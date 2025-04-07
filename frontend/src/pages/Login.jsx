@@ -1,7 +1,8 @@
 //import Form from "../components/Form";
 import "../styles/custom-colors.css";
-import "../styles/Login.css";
-import loginImage from "../images/login.png";
+import "../styles/login.css";
+import loginImage from "../assets/img/login.png";
+import closeIcon from "../assets/icons/close.png";
 
 function Login() {
   // return <Form route="/api/token/" method="login" />
@@ -11,6 +12,12 @@ function Login() {
         <img src={loginImage} alt="login-illustration" />
       </section>
       <section className="right-panel">
+        <div className="alert-warning">
+          <div className="alert-container">
+            <img src={closeIcon} alt="close-icon" />
+            <p>Invalid credentials.</p>
+          </div>
+        </div>
         <form action="" method="post">
           <p>Username:</p>
           <input type="text" placeholder="Enter your username" />
