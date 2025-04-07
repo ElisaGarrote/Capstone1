@@ -3,4 +3,7 @@
   --primary-color: #007bff;
   --text-color: #242424;
   --secondary-text-color: #545f71;
+
+  --warning-bg: #ffe0db;
+  --warning-text: #ff3e1d;
 }
