@@ -15,7 +15,7 @@
   background-color: var(--bg-color);
 }
 
-.login-page div {
+.login-page section {
   display: inherit;
   height: inherit;
   width: 50vw;
@@ -46,6 +46,10 @@ form p {
   font-size: 18px;
   color: var(--secondary-text-color);
   align-self: start;
+}
+
+.password {
+  margin-top: 10px;
 }
 
 input {
