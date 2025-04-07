@@ -33,15 +33,24 @@
   object-fit: cover;
 }
 
-.right-panel {
+form {
+  display: inherit;
   flex-direction: column;
-  align-items: start;
+  justify-content: inherit;
+  align-items: inherit;
+  width: 70%;
   gap: 10px;
+}
+
+form p {
+  font-size: 18px;
+  color: var(--secondary-text-color);
+  align-self: start;
 }
 
 input {
   display: flex;
-  width: 70%;
+  width: 100%;
   height: 44px;
   padding: 18px 16px;
   border-radius: 40px;
@@ -50,14 +59,28 @@ input {
 }
 
 input:focus {
-  outline: 2px solid #007bff;
+  outline: 2px solid var(--primary-color);
 }
 
 button {
-  width: 70%;
+  width: 100%;
   padding: 12px 32px;
   border-radius: 40px;
   margin-top: 16px;
-  background-color: #007bff;
+  background-color: var(--primary-color);
   color: var(--bg-color);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+button:hover {
+  background-color: rgba(0, 123, 255, 0.8);
+}
+
+a {
+  color: var(--primary-color);
+}
+
+a:hover {
+  color: rgba(0, 123, 255, 0.8);
 }
