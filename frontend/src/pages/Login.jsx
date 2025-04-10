@@ -2,7 +2,8 @@
 import "../styles/custom-colors.css";
 import "../styles/login.css";
 import loginImage from "../assets/img/login.png";
-import closeIcon from "../assets/icons/close.png";
+import Alert from "../components/Alert";
+import "../styles/alert.css";
 
 function Login() {
   // return <Form route="/api/token/" method="login" />
@@ -12,22 +13,21 @@ function Login() {
         <img src={loginImage} alt="login-illustration" />
       </section>
       <section className="right-panel">
-        <div className="alert-warning">
-          <div className="alert-container">
-            <img src={closeIcon} alt="close-icon" />
-            <p>Invalid credentials.</p>
-          </div>
-        </div>
+        <Alert message="Invalid credentials." type="danger" />
         <form action="" method="post">
-          <p>Username:</p>
-          <input type="text" placeholder="Enter your username" />
+          <fieldset>
+            <label>Email:</label>
+            <input type="text" placeholder="Enter your username" />
+          </fieldset>
 
-          <p className="password">Password:</p>
-          <input type="password" placeholder="Enter your password" />
+          <fieldset>
+            <label>Password:</label>
+            <input type="password" placeholder="Enter your password" />
+          </fieldset>
 
           <button type="submit">Log In</button>
-          <a href="#">Forgot Password?</a>
         </form>
+        <a href="#">Forgot Password?</a>
       </section>
     </main>
   );
