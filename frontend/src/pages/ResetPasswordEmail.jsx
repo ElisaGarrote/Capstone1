@@ -1,10 +1,10 @@
 import "../styles/custom-colors.css";
-import "../styles/Register.css";
+import "../styles/ResetPassword.css";
 import loginImage from "../assets/img/login.png";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-function ResetPassword() {
+function ResetPasswordEmail() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
@@ -58,14 +58,13 @@ function ResetPassword() {
   };  
   
   return (
-    <main className="register-page">
+    <main className="reset-page">
       <section className="left-panel">
         <img src={loginImage} alt="reset-illustration" />
       </section>
       <section className="right-panel">
         <h2>Reset Your Password</h2>
         {error && <p className="error-message">{error}</p>}
-        {!submitted ? (
           <form onSubmit={handleSubmit}>
             <fieldset>
               <label>Email:</label>
@@ -78,24 +77,15 @@ function ResetPassword() {
                 required
               />
             </fieldset>
-
             <button type="submit">Send Reset Link</button>
           </form>
-        ) : (
-          <div className="confirmation-box">
-            <p>If this email is registered, a reset link will be sent shortly.</p>
-            <p className="resend-label">Didn't receive the email?</p>
-            <button onClick={handleSubmit} className="resend-button">
-              Resend Link
-            </button>
-          </div>
-        )}
-        <div className="confirmation-box">
-          <button onClick={() => navigate("/login")}>Back to Login</button>
-        </div>
+          <div>
+            <p>Password has been reset?</p>
+            <Link to="/login">Login</Link>
+          </div>  
       </section>
     </main>
   );
 }
 
-export default ResetPassword;
+export default ResetPasswordEmail;

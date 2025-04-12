@@ -40,7 +40,7 @@ function Login() {
 
           <button type="submit">Log In</button>
         </form>
-        <Link to="/reset-password">Forgot Password?</Link>
+        <Link to="/reset-password-email">Forgot Password?</Link>
       </section>
     </main>
   );
