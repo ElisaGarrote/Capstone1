@@ -54,14 +54,12 @@ const ResetPassword = () => {
           <h4>If this email is registered, a reset link will be sent shortly.</h4>
 
           <p>Didn't receive it?</p>
-          <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
-            <button className="common-button" onClick={handleResend}>
-              Resend Link
-            </button>
-            <button className="common-button" onClick={() => navigate("/login")}>
-              Back to Login
-            </button>
-          </div>
+          <button className="common-button" onClick={handleResend}>
+            Resend Link
+          </button>
+          <button className="common-button" onClick={() => navigate("/login")}>
+            Back to Login
+          </button>
         </div>
       )}
 
