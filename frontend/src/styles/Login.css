@@ -127,6 +127,10 @@
   transition: ease 0.5s;
 }
 
+.resend-button {
+  margin-bottom: 1rem;
+}
+
 .login-page button:hover {
   background-color: rgba(0, 123, 255, 0.8);
 }
@@ -137,4 +141,15 @@
 
 .login-page a:hover {
   color: rgba(0, 123, 255, 0.8);
+}
+
+.login-page p{
+  color: var(--text-color);
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.login-page p.resend-label {
+  text-align: left;
+  width: 100%;
 }

@@ -1,79 +1,58 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import "../styles/reset-password.css";
 import "../styles/custom-colors.css";
+import "../styles/Register.css";
+import loginImage from "../assets/img/login.png";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-const ResetPassword = () => {
+function ResetPassword() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitted(true);
+    // Simulate backend call or trigger an alert/popup here
+    alert("Reset link sent! Please Check your email.");
   };
-
-  const handleResend = () => {
-    setShowPopup(true);
-  };
-
-  useEffect(() => {
-    if (showPopup) {
-      const timer = setTimeout(() => {
-        setShowPopup(false);
-      }, 3000); // Auto-close after 3 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [showPopup]);
 
   return (
-    <main className="reset-password-page">
-      <h1>Reset Your Password</h1>
+    <main className="register-page">
+      <section className="left-panel">
+        <img src={loginImage} alt="reset-illustration" />
+      </section>
+      <section className="right-panel">
+        <h2>Reset Your Password</h2>
+        {!submitted ? (
+          <form onSubmit={handleSubmit}>
+            <fieldset>
+              <label>Email:</label>
+              <input
+                type="email"
+                placeholder="Enter your registered email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </fieldset>
 
-      {!submitted ? (
-        <form onSubmit={handleSubmit}>
-          <fieldset>
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Enter your registered email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </fieldset>
-          <button className="common-button" type="submit">
-            Send Reset Link
-          </button>
-        </form>
-      ) : (
-        <div className="confirmation">
-          <h4>If this email is registered, a reset link will be sent shortly.</h4>
-
-          <p>Didn't receive it?</p>
-          <button className="common-button" onClick={handleResend}>
-            Resend Link
-          </button>
-          <button className="common-button" onClick={() => navigate("/login")}>
-            Back to Login
-          </button>
-        </div>
-      )}
-
-      {/* Local popup implementation */}
-      {showPopup && (
-        <div className="local-popup-overlay">
-          <div className="local-popup">
-            <h3>Success!</h3>
-            <p>Reset link has been resent.</p>
+            <button type="submit">Send Reset Link</button>
+          </form>
+        ) : (
+          <div className="confirmation-box">
+            <p>If this email is registered, a reset link will be sent shortly.</p>
+            <p className="resend-label">Didn't receive the email?</p>
+            <button onClick={handleSubmit} className="resend-button">
+              Resend Link
+            </button>
+            <button onClick={() => navigate("/login")}>
+              Back to Login
+            </button>
           </div>
-        </div>
-      )}
+        )}
+      </section>
     </main>
   );
-};
+}
 
 export default ResetPassword;

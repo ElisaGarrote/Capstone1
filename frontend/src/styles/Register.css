@@ -1,0 +1,107 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: none;
+  color: var(--text-color);
+  font-family: poppins, sans-serif;
+}
+
+.register-page {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-color);
+}
+
+.register-page section {
+  display: flex;
+  height: 100vh;
+  width: 50vw;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-page .left-panel {
+  background-color: white;
+}
+
+.register-page .left-panel img {
+  width: 100%;
+  height: 50%;
+  object-fit: cover;
+}
+
+.register-page .right-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.register-page h2 {
+  color: var(--text-color);
+  margin-bottom: 20px;
+}
+
+.register-page form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 70%;
+  gap: 20px;
+}
+
+.register-page form fieldset {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  width: 100%;
+  gap: 10px;
+}
+
+.register-page form fieldset input {
+  display: flex;
+  width: 100%;
+  height: 44px;
+  padding: 18px 16px;
+  border-radius: 40px;
+  border: 1px solid #d3d3d3;
+  background-color: var(--bg-color);
+}
+
+.register-page input:focus {
+  outline: 2px solid var(--primary-color);
+}
+
+.register-page button {
+  width: 100%;
+  padding: 12px 32px;
+  border-radius: 40px;
+  background-color: var(--primary-color);
+  color: var(--bg-color);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: ease 0.5s;
+}
+
+.confirmation-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 70%;
+    text-align: center;
+  }
+  
+  .confirmation-box .resend-label {
+    text-align: left;
+    margin-top: 2rem;
+  }
+  
+  
