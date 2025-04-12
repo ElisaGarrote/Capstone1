@@ -4,9 +4,22 @@ import "../styles/login.css";
 import loginImage from "../assets/img/login.png";
 import Alert from "../components/Alert";
 import "../styles/alert.css";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function Login() {
   // return <Form route="/api/token/" method="login" />
+  const navigate = useNavigate();
+
+  // Redirect to "/" if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/");
+    }
+  }, []);
+  
   return (
     <main className="login-page">
       <section className="left-panel">
@@ -27,7 +40,7 @@ function Login() {
 
           <button type="submit">Log In</button>
         </form>
-        <a href="#">Forgot Password?</a>
+        <Link to="/reset-password">Forgot Password?</Link>
       </section>
     </main>
   );
