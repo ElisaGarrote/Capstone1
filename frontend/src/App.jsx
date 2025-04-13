@@ -32,7 +32,7 @@ function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/register" element={<RegisterAndLogout />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/reset-password-email" element={<ResetPasswordEmail />} />
         <Route path="/set-password" element={<SetPassword />} />
         <Route path="*" element={<NotFound />}></Route>

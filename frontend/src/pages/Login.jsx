@@ -41,6 +41,7 @@ function Login() {
           <button type="submit">Log In</button>
         </form>
         <Link to="/reset-password-email">Forgot Password?</Link>
+        <Link to="/register">Register</Link>
       </section>
     </main>
   );

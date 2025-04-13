@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import loginImage from "../assets/img/login.png";
 
 function SetPassword() {
   const { uid, token } = useParams();
@@ -47,7 +48,7 @@ function SetPassword() {
   return (
     <main className="reset-page">
       <section className="left-panel">
-        <img src="loginImage" alt="reset-illustration" />
+        <img src={loginImage} alt="login-illustration" />
       </section>
 
       <section className="right-panel">
