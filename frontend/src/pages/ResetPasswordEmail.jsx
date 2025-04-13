@@ -80,7 +80,7 @@ function ResetPasswordEmail() {
             <button type="submit">Send Reset Link</button>
           </form>
           <div>
-            <p>Password has been reset?</p>
+            <p>Good to go?</p>
             <Link to="/login">Login</Link>
           </div>  
       </section>

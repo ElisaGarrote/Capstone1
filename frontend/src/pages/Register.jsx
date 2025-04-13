@@ -33,21 +33,6 @@ function Register() {
           </fieldset>
 
           <fieldset>
-            <label>Username:</label>
-            <input type="text" placeholder="Enter your username" />
-          </fieldset>
-
-          <fieldset>
-            <label>First Name:</label>
-            <input type="text" placeholder="Enter your username" />
-          </fieldset>
-
-          <fieldset>
-            <label>Last Name:</label>
-            <input type="text" placeholder="Enter your username" />
-          </fieldset>
-
-          <fieldset>
             <label>Password:*</label>
             <input type="password" placeholder="Enter your password" />
           </fieldset>
@@ -59,6 +44,7 @@ function Register() {
 
           <button type="submit">Log In</button>
         </form>
+        <Link to="/login">Login</Link>
       </section>
     </main>
   );
