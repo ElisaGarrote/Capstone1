@@ -25,7 +25,7 @@ export default function NavBar() {
   };
 
   return (
-    <nav>
+    <nav className="main-nav-bar">
       <section>
         <img src={Logo} alt="Logo" />
       </section>
@@ -62,7 +62,12 @@ export default function NavBar() {
             <a>Maintenance</a>
           </li>
           <li>
-            <a>Audits</a>
+            <a
+              className={location.pathname === "/audits" ? "active" : ""}
+              onClick={() => navigate("/audits")}
+            >
+              Audits
+            </a>
           </li>
           <li>
             <select name="reports-more" id="reports-more" defaultValue="">
