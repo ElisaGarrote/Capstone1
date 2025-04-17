@@ -1,0 +1,97 @@
+nav {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  width: 100vw;
+  background-color: var(--bg-color);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
+}
+
+/* Set the left padding of the logo */
+nav section:nth-child(1) {
+  padding-left: 38px;
+}
+
+/* Set the style of the last section (Inside this section, there are profile and notification icons.) */
+nav section:nth-last-child(1) {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  padding-right: 38px;
+}
+
+nav ul {
+  display: flex;
+  flex-direction: row;
+}
+
+nav li {
+  display: flex;
+  padding: 10px;
+  gap: 40px;
+}
+
+li a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-color);
+}
+
+/* Style the anchor that is active (the user selected specific nav menu (dashboard, assets, maintenance, etc.)) */
+li a.active {
+  color: var(--primary-color);
+}
+
+li select.active {
+  color: var(--primary-color);
+}
+
+nav .notif-icon {
+  height: 35px;
+  width: 35px;
+  padding: 8px 8px;
+  border-radius: 50%;
+  border: 1px solid var(--primary-color);
+  cursor: pointer;
+}
+
+nav .notif-icon:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+nav .sample-profile {
+  height: 35px;
+  width: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+li select {
+  padding: 20px 0;
+  color: var(--text-color);
+  font-size: 1rem;
+  background-color: transparent;
+  outline: none;
+}
+
+li select:hover {
+  color: var(--primary-color);
+  cursor: pointer;
+}
+
+li select option {
+  background-color: white;
+  color: var(--text-color);
+  font-size: 1rem;
+  width: unset;
+}
+
+li a:hover {
+  color: var(--primary-color);
+  cursor: pointer;
+}
