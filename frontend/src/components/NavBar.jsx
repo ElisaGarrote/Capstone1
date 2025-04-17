@@ -1,0 +1,93 @@
+import { useNavigate } from "react-router-dom";
+import "../styles/custom-colors.css";
+import "../styles/NavBar.css";
+import Logo from "../assets/img/Logo.png";
+import SampleProfile from "../assets/img/do.png";
+import NotifIcon from "../assets/icons/notification.svg";
+
+export default function NavBar() {
+  const navigate = useNavigate();
+
+  // Function to handle the navigation route from the dropdown
+  const handleNavigation = (event) => {
+    const value = event.target.value;
+    if (value === "Accessories") {
+      navigate("/accessories");
+    }
+  };
+
+  // Function to handle the current selected dropdown menu based on the current location path of the page
+  const currentDropdownPage = () => {
+    if (location.pathname === "/accessories") {
+      return "Accessories";
+    }
+    // Add other condition here
+  };
+
+  return (
+    <nav>
+      <section>
+        <img src={Logo} alt="Logo" />
+      </section>
+      <section>
+        <ul>
+          <li>
+            <a
+              onClick={() => navigate("/dashboard")}
+              className={location.pathname === "/dashboard" ? "active" : ""}
+            >
+              Dashboard
+            </a>
+          </li>
+          <li>
+            <select
+              name="assets-more"
+              id="assets-more"
+              defaultValue=""
+              value={currentDropdownPage()}
+              onChange={handleNavigation}
+              className={currentDropdownPage() != null ? "active" : ""}
+            >
+              <option value="" disabled hidden>
+                Assets
+              </option>
+              <option value="Product">Product</option>
+              <option value="Assets">Assets</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Consumable">Consumable</option>
+              <option value="Components">Components</option>
+            </select>
+          </li>
+          <li>
+            <a>Maintenance</a>
+          </li>
+          <li>
+            <a>Audits</a>
+          </li>
+          <li>
+            <select name="reports-more" id="reports-more" defaultValue="">
+              <option value="" disabled hidden>
+                Reports
+              </option>
+              <option value="Asset Reports">Asset Reports</option>
+              <option value="Depreciation Reports">Depreciation Reports</option>
+              <option value="Due Back Reports">Due Back Reports</option>
+              <option value="End of Life and Warranty Reports">
+                End of Life and Warranty Reports
+              </option>
+              <option value="Activity Reports">Components</option>
+            </select>
+          </li>
+        </ul>
+      </section>
+      <section>
+        <img src={NotifIcon} alt="notif-icon" className="notif-icon" />
+        <img
+          src={SampleProfile}
+          alt="sample-profile"
+          className="sample-profile"
+        />
+      </section>
+    </nav>
+  );
+}
