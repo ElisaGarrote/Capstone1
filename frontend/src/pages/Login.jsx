@@ -1,12 +1,14 @@
 //import Form from "../components/Form";
+import { useNavigate } from "react-router-dom";
 import "../styles/custom-colors.css";
 import "../styles/login.css";
 import loginImage from "../assets/img/login.png";
 import Alert from "../components/Alert";
-import "../styles/alert.css";
 
 function Login() {
   // return <Form route="/api/token/" method="login" />
+  const navigate = useNavigate();
+
   return (
     <main className="login-page">
       <section className="left-panel">
@@ -28,6 +30,7 @@ function Login() {
           <button type="submit">Log In</button>
         </form>
         <a href="#">Forgot Password?</a>
+        <a onClick={() => navigate("/dashboard")}>Go to dashboard</a>
       </section>
     </main>
   );
