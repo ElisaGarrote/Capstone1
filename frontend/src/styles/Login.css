@@ -43,47 +43,6 @@
   gap: 10px;
 }
 
-/* .login-page .alert-warning {
-  display: flex;
-  width: 70%;
-  padding: 10px 18px;
-  border-radius: 10px;
-  background-color: var(--warning-bg);
-  margin-bottom: 10px;
-}
-
-.login-page .alert-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
-  align-items: center;
-  gap: 12px;
-}
-
-.login-page .alert-container img {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 13px;
-  height: 13px;
-  padding: 2px;
-  border-radius: 50%;
-  background-color: var(--warning-text);
-  box-shadow: 0px 0px 0px 3px rgba(255, 62, 29, 0.25),
-    0px 0px 0px 6px rgba(255, 62, 29, 0.15);
-}
-
-.login-page .alert-container p {
-  font-size: 1rem;
-  color: var(--warning-text);
-  font-weight: 500;
-}
-
-/* For the alert to be visible or hidden. */
-/* .login-page .alert-warning {
-  display: block;
-} */
-
 .login-page form {
   display: flex;
   flex-direction: column;
@@ -133,6 +92,7 @@
 
 .login-page a {
   color: var(--primary-color);
+  cursor: pointer;
 }
 
 .login-page a:hover {
