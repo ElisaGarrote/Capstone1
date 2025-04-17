@@ -1,19 +1,22 @@
-import react from "react"
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import Login from "./pages/Login"
-import Register from "./pages/Register"
-import Home from "./pages/Home"
-import NotFound from "./pages/NotFound"
-import ProtectedRoute from "./components/ProtectedRoute"
+import react from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Home from "./pages/Home";
+import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Dashboard from "./pages/Dashboard";
+import Accessories from "./pages/Accessories/Accessories";
+import CheckoutAccessory from "./pages/Accessories/CheckoutAccessory";
 
 function Logout() {
-  localStorage.clear()
-  return <Navigate to="/login" />
+  localStorage.clear();
+  return <Navigate to="/login" />;
 }
 
 function RegisterAndLogout() {
-  localStorage.clear()
-  return <Register />
+  localStorage.clear();
+  return <Register />;
 }
 
 function App() {
@@ -31,10 +34,13 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/register" element={<RegisterAndLogout />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/accessories" element={<Accessories />} />
+        <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;
