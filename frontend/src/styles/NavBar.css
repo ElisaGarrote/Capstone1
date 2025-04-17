@@ -1,4 +1,4 @@
-nav {
+.main-nav-bar {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -10,12 +10,12 @@ nav {
 }
 
 /* Set the left padding of the logo */
-nav section:nth-child(1) {
+.main-nav-bar section:nth-child(1) {
   padding-left: 38px;
 }
 
 /* Set the style of the last section (Inside this section, there are profile and notification icons.) */
-nav section:nth-last-child(1) {
+.main-nav-bar section:nth-last-child(1) {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -23,12 +23,12 @@ nav section:nth-last-child(1) {
   padding-right: 38px;
 }
 
-nav ul {
+.main-nav-bar ul {
   display: flex;
   flex-direction: row;
 }
 
-nav li {
+.main-nav-bar li {
   display: flex;
   padding: 10px;
   gap: 40px;
@@ -50,7 +50,7 @@ li select.active {
   color: var(--primary-color);
 }
 
-nav .notif-icon {
+.main-nav-bar .notif-icon {
   height: 35px;
   width: 35px;
   padding: 8px 8px;
@@ -59,11 +59,11 @@ nav .notif-icon {
   cursor: pointer;
 }
 
-nav .notif-icon:hover {
+.main-nav-bar .notif-icon:hover {
   background-color: rgba(0, 123, 255, 0.1);
 }
 
-nav .sample-profile {
+.main-nav-bar .sample-profile {
   height: 35px;
   width: 35px;
   border-radius: 50%;
