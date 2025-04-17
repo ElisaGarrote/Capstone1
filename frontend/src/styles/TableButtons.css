@@ -1,0 +1,54 @@
+.table-buttons-checkin img,
+.table-buttons-checkout img,
+.table-buttons-edit img,
+.table-buttons-delete img,
+.table-buttons-view img {
+  display: flex;
+  height: 3vh;
+  width: auto;
+  object-fit: fill;
+}
+
+.table-buttons-checkout {
+  display: flex;
+  padding: 8% 12%;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: #34c759;
+}
+
+.table-buttons-checkout:hover {
+  background-color: rgba(52, 199, 89, 0.8);
+}
+
+.table-buttons-checkin {
+  display: flex;
+  padding: 8% 12%;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: var(--primary-color);
+}
+
+.table-buttons-checkin:hover {
+  background-color: rgba(0, 123, 255, 0.8);
+}
+
+.table-buttons-edit,
+.table-buttons-delete,
+.table-buttons-view {
+  display: flex;
+  padding: 8% 12%;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: var(--bg-color);
+  border: 1px solid #d3d3d3;
+}
+
+.table-buttons-edit:hover,
+.table-buttons-view:hover {
+  background-color: rgba(0, 123, 255, 0.2);
+}
+
+.table-buttons-delete:hover {
+  background-color: rgba(255, 0, 0, 0.2);
+}
