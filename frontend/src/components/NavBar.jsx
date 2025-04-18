@@ -63,7 +63,9 @@ export default function NavBar() {
           </li>
           <li>
             <a
-              className={location.pathname === "/audits" ? "active" : ""}
+              className={
+                location.pathname.startsWith("/audits") ? "active" : ""
+              }
               onClick={() => navigate("/audits")}
             >
               Audits
