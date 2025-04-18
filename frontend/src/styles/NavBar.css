@@ -6,7 +6,8 @@
   height: 60px;
   width: 100vw;
   background-color: var(--bg-color);
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 10px #d3d3d3;
+  position: fixed;
 }
 
 /* Set the left padding of the logo */
