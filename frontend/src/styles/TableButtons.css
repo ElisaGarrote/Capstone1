@@ -9,12 +9,20 @@
   object-fit: fill;
 }
 
-.table-buttons-checkout {
+.table-buttons-checkin,
+.table-buttons-checkout,
+.table-buttons-edit,
+.table-buttons-delete,
+.table-buttons-view {
   display: flex;
   padding: 8% 12%;
   border-radius: 5px;
   cursor: pointer;
+}
+
+.table-buttons-checkout {
   background-color: #34c759;
+  transition: 0.5s ease;
 }
 
 .table-buttons-checkout:hover {
@@ -22,11 +30,8 @@
 }
 
 .table-buttons-checkin {
-  display: flex;
-  padding: 8% 12%;
-  border-radius: 5px;
-  cursor: pointer;
   background-color: var(--primary-color);
+  transition: 0.5s ease;
 }
 
 .table-buttons-checkin:hover {
@@ -36,12 +41,9 @@
 .table-buttons-edit,
 .table-buttons-delete,
 .table-buttons-view {
-  display: flex;
-  padding: 8% 12%;
-  border-radius: 5px;
-  cursor: pointer;
   background-color: var(--bg-color);
   border: 1px solid #d3d3d3;
+  transition: 0.5s ease;
 }
 
 .table-buttons-edit:hover,
