@@ -1,4 +1,7 @@
 .dashboard-page {
   display: flex;
   background-color: var(--bg-color);
+  padding: 100px 38px 38px 38px;
+  height: 100vh;
+  width: 100vw;
 }
