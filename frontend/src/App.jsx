@@ -7,7 +7,7 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Accessories from "./pages/Accessories/Accessories";
-import CheckoutAccessory from "./pages/Accessories/CheckoutAccessory";
+import CheckoutAccessory from "./pages/accessories/CheckoutAccessory";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
