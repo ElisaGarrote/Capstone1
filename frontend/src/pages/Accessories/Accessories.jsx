@@ -3,7 +3,7 @@ import "../../styles/Accessories.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
-import plusIcon from "../../assets/icons/plus.svg";
+import MediumButtons from "../../components/buttons/MediumButtons";
 
 export default function Accessories() {
   let maxAvail = 10;
@@ -22,13 +22,8 @@ export default function Accessories() {
               <form action="" method="post">
                 <input type="text" placeholder="Search..." />
               </form>
-              <button type="button" className="new-btn">
-                <img src={plusIcon} alt="plus-icon" />
-                New
-              </button>
-              <button type="button" className="export-btn">
-                Export
-              </button>
+              <MediumButtons type="export" />
+              <MediumButtons type="new" />
             </div>
           </section>
           <section className="middle">
@@ -76,7 +71,7 @@ export default function Accessories() {
                   <td>
                     <TableBtn type="checkin" navigatePage={""} />
                   </td>
-                  <td>MLA3718L/A sdfsdfsdfsdfssdfsdfsdfsdfsdfsdf</td>
+                  <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
                   <td>December 31, 2025</td>
                   <td>
                     <TableBtn type="edit" navigatePage={""} />
