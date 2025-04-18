@@ -8,6 +8,10 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Accessories from "./pages/Accessories/Accessories";
 import CheckoutAccessory from "./pages/Accessories/CheckoutAccessory";
+import AssetAudits from "./pages/asset-audit/AssetAudits";
+import OverdueAudits from "./pages/asset-audit/OverdueAudits";
+import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
+import CompletedAudits from "./pages/asset-audit/CompletedAudtis";
 
 function Logout() {
   localStorage.clear();
@@ -37,6 +41,10 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/accessories" element={<Accessories />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
+        <Route path="/audits/" element={<AssetAudits />} />
+        <Route path="/audits/overdue" element={<OverdueAudits />} />
+        <Route path="/audits/scheduled" element={<ScheduledAudits />} />
+        <Route path="/audits/completed" element={<CompletedAudits />} />
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
