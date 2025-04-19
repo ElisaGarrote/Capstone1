@@ -23,7 +23,7 @@ export default function Accessories() {
                 <input type="text" placeholder="Search..." />
               </form>
               <MediumButtons type="export" />
-              <MediumButtons type="new" />
+              <MediumButtons type="new" navigatePage="/accessories/registration" />
             </div>
           </section>
           <section className="middle">
