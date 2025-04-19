@@ -18,7 +18,7 @@ export default function NavBar() {
 
   // Function to handle the current selected dropdown menu based on the current location path of the page
   const currentDropdownPage = () => {
-    if (location.pathname === "/accessories") {
+    if (location.pathname.startsWith("/accessories")) {
       return "Accessories";
     }
     // Add other condition here
