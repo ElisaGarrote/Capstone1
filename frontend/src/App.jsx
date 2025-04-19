@@ -12,6 +12,7 @@ import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
 import CompletedAudits from "./pages/asset-audit/CompletedAudtis";
+import AccessoriesRegistration from "./pages/accessories/AccessoriesRegistration";
 
 function Logout() {
   localStorage.clear();
@@ -45,6 +46,7 @@ function App() {
         <Route path="/audits/overdue" element={<OverdueAudits />} />
         <Route path="/audits/scheduled" element={<ScheduledAudits />} />
         <Route path="/audits/completed" element={<CompletedAudits />} />
+        <Route path="/accessories/registration" element={<AccessoriesRegistration />} />
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
