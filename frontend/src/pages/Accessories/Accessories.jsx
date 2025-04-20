@@ -71,6 +71,7 @@ export default function Accessories() {
                     <TableBtn
                       type="checkout"
                       navigatePage={"/accessories/checkout"}
+                      id={accessoryName1}
                     />
                   </td>
                   <td>
@@ -112,6 +113,7 @@ export default function Accessories() {
                     <TableBtn
                       type="checkout"
                       navigatePage={"/accessories/checkout"}
+                      id={accessoryName2}
                     />
                   </td>
                   <td>
