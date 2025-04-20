@@ -2,10 +2,23 @@ import NavBar from "../../components/NavBar"
 import "../../styles/AccessoriesRegistration.css"
 import { useNavigate } from "react-router-dom";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import TopSecFormPage from "../../components/TopSecFormPage";
+import CloseIcon from "../../assets/icons/close.svg"
+import { useState } from "react";
 
 export default function AccessoriesRegistration() {
     const navigate = useNavigate();
     const currentDate = new Date().toISOString().split("T")[0];
+    const [previewImage, setPreviewImage] = useState(null);
+
+    const handleImageSelection = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        setPreviewImage(URL.createObjectURL(file));
+      } else {
+        setPreviewImage(null);
+      }
+    }
 
     return (
       <>
@@ -13,12 +26,13 @@ export default function AccessoriesRegistration() {
           <NavBar />
         </nav>
         <main className="accessories-registration">
-          <section className="navigation-and-title">
-            <div>
-              <a onClick={() => navigate("/accessories")}>Accessories</a> / New
-              Accessory
-            </div>
-            <h1>New Accessory</h1>
+          <section className="top">
+            <TopSecFormPage
+              root="Accessories"
+              currentPage="New Accessory"
+              rootNavigatePage="/accessories"
+              title="New Accessory"
+            />
           </section>
           <section className="registration-form">
             <form action="" method="post">
@@ -145,18 +159,37 @@ export default function AccessoriesRegistration() {
               </fieldset>
               <fieldset>
                 <label htmlFor="notes">Notes</label>
-                <textarea
-                  name="notes"
-                  id="notes"
-                  maxLength="500"
-                ></textarea>
+                <textarea name="notes" id="notes" maxLength="500"></textarea>
               </fieldset>
               <fieldset>
-                <label htmlFor="image">Image</label>
+                <label htmlFor="upload-image">Image</label>
                 <div>
-                  Image here
-                  <button type="button">Upload</button>
+                  {previewImage && (
+                    <div className="image-selected">
+                      <img src={previewImage} alt="" />
+                      <button
+                        onClick={(event) => {
+                          event.preventDefault();
+                          setPreviewImage(null);
+                          document.getElementById("image").value = "";
+                        }}
+                      >
+                        <img src={CloseIcon} alt="" />
+                      </button>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    name="image"
+                    id="image"
+                    accept="image/*"
+                    onChange={handleImageSelection}
+                    style={{ display: "none" }}
+                  />
                 </div>
+                <label htmlFor="image" className="upload-image-btn">
+                  {!previewImage ? "Choose Image" : "Change Image"}
+                </label>
               </fieldset>
               <button type="submit" className="save-btn">
                 Save
