@@ -8,6 +8,8 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 export default function Accessories() {
   let maxAvail = 10;
   let availValue = 7;
+  let accessoryName1 = "DVI Cable";
+  let accessoryName2 = "HDMI Cable";
 
   return (
     <>
@@ -23,7 +25,10 @@ export default function Accessories() {
                 <input type="text" placeholder="Search..." />
               </form>
               <MediumButtons type="export" />
-              <MediumButtons type="new" navigatePage="/accessories/registration" />
+              <MediumButtons
+                type="new"
+                navigatePage="/accessories/registration"
+              />
             </div>
           </section>
           <section className="middle">
@@ -53,7 +58,7 @@ export default function Accessories() {
                   <td>
                     <img src={SampleImage} alt="sample-img" />
                   </td>
-                  <td>DVI Cable dfgdfgdfgdfgdfgdfgsdgsdfsdfssdfsdfsdf</td>
+                  <td>{accessoryName1}</td>
                   <td>
                     <span>
                       {availValue}/{maxAvail}
@@ -69,7 +74,52 @@ export default function Accessories() {
                     />
                   </td>
                   <td>
-                    <TableBtn type="checkin" navigatePage={""} />
+                    <TableBtn
+                      type="checkin"
+                      navigatePage={"/accessories/checkin"}
+                      id={accessoryName1}
+                    />
+                  </td>
+                  <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
+                  <td>December 31, 2025</td>
+                  <td>
+                    <TableBtn type="edit" navigatePage={""} />
+                  </td>
+                  <td>
+                    <TableBtn type="delete" navigatePage={""} />
+                  </td>
+                  <td>
+                    <TableBtn type="view" navigatePage={""} />
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="" id="" />
+                  </td>
+                  <td>
+                    <img src={SampleImage} alt="sample-img" />
+                  </td>
+                  <td>{accessoryName2}</td>
+                  <td>
+                    <span>
+                      {availValue}/{maxAvail}
+                      <progress value={availValue} max={maxAvail}>
+                        3
+                      </progress>
+                    </span>
+                  </td>
+                  <td>
+                    <TableBtn
+                      type="checkout"
+                      navigatePage={"/accessories/checkout"}
+                    />
+                  </td>
+                  <td>
+                    <TableBtn
+                      type="checkin"
+                      navigatePage={"/accessories/checkin"}
+                      id={accessoryName2}
+                    />
                   </td>
                   <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
                   <td>December 31, 2025</td>
