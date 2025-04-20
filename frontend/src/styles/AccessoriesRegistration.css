@@ -1,28 +1,15 @@
 .accessories-registration {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    width: 100vw;
+    height: auto;
+    width: auto;
     padding: 100px 38px 38px 38px;
     background-color: var(--bg-color);
     overflow: auto;
 }
 
-.accessories-registration .navigation-and-title {
+.accessories-registration section {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    border-bottom: 1px solid #d3d3d3;
-    padding-bottom: 20px;
-}
-
-.accessories-registration a {
-    color: var(--secondary-text-color);
-    cursor: pointer;
-}
-
-.accessories-registration a:hover {
-    color: var(--primary-color);
 }
 
 .accessories-registration .registration-form {
@@ -58,6 +45,11 @@
     gap: 10px;
 }
 
+.accessories-registration fieldset label:not(.upload-image-btn) {
+    color: var(--secondary-text-color);
+    font-weight: 600;
+}
+
 .accessories-registration input,
 .accessories-registration select,
 .accessories-registration textarea {
@@ -79,16 +71,78 @@
     color: var(--secondary-text-color);
 }
 
-.accessories-registration fieldset:nth-last-child(2) button {
+.accessories-registration .save-btn {
+    height: 48px;
     padding: 12px 16px;
     border-radius: 40px;
     background-color: var(--primary-color);
     color: var(--bg-color);
+    transition: 0.5s ease;
+    cursor: pointer;
 }
 
-.accessories-registration .save-btn {
-    padding: 12px 16px;
-    border-radius: 40px;
+.accessories-registration .save-btn:hover {
+    background-color: var(--primary-color-hover);
+}
+
+.accessories-registration .image-selected {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    width: auto;
+    border-radius: 10px;
+    position: relative;
+}
+
+.accessories-registration .image-selected img:not(.image-selected button img) {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 15px;
+    padding: 2px;
+}
+
+.accessories-registration .image-selected button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 20px;
+    width: 20px;
+    padding: 10px;
+    border-radius: 50px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: red;
+    border: 2px solid #ffffff;
+    cursor: pointer;
+}
+
+.accessories-registration .image-selected button:hover {
+    background-color: darkred;
+}
+
+.accessories-registration .image-selected button img {
+    height: 12px;
+    width: 12px;
+}
+
+.accessories-registration .upload-image-btn {
+    display: flex;
+    width: fit-content;
+    justify-content: center;
+    align-items: center;
     background-color: var(--primary-color);
+    border-radius: 40px;
+    padding: 12px;
+    font-size: 0.83333rem;
     color: var(--bg-color);
+    cursor: pointer;
+    transition: 0.5s ease;
+}
+
+.accessories-registration .upload-image-btn:hover {
+    background-color: var(--primary-color-hover);
 }
