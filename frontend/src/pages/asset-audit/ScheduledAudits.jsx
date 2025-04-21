@@ -20,8 +20,11 @@ export default function ScheduledAudits() {
         <section className="main-top">
           <h1>Asset Audits</h1>
           <div>
-            <button>Schedule Audits</button>
-            <button>Perform Audits</button>
+            <MediumButtons
+              type="schedule-audits"
+              navigatePage="/audits/schedule"
+            />
+            <MediumButtons type="perform-audits" navigatePage="/audits/new" />
           </div>
         </section>
         <section className="main-middle">
@@ -36,7 +39,6 @@ export default function ScheduledAudits() {
                   <input type="text" placeholder="Search..." />
                 </form>
                 <MediumButtons type="export" navigatePage="" />
-                <MediumButtons type="new" navigatePage="" />
               </div>
             </section>
             <section className="middle">
