@@ -6,12 +6,34 @@ import TableBtn from "../../components/buttons/TableButtons";
 import Status from "../../components/Status";
 import { useNavigate } from "react-router-dom";
 import TabNavBar from "../../components/TabNavBar";
+import DeleteModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
+import { useState } from "react";
 
 export default function AssetAudits() {
   let notes = "sdfsdfsdfdfdfdfdfdfdfsdfsdfsdf";
   const navigate = useNavigate();
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleteSuccess, setDeleteSucess] = useState(false);
+
   return (
     <>
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={() => {
+            setDeleteSucess(true);
+            setTimeout(() => {
+              setDeleteSucess(false);
+            }, 5000);
+          }}
+        />
+      )}
+
+      {isDeleteSuccess && (
+        <Alert message="Deleted Successfully!" type="success" />
+      )}
+
       <nav>
         <NavBar />
       </nav>
@@ -75,7 +97,13 @@ export default function AssetAudits() {
                       <TableBtn type="edit" />
                     </td>
                     <td>
-                      <TableBtn type="delete" />
+                      <TableBtn
+                        type="delete"
+                        showModal={() => {
+                          setDeleteModalOpen(true);
+                          setSelectedRowId(accessoryName1);
+                        }}
+                      />
                     </td>
                     <td>
                       <TableBtn type="view" />
