@@ -4,15 +4,31 @@ import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import { useState } from "react";
+import AccessoriesViewModal from "../../components/Modals/AccessoriesViewModal";
 
 export default function Accessories() {
   let maxAvail = 10;
   let availValue = 7;
   let accessoryName1 = "DVI Cable";
   let accessoryName2 = "HDMI Cable";
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedRowId, setSelectedRowId] = useState(null);
+
+  console.log("modal edit: ", isEditModalOpen);
+  console.log("modal delete: ", isDeleteModalOpen);
+  console.log("modal view: ", isViewModalOpen);
 
   return (
     <>
+      {isEditModalOpen && (
+        <AccessoriesViewModal
+          id={selectedRowId}
+          closeModal={() => setEditModalOpen(false)}
+        />
+      )}
       <nav>
         <NavBar />
       </nav>
@@ -84,13 +100,19 @@ export default function Accessories() {
                   <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
                   <td>December 31, 2025</td>
                   <td>
-                    <TableBtn type="edit" navigatePage={""} />
+                    <TableBtn type="edit" />
                   </td>
                   <td>
                     <TableBtn type="delete" navigatePage={""} />
                   </td>
                   <td>
-                    <TableBtn type="view" navigatePage={""} />
+                    <TableBtn
+                      type="view"
+                      showModal={() => {
+                        setEditModalOpen(true);
+                        setSelectedRowId(accessoryName1);
+                      }}
+                    />
                   </td>
                 </tr>
                 <tr>
@@ -132,7 +154,13 @@ export default function Accessories() {
                     <TableBtn type="delete" navigatePage={""} />
                   </td>
                   <td>
-                    <TableBtn type="view" navigatePage={""} />
+                    <TableBtn
+                      type="view"
+                      showModal={() => {
+                        setEditModalOpen(true);
+                        setSelectedRowId(accessoryName2);
+                      }}
+                    />
                   </td>
                 </tr>
               </tbody>
