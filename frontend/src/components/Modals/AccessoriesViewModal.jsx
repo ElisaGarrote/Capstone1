@@ -1,6 +1,6 @@
 import "../../styles/AccessoriesViewModal.css";
 import SampleImage from "../../assets/img/dvi.jpeg";
-import CloseIcon from "../..//assets/icons/close.svg";
+import CloseIcon from "../../assets/icons/close.svg";
 
 export default function AccessoriesViewModal({ id, closeModal }) {
   return (
