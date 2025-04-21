@@ -1,5 +1,5 @@
-import closeIcon from "../assets/icons/close.png";
-import checkIcon from "../assets/icons/check.png";
+import closeIcon from "../assets/icons/close.svg";
+import checkIcon from "../assets/icons/check.svg";
 import "../styles/custom-colors.css";
 import "../styles/alert.css";
 
