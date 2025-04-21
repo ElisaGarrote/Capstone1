@@ -1,0 +1,155 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: none;
+  color: var(--text-color);
+  font-family: poppins, sans-serif;
+}
+
+.login-page {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-color);
+}
+
+.login-page section {
+  display: flex;
+  height: 100vh;
+  width: 50vw;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-page .left-panel {
+  background-color: white;
+}
+
+.login-page .left-panel img {
+  width: 100%;
+  height: 50%;
+  object-fit: cover;
+}
+
+.login-page .right-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+/* .login-page .alert-warning {
+  display: flex;
+  width: 70%;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background-color: var(--warning-bg);
+  margin-bottom: 10px;
+}
+
+.login-page .alert-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: start;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-page .alert-container img {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 13px;
+  height: 13px;
+  padding: 2px;
+  border-radius: 50%;
+  background-color: var(--warning-text);
+  box-shadow: 0px 0px 0px 3px rgba(255, 62, 29, 0.25),
+    0px 0px 0px 6px rgba(255, 62, 29, 0.15);
+}
+
+.login-page .alert-container p {
+  font-size: 1rem;
+  color: var(--warning-text);
+  font-weight: 500;
+}
+
+/* For the alert to be visible or hidden. */
+/* .login-page .alert-warning {
+  display: block;
+} */
+
+.login-page form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 70%;
+  gap: 20px;
+}
+
+.login-page form fieldset {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  width: 100%;
+  gap: 10px;
+}
+
+.login-page form fieldset input {
+  display: flex;
+  width: 100%;
+  height: 44px;
+  padding: 18px 16px;
+  border-radius: 40px;
+  border: 1px solid #d3d3d3;
+  background-color: var(--bg-color);
+}
+
+.login-page input:focus {
+  outline: 2px solid var(--primary-color);
+}
+
+.login-page button {
+  width: 100%;
+  padding: 12px 32px;
+  border-radius: 40px;
+  background-color: var(--primary-color);
+  color: var(--bg-color);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: ease 0.5s;
+}
+
+.resend-button {
+  margin-bottom: 1rem;
+}
+
+.login-page button:hover {
+  background-color: rgba(0, 123, 255, 0.8);
+}
+
+.login-page a {
+  color: var(--primary-color);
+}
+
+.login-page a:hover {
+  color: rgba(0, 123, 255, 0.8);
+}
+
+.login-page p{
+  color: var(--text-color);
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.login-page p.resend-label {
+  text-align: left;
+  width: 100%;
+}

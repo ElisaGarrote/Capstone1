@@ -1,7 +1,50 @@
-import Form from "../components/Form"
+//import Form from "../components/Form";
+import "../styles/custom-colors.css";
+import "../styles/login.css";
+import loginImage from "../assets/img/login.png";
+import Alert from "../components/Alert";
+import "../styles/alert.css";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function Login() {
-    return <Form route="/api/token/" method="login" />
+  // return <Form route="/api/token/" method="login" />
+  const navigate = useNavigate();
+
+  // Redirect to "/" if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/");
+    }
+  }, []);
+  
+  return (
+    <main className="login-page">
+      <section className="left-panel">
+        <img src={loginImage} alt="login-illustration" />
+      </section>
+      <section className="right-panel">
+        <Alert message="Invalid credentials." type="danger" />
+        <form action="" method="post">
+          <fieldset>
+            <label>Email:</label>
+            <input type="text" placeholder="Enter your username" />
+          </fieldset>
+
+          <fieldset>
+            <label>Password:</label>
+            <input type="password" placeholder="Enter your password" />
+          </fieldset>
+
+          <button type="submit">Log In</button>
+        </form>
+        <Link to="/reset-password-email">Forgot Password?</Link>
+        <Link to="/register">Register</Link>
+      </section>
+    </main>
+  );
 }
 
-export default Login
+export default Login;
