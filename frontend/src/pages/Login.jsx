@@ -7,6 +7,8 @@ import Alert from "../components/Alert";
 
 function Login() {
   // return <Form route="/api/token/" method="login" />
+  const navigate = useNavigate();
+
   return (
     <main className="login-page">
       <section className="left-panel">
