@@ -1,5 +1,7 @@
 import closeIcon from "../assets/icons/close.png";
 import checkIcon from "../assets/icons/check.png";
+import "../styles/custom-colors.css";
+import "../styles/alert.css";
 
 function Alert({ message, type }) {
   let icon = type === "success" ? checkIcon : closeIcon;
