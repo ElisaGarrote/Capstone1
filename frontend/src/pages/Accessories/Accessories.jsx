@@ -6,6 +6,8 @@ import SampleImage from "../../assets/img/dvi.jpeg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import { useState } from "react";
 import AccessoriesViewModal from "../../components/Modals/AccessoriesViewModal";
+import DeleteModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
 
 export default function Accessories() {
   let maxAvail = 10;
@@ -16,19 +18,39 @@ export default function Accessories() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedRowId, setSelectedRowId] = useState(null);
+  const [isDeleteSuccess, setDeleteSucess] = useState(false);
 
   console.log("modal edit: ", isEditModalOpen);
   console.log("modal delete: ", isDeleteModalOpen);
   console.log("modal view: ", isViewModalOpen);
+  console.log("delete confirm: ", isDeleteSuccess);
 
   return (
     <>
-      {isEditModalOpen && (
+      {isViewModalOpen && (
         <AccessoriesViewModal
           id={selectedRowId}
-          closeModal={() => setEditModalOpen(false)}
+          closeModal={() => setViewModalOpen(false)}
         />
       )}
+
+      {isDeleteModalOpen && (
+        <DeleteModal
+          id={selectedRowId}
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={() => {
+            setDeleteSucess(true);
+            setTimeout(() => {
+              setDeleteSucess(false);
+            }, 5000);
+          }}
+        />
+      )}
+
+      {isDeleteSuccess && (
+        <Alert message="Deleted Successfully!" type="success" />
+      )}
+
       <nav>
         <NavBar />
       </nav>
@@ -103,13 +125,19 @@ export default function Accessories() {
                     <TableBtn type="edit" />
                   </td>
                   <td>
-                    <TableBtn type="delete" navigatePage={""} />
+                    <TableBtn
+                      type="delete"
+                      showModal={() => {
+                        setDeleteModalOpen(true);
+                        setSelectedRowId(accessoryName1);
+                      }}
+                    />
                   </td>
                   <td>
                     <TableBtn
                       type="view"
                       showModal={() => {
-                        setEditModalOpen(true);
+                        setViewModalOpen(true);
                         setSelectedRowId(accessoryName1);
                       }}
                     />
@@ -151,13 +179,19 @@ export default function Accessories() {
                     <TableBtn type="edit" navigatePage={""} />
                   </td>
                   <td>
-                    <TableBtn type="delete" navigatePage={""} />
+                    <TableBtn
+                      type="delete"
+                      showModal={() => {
+                        setDeleteModalOpen(true);
+                        setSelectedRowId(accessoryName1);
+                      }}
+                    />
                   </td>
                   <td>
                     <TableBtn
                       type="view"
                       showModal={() => {
-                        setEditModalOpen(true);
+                        setViewModalOpen(true);
                         setSelectedRowId(accessoryName2);
                       }}
                     />
