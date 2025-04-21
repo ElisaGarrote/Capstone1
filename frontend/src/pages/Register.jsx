@@ -81,6 +81,8 @@ function Register() {
 
       <section className="right-panel">
         {errorMessage && <Alert message={errorMessage} type="danger" />}
+        {successMessage && <Alert message={successMessage} type="success" />}
+        
         <div className="form-header">
           <h1>Admin Registration</h1>
           <p>Welcome! Please register to create an admin account.</p>

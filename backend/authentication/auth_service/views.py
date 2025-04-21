@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 # Create your views here.
-class RegisterViewset(viewsets.ViewSet):
+class RegisterViewset(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
