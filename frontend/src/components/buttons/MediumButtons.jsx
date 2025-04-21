@@ -5,6 +5,10 @@ import { useNavigate } from "react-router-dom";
 import plusIcon from "../../assets/icons/plus.svg";
 
 export default function MediumButtons({ type, navigatePage }) {
+  /* List of Button Type:
+    - new
+    - export
+   */
   let icon;
   const navigate = useNavigate();
 
