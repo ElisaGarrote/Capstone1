@@ -8,6 +8,8 @@ export default function MediumButtons({ type, navigatePage }) {
   /* List of Button Type:
     - new
     - export
+    - schedule-audits
+    - perform-audits
    */
   let icon;
   const navigate = useNavigate();
@@ -29,7 +31,7 @@ export default function MediumButtons({ type, navigatePage }) {
     >
       {/* The img tag will be rendered when the icon is not null*/}
       {icon && <img src={icon} alt="" />}
-      {type}
+      {type.replace("-", " ")}
     </button>
   );
 }
