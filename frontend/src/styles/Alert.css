@@ -4,21 +4,28 @@
   justify-content: start;
   align-items: center;
   width: 35vw;
-  padding: 10px 18px;
+  padding: 12px 18px;
   border-radius: 10px;
   margin-bottom: 10px;
   gap: 12px;
   font-size: 1rem;
   font-weight: 500;
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  right: 50%;
+  top: 100px;
+  transform: translate(-50%, -50%);
+  animation: fade-in-out 5s ease-in-out;
 }
 
 .alert img {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 13px;
-  height: 13px;
-  padding: 2px;
+  width: 15px;
+  height: 15px;
+  padding: 3px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -47,10 +54,17 @@
     0px 0px 0px 6px rgba(113, 221, 55, 0.15);
 }
 
-/* To make the alert as visible or hidden.
-   Use diplay as none if you want to hide the alert.
-   Other wise, use flex.
-*/
-.alert {
-  display: flex;
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
