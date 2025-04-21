@@ -1,6 +1,7 @@
 :root {
   --bg-color: #fcfcfc;
   --primary-color: #007bff;
+  --primary-color-hover: rgba(0, 123, 255, 0.8);
   --text-color: #242424;
   --secondary-text-color: #545f71;
 
@@ -8,4 +9,16 @@
   --warning-text: #ff3e1d;
   --success-bg: #e8f9df;
   --success-text: #71dd37;
+
+  /* Status colors */
+  --archived: #e7e8ec;
+  --archiveda-text: #132144;
+  --deployed: #007bff33;
+  --deployed-text: #007bff;
+  --undeployable: #ff3b3033;
+  --undeployable-text: #cc2f26;
+  --pending: #ff950033;
+  --pending-text: #ff9500;
+  --deployable: #34c75933;
+  --deployable-text: #34c759;
 }

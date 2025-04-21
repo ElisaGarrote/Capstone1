@@ -1,0 +1,86 @@
+.status-archived,
+.status-deployed,
+.status-undeployable,
+.status-pending,
+.status-deployable {
+  display: inline-flex;
+  height: 4vh;
+  width: auto;
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 40px;
+  gap: 5px;
+  font-size: 0.75rem;
+  overflow: hidden;
+}
+
+.status-archived .circle,
+.status-deployed .circle,
+.status-undeployable .circle,
+.status-pending .circle,
+.status-deployable .circle {
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  margin-right: 3px;
+}
+
+.status-deployed .icon img {
+  height: 12px;
+  width: 12px;
+}
+
+.status-archived {
+  background-color: var(--archived);
+  color: var(--archived-text);
+}
+
+.status-archived .circle {
+  background-color: #132144;
+  box-shadow: 0 0 0 2px rgba(19, 33, 68, 0.25), 0 0 0 4px rgba(19, 33, 68, 0.25);
+}
+
+.status-deployed {
+  background-color: var(--deployed);
+  color: var(--deployed-text);
+}
+
+.status-deployed .circle {
+  background-color: var(--deployed-text);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25),
+    0 0 0 4px rgba(0, 123, 255, 0.25);
+}
+
+.status-undeployable {
+  background-color: var(--undeployable);
+  color: var(--undeployable-text);
+}
+
+.status-undeployable .circle {
+  background-color: var(--undeployable-text);
+  box-shadow: 0 0 0 2px rgba(204, 47, 38, 0.25),
+    0 0 0 4px rgba(204, 47, 38, 0.25);
+}
+
+.status-pending {
+  background-color: var(--pending);
+  color: var(--pending-text);
+}
+
+.status-pending .circle {
+  background-color: var(--pending-text);
+  box-shadow: 0 0 0 2px rgba(255, 149, 0, 0.25),
+    0 0 0 4px rgba(255, 149, 0, 0.25);
+}
+
+.status-deployable {
+  background-color: var(--deployable);
+  color: var(--deployable-text);
+}
+
+.status-deployable .circle {
+  background-color: var(--deployable-text);
+  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.25),
+    0 0 0 4px rgba(52, 199, 89, 0.25);
+}
