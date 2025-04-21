@@ -20,7 +20,9 @@ export default function AssetAudits() {
           <h1>Asset Audits</h1>
           <div>
             <button>Schedule Audits</button>
-            <button>Perform Audits</button>
+            <button onClick={() => navigate("/audits/new")}>
+              Perform Audits
+            </button>
           </div>
         </section>
         <section className="main-middle">
@@ -35,7 +37,6 @@ export default function AssetAudits() {
                   <input type="text" placeholder="Search..." />
                 </form>
                 <MediumButtons type="export" navigatePage="" />
-                <MediumButtons type="new" navigatePage="" />
               </div>
             </section>
             <section className="middle">
