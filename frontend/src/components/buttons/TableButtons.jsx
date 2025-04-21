@@ -8,11 +8,7 @@ import editIcon from "../../assets/icons/edit.svg";
 import deleteIcon from "../../assets/icons/delete.svg";
 import viewIcon from "../../assets/icons/eye.svg";
 
-export default function TableButtons({
-  type,
-  navigatePage,
-  id,
-}) {
+export default function TableButtons({ type, navigatePage, id, showModal }) {
   let icon;
   const navigate = useNavigate();
 
@@ -39,10 +35,10 @@ export default function TableButtons({
     <button
       type="button"
       className={`table-buttons-${type}`}
-      onClick={() => 
-        navigate(navigatePage, {
-          state: {id} // Pass the value of id as state in the next page
-        })
+      onClick={
+        navigatePage != null
+          ? () => navigate(navigatePage, { state: { id } })
+          : showModal
       }
     >
       <img src={icon} alt="" />
