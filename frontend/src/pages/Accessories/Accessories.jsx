@@ -8,8 +8,11 @@ import { useState } from "react";
 import AccessoriesViewModal from "../../components/Modals/AccessoriesViewModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function Accessories() {
+  const location = useLocation();
   let maxAvail = 10;
   let availValue = 7;
   let accessoryName1 = "DVI Cable";
@@ -20,10 +23,27 @@ export default function Accessories() {
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
 
+  // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
+  // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
+  const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
+
+  // Set the setDeleteSuccess to true when the isDeleteSuccessFromEdit is true.
+  // And reset the setDeleteSucces to false after 5 seconds.
+  useEffect(() => {
+    if (isDeleteSuccessFromEdit == true) {
+      setDeleteSucess(true);
+      setTimeout(() => {
+        setDeleteSucess(false);
+      }, 5000);
+    }
+  }, [isDeleteSuccessFromEdit]); // This will be executed every time the isDeleteSucessFromEdit changes.
+
+  // For debugging only.
   console.log("modal edit: ", isEditModalOpen);
   console.log("modal delete: ", isDeleteModalOpen);
   console.log("modal view: ", isViewModalOpen);
   console.log("delete confirm: ", isDeleteSuccess);
+  console.log("delete from edit: ", isDeleteSuccessFromEdit);
 
   return (
     <>
@@ -122,7 +142,11 @@ export default function Accessories() {
                   <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
                   <td>December 31, 2025</td>
                   <td>
-                    <TableBtn type="edit" />
+                    <TableBtn
+                      type="edit"
+                      navigatePage={"/accessories/edit"}
+                      id={accessoryName1}
+                    />
                   </td>
                   <td>
                     <TableBtn
@@ -176,7 +200,11 @@ export default function Accessories() {
                   <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
                   <td>December 31, 2025</td>
                   <td>
-                    <TableBtn type="edit" navigatePage={""} />
+                    <TableBtn
+                      type="edit"
+                      navigatePage={"/accessories/edit"}
+                      id={accessoryName2}
+                    />
                   </td>
                   <td>
                     <TableBtn
