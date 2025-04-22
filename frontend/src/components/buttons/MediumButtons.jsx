@@ -3,13 +3,15 @@ import "../../styles/MediumButtons.css";
 
 import { useNavigate } from "react-router-dom";
 import plusIcon from "../../assets/icons/plus.svg";
+import deleteIcon from "../../assets/icons/delete-white.svg";
 
-export default function MediumButtons({ type, navigatePage }) {
+export default function MediumButtons({ type, navigatePage, deleteModalOpen }) {
   /* List of Button Type:
     - new
     - export
     - schedule-audits
     - perform-audits
+    - delete
    */
   let icon;
   const navigate = useNavigate();
@@ -19,6 +21,9 @@ export default function MediumButtons({ type, navigatePage }) {
     case "new":
       icon = plusIcon;
       break;
+    case "delete":
+      icon = deleteIcon;
+      break;
     default:
       icon = null;
   }
@@ -27,7 +32,9 @@ export default function MediumButtons({ type, navigatePage }) {
     <button
       type="button"
       className={`medium-button-${type}`}
-      onClick={() => navigate(navigatePage)}
+      onClick={
+        type == "delete" ? deleteModalOpen : () => navigate(navigatePage)
+      }
     >
       {/* The img tag will be rendered when the icon is not null*/}
       {icon && <img src={icon} alt="" />}
