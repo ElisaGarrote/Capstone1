@@ -172,19 +172,7 @@ td {
   width: 16vw;
 }
 
-/* Set the width of the notes header and its data */
-.asset-audits-page table th:nth-child(5),
-.asset-audits-page table td:nth-child(5) {
-  width: 10vw;
-}
-
-/* Set the width of the notes head and its data when the notes is null (added classname of blank) */
-.asset-audits-page table th:nth-child(5).blank,
-.asset-audits-page table td:nth-child(5).blank {
-  width: 5.5vw;
-}
-
-/* Set the width of the edit, and more header and its data*/
+/* Set the width of the edit, and view header and its data*/
 .asset-audits-page table th:nth-last-child(1),
 .asset-audits-page table td:nth-last-child(1),
 .asset-audits-page table th:nth-last-child(3),
