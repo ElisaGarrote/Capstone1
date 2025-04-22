@@ -4,7 +4,7 @@
   width: 100vw;
   justify-content: center;
   align-items: center;
-  position: absolute;
+  position: fixed;
   z-index: 2;
 }
 
