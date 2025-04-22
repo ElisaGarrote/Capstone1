@@ -10,6 +10,7 @@ import Accessories from "./pages/Accessories/Accessories";
 import AccessoriesRegistration from "./pages/accessories/AccessoriesRegistration";
 import CheckinAccessory from "./pages/accessories/CheckinAccessory";
 import CheckoutAccessory from "./pages/accessories/CheckoutAccessory";
+import EditAccessories from "./pages/accessories/EditAccessories";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
@@ -50,6 +51,7 @@ function App() {
         />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
+        <Route path="/accessories/edit" element={<EditAccessories />} />
         <Route path="/audits/" element={<AssetAudits />} />
         <Route path="/audits/overdue" element={<OverdueAudits />} />
         <Route path="/audits/scheduled" element={<ScheduledAudits />} />
