@@ -4,14 +4,40 @@ import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
 import Status from "../../components/Status";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import TabNavBar from "../../components/TabNavBar";
+import DeleteModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
+import { useState } from "react";
 
 export default function CompletedAudits() {
-  const navigate = useNavigate();
+  const location = useLocation();
+  let assetId = 123880;
+  let assetName = "Microsoft Surface Pro 11";
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleteSuccess, setDeleteSucess] = useState(false);
 
   return (
     <>
+      {/* Handle the delete modal.
+      Open this model if the isDeleteModalOpen state is true */}
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={() => {
+            setDeleteSucess(true);
+            setTimeout(() => {
+              setDeleteSucess(false);
+            }, 5000);
+          }}
+        />
+      )}
+
+      {/* Handle the display of the success alert.
+       Display this if the isDeleteSuccess state is true */}
+      {isDeleteSuccess && (
+        <Alert message="Deleted Successfully!" type="success" />
+      )}
       <nav>
         <NavBar />
       </nav>
@@ -52,7 +78,6 @@ export default function CompletedAudits() {
                     <th>STATUS</th>
                     <th>LOCATION</th>
                     <th>PERFORM BY</th>
-                    <th>EDIT</th>
                     <th>DELETE</th>
                     <th>VIEW</th>
                   </tr>
@@ -63,20 +88,30 @@ export default function CompletedAudits() {
                       <input type="checkbox" name="" id="" />
                     </td>
                     <td>December 31, 2025</td>
-                    <td>100019 - Macbook Pro 16"</td>
+                    <td>
+                      {assetId} - {assetName}
+                    </td>
                     <td>
                       <Status type="undeployable" name="Being Repaired" />
                     </td>
                     <td>General Santos City</td>
                     <td>Pia Piatos-Lim</td>
                     <td>
-                      <TableBtn type="edit" />
+                      <TableBtn
+                        type="delete"
+                        showModal={() => {
+                          setDeleteModalOpen(true);
+                          setSelectedRowId(assetId);
+                        }}
+                      />
                     </td>
                     <td>
-                      <TableBtn type="delete" />
-                    </td>
-                    <td>
-                      <TableBtn type="view" />
+                      <TableBtn
+                        type="view"
+                        navigatePage="/audits/view"
+                        id={`${assetId} - ${assetName}`}
+                        previousPage={location.pathname}
+                      />
                     </td>
                   </tr>
                 </tbody>

@@ -5,11 +5,69 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
 import Status from "../../components/Status";
 import TabNavBar from "../../components/TabNavBar";
+import { useLocation } from "react-router-dom";
+import DeleteModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
+import { useState, useEffect } from "react";
 
 export default function OverdueAudits() {
   let notes = null;
+  let assetId = 100028;
+  let assetName = 'Macbook Pro 14"';
+  const location = useLocation();
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [isUpdated, setUpdated] = useState(false);
+
+  // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
+  // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
+  const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
+  const isUpdateFromEdit = location.state?.isUpdateFromEdit;
+
+  // Set the setDeleteSuccess state to true when the isDeleteSuccessFromEdit is true.
+  // And reset the setDeleteSucces state to false after 5 seconds.
+  useEffect(() => {
+    if (isDeleteSuccessFromEdit == true) {
+      setDeleteSucess(true);
+      setTimeout(() => {
+        setDeleteSucess(false);
+      }, 5000);
+    }
+  }, [isDeleteSuccessFromEdit]); // This will be executed every time the isDeleteSucessFromEdit changes.
+
+  useEffect(() => {
+    if (isUpdateFromEdit == true) {
+      setUpdated(true);
+      setTimeout(() => {
+        setUpdated(false);
+      }, 5000);
+    }
+  }, [isUpdateFromEdit]);
+
   return (
     <>
+      {/* Handle the delete modal.
+      Open this model if the isDeleteModalOpen state is true */}
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={() => {
+            setDeleteSucess(true);
+            setTimeout(() => {
+              setDeleteSucess(false);
+            }, 5000);
+          }}
+        />
+      )}
+
+      {/* Handle the display of the success alert.
+       Display this if the isDeleteSuccess state is true */}
+      {isDeleteSuccess && (
+        <Alert message="Deleted Successfully!" type="success" />
+      )}
+
+      {isUpdated && <Alert message="Update Successfully!" type="success" />}
+
       <nav>
         <NavBar />
       </nav>
@@ -62,7 +120,9 @@ export default function OverdueAudits() {
                     </td>
                     <td>December 31, 2025</td>
                     <td>31 days</td>
-                    <td>100019 - Macbook Pro 16"</td>
+                    <td>
+                      {assetId} - {assetName}
+                    </td>
                     <td>
                       <Status
                         type="deployed"
@@ -74,13 +134,29 @@ export default function OverdueAudits() {
                       {notes == null ? "-" : notes}
                     </td>
                     <td>
-                      <TableBtn type="edit" />
+                      <TableBtn
+                        type="edit"
+                        navigatePage={"/audits/edit"}
+                        id={`${assetId} - ${assetName}`}
+                        previousPage={location.pathname}
+                      />
                     </td>
                     <td>
-                      <TableBtn type="delete" />
+                      <TableBtn
+                        type="delete"
+                        showModal={() => {
+                          setDeleteModalOpen(true);
+                          setSelectedRowId(assetId);
+                        }}
+                      />
                     </td>
                     <td>
-                      <TableBtn type="view" />
+                      <TableBtn
+                        type="view"
+                        navigatePage="/audits/view"
+                        id={`${assetId} - ${assetName}`}
+                        previousPage={location.pathname}
+                      />
                     </td>
                   </tr>
                 </tbody>
