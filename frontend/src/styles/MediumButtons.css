@@ -1,7 +1,8 @@
 .medium-button-new,
 .medium-button-export,
 .medium-button-schedule-audits,
-.medium-button-perform-audits {
+.medium-button-perform-audits,
+.medium-button-delete {
   display: flex;
   height: 40px;
   justify-content: center;
@@ -19,7 +20,8 @@
   color: var(--bg-color);
 }
 
-.medium-button-new img {
+.medium-button-new img,
+.medium-button-delete img {
   height: 16px;
   width: 16px;
 }
@@ -51,4 +53,14 @@
 .medium-button-schedule-audits:hover,
 .medium-button-perform-audits:hover {
   background-color: var(--primary-color-hover);
+}
+
+.medium-button-delete {
+  background-color: red;
+  color: var(--bg-color);
+  transition: 0.5s ease;
+}
+
+.medium-button-delete:hover {
+  background-color: darkred;
 }
