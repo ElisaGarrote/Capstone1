@@ -5,11 +5,17 @@
   width: auto;
   padding: 100px 38px 38px 38px;
   background-color: var(--bg-color);
+  overflow-y: auto;
+}
+
+.fix-scrollbar {
+  height: 100vh;
 }
 
 .perform-audit-page section {
   display: flex;
   flex-direction: row;
+  height: auto;
   width: 100%;
   gap: 20px;
 }
