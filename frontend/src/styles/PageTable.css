@@ -161,4 +161,17 @@
   color: var(--secondary-text-color);
 }
 
+.input-error {
+  border: 1px solid var(--warning-text) !important;
+  outline: none;
+}
+
+.error-message {
+  color: var(--warning-text);
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
+}
+
+
   
