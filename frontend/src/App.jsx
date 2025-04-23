@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-import react from "react"
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import Login from "./pages/Login"
-import Register from "./pages/Register"
-import Home from "./pages/Home"
-import NotFound from "./pages/NotFound"
-import ProtectedRoute from "./components/ProtectedRoute"
-import ResetPasswordEmail from "./pages/ResetPasswordEmail"
-import SetPassword from "./pages/SetPassword"
-=======
 import react from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
@@ -27,7 +16,6 @@ import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
 import CompletedAudits from "./pages/asset-audit/CompletedAudtis";
 import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
->>>>>>> benj/dev
 
 function Logout() {
   localStorage.clear();
@@ -53,11 +41,6 @@ function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
-<<<<<<< HEAD
-        <Route path="/register" element={<Register />} />
-        <Route path="/reset-password-email" element={<ResetPasswordEmail />} />
-        <Route path="/set-password" element={<SetPassword />} />
-=======
         <Route path="/register" element={<RegisterAndLogout />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/accessories" element={<Accessories />} />
@@ -73,7 +56,6 @@ function App() {
         <Route path="/audits/completed" element={<CompletedAudits />} />
         <Route path="/audits/new" element={<PerformAudits />} />
         <Route path="/audits/schedule" element={<ScheduleRegistration />} />
->>>>>>> benj/dev
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
