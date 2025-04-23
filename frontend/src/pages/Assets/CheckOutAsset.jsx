@@ -18,6 +18,7 @@ export default function CheckOutAsset() {
   const employeeList = ['Employee 1', 'Employee 2', 'Employee 3'];
   const locationList = ['Location 1', 'Location 2', 'Location 3'];
   const conditionList = ['Excellent', 'Good', 'Fair', 'Poor'];
+  const currentDate = new Date().toISOString().split("T")[0];
   
   const {
     register,
@@ -30,7 +31,7 @@ export default function CheckOutAsset() {
       checkoutTo: "employee",
       employee: '',
       location: '',
-      checkoutDate: new Date().toISOString().split('T')[0],
+      checkoutDate: {currentDate},
       expectedReturnDate: '',
       condition: '',
       notes: '',
@@ -56,14 +57,14 @@ export default function CheckOutAsset() {
 
   const onSubmit = (data) => {
     console.log("Form submitted:", data);
-    console.log("Asset ID:", Id);
+    console.log("Asset ID:", id);
     navigate("/assets");
   };
 
   return (
     <>
       <nav><NavBar /></nav>
-      <main className="checkin-accessory-page">
+      <main className="check-in-out-page">
         <section className="top">
           <TopSecFormPage
             root="Assets"
@@ -154,7 +155,7 @@ export default function CheckOutAsset() {
                 <input
                   type="text"  // Use "text" instead of "date" to prevent date picker
                   readOnly
-                  value={new Date().toLocaleDateString('en-CA')}  // Format: YYYY-MM-DD
+                  value={currentDate}  // Format: YYYY-MM-DD
                   className={errors.checkoutDate ? 'input-error' : ''}
                   {...register("checkoutDate")}
                 />

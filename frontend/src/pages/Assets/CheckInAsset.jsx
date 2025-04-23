@@ -5,18 +5,15 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
-import PersonIcon from "../../assets/icons/person.svg";
-import LocationIcon from "../../assets/icons/location.svg";
 import { useForm } from "react-hook-form";
 
 export default function CheckInAsset() {
   const location = useLocation();
   const navigate = useNavigate();
   const { id, assetId, product, image, employee, checkOutDate, returnDate, condition } = location.state || {};
+  const currentDate = new Date().toISOString().split("T")[0];
   
   // Dropdown lists for easier maintenance
-  const employeeList = ['Employee 1', 'Employee 2', 'Employee 3'];
-  const locationList = ['Location 1', 'Location 2', 'Location 3'];
   const conditionList = ['Excellent', 'Good', 'Fair', 'Poor'];
 
   const {
@@ -30,16 +27,14 @@ export default function CheckInAsset() {
       checkoutTo: "employee",
       employee: '',
       location: '',
-      checkoutDate: new Date().toISOString().split('T')[0],
+      checkoutDate: {currentDate},
       expectedReturnDate: '',
       condition: '',
       notes: '',
-      photos: []
+      image: []
     }
   });
 
-  const checkoutTo = watch("checkoutTo");
-  const checkoutDate = watch("checkoutDate");
   const [previewImages, setPreviewImages] = useState([]);
 
   const handleImagesSelection = (event) => {
@@ -47,10 +42,10 @@ export default function CheckInAsset() {
     if (selectedFiles.length > 0) {
       const imagesArray = selectedFiles.map((file) => URL.createObjectURL(file));
       setPreviewImages(imagesArray);
-      setValue("photos", selectedFiles);
+      setValue("image", selectedFiles);
     } else {
       setPreviewImages([]);
-      setValue("photos", []);
+      setValue("image", []);
     }
   };
 
@@ -62,7 +57,7 @@ export default function CheckInAsset() {
   return (
     <>
       <nav><NavBar /></nav>
-      <main className="checkin-accessory-page">
+      <main className="check-in-out-page">
         <section className="top">
           <TopSecFormPage
             root="Assets"
@@ -73,7 +68,7 @@ export default function CheckInAsset() {
         </section>
         <section className="middle">
           <section className="recent-checkout-info">
-            <h2>Check-out Info</h2>
+            <h2>Check-Out Information</h2>
             <fieldset>
               <label>Checked-Out To:</label>
               <p>{employee}</p>
@@ -91,13 +86,9 @@ export default function CheckInAsset() {
               <p>{condition}</p>
             </fieldset>
 
-            <h2>Asset Info</h2>
+            <h2>Asset Information</h2>
             <fieldset>
               <img src={image} alt="asset" />
-            </fieldset>
-            <fieldset>
-              <label>Asset ID:</label>
-              <p>{id}</p>
             </fieldset>
             <fieldset>
               <label>Asset ID:</label>
@@ -115,12 +106,12 @@ export default function CheckInAsset() {
               <fieldset>
                 <label>Check-In Date *</label>
                 <input
-                  type="date"
+                  type="text"  // Use "text" instead of "date" to prevent date picker
+                  readOnly
+                  value={currentDate}  // Format: YYYY-MM-DD
                   className={errors.checkInDate ? 'input-error' : ''}
-                  min={checkoutDate}
-                  {...register("checkInDate", { required: 'Check-in date is required' })}
+                  {...register("checkInDate")}
                 />
-                {errors.checkInDate && <span className='error-message'>{errors.checkInDate.message}</span>}
               </fieldset>
 
               <fieldset>
@@ -143,7 +134,7 @@ export default function CheckInAsset() {
                         type="button"
                         onClick={() => {
                           setPreviewImages(previewImages.filter((_, i) => i !== index));
-                          setValue("photos", previewImages.filter((_, i) => i !== index));
+                          setValue("image", previewImages.filter((_, i) => i !== index));
                         }}
                       >
                         <img src={CloseIcon} alt="Remove" />

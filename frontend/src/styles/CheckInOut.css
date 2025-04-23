@@ -1,4 +1,4 @@
-.checkin-accessory-page {
+.check-in-out-page {
   display: flex;
   flex-direction: column;
   height: auto;
@@ -7,32 +7,32 @@
   background-color: var(--bg-color);
 }
 
-.checkin-accessory-page section {
+.check-in-out-page section {
   display: flex;
   flex-direction: row;
   width: 100%;
   gap: 20px;
 }
 
-.checkin-accessory-page .recent-checkout-info fieldset {
+.check-in-out-page .recent-checkout-info fieldset {
   display: flex;
   flex-direction: column;
 }
 
-.checkin-accessory-page .recent-checkout-info h2 {
+.check-in-out-page .recent-checkout-info h2 {
   font-size: 1.25rem;
   color: var(--secondary-text-color);
 }
 
-.checkin-accessory-page .recent-checkout-info p {
+.check-in-out-page .recent-checkout-info p {
   display: flex;
   color: var(--secondary-text-color);
   width: 100%;
   overflow-wrap: anywhere;
 }
 
-.checkin-accessory-page .checkin-form,
-.checkin-accessory-page .recent-checkout-info {
+.check-in-out-page .checkin-form,
+.check-in-out-page .recent-checkout-info {
   display: flex;
   flex-direction: column;
   height: auto;
@@ -46,34 +46,34 @@
   border: 1px solid #d3d3d3;
 }
 
-.checkin-accessory-page .recent-checkout-info {
+.check-in-out-page .recent-checkout-info {
   display: flex;
-  align-self: start;
+  align-self: flex-start;
   width: 35%;
   background-color: var(--bg-color);
   box-shadow: none;
 }
 
-.checkin-accessory-page form {
+.check-in-out-page form {
   display: flex;
   width: 100%;
   flex-direction: column;
   gap: 20px;
 }
 
-.checkin-accessory-page form fieldset {
+.check-in-out-page form fieldset {
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
 
-.checkin-accessory-page fieldset label:not(.upload-image-btn) {
+.check-in-out-page fieldset label:not(.upload-image-btn) {
   color: var(--secondary-text-color);
   font-weight: 600;
 }
 
-.checkin-accessory-page select,
-.checkin-accessory-page textarea {
+.check-in-out-page select,
+.check-in-out-page textarea {
   width: 100%;
   padding: 13px 16px;
   border-radius: 10px;
@@ -81,7 +81,7 @@
   justify-content: flex-start;
 }
 
-.checkin-accessory-page form fieldset:nth-child(1) div {
+.check-in-out-page form fieldset:nth-child(1) div {
   display: flex;
   flex-direction: row;
   gap: 20px;
@@ -89,26 +89,26 @@
   justify-content: flex-start;
 }
 
-.checkin-accessory-page .employee-radio-container img,
-.checkin-accessory-page .location-radio-container img {
+.check-in-out-page .employee-radio-container img,
+.check-in-out-page .location-radio-container img {
   height: 20px;
   left: 20px;
 }
 
-.checkin-accessory-page input,
-.checkin-accessory-page select,
-.checkin-accessory-page textarea {
+.check-in-out-page input,
+.check-in-out-page select,
+.check-in-out-page textarea {
   width: 100%;
   padding: 13px 16px;
   border-radius: 10px;
   border: 1px solid #d3d3d3;
 }
 
-.checkin-accessory-page textarea {
+.check-in-out-page textarea {
   height: 13vh;
 }
 
-.checkin-accessory-page .save-btn {
+.check-in-out-page .save-btn {
   justify-content: center;
   align-items: center;
   height: 48px;
@@ -120,18 +120,18 @@
   cursor: pointer;
 }
 
-.checkin-accessory-page .save-btn:hover {
+.check-in-out-page .save-btn:hover {
   background-color: var(--primary-color-hover);
 }
 
-.checkin-accessory-page .images-container {
+.check-in-out-page .images-container {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   gap: 10px;
 }
 
-.checkin-accessory-page .image-selected {
+.check-in-out-page .image-selected {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -141,7 +141,7 @@
   position: relative;
 }
 
-.checkin-accessory-page .image-selected img:not(.image-selected button img) {
+.check-in-out-page .image-selected img:not(.image-selected button img) {
   display: flex;
   height: 100%;
   width: 100%;
@@ -150,7 +150,7 @@
   padding: 2px;
 }
 
-.checkin-accessory-page .image-selected button {
+.check-in-out-page .image-selected button {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -166,16 +166,16 @@
   cursor: pointer;
 }
 
-.checkin-accessory-page .image-selected button:hover {
+.check-in-out-page .image-selected button:hover {
   background-color: darkred;
 }
 
-.checkin-accessory-page .image-selected button img {
+.check-in-out-page .image-selected button img {
   height: 12px;
   width: 12px;
 }
 
-.checkin-accessory-page .upload-image-btn {
+.check-in-out-page .upload-image-btn {
   display: flex;
   width: fit-content;
   justify-content: center;
@@ -189,7 +189,7 @@
   transition: 0.5s ease;
 }
 
-.checkin-accessory-page .upload-image-btn:hover {
+.check-in-out-page .upload-image-btn:hover {
   background-color: var(--primary-color-hover);
 }
 

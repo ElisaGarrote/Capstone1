@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
 import NavBar from "../../components/NavBar";
@@ -47,6 +48,7 @@ const sampleItems = [
 export default function Components() {
   const [checkedItems, setCheckedItems] = useState([]);
   const allChecked = checkedItems.length === sampleItems.length;
+  const navigate = useNavigate(); // Use useNavigate hook
 
   const toggleSelectAll = () => {
     if (allChecked) {
@@ -60,6 +62,32 @@ export default function Components() {
     setCheckedItems((prev) =>
       prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
+  };
+
+  const handleCheckInOut = (item) => {
+    if (item.status === 'Deployed') {
+      navigate(`/components/check-in/${item.id}`, {
+        state: {
+          id: item.id,
+          image: item.image,
+          name: item.componentName,
+          category: item.category,
+          assetId: 1001,
+          assetName: "Logitech Mouse",
+          checkOutDate: "2023-10-01",
+          notes: "Component checked out note testing",
+        },
+      });
+    } else {
+      navigate(`/components/check-out/${item.id}`, {
+        state: {
+          id: item.id,
+          image: item.image,
+          name: item.componentName,
+          category: item.category,
+        },
+      });
+    }
   };
 
   return (
@@ -116,11 +144,12 @@ export default function Components() {
                     </td>
                     <td>{item.componentName}</td>
                     <td>
-                      {item.status === 'Deployed' ? (
-                        <button className="check-in-btn" onClick={() => handleCheckIn(item.id)}>{"< Check-In"}</button>
-                      ) : (
-                        <button className="check-out-btn" onClick={() => handleCheckOut(item.id)}>{"> Check-Out"}</button>
-                      )}
+                      <button
+                        className={item.status === 'Deployed' ? "check-in-btn" : "check-out-btn"}
+                        onClick={() => handleCheckInOut(item)}
+                      >
+                        {item.status === 'Deployed' ? "< Check-In" : "> Check-Out"}
+                      </button>
                     </td>
                     <td>{item.quantity}</td>
                     <td>{item.category}</td>
@@ -132,7 +161,7 @@ export default function Components() {
                       <TableBtn type="delete" onClick={() => handleDelete(item.id)} />
                     </td>
                     <td>
-                      <TableBtn type="view" onClick={() => handleView(item.id)} />
+                      <TableBtn type="view" navigatePage={`/assets/view/${item.id}`} />
                     </td>
                   </tr>
                 ))}
