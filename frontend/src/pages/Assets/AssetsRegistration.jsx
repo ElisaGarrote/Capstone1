@@ -23,7 +23,6 @@ export default function AssetsRegistration() {
       supplier: 'Amazon',
       location: 'Makati City',
       warrantyExpiration: '2027-05-02',
-      endOfLife: '2025-04-09',
       orderNumber: 'GJ08CX',
       purchaseDate: '2025-04-01',
       purchaseCost: 25000,
@@ -39,7 +38,6 @@ export default function AssetsRegistration() {
       supplier: 'GadgetWorld',
       location: 'Quezon City',
       warrantyExpiration: '2027-05-02',
-      endOfLife: '2025-04-09',
       orderNumber: '67890',
       purchaseDate: '2025-04-01',
       purchaseCost: 30000,
@@ -135,7 +133,7 @@ export default function AssetsRegistration() {
                   <option value="Ready for Deployment">Ready For Deployment</option>
                   <option value="Deployed">Deployed</option>
                 </select>
-                <MediumButtons type="new" disabled={!id} />
+                <MediumButtons type="new" />
               </div>
             </fieldset>
             <fieldset>
@@ -147,7 +145,7 @@ export default function AssetsRegistration() {
                   <option value="TechCorp">TechCorp</option>
                   <option value="GadgetWorld">GadgetWorld</option>
                 </select>
-                <MediumButtons type="new" disabled={!id} />
+                <MediumButtons type="new" />
               </div>
             </fieldset>
             <fieldset>
@@ -161,7 +159,7 @@ export default function AssetsRegistration() {
                   <option value="Makati City">Makati City</option>
                   <option value="Quezon City">Quezon City</option>
                 </select>
-                <MediumButtons type="new" disabled={!id} />
+                <MediumButtons type="new" />
               </div>
             </fieldset>
             <fieldset>
@@ -193,16 +191,6 @@ export default function AssetsRegistration() {
                 name="warrantyExpiration"
                 min={!id ? currentDate : undefined}
                 defaultValue={asset?.warrantyExpiration || ""}
-                readOnly={false}
-              />
-            </fieldset>
-            <fieldset>
-              <label htmlFor="end-of-life">End of Life</label>
-              <input
-                type="date"
-                name="endOfLife"
-                min={!id ? currentDate : undefined}
-                defaultValue={asset?.endOfLife || ""}
                 readOnly={false}
               />
             </fieldset>

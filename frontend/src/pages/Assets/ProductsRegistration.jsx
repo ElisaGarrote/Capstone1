@@ -16,8 +16,9 @@ export default function ProductsRegistration() {
     '1': {
       image: SampleImage,
       productName: 'Dell Latitude',
-      modelNumber: 'DL-2025',
       category: 'Laptop',
+      
+      modelNumber: 'DL-2025',
       manufacturer: 'Dell',
       depreciation: 'Straight Line',
       endOfLife: '2028-12-31',
@@ -29,8 +30,8 @@ export default function ProductsRegistration() {
     '2': {
       image: SampleImage,
       productName: 'iPhone 15 Pro',
-      modelNumber: 'IPH15P',
       category: 'Mobile Phone',
+      modelNumber: 'IPH15P',
       manufacturer: 'Apple',
       depreciation: 'Declining Balance',
       endOfLife: '2027-11-20',
@@ -107,8 +108,20 @@ export default function ProductsRegistration() {
                 placeholder='Product Name'
                 maxLength='100'
                 defaultValue={product?.productName || ''}
-                readOnly={!id}
+                readOnly={false}
               />
+            </fieldset>
+            <fieldset>
+              <label htmlFor="category">Cagtegory *</label>
+              <div>
+                <select name="category" defaultValue={product?.category || ""}>
+                  <option value="">Select Category</option>
+                  <option value='Laptop'>Laptop</option>
+                  <option value='Mobile Phone'>Mobile Phone</option>
+                  <option value='Tablet'>Tablet</option>
+                </select>
+                <MediumButtons type="new" />
+              </div>
             </fieldset>
             <fieldset>
               <label htmlFor='model-number'>Model Number</label>
@@ -118,42 +131,30 @@ export default function ProductsRegistration() {
                 placeholder='Model Number'
                 maxLength='100'
                 defaultValue={product?.modelNumber || ''}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
-              <label htmlFor='category'>Category *</label>
+              <label htmlFor='manufacturer'>Manufacturer</label>
               <div>
-                <select name='category' defaultValue={product?.category || ''} disabled={!id}>
-                  <option value=''>Select Category</option>
-                  <option value='Laptop'>Laptop</option>
-                  <option value='Mobile Phone'>Mobile Phone</option>
-                  <option value='Tablet'>Tablet</option>
-                </select>
-                <MediumButtons type='new' disabled={!id} />
-              </div>
-            </fieldset>
-            <fieldset>
-              <label htmlFor='manufacturer'>Manufacturer *</label>
-              <div>
-                <select name='manufacturer' defaultValue={product?.manufacturer || ''} disabled={!id}>
+                <select name='manufacturer' defaultValue={product?.manufacturer || ''}>
                   <option value=''>Select Manufacturer</option>
                   <option value='Apple'>Apple</option>
                   <option value='Dell'>Dell</option>
                   <option value='Samsung'>Samsung</option>
                 </select>
-                <MediumButtons type='new' disabled={!id} />
+                <MediumButtons type='new' />
               </div>
             </fieldset>
             <fieldset>
-              <label htmlFor='depreciation'>Depreciation *</label>
+              <label htmlFor='depreciation'>Depreciation</label>
               <div>
-                <select name='depreciation' defaultValue={product?.depreciation || ''} disabled={!id}>
+                <select name='depreciation' defaultValue={product?.depreciation || ''}>
                   <option value=''>Select Depreciation Method</option>
                   <option value='Straight Line'>Straight Line</option>
                   <option value='Declining Balance'>Declining Balance</option>
                 </select>
-                <MediumButtons type='new' disabled={!id} />
+                <MediumButtons type='new' />
               </div>
             </fieldset>
             <fieldset>
@@ -161,9 +162,9 @@ export default function ProductsRegistration() {
               <input
                 type='date'
                 name='endOfLifeDate'
-                max={currentDate}
+                min={!id ? currentDate : undefined}
                 defaultValue={product?.endOfLifeDate || ''}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -171,9 +172,9 @@ export default function ProductsRegistration() {
               <input
                 type='number'
                 name='minimumQuantity'
-                min='0'
+                min='10'
                 defaultValue={product?.minimumQuantity || ''}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -184,7 +185,7 @@ export default function ProductsRegistration() {
                 placeholder='IMEI Number'
                 maxLength='15'
                 defaultValue={product?.imeiNumber || ''}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -195,7 +196,7 @@ export default function ProductsRegistration() {
                 placeholder='SSD Encryption'
                 maxLength='100'
                 defaultValue={product?.ssdEncryption || ''}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -204,7 +205,7 @@ export default function ProductsRegistration() {
                 name='notes'
                 maxLength='500'
                 defaultValue={product?.notes || ''}
-                readOnly={!id}
+                readOnly={false}
               ></textarea>
             </fieldset>
             <fieldset>
@@ -236,7 +237,6 @@ export default function ProductsRegistration() {
                   accept='image/*'
                   onChange={handleImageSelection}
                   style={{ display: 'none' }}
-                  disabled={!id}
                 />
               </div>
               <label htmlFor='image' className='upload-image-btn'>
