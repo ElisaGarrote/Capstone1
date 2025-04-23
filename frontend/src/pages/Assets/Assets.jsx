@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
 import NavBar from "../../components/NavBar";
@@ -45,6 +46,7 @@ const sampleItems = [
 export default function Assets() {
   const [checkedItems, setCheckedItems] = useState([]);
   const allChecked = checkedItems.length === sampleItems.length;
+  const navigate = useNavigate(); // Use useNavigate hook
 
   const toggleSelectAll = () => {
     if (allChecked) {
@@ -58,6 +60,21 @@ export default function Assets() {
     setCheckedItems((prev) =>
       prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
+  };
+
+  const handleCheckInOut = (item) => {
+    if (item.status === 'Deployed') {
+      navigate(`/assets/check-in/${item.id}`);
+    } else {
+      navigate(`/assets/check-out/${item.id}`, {
+        state: {
+          id: item.id,
+          image: item.image,
+          assetId: item.assetId,
+          product: item.product,
+        },
+      });
+    }
   };
 
   return (
@@ -114,11 +131,12 @@ export default function Assets() {
                     </td>
                     <td>{item.assetId}</td>
                     <td>
-                      {item.status === 'Deployed' ? (
-                        <button className="check-in-btn" onClick={() => handleCheckIn(item.id)}>{"< Check-In"}</button>
-                      ) : (
-                        <button className="check-out-btn" onClick={() => handleCheckOut(item.id)}>{"> Check-Out"}</button>
-                      )}
+                      <button
+                        className={item.status === 'Deployed' ? "check-in-btn" : "check-out-btn"}
+                        onClick={() => handleCheckInOut(item)}
+                      >
+                        {item.status === 'Deployed' ? "< Check-In" : "> Check-Out"}
+                      </button>
                     </td>
                     <td>{item.product}</td>
                     <td>{item.status}</td>
@@ -130,7 +148,7 @@ export default function Assets() {
                       <TableBtn type="delete" onClick={() => handleDelete(item.id)} />
                     </td>
                     <td>
-                      <TableBtn type="view" onClick={() => handleView(item.id)} />
+                      <TableBtn type="view" navigatePage={`/assets/view/${item.id}`} />
                     </td>
                   </tr>
                 ))}
