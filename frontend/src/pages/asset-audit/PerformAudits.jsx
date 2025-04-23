@@ -3,6 +3,7 @@ import "../../styles/PerformAudits.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
+import Select from "react-select";
 
 export default function PerformAudits() {
   const [currentDate, setCurrentDate] = useState("");
@@ -36,6 +37,47 @@ export default function PerformAudits() {
     }
   };
 
+  const assetOptions = [
+    { value: "100000 - XPS 13", label: "100000 - XPS 13" },
+    { value: "100001 - ThinkPad E15 G4", label: "100001 - ThinkPad E15 G4" },
+    { value: '100008 - Macbook Pro 16"', label: '100008 - Macbook Pro 16"' },
+    {
+      value: "100036 - Microsoft Surface Pro 11",
+      label: "100036 - Microsoft Surface Pro 11",
+    },
+  ];
+
+  const locationOptions = [
+    { value: "makati", label: "Makati" },
+    { value: "pasig", label: "Pasig" },
+    { value: "marikina", label: "Marikina" },
+  ];
+
+  const performByOptions = [
+    { value: "fernando tempura", label: "Fernando Tempura" },
+    { value: "may pamana", label: "May Pamana" },
+    { value: "mary grace piattos", label: "Mary Grace Piattos" },
+  ];
+
+  const customStylesDropdown = {
+    control: (provided) => ({
+      ...provided,
+      width: "100%",
+      borderRadius: "10px",
+      fontSize: "0.875rem",
+      padding: "3px 8px",
+    }),
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "grey",
+      fontSize: "0.875rem",
+    }),
+  };
+
   return (
     <>
       <nav>
@@ -54,27 +96,31 @@ export default function PerformAudits() {
           <form action="" method="post">
             <fieldset>
               <label htmlFor="asset">Select Asset *</label>
-              <select name="asset" id="asset">
-                <option value="asset1">Asset 1</option>
-                <option value="asset2">Asset 2</option>
-                <option value="asset3">Asset 3</option>
-              </select>
+              <Select
+                options={assetOptions}
+                styles={customStylesDropdown}
+                placeholder="Select asset..."
+              />
             </fieldset>
             <fieldset>
               <label htmlFor="location">Location *</label>
-              <select name="location" id="location" required>
-                <option value="option1">Option 1</option>
-                <option value="option2">Option 2</option>
-                <option value="option3">Option 3</option>
-              </select>
+              <Select
+                options={locationOptions}
+                styles={customStylesDropdown}
+                placeholder="Select locatioin..."
+              />
             </fieldset>
             <fieldset>
               <label htmlFor="perform-by">Perform by *</label>
-              <select name="perform-by" id="perform-by" required>
-                <option value="option1">Option 1</option>
-                <option value="option2">Option 2</option>
-                <option value="option3">Option 3</option>
-              </select>
+              <Select
+                options={performByOptions}
+                styles={customStylesDropdown}
+                placeholder="Select user..."
+                defaultValue={{
+                  value: "mary grace piattos",
+                  label: "Mary Grace Piattos",
+                }}
+              />
             </fieldset>
             <fieldset>
               <label htmlFor="audit-date">Audit Date *</label>

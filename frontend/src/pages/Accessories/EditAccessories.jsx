@@ -6,6 +6,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import { useState } from "react";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import Select from "react-select";
 
 export default function EditAccessories() {
   const navigate = useNavigate();
@@ -30,6 +31,49 @@ export default function EditAccessories() {
     } else {
       setPreviewImage(null);
     }
+  };
+
+  const categoryOptions = [
+    { value: "cable", label: "Cable" },
+    { value: "charger", label: "Charger" },
+    { value: "keyboard", label: "Keyboard" },
+  ];
+
+  const manufacturerOptions = [
+    { value: "apple", label: "Apple" },
+    { value: "lenovo", label: "Lenovo" },
+    { value: "asus", label: "Asus" },
+  ];
+
+  const supplierOptions = [
+    { value: "amazon", label: "Amazon" },
+    { value: "wsi", label: "WSI" },
+    { value: "iontech inc.", label: "Iontech Inc." },
+  ];
+
+  const locationOptions = [
+    { value: "makati", label: "Makati" },
+    { value: "pasig", label: "Pasig" },
+    { value: "marikina", label: "Marikina" },
+  ];
+
+  const customStylesDropdown = {
+    control: (provided) => ({
+      ...provided,
+      width: "100%",
+      borderRadius: "10px",
+      fontSize: "0.875rem",
+      padding: "3px 8px",
+    }),
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "grey",
+      fontSize: "0.875rem",
+    }),
   };
 
   return (
@@ -77,47 +121,38 @@ export default function EditAccessories() {
             </fieldset>
             <fieldset>
               <label htmlFor="category">Category *</label>
-              <div>
-                <select name="category" id="category" required>
-                  <option value="cables">Cables</option>
-                  <option value="chargers">Chargers</option>
-                  <option value="keyboards">Keyboards</option>
-                </select>
+              <div className="dropdown-container">
+                <Select
+                  options={categoryOptions}
+                  styles={customStylesDropdown}
+                  placeholder="Select category..."
+                />
                 <MediumButtons type="new" />
               </div>
             </fieldset>
             <fieldset>
               <label htmlFor="manufacturer">Manufacturer *</label>
-              <div>
-                <select name="category" id="category" required>
-                  <option value="cables">Cables</option>
-                  <option value="chargers">Chargers</option>
-                  <option value="keyboards">Keyboards</option>
-                </select>
-                <MediumButtons type="new" />
-              </div>
+              <Select
+                options={manufacturerOptions}
+                styles={customStylesDropdown}
+                placeholder="Select manufacturer..."
+              />
             </fieldset>
             <fieldset>
               <label htmlFor="supplier">Supplier</label>
-              <div>
-                <select name="category" id="category">
-                  <option value="cables">Cables</option>
-                  <option value="chargers">Chargers</option>
-                  <option value="keyboards">Keyboards</option>
-                </select>
-                <MediumButtons type="new" />
-              </div>
+              <Select
+                options={supplierOptions}
+                styles={customStylesDropdown}
+                placeholder="Select supplier..."
+              />
             </fieldset>
             <fieldset>
               <label htmlFor="location">Location *</label>
-              <div>
-                <select name="category" id="category" required>
-                  <option value="cables">Cables</option>
-                  <option value="chargers">Chargers</option>
-                  <option value="keyboards">Keyboards</option>
-                </select>
-                <MediumButtons type="new" />
-              </div>
+              <Select
+                options={locationOptions}
+                styles={customStylesDropdown}
+                placeholder="Select location..."
+              />
             </fieldset>
             <fieldset>
               <label htmlFor="order-number">Order Number</label>
@@ -151,7 +186,7 @@ export default function EditAccessories() {
             </fieldset>
             <fieldset>
               <label htmlFor="purchase-cost">Purchase Cost *</label>
-              <div>
+              <div className="purchase-cost-container">
                 <p>PHP</p>
                 <input
                   type="number"
