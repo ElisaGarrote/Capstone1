@@ -127,4 +127,38 @@
     width: 5vw;
     object-fit: cover;
   }
+
+  /* Check-In button (Green) */
+.check-in-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.check-in-btn:hover {
+  background-color: var(--primary-color-hover);
+}
+
+/* Check-Out button (Blue) */
+.check-out-btn {
+  background-color: var(--deployable-text);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.check-out-btn:hover {
+  background-color: var(--deployable);
+  color: var(--secondary-text-color);
+}
+
   

@@ -52,9 +52,10 @@ function App() {
         <Route path="/set-password" element={<SetPassword />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
-        <Route path="products/registration" element={<ProductsRegistration />} />
+        <Route path="/products/registration" element={<ProductsRegistration />} />
+        <Route path="/products/registration/:id" element={<ProductsRegistration />} />
         <Route path="/assets" element={<Assets />} />
-        <Route path="assets/registration" element={<AssetsRegistration />} />
+        <Route path="/assets/registration" element={<AssetsRegistration />} />
         <Route path="/assets/registration/:id" element={<AssetsRegistration />} />
         <Route path="/accessories" element={<Accessories />} />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />

@@ -6,24 +6,35 @@ import TableBtn from "../../components/buttons/TableButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 
+// Sample asset data
 const sampleItems = [
   {
     id: 1,
-    name: "HDMI Cable",
-    model: "HDMI-1234",
-    category: "Cables",
-    manufacturer: "Anker",
-    endOfLife: "2027-12-31",
     image: SampleImage,
+    productName: 'Dell Latitude',
+    modelNumber: 'DL-2025',
+    category: 'Laptop',
+    manufacturer: 'Dell',
+    depreciation: 'Straight Line',
+    endOfLife: '2028-12-31',
+    minimumQuantity: 10,
+    imeiNumber: '123456789012345',
+    ssdEncryption: 'Enabled',
+    notes: 'Sample notes for Dell Latitude',
   },
   {
     id: 2,
-    name: "USB Hub",
-    model: "USB-5678",
-    category: "Adapters",
-    manufacturer: "Belkin",
-    endOfLife: "2026-06-30",
     image: SampleImage,
+    productName: 'iPhone 15 Pro',
+    modelNumber: 'IPH15P',
+    category: 'Mobile Phone',
+    manufacturer: 'Apple',
+    depreciation: 'Declining Balance',
+    endOfLife: '2027-11-20',
+    minimumQuantity: 10,
+    imeiNumber: '123456789012345',
+    ssdEncryption: 'Disabled',
+    notes: null,
   },
 ];
 
@@ -74,13 +85,11 @@ export default function Products() {
                     />
                   </th>
                   <th>IMAGE</th>
-
                   <th>NAME</th>
                   <th>MODEL NUMBER</th>
                   <th>CATEGORY</th>
                   <th>MANUFACTURER</th>
                   <th>END OF LIFE</th>
-
                   <th>EDIT</th>
                   <th>DELETE</th>
                   <th>VIEW</th>
@@ -97,21 +106,21 @@ export default function Products() {
                       />
                     </td>
                     <td>
-                      <img src={item.image} alt={item.name} width="50" />
+                      <img src={item.image} alt={item.product} width="50" />
                     </td>
-                    <td>{item.name}</td>
-                    <td>{item.model}</td>
+                    <td>{item.productName}</td>
+                    <td>{item.modelNumber}</td>
                     <td>{item.category}</td>
                     <td>{item.manufacturer}</td>
                     <td>{item.endOfLife}</td>
                     <td>
-                      <TableBtn type="edit" navigatePage="" />
+                      <TableBtn type="edit" navigatePage={`/products/registration/${item.id}`} />
                     </td>
                     <td>
-                      <TableBtn type="delete" navigatePage="" />
+                      <TableBtn type="delete" onClick={() => handleDelete(item.id)} />
                     </td>
                     <td>
-                      <TableBtn type="view" navigatePage="" />
+                      <TableBtn type="view" onClick={() => handleView(item.id)} />
                     </td>
                   </tr>
                 ))}

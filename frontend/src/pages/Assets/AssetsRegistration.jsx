@@ -16,13 +16,12 @@ export default function AssetsRegistration() {
     "1": {
       image: SampleImage,
       assetId: 10001,
+      assetName: null,
+      serialNumber: 'GC1SJL3',
       product: 'XPS 13',
       status: 'Ready for Deployment',
-      checkin: true,
       supplier: 'Amazon',
       location: 'Makati City',
-      assetName: '',
-      serialNumber: 'GC1SJL3',
       warrantyExpiration: '2027-05-02',
       endOfLife: '2025-04-09',
       orderNumber: 'GJ08CX',
@@ -33,19 +32,18 @@ export default function AssetsRegistration() {
     "2": {
       image: SampleImage,
       assetId: 10002,
-      product: 'Mouse',
-      status: 'Deployed',
-      checkin: false,
-      supplier: 'GadgetWorld',
-      location: 'Quezon City',
       assetName: 'Logitech Mouse',
       serialNumber: 'LOGI789',
+      product: 'Mouse',
+      status: 'Deployed',
+      supplier: 'GadgetWorld',
+      location: 'Quezon City',
       warrantyExpiration: '2027-05-02',
       endOfLife: '2025-04-09',
       orderNumber: '67890',
       purchaseDate: '2025-04-01',
       purchaseCost: 30000,
-      notes: '',
+      notes: null,
     }
   };
 
@@ -60,20 +58,20 @@ export default function AssetsRegistration() {
       }
     } else {
       setAsset({
+        image: null,
         assetId: '',
+        assetName: '',
+        serialNumber: '',
         product: '',
         status: '',
         supplier: '',
         location: '',
-        assetName: '',
-        serialNumber: '',
         warrantyExpiration: '',
         endOfLife: '',
         orderNumber: '',
         purchaseDate: '',
         purchaseCost: '',
         notes: '',
-        image: null
       });
     }
   }, [id]);
@@ -106,7 +104,7 @@ export default function AssetsRegistration() {
           />
         </section>
         <section className="registration-form">
-          <form encType="multipart/form-data">
+          <form action="" method="post">
             <fieldset>
               <label htmlFor="asset-id">Asset ID *</label>
               <input
@@ -115,7 +113,7 @@ export default function AssetsRegistration() {
                 placeholder="Asset ID"
                 maxLength="100"
                 defaultValue={asset?.assetId || ""}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -126,7 +124,7 @@ export default function AssetsRegistration() {
                 placeholder="Product"
                 maxLength="100"
                 defaultValue={asset?.product || ""}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -174,7 +172,7 @@ export default function AssetsRegistration() {
                 placeholder="Asset Name"
                 maxLength="100"
                 defaultValue={asset?.assetName || ""}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -185,7 +183,7 @@ export default function AssetsRegistration() {
                 placeholder="Serial Number"
                 maxLength="50"
                 defaultValue={asset?.serialNumber || ""}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -193,9 +191,9 @@ export default function AssetsRegistration() {
               <input
                 type="date"
                 name="warrantyExpiration"
-                max={currentDate}
+                min={!id ? currentDate : undefined}
                 defaultValue={asset?.warrantyExpiration || ""}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -203,9 +201,9 @@ export default function AssetsRegistration() {
               <input
                 type="date"
                 name="endOfLife"
-                max={currentDate}
+                min={!id ? currentDate : undefined}
                 defaultValue={asset?.endOfLife || ""}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -216,7 +214,7 @@ export default function AssetsRegistration() {
                 placeholder="Order Number"
                 maxLength="30"
                 defaultValue={asset?.orderNumber || ""}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -224,9 +222,9 @@ export default function AssetsRegistration() {
               <input
                 type="date"
                 name="purchaseDate"
-                max={currentDate}
+                max={!id ? currentDate : undefined}
                 defaultValue={asset?.purchaseDate || ""}
-                readOnly={!id}
+                readOnly={false}
               />
             </fieldset>
             <fieldset>
@@ -239,7 +237,7 @@ export default function AssetsRegistration() {
                   step="0.01"
                   min="1"
                   defaultValue={asset?.purchaseCost || ""}
-                  readOnly={!id}
+                  readOnly={false}
                 />
               </div>
             </fieldset>
@@ -249,7 +247,7 @@ export default function AssetsRegistration() {
                 name="notes"
                 maxLength="500"
                 defaultValue={asset?.notes || ""}
-                readOnly={!id}
+                readOnly={false}
               ></textarea>
             </fieldset>
             <fieldset>
@@ -281,13 +279,15 @@ export default function AssetsRegistration() {
                   accept="image/*"
                   onChange={handleImageSelection}
                   style={{ display: "none" }}
-                  disabled={!id}
                 />
               </div>
               <label htmlFor="image" className="upload-image-btn">
                 {!previewImage ? "Choose Image" : "Change Image"}
               </label>
             </fieldset>
+            <button type="submit" className="save-btn">
+              Save
+            </button>
           </form>
         </section>
       </main>

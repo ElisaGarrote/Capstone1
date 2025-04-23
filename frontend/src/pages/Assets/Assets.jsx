@@ -12,19 +12,35 @@ const sampleItems = [
     id: 1,
     image: SampleImage,
     assetId: 10001,
+    assetName: null,
+    serialNumber: 'GC1SJL3',
     product: 'XPS 13',
     status: 'Ready for Deployment',
-    checkin: true,
     supplier: 'Amazon',
     location: 'Makati City',
-    assetName: '',
-    serialNumber: 'GC1SJL3',
     warrantyExpiration: '2027-05-02',
     endOfLife: '2025-04-09',
     orderNumber: 'GJ08CX',
     purchaseDate: '2025-04-01',
     purchaseCost: 25000,
     notes: 'Laptop for software development.',
+  },
+  {
+    id: 2,
+    image: SampleImage,
+    assetId: 10002,
+    assetName: 'Logitech Mouse',
+    serialNumber: 'LOGI789',
+    product: 'Mouse',
+    status: 'Deployed',
+    supplier: 'GadgetWorld',
+    location: 'Quezon City',
+    warrantyExpiration: '2027-05-02',
+    endOfLife: '2025-04-09',
+    orderNumber: '67890',
+    purchaseDate: '2025-04-01',
+    purchaseCost: 30000,
+    notes: null,
   },
 ];
 
@@ -101,16 +117,23 @@ export default function Assets() {
                     <td>{item.assetId}</td>
                     <td>{item.product}</td>
                     <td>{item.status}</td>
-                    <td>{item.checkin ? "Check-In" : "Check-Out"}</td>
+                    <td>
+                      {item.status === 'Deployed' ? (
+                        <button className="check-in-btn" onClick={() => handleCheckIn(item.id)}>{"< Check-In"}</button>
+                      ) : (
+                        <button className="check-out-btn" onClick={() => handleCheckOut(item.id)}>{"> Check-Out"}</button>
+                      )}
+                    </td>
+
                     <td>{item.warrantyExpiration}</td>
                     <td>
                       <TableBtn type="edit" navigatePage={`/assets/registration/${item.id}`} />
                     </td>
                     <td>
-                      <TableBtn type="delete" navigatePage={`/assets/delete/${item.id}`} id={item.id} />
+                      <TableBtn type="delete" onClick={() => handleDelete(item.id)} />
                     </td>
                     <td>
-                      <TableBtn type="view" navigatePage={`/assets/view/${item.id}`} id={item.id} />
+                      <TableBtn type="view" onClick={() => handleView(item.id)} />
                     </td>
                   </tr>
                 ))}
