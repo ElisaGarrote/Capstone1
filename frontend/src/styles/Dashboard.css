@@ -1,7 +1,69 @@
-.dashboard-page {
+.dashboard-container {
   display: flex;
-  background-color: var(--bg-color);
-  padding: 100px 38px 38px 38px;
-  height: 100vh;
-  width: 100vw;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.dashboard-content {
+  padding: 2rem;
+  margin-top: 60px;
+  flex-grow: 1;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.dashboard-content h1 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.status-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 225px);
+  grid-template-rows: repeat(2, 100px);
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Responsive Grid */
+@media (max-width: 1400px) {
+  .dashboard-content {
+    padding: 1.5rem;
+  }
+
+  .status-cards-grid {
+    grid-template-columns: repeat(4, 225px);
+    gap: 1.5rem;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 1200px) {
+  .status-cards-grid {
+    grid-template-columns: repeat(3, 225px);
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .status-cards-grid {
+    grid-template-columns: repeat(2, 225px);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-content {
+    padding: 1rem;
+  }
+
+  .status-cards-grid {
+    grid-template-columns: 225px;
+    gap: 1rem;
+  }
 }

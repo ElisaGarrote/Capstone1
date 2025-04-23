@@ -1,0 +1,118 @@
+.status-card {
+    background: white;
+    border-radius: 30px;
+    padding: 1.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    height: 100px;
+    animation: fadeInUp 0.6s ease both;
+    width: 248px;
+  }
+  
+  /* Position cards in specific grid areas */
+  .status-card:nth-child(1) { grid-area: 1 / 1; } /* Due for Return */
+  .status-card:nth-child(2) { grid-area: 1 / 2; } /* Upcoming Audits */
+  .status-card:nth-child(3) { grid-area: 1 / 3; } /* Upcoming End of Life */
+  .status-card:nth-child(4) { grid-area: 1 / 4; } /* Expiring Warranties */
+  .status-card:nth-child(5) { grid-area: 2 / 1; } /* Overdue for Return */
+  .status-card:nth-child(6) { grid-area: 2 / 2; } /* Overdue Audits */
+  .status-card:nth-child(7) { grid-area: 2 / 3; } /* Reached End of Life */
+  .status-card:nth-child(8) { grid-area: 2 / 4; } /* Expired Warranties */
+  .status-card:nth-child(9) { 
+    grid-area: 1 / 5 / 3 / 6;
+    height: 100%;
+    width: 295px;
+  } /* Low Stock */
+  
+  /* Status Number */
+  .status-number {
+    padding: 0.5rem;
+    border-radius: 8px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: white;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .status-number.blue {
+    background: #0066ff;
+    animation: pulseBlue 2s infinite;
+  }
+  
+  .status-number.red {
+    background: #ff3333;
+    animation: pulseRed 2s infinite;
+  }
+  
+  .status-title {
+    font-size: 0.85rem;
+    color: #333;
+    font-weight: 500;
+    line-height: 1.2;
+    flex: 1;
+  }
+  
+  /* Animations */
+  @keyframes pulseBlue {
+    0% { box-shadow: 0 0 0 0 rgba(0, 102, 255, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 102, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 102, 255, 0); }
+  }
+  
+  @keyframes pulseRed {
+    0% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 51, 51, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0); }
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Hover Effects */
+  .status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 1400px) {
+    .status-card,
+    .status-card:nth-child(9) {
+      width: 100%;
+    }
+    
+    .status-card:nth-child(9) {
+      grid-area: 3 / 1 / 3 / 5;
+      height: 100px;
+    }
+  }
+  
+  @media (max-width: 992px) {
+    .status-card:nth-child(9) {
+      grid-area: 5 / 1 / 5 / 3;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .status-card:nth-child(9) {
+      grid-area: auto;
+    }
+  } 
