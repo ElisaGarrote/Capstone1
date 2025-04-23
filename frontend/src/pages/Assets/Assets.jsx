@@ -9,12 +9,22 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 // Sample asset data
 const sampleItems = [
   {
-    id: 10098,
-    product: "XPS 13",
-    status: "Ready",
-    checkin: true,
-    warranty: "2025-12-31",
+    id: 1,
     image: SampleImage,
+    assetId: 10001,
+    product: 'XPS 13',
+    status: 'Ready for Deployment',
+    checkin: true,
+    supplier: 'Amazon',
+    location: 'Makati City',
+    assetName: '',
+    serialNumber: 'GC1SJL3',
+    warrantyExpiration: '2027-05-02',
+    endOfLife: '2025-04-09',
+    orderNumber: 'GJ08CX',
+    purchaseDate: '2025-04-01',
+    purchaseCost: 25000,
+    notes: 'Laptop for software development.',
   },
 ];
 
@@ -88,19 +98,19 @@ export default function Assets() {
                     <td>
                       <img src={item.image} alt={item.product} width="50" />
                     </td>
-                    <td>{item.id}</td>
+                    <td>{item.assetId}</td>
                     <td>{item.product}</td>
                     <td>{item.status}</td>
                     <td>{item.checkin ? "Check-In" : "Check-Out"}</td>
-                    <td>{item.warranty}</td>
+                    <td>{item.warrantyExpiration}</td>
                     <td>
-                      <TableBtn type="edit" navigatePage="" />
+                      <TableBtn type="edit" navigatePage={`/assets/registration/${item.id}`} />
                     </td>
                     <td>
-                      <TableBtn type="delete" navigatePage="" />
+                      <TableBtn type="delete" navigatePage={`/assets/delete/${item.id}`} id={item.id} />
                     </td>
                     <td>
-                      <TableBtn type="view" navigatePage="" />
+                      <TableBtn type="view" navigatePage={`/assets/view/${item.id}`} id={item.id} />
                     </td>
                   </tr>
                 ))}

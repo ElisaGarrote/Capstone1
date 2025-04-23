@@ -53,8 +53,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="products/registration" element={<ProductsRegistration />} />
-        <Route path="assets/registration" element={<AssetsRegistration />} />
         <Route path="/assets" element={<Assets />} />
+        <Route path="assets/registration" element={<AssetsRegistration />} />
+        <Route path="/assets/registration/:id" element={<AssetsRegistration />} />
         <Route path="/accessories" element={<Accessories />} />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
