@@ -5,8 +5,10 @@ import '../../styles/dashboard/StatusCard.css';
 function StatusCard({ number, title, isRed, isLarge }) {
   return (
     <div className={`status-card ${isLarge ? 'large' : ''}`}>
-      <div className={`status-number ${isRed ? 'red' : 'blue'}`}>{number}</div>
-      <div className="status-title">{title}</div>
+      <div className="content-wrapper">
+        <div className={`status-number ${isRed ? 'red' : 'blue'}`}>{number}</div>
+        <div className="status-title">{title}</div>
+      </div>
     </div>
   );
 }
