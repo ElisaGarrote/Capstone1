@@ -243,6 +243,9 @@ export default function ProductsRegistration() {
                 {!previewImage ? 'Choose Image' : 'Change Image'}
               </label>
             </fieldset>
+            <button type="submit" className="save-btn">
+              Save
+            </button>
           </form>
         </section>
       </main>
