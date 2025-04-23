@@ -45,6 +45,10 @@ export default function AssetsRegistration() {
     }
   };
 
+  const statusList = ['Ready for Deployment', 'Deployed'];
+  const supplierList = ['Amazon', 'TechCorp', 'GadgetWorld', 'GizmoHub'];
+  const locationList = ['Office', 'Makati City', 'Quezon City', 'Cebu City', 'Davao City'];
+
   const [previewImage, setPreviewImage] = useState(null);
   const [asset, setAsset] = useState(null);
 
@@ -130,8 +134,9 @@ export default function AssetsRegistration() {
               <div>
                 <select name="status" defaultValue={asset?.status || ""}>
                   <option value="">Select Status</option>
-                  <option value="Ready for Deployment">Ready For Deployment</option>
-                  <option value="Deployed">Deployed</option>
+                  {statusList.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
                 </select>
                 <MediumButtons type="new" />
               </div>
@@ -141,9 +146,9 @@ export default function AssetsRegistration() {
               <div>
                 <select name="supplier" defaultValue={asset?.supplier || ""}>
                   <option value="">Select Supplier</option>
-                  <option value="Amazon">Amazon</option>
-                  <option value="TechCorp">TechCorp</option>
-                  <option value="GadgetWorld">GadgetWorld</option>
+                  {supplierList.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
                 </select>
                 <MediumButtons type="new" />
               </div>
@@ -153,11 +158,9 @@ export default function AssetsRegistration() {
               <div>
                 <select name="location" defaultValue={asset?.location || ""}>
                   <option value="">Select Location</option>
-                  <option value="Office">Office</option>
-                  <option value="Warehouse 1">Warehouse 1</option>
-                  <option value="Warehouse 2">Warehouse 2</option>
-                  <option value="Makati City">Makati City</option>
-                  <option value="Quezon City">Quezon City</option>
+                  {locationList.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
                 </select>
                 <MediumButtons type="new" />
               </div>

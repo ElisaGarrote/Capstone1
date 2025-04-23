@@ -42,6 +42,10 @@ export default function ProductsRegistration() {
     }
   };
 
+  const categoryList = ['Laptop', 'Mobile Phone', 'Tablet'];
+  const manufacturerList = ['Apple', 'Dell', 'Samsung'];
+  const depreciationList = ['Straight Line', 'Declining Balance', 'Units of Production'];
+
   const [product, setProduct] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
@@ -116,9 +120,9 @@ export default function ProductsRegistration() {
               <div>
                 <select name="category" defaultValue={product?.category || ""}>
                   <option value="">Select Category</option>
-                  <option value='Laptop'>Laptop</option>
-                  <option value='Mobile Phone'>Mobile Phone</option>
-                  <option value='Tablet'>Tablet</option>
+                  {categoryList.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
                 </select>
                 <MediumButtons type="new" />
               </div>
@@ -139,9 +143,9 @@ export default function ProductsRegistration() {
               <div>
                 <select name='manufacturer' defaultValue={product?.manufacturer || ''}>
                   <option value=''>Select Manufacturer</option>
-                  <option value='Apple'>Apple</option>
-                  <option value='Dell'>Dell</option>
-                  <option value='Samsung'>Samsung</option>
+                  {manufacturerList.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
                 </select>
                 <MediumButtons type='new' />
               </div>
@@ -151,8 +155,9 @@ export default function ProductsRegistration() {
               <div>
                 <select name='depreciation' defaultValue={product?.depreciation || ''}>
                   <option value=''>Select Depreciation Method</option>
-                  <option value='Straight Line'>Straight Line</option>
-                  <option value='Declining Balance'>Declining Balance</option>
+                  {depreciationList.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
                 </select>
                 <MediumButtons type='new' />
               </div>
