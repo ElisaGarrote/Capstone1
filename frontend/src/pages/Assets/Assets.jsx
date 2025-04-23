@@ -90,9 +90,9 @@ export default function Assets() {
                   </th>
                   <th>IMAGE</th>
                   <th>ID</th>
+                  <th>CHECKIN/CHECKOUT</th>
                   <th>PRODUCT</th>
                   <th>STATUS</th>
-                  <th>CHECKIN/CHECKOUT</th>
                   <th>WARRANTY</th>
                   <th>EDIT</th>
                   <th>DELETE</th>
@@ -113,8 +113,6 @@ export default function Assets() {
                       <img src={item.image} alt={item.product} width="50" />
                     </td>
                     <td>{item.assetId}</td>
-                    <td>{item.product}</td>
-                    <td>{item.status}</td>
                     <td>
                       {item.status === 'Deployed' ? (
                         <button className="check-in-btn" onClick={() => handleCheckIn(item.id)}>{"< Check-In"}</button>
@@ -122,7 +120,8 @@ export default function Assets() {
                         <button className="check-out-btn" onClick={() => handleCheckOut(item.id)}>{"> Check-Out"}</button>
                       )}
                     </td>
-
+                    <td>{item.product}</td>
+                    <td>{item.status}</td>
                     <td>{item.warrantyExpiration}</td>
                     <td>
                       <TableBtn type="edit" navigatePage={`/assets/registration/${item.id}`} />
