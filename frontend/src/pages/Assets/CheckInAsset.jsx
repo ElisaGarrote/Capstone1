@@ -1,142 +1,157 @@
 import "../../styles/custom-colors.css";
-import "../../styles/CheckinAccessory.css";
+import "../../styles/CheckInOut.css";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
+import PersonIcon from "../../assets/icons/person.svg";
+import LocationIcon from "../../assets/icons/location.svg";
+import { useForm } from "react-hook-form";
 
 export default function CheckInAsset() {
   const location = useLocation();
-  const { id } = location.state || {}; // Retrieve the data that pass from the previous page. Set this empty if the id state is undefined or null.
-  const [currentDate, setCurrentDate] = useState("");
+  const navigate = useNavigate();
+  const { id, assetId, product, image, employee, checkOutDate, returnDate, condition } = location.state || {};
+  
+  // Dropdown lists for easier maintenance
+  const employeeList = ['Employee 1', 'Employee 2', 'Employee 3'];
+  const locationList = ['Location 1', 'Location 2', 'Location 3'];
+  const conditionList = ['Excellent', 'Good', 'Fair', 'Poor'];
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      checkoutTo: "employee",
+      employee: '',
+      location: '',
+      checkoutDate: new Date().toISOString().split('T')[0],
+      expectedReturnDate: '',
+      condition: '',
+      notes: '',
+      photos: []
+    }
+  });
+
+  const checkoutTo = watch("checkoutTo");
+  const checkoutDate = watch("checkoutDate");
   const [previewImages, setPreviewImages] = useState([]);
 
-  useEffect(() => {
-    const today = new Date();
-    const options = {
-      timeZone: "Asia/Manila",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    };
-    const formatter = new Intl.DateTimeFormat("en-CA", options); // "en-CA" ensures YYYY-MM-DD format
-    const formattedDate = formatter.format(today); // Format date in Philippines timezone
-    setCurrentDate(formattedDate);
-  }, []);
-
   const handleImagesSelection = (event) => {
-    const selectedFiles = Array.from(event.target.files); // Convert the FileList to Array
+    const selectedFiles = Array.from(event.target.files);
     if (selectedFiles.length > 0) {
-      const imagesArray = selectedFiles.map((file) => {
-        return URL.createObjectURL(file);
-      });
-
+      const imagesArray = selectedFiles.map((file) => URL.createObjectURL(file));
       setPreviewImages(imagesArray);
+      setValue("photos", selectedFiles);
     } else {
       setPreviewImages([]);
+      setValue("photos", []);
     }
+  };
+
+  const onSubmit = (data) => {
+    console.log("Form submitted:", data);
+    navigate("/assets");
   };
 
   return (
     <>
-      <nav>
-        <NavBar />
-      </nav>
+      <nav><NavBar /></nav>
       <main className="checkin-accessory-page">
         <section className="top">
           <TopSecFormPage
-            root="Accessories"
-            currentPage="Checkin Accessory"
-            rootNavigatePage="/accessories"
-            title={id}
+            root="Assets"
+            currentPage="Check-In Asset"
+            rootNavigatePage="/assets"
+            title={assetId}
           />
         </section>
         <section className="middle">
           <section className="recent-checkout-info">
-            <h2>Most Recent Check-Out</h2>
+            <h2>Check-out Info</h2>
             <fieldset>
-              <label htmlFor="check-out-to">Check-Out to:</label>
-              <p>Mary Grace Piattos</p>
+              <label>Checked-Out To:</label>
+              <p>{employee}</p>
             </fieldset>
             <fieldset>
-              <label htmlFor="check-out-date">Check-Out Date:</label>
-              <p>April 19, 2025, 2025</p>
+              <label>Check-Out Date:</label>
+              <p>{checkOutDate}</p>
             </fieldset>
             <fieldset>
-              <label htmlFor="expected-return-date">
-                Expected Return Date:
-              </label>
-              <p>July 10, 2025</p>
+              <label>Expected Return Date:</label>
+              <p>{returnDate}</p>
             </fieldset>
             <fieldset>
-              <label htmlFor="condition">Condition:</label>
-              <p>Good</p>
+              <label>Condition:</label>
+              <p>{condition}</p>
+            </fieldset>
+
+            <h2>Asset Info</h2>
+            <fieldset>
+              <img src={image} alt="asset" />
             </fieldset>
             <fieldset>
-              <label htmlFor="notes">Notes:</label>
-              <p>-</p>
+              <label>Asset ID:</label>
+              <p>{id}</p>
             </fieldset>
             <fieldset>
-              <label htmlFor="confirm-email-notes">
-                Confirmation Email Notes:
-              </label>
-              <p>-</p>
+              <label>Asset ID:</label>
+              <p>{assetId}</p>
+            </fieldset>
+            <fieldset>
+              <label>Product:</label>
+              <p>{product}</p>
             </fieldset>
           </section>
+
           <section className="checkin-form">
             <h2>Check-In Form</h2>
-            <form action="" method="post">
+            <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label htmlFor="checkin-date">Check-In Date *</label>
+                <label>Check-In Date *</label>
                 <input
                   type="date"
-                  name="checkin-date"
-                  id="checkin-date"
-                  defaultValue={currentDate}
-                  max={currentDate}
-                  required
+                  className={errors.checkInDate ? 'input-error' : ''}
+                  min={checkoutDate}
+                  {...register("checkInDate", { required: 'Check-in date is required' })}
                 />
+                {errors.checkInDate && <span className='error-message'>{errors.checkInDate.message}</span>}
               </fieldset>
+
               <fieldset>
-                <label htmlFor="status">Status *</label>
-                <select name="status" id="status" required>
-                  <option value="option1">Option 1</option>
-                  <option value="option2">Option 2</option>
-                  <option value="option3">Option 3</option>
+                <label>Condition</label>
+                <select {...register("condition")}>
+                  <option value="">Select Condition</option>
+                  {conditionList.map((condition, idx) => (
+                    <option key={idx} value={condition}>{condition}</option>
+                  ))}
                 </select>
               </fieldset>
+
               <fieldset>
-                <label htmlFor="condition">Condition *</label>
-                <select name="condition" id="condition" required>
-                  <option value="option1">Option 1</option>
-                  <option value="option2">Option 2</option>
-                  <option value="option3">Option 3</option>
-                </select>
-              </fieldset>
-              <fieldset>
-                <label htmlFor="upload-images">Photos</label>
+                <label>Image</label>
                 <div className="images-container">
-                  {previewImages &&
-                    previewImages.map((image, index) => {
-                      return (
-                        <div key={image} className="image-selected">
-                          <img src={image} alt="" />
-                          <button
-                            onClick={() =>
-                              setPreviewImages(
-                                previewImages.filter((e) => e !== image)
-                              )
-                            }
-                          >
-                            <img src={CloseIcon} alt="" />
-                          </button>
-                        </div>
-                      );
-                    })}
+                  {previewImages.map((img, index) => (
+                    <div key={index} className="image-selected">
+                      <img src={img} alt={`Preview ${index}`} />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewImages(previewImages.filter((_, i) => i !== index));
+                          setValue("photos", previewImages.filter((_, i) => i !== index));
+                        }}
+                      >
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))}
                   <input
                     type="file"
-                    name="images"
                     id="images"
                     accept="image/*"
                     multiple
@@ -145,24 +160,16 @@ export default function CheckInAsset() {
                   />
                 </div>
                 <label htmlFor="images" className="upload-image-btn">
-                  {previewImages.length == 0 ? "Choose Image" : "Change Image"}
+                  {previewImages.length === 0 ? "Choose Image" : "Change Image"}
                 </label>
               </fieldset>
+
               <fieldset>
-                <label htmlFor="notes">Notes</label>
-                <textarea name="notes" id="notes" maxLength="500"></textarea>
+                <label>Notes</label>
+                <textarea {...register("notes")} maxLength="500" />
               </fieldset>
-              <fieldset>
-                <label htmlFor="location">Location *</label>
-                <select name="location" id="location" required>
-                  <option value="option1">Option 1</option>
-                  <option value="option2">Option 2</option>
-                  <option value="option3">Option 3</option>
-                </select>
-              </fieldset>
-              <button type="submit" className="save-btn">
-                Save
-              </button>
+
+              <button type="submit" className="save-btn">Save</button>
             </form>
           </section>
         </section>

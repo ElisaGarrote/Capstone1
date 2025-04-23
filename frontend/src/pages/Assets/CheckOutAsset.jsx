@@ -56,6 +56,7 @@ export default function CheckOutAsset() {
 
   const onSubmit = (data) => {
     console.log("Form submitted:", data);
+    console.log("Asset ID:", Id);
     navigate("/assets");
   };
 
@@ -181,7 +182,7 @@ export default function CheckOutAsset() {
               </fieldset>
 
               <fieldset>
-                <label>Photos</label>
+                <label>Image</label>
                 <div className="images-container">
                   {previewImages.map((img, index) => (
                     <div key={index} className="image-selected">

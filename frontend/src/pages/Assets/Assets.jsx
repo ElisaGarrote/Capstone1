@@ -64,7 +64,18 @@ export default function Assets() {
 
   const handleCheckInOut = (item) => {
     if (item.status === 'Deployed') {
-      navigate(`/assets/check-in/${item.id}`);
+      navigate(`/assets/check-in/${item.id}`, {
+        state: {
+          id: item.id,
+          image: item.image,
+          assetId: item.assetId,
+          product: item.product,
+          employee: "Elphaba Thropp",
+          checkOutDate: "2023-10-01",
+          returnDate: "2023-10-15",
+          condition: "Good",
+        },
+      });
     } else {
       navigate(`/assets/check-out/${item.id}`, {
         state: {
