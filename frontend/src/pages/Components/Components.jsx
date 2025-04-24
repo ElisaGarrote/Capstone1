@@ -66,16 +66,11 @@ export default function Components() {
 
   const handleCheckInOut = (item) => {
     if (item.status === 'Deployed') {
-      navigate(`/components/check-in/${item.id}`, {
+      navigate(`/components/checked-out-list/${item.id}`, {
         state: {
           id: item.id,
-          image: item.image,
           name: item.componentName,
           category: item.category,
-          assetId: 1001,
-          assetName: "Logitech Mouse",
-          checkOutDate: "2023-10-01",
-          notes: "Component checked out note testing",
         },
       });
     } else {

@@ -16,8 +16,9 @@ import Accessories from "./pages/Accessories/Accessories";
 import CheckinAccessory from "./pages/accessories/CheckinAccessory";
 import CheckoutAccessory from "./pages/accessories/CheckoutAccessory";
 import Components from "./pages/Components/Components";
-import CheckInComponent from "./pages/Components/CheckInComponent";
 import CheckOutComponent from "./pages/Components/CheckOutComponent";
+import CheckedOutList from "./pages/Components/CheckedOutList";
+import CheckInComponent from "./pages/Components/CheckInComponent";
 import ComponentsRegistration from "./pages/Components/ComponentsRegistration";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
@@ -67,9 +68,10 @@ function App() {
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
         <Route path="/components" element={<Components />} />
-        <Route path="/components/check-in/:id" element={<CheckInComponent />} />
         <Route path="/components/check-out/:id" element={<CheckOutComponent />} />
-        <Route path="components/registration" element={<ComponentsRegistration />} />
+        <Route path="/components/checked-out-list/:id" element={<CheckedOutList />} />
+        <Route path="/components/check-in/:id" element={<CheckInComponent />} />
+        <Route path="/components/registration" element={<ComponentsRegistration />} />
         <Route path="/audits/" element={<AssetAudits />} />
         <Route path="/audits/overdue" element={<OverdueAudits />} />
         <Route path="/audits/scheduled" element={<ScheduledAudits />} />

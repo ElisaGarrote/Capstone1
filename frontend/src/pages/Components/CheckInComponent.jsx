@@ -5,70 +5,47 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
-import PersonIcon from "../../assets/icons/person.svg";
-import LocationIcon from "../../assets/icons/location.svg";
 import { useForm } from "react-hook-form";
+
+const sampleItems = [
+  {
+    id: 1,
+    checkOutDate: '2023-10-01',
+    user: 'John Doe',
+    asset: 'Dell XPS 13',
+    notes: 'For software development',
+    checkInDate: '',
+  },
+  {
+    id: 2,
+    checkOutDate: '2023-10-02',
+    user: 'Jane Smith',
+    asset: 'Logitech Mouse',
+    notes: 'For testing purposes',
+    checkInDate: '',
+  },
+];
 
 export default function CheckInComponent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { id, assetId, product, image, employee, checkOutDate, returnDate, condition } = location.state || {};
-  
-  // Dropdown lists for easier maintenance
-  const employeeList = ['Employee 1', 'Employee 2', 'Employee 3'];
-  const locationList = ['Location 1', 'Location 2', 'Location 3'];
-  const conditionList = ['Excellent', 'Good', 'Fair', 'Poor'];
-
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors }
-  } = useForm({
-    defaultValues: {
-      checkoutTo: "employee",
-      employee: '',
-      location: '',
-      checkoutDate: new Date().toISOString().split('T')[0],
-      expectedReturnDate: '',
-      condition: '',
-      notes: '',
-      photos: []
-    }
-  });
-
-  const checkoutTo = watch("checkoutTo");
-  const checkoutDate = watch("checkoutDate");
-  const [previewImages, setPreviewImages] = useState([]);
-
-  const handleImagesSelection = (event) => {
-    const selectedFiles = Array.from(event.target.files);
-    if (selectedFiles.length > 0) {
-      const imagesArray = selectedFiles.map((file) => URL.createObjectURL(file));
-      setPreviewImages(imagesArray);
-      setValue("photos", selectedFiles);
-    } else {
-      setPreviewImages([]);
-      setValue("photos", []);
-    }
-  };
+  const { id, name } = location.state || {};
 
   const onSubmit = (data) => {
     console.log("Form submitted:", data);
-    navigate("/assets");
+    navigate("/components");
   };
 
   return (
     <>
       <nav><NavBar /></nav>
-      <main className="checkin-accessory-page">
+      <main className="check-in-out-page">
         <section className="top">
           <TopSecFormPage
-            root="Assets"
-            currentPage="Check-In Asset"
-            rootNavigatePage="/assets"
-            title={assetId}
+            root="Components"
+            currentPage="Check-In Components"
+            rootNavigatePage="/components"
+            title={name}
           />
         </section>
         <section className="middle">
@@ -76,7 +53,7 @@ export default function CheckInComponent() {
             <h2>Check-out Info</h2>
             <fieldset>
               <label>Checked-Out To:</label>
-              <p>{employee}</p>
+              <p>{asset}</p>
             </fieldset>
             <fieldset>
               <label>Check-Out Date:</label>

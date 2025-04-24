@@ -101,6 +101,17 @@ export default function CheckOutComponent() {
                 </fieldset>
 
                 <fieldset>
+                <label>Expected Return Date *</label>
+                <input
+                  type="date"
+                  className={errors.expectedReturnDate ? 'input-error' : ''}
+                  min={currentDate}
+                  {...register("expectedReturnDate", { required: 'Expected return date is required' })}
+                />
+                {errors.expectedReturnDate && <span className='error-message'>{errors.expectedReturnDate.message}</span>}
+              </fieldset>
+
+                <fieldset>
                     <label>Notes</label>
                     <textarea {...register("notes")} maxLength="500" />
                 </fieldset>

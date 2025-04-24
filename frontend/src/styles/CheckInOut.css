@@ -141,7 +141,7 @@
   position: relative;
 }
 
-.check-in-out-page .image-selected img:not(.image-selected button img) {
+.check-in-out-page .image-selected imFg:not(.image-selected button img) {
   display: flex;
   height: 100%;
   width: 100%;
