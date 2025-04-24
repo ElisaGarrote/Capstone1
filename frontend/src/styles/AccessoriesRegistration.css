@@ -19,6 +19,7 @@
 
 .accessories-registration .registration-form {
   display: flex;
+  flex-direction: column;
   height: auto;
   width: 60vw;
   align-self: center;
@@ -28,6 +29,7 @@
   box-shadow: 0 0 20px rgba(211, 211, 211, 0.3);
   border-radius: 40px;
   border: 1px solid #d3d3d3;
+  gap: 20px;
 }
 
 .accessories-registration form {
