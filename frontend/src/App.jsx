@@ -1,4 +1,4 @@
-import react from "react";
+import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -19,7 +19,9 @@ import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
 import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
-
+import Maintenance from "./pages/Repair/Maintenance";
+import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
+import EditMaintenance from "./pages/Repair/EditMaintenance";
 function Logout() {
   localStorage.clear();
   return <Navigate to="/login" />;
@@ -62,6 +64,9 @@ function App() {
         <Route path="/audits/schedule" element={<ScheduleRegistration />} />
         <Route path="/audits/edit" element={<EditAudits />} />
         <Route path="/audits/view" element={<ViewAudits />} />
+        <Route path="/dashboard/Repair/Maintenance" element={<Maintenance />} />
+        <Route path="/dashboard/Repair/MaintenanceRegistration" element={<MaintenanceRegistration />} />
+        <Route path="/dashboard/Repair/EditMaintenance" element={<EditMaintenance />} />
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>

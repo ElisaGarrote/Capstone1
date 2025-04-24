@@ -1,0 +1,220 @@
+/* Overall layout structure */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Maintenance page specific styles */
+  .maintenance-page {
+    padding: 1.5rem 2rem;
+    max-width: 100%;
+    overflow-x: auto;
+    margin-top: 4rem; /* Create space between navbar and content */
+  }
+  
+  .main-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .main-top h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  
+  .actions-container {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  
+  .search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .search-input {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.375rem;
+    padding: 0.5rem 2.5rem 0.5rem 1rem;
+    font-size: 0.875rem;
+    min-width: 240px;
+  }
+  
+  .search-icon {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+  }
+  
+  .maintenance-table-container {
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .maintenance-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .maintenance-table th {
+    background-color: #f8fafc;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  
+  .maintenance-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 0.875rem;
+    color: #334155;
+  }
+  
+  .maintenance-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .checkbox-column {
+    width: 40px;
+  }
+  
+  .asset-cell {
+    font-weight: 500;
+  }
+  
+  .asset-id {
+    color: #3b82f6;
+  }
+  
+  .supplier-cell {
+    color: #3b82f6;
+  }
+  
+  .action-cell {
+    width: 60px;
+  }
+  
+  /* Styles for buttons */
+  .btn-sort,
+  .btn-export,
+  .btn-new {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  
+  .btn-sort,
+  .btn-export {
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+  }
+  
+  .btn-new {
+    background-color: #3b82f6;
+    border: none;
+    color: white;
+  }
+  
+  /* Alert styles */
+  .alert {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1000;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .alert-success {
+    background-color: #ecfdf5;
+    color: #047857;
+    border-left: 4px solid #10b981;
+  }
+  
+  /* Pagination styles */
+  .pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-top: 1px solid #e2e8f0;
+  }
+  
+  .items-per-page {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #64748b;
+  }
+  
+  .page-select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.25rem;
+    background-color: white;
+    font-size: 0.875rem;
+    color: #334155;
+  }
+  
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .pagination-btn {
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.25rem;
+    background-color: white;
+    font-size: 0.875rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .pagination-btn:hover:not(.disabled, .active) {
+    background-color: #f1f5f9;
+  }
+  
+  .pagination-btn.active {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+  
+  .pagination-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }

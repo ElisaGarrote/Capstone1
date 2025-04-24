@@ -24,6 +24,28 @@ export default function NavBar() {
     // Add other condition here
   };
 
+  // Function to handle more dropdown navigation
+  const handleMoreNavigation = (event) => {
+    const value = event.target.value;
+    // Navigate based on selection but reset dropdown to default
+    if (value === "Categories") {
+      navigate("/categories");
+    } else if (value === "Manufacturers") {
+      navigate("/manufacturers");
+    } else if (value === "Suppliers") {
+      navigate("/suppliers");
+    } else if (value === "Statuses") {
+      navigate("/statuses");
+    } else if (value === "Depreciations") {
+      navigate("/depreciations");
+    } else if (value === "Recycle Bin") {
+      navigate("/recycle-bin");
+    }
+    
+    // Reset the dropdown to default "More" after navigation
+    event.target.value = "";
+  };
+
   return (
     <nav className="main-nav-bar">
       <section>
@@ -59,7 +81,12 @@ export default function NavBar() {
             </select>
           </li>
           <li>
-            <a>Maintenance</a>
+            <a
+              onClick={() => navigate("/dashboard/Repair/Maintenance")}
+              className={location.pathname.startsWith("/Maintenance") ? "active" : ""}
+            >
+              Repairs
+            </a>
           </li>
           <li>
             <a
@@ -80,9 +107,27 @@ export default function NavBar() {
               <option value="Depreciation Reports">Depreciation Reports</option>
               <option value="Due Back Reports">Due Back Reports</option>
               <option value="End of Life and Warranty Reports">
-                End of Life and Warranty Reports
+                EoL & Warranty Reports
               </option>
               <option value="Activity Reports">Components</option>
+            </select>
+          </li>
+          <li>
+            <select 
+              name="more-options" 
+              id="more-options" 
+              defaultValue=""
+              onChange={handleMoreNavigation}
+            >
+              <option value="" disabled hidden>
+                More
+              </option>
+              <option value="Categories">Categories</option>
+              <option value="Manufacturers">Manufacturers</option>
+              <option value="Suppliers">Suppliers</option>
+              <option value="Statuses">Statuses</option>
+              <option value="Depreciations">Depreciations</option>
+              <option value="Recycle Bin">Recycle Bin</option>
             </select>
           </li>
         </ul>
