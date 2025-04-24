@@ -16,6 +16,8 @@ export default function MediumButtons({
     - schedule-audits
     - perform-audits
     - delete
+    - sort
+    - filter
    */
   let icon;
   const navigate = useNavigate();
