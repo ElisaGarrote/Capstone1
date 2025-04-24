@@ -4,8 +4,10 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
 import Select from "react-select";
+import { useNavigate } from "react-router-dom";
 
 export default function PerformAudits() {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState("");
   const [previewImages, setPreviewImages] = useState([]);
 
@@ -183,10 +185,17 @@ export default function PerformAudits() {
                   : "Change Attachements"}
               </label>
             </fieldset>
-            <button type="submit" className="save-btn">
-              Save
-            </button>
           </form>
+          {/* Place this button inside the form when working on the backend. */}
+          <button
+            type="submit"
+            className="save-btn"
+            onClick={() =>
+              navigate("/audits", { state: { addedNewAudit: true } })
+            }
+          >
+            Save
+          </button>
         </section>
       </main>
     </>
