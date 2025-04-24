@@ -13,17 +13,15 @@
 
 .eol-table-section {
   background: white;
-  border-radius: 40px 40px 20px 20px;
+  border-radius: 40px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 0;
+  position: relative;
   overflow: hidden;
 }
 
 .table-container {
-  overflow-x: auto;
-  margin: 0;
-  padding: 0;
-  border-radius: 0;
+  position: relative;
 }
 
 .table-header {
@@ -33,6 +31,15 @@
   padding: 1.5rem 2rem;
   border-bottom: 1px solid #E5E7EB;
   background: white;
+  position: sticky;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.table-scroll-container {
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .header-with-status {

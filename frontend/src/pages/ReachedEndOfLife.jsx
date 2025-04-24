@@ -66,7 +66,7 @@ export default function ReachedEndOfLife() {
             </div>
           </div>
 
-          <div className="table-container">
+          <div className="table-scroll-container">
             <table className="eol-table">
               <thead>
                 <tr>

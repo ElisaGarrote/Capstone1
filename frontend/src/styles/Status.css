@@ -1,173 +1,109 @@
-.status-card {
-  background: white;
-  border-radius: 30px;
-  padding: 1.75rem 1.25rem;
-  display: flex;
+.status-archived,
+.status-deployed,
+.status-undeployable,
+.status-pending,
+.status-deployable,
+.status-lost {
+  display: inline-flex;
+  height: auto;
+  min-height: 4vh;
+  width: auto;
+  flex-direction: row;
   align-items: center;
-  gap: 1.75rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  border: 1px solid #e8e8e8;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-  height: 100px;
-  animation: fadeInUp 0.6s ease both;
-  width: 248px;
-  overflow: hidden;
+  padding: 4px 12px;
+  border-radius: 40px;
+  gap: 5px;
+  font-size: 0.75rem;
+  overflow: visible;
+  white-space: normal;
 }
 
-.status-card .content-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 1.75rem;
-  transition: transform 0.3s ease;
-  width: 100%;
+.status-archived .circle,
+.status-deployed .circle,
+.status-undeployable .circle,
+.status-pending .circle,
+.status-deployable .circle,
+.status-lost .circle {
+  height: 6px;
+  width: 6px;
+  border-radius: 50%;
+  margin-right: 3px;
+  animation: statusPulse 2s infinite;
 }
 
-/* Position cards in specific grid areas */
-.status-card:nth-child(1) { grid-area: 1 / 1; } /* Due for Return */
-.status-card:nth-child(2) { grid-area: 1 / 2; } /* Upcoming Audits */
-.status-card:nth-child(3) { grid-area: 1 / 3; } /* Upcoming End of Life */
-.status-card:nth-child(4) { grid-area: 1 / 4; } /* Expiring Warranties */
-.status-card:nth-child(5) { grid-area: 2 / 1; } /* Overdue for Return */
-.status-card:nth-child(6) { grid-area: 2 / 2; } /* Overdue Audits */
-.status-card:nth-child(7) { grid-area: 2 / 3; } /* Reached End of Life */
-.status-card:nth-child(8) { grid-area: 2 / 4; } /* Expired Warranties */
-.status-card:nth-child(9) { 
-  grid-area: 1 / 5 / 3 / 6;
-  height: 100%;
-  width: 295px;
-} /* Low Stock */
-
-/* Status Number */
-.status-number {
-  padding: 0.5rem;
-  border-radius: 8px;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: white;
-  min-width: 2.5rem;
-  height: 2.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.status-number.blue {
-  background: #0066ff;
-  animation: pulseBlue 2s infinite;
-}
-
-.status-number.red {
-  background: #ff3333;
-  animation: pulseRed 2s infinite;
-}
-
-.status-title {
-  font-size: 0.85rem;
-  color: #333;
-  font-weight: 500;
-  line-height: 1.2;
-  flex: 1;
-}
-
-/* Animations */
-@keyframes pulseBlue {
-  0% { box-shadow: 0 0 0 0 rgba(0, 102, 255, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(0, 102, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 102, 255, 0); }
-}
-
-@keyframes pulseRed {
-  0% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 51, 51, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0); }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+@keyframes statusPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--pulse-color), 0.4);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  70% {
+    box-shadow: 0 0 0 6px rgba(var(--pulse-color), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--pulse-color), 0);
   }
 }
 
-/* Hover Effects */
-.status-card:hover {
-  background: #0066ff;
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 102, 255, 0.25);
+.status-deployed .icon img {
+  height: 12px;
+  width: 12px;
 }
 
-.status-card:hover::before {
-  content: '';
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 40%;
-  background: white;
-  border-radius: 0 2px 2px 0;
+.status-archived {
+  background-color: var(--archived);
+  color: var(--archived-text);
 }
 
-.status-card:hover .status-number {
-  background: white;
-  color: #0066ff;
+.status-archived .circle {
+  background-color: #132144;
+  --pulse-color: 19, 33, 68;
 }
 
-.status-card:hover .status-number.blue {
-  animation: pulseBlueHover 2s infinite;
+.status-deployed {
+  background-color: var(--deployed);
+  color: var(--deployed-text);
 }
 
-.status-card:hover .status-number.red {
-  animation: pulseRedHover 2s infinite;
+.status-deployed .circle {
+  background-color: var(--deployed-text);
+  --pulse-color: 0, 123, 255;
 }
 
-@keyframes pulseBlueHover {
-  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+.status-undeployable {
+  background-color: var(--undeployable);
+  color: var(--undeployable-text);
 }
 
-@keyframes pulseRedHover {
-  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+.status-undeployable .circle {
+  background-color: var(--undeployable-text);
+  --pulse-color: 204, 47, 38;
 }
 
-.status-card:hover .status-title {
-  color: white;
+.status-pending {
+  background-color: var(--pending);
+  color: var(--pending-text);
 }
 
-.status-card:hover .content-wrapper {
-  transform: translateX(8px);
+.status-pending .circle {
+  background-color: var(--pending-text);
+  --pulse-color: 255, 149, 0;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1400px) {
-  .status-card,
-  .status-card:nth-child(9) {
-    width: 100%;
-  }
-  
-  .status-card:nth-child(9) {
-    grid-area: 3 / 1 / 3 / 5;
-    height: 100px;
-  }
+.status-deployable {
+  background-color: var(--deployable);
+  color: var(--deployable-text);
 }
 
-@media (max-width: 992px) {
-  .status-card:nth-child(9) {
-    grid-area: 5 / 1 / 5 / 3;
-  }
+.status-deployable .circle {
+  background-color: var(--deployable-text);
+  --pulse-color: 52, 199, 89;
 }
 
-@media (max-width: 576px) {
-  .status-card:nth-child(9) {
-    grid-area: auto;
-  }
+.status-lost {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: #FF3B30;
+}
+
+.status-lost .circle {
+  background-color: #FF3B30;
+  --pulse-color: 255, 59, 48;
 }
