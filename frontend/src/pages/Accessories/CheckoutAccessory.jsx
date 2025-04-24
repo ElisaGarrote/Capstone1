@@ -183,14 +183,18 @@ export default function CheckoutAccessory() {
               </label>
               <textarea name="notes" id="notes" maxLength="500"></textarea>
             </fieldset>
-            <fieldset>
-              <label htmlFor="location">Location *</label>
-              <select name="location" id="location" required>
-                <option value="option1">Option 1</option>
-                <option value="option2">Option 2</option>
-                <option value="option3">Option 3</option>
-              </select>
-            </fieldset>
+            {checkoutTo == "employee" ? (
+              <fieldset>
+                <label htmlFor="location">Location *</label>
+                <select name="location" id="location" required>
+                  <option value="option1">Option 1</option>
+                  <option value="option2">Option 2</option>
+                  <option value="option3">Option 3</option>
+                </select>
+              </fieldset>
+            ) : (
+              ""
+            )}
             <button type="submit" className="save-btn">
               Save
             </button>
