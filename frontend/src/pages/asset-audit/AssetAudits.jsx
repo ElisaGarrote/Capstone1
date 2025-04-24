@@ -18,11 +18,13 @@ export default function AssetAudits() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isUpdated, setUpdated] = useState(false);
+  const [isNewAuditAdded, setNewAuditAdded] = useState(false);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
   const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
   const isUpdateFromEdit = location.state?.isUpdateFromEdit;
+  const addedNewAudit = location.state?.addedNewAudit;
 
   console.log("is update from audit: ", isUpdateFromEdit);
 
@@ -45,6 +47,15 @@ export default function AssetAudits() {
       }, 5000);
     }
   }, [isUpdateFromEdit]);
+
+  useEffect(() => {
+    if (addedNewAudit == true) {
+      setNewAuditAdded(true);
+      setTimeout(() => {
+        setNewAuditAdded(false);
+      }, 5000);
+    }
+  }, [addedNewAudit]);
 
   return (
     <>
@@ -69,6 +80,8 @@ export default function AssetAudits() {
       )}
 
       {isUpdated && <Alert message="Update Successfully!" type="success" />}
+
+      {isNewAuditAdded && <Alert message="New audit added!" type="success" />}
 
       <nav>
         <NavBar />
