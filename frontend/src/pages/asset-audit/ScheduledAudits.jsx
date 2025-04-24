@@ -18,11 +18,13 @@ export default function ScheduledAudits() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isUpdated, setUpdated] = useState(false);
+  const [isScheduleAuditAdded, setScheduleAuditAdded] = useState(false);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
   const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
   const isUpdateFromEdit = location.state?.isUpdateFromEdit;
+  const addedScheduleAudit = location.state?.addedScheduleAudit;
 
   console.log("is update from audit: ", isUpdateFromEdit);
 
@@ -45,6 +47,15 @@ export default function ScheduledAudits() {
       }, 5000);
     }
   }, [isUpdateFromEdit]);
+
+  useEffect(() => {
+    if (addedScheduleAudit == true) {
+      setScheduleAuditAdded(true);
+      setTimeout(() => {
+        setScheduleAuditAdded(false);
+      }, 5000);
+    }
+  }, [addedScheduleAudit]);
 
   return (
     <>
@@ -69,6 +80,10 @@ export default function ScheduledAudits() {
       )}
 
       {isUpdated && <Alert message="Update Successfully!" type="success" />}
+
+      {isScheduleAuditAdded && (
+        <Alert message="New schedule audit added!" type="success" />
+      )}
 
       <nav>
         <NavBar />
