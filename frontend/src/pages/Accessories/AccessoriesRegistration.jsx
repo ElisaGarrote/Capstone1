@@ -1,20 +1,27 @@
 import NavBar from "../../components/NavBar";
 import "../../styles/AccessoriesRegistration.css";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
+import NewAccessoryModal from "../../components/Modals/NewAccessoryModal";
+import Alert from "../../components/Alert";
 
 export default function AccessoriesRegistration() {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
   const [previewImage, setPreviewImage] = useState(null);
   const [isPurchaseCostValid, setPurchaseCostValid] = useState(false);
   const [isQuantityNegative, setQuantityNegative] = useState(false);
   const [isMinQuantityValid, setMinQuantityValid] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isNewCategoryAdded, setNewCategoryAdded] = useState(false);
+  const [isFirstRender, setFirstRender] = useState(true);
   // const [countRequiredInput, setCountRequiredInput] = useState(0);
+
+  console.log("new category: ", isNewCategoryAdded);
 
   const handleImageSelection = (event) => {
     const file = event.target.files[0];
@@ -25,11 +32,25 @@ export default function AccessoriesRegistration() {
     }
   };
 
-  const categoryOptions = [
+  const [categoryOptions, setCategoryOptions] = useState([
     { value: "cable", label: "Cable" },
     { value: "charger", label: "Charger" },
     { value: "keyboard", label: "Keyboard" },
-  ];
+  ]);
+
+  useEffect(() => {
+    if (isFirstRender) {
+      setFirstRender(false);
+      return;
+    }
+
+    if (!isNewCategoryAdded) {
+      setNewCategoryAdded(true);
+      setTimeout(() => {
+        setNewCategoryAdded(false);
+      }, 5000);
+    }
+  }, [categoryOptions]);
 
   const manufacturerOptions = [
     { value: "apple", label: "Apple" },
@@ -107,10 +128,31 @@ export default function AccessoriesRegistration() {
 
   return (
     <>
+      {isModalOpen && (
+        <NewAccessoryModal
+          save={(name) => {
+            setCategoryOptions((prev) => [
+              ...prev,
+              { value: name.toLowerCase(), label: name },
+            ]);
+            setModalOpen(false);
+          }}
+          closeModal={() => setModalOpen(false)}
+        />
+      )}
+
+      {isNewCategoryAdded && (
+        <Alert message="New category added!" type="success" />
+      )}
+
       <nav>
         <NavBar />
       </nav>
-      <main className="accessories-registration">
+      <main
+        className={`accessories-registration ${
+          isModalOpen ? "hide-scroll" : ""
+        }`}
+      >
         <section className="top">
           <TopSecFormPage
             root="Accessories"
@@ -137,8 +179,12 @@ export default function AccessoriesRegistration() {
                   options={categoryOptions}
                   styles={customStylesDropdown}
                   placeholder="Select category..."
+                  required
                 />
-                <MediumButtons type="new" />
+                <MediumButtons
+                  type="new"
+                  deleteModalOpen={() => setModalOpen(true)}
+                />
               </div>
             </fieldset>
             <fieldset>
@@ -147,6 +193,7 @@ export default function AccessoriesRegistration() {
                 options={manufacturerOptions}
                 styles={customStylesDropdown}
                 placeholder="Select manufacturer..."
+                required
               />
             </fieldset>
             <fieldset>
@@ -163,6 +210,7 @@ export default function AccessoriesRegistration() {
                 options={locationOptions}
                 styles={customStylesDropdown}
                 placeholder="Select location..."
+                required
               />
             </fieldset>
             <fieldset>
@@ -287,10 +335,17 @@ export default function AccessoriesRegistration() {
                 {!previewImage ? "Choose Image" : "Change Image"}
               </label>
             </fieldset>
-            <button type="submit" className="save-btn">
-              Save
-            </button>
           </form>
+          {/* Place this button inside the form when working on the backend. */}
+          <button
+            type="submit"
+            className="save-btn"
+            onClick={() =>
+              navigate("/accessories", { state: { newAccessoryAdded: true } })
+            }
+          >
+            Save
+          </button>
         </section>
       </main>
     </>
