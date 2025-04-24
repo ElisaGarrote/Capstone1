@@ -11,6 +11,7 @@ const sampleItems = [
   {
     id: 1,
     checkOutDate: '2023-10-01',
+    returnDate: '2023-10-10',
     user: 'John Doe',
     asset: 'Dell XPS 13',
     notes: 'For software development',
@@ -19,6 +20,7 @@ const sampleItems = [
   {
     id: 2,
     checkOutDate: '2023-10-02',
+    returnDate: '2023-10-05',
     user: 'Jane Smith',
     asset: 'Logitech Mouse',
     notes: 'For testing purposes',
@@ -29,7 +31,17 @@ const sampleItems = [
 export default function CheckInComponent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { id, name } = location.state || {};
+  const { ids } = location.state || {};  // Expecting an array of IDs
+  const currentDate = new Date().toISOString().split("T")[0];
+  
+  // Find the item with the matching id
+  const selectedItems = ids ? sampleItems.filter(item => ids.includes(item.id)) : [sampleItems[0]];
+    
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
   const onSubmit = (data) => {
     console.log("Form submitted:", data);
@@ -45,41 +57,36 @@ export default function CheckInComponent() {
             root="Components"
             currentPage="Check-In Components"
             rootNavigatePage="/components"
-            title={name}
+            title="Check-In Components"
           />
         </section>
         <section className="middle">
           <section className="recent-checkout-info">
             <h2>Check-out Info</h2>
-            <fieldset>
-              <label>Checked-Out To:</label>
-              <p>{asset}</p>
-            </fieldset>
-            <fieldset>
-              <label>Check-Out Date:</label>
-              <p>{checkOutDate}</p>
-            </fieldset>
-            <fieldset>
-              <label>Expected Return Date:</label>
-              <p>{returnDate}</p>
-            </fieldset>
-            <fieldset>
-              <label>Condition:</label>
-              <p>{condition}</p>
-            </fieldset>
-
-            <h2>Asset Info</h2>
-            <fieldset>
-              <img src={image} alt="asset" />
-            </fieldset>
-            <fieldset>
-              <label>Asset ID:</label>
-              <p>{assetId}</p>
-            </fieldset>
-            <fieldset>
-              <label>Product:</label>
-              <p>{product}</p>
-            </fieldset>
+            {selectedItems.map((item) => (
+              <div key={item.id}>
+                <fieldset>
+                  <label>Checked-Out To:</label>
+                  <p>{item.user}</p>
+                </fieldset>
+                <fieldset>
+                  <label>Asset:</label>
+                  <p>{item.asset}</p>
+                </fieldset>
+                <fieldset>
+                  <label>Check-Out Date:</label>
+                  <p>{item.checkOutDate}</p>
+                </fieldset>
+                <fieldset>
+                  <label>Expected Return Date:</label>
+                  <p>{item.returnDate}</p>
+                </fieldset>
+                <fieldset>
+                  <label>Notes:</label>
+                  <p>{item.notes}</p>
+                </fieldset>
+              </div>
+            ))}
           </section>
 
           <section className="checkin-form">
@@ -88,53 +95,12 @@ export default function CheckInComponent() {
               <fieldset>
                 <label>Check-In Date *</label>
                 <input
-                  type="date"
+                  type="text"  // Use "text" instead of "date" to prevent date picker
+                  readOnly
+                  value={currentDate}  // Format: YYYY-MM-DD
                   className={errors.checkInDate ? 'input-error' : ''}
-                  min={checkoutDate}
-                  {...register("checkInDate", { required: 'Check-in date is required' })}
+                  {...register("checkInDate")}
                 />
-                {errors.checkInDate && <span className='error-message'>{errors.checkInDate.message}</span>}
-              </fieldset>
-
-              <fieldset>
-                <label>Condition</label>
-                <select {...register("condition")}>
-                  <option value="">Select Condition</option>
-                  {conditionList.map((condition, idx) => (
-                    <option key={idx} value={condition}>{condition}</option>
-                  ))}
-                </select>
-              </fieldset>
-
-              <fieldset>
-                <label>Image</label>
-                <div className="images-container">
-                  {previewImages.map((img, index) => (
-                    <div key={index} className="image-selected">
-                      <img src={img} alt={`Preview ${index}`} />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPreviewImages(previewImages.filter((_, i) => i !== index));
-                          setValue("photos", previewImages.filter((_, i) => i !== index));
-                        }}
-                      >
-                        <img src={CloseIcon} alt="Remove" />
-                      </button>
-                    </div>
-                  ))}
-                  <input
-                    type="file"
-                    id="images"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImagesSelection}
-                    style={{ display: "none" }}
-                  />
-                </div>
-                <label htmlFor="images" className="upload-image-btn">
-                  {previewImages.length === 0 ? "Choose Image" : "Change Image"}
-                </label>
               </fieldset>
 
               <fieldset>

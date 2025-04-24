@@ -25,7 +25,7 @@ const sampleItems = [
   },
 ];
 
-export default function CheckOutAsset() {
+export default function CheckOutList() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id, name, category } = location.state || {};
@@ -46,12 +46,18 @@ export default function CheckOutAsset() {
     );
   };
 
-  const handleCheckIn = (itemId, itemName) => {
+  const handleCheckIn = (itemId) => {
+    console.log(`Check-in-out record id: ${itemId}`);
     navigate(`/components/check-in/${itemId}`, {
-      state: {
-        id: itemId,
-        name: itemName
-      }
+      state: { id: itemId }
+    });
+  };    
+
+  const handleBulkCheckIn = () => {
+    if (checkedItems.length === 0) return; // optional guard
+    console.log(`Bulk check-in for items: ${checkedItems.join(", ")}`);
+    navigate("/components/check-in/0", {
+      state: { ids: checkedItems }
     });
   };
 
@@ -70,7 +76,7 @@ export default function CheckOutAsset() {
         <div className="container">
             <section className="top">
                 <p>Please select which employee/location's "{name}" you would like to check-in.</p>
-                <button>Bulk Check-In</button>
+                <button onClick={handleBulkCheckIn}>Bulk Check-In</button>
             </section>
             <section className="middle">
                 <table>
@@ -107,7 +113,7 @@ export default function CheckOutAsset() {
                         <td>
                             <button 
                               className="cmp-check-in-btn" 
-                              onClick={() => handleCheckIn(item.id, item.asset)}
+                              onClick={() => handleCheckIn(item.id)}
                             >
                               {"< Check-In"}
                             </button>
