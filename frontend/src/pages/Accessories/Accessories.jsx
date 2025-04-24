@@ -10,6 +10,7 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import ExportModal from "../../components/Modals/ExportModal";
 
 export default function Accessories() {
   const location = useLocation();
@@ -23,6 +24,7 @@ export default function Accessories() {
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isNewAccessoryAdded, setNewAccessoryAdde] = useState(false);
   const [isEditSuccess, setEditSuccess] = useState(false);
+  const [isExportModalOpen, setExportModalOpen] = useState(false);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
@@ -97,6 +99,10 @@ export default function Accessories() {
 
       {isEditSuccess && <Alert message="Accessory updated!" type="success" />}
 
+      {isExportModalOpen && (
+        <ExportModal closeModal={() => setExportModalOpen(false)} />
+      )}
+
       <nav>
         <NavBar />
       </nav>
@@ -108,7 +114,10 @@ export default function Accessories() {
               <form action="" method="post">
                 <input type="text" placeholder="Search..." />
               </form>
-              <MediumButtons type="export" />
+              <MediumButtons
+                type="export"
+                deleteModalOpen={() => setExportModalOpen(true)}
+              />
               <MediumButtons
                 type="new"
                 navigatePage="/accessories/registration"
