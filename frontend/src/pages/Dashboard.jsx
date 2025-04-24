@@ -101,7 +101,11 @@ function Dashboard() {
         <h1>Dashboard</h1>
         <div className="status-cards-grid">
           {statusCards.map((card, index) => (
-            <StatusCard key={index} {...card} />
+            <StatusCard 
+              key={index} 
+              {...card} 
+              index={index}
+            />
           ))}
         </div>
         

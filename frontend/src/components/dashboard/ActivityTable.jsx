@@ -2,14 +2,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { BsKeyboard } from 'react-icons/bs';
 import { LuDroplet } from 'react-icons/lu';
-import { HiTag } from 'react-icons/hi';
+import { HiOutlineTag } from 'react-icons/hi';
 import { RxPerson } from 'react-icons/rx';
+import Status from '../Status';
 import '../../styles/dashboard/ActivityLog.css';
 
 const ActivityTable = () => {
+  // Sample data matching the image exactly
   const activities = [
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "Chippy McDonald",
       type: "Accessory",
       event: "Checkout",
@@ -17,7 +19,7 @@ const ActivityTable = () => {
       toFrom: "Xiaomie Ocho"
     },
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "Renan Piotas",
       type: "Consumable",
       event: "Checkin",
@@ -25,7 +27,7 @@ const ActivityTable = () => {
       toFrom: "Xiaomie Ocho"
     },
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "Xiaomie Ocho",
       type: "Asset",
       event: "Update",
@@ -33,7 +35,7 @@ const ActivityTable = () => {
       toFrom: "Xiaomie Ocho"
     },
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "Reymundo Jane Nova",
       type: "Asset",
       event: "Update",
@@ -41,7 +43,7 @@ const ActivityTable = () => {
       toFrom: "Xiaomie Ocho"
     },
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "May Pomona",
       type: "Asset",
       event: "Checkout",
@@ -49,7 +51,7 @@ const ActivityTable = () => {
       toFrom: "Xiaomie Ocho"
     },
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "Chippy McDonald",
       type: "Accessory",
       event: "Checkout",
@@ -57,7 +59,7 @@ const ActivityTable = () => {
       toFrom: "Xiaomie Ocho"
     },
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "Renan Piotas",
       type: "Consumable",
       event: "Checkin",
@@ -65,7 +67,7 @@ const ActivityTable = () => {
       toFrom: "Xiaomie Ocho"
     },
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "Xiaomie Ocho",
       type: "Asset",
       event: "Update",
@@ -73,7 +75,7 @@ const ActivityTable = () => {
       toFrom: "Xiaomie Ocho"
     },
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "Reymundo Jane Nova",
       type: "Asset",
       event: "Update",
@@ -81,7 +83,7 @@ const ActivityTable = () => {
       toFrom: "Xiaomie Ocho"
     },
     {
-      date: "April 2, 2023 11:59:00 PM",
+      date: "Apr 2, 2023",
       user: "May Pomona",
       type: "Asset",
       event: "Checkout",
@@ -93,26 +95,26 @@ const ActivityTable = () => {
   const getIcon = (type) => {
     switch (type) {
       case 'Asset':
-        return <HiTag className="activity-icon" />;
+        return <HiOutlineTag className="activity-icon" />;
       case 'Accessory':
         return <BsKeyboard className="activity-icon" />;
       case 'Consumable':
         return <LuDroplet className="activity-icon" />;
       default:
-        return <HiTag className="activity-icon" />;
+        return <HiOutlineTag className="activity-icon" />;
     }
   };
 
-  const getEventStyle = (event) => {
+  const getEventType = (event) => {
     switch (event.toLowerCase()) {
       case 'checkout':
-        return 'event-status checkout';
+        return 'undeployable';
       case 'checkin':
-        return 'event-status checkin';
+        return 'deployable';
       case 'update':
-        return 'event-status update';
+        return 'pending';
       default:
-        return 'event-status';
+        return 'pending';
     }
   };
 
@@ -144,14 +146,15 @@ const ActivityTable = () => {
                   </div>
                 </td>
                 <td>
-                  <span className={getEventStyle(activity.event)}>
-                    {activity.event}
-                  </span>
+                  <Status
+                    type={getEventType(activity.event)}
+                    name={activity.event}
+                  />
                 </td>
                 <td className="item-cell">{activity.item}</td>
                 <td>
                   <div className="user-cell">
-                    <RxPerson size={16} fill="#0D6EFD" stroke="#0D6EFD" className="user-icon" />
+                    <RxPerson className="user-icon" style={{ color: '#0D6EFD' }} />
                     <span className="user-link">{activity.toFrom}</span>
                   </div>
                 </td>

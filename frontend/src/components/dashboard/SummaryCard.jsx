@@ -24,4 +24,4 @@ SummaryCard.propTypes = {
   percentage: PropTypes.number.isRequired
 };
 
-export default SummaryCard;
+export default SummaryCard; 
