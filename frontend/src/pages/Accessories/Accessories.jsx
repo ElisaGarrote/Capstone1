@@ -17,22 +17,23 @@ export default function Accessories() {
   let availValue = 7;
   let accessoryName1 = "DVI Cable";
   let accessoryName2 = "HDMI Cable";
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isNewAccessoryAdded, setNewAccessoryAdde] = useState(false);
+  const [isEditSuccess, setEditSuccess] = useState(false);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
   const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
   const newAccessoryAdded = location.state?.newAccessoryAdded;
+  const editSuccess = location.state?.editSuccess;
 
   // Set the setDeleteSuccess to true when the isDeleteSuccessFromEdit is true.
   // And reset the setDeleteSucces to false after 5 seconds.
   useEffect(() => {
-    if (isDeleteSuccessFromEdit == true) {
+    if (isDeleteSuccessFromEdit) {
       setDeleteSucess(true);
       setTimeout(() => {
         setDeleteSucess(false);
@@ -41,7 +42,7 @@ export default function Accessories() {
   }, [isDeleteSuccessFromEdit]); // This will be executed every time the isDeleteSucessFromEdit changes.
 
   useEffect(() => {
-    if (newAccessoryAdded == true) {
+    if (newAccessoryAdded) {
       setNewAccessoryAdde(true);
       setTimeout(() => {
         setNewAccessoryAdde(false);
@@ -49,8 +50,16 @@ export default function Accessories() {
     }
   }, [newAccessoryAdded]);
 
+  useEffect(() => {
+    if (editSuccess) {
+      setEditSuccess(true);
+      setTimeout(() => {
+        setEditSuccess(false);
+      }, 5000);
+    }
+  }, [editSuccess]);
+
   // For debugging only.
-  console.log("modal edit: ", isEditModalOpen);
   console.log("modal delete: ", isDeleteModalOpen);
   console.log("modal view: ", isViewModalOpen);
   console.log("delete confirm: ", isDeleteSuccess);
@@ -85,6 +94,8 @@ export default function Accessories() {
       {isNewAccessoryAdded && (
         <Alert message="New accessory added!" type="success" />
       )}
+
+      {isEditSuccess && <Alert message="Accessory updated!" type="success" />}
 
       <nav>
         <NavBar />
