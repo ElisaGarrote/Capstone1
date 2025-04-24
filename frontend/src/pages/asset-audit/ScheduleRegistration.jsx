@@ -3,8 +3,10 @@ import "../../styles/ScheduleRegistration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useState, useEffect } from "react";
 import Select from "react-select";
+import { useNavigate } from "react-router-dom";
 
 export default function ScheduleRegistration() {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState("");
 
   // Handle current date
@@ -88,10 +90,19 @@ export default function ScheduleRegistration() {
               <label htmlFor="notes">Notes</label>
               <textarea name="notes" id="notes" maxLength="2000"></textarea>
             </fieldset>
-            <button type="submit" className="save-btn">
-              Save
-            </button>
           </form>
+          {/* Place this button inside the form when working on the backend. */}
+          <button
+            type="submit"
+            className="save-btn"
+            onClick={() =>
+              navigate("/audits/scheduled", {
+                state: { addedScheduleAudit: true },
+              })
+            }
+          >
+            Save
+          </button>
         </section>
       </main>
     </>
