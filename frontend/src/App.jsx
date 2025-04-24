@@ -22,6 +22,7 @@ import ViewAudits from "./pages/asset-audit/ViewAudits";
 import Maintenance from "./pages/Repair/Maintenance";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
+import Consumables from './pages/Consumables/ViewConsumables';
 function Logout() {
   localStorage.clear();
   return <Navigate to="/login" />;
@@ -67,6 +68,7 @@ function App() {
         <Route path="/dashboard/Repair/Maintenance" element={<Maintenance />} />
         <Route path="/dashboard/Repair/MaintenanceRegistration" element={<MaintenanceRegistration />} />
         <Route path="/dashboard/Repair/EditMaintenance" element={<EditMaintenance />} />
+        <Route path="/Consumables/ViewConsumables" element={<Consumables />} />
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>

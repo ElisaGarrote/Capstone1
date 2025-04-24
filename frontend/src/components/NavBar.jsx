@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/custom-colors.css";
 import "../styles/NavBar.css";
 import Logo from "../assets/img/Logo.png";
@@ -7,12 +7,15 @@ import NotifIcon from "../assets/icons/notification.svg";
 
 export default function NavBar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Function to handle the navigation route from the dropdown
   const handleNavigation = (event) => {
     const value = event.target.value;
     if (value === "Accessories") {
       navigate("/accessories");
+    } else if (value === "Consumable") {
+      navigate("/Consumables/ViewConsumables");
     }
   };
 
@@ -20,6 +23,9 @@ export default function NavBar() {
   const currentDropdownPage = () => {
     if (location.pathname.startsWith("/accessories")) {
       return "Accessories";
+    }
+    if (location.pathname.startsWith("/Consumables")) {
+      return "Consumable";
     }
     // Add other condition here
   };
@@ -83,7 +89,7 @@ export default function NavBar() {
           <li>
             <a
               onClick={() => navigate("/dashboard/Repair/Maintenance")}
-              className={location.pathname.startsWith("/Maintenance") ? "active" : ""}
+              className={location.pathname.startsWith("/dashboard/Repair") ? "active" : ""}
             >
               Repairs
             </a>
