@@ -4,9 +4,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Select from "react-select";
+import NewAccessoryModal from "../../components/Modals/NewAccessoryModal";
+import Alert from "../../components/Alert";
 
 export default function EditAccessories() {
   const navigate = useNavigate();
@@ -15,6 +17,9 @@ export default function EditAccessories() {
   const [previewImage, setPreviewImage] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccessFromEdit, setDeleteSucsess] = useState(false);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [isNewCategoryAdded, setNewCategoryAdded] = useState(false);
+  const [isFirstRender, setFirstRender] = useState(true);
 
   // Retrieve the "id" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
@@ -33,11 +38,25 @@ export default function EditAccessories() {
     }
   };
 
-  const categoryOptions = [
+  const [categoryOptions, setCategoryOptions] = useState([
     { value: "cable", label: "Cable" },
     { value: "charger", label: "Charger" },
     { value: "keyboard", label: "Keyboard" },
-  ];
+  ]);
+
+  useEffect(() => {
+    if (isFirstRender) {
+      setFirstRender(false);
+      return;
+    }
+
+    if (!isNewCategoryAdded) {
+      setNewCategoryAdded(true);
+      setTimeout(() => {
+        setNewCategoryAdded(false);
+      }, 5000);
+    }
+  }, [categoryOptions]);
 
   const manufacturerOptions = [
     { value: "apple", label: "Apple" },
@@ -90,6 +109,23 @@ export default function EditAccessories() {
       {isDeleteSuccessFromEdit &&
         navigate("/accessories", { state: { isDeleteSuccessFromEdit } })}
 
+      {isModalOpen && (
+        <NewAccessoryModal
+          save={(name) => {
+            setCategoryOptions((prev) => [
+              ...prev,
+              { value: name.toLowerCase(), label: name },
+            ]);
+            setModalOpen(false);
+          }}
+          closeModal={() => setModalOpen(false)}
+        />
+      )}
+
+      {isNewCategoryAdded && (
+        <Alert message="New category added!" type="success" />
+      )}
+
       <nav>
         <NavBar />
       </nav>
@@ -126,8 +162,12 @@ export default function EditAccessories() {
                   options={categoryOptions}
                   styles={customStylesDropdown}
                   placeholder="Select category..."
+                  required
                 />
-                <MediumButtons type="new" />
+                <MediumButtons
+                  type="new"
+                  deleteModalOpen={() => setModalOpen(true)}
+                />
               </div>
             </fieldset>
             <fieldset>
@@ -136,6 +176,7 @@ export default function EditAccessories() {
                 options={manufacturerOptions}
                 styles={customStylesDropdown}
                 placeholder="Select manufacturer..."
+                required
               />
             </fieldset>
             <fieldset>
@@ -152,6 +193,7 @@ export default function EditAccessories() {
                 options={locationOptions}
                 styles={customStylesDropdown}
                 placeholder="Select location..."
+                required
               />
             </fieldset>
             <fieldset>
@@ -256,8 +298,14 @@ export default function EditAccessories() {
                 {!previewImage ? "Choose Image" : "Change Image"}
               </label>
             </fieldset>
-            <button type="submit" className="save-btn">
-              Save
+            <button
+              type="submit"
+              className="save-btn"
+              onClick={() =>
+                navigate("/accessories", { state: { editSuccess: true } })
+              }
+            >
+              Save Changes
             </button>
           </form>
         </section>
