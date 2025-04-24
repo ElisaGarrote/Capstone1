@@ -60,3 +60,7 @@
 .export-modal button:hover {
   background-color: var(--primary-color-hover);
 }
+
+.export-modal p {
+  color: var(--secondary-text-color);
+}
