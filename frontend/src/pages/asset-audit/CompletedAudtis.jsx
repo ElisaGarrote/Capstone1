@@ -9,6 +9,7 @@ import TabNavBar from "../../components/TabNavBar";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import { useState } from "react";
+import ExportModal from "../../components/Modals/ExportModal";
 
 export default function CompletedAudits() {
   const location = useLocation();
@@ -16,6 +17,7 @@ export default function CompletedAudits() {
   let assetName = "Microsoft Surface Pro 11";
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [isExportModalOpen, setExportModalOpen] = useState(false);
 
   return (
     <>
@@ -38,6 +40,11 @@ export default function CompletedAudits() {
       {isDeleteSuccess && (
         <Alert message="Deleted Successfully!" type="success" />
       )}
+
+      {isExportModalOpen && (
+        <ExportModal closeModal={() => setExportModalOpen(false)} />
+      )}
+
       <nav>
         <NavBar />
       </nav>
@@ -63,7 +70,10 @@ export default function CompletedAudits() {
                 <form action="" method="post">
                   <input type="text" placeholder="Search..." />
                 </form>
-                <MediumButtons type="export" navigatePage="" />
+                <MediumButtons
+                  type="export"
+                  deleteModalOpen={() => setExportModalOpen(true)}
+                />
               </div>
             </section>
             <section className="middle">

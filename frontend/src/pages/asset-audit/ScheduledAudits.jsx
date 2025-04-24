@@ -9,6 +9,7 @@ import TabNavBar from "../../components/TabNavBar";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import { useState, useEffect } from "react";
+import ExportModal from "../../components/Modals/ExportModal";
 
 export default function ScheduledAudits() {
   const location = useLocation();
@@ -19,6 +20,7 @@ export default function ScheduledAudits() {
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isUpdated, setUpdated] = useState(false);
   const [isScheduleAuditAdded, setScheduleAuditAdded] = useState(false);
+  const [isExportModalOpen, setExportModalOpen] = useState(false);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
@@ -85,6 +87,10 @@ export default function ScheduledAudits() {
         <Alert message="New schedule audit added!" type="success" />
       )}
 
+      {isExportModalOpen && (
+        <ExportModal closeModal={() => setExportModalOpen(false)} />
+      )}
+
       <nav>
         <NavBar />
       </nav>
@@ -110,7 +116,10 @@ export default function ScheduledAudits() {
                 <form action="" method="post">
                   <input type="text" placeholder="Search..." />
                 </form>
-                <MediumButtons type="export" navigatePage="" />
+                <MediumButtons
+                  type="export"
+                  deleteModalOpen={() => setExportModalOpen(true)}
+                />
               </div>
             </section>
             <section className="middle">
