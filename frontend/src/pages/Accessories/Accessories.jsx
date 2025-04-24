@@ -22,10 +22,12 @@ export default function Accessories() {
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [isNewAccessoryAdded, setNewAccessoryAdde] = useState(false);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
   const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
+  const newAccessoryAdded = location.state?.newAccessoryAdded;
 
   // Set the setDeleteSuccess to true when the isDeleteSuccessFromEdit is true.
   // And reset the setDeleteSucces to false after 5 seconds.
@@ -37,6 +39,15 @@ export default function Accessories() {
       }, 5000);
     }
   }, [isDeleteSuccessFromEdit]); // This will be executed every time the isDeleteSucessFromEdit changes.
+
+  useEffect(() => {
+    if (newAccessoryAdded == true) {
+      setNewAccessoryAdde(true);
+      setTimeout(() => {
+        setNewAccessoryAdde(false);
+      }, 5000);
+    }
+  }, [newAccessoryAdded]);
 
   // For debugging only.
   console.log("modal edit: ", isEditModalOpen);
@@ -69,6 +80,10 @@ export default function Accessories() {
 
       {isDeleteSuccess && (
         <Alert message="Deleted Successfully!" type="success" />
+      )}
+
+      {isNewAccessoryAdded && (
+        <Alert message="New accessory added!" type="success" />
       )}
 
       <nav>
