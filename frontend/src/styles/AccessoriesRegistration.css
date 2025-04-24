@@ -43,7 +43,8 @@
   gap: 5px;
 }
 
-.accessories-registration fieldset div {
+.accessories-registration fieldset .dropdown-container,
+.accessories-registration fieldset .purchase-cost-container {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -62,10 +63,6 @@
   padding: 13px 16px;
   border-radius: 10px;
   border: 1px solid #d3d3d3;
-}
-
-.accessories-registration textarea {
-  height: 13vh;
 }
 
 .accessories-registration fieldset p {
@@ -88,6 +85,11 @@
 
 .accessories-registration .save-btn:hover {
   background-color: var(--primary-color-hover);
+}
+
+.accessories-registration .save-btn:disabled {
+  cursor: no-drop;
+  background-color: #d3d3d3;
 }
 
 .accessories-registration .image-selected {
@@ -150,4 +152,9 @@
 
 .accessories-registration .upload-image-btn:hover {
   background-color: var(--primary-color-hover);
+}
+
+.accessories-registration span {
+  color: red;
+  font-size: 0.875rem;
 }
