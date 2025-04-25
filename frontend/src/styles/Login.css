@@ -43,7 +43,7 @@
   gap: 10px;
 }
 
-.login-page form {
+.login-page form, .resend-button{
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -86,6 +86,10 @@
   transition: ease 0.5s;
 }
 
+.resend-button {
+  margin-bottom: 1rem;
+}
+
 .login-page button:hover {
   background-color: rgba(0, 123, 255, 0.8);
 }
@@ -97,4 +101,54 @@
 
 .login-page a:hover {
   color: rgba(0, 123, 255, 0.8);
+}
+
+.login-page p{
+  color: var(--text-color);
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.login-page p.resend-label {
+  text-align: left;
+  width: 100%;
+}
+
+.form-btn {
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-header {
+  width: 70%;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.form-header h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-header p {
+  font-size: 1rem;
+  color: var(--text-color);
+}
+
+.error-msg {
+  color: var(--warning-text);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.password-requirements {
+  margin-top: 10px;
+}
+
+.password-requirements .error-msg {
+  display: block;
+  margin-bottom: 5px;
 }

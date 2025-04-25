@@ -29,7 +29,10 @@ function Login() {
 
           <button type="submit">Log In</button>
         </form>
-        <a href="#">Forgot Password?</a>
+        <div className="form-btn">
+          <button type="button" onClick={() => navigate("/register")} className="register-btn">Register</button>
+        </div>
+        <a onClick={() => navigate("/reset-password-email")}>Forgot Password?</a>
         <a onClick={() => navigate("/dashboard")}>Go to dashboard</a>
       </section>
     </main>

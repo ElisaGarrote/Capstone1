@@ -12,20 +12,39 @@ export default function NavBar() {
   // Function to handle the navigation route from the dropdown
   const handleNavigation = (event) => {
     const value = event.target.value;
+    if (value === "Products") {
+      navigate("/products");
+    }
+    if (value === "Assets") {
+      navigate("/assets");
+    }
     if (value === "Accessories") {
       navigate("/accessories");
-    } else if (value === "Consumable") {
+    } 
+    if (value === "Consumable") {
       navigate("/Consumables/ViewConsumables");
+    }
+    if (value === "Components") {
+      navigate("/components");
     }
   };
 
   // Function to handle the current selected dropdown menu based on the current location path of the page
   const currentDropdownPage = () => {
+    if (location.pathname.startsWith("/products")) {
+      return "Products";
+    }
+    if (location.pathname.startsWith("/assets")) {
+      return "Assets";
+    }
     if (location.pathname.startsWith("/accessories")) {
       return "Accessories";
     }
     if (location.pathname.startsWith("/Consumables")) {
       return "Consumable";
+    }
+    if (location.pathname.startsWith("/components")) {
+      return "Components";
     }
     // Add other condition here
   };
@@ -79,7 +98,7 @@ export default function NavBar() {
               <option value="" disabled hidden>
                 Assets
               </option>
-              <option value="Product">Product</option>
+              <option value="Products">Products</option>
               <option value="Assets">Assets</option>
               <option value="Accessories">Accessories</option>
               <option value="Consumable">Consumable</option>
