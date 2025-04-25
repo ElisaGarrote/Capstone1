@@ -150,7 +150,7 @@ export default function Components() {
                     <td>{item.category}</td>
                     <td>{item.modelNumber}</td>
                     <td>
-                      <TableBtn type="edit" navigatePage={`/assets/registration/${item.id}`} />
+                      <TableBtn type="edit" navigatePage={`/components/registration/${item.id}`} />
                     </td>
                     <td>
                       <TableBtn type="delete" onClick={() => handleDelete(item.id)} />

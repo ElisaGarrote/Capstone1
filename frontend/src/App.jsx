@@ -72,6 +72,7 @@ function App() {
         <Route path="/components/checked-out-list/:id" element={<CheckedOutList />} />
         <Route path="/components/check-in/:id" element={<CheckInComponent />} />
         <Route path="/components/registration" element={<ComponentsRegistration />} />
+        <Route path="/components/registration/:id" element={<ComponentsRegistration />} />
         <Route path="/audits/" element={<AssetAudits />} />
         <Route path="/audits/overdue" element={<OverdueAudits />} />
         <Route path="/audits/scheduled" element={<ScheduledAudits />} />
