@@ -9,6 +9,7 @@ export default function TopSecFormPage({
   title,
   buttonType,
   buttonNavigation,
+  deleteModalOpen,
 }) {
   const navigate = useNavigate();
 
@@ -24,15 +25,14 @@ export default function TopSecFormPage({
           </ul>
         </section>
         <section className="title">
-            <h1>
-                {title}
-            </h1>
-            {buttonType && (
-                <MediumButtons
-                    type={buttonType}
-                    navigatePage={buttonNavigation}
-                />
-            )}
+          <h1>{title}</h1>
+          {buttonType && (
+            <MediumButtons
+              type={buttonType}
+              navigatePage={buttonNavigation}
+              deleteModalOpen={deleteModalOpen}
+            />
+          )}
         </section>
       </main>
     </>

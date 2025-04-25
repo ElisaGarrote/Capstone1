@@ -45,13 +45,17 @@
   border-collapse: collapse;
 }
 
-.accessories-page .top div {
+.accessories-page .group-buttons {
   display: flex;
   flex-direction: row;
   justify-content: end;
   align-items: center;
   width: 40vw;
   gap: 1vw;
+}
+
+.accessories-page .middle {
+  position: relative;
 }
 
 .accessories-page .top input {

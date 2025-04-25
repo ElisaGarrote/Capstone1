@@ -171,17 +171,17 @@ td {
   width: 16vw;
 }
 
-/* Set the width of the location header and its data */
+/* Set the width of the location and perform by header and its data */
 .completed-audits-page table th:nth-child(5),
-.completed-audits-page table td:nth-child(5) {
-  width: 11vw;
+.completed-audits-page table td:nth-child(5),
+.completed-audits-page table th:nth-child(6),
+.completed-audits-page table td:nth-child(6) {
+  width: 13vw;
 }
 
-/* Set the width of the edit, and more header and its data*/
+/* Set the width of the view header and its data*/
 .completed-audits-page table th:nth-last-child(1),
-.completed-audits-page table td:nth-last-child(1),
-.completed-audits-page table th:nth-last-child(3),
-.completed-audits-page table td:nth-last-child(3) {
+.completed-audits-page table td:nth-last-child(1) {
   width: 4.8vw;
 }
 

@@ -11,10 +11,15 @@ import viewIcon from "../../assets/icons/eye.svg";
 export default function TableButtons({
   type,
   navigatePage,
+  previousPage,
   id,
+  showModal,
 }) {
   let icon;
   const navigate = useNavigate();
+
+  console.log("id e2: ", id);
+  console.log("previous page buttons: ", previousPage);
 
   // Assign the correct icon based on the type
   switch (type) {
@@ -39,10 +44,10 @@ export default function TableButtons({
     <button
       type="button"
       className={`table-buttons-${type}`}
-      onClick={() => 
-        navigate(navigatePage, {
-          state: {id} // Pass the value of id as state in the next page
-        })
+      onClick={
+        navigatePage != null
+          ? () => navigate(navigatePage, { state: { id, previousPage } })
+          : showModal
       }
     >
       <img src={icon} alt="" />

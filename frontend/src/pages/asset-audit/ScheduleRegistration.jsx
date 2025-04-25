@@ -2,8 +2,11 @@ import NavBar from "../../components/NavBar";
 import "../../styles/ScheduleRegistration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useState, useEffect } from "react";
+import Select from "react-select";
+import { useNavigate } from "react-router-dom";
 
 export default function ScheduleRegistration() {
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState("");
 
   // Handle current date
@@ -19,6 +22,35 @@ export default function ScheduleRegistration() {
     const formattedDate = formatter.format(today); // Format date in Philippines timezone
     setCurrentDate(formattedDate);
   }, []);
+
+  const assetOptions = [
+    { value: "100000 - XPS 13", label: "100000 - XPS 13" },
+    { value: "100001 - ThinkPad E15 G4", label: "100001 - ThinkPad E15 G4" },
+    { value: '100008 - Macbook Pro 16"', label: '100008 - Macbook Pro 16"' },
+    {
+      value: "100036 - Microsoft Surface Pro 11",
+      label: "100036 - Microsoft Surface Pro 11",
+    },
+  ];
+
+  const customStylesDropdown = {
+    control: (provided) => ({
+      ...provided,
+      width: "100%",
+      borderRadius: "10px",
+      fontSize: "0.875rem",
+      padding: "3px 8px",
+    }),
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "grey",
+      fontSize: "0.875rem",
+    }),
+  };
 
   return (
     <>
@@ -38,11 +70,11 @@ export default function ScheduleRegistration() {
           <form action="" method="post">
             <fieldset>
               <label htmlFor="asset">Select Asset *</label>
-              <select name="asset" id="asset">
-                <option value="asset1">Asset 1</option>
-                <option value="asset2">Asset 2</option>
-                <option value="asset3">Asset 3</option>
-              </select>
+              <Select
+                options={assetOptions}
+                styles={customStylesDropdown}
+                placeholder="Select locatioin..."
+              />
             </fieldset>
             <fieldset>
               <label htmlFor="audit-due-date">Audit Due Date *</label>
@@ -58,10 +90,19 @@ export default function ScheduleRegistration() {
               <label htmlFor="notes">Notes</label>
               <textarea name="notes" id="notes" maxLength="2000"></textarea>
             </fieldset>
-            <button type="submit" className="save-btn">
-              Save
-            </button>
           </form>
+          {/* Place this button inside the form when working on the backend. */}
+          <button
+            type="submit"
+            className="save-btn"
+            onClick={() =>
+              navigate("/audits/scheduled", {
+                state: { addedScheduleAudit: true },
+              })
+            }
+          >
+            Save
+          </button>
         </section>
       </main>
     </>

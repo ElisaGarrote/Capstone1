@@ -1,27 +1,33 @@
 import NavBar from "../../components/NavBar";
 import "../../styles/AccessoriesRegistration.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import DeleteModal from "../../components/Modals/DeleteModal";
 import Select from "react-select";
 import NewAccessoryModal from "../../components/Modals/NewAccessoryModal";
 import Alert from "../../components/Alert";
 
-export default function AccessoriesRegistration() {
+export default function EditAccessories() {
   const navigate = useNavigate();
+  const location = useLocation();
   const currentDate = new Date().toISOString().split("T")[0];
   const [previewImage, setPreviewImage] = useState(null);
-  const [isPurchaseCostValid, setPurchaseCostValid] = useState(false);
-  const [isQuantityNegative, setQuantityNegative] = useState(false);
-  const [isMinQuantityValid, setMinQuantityValid] = useState(false);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleteSuccessFromEdit, setDeleteSucsess] = useState(false);
   const [isModalOpen, setModalOpen] = useState(false);
   const [isNewCategoryAdded, setNewCategoryAdded] = useState(false);
   const [isFirstRender, setFirstRender] = useState(true);
-  // const [countRequiredInput, setCountRequiredInput] = useState(0);
 
-  console.log("new category: ", isNewCategoryAdded);
+  // Retrieve the "id" value passed from the navigation state.
+  // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
+  const id = location.state?.id;
+
+  console.log("delete open: ", isDeleteModalOpen);
+  console.log("delete success: ", isDeleteSuccessFromEdit);
+  console.log("id: ", id);
 
   const handleImageSelection = (event) => {
     const file = event.target.files[0];
@@ -89,45 +95,20 @@ export default function AccessoriesRegistration() {
     }),
   };
 
-  // Validations
-  const handlePurchaseCostInput = (event) => {
-    const value = event.target.value;
-
-    // Check if input value contains a decimal point
-    if (value.includes(".")) {
-      // Split the value into integer and decimal parts
-      const [integerPart, decimalPart] = value.split(".");
-
-      // Restrict the decimal part to 2 digits
-      if (decimalPart.length > 2) {
-        // Update the value to only allow 2 decimal places
-        event.target.value = `${integerPart}.${decimalPart.slice(0, 2)}`;
-      }
-    }
-
-    setPurchaseCostValid(value < 0);
-  };
-
-  const handleQuantityInput = (event) => {
-    const value = event.target.value;
-    setQuantityNegative(value < 0);
-
-    if (value > 9999) {
-      event.target.value = value.slice(0, 4);
-    }
-  };
-
-  const handleMinQuantityInput = (event) => {
-    const value = event.target.value;
-    setMinQuantityValid(value < 0 || value.includes("."));
-
-    if (value > 9999) {
-      event.target.value = value.slice(0, 4);
-    }
-  };
-
   return (
     <>
+      {/* Show the delete modal when the isDeleteModalOpen value is true */}
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={() => setDeleteSucsess(true)}
+        />
+      )}
+
+      {/* Redirect to accessories page and passed the state "isDeleteSuccessFromEdit" */}
+      {isDeleteSuccessFromEdit &&
+        navigate("/accessories", { state: { isDeleteSuccessFromEdit } })}
+
       {isModalOpen && (
         <NewAccessoryModal
           save={(name) => {
@@ -150,15 +131,17 @@ export default function AccessoriesRegistration() {
       </nav>
       <main
         className={`accessories-registration ${
-          isModalOpen ? "hide-scroll" : ""
+          isDeleteModalOpen ? "hide-scroll" : ""
         }`}
       >
         <section className="top">
           <TopSecFormPage
             root="Accessories"
-            currentPage="New Accessory"
+            currentPage="Edit Accessory"
             rootNavigatePage="/accessories"
-            title="New Accessory"
+            title={id}
+            buttonType="delete"
+            deleteModalOpen={() => setDeleteModalOpen(true)}
           />
         </section>
         <section className="registration-form">
@@ -214,16 +197,6 @@ export default function AccessoriesRegistration() {
               />
             </fieldset>
             <fieldset>
-              <label htmlFor="model-number">Model Number</label>
-              <input
-                type="text"
-                name="model-number"
-                id="model-number"
-                placeholder="Model Number"
-                maxLength="50"
-              />
-            </fieldset>
-            <fieldset>
               <label htmlFor="order-number">Order Number</label>
               <input
                 type="text"
@@ -234,21 +207,27 @@ export default function AccessoriesRegistration() {
               />
             </fieldset>
             <fieldset>
+              <label htmlFor="model-number">Model Number</label>
+              <input
+                type="text"
+                name="order-number"
+                id="order-number"
+                placeholder="Order Number"
+                maxLength="50"
+              />
+            </fieldset>
+            <fieldset>
               <label htmlFor="purchase-date">Purchase Date *</label>
               <input
                 type="date"
                 name="purchase-date"
                 id="purchase-date"
                 max={currentDate}
-                defaultValue={currentDate}
                 required
               />
             </fieldset>
             <fieldset>
               <label htmlFor="purchase-cost">Purchase Cost *</label>
-
-              {isPurchaseCostValid && <span>Must not a negative value.</span>}
-
               <div className="purchase-cost-container">
                 <p>PHP</p>
                 <input
@@ -256,17 +235,13 @@ export default function AccessoriesRegistration() {
                   name="purchase-cost"
                   id="purchase-cost"
                   step="0.01"
-                  min="0"
+                  min="1"
                   required
-                  onChange={handlePurchaseCostInput}
                 />
               </div>
             </fieldset>
             <fieldset>
               <label htmlFor="quantity">Quantity *</label>
-
-              {isQuantityNegative && <span>Must not be a negative value.</span>}
-
               <input
                 type="number"
                 name="quantity"
@@ -275,16 +250,10 @@ export default function AccessoriesRegistration() {
                 max="9999"
                 defaultValue="1"
                 required
-                onChange={handleQuantityInput}
               />
             </fieldset>
             <fieldset>
               <label htmlFor="minimum-quantity">Min Quantity *</label>
-
-              {isMinQuantityValid && (
-                <span>Must not be a negative value or has decimal.</span>
-              )}
-
               <input
                 type="number"
                 name="min-quantity"
@@ -293,17 +262,11 @@ export default function AccessoriesRegistration() {
                 max="9999"
                 defaultValue="0"
                 required
-                onChange={handleMinQuantityInput}
               />
             </fieldset>
             <fieldset>
               <label htmlFor="notes">Notes</label>
-              <textarea
-                name="notes"
-                id="notes"
-                maxLength="500"
-                rows="3"
-              ></textarea>
+              <textarea name="notes" id="notes" maxLength="500"></textarea>
             </fieldset>
             <fieldset>
               <label htmlFor="upload-image">Image</label>
@@ -335,17 +298,16 @@ export default function AccessoriesRegistration() {
                 {!previewImage ? "Choose Image" : "Change Image"}
               </label>
             </fieldset>
+            <button
+              type="submit"
+              className="save-btn"
+              onClick={() =>
+                navigate("/accessories", { state: { editSuccess: true } })
+              }
+            >
+              Save Changes
+            </button>
           </form>
-          {/* Place this button inside the form when working on the backend. */}
-          <button
-            type="submit"
-            className="save-btn"
-            onClick={() =>
-              navigate("/accessories", { state: { newAccessoryAdded: true } })
-            }
-          >
-            Save
-          </button>
         </section>
       </main>
     </>
