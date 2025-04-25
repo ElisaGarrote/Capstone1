@@ -17,7 +17,6 @@ import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
 import CompletedAudits from "./pages/asset-audit/CompletedAudtis";
 import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
-<<<<<<< HEAD
 import UpcomingEndOfLife from "./pages/UpcomingEndOfLife";
 import ExpiringWarranties from "./pages/ExpiringWarranties";
 import ReachedEndOfLife from "./pages/ReachedEndOfLife";
@@ -29,10 +28,6 @@ import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
 import ActivityReport from "./pages/reports/ActivityReport";
 import Settings from "./pages/Settings";
 import UserManagement from "./pages/UserManagement";
-=======
-import EditAudits from "./pages/asset-audit/EditAudits";
-import ViewAudits from "./pages/asset-audit/ViewAudits";
->>>>>>> TestingForMerging-S
 
 function Logout() {
   localStorage.clear();
@@ -74,7 +69,6 @@ function App() {
         <Route path="/audits/completed" element={<CompletedAudits />} />
         <Route path="/audits/new" element={<PerformAudits />} />
         <Route path="/audits/schedule" element={<ScheduleRegistration />} />
-<<<<<<< HEAD
         <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
         <Route path="/warranties" element={<ExpiringWarranties />} />
         <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />
@@ -86,10 +80,6 @@ function App() {
         <Route path="/reports/activity" element={<ActivityReport />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/user-management" element={<UserManagement />} />
-=======
-        <Route path="/audits/edit" element={<EditAudits />} />
-        <Route path="/audits/view" element={<ViewAudits />} />
->>>>>>> TestingForMerging-S
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
