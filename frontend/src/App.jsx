@@ -34,7 +34,9 @@ import Maintenance from "./pages/Repair/Maintenance";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
 import Consumables from './pages/Consumables/ViewConsumables';import ResetPasswordEmail from "./pages/ResetPasswordEmail"
-import SetPassword from "./pages/SetPassword"
+import AccessoriesRegistration from "./pages/accessories/AccessoriesRegistration";
+import PasswordResetRequest from "./pages/PasswordResetRequest";
+import PasswordReset from "./pages/PasswordReset"
 
 function Logout() {
   localStorage.clear();
@@ -61,8 +63,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/reset-password-email" element={<ResetPasswordEmail />} />
-        <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/request/password_reset" element={<PasswordResetRequest />} />
+        <Route path="/password-reset/:token" element={<PasswordReset />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/registration" element={<ProductsRegistration />} />
