@@ -68,7 +68,7 @@ export default function CheckOutAsset() {
         <section className="top">
           <TopSecFormPage
             root="Assets"
-            currentPage={name}
+            currentPage="Check-Out Asset"
             rootNavigatePage="/assets"
             title={assetId}
           />

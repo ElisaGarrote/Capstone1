@@ -55,7 +55,7 @@ export default function CheckInComponent() {
         <section className="top">
           <TopSecFormPage
             root="Components"
-            currentPage="Check-In Components"
+            currentPage="Check-In Component"
             rootNavigatePage="/components"
             title="Check-In Components"
           />
