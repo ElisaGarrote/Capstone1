@@ -16,6 +16,17 @@ import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
 import CompletedAudits from "./pages/asset-audit/CompletedAudtis";
 import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
+import UpcomingEndOfLife from "./pages/UpcomingEndOfLife";
+import ExpiringWarranties from "./pages/ExpiringWarranties";
+import ReachedEndOfLife from "./pages/ReachedEndOfLife";
+import ExpiredWarranties from "./pages/ExpiredWarranties";
+import AssetReport from "./pages/reports/AssetReport";
+import DepreciationReport from "./pages/reports/DepreciationReport";
+import DueBackReport from "./pages/reports/DueBackReport";
+import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
+import ActivityReport from "./pages/reports/ActivityReport";
+import Settings from "./pages/Settings";
+import UserManagement from "./pages/UserManagement";
 
 function Logout() {
   localStorage.clear();
@@ -56,6 +67,17 @@ function App() {
         <Route path="/audits/completed" element={<CompletedAudits />} />
         <Route path="/audits/new" element={<PerformAudits />} />
         <Route path="/audits/schedule" element={<ScheduleRegistration />} />
+        <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
+        <Route path="/warranties" element={<ExpiringWarranties />} />
+        <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />
+        <Route path="/expired-warranties" element={<ExpiredWarranties />} />
+        <Route path="/reports/asset" element={<AssetReport />} />
+        <Route path="/reports/depreciation" element={<DepreciationReport />} />
+        <Route path="/reports/due-back" element={<DueBackReport />} />
+        <Route path="/reports/eol-warranty" element={<EndOfLifeWarrantyReport />} />
+        <Route path="/reports/activity" element={<ActivityReport />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/user-management" element={<UserManagement />} />
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
