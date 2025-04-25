@@ -3,7 +3,7 @@ import NavBar from "../components/NavBar";
 import "../styles/Settings.css";
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState("company");
+  const [activeTab, setActiveTab] = useState("account");
 
   return (
     <>
@@ -35,7 +35,7 @@ export default function Settings() {
                   <div className="form-section">
                     <h3>Basic Information</h3>
                     <div className="form-group">
-                      <label>Company name *</label>
+                      <label>Company name </label>
                       <input 
                         type="text"
                         value="MAP Active"
@@ -43,7 +43,7 @@ export default function Settings() {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Industry Type *</label>
+                      <label>Industry Type </label>
                       <input 
                         type="text"
                         value="Retail"
@@ -55,7 +55,7 @@ export default function Settings() {
                   <div className="form-section">
                     <h3>Contact Information</h3>
                     <div className="form-group">
-                      <label>Contact Person *</label>
+                      <label>Contact Person </label>
                       <input 
                         type="text"
                         value="Mary Grace Piattos"
@@ -63,7 +63,7 @@ export default function Settings() {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Contact Email *</label>
+                      <label>Contact Email </label>
                       <input 
                         type="email"
                         value="m*********@gmail.com"
@@ -72,9 +72,9 @@ export default function Settings() {
                     </div>
                   </div>
                 </div>
-                <button className="save-changes" disabled>
-                  Save Changes
-                </button>
+                <button type="submit" className="save-changes">
+                    Save Changes
+                  </button>
               </div>
             )}
 
@@ -84,7 +84,7 @@ export default function Settings() {
                 <form>
                   <div className="form-grid">
                     <div className="form-group">
-                      <label>First name *</label>
+                      <label>First name </label>
                       <input 
                         type="text" 
                         value="Mary Grace"
@@ -93,7 +93,7 @@ export default function Settings() {
                     </div>
 
                     <div className="form-group">
-                      <label>Email Address *</label>
+                      <label>Email Address </label>
                       <input 
                         type="email" 
                         value="m*********@gmail.com"
@@ -110,7 +110,7 @@ export default function Settings() {
                     </div>
 
                     <div className="form-group">
-                      <label>Role *</label>
+                      <label>Role </label>
                       <input 
                         type="text" 
                         value="Admin"
@@ -119,7 +119,7 @@ export default function Settings() {
                     </div>
 
                     <div className="form-group">
-                      <label>Last name *</label>
+                      <label>Last name </label>
                       <input 
                         type="text" 
                         value="Piattos"
@@ -128,7 +128,7 @@ export default function Settings() {
                     </div>
 
                     <div className="form-group">
-                      <label>Contact Number *</label>
+                      <label>Contact Number </label>
                       <input 
                         type="tel" 
                         value="+63 9*******678"
@@ -137,7 +137,7 @@ export default function Settings() {
                     </div>
 
                     <div className="form-group created-at">
-                      <label>Created At *</label>
+                      <label>Created At </label>
                       <input 
                         type="text" 
                         value="January 1, 2025 at 12:00 AM"
@@ -157,4 +157,4 @@ export default function Settings() {
       </main>
     </>
   );
-} 
+}

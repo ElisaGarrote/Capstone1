@@ -1,13 +1,35 @@
+/* Add these CSS rules for the navbar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+
+/* Adjust settings page to account for fixed navbar */
+.settings-page {
+  padding-top: 60px; /* Height of the navbar */
+}
+
 .settings-container {
   padding: 20px;
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0 auto; /* Removed top margin since we're using padding-top on the parent */
 }
 
+/* Rest of your CSS remains the same */
 .settings-container h1 {
   font-size: 24px;
   margin-bottom: 20px;
   color: #333;
+  margin-top: 20px;
 }
 
 .settings-tabs {
@@ -15,6 +37,7 @@
   border-bottom: 1px solid #e0e0e0;
   margin-bottom: 24px;
   background: white;
+  z-index: 10;
 }
 
 .settings-tabs .tab {
@@ -82,9 +105,15 @@
   margin-bottom: 8px;
 }
 
+/* Add asterisk to required fields */
 .form-group label::after {
   content: ' *';
   color: #dc3545;
+}
+
+/* Remove asterisk from optional fields */
+.form-group:has(input[placeholder*="middle name"]) label::after {
+  content: '';
 }
 
 .form-group input {
@@ -94,7 +123,7 @@
   border-radius: 4px;
   font-size: 13px;
   color: #333;
-  background-color: #f8f9fa;
+  background-color: #fff;
 }
 
 .form-group input:disabled {
@@ -103,18 +132,30 @@
   color: #666;
 }
 
+/* Make Created At field span both columns */
+.created-at {
+  grid-column: 1 / span 2;
+}
+
 .save-changes {
   width: 100%;
   padding: 10px;
-  background-color: #e9ecef;
-  color: #666;
+  background-color: #007bff;
+  color: white;
   border: none;
   border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.save-changes:hover:not(:disabled) {
+  background-color: #0069d9;
 }
 
 .save-changes:disabled {
+  background-color: #e9ecef;
+  color: #666;
   cursor: not-allowed;
   opacity: 0.7;
-} 
+}
