@@ -2,41 +2,50 @@ import React from 'react';
 import NavBar from "../../components/NavBar";
 import "../../styles/reports/AssetReport.css";
 
+// FilterForm component for handling filter selections
+function FilterForm({ title, placeholder }) {
+  return (
+    <div className="filter-form">
+      <label htmlFor={`filter-${title}`}>{title}</label>
+      <input 
+        type="text" 
+        id={`filter-${title}`} 
+        placeholder={placeholder}
+        className="filter-input"
+      />
+    </div>
+  );
+}
+
 export default function AssetReport() {
   const filters = [
     {
       title: "Location",
-      placeholder: "All Locations",
-      options: []
+      placeholder: "All Locations"
     },
     {
       title: "Supplier",
-      placeholder: "All Suppliers",
-      options: []
+      placeholder: "All Suppliers"
     },
     {
       title: "Product",
-      placeholder: "All Products",
-      options: []
+      placeholder: "All Products"
     },
     {
       title: "Manufacturer",
-      placeholder: "All Manufacturers",
-      options: []
+      placeholder: "All Manufacturers"
     },
     {
       title: "Category",
-      placeholder: "All Categories",
-      options: []
+      placeholder: "All Categories"
     },
     {
       title: "Status",
-      placeholder: "All Statuses",
-      options: []
+      placeholder: "All Statuses"
     }
   ];
 
-  const columns = [
+  const leftColumns = [
     { id: "asset_id", label: "Asset ID", checked: true },
     { id: "asset_name", label: "Asset Name", checked: true },
     { id: "purchase_date", label: "Purchase Date", checked: true },
@@ -48,7 +57,10 @@ export default function AssetReport() {
     { id: "notes", label: "Notes", checked: true },
     { id: "created_at", label: "Created At", checked: true },
     { id: "updated_at", label: "Updated At", checked: true },
-    { id: "custom_fields", label: "Custom Fields", checked: true },
+    { id: "custom_fields", label: "Custom Fields", checked: true }
+  ];
+
+  const rightColumns = [
     { id: "product_data", label: "Product Data", checked: true },
     { id: "category_data", label: "Category Data", checked: true },
     { id: "manufacturer_data", label: "Manufacturer Data", checked: true },
@@ -69,8 +81,8 @@ export default function AssetReport() {
       <main className="report-content">
         <h1>Asset Report</h1>
         
-        <div className="report-section">
-          <div className="filter-columns-wrapper">
+        <div className="report-card">
+          <div className="report-sections">
             <div className="filters-section">
               <h2>Select Filter</h2>
               {filters.map((filter, index) => (
@@ -78,8 +90,6 @@ export default function AssetReport() {
                   key={index}
                   title={filter.title}
                   placeholder={filter.placeholder}
-                  options={filter.options}
-                  onChange={(e) => console.log(filter.title, e.target.value)}
                 />
               ))}
             </div>
@@ -87,16 +97,30 @@ export default function AssetReport() {
             <div className="columns-section">
               <h2>Select Columns</h2>
               <div className="columns-grid">
-                {columns.map((column) => (
-                  <div key={column.id} className="column-checkbox">
-                    <input
-                      type="checkbox"
-                      id={column.id}
-                      defaultChecked={column.checked}
-                    />
-                    <label htmlFor={column.id}>{column.label}</label>
-                  </div>
-                ))}
+                <div className="column-left">
+                  {leftColumns.map((column) => (
+                    <div key={column.id} className="column-checkbox">
+                      <input
+                        type="checkbox"
+                        id={column.id}
+                        defaultChecked={column.checked}
+                      />
+                      <label htmlFor={column.id}>{column.label}</label>
+                    </div>
+                  ))}
+                </div>
+                <div className="column-right">
+                  {rightColumns.map((column) => (
+                    <div key={column.id} className="column-checkbox">
+                      <input
+                        type="checkbox"
+                        id={column.id}
+                        defaultChecked={column.checked}
+                      />
+                      <label htmlFor={column.id}>{column.label}</label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -108,4 +132,4 @@ export default function AssetReport() {
       </main>
     </div>
   );
-} 
+}

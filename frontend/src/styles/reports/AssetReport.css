@@ -1,123 +1,119 @@
 .report-container {
-  display: flex;
+  width: 100%;
   min-height: 100vh;
   background-color: #f5f5f5;
 }
 
 .report-content {
-  flex-grow: 1;
-  padding: 2rem 4rem;
-  margin-top: 60px;
+  padding: 80px 20px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .report-content h1 {
   font-size: 24px;
   font-weight: 600;
-  color: #111827;
-  margin-bottom: 2rem;
-  text-align: left;
+  margin-bottom: 20px;
+  color: #333;
 }
 
-.report-section {
-  background: white;
-  border-radius: 24px;
-  padding: 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
+.report-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
-.filter-columns-wrapper {
+.report-sections {
   display: flex;
-  gap: 4rem;
-  margin-bottom: 2rem;
+  gap: 30px;
+  margin-bottom: 20px;
 }
 
 .filters-section {
   flex: 1;
-  max-width: 350px;
-}
-
-.filters-section h2,
-.columns-section h2 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 1.5rem;
-}
-
-.filter-group {
-  margin-bottom: 1rem;
-}
-
-.filter-group label {
-  display: block;
-  font-size: 14px;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
-
-.filter-select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #374151;
-  background-color: white;
-}
-
-.filter-select:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
 }
 
 .columns-section {
   flex: 1;
 }
 
+.filters-section h2,
+.columns-section h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.filter-form {
+  margin-bottom: 15px;
+}
+
+.filter-form label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
 .columns-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  display: flex;
+  gap: 20px;
+}
+
+.column-left,
+.column-right {
+  flex: 1;
 }
 
 .column-checkbox {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 8px;
 }
 
 .column-checkbox input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  border: 1px solid #E5E7EB;
-  border-radius: 4px;
-  cursor: pointer;
+  margin-right: 8px;
 }
 
 .column-checkbox label {
   font-size: 14px;
-  color: #374151;
-  cursor: pointer;
+  color: #555;
 }
 
 .download-button {
-  display: block;
   width: 100%;
-  padding: 0.75rem;
-  background-color: #0066FF;
+  padding: 12px;
+  background-color: #0d6efd;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 5px;
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .download-button:hover {
-  background-color: #0052cc;
-} 
+  background-color: #0b5ed7;
+}
+
+@media (max-width: 768px) {
+  .report-sections {
+    flex-direction: column;
+  }
+  
+  .columns-grid {
+    flex-direction: column;
+  }
+}
