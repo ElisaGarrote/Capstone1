@@ -1,6 +1,5 @@
 import React from 'react';
 import NavBar from "../../components/NavBar";
-import FilterForm from "../../components/FilterForm";
 import "../../styles/reports/AssetReport.css";
 
 export default function AssetReport() {
