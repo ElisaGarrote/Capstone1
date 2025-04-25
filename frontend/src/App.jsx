@@ -25,8 +25,8 @@ import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
 import CompletedAudits from "./pages/asset-audit/CompletedAudtis";
 import AccessoriesRegistration from "./pages/accessories/AccessoriesRegistration";
-import ResetPasswordEmail from "./pages/ResetPasswordEmail"
-import SetPassword from "./pages/SetPassword"
+import PasswordResetRequest from "./pages/PasswordResetRequest";
+import PasswordReset from "./pages/PasswordReset"
 
 function Logout() {
   localStorage.clear();
@@ -53,8 +53,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/reset-password-email" element={<ResetPasswordEmail />} />
-        <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/request/password_reset" element={<PasswordResetRequest />} />
+        <Route path="/password-reset/:token" element={<PasswordReset />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/registration" element={<ProductsRegistration />} />

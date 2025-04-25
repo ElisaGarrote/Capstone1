@@ -4,31 +4,37 @@ import loginImage from "../assets/img/login.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
-import AxiosInstance from "../components/AxiosInstance.jsx"; // Assuming this is your Axios instance
-import Alert from "../components/Alert"; // Assuming you have an Alert component
+import AxiosInstance from "../components/AxiosInstance.jsx";
+import Alert from "../components/Alert.jsx";
 
-function ResetPasswordEmail() {
+function PasswordResetRequest() {
   const navigate = useNavigate();
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Form handling initializations
   const { control, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       email: "",
     },
   });
 
-  // Function to handle form submission
   const onSubmit = async (data) => {
     try {
-      await AxiosInstance.post("reset-password/", {
+      const response = await AxiosInstance.post("api/password_reset/", {
         email: data.email,
       });
-      setSuccessMessage("Password reset link has been sent to your email. Please check your inbox.");
+
+      console.log("Response:", response);
+      console.log("Response status:", response.status);
+      console.log("Response data:", response.data);
+
+      setSuccessMessage("If your email is registered, the password reset link has been sent. Please check your inbox.");
       setErrorMessage("");
     } catch (error) {
       console.error("Error response:", error.response?.data || error);
+      console.log("Error status:", error.response?.status);
+      console.log("Error data:", error.response?.data);
+
       setErrorMessage("Failed to send reset password link. Please try again.");
       setSuccessMessage("");
     }
@@ -49,7 +55,6 @@ function ResetPasswordEmail() {
           <p>Enter your email to receive a password reset link.</p>
         </div>
         <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Email field with validation */}
           <fieldset>
             <label>Email:</label>
             <Controller
@@ -75,4 +80,4 @@ function ResetPasswordEmail() {
   );
 }
 
-export default ResetPasswordEmail;
+export default PasswordResetRequest;

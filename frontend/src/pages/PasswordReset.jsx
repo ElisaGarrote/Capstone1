@@ -1,13 +1,18 @@
+import "../styles/custom-colors.css";
+import "../styles/Login.css";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import loginImage from "../assets/img/login.png";
+import Alert from "../components/Alert.jsx";
+import AxiosInstance from "../components/AxiosInstance.jsx";
 
-function SetPassword() {
-  const { uid, token } = useParams();
+function PasswordReset() {
+  const { token } = useParams();
+  const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const submitNewPassword = async (e) => {
     e.preventDefault();
@@ -18,41 +23,35 @@ function SetPassword() {
     }
 
     try {
-      const formData = new URLSearchParams();
-      formData.append("new_password1", newPassword);
-      formData.append("new_password2", confirmPassword);
-
-      const response = await fetch(`http://127.0.0.1:8000/reset/${uid}/${token}/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: formData.toString(),
+      const response = await AxiosInstance.post("api/password_reset/confirm/", {
+        password: confirmPassword,
+        token: token,
       });
 
-      if (response.ok) {
-        setSuccess(true);
-        alert('Your password has been reset successfully!');
-      } else {
-        const data = await response.json();
-        const errMsg = data?.new_password2?.[0] || "Something went wrong.";
-        alert(errMsg);
-      }
+      console.log("Response:", response);
+      setSuccessMessage("Your password reset was successful, you can now log in with your new password. You will be redirected to the login page in a second.");
+      setErrorMessage("");
 
-    } catch (err) {
-      setError("Failed to reset password. Please try again.");
-      alert('Network error! Please try again.');
+      setTimeout(() => {
+        navigate("/login")}, 3000); // Redirect after 5 seconds
+    } catch (error) {
+      console.error("Error response:", error.response?.data || error);
+      setErrorMessage("Failed to reset password. Please try again.");
+      setSuccessMessage("");
     }
   };
 
   return (
-    <main className="reset-page">
+    <main className="login-page">
       <section className="left-panel">
         <img src={loginImage} alt="login-illustration" />
       </section>
 
       <section className="right-panel">
         <h2>Set New Password</h2>
+
+        {errorMessage && <Alert message={errorMessage} type="danger" />}
+        {successMessage && <Alert message={successMessage} type="success" />}
 
         <form onSubmit={submitNewPassword}>
           <fieldset>
@@ -78,9 +77,10 @@ function SetPassword() {
           </fieldset>
           <button type="submit">Reset Password</button>
         </form>
+        <a onClick={() => navigate("/login")}>Login</a>
       </section>
     </main>
   );
 }
 
-export default SetPassword;
+export default PasswordReset;
