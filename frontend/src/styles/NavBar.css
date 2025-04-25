@@ -4,7 +4,7 @@
   justify-content: space-between;
   align-items: center;
   height: 60px;
-  width: 100vw;
+  width: 100%;
   background-color: var(--bg-color);
   box-shadow: 0 0 10px #d3d3d3;
   position: fixed;
@@ -28,12 +28,12 @@
 .main-nav-bar ul {
   display: flex;
   flex-direction: row;
+  gap: 20px;
 }
 
 .main-nav-bar li {
   display: flex;
   padding: 10px;
-  gap: 40px;
 }
 
 .main-nav-bar li a {
@@ -41,6 +41,8 @@
   justify-content: center;
   align-items: center;
   color: var(--text-color);
+  font-size: 1rem;
+  white-space: nowrap;
 }
 
 /* Style the anchor that is active (the user selected specific nav menu (dashboard, assets, maintenance, etc.)) */
@@ -79,21 +81,32 @@
   font-size: 1rem;
   background-color: transparent;
   outline: none;
+  border: none;
+  white-space: nowrap;
+  cursor: pointer;
+  /* Reduced padding to tighten the dropdown arrow spacing */
+  padding-right: 12px;
 }
 
 .main-nav-bar li select:hover {
   color: var(--primary-color);
-  cursor: pointer;
 }
 
 .main-nav-bar li select option {
   background-color: white;
   color: var(--text-color);
   font-size: 1rem;
-  width: unset;
+  padding: 8px;
 }
 
 .main-nav-bar li a:hover {
   color: var(--primary-color);
   cursor: pointer;
+}
+
+/* Middle section styling */
+.main-nav-bar section:nth-child(2) {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
 }
