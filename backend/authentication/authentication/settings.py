@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'auth_service',
+    'django_rest_passwordreset',
 ]
 
 MIDDLEWARE = [
@@ -73,10 +74,16 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'authentication.urls'
 
+AUTH_USER_MODEL = 'auth_service.CustomUser'
+
+ATUHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]    # 'django.contrib.auth.backends.ModelBackend'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -150,8 +157,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-AUTH_USER_MODEL = 'auth_service.CustomUser'
-
 CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_COOKIE_HTTPONLY = False  # Allows JavaScript to read the CSRF cookie
 CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
@@ -161,4 +166,4 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'edzram7@gmail.com'
-EMAIL_HOST_PASSWORD = 'pass'
+EMAIL_HOST_PASSWORD = 'sxhn eyle hufk qobb'
