@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React from "react";
+=======
+import react from "react";
+>>>>>>> Sillano
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -28,6 +32,7 @@ import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
 import CompletedAudits from "./pages/asset-audit/CompletedAudtis";
 import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
+<<<<<<< HEAD
 import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
 import Maintenance from "./pages/Repair/Maintenance";
@@ -35,6 +40,19 @@ import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
 import Consumables from './pages/Consumables/ViewConsumables';import ResetPasswordEmail from "./pages/ResetPasswordEmail"
 import SetPassword from "./pages/SetPassword"
+=======
+import UpcomingEndOfLife from "./pages/UpcomingEndOfLife";
+import ExpiringWarranties from "./pages/ExpiringWarranties";
+import ReachedEndOfLife from "./pages/ReachedEndOfLife";
+import ExpiredWarranties from "./pages/ExpiredWarranties";
+import AssetReport from "./pages/reports/AssetReport";
+import DepreciationReport from "./pages/reports/DepreciationReport";
+import DueBackReport from "./pages/reports/DueBackReport";
+import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
+import ActivityReport from "./pages/reports/ActivityReport";
+import Settings from "./pages/Settings";
+import UserManagement from "./pages/UserManagement";
+>>>>>>> Sillano
 
 function Logout() {
   localStorage.clear();
@@ -60,9 +78,13 @@ function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
+<<<<<<< HEAD
         <Route path="/register" element={<Register />} />
         <Route path="/reset-password-email" element={<ResetPasswordEmail />} />
         <Route path="/set-password" element={<SetPassword />} />
+=======
+        <Route path="/register" element={<RegisterAndLogout />} />
+>>>>>>> Sillano
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/registration" element={<ProductsRegistration />} />
@@ -92,12 +114,26 @@ function App() {
         <Route path="/audits/completed" element={<CompletedAudits />} />
         <Route path="/audits/new" element={<PerformAudits />} />
         <Route path="/audits/schedule" element={<ScheduleRegistration />} />
+<<<<<<< HEAD
         <Route path="/audits/edit" element={<EditAudits />} />
         <Route path="/audits/view" element={<ViewAudits />} />
         <Route path="/dashboard/Repair/Maintenance" element={<Maintenance />} />
         <Route path="/dashboard/Repair/MaintenanceRegistration" element={<MaintenanceRegistration />} />
         <Route path="/dashboard/Repair/EditMaintenance" element={<EditMaintenance />} />
         <Route path="/Consumables/ViewConsumables" element={<Consumables />} />
+=======
+        <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
+        <Route path="/warranties" element={<ExpiringWarranties />} />
+        <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />
+        <Route path="/expired-warranties" element={<ExpiredWarranties />} />
+        <Route path="/reports/asset" element={<AssetReport />} />
+        <Route path="/reports/depreciation" element={<DepreciationReport />} />
+        <Route path="/reports/due-back" element={<DueBackReport />} />
+        <Route path="/reports/eol-warranty" element={<EndOfLifeWarrantyReport />} />
+        <Route path="/reports/activity" element={<ActivityReport />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/user-management" element={<UserManagement />} />
+>>>>>>> Sillano
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>

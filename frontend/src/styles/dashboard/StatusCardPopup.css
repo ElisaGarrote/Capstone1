@@ -1,0 +1,216 @@
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background: white;
+  border-radius: 40px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease;
+  padding: 0;
+  overflow: hidden;
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #E5E7EB;
+  background: white;
+}
+
+.popup-header h2 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #6B7280;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #111827;
+}
+
+.close-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.popup-body {
+  margin: 0;
+  padding-bottom: 2rem; /* Added padding at the bottom */
+}
+
+.table-container {
+  overflow-x: auto;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+}
+
+.audits-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 0;
+  border-radius: 0;
+  background: white;
+}
+
+.audits-table thead,
+.audits-table tbody,
+.audits-table tr,
+.audits-table th,
+.audits-table td {
+  border-radius: 0;
+}
+
+.audits-table th {
+  background-color: #F9FAFB;
+  padding: 0.75rem 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B7280;
+  text-align: left;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.audits-table td {
+  padding: 0.75rem 2rem;
+  font-size: 0.875rem;
+  color: #374151;
+  border-bottom: 1px solid #E5E7EB;
+  background: white;
+}
+
+.audits-table tr:last-child td {
+  border-bottom: none;
+  padding-bottom: 1.5rem; /* Add padding to last row to ensure spacing at bottom */
+}
+
+.audits-table tr:hover td {
+  background-color: #F9FAFB;
+}
+
+/* Category info styles */
+.category-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.category-icon {
+  color: #6B7280;
+  font-size: 1.125rem;
+}
+
+.category-name {
+  color: #111827;
+  font-weight: 500;
+}
+
+/* Asset info styles */
+.asset-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.asset-info:hover {
+  text-decoration: underline;
+}
+
+.asset-icon {
+  color: #2563eb;
+  font-size: 1.125rem;
+}
+
+/* Location info styles */
+.location-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.location-info:hover {
+  text-decoration: underline;
+}
+
+.location-info svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: currentColor;
+}
+
+/* User info styles */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.user-info:hover {
+  text-decoration: underline;
+}
+
+.user-info svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: currentColor;
+}
+
+/* Column widths */
+.audits-table th:nth-child(1),
+.audits-table td:nth-child(1) {
+  width: 40%;
+}
+
+.audits-table th:nth-child(2),
+.audits-table td:nth-child(2) {
+  width: 30%;
+}
+
+.audits-table th:nth-child(3),
+.audits-table td:nth-child(3) {
+  width: 30%;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

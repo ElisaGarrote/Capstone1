@@ -104,9 +104,88 @@
   cursor: pointer;
 }
 
+<<<<<<< HEAD
 /* Middle section styling */
 .main-nav-bar section:nth-child(2) {
   flex-grow: 1;
   display: flex;
   justify-content: center;
 }
+=======
+.profile-container {
+  position: relative;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 250px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.profile-header {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-header img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-info h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.admin-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.profile-menu {
+  padding: 8px;
+}
+
+.profile-menu button {
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-color);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.profile-menu button:hover {
+  background-color: #f5f5f5;
+}
+
+.profile-menu .logout-btn {
+  color: #dc3545;
+}
+
+.profile-menu .logout-btn:hover {
+  background-color: #fff5f5;
+}
+>>>>>>> Sillano
