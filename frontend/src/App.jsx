@@ -33,8 +33,7 @@ import ViewAudits from "./pages/asset-audit/ViewAudits";
 import Maintenance from "./pages/Repair/Maintenance";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
-import Consumables from './pages/Consumables/ViewConsumables';import ResetPasswordEmail from "./pages/ResetPasswordEmail"
-import AccessoriesRegistration from "./pages/accessories/AccessoriesRegistration";
+import Consumables from './pages/Consumables/ViewConsumables';
 import PasswordResetRequest from "./pages/PasswordResetRequest";
 import PasswordReset from "./pages/PasswordReset"
 
