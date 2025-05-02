@@ -7,6 +7,7 @@ import { RxPerson } from 'react-icons/rx';
 import { BsKeyboard, BsLaptop } from 'react-icons/bs';
 import Status from '../Status';
 import '../../styles/dashboard/StatusCardPopup.css';
+import '../../styles/custom-colors.css';
 
 const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
   const getColumnTitles = () => {
@@ -17,7 +18,7 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
         available: 'AVAILABLE'
       };
     }
-    
+
     switch (title) {
       case 'Due for Return':
         return {
@@ -92,7 +93,7 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
           <tr>
             <th>{columnTitles.asset}</th>
             <th>{columnTitles.assignee}</th>
-            <th>{columnTitles.date}</th>
+            <th className="date-header">{columnTitles.date}</th>
           </tr>
         </thead>
         <tbody>
@@ -107,17 +108,17 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
               <td>
                 {item.location ? (
                   <div className="location-info">
-                    <IoLocationOutline style={{ color: 'inherit' }} />
-                    <span>{item.location}</span>
+                    <IoLocationOutline style={{ color: '#2563eb' }} />
+                    <span className="location-name">{item.location}</span>
                   </div>
                 ) : (
                   <div className="user-info">
-                    <RxPerson style={{ color: 'inherit' }} />
-                    <span>{item.checkedOutTo}</span>
+                    <RxPerson style={{ color: '#2563eb' }} />
+                    <span className="user-name">{item.checkedOutTo}</span>
                   </div>
                 )}
               </td>
-              <td>{item.expectedReturnDate}</td>
+              <td className="date-cell">{item.expectedReturnDate}</td>
             </tr>
           ))}
         </tbody>
@@ -168,4 +169,4 @@ StatusCardPopup.propTypes = {
   onClose: PropTypes.func.isRequired,
 };
 
-export default StatusCardPopup; 
+export default StatusCardPopup;

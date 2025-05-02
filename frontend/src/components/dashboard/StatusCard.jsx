@@ -30,14 +30,14 @@ function StatusCard({ number, title, isRed, isLarge, index }) {
     {
       assetId: '100010',
       assetName: 'Macbook Pro 16"',
-      checkedOutTo: 'Alan Rick Otso',
-      expectedReturnDate: 'April 1, 2025'
+      checkedOutTo: 'Dan Rick Otso',
+      expectedReturnDate: 'April 2, 2025'
     },
     {
       assetId: '100011',
       assetName: 'iPad Pro"',
       location: 'Makati',
-      expectedReturnDate: 'April 1, 2025'
+      expectedReturnDate: 'April 3, 2025'
     }
   ];
 
@@ -101,7 +101,7 @@ function StatusCard({ number, title, isRed, isLarge, index }) {
 
   return (
     <div className={`card-position-${index}`}>
-      <div 
+      <div
         className={`status-card ${isLarge ? 'large' : ''} ${title === 'Low Stock' ? 'low-stock-card' : ''} ${showPopup ? 'active' : ''}`}
         onClick={handleClick}
       >

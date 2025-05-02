@@ -1,8 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-<<<<<<< HEAD
-=======
 import { useState } from "react";
->>>>>>> Sillano
 import "../styles/custom-colors.css";
 import "../styles/NavBar.css";
 import Logo from "../assets/img/Logo.png";
@@ -12,10 +9,7 @@ import NotifIcon from "../assets/icons/notification.svg";
 export default function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
-<<<<<<< HEAD
-=======
   const [showProfileMenu, setShowProfileMenu] = useState(false);
->>>>>>> Sillano
 
   // Function to handle the navigation route from the dropdown
   const handleNavigation = (event) => {
@@ -28,7 +22,7 @@ export default function NavBar() {
     }
     if (value === "Accessories") {
       navigate("/accessories");
-    } 
+    }
     if (value === "Consumable") {
       navigate("/Consumables/ViewConsumables");
     }
@@ -41,7 +35,7 @@ export default function NavBar() {
   const handleReportsNavigation = (event) => {
     const value = event.target.value;
     console.log("Selected value:", value);
-    
+
     if (value === "Asset Reports") {
       navigate("/reports/asset");
     } else if (value === "Depreciation Reports") {
@@ -76,7 +70,6 @@ export default function NavBar() {
     // Add other condition here
   };
 
-<<<<<<< HEAD
   // Function to handle more dropdown navigation
   const handleMoreNavigation = (event) => {
     const value = event.target.value;
@@ -94,10 +87,11 @@ export default function NavBar() {
     } else if (value === "Recycle Bin") {
       navigate("/recycle-bin");
     }
-    
+
     // Reset the dropdown to default "More" after navigation
     event.target.value = "";
-=======
+  };
+
   // Function to get current reports page
   const getCurrentReportsPage = () => {
     const pathToValue = {
@@ -108,7 +102,6 @@ export default function NavBar() {
       '/reports/activity': 'Activity Reports'
     };
     return pathToValue[location.pathname] || '';
->>>>>>> Sillano
   };
 
   return (
@@ -162,9 +155,9 @@ export default function NavBar() {
             </a>
           </li>
           <li>
-            <select 
-              name="reports-more" 
-              id="reports-more" 
+            <select
+              name="reports-more"
+              id="reports-more"
               value={getCurrentReportsPage()}
               onChange={handleReportsNavigation}
               className={location.pathname.startsWith("/reports") ? "active" : ""}
@@ -182,9 +175,9 @@ export default function NavBar() {
             </select>
           </li>
           <li>
-            <select 
-              name="more-options" 
-              id="more-options" 
+            <select
+              name="more-options"
+              id="more-options"
               defaultValue=""
               onChange={handleMoreNavigation}
             >
@@ -204,7 +197,7 @@ export default function NavBar() {
       <section>
         <img src={NotifIcon} alt="notif-icon" className="notif-icon" />
         <div className="profile-container">
-          <img 
+          <img
             src={SampleProfile}
             alt="sample-profile"
             className="sample-profile"

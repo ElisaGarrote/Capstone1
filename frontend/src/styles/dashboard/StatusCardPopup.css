@@ -13,9 +13,9 @@
 
 .popup-content {
   background: white;
-  border-radius: 40px;
+  border-radius: 24px;
   width: 90%;
-  max-width: 700px;
+  max-width: 600px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   animation: slideIn 0.3s ease;
   padding: 0;
@@ -26,14 +26,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid #E5E7EB;
   background: white;
 }
 
 .popup-header h2 {
   font-size: 1.125rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #111827;
   margin: 0;
 }
@@ -43,15 +43,17 @@
   border: none;
   color: #6B7280;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: color 0.2s;
+  border-radius: 50%;
 }
 
 .close-button:hover {
   color: #111827;
+  background-color: #f3f4f6;
 }
 
 .close-button svg {
@@ -61,14 +63,14 @@
 
 .popup-body {
   margin: 0;
-  padding-bottom: 2rem; /* Added padding at the bottom */
+  padding-bottom: 0; /* Remove bottom padding */
 }
 
 .table-container {
-  overflow-x: auto;
   margin: 0;
   padding: 0;
   border-radius: 0;
+  width: 100%;
 }
 
 .audits-table {
@@ -90,16 +92,17 @@
 
 .audits-table th {
   background-color: #F9FAFB;
-  padding: 0.75rem 2rem;
+  padding: 1rem 1rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: #6B7280;
   text-align: left;
   border-bottom: 1px solid #E5E7EB;
+  white-space: nowrap;
 }
 
 .audits-table td {
-  padding: 0.75rem 2rem;
+  padding: 1rem 1rem;
   font-size: 0.875rem;
   color: #374151;
   border-bottom: 1px solid #E5E7EB;
@@ -108,11 +111,21 @@
 
 .audits-table tr:last-child td {
   border-bottom: none;
-  padding-bottom: 1.5rem; /* Add padding to last row to ensure spacing at bottom */
 }
 
 .audits-table tr:hover td {
   background-color: #F9FAFB;
+}
+
+.date-cell {
+  color: #374151;
+  font-weight: normal;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.date-header {
+  text-align: right;
 }
 
 /* Category info styles */
@@ -139,15 +152,25 @@
   gap: 0.5rem;
   color: #2563eb;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .asset-info:hover {
   text-decoration: underline;
 }
 
+.asset-info span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .asset-icon {
   color: #2563eb;
   font-size: 1.125rem;
+  flex-shrink: 0;
 }
 
 /* Location info styles */
@@ -157,6 +180,9 @@
   gap: 0.5rem;
   color: #2563eb;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .location-info:hover {
@@ -166,7 +192,16 @@
 .location-info svg {
   width: 1.125rem;
   height: 1.125rem;
-  color: currentColor;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.location-name {
+  color: #2563eb;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* User info styles */
@@ -176,6 +211,9 @@
   gap: 0.5rem;
   color: #2563eb;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-info:hover {
@@ -185,7 +223,16 @@
 .user-info svg {
   width: 1.125rem;
   height: 1.125rem;
-  color: currentColor;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.user-name {
+  color: #2563eb;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Column widths */
@@ -202,6 +249,7 @@
 .audits-table th:nth-child(3),
 .audits-table td:nth-child(3) {
   width: 30%;
+  text-align: right;
 }
 
 @keyframes slideIn {
@@ -213,4 +261,32 @@
     opacity: 1;
     transform: translateY(0);
   }
-} 
+}
+
+/* Responsive styles */
+@media (max-width: 576px) {
+  .popup-content {
+    width: 95%;
+    max-width: 95%;
+  }
+
+  .audits-table th,
+  .audits-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .audits-table th:nth-child(1),
+  .audits-table td:nth-child(1) {
+    width: 35%;
+  }
+
+  .audits-table th:nth-child(2),
+  .audits-table td:nth-child(2) {
+    width: 30%;
+  }
+
+  .audits-table th:nth-child(3),
+  .audits-table td:nth-child(3) {
+    width: 35%;
+  }
+}
