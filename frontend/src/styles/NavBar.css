@@ -8,7 +8,7 @@
   background-color: var(--bg-color);
   box-shadow: 0 0 10px #d3d3d3;
   position: fixed;
-  z-index: 1;
+  z-index: 100; /* Increased z-index to ensure dropdowns appear above other content */
 }
 
 /* Set the left padding of the logo */
@@ -28,12 +28,13 @@
 .main-nav-bar ul {
   display: flex;
   flex-direction: row;
-  gap: 20px;
+  gap: 30px; /* Increased gap between navbar items */
 }
 
 .main-nav-bar li {
   display: flex;
   padding: 10px;
+  position: relative;
 }
 
 .main-nav-bar li a,
@@ -45,6 +46,7 @@
   font-size: 1rem;
   white-space: nowrap;
   cursor: pointer;
+  padding: 0 5px; /* Add some padding to the navbar items */
 }
 
 /* Dropdown trigger styling */
@@ -53,14 +55,51 @@
   transition: color 0.2s ease;
   display: inline-flex;
   align-items: center;
-  padding: 0 20px 0 0; /* Increase right padding for more space before the icon */
+  padding: 0 10px; /* Add horizontal padding */
+  box-sizing: border-box; /* Include padding in width calculation */
+  justify-content: space-between; /* Space between text and icon */
+}
+
+/* Dropdown text container */
+.dropdown-text {
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Style for dropdown arrow icon */
 .main-nav-bar li .dropdown-trigger svg {
   font-size: 0.8rem;
   transition: transform 0.2s ease, color 0.2s ease;
-  margin-left: 5px; /* Fixed space between text and icon */
+  margin-left: 8px; /* Space between text and icon */
+  flex-shrink: 0; /* Prevent icon from shrinking */
+  position: relative; /* Allow positioning relative to the container */
+}
+
+/* Specific widths for each dropdown to accommodate longest option */
+.assets-dropdown-container .dropdown-trigger {
+  width: 140px; /* Fixed width for Assets dropdown */
+}
+
+.assets-dropdown-container .dropdown-text {
+  min-width: 100px; /* Fixed width for text in Assets dropdown */
+}
+
+.reports-dropdown-container .dropdown-trigger {
+  width: 220px; /* Fixed width for Reports dropdown */
+}
+
+.reports-dropdown-container .dropdown-text {
+  min-width: 190px; /* Fixed width for text in Reports dropdown */
+}
+
+.more-dropdown-container .dropdown-trigger {
+  width: 150px; /* Fixed width for More dropdown */
+}
+
+.more-dropdown-container .dropdown-text {
+  min-width: 120px; /* Fixed width for text in More dropdown */
 }
 
 /* Change arrow color on hover */
@@ -87,21 +126,58 @@
   font-weight: 500;
 }
 
+/* Ensure dropdown text and icon both turn blue when active */
+.main-nav-bar li .dropdown-trigger.active .dropdown-text,
+.main-nav-bar li .dropdown-trigger.active svg,
+.dropdown-container.open .dropdown-trigger .dropdown-text,
+.dropdown-container.open .dropdown-trigger svg {
+  color: var(--primary-color);
+}
+
 .main-nav-bar li select.active {
   color: var(--primary-color);
+}
+
+.notification-icon-container {
+  position: relative;
+  margin-right: 5px;
+}
+
+.notification-icon-wrapper {
+  position: relative;
+  cursor: pointer;
 }
 
 .main-nav-bar .notif-icon {
   height: 35px;
   width: 35px;
-  padding: 8px 8px;
+  padding: 8px;
   border-radius: 50%;
   border: 1px solid var(--primary-color);
+  color: var(--primary-color);
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .main-nav-bar .notif-icon:hover {
   background-color: rgba(0, 123, 255, 0.1);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #EF4444;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
 }
 
 .main-nav-bar .sample-profile {
@@ -173,17 +249,18 @@
 /* Dropdown container positioning */
 .dropdown-container {
   position: relative;
-  margin: 0 10px; /* Add consistent spacing between navbar items */
+  margin: 0; /* Remove margin to align with navbar spacing */
 }
 
 /* Custom dropdown styling */
 .custom-dropdown {
   position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  width: 250px;
+  top: 40px; /* Position dropdown directly below navbar */
+  left: 50%;
+  transform: translateX(-50%); /* Center the dropdown under the menu item */
+  min-width: 180px; /* Reduced width to match the image */
   background: white;
-  border-radius: 40px;
+  border-radius: 8px; /* Reduced border radius to match the image */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   overflow: hidden;
@@ -191,21 +268,22 @@
 }
 
 .dropdown-menu {
-  padding: 12px 16px;
+  padding: 10px;
+  border-radius: 8px; /* Ensure the menu container has the same border radius */
 }
 
 .dropdown-menu button {
   width: 100%;
-  padding: 10px 16px;
+  padding: 8px 12px;
   text-align: left;
   background: none;
   border: none;
-  border-radius: 40px;
+  border-radius: 8px; /* Increased border radius for consistency */
   color: var(--text-color);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .dropdown-menu button:last-child {
@@ -216,6 +294,7 @@
   background-color: rgba(0, 123, 255, 0.1);
   color: var(--primary-color);
   font-weight: 500;
+  border-radius: 8px; /* Ensure hover state maintains border radius */
 }
 
 /* Middle section styling */
@@ -230,11 +309,11 @@
 
 .profile-dropdown {
   position: absolute;
-  top: calc(100% + 10px);
+  top: 45px; /* Position dropdown directly below profile icon */
   right: 0;
   width: 250px;
   background: white;
-  border-radius: 40px;
+  border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   overflow: hidden;
@@ -274,21 +353,22 @@
 }
 
 .profile-menu {
-  padding: 12px 16px;
+  padding: 10px;
+  border-radius: 8px; /* Ensure the menu container has the same border radius */
 }
 
 .profile-menu button {
   width: 100%;
-  padding: 10px 16px;
+  padding: 8px 12px;
   text-align: left;
   background: none;
   border: none;
-  border-radius: 40px;
+  border-radius: 8px; /* Increased border radius for consistency */
   color: var(--text-color);
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .profile-menu button:last-child {
@@ -299,6 +379,7 @@
   background-color: rgba(0, 123, 255, 0.1);
   color: var(--primary-color);
   font-weight: 500;
+  border-radius: 8px; /* Ensure hover state maintains border radius */
 }
 
 .profile-menu .logout-btn {
@@ -309,5 +390,6 @@
   background-color: rgba(220, 53, 69, 0.1);
   color: #dc3545;
   font-weight: 500;
+  border-radius: 8px; /* Ensure hover state maintains border radius */
 }
 

@@ -42,6 +42,9 @@
   display: flex;
   gap: 0.5rem;
   margin-top: 0.5rem;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 240px; /* Limit the overall width of the button container */
 }
 
 .time-button {
@@ -54,6 +57,9 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-weight: 400;
+  flex: 1; /* Allow buttons to grow equally within the container */
+  min-width: 100px; /* Set minimum width */
+  max-width: 120px; /* Set maximum width */
 }
 
 .time-button:hover {
@@ -178,22 +184,25 @@
   .metrics-container {
     grid-template-columns: 1fr;
   }
-  
+
   .time-period-buttons {
     width: 100%;
+    max-width: 220px;
     justify-content: space-between;
   }
-  
+
   .time-button {
     flex: 1;
     text-align: center;
+    min-width: 90px;
+    max-width: 110px;
   }
-  
+
   .metrics-container {
     grid-template-columns: 1fr;
   }
-  
+
   .chart-container {
     height: 250px;
   }
-} 
+}

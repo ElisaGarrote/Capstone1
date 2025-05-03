@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/dashboard/AssetMetrics.css';
 
 const AssetMetrics = () => {
+  const navigate = useNavigate();
   const [selectedPeriod1, setSelectedPeriod1] = useState('This month');
   const [selectedPeriod2, setSelectedPeriod2] = useState('This month');
+  const [assetCost, setAssetCost] = useState('₱24,000');
+  const [assetUtilization, setAssetUtilization] = useState('60%');
 
   const assetCategoriesData = [
     { name: 'Mobile Phone', value: 10, color: '#0D6EFD' },
@@ -37,25 +41,25 @@ const AssetMetrics = () => {
         <div className="metric-summary-card">
           <div className="summary-content">
             <h3>Total Asset Costs</h3>
-            <div className="summary-value">₱24,000</div>
+            <div className="summary-value">{assetCost}</div>
             <div className="time-period-buttons">
               <button
                 className={`time-button ${selectedPeriod1 === 'This month' ? 'active pulse' : ''}`}
-                onClick={() => setSelectedPeriod1('This month')}
+                onClick={() => {
+                  setSelectedPeriod1('This month');
+                  setAssetCost('₱24,000');
+                }}
               >
                 This month
               </button>
               <button
                 className={`time-button ${selectedPeriod1 === 'Last month' ? 'active pulse' : ''}`}
-                onClick={() => setSelectedPeriod1('Last month')}
+                onClick={() => {
+                  setSelectedPeriod1('Last month');
+                  setAssetCost('₱25,000');
+                }}
               >
                 Last month
-              </button>
-              <button
-                className={`time-button ${selectedPeriod1 === 'Two months ago' ? 'active pulse' : ''}`}
-                onClick={() => setSelectedPeriod1('Two months ago')}
-              >
-                Two months ago
               </button>
             </div>
           </div>
@@ -64,7 +68,7 @@ const AssetMetrics = () => {
         <div className="metric-summary-card">
           <div className="summary-content">
             <h3>Asset Utilization</h3>
-            <div className="summary-value">60%</div>
+            <div className="summary-value">{assetUtilization}</div>
             <div className="time-period-buttons">
               <button
                 className={`time-button ${selectedPeriod2 === 'This month' ? 'active pulse' : ''}`}
@@ -74,15 +78,12 @@ const AssetMetrics = () => {
               </button>
               <button
                 className={`time-button ${selectedPeriod2 === 'Last month' ? 'active pulse' : ''}`}
-                onClick={() => setSelectedPeriod2('Last month')}
+                onClick={() => {
+                  setSelectedPeriod2('Last month');
+                  setAssetUtilization('70%');
+                }}
               >
                 Last month
-              </button>
-              <button
-                className={`time-button ${selectedPeriod2 === 'Two months ago' ? 'active pulse' : ''}`}
-                onClick={() => setSelectedPeriod2('Two months ago')}
-              >
-                Two months ago
               </button>
             </div>
           </div>
@@ -110,8 +111,8 @@ const AssetMetrics = () => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Legend 
-                layout="vertical" 
+              <Legend
+                layout="vertical"
                 align="left"
                 verticalAlign="middle"
                 iconType="circle"
@@ -119,7 +120,7 @@ const AssetMetrics = () => {
               />
             </PieChart>
           </ResponsiveContainer>
-          <button className="browse-all">Browse All</button>
+          <button className="browse-all" onClick={() => navigate('/assets')}>Browse All</button>
         </div>
 
         <div className="metric-card">
@@ -142,8 +143,8 @@ const AssetMetrics = () => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Legend 
-                layout="vertical" 
+              <Legend
+                layout="vertical"
                 align="left"
                 verticalAlign="middle"
                 iconType="circle"
@@ -151,11 +152,11 @@ const AssetMetrics = () => {
               />
             </PieChart>
           </ResponsiveContainer>
-          <button className="browse-all">Browse All</button>
+          <button className="browse-all" onClick={() => navigate('/reports/activity')}>Browse All</button>
         </div>
       </div>
     </div>
   );
 };
 
-export default AssetMetrics; 
+export default AssetMetrics;

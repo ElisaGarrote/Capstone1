@@ -4,8 +4,8 @@ import "../styles/custom-colors.css";
 import "../styles/NavBar.css";
 import Logo from "../assets/img/Logo.png";
 import SampleProfile from "../assets/img/do.png";
-import NotifIcon from "../assets/icons/notification.svg";
 import { IoIosArrowDown } from "react-icons/io";
+import NotificationOverlay from "./NotificationOverlay";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -14,6 +14,8 @@ export default function NavBar() {
   const [showAssetsMenu, setShowAssetsMenu] = useState(false);
   const [showReportsMenu, setShowReportsMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(4);
 
   // State for selected items in each dropdown
   const [selectedAsset, setSelectedAsset] = useState("Assets");
@@ -27,11 +29,14 @@ export default function NavBar() {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest('.dropdown-container') &&
-          !event.target.closest('.profile-container')) {
+          !event.target.closest('.profile-container') &&
+          !event.target.closest('.notification-container') &&
+          !event.target.closest('.notification-icon-container')) {
         setShowAssetsMenu(false);
         setShowReportsMenu(false);
         setShowMoreMenu(false);
         setShowProfileMenu(false);
+        setShowNotifications(false);
       }
     };
 
@@ -49,50 +54,35 @@ export default function NavBar() {
       setShowReportsMenu(false);
       setShowMoreMenu(false);
 
-      // Set active menu when opening dropdown, clear when closing
-      if (newState) {
-        setActiveMenu('assets');
-      } else if (activeMenu === 'assets') {
-        // Only clear if this was the active menu
-        setActiveMenu(isInAssetsSection() ? 'assets' : '');
-      }
+      // Always set active menu when clicked, regardless of dropdown state
+      setActiveMenu('assets');
     } else if (dropdown === 'reports') {
       const newState = !showReportsMenu;
       setShowReportsMenu(newState);
       setShowAssetsMenu(false);
       setShowMoreMenu(false);
 
-      // Set active menu when opening dropdown, clear when closing
-      if (newState) {
-        setActiveMenu('reports');
-      } else if (activeMenu === 'reports') {
-        // Only clear if this was the active menu
-        setActiveMenu(location.pathname.startsWith("/reports") ? 'reports' : '');
-      }
+      // Always set active menu when clicked, regardless of dropdown state
+      setActiveMenu('reports');
     } else if (dropdown === 'more') {
       const newState = !showMoreMenu;
       setShowMoreMenu(newState);
       setShowAssetsMenu(false);
       setShowReportsMenu(false);
 
-      // Set active menu when opening dropdown, clear when closing
-      if (newState) {
-        setActiveMenu('more');
-      } else if (activeMenu === 'more') {
-        // Only clear if this was the active menu
-        setActiveMenu('');
-      }
+      // Always set active menu when clicked, regardless of dropdown state
+      setActiveMenu('more');
     }
   };
 
-  // Function to check if we're in the Assets section
-  const isInAssetsSection = () => {
+  // Function to check if we're in the Assets section (kept for future reference)
+  /* const isInAssetsSection = () => {
     return location.pathname.startsWith("/products") ||
            location.pathname.startsWith("/assets") ||
            location.pathname.startsWith("/accessories") ||
            location.pathname.startsWith("/consumables") ||
            location.pathname.startsWith("/components");
-  };
+  }; */
 
   // Initialize selected items based on current location
   useEffect(() => {
@@ -160,12 +150,12 @@ export default function NavBar() {
               Dashboard
             </a>
           </li>
-          <li className={`dropdown-container ${showAssetsMenu ? 'open' : ''}`}>
+          <li className={`dropdown-container assets-dropdown-container ${showAssetsMenu ? 'open' : ''}`}>
             <div
               className={`dropdown-trigger ${activeMenu === "assets" ? "active" : ""}`}
               onClick={() => toggleDropdown('assets')}
             >
-              {selectedAsset} <IoIosArrowDown />
+              <span className="dropdown-text">{selectedAsset}</span> <IoIosArrowDown />
             </div>
             {showAssetsMenu && (
               <div className="custom-dropdown assets-dropdown">
@@ -221,12 +211,12 @@ export default function NavBar() {
               Audits
             </a>
           </li>
-          <li className={`dropdown-container ${showReportsMenu ? 'open' : ''}`}>
+          <li className={`dropdown-container reports-dropdown-container ${showReportsMenu ? 'open' : ''}`}>
             <div
               className={`dropdown-trigger ${activeMenu === "reports" ? "active" : ""}`}
               onClick={() => toggleDropdown('reports')}
             >
-              {selectedReport} <IoIosArrowDown />
+              <span className="dropdown-text">{selectedReport}</span> <IoIosArrowDown />
             </div>
             {showReportsMenu && (
               <div className="custom-dropdown reports-dropdown">
@@ -260,12 +250,12 @@ export default function NavBar() {
               </div>
             )}
           </li>
-          <li className={`dropdown-container ${showMoreMenu ? 'open' : ''}`}>
+          <li className={`dropdown-container more-dropdown-container ${showMoreMenu ? 'open' : ''}`}>
             <div
               className={`dropdown-trigger ${activeMenu === "more" ? "active" : ""}`}
               onClick={() => toggleDropdown('more')}
             >
-              {selectedMore} <IoIosArrowDown />
+              <span className="dropdown-text">{selectedMore}</span> <IoIosArrowDown />
             </div>
             {showMoreMenu && (
               <div className="custom-dropdown more-dropdown">
@@ -307,7 +297,34 @@ export default function NavBar() {
         </ul>
       </section>
       <section>
-        <img src={NotifIcon} alt="notif-icon" className="notif-icon" />
+        <div className="notification-icon-container">
+          <div
+            className="notification-icon-wrapper"
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="notif-icon"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.25 9a6.75 6.75 0 0113.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 01-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 11-7.48 0 24.585 24.585 0 01-4.831-1.244.75.75 0 01-.298-1.205A8.217 8.217 0 005.25 9.75V9zm4.502 8.9a2.25 2.25 0 104.496 0 25.057 25.057 0 01-4.496 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {notificationCount > 0 && (
+              <span className="notification-badge">{notificationCount}</span>
+            )}
+          </div>
+          {showNotifications && (
+            <NotificationOverlay
+              isOpen={showNotifications}
+              onClose={() => setShowNotifications(false)}
+            />
+          )}
+        </div>
         <div className="profile-container">
           <img
             src={SampleProfile}
