@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 class Accessories(models.Model):
     location = models.CharField(max_length=50, blank=True)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     order_number = models.CharField(max_length=20, blank=True)
     purchase_date = models.DateField(null=True, blank=True)
     purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
