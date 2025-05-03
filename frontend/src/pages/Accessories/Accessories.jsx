@@ -1,4 +1,5 @@
-import "../../styles/Accessories.css";
+import "../../styles/custom-colors.css";
+import "../../styles/PageTable.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
@@ -10,8 +11,7 @@ import Alert from "../../components/Alert";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
-import SortModal from "../../components/Modals/SortModal";
-import FilterModal from "../../components/Modals/FilterModal";
+
 
 export default function Accessories() {
   const location = useLocation();
@@ -26,13 +26,25 @@ export default function Accessories() {
   const [isNewAccessoryAdded, setNewAccessoryAdde] = useState(false);
   const [isEditSuccess, setEditSuccess] = useState(false);
   const [isExportModalOpen, setExportModalOpen] = useState(false);
-  const [isSortOpen, setSortOpen] = useState(false);
-  const [sortSelectedOption, setSortSelectedOption] = useState(null);
-  const [isFilterOpne, setFilterOpen] = useState(false);
-  const [filterCategorySelectedOption, setFilterCategorySelectedOption] =
-    useState(null);
-  const [filterLocationSelectedOption, setFilterLocationSelectedOption] =
-    useState(null);
+
+
+  // Add checkbox functionality
+  const [checkedItems, setCheckedItems] = useState([]);
+  const allChecked = checkedItems.length === 2; // 2 items in the table
+
+  const toggleSelectAll = () => {
+    if (allChecked) {
+      setCheckedItems([]);
+    } else {
+      setCheckedItems([accessoryName1, accessoryName2]);
+    }
+  };
+
+  const toggleItem = (id) => {
+    setCheckedItems((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+    );
+  };
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
@@ -74,8 +86,6 @@ export default function Accessories() {
   console.log("modal view: ", isViewModalOpen);
   console.log("delete confirm: ", isDeleteSuccess);
   console.log("delete from edit: ", isDeleteSuccessFromEdit);
-  console.log("sort: ", isSortOpen);
-  console.log("sort selected main: ", sortSelectedOption);
 
   return (
     <>
@@ -116,32 +126,15 @@ export default function Accessories() {
       <nav>
         <NavBar />
       </nav>
-      <main
-        className="accessories-page"
-        onClick={() => {
-          setSortOpen(false);
-          setFilterOpen(false);
-        }}
-      >
+      <main className="page">
         <div className="container">
           <section className="top">
             <h1>Accessories</h1>
-            <div className="group-buttons">
+            <div>
               <form action="" method="post">
                 <input type="text" placeholder="Search..." />
               </form>
-              <div onClick={(e) => e.stopPropagation()}>
-                <MediumButtons
-                  type="sort"
-                  deleteModalOpen={() => setSortOpen(true)}
-                />
-              </div>
-              <div onClick={(e) => e.stopPropagation()}>
-                <MediumButtons
-                  type="filter"
-                  deleteModalOpen={() => setFilterOpen(true)}
-                />
-              </div>
+
               <MediumButtons
                 type="export"
                 deleteModalOpen={() => setExportModalOpen(true)}
@@ -153,34 +146,15 @@ export default function Accessories() {
             </div>
           </section>
           <section className="middle">
-            {isSortOpen && (
-              <SortModal
-                setOptionSelected={(optionSelected) =>
-                  // Pass a function as a prop to update the sortSelectedOption state.
-                  setSortSelectedOption(optionSelected)
-                }
-                selectedOption={sortSelectedOption} // Pass the currently sortSelectedOption as a prop.
-              />
-            )}
-
-            {isFilterOpne && (
-              <FilterModal
-                setCategoryOptionSelected={(selectedOption) =>
-                  // Pass a function as a prop to update the filterCategorySelectedOption state.
-                  setFilterCategorySelectedOption(selectedOption)
-                }
-                setLocationOptionSelected={(selectedOption) =>
-                  setFilterLocationSelectedOption(selectedOption)
-                }
-                categorySelected={filterCategorySelectedOption}
-                locationSelected={filterLocationSelectedOption}
-              />
-            )}
             <table>
               <thead>
                 <tr>
                   <th>
-                    <input type="checkbox" name="" id="" />
+                    <input
+                      type="checkbox"
+                      checked={allChecked}
+                      onChange={toggleSelectAll}
+                    />
                   </th>
                   <th>IMAGE</th>
                   <th>NAME</th>
@@ -197,18 +171,19 @@ export default function Accessories() {
               <tbody>
                 <tr>
                   <td>
-                    <input type="checkbox" name="" id="" />
+                    <input
+                      type="checkbox"
+                      checked={checkedItems.includes(accessoryName1)}
+                      onChange={() => toggleItem(accessoryName1)}
+                    />
                   </td>
                   <td>
                     <img src={SampleImage} alt="sample-img" />
                   </td>
                   <td>{accessoryName1}</td>
                   <td>
-                    <span>
-                      {availValue}/{maxAvail}
-                      <progress value={availValue} max={maxAvail}>
-                        3
-                      </progress>
+                    <span style={{ color: '#34c759' }}>
+                      {availValue}/{maxAvail} <progress value={availValue} max={maxAvail}></progress>
                     </span>
                   </td>
                   <td>
@@ -255,18 +230,19 @@ export default function Accessories() {
                 </tr>
                 <tr>
                   <td>
-                    <input type="checkbox" name="" id="" />
+                    <input
+                      type="checkbox"
+                      checked={checkedItems.includes(accessoryName2)}
+                      onChange={() => toggleItem(accessoryName2)}
+                    />
                   </td>
                   <td>
                     <img src={SampleImage} alt="sample-img" />
                   </td>
                   <td>{accessoryName2}</td>
                   <td>
-                    <span>
-                      {availValue}/{maxAvail}
-                      <progress value={availValue} max={maxAvail}>
-                        3
-                      </progress>
+                    <span style={{ color: '#34c759' }}>
+                      {availValue}/{maxAvail} <progress value={availValue} max={maxAvail}></progress>
                     </span>
                   </td>
                   <td>

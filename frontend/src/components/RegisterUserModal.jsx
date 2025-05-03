@@ -39,7 +39,7 @@ export default function RegisterUserModal({ isOpen, onClose }) {
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>First name *</label>
+            <label>First name</label>
             <input
               type="text"
               name="firstName"
@@ -60,7 +60,7 @@ export default function RegisterUserModal({ isOpen, onClose }) {
           </div>
 
           <div className="form-group">
-            <label>Last name *</label>
+            <label>Last name</label>
             <input
               type="text"
               name="lastName"
@@ -71,7 +71,7 @@ export default function RegisterUserModal({ isOpen, onClose }) {
           </div>
 
           <div className="form-group">
-            <label>Email *</label>
+            <label>Email</label>
             <input
               type="email"
               name="email"
@@ -102,4 +102,4 @@ export default function RegisterUserModal({ isOpen, onClose }) {
       </div>
     </div>
   );
-} 
+}

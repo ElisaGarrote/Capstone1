@@ -51,7 +51,7 @@ export default function CheckOutList() {
     navigate(`/components/check-in/${itemId}`, {
       state: { id: itemId }
     });
-  };    
+  };
 
   const handleBulkCheckIn = () => {
     if (checkedItems.length === 0) return; // optional guard
@@ -111,11 +111,11 @@ export default function CheckOutList() {
                         <td>{item.asset}</td>
                         <td>{item.notes}</td>
                         <td>
-                            <button 
-                              className="cmp-check-in-btn" 
+                            <button
+                              className="cmp-check-in-btn"
                               onClick={() => handleCheckIn(item.id)}
                             >
-                              {"< Check-In"}
+                              {"Check-In"}
                             </button>
                         </td>
                       </tr>

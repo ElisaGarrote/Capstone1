@@ -5,6 +5,7 @@ import TableBtn from "../components/buttons/TableButtons";
 import MediumButtons from "../components/buttons/MediumButtons";
 import Status from "../components/Status";
 import macbook from "../assets/img/macbook.png";
+import CheckboxFix from "../components/CheckboxFix";
 
 export default function UpcomingEndOfLife() {
   const items = [
@@ -44,6 +45,7 @@ export default function UpcomingEndOfLife() {
 
   return (
     <div className="eol-container">
+      <CheckboxFix />
       <NavBar />
       <main className="eol-content">
         <div className="eol-table-section">
@@ -108,8 +110,8 @@ export default function UpcomingEndOfLife() {
                       />
                     </td>
                     <td>
-                      <TableBtn 
-                        type={item.checkoutIn.direction === "out" ? "checkin" : "checkout"} 
+                      <TableBtn
+                        type={item.checkoutIn.direction === "out" ? "checkin" : "checkout"}
                         navigatePage={`/eol/${item.checkoutIn.direction === "out" ? "checkin" : "checkout"}/${item.id}`}
                       />
                     </td>
@@ -140,4 +142,4 @@ export default function UpcomingEndOfLife() {
       </main>
     </div>
   );
-} 
+}

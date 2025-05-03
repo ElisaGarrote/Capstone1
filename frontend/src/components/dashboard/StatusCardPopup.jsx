@@ -108,12 +108,12 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
               <td>
                 {item.location ? (
                   <div className="location-info">
-                    <IoLocationOutline style={{ color: '#2563eb' }} />
+                    <IoLocationOutline style={{ color: '#0D6EFD' }} />
                     <span className="location-name">{item.location}</span>
                   </div>
                 ) : (
                   <div className="user-info">
-                    <RxPerson style={{ color: '#2563eb' }} />
+                    <RxPerson className="user-icon" />
                     <span className="user-name">{item.checkedOutTo}</span>
                   </div>
                 )}
@@ -136,11 +136,9 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
           </button>
         </div>
         <div className="popup-body">
-          <div className="table-container">
-            <table className="audits-table">
-              {renderTableContent()}
-            </table>
-          </div>
+          <table className="audits-table">
+            {renderTableContent()}
+          </table>
         </div>
       </div>
     </div>

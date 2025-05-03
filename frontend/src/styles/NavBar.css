@@ -36,18 +36,55 @@
   padding: 10px;
 }
 
-.main-nav-bar li a {
+.main-nav-bar li a,
+.main-nav-bar li .dropdown-trigger {
   display: flex;
   justify-content: center;
   align-items: center;
   color: var(--text-color);
   font-size: 1rem;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+/* Dropdown trigger styling */
+.main-nav-bar li .dropdown-trigger {
+  position: relative;
+  transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 20px 0 0; /* Increase right padding for more space before the icon */
+}
+
+/* Style for dropdown arrow icon */
+.main-nav-bar li .dropdown-trigger svg {
+  font-size: 0.8rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+  margin-left: 5px; /* Fixed space between text and icon */
+}
+
+/* Change arrow color on hover */
+.main-nav-bar li .dropdown-trigger:hover svg {
+  color: var(--primary-color);
+}
+
+/* Rotate arrow and change color when dropdown is open */
+.dropdown-container.open .dropdown-trigger svg {
+  transform: rotate(180deg);
+  color: var(--primary-color);
+}
+
+/* Change color when dropdown is active */
+.main-nav-bar li .dropdown-trigger.active svg {
+  color: var(--primary-color);
 }
 
 /* Style the anchor that is active (the user selected specific nav menu (dashboard, assets, maintenance, etc.)) */
-.main-nav-bar li a.active {
+.main-nav-bar li a.active,
+.main-nav-bar li .dropdown-trigger.active,
+.dropdown-container.open .dropdown-trigger {
   color: var(--primary-color);
+  font-weight: 500;
 }
 
 .main-nav-bar li select.active {
@@ -86,32 +123,107 @@
   cursor: pointer;
   /* Reduced padding to tighten the dropdown arrow spacing */
   padding-right: 12px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0 center;
+  background-size: 1em;
 }
 
 .main-nav-bar li select:hover {
   color: var(--primary-color);
 }
 
+/* Style for the dropdown container */
+.main-nav-bar li select::-ms-expand {
+  display: none;
+}
+
+/* Style for dropdown options */
 .main-nav-bar li select option {
   background-color: white;
   color: var(--text-color);
   font-size: 1rem;
   padding: 8px;
+  border: none;
 }
 
-.main-nav-bar li a:hover {
+.main-nav-bar li select option:hover,
+.main-nav-bar li select option:focus,
+.main-nav-bar li select option:checked,
+.main-nav-bar li select option:active {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  color: var(--primary-color) !important;
+  font-weight: 500 !important;
+}
+
+/* Add a subtle indicator for selected options */
+.main-nav-bar li select option:checked {
+  font-weight: 600 !important;
+}
+
+.main-nav-bar li a:hover,
+.main-nav-bar li .dropdown-trigger:hover {
   color: var(--primary-color);
   cursor: pointer;
 }
 
-<<<<<<< HEAD
+/* Dropdown container positioning */
+.dropdown-container {
+  position: relative;
+  margin: 0 10px; /* Add consistent spacing between navbar items */
+}
+
+/* Custom dropdown styling */
+.custom-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: 250px;
+  background: white;
+  border-radius: 40px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.dropdown-menu {
+  padding: 12px 16px;
+}
+
+.dropdown-menu button {
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 40px;
+  color: var(--text-color);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.dropdown-menu button:last-child {
+  margin-bottom: 0;
+}
+
+.dropdown-menu button:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
 /* Middle section styling */
 .main-nav-bar section:nth-child(2) {
   flex-grow: 1;
   display: flex;
   justify-content: center;
 }
-=======
 .profile-container {
   position: relative;
 }
@@ -122,14 +234,15 @@
   right: 0;
   width: 250px;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 40px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   overflow: hidden;
+  border: 1px solid #eee;
 }
 
 .profile-header {
-  padding: 16px;
+  padding: 20px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -152,16 +265,16 @@
 
 .admin-badge {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 3px 10px;
   background-color: var(--primary-color);
   color: white;
-  border-radius: 4px;
+  border-radius: 20px;
   font-size: 12px;
   margin-top: 4px;
 }
 
 .profile-menu {
-  padding: 8px;
+  padding: 12px 16px;
 }
 
 .profile-menu button {
@@ -170,15 +283,22 @@
   text-align: left;
   background: none;
   border: none;
-  border-radius: 4px;
+  border-radius: 40px;
   color: var(--text-color);
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.profile-menu button:last-child {
+  margin-bottom: 0;
 }
 
 .profile-menu button:hover {
-  background-color: #f5f5f5;
+  background-color: rgba(0, 123, 255, 0.1);
+  color: var(--primary-color);
+  font-weight: 500;
 }
 
 .profile-menu .logout-btn {
@@ -186,6 +306,8 @@
 }
 
 .profile-menu .logout-btn:hover {
-  background-color: #fff5f5;
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  font-weight: 500;
 }
->>>>>>> Sillano
+

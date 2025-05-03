@@ -48,7 +48,8 @@
 .table-container {
   background-color: white;
   border-radius: 40px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d3d3d3;
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   margin-top: 1rem;
   position: relative;
   overflow: hidden;
@@ -67,9 +68,9 @@
 }
 
 .table-header h2 {
-  font-size: 16px;
-  font-weight: 500;
-  color: #111827;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--secondary-text-color);
   margin: 0;
 }
 
@@ -113,26 +114,30 @@
 }
 
 .table th {
-  background-color: #F9FAFB;
-  padding: 12px 24px;
+  background-color: rgba(211, 211, 211, 0.2);
+  padding: 0.75rem 1rem;
   text-align: left;
-  font-size: 12px;
-  font-weight: 500;
-  color: #6B7280;
-  border-bottom: 1px solid #E5E7EB;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  border-bottom: 1px solid #d3d3d3;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
 .table td {
-  padding: 16px 24px;
-  font-size: 14px;
-  color: #374151;
-  border-bottom: 1px solid #E5E7EB;
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  color: var(--secondary-text-color);
+  border-bottom: 1px solid #d3d3d3;
   background-color: white;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .table tbody tr:hover {
-  background-color: #F9FAFB;
+  background-color: rgba(211, 211, 211, 0.1);
 }
 
 /* Asset Cell */
@@ -142,8 +147,9 @@
 }
 
 .asset-link {
-  color: #0D6EFD;
+  color: var(--primary-color);
   text-decoration: none;
+  font-weight: 500;
 }
 
 .asset-link:hover {
@@ -191,7 +197,7 @@
   .table-container {
     overflow-x: auto;
   }
-  
+
   .table {
     min-width: 1000px;
   }
@@ -221,4 +227,4 @@
 .table-scroll-container {
   overflow-x: auto;
   white-space: nowrap;
-} 
+}

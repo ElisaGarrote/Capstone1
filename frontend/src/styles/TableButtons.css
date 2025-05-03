@@ -4,24 +4,40 @@
 .table-buttons-delete img,
 .table-buttons-view img {
   display: flex;
-  height: 3vh;
-  width: auto;
-  object-fit: fill;
+  height: 16px;
+  width: 16px;
+  object-fit: contain;
 }
 
-.table-buttons-checkin,
-.table-buttons-checkout,
 .table-buttons-edit,
 .table-buttons-delete,
 .table-buttons-view {
   display: flex;
-  padding: 8% 12%;
-  border-radius: 5px;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 8px;
+  border-radius: 4px;
   cursor: pointer;
+  width: 30px;
+  height: 28px;
+}
+
+.table-buttons-checkin,
+.table-buttons-checkout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  min-width: 70px;
+  height: 28px;
 }
 
 .table-buttons-checkout {
   background-color: #34c759;
+  color: white;
   transition: 0.5s ease;
 }
 
@@ -31,6 +47,7 @@
 
 .table-buttons-checkin {
   background-color: var(--primary-color);
+  color: white;
   transition: 0.5s ease;
 }
 

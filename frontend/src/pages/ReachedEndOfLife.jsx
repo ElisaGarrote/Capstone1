@@ -1,10 +1,12 @@
 import "../styles/custom-colors.css";
 import "../styles/UpcomingEndOfLife.css";  // Reusing the same CSS for consistent styling
+import "../styles/ReachedEndOfLife.css"; // Specific styles for this page
 import NavBar from "../components/NavBar";
 import TableBtn from "../components/buttons/TableButtons";
 import MediumButtons from "../components/buttons/MediumButtons";
 import Status from "../components/Status";
 import macbook from "../assets/img/macbook.png";
+import CheckboxFix from "../components/CheckboxFix";
 
 export default function ReachedEndOfLife() {
   const items = [
@@ -44,6 +46,7 @@ export default function ReachedEndOfLife() {
 
   return (
     <div className="eol-container">
+      <CheckboxFix />
       <NavBar />
       <main className="eol-content">
         <div className="eol-table-section">
@@ -108,8 +111,8 @@ export default function ReachedEndOfLife() {
                       />
                     </td>
                     <td>
-                      <TableBtn 
-                        type={item.checkoutIn.direction === "out" ? "checkin" : "checkout"} 
+                      <TableBtn
+                        type={item.checkoutIn.direction === "out" ? "checkin" : "checkout"}
                         navigatePage={`/reached-end-of-life/${item.checkoutIn.direction === "out" ? "checkin" : "checkout"}/${item.id}`}
                       />
                     </td>
@@ -140,4 +143,4 @@ export default function ReachedEndOfLife() {
       </main>
     </div>
   );
-} 
+}

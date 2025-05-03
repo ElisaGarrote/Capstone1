@@ -146,7 +146,7 @@ export default function Assets() {
                         className={item.status === 'Deployed' ? "check-in-btn" : "check-out-btn"}
                         onClick={() => handleCheckInOut(item)}
                       >
-                        {item.status === 'Deployed' ? "< Check-In" : "> Check-Out"}
+                        {item.status === 'Deployed' ? "Check-In" : "Check-Out"}
                       </button>
                     </td>
                     <td>{item.product}</td>

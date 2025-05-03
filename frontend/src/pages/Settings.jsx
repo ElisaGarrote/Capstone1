@@ -1,9 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import "../styles/Settings.css";
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("account");
+
+  // Add a class to the body to prevent layout shift when switching tabs
+  useEffect(() => {
+    // Save the original body padding
+    const originalPadding = window.getComputedStyle(document.body).paddingRight;
+
+    // Add a class to the body to prevent scrollbar from affecting layout
+    document.body.classList.add('settings-page-open');
+
+    // Clean up when component unmounts
+    return () => {
+      document.body.classList.remove('settings-page-open');
+      document.body.style.paddingRight = originalPadding;
+    };
+  }, []);
+
+  // Handle tab switching without layout shift
+  const handleTabChange = (tab) => {
+    // Prevent scrollbar from affecting layout during tab switch
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
+
+    setActiveTab(tab);
+  };
 
   return (
     <>
@@ -11,17 +35,17 @@ export default function Settings() {
       <main className="settings-page">
         <div className="settings-container">
           <h1>Settings</h1>
-          
+
           <div className="settings-tabs">
-            <button 
+            <button
               className={`tab ${activeTab === "account" ? "active" : ""}`}
-              onClick={() => setActiveTab("account")}
+              onClick={() => handleTabChange("account")}
             >
               Account Details
             </button>
-            <button 
+            <button
               className={`tab ${activeTab === "company" ? "active" : ""}`}
-              onClick={() => setActiveTab("company")}
+              onClick={() => handleTabChange("company")}
             >
               Company Details
             </button>
@@ -36,7 +60,7 @@ export default function Settings() {
                     <h3>Basic Information</h3>
                     <div className="form-group">
                       <label>Company name </label>
-                      <input 
+                      <input
                         type="text"
                         value="MAP Active"
                         disabled
@@ -44,7 +68,7 @@ export default function Settings() {
                     </div>
                     <div className="form-group">
                       <label>Industry Type </label>
-                      <input 
+                      <input
                         type="text"
                         value="Retail"
                         disabled
@@ -56,7 +80,7 @@ export default function Settings() {
                     <h3>Contact Information</h3>
                     <div className="form-group">
                       <label>Contact Person </label>
-                      <input 
+                      <input
                         type="text"
                         value="Mary Grace Piattos"
                         disabled
@@ -64,7 +88,7 @@ export default function Settings() {
                     </div>
                     <div className="form-group">
                       <label>Contact Email </label>
-                      <input 
+                      <input
                         type="email"
                         value="m*********@gmail.com"
                         disabled
@@ -85,8 +109,8 @@ export default function Settings() {
                   <div className="form-grid">
                     <div className="form-group">
                       <label>First name </label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value="Mary Grace"
                         placeholder="Enter your first name"
                       />
@@ -94,8 +118,8 @@ export default function Settings() {
 
                     <div className="form-group">
                       <label>Email Address </label>
-                      <input 
-                        type="email" 
+                      <input
+                        type="email"
                         value="m*********@gmail.com"
                         disabled
                       />
@@ -103,7 +127,7 @@ export default function Settings() {
 
                     <div className="form-group">
                       <label>Middle name (Optional)</label>
-                      <input 
+                      <input
                         type="text"
                         placeholder="Enter your middle name"
                       />
@@ -111,8 +135,8 @@ export default function Settings() {
 
                     <div className="form-group">
                       <label>Role </label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value="Admin"
                         disabled
                       />
@@ -120,8 +144,8 @@ export default function Settings() {
 
                     <div className="form-group">
                       <label>Last name </label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value="Piattos"
                         placeholder="Enter your last name"
                       />
@@ -129,8 +153,8 @@ export default function Settings() {
 
                     <div className="form-group">
                       <label>Contact Number </label>
-                      <input 
-                        type="tel" 
+                      <input
+                        type="tel"
                         value="+63 9*******678"
                         disabled
                       />
@@ -138,8 +162,8 @@ export default function Settings() {
 
                     <div className="form-group created-at">
                       <label>Created At </label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value="January 1, 2025 at 12:00 AM"
                         disabled
                       />

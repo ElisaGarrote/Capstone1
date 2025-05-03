@@ -14,7 +14,8 @@
 .eol-table-section {
   background: white;
   border-radius: 40px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d3d3d3;
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   padding: 0;
   position: relative;
   overflow: hidden;
@@ -29,7 +30,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem 2rem;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #d3d3d3;
   background: white;
   left: 0;
   right: 0;
@@ -48,9 +49,9 @@
 }
 
 .table-header h2 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: var(--secondary-text-color);
   margin: 0;
 }
 
@@ -160,25 +161,35 @@
 }
 
 .eol-table th {
-  background-color: #F9FAFB;
-  padding: 0.75rem 2rem;
+  background-color: rgba(211, 211, 211, 0.2);
+  padding: 0.75rem 1rem;
+  text-align: left;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6B7280;
-  text-align: left;
-  border-bottom: 1px solid #E5E7EB;
+  color: var(--secondary-text-color);
+  border-bottom: 1px solid #d3d3d3;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .eol-table td {
-  padding: 0.75rem 2rem;
-  font-size: 0.875rem;
-  color: #374151;
-  border-bottom: 1px solid #E5E7EB;
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  color: var(--secondary-text-color);
+  border-bottom: 1px solid #d3d3d3;
   background: white;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .eol-table tr:last-child td {
   border-bottom: none;
+}
+
+/* Add hover effect */
+.eol-table tbody tr:hover {
+  background-color: rgba(211, 211, 211, 0.1);
 }
 
 /* Column widths */
@@ -337,6 +348,7 @@
   border-radius: 0;
   cursor: pointer;
   margin: 0;
+  appearance: auto;
 }
 
 /* Button styling */
@@ -354,4 +366,4 @@
 
 .icon-button:hover {
   color: #111827;
-} 
+}

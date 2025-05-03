@@ -1,13 +1,20 @@
 import { useState } from "react";
 import NavBar from "../components/NavBar";
 import RegisterUserModal from "../components/RegisterUserModal";
+import FilterOverlay from "../components/FilterOverlay";
 import "../styles/UserManagement.css";
 import ProfileImage from "../assets/img/profile.jpg";
 
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    role: [],
+    status: [],
+    name: ""
+  });
+
   // Mock data for users - replace with actual data later
   const users = [
     { id: 1, name: "Pia Piattos-Lim", role: "Operator", status: "Active" },
@@ -20,9 +27,28 @@ export default function UserManagement() {
     { id: 8, name: "Renan Piatos", role: "Operator", status: "Active" }
   ];
 
-  const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleApplyFilters = (filters) => {
+    setActiveFilters(filters);
+  };
+
+  const filteredUsers = users.filter(user => {
+    // Filter by search query
+    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Filter by name from filter panel
+    const matchesNameFilter = activeFilters.name === "" ||
+      user.name.toLowerCase().includes(activeFilters.name.toLowerCase());
+
+    // Filter by role
+    const matchesRole = activeFilters.role.length === 0 ||
+      activeFilters.role.includes(user.role);
+
+    // Filter by status
+    const matchesStatus = activeFilters.status.length === 0 ||
+      activeFilters.status.includes(user.status);
+
+    return matchesSearch && matchesNameFilter && matchesRole && matchesStatus;
+  });
 
   return (
     <>
@@ -45,8 +71,20 @@ export default function UserManagement() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <button className="filter-btn">Filter</button>
-                <button 
+                <div className="filter-container">
+                  <button
+                    className="filter-btn"
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  >
+                    Filter
+                  </button>
+                  <FilterOverlay
+                    isOpen={isFilterOpen}
+                    onClose={() => setIsFilterOpen(false)}
+                    onApplyFilters={handleApplyFilters}
+                  />
+                </div>
+                <button
                   className="add-user-btn"
                   onClick={() => setIsModalOpen(true)}
                 >
@@ -63,7 +101,7 @@ export default function UserManagement() {
                       <img src={ProfileImage} alt={user.name} />
                     </div>
                     <div className="user-details">
-                      <h3>{user.name}</h3>
+                      <h3 style={{ textDecoration: 'none' }}>{user.name}</h3>
                       <div className="user-badges">
                         <span className={`role-badge ${user.role.toLowerCase()}`}>
                           {user.role}
@@ -76,7 +114,7 @@ export default function UserManagement() {
                   </div>
                   <div className="user-actions">
                     <button className="action-btn primary">Make Changes</button>
-                    <button 
+                    <button
                       className={`action-btn ${user.status === 'Active' ? 'danger' : 'success'}`}
                     >
                       {user.status === 'Active' ? 'Make Inactive' : 'Make Active'}
@@ -95,4 +133,4 @@ export default function UserManagement() {
       />
     </>
   );
-} 
+}

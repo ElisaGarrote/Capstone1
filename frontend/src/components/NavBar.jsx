@@ -1,108 +1,146 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/custom-colors.css";
 import "../styles/NavBar.css";
 import Logo from "../assets/img/Logo.png";
 import SampleProfile from "../assets/img/do.png";
 import NotifIcon from "../assets/icons/notification.svg";
+import { IoIosArrowDown } from "react-icons/io";
 
 export default function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showAssetsMenu, setShowAssetsMenu] = useState(false);
+  const [showReportsMenu, setShowReportsMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-  // Function to handle the navigation route from the dropdown
-  const handleNavigation = (event) => {
-    const value = event.target.value;
-    if (value === "Products") {
-      navigate("/products");
-    }
-    if (value === "Assets") {
-      navigate("/assets");
-    }
-    if (value === "Accessories") {
-      navigate("/accessories");
-    }
-    if (value === "Consumable") {
-      navigate("/Consumables/ViewConsumables");
-    }
-    if (value === "Components") {
-      navigate("/components");
-    }
-  };
+  // State for selected items in each dropdown
+  const [selectedAsset, setSelectedAsset] = useState("Assets");
+  const [selectedReport, setSelectedReport] = useState("Reports");
+  const [selectedMore, setSelectedMore] = useState("More");
 
-  // Function to handle reports navigation
-  const handleReportsNavigation = (event) => {
-    const value = event.target.value;
-    console.log("Selected value:", value);
+  // State to track which menu item is active
+  const [activeMenu, setActiveMenu] = useState("");
 
-    if (value === "Asset Reports") {
-      navigate("/reports/asset");
-    } else if (value === "Depreciation Reports") {
-      navigate("/reports/depreciation");
-    } else if (value === "Due Back Reports") {
-      navigate("/reports/due-back");
-    } else if (value === "End of Life and Warranty Reports") {
-      navigate("/reports/eol-warranty");
-    } else if (value === "Activity Reports") {
-      console.log("Navigating to activity reports");
-      navigate("/reports/activity");
-    }
-  };
-
-  // Function to handle the current selected dropdown menu based on the current location path of the page
-  const currentDropdownPage = () => {
-    if (location.pathname.startsWith("/products")) {
-      return "Products";
-    }
-    if (location.pathname.startsWith("/assets")) {
-      return "Assets";
-    }
-    if (location.pathname.startsWith("/accessories")) {
-      return "Accessories";
-    }
-    if (location.pathname.startsWith("/Consumables")) {
-      return "Consumable";
-    }
-    if (location.pathname.startsWith("/components")) {
-      return "Components";
-    }
-    // Add other condition here
-  };
-
-  // Function to handle more dropdown navigation
-  const handleMoreNavigation = (event) => {
-    const value = event.target.value;
-    // Navigate based on selection but reset dropdown to default
-    if (value === "Categories") {
-      navigate("/categories");
-    } else if (value === "Manufacturers") {
-      navigate("/manufacturers");
-    } else if (value === "Suppliers") {
-      navigate("/suppliers");
-    } else if (value === "Statuses") {
-      navigate("/statuses");
-    } else if (value === "Depreciations") {
-      navigate("/depreciations");
-    } else if (value === "Recycle Bin") {
-      navigate("/recycle-bin");
-    }
-
-    // Reset the dropdown to default "More" after navigation
-    event.target.value = "";
-  };
-
-  // Function to get current reports page
-  const getCurrentReportsPage = () => {
-    const pathToValue = {
-      '/reports/asset': 'Asset Reports',
-      '/reports/depreciation': 'Depreciation Reports',
-      '/reports/due-back': 'Due Back Reports',
-      '/reports/eol-warranty': 'End of Life and Warranty Reports',
-      '/reports/activity': 'Activity Reports'
+  // Close all dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.dropdown-container') &&
+          !event.target.closest('.profile-container')) {
+        setShowAssetsMenu(false);
+        setShowReportsMenu(false);
+        setShowMoreMenu(false);
+        setShowProfileMenu(false);
+      }
     };
-    return pathToValue[location.pathname] || '';
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
+  // Function to toggle a dropdown and close others
+  const toggleDropdown = (dropdown) => {
+    if (dropdown === 'assets') {
+      const newState = !showAssetsMenu;
+      setShowAssetsMenu(newState);
+      setShowReportsMenu(false);
+      setShowMoreMenu(false);
+
+      // Set active menu when opening dropdown, clear when closing
+      if (newState) {
+        setActiveMenu('assets');
+      } else if (activeMenu === 'assets') {
+        // Only clear if this was the active menu
+        setActiveMenu(isInAssetsSection() ? 'assets' : '');
+      }
+    } else if (dropdown === 'reports') {
+      const newState = !showReportsMenu;
+      setShowReportsMenu(newState);
+      setShowAssetsMenu(false);
+      setShowMoreMenu(false);
+
+      // Set active menu when opening dropdown, clear when closing
+      if (newState) {
+        setActiveMenu('reports');
+      } else if (activeMenu === 'reports') {
+        // Only clear if this was the active menu
+        setActiveMenu(location.pathname.startsWith("/reports") ? 'reports' : '');
+      }
+    } else if (dropdown === 'more') {
+      const newState = !showMoreMenu;
+      setShowMoreMenu(newState);
+      setShowAssetsMenu(false);
+      setShowReportsMenu(false);
+
+      // Set active menu when opening dropdown, clear when closing
+      if (newState) {
+        setActiveMenu('more');
+      } else if (activeMenu === 'more') {
+        // Only clear if this was the active menu
+        setActiveMenu('');
+      }
+    }
   };
+
+  // Function to check if we're in the Assets section
+  const isInAssetsSection = () => {
+    return location.pathname.startsWith("/products") ||
+           location.pathname.startsWith("/assets") ||
+           location.pathname.startsWith("/accessories") ||
+           location.pathname.startsWith("/consumables") ||
+           location.pathname.startsWith("/components");
+  };
+
+  // Initialize selected items based on current location
+  useEffect(() => {
+    // Set active menu based on path
+    if (location.pathname === "/dashboard") {
+      setActiveMenu("dashboard");
+    } else if (location.pathname.startsWith("/products") ||
+               location.pathname.startsWith("/assets") ||
+               location.pathname.startsWith("/accessories") ||
+               location.pathname.startsWith("/consumables") ||
+               location.pathname.startsWith("/components")) {
+      setActiveMenu("assets");
+    } else if (location.pathname.startsWith("/dashboard/Repair")) {
+      setActiveMenu("repairs");
+    } else if (location.pathname.startsWith("/audits")) {
+      setActiveMenu("audits");
+    } else if (location.pathname.startsWith("/reports")) {
+      setActiveMenu("reports");
+    } else {
+      setActiveMenu("");
+    }
+
+    // Set selected asset based on path
+    if (location.pathname.startsWith("/products")) {
+      setSelectedAsset("Products");
+    } else if (location.pathname.startsWith("/assets")) {
+      setSelectedAsset("Assets");
+    } else if (location.pathname.startsWith("/accessories")) {
+      setSelectedAsset("Accessories");
+    } else if (location.pathname.startsWith("/consumables")) {
+      setSelectedAsset("Consumable");
+    } else if (location.pathname.startsWith("/components")) {
+      setSelectedAsset("Components");
+    }
+
+    // Set selected report based on path
+    if (location.pathname.startsWith("/reports/asset")) {
+      setSelectedReport("Asset Reports");
+    } else if (location.pathname.startsWith("/reports/depreciation")) {
+      setSelectedReport("Depreciation Reports");
+    } else if (location.pathname.startsWith("/reports/due-back")) {
+      setSelectedReport("Due Back Reports");
+    } else if (location.pathname.startsWith("/reports/eol-warranty")) {
+      setSelectedReport("EoL & Warranty Reports");
+    } else if (location.pathname.startsWith("/reports/activity")) {
+      setSelectedReport("Activity Reports");
+    }
+  }, [location.pathname]);
 
   return (
     <nav className="main-nav-bar">
@@ -113,84 +151,158 @@ export default function NavBar() {
         <ul>
           <li>
             <a
-              onClick={() => navigate("/dashboard")}
-              className={location.pathname === "/dashboard" ? "active" : ""}
+              onClick={() => {
+                navigate("/dashboard");
+                setActiveMenu("dashboard");
+              }}
+              className={activeMenu === "dashboard" ? "active" : ""}
             >
               Dashboard
             </a>
           </li>
-          <li>
-            <select
-              name="assets-more"
-              id="assets-more"
-              defaultValue=""
-              value={currentDropdownPage()}
-              onChange={handleNavigation}
-              className={currentDropdownPage() != null ? "active" : ""}
+          <li className={`dropdown-container ${showAssetsMenu ? 'open' : ''}`}>
+            <div
+              className={`dropdown-trigger ${activeMenu === "assets" ? "active" : ""}`}
+              onClick={() => toggleDropdown('assets')}
             >
-              <option value="" disabled hidden>
-                Assets
-              </option>
-              <option value="Products">Products</option>
-              <option value="Assets">Assets</option>
-              <option value="Accessories">Accessories</option>
-              <option value="Consumable">Consumable</option>
-              <option value="Components">Components</option>
-            </select>
+              {selectedAsset} <IoIosArrowDown />
+            </div>
+            {showAssetsMenu && (
+              <div className="custom-dropdown assets-dropdown">
+                <div className="dropdown-menu">
+                  <button onClick={() => {
+                    navigate("/products");
+                    setSelectedAsset("Products");
+                    setShowAssetsMenu(false);
+                  }}>Products</button>
+                  <button onClick={() => {
+                    navigate("/assets");
+                    setSelectedAsset("Assets");
+                    setShowAssetsMenu(false);
+                  }}>Assets</button>
+                  <button onClick={() => {
+                    navigate("/accessories");
+                    setSelectedAsset("Accessories");
+                    setShowAssetsMenu(false);
+                  }}>Accessories</button>
+                  <button onClick={() => {
+                    navigate("/consumables");
+                    setSelectedAsset("Consumable");
+                    setShowAssetsMenu(false);
+                  }}>Consumable</button>
+                  <button onClick={() => {
+                    navigate("/components");
+                    setSelectedAsset("Components");
+                    setShowAssetsMenu(false);
+                  }}>Components</button>
+                </div>
+              </div>
+            )}
           </li>
           <li>
             <a
-              onClick={() => navigate("/dashboard/Repair/Maintenance")}
-              className={location.pathname.startsWith("/dashboard/Repair") ? "active" : ""}
+              onClick={() => {
+                navigate("/dashboard/Repair/Maintenance");
+                setActiveMenu("repairs");
+              }}
+              className={activeMenu === "repairs" ? "active" : ""}
             >
               Repairs
             </a>
           </li>
           <li>
             <a
-              className={location.pathname.startsWith("/audits") ? "active" : ""}
-              onClick={() => navigate("/audits")}
+              className={activeMenu === "audits" ? "active" : ""}
+              onClick={() => {
+                navigate("/audits");
+                setActiveMenu("audits");
+              }}
             >
               Audits
             </a>
           </li>
-          <li>
-            <select
-              name="reports-more"
-              id="reports-more"
-              value={getCurrentReportsPage()}
-              onChange={handleReportsNavigation}
-              className={location.pathname.startsWith("/reports") ? "active" : ""}
+          <li className={`dropdown-container ${showReportsMenu ? 'open' : ''}`}>
+            <div
+              className={`dropdown-trigger ${activeMenu === "reports" ? "active" : ""}`}
+              onClick={() => toggleDropdown('reports')}
             >
-              <option value="" disabled hidden>
-                Reports
-              </option>
-              <option value="Asset Reports">Asset Reports</option>
-              <option value="Depreciation Reports">Depreciation Reports</option>
-              <option value="Due Back Reports">Due Back Reports</option>
-              <option value="End of Life and Warranty Reports">
-                EoL & Warranty Reports
-              </option>
-              <option value="Activity Reports">Activity Reports</option>
-            </select>
+              {selectedReport} <IoIosArrowDown />
+            </div>
+            {showReportsMenu && (
+              <div className="custom-dropdown reports-dropdown">
+                <div className="dropdown-menu">
+                  <button onClick={() => {
+                    navigate("/reports/asset");
+                    setSelectedReport("Asset Reports");
+                    setShowReportsMenu(false);
+                  }}>Asset Reports</button>
+                  <button onClick={() => {
+                    navigate("/reports/depreciation");
+                    setSelectedReport("Depreciation Reports");
+                    setShowReportsMenu(false);
+                  }}>Depreciation Reports</button>
+                  <button onClick={() => {
+                    navigate("/reports/due-back");
+                    setSelectedReport("Due Back Reports");
+                    setShowReportsMenu(false);
+                  }}>Due Back Reports</button>
+                  <button onClick={() => {
+                    navigate("/reports/eol-warranty");
+                    setSelectedReport("EoL & Warranty Reports");
+                    setShowReportsMenu(false);
+                  }}>EoL & Warranty Reports</button>
+                  <button onClick={() => {
+                    navigate("/reports/activity");
+                    setSelectedReport("Activity Reports");
+                    setShowReportsMenu(false);
+                  }}>Activity Reports</button>
+                </div>
+              </div>
+            )}
           </li>
-          <li>
-            <select
-              name="more-options"
-              id="more-options"
-              defaultValue=""
-              onChange={handleMoreNavigation}
+          <li className={`dropdown-container ${showMoreMenu ? 'open' : ''}`}>
+            <div
+              className={`dropdown-trigger ${activeMenu === "more" ? "active" : ""}`}
+              onClick={() => toggleDropdown('more')}
             >
-              <option value="" disabled hidden>
-                More
-              </option>
-              <option value="Categories">Categories</option>
-              <option value="Manufacturers">Manufacturers</option>
-              <option value="Suppliers">Suppliers</option>
-              <option value="Statuses">Statuses</option>
-              <option value="Depreciations">Depreciations</option>
-              <option value="Recycle Bin">Recycle Bin</option>
-            </select>
+              {selectedMore} <IoIosArrowDown />
+            </div>
+            {showMoreMenu && (
+              <div className="custom-dropdown more-dropdown">
+                <div className="dropdown-menu">
+                  <button onClick={() => {
+                    navigate("/categories");
+                    setSelectedMore("Categories");
+                    setShowMoreMenu(false);
+                  }}>Categories</button>
+                  <button onClick={() => {
+                    navigate("/manufacturers");
+                    setSelectedMore("Manufacturers");
+                    setShowMoreMenu(false);
+                  }}>Manufacturers</button>
+                  <button onClick={() => {
+                    navigate("/suppliers");
+                    setSelectedMore("Suppliers");
+                    setShowMoreMenu(false);
+                  }}>Suppliers</button>
+                  <button onClick={() => {
+                    navigate("/statuses");
+                    setSelectedMore("Statuses");
+                    setShowMoreMenu(false);
+                  }}>Statuses</button>
+                  <button onClick={() => {
+                    navigate("/depreciations");
+                    setSelectedMore("Depreciations");
+                    setShowMoreMenu(false);
+                  }}>Depreciations</button>
+                  <button onClick={() => {
+                    navigate("/recycle-bin");
+                    setSelectedMore("Recycle Bin");
+                    setShowMoreMenu(false);
+                  }}>Recycle Bin</button>
+                </div>
+              </div>
+            )}
           </li>
         </ul>
       </section>

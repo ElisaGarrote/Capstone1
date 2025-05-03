@@ -4,6 +4,14 @@
   margin: 0 auto;
 }
 
+/* Remove all text decoration from user management elements */
+.user-management-page *,
+.user-management-page *:hover,
+.user-management-page *:focus,
+.user-management-page *:active {
+  text-decoration: none !important;
+}
+
 .user-management-container h1 {
   font-size: 24px;
   margin-bottom: 24px;
@@ -12,9 +20,9 @@
 
 .user-section {
   background: white;
-  border-radius: 8px;
+  border-radius: 40px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
 }
 
 .user-header {
@@ -38,19 +46,34 @@
 .search-box input {
   padding: 8px 16px;
   border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border-radius: 40px;
   font-size: 14px;
   min-width: 200px;
+  transition: border-color 0.2s ease;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.filter-container {
+  position: relative;
 }
 
 .filter-btn {
   padding: 8px 16px;
   border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border-radius: 40px;
   background: white;
   color: var(--text-color);
   font-size: 14px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  background-color: #f5f5f5;
 }
 
 .add-user-btn {
@@ -58,9 +81,14 @@
   background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 40px;
   font-size: 14px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-user-btn:hover {
+  background-color: var(--primary-color-hover);
 }
 
 .user-grid {
@@ -71,8 +99,15 @@
 
 .user-card {
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 20px;
   padding: 16px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.user-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
 }
 
 .user-info {
@@ -92,6 +127,11 @@
   margin: 0 0 8px 0;
   font-size: 16px;
   color: var(--text-color);
+  text-decoration: none;
+}
+
+.user-details h3:hover {
+  text-decoration: none;
 }
 
 .user-badges {
@@ -100,10 +140,11 @@
 }
 
 .role-badge, .status-badge {
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 12px;
   text-decoration: none;
+  display: inline-block;
 }
 
 .role-badge.operator {
@@ -140,10 +181,10 @@
   width: 100%;
   padding: 8px;
   border: none;
-  border-radius: 4px;
+  border-radius: 40px;
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .action-btn.primary {
@@ -171,4 +212,4 @@
 
 .action-btn.success:hover {
   background-color: #c8e6c9;
-} 
+}

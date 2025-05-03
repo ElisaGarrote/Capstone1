@@ -13,11 +13,12 @@
 
 .modal-content {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 25px;
+  border-radius: 40px;
   width: 100%;
   max-width: 500px;
   position: relative;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
 .modal-header {
@@ -59,13 +60,37 @@
   font-weight: 500;
 }
 
+/* Override the global asterisk rule from Settings.css */
+.modal-content .form-group label::after {
+  content: '';
+}
+
+/* Add asterisk only to required fields */
+.modal-content .form-group:has(input[required]) label::after,
+.modal-content .form-group:has(select[required]) label::after {
+  content: ' *';
+  color: #dc3545;
+}
+
+/* Remove asterisk from optional fields */
+.modal-content .form-group:has(input:not([required])) label::after {
+  content: '';
+}
+
 .form-group input,
 .form-group select {
   width: 100%;
   padding: 8px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 40px;
   font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #007bff;
 }
 
 .register-btn {
@@ -74,12 +99,13 @@
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 40px;
   cursor: pointer;
   font-size: 16px;
   margin-top: 10px;
+  transition: all 0.2s ease;
 }
 
 .register-btn:hover {
   background-color: #0056b3;
-} 
+}

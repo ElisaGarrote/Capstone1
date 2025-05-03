@@ -16,12 +16,20 @@
 /* Adjust settings page to account for fixed navbar */
 .settings-page {
   padding-top: 60px; /* Height of the navbar */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+}
+
+/* Prevent layout shift when tabs are switched */
+body.settings-page-open {
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .settings-container {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto; /* Removed top margin since we're using padding-top on the parent */
+  position: relative; /* For proper positioning of content */
 }
 
 /* Rest of your CSS remains the same */
@@ -70,9 +78,12 @@
 
 .settings-content {
   background: white;
-  border-radius: 8px;
+  border-radius: 40px; /* Match other UI elements */
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8); /* Match other UI elements */
+  position: relative;
+  width: 100%;
+  overflow: hidden; /* Prevent content from causing layout shifts */
 }
 
 .settings-content h2 {
@@ -86,6 +97,9 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 32px;
   margin-bottom: 24px;
+  width: 100%;
+  position: relative;
+  overflow: hidden; /* Prevent content from causing layout shifts */
 }
 
 .form-section h3 {
@@ -120,10 +134,16 @@
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #e0e0e0;
-  border-radius: 4px;
+  border-radius: 40px; /* Match other UI elements */
   font-size: 13px;
   color: #333;
   background-color: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #007bff;
 }
 
 .form-group input:disabled {
@@ -143,10 +163,10 @@
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 40px; /* Match other UI elements */
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .save-changes:hover:not(:disabled) {

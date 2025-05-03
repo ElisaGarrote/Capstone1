@@ -46,8 +46,9 @@
 
 .depreciation-table-container {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 40px;
+  border: 1px solid #d3d3d3;
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   overflow: hidden;
 }
 
@@ -57,24 +58,31 @@
 }
 
 .depreciation-table th {
-  background-color: #F9FAFB;
+  background-color: rgba(211, 211, 211, 0.2);
   padding: 0.75rem 1rem;
   text-align: left;
-  font-size: 14px;
-  font-weight: 500;
-  color: #6B7280;
-  border-bottom: 1px solid #E5E7EB;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  border-bottom: 1px solid #d3d3d3;
+  text-transform: uppercase;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .depreciation-table td {
   padding: 0.75rem 1rem;
-  font-size: 14px;
-  color: #374151;
-  border-bottom: 1px solid #E5E7EB;
+  font-size: 0.88rem;
+  color: var(--secondary-text-color);
+  border-bottom: 1px solid #d3d3d3;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .depreciation-table tbody tr:hover {
-  background-color: #F9FAFB;
+  background-color: rgba(211, 211, 211, 0.1);
 }
 
 .action-button {
@@ -89,6 +97,20 @@
 
 .action-button:hover {
   background-color: #F3F4F6;
+}
+
+/* Asset link styling */
+.asset-cell {
+  font-weight: 500;
+}
+
+.asset-link {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.asset-link:hover {
+  text-decoration: underline;
 }
 
 .pagination {
@@ -122,4 +144,4 @@
 .pagination span {
   font-size: 14px;
   color: #6B7280;
-} 
+}

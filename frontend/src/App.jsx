@@ -1,6 +1,7 @@
 import React from "react";
 import react from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import ChatBot from "./components/ChatBot";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
@@ -34,7 +35,8 @@ import ViewAudits from "./pages/asset-audit/ViewAudits";
 import Maintenance from "./pages/Repair/Maintenance";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
-import Consumables from './pages/Consumables/ViewConsumables';import ResetPasswordEmail from "./pages/ResetPasswordEmail"
+import Consumables from './pages/Consumables/Consumables';
+import ResetPasswordEmail from "./pages/ResetPasswordEmail"
 import SetPassword from "./pages/SetPassword"
 import UpcomingEndOfLife from "./pages/UpcomingEndOfLife";
 import ExpiringWarranties from "./pages/ExpiringWarranties";
@@ -61,6 +63,7 @@ function RegisterAndLogout() {
 function App() {
   return (
     <BrowserRouter>
+      <ChatBot />
       <Routes>
         <Route
           path="/"
@@ -110,7 +113,7 @@ function App() {
         <Route path="/dashboard/Repair/Maintenance" element={<Maintenance />} />
         <Route path="/dashboard/Repair/MaintenanceRegistration" element={<MaintenanceRegistration />} />
         <Route path="/dashboard/Repair/EditMaintenance" element={<EditMaintenance />} />
-        <Route path="/Consumables/ViewConsumables" element={<Consumables />} />
+        <Route path="/consumables" element={<Consumables />} />
         <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
         <Route path="/warranties" element={<ExpiringWarranties />} />
         <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />
@@ -122,6 +125,7 @@ function App() {
         <Route path="/reports/activity" element={<ActivityReport />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/user-management" element={<UserManagement />} />
+        <Route path="*" element={<NotFound />}></Route>
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>

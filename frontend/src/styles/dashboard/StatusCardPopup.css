@@ -16,10 +16,12 @@
   border-radius: 24px;
   width: 90%;
   max-width: 600px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d3d3d3;
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   animation: slideIn 0.3s ease;
   padding: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .popup-header {
@@ -27,14 +29,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #E5E7EB;
+  border-bottom: 1px solid #d3d3d3;
   background: white;
 }
 
 .popup-header h2 {
-  font-size: 1.125rem;
+  font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: var(--secondary-text-color);
   margin: 0;
 }
 
@@ -63,14 +65,10 @@
 
 .popup-body {
   margin: 0;
-  padding-bottom: 0; /* Remove bottom padding */
-}
-
-.table-container {
-  margin: 0;
   padding: 0;
-  border-radius: 0;
   width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .audits-table {
@@ -80,6 +78,13 @@
   margin: 0;
   border-radius: 0;
   background: white;
+  border-spacing: 0;
+}
+
+/* Global rule to ensure all elements in the table are left-aligned */
+.audits-table *,
+.audits-table * * {
+  text-align: left !important;
 }
 
 .audits-table thead,
@@ -91,41 +96,75 @@
 }
 
 .audits-table th {
-  background-color: #F9FAFB;
-  padding: 1rem 1rem;
+  background-color: rgba(211, 211, 211, 0.2);
+  padding: 0.75rem 1rem;
+  text-align: left;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #6B7280;
-  text-align: left;
-  border-bottom: 1px solid #E5E7EB;
+  color: var(--secondary-text-color);
+  border-bottom: 1px solid #d3d3d3;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.audits-table td {
-  padding: 1rem 1rem;
-  font-size: 0.875rem;
-  color: #374151;
-  border-bottom: 1px solid #E5E7EB;
-  background: white;
+/* Ensure all table headers are left-aligned */
+.audits-table th {
+  text-align: left !important;
 }
 
+.audits-table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  color: var(--secondary-text-color);
+  border-bottom: 1px solid #d3d3d3;
+  background: white;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+/* Ensure all table cells are left-aligned */
+.audits-table td {
+  text-align: left !important;
+}
+
+/* Remove bottom border from last row */
 .audits-table tr:last-child td {
   border-bottom: none;
 }
 
+/* Add hover effect */
 .audits-table tr:hover td {
-  background-color: #F9FAFB;
+  background-color: rgba(211, 211, 211, 0.1);
+}
+
+/* Fix the first and last cells to match the popup border radius */
+.audits-table tr:first-child th:first-child {
+  border-top-left-radius: 0;
+}
+
+.audits-table tr:first-child th:last-child {
+  border-top-right-radius: 0;
+}
+
+.audits-table tr:last-child td:first-child {
+  border-bottom-left-radius: 0;
+}
+
+.audits-table tr:last-child td:last-child {
+  border-bottom-right-radius: 0;
 }
 
 .date-cell {
   color: #374151;
   font-weight: normal;
-  text-align: right;
+  text-align: left;
   white-space: nowrap;
 }
 
 .date-header {
-  text-align: right;
+  text-align: left;
 }
 
 /* Category info styles */
@@ -150,7 +189,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #2563eb;
+  color: #0D6EFD;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -168,7 +207,7 @@
 }
 
 .asset-icon {
-  color: #2563eb;
+  color: #0D6EFD !important;
   font-size: 1.125rem;
   flex-shrink: 0;
 }
@@ -178,7 +217,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #2563eb;
+  color: #0D6EFD;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -190,14 +229,14 @@
 }
 
 .location-info svg {
-  width: 1.125rem;
-  height: 1.125rem;
-  color: #2563eb;
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  color: #0D6EFD !important;
   flex-shrink: 0;
 }
 
 .location-name {
-  color: #2563eb;
+  color: #0D6EFD;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -209,7 +248,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #2563eb;
+  color: var(--primary-color);
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -220,15 +259,15 @@
   text-decoration: underline;
 }
 
-.user-info svg {
-  width: 1.125rem;
-  height: 1.125rem;
-  color: #2563eb;
+.user-icon {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  color: var(--primary-color) !important;
   flex-shrink: 0;
 }
 
 .user-name {
-  color: #2563eb;
+  color: var(--primary-color);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -239,17 +278,19 @@
 .audits-table th:nth-child(1),
 .audits-table td:nth-child(1) {
   width: 40%;
+  text-align: left;
 }
 
 .audits-table th:nth-child(2),
 .audits-table td:nth-child(2) {
   width: 30%;
+  text-align: left;
 }
 
 .audits-table th:nth-child(3),
 .audits-table td:nth-child(3) {
   width: 30%;
-  text-align: right;
+  text-align: left;
 }
 
 @keyframes slideIn {
@@ -278,15 +319,18 @@
   .audits-table th:nth-child(1),
   .audits-table td:nth-child(1) {
     width: 35%;
+    text-align: left;
   }
 
   .audits-table th:nth-child(2),
   .audits-table td:nth-child(2) {
     width: 30%;
+    text-align: left;
   }
 
   .audits-table th:nth-child(3),
   .audits-table td:nth-child(3) {
     width: 35%;
+    text-align: left;
   }
 }
