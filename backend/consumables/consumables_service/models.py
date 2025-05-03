@@ -5,15 +5,15 @@ class Consumables(models.Model):
     location = models.CharField(max_length=50, blank=True)
     name = models.CharField(max_length=50)
     order_number = models.CharField(max_length=20, blank=True)
-    purchase_date = models.DateField()
-    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    purchase_date = models.DateField(null=True, blank=True)
+    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     notes = models.TextField(blank=True)  
     is_deleted = models.BooleanField(default=False)
     model_number = models.CharField(max_length=20, blank=True)
     quantity = models.IntegerField(blank=True, null=True)
     minimum_quantity = models.IntegerField(blank=True, null=True)
     supplier_id = models.IntegerField(blank=True, null=True)
-    category_id = models.IntegerField(blank=True, null=True)
+    category_id = models.IntegerField()
     manufacturer_id = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
