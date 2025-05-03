@@ -9,7 +9,7 @@ class Users(models.Model):
     first_name = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50)
-    email = models.EmailField(max_length=50)
+    email = models.EmailField(max_length=50, unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='operator')    
     contact_number = models.CharField(max_length=13)
     created_at = models.DateTimeField(auto_now_add=True)
