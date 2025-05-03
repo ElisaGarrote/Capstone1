@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-class Consumables(models.Model):
+class Consumable(models.Model):
     location = models.CharField(max_length=50, blank=True)
     name = models.CharField(max_length=50, unique=True)
     order_number = models.CharField(max_length=20, blank=True)
@@ -20,7 +20,7 @@ class Consumables(models.Model):
         return self.name
     
 class ConsumableImages(models.Model):
-    consumable = models.ForeignKey(Consumables, on_delete=models.CASCADE, related_name='images')
+    consumable = models.ForeignKey(Consumable, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(null=True, blank=True, upload_to='consumable_images/')
     is_deleted = models.BooleanField(default=False)
 

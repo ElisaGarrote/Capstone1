@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-class Users(models.Model):
+class User(models.Model):
     ROLE_CHOICES = [
         ('admin', 'Admin'), ('operator', 'Operator'),
     ]
@@ -21,7 +21,7 @@ class Users(models.Model):
         return f"{self.first_name} {self.middle_name} {self.last_name}".strip()
     
 class UserImages(models.Model):
-    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='images')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(null=True, blank=True, upload_to='user_images/')
     is_deleted = models.BooleanField(default=False)
 

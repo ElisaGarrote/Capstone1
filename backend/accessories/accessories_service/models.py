@@ -1,7 +1,7 @@
 from django.db import models
 
 # Create your models here.
-class Accessories(models.Model):
+class Accessory(models.Model):
     location = models.CharField(max_length=50, blank=True)
     name = models.CharField(max_length=50, unique=True)
     order_number = models.CharField(max_length=20, blank=True)
@@ -20,7 +20,7 @@ class Accessories(models.Model):
         return self.name
     
 class AccessoryImages(models.Model):
-    accessory = models.ForeignKey(Accessories, on_delete=models.CASCADE, related_name='images')
+    accessory = models.ForeignKey(Accessory, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(null=True, blank=True, upload_to='accessory_images/')
     is_deleted = models.BooleanField(default=False)
 
