@@ -34,7 +34,7 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
-    'accounts_service',
+    'assets_service',
 ]
 
 MIDDLEWARE = [
