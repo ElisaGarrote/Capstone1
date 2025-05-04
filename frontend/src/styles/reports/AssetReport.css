@@ -1,0 +1,119 @@
+.report-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.report-content {
+  padding: 80px 20px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.report-content h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.report-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.report-sections {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.filters-section {
+  flex: 1;
+}
+
+.columns-section {
+  flex: 1;
+}
+
+.filters-section h2,
+.columns-section h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.filter-form {
+  margin-bottom: 15px;
+}
+
+.filter-form label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.columns-grid {
+  display: flex;
+  gap: 20px;
+}
+
+.column-left,
+.column-right {
+  flex: 1;
+}
+
+.column-checkbox {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.column-checkbox input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.column-checkbox label {
+  font-size: 14px;
+  color: #555;
+}
+
+.download-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.download-button:hover {
+  background-color: #0b5ed7;
+}
+
+@media (max-width: 768px) {
+  .report-sections {
+    flex-direction: column;
+  }
+  
+  .columns-grid {
+    flex-direction: column;
+  }
+}

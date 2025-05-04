@@ -22,3 +22,16 @@
   --deployable: #34c75933;
   --deployable-text: #34c759;
 }
+
+/* Global checkbox styling to remove the three dots */
+input[type="checkbox"] {
+  appearance: auto;
+  -webkit-appearance: checkbox;
+  -moz-appearance: checkbox;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 0;
+  cursor: pointer;
+  margin: 0;
+}
