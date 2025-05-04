@@ -33,9 +33,9 @@ import ViewAudits from "./pages/asset-audit/ViewAudits";
 import Maintenance from "./pages/Repair/Maintenance";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
-import Consumables from './pages/Consumables/ViewConsumables';
+import Consumables from "./pages/Consumables/ViewConsumables";
 import PasswordResetRequest from "./pages/PasswordResetRequest";
-import PasswordReset from "./pages/PasswordReset"
+import PasswordReset from "./pages/PasswordReset";
 
 function Logout() {
   localStorage.clear();
@@ -51,26 +51,44 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
+        {/* <Route
           path="/"
           element={
             <ProtectedRoute>
               <Home />
             </ProtectedRoute>
           }
-        />
+        /> */}
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
+
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/request/password_reset" element={<PasswordResetRequest />} />
+        <Route
+          path="/request/password_reset"
+          element={<PasswordResetRequest />}
+        />
         <Route path="/password-reset/:token" element={<PasswordReset />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+
         <Route path="/products" element={<Products />} />
-        <Route path="/products/registration" element={<ProductsRegistration />} />
-        <Route path="/products/registration/:id" element={<ProductsRegistration />} />
+        <Route
+          path="/products/registration"
+          element={<ProductsRegistration />}
+        />
+        <Route
+          path="/products/registration/:id"
+          element={<ProductsRegistration />}
+        />
         <Route path="/assets" element={<Assets />} />
         <Route path="/assets/registration" element={<AssetsRegistration />} />
-        <Route path="/assets/registration/:id" element={<AssetsRegistration />} />
+        <Route
+          path="/assets/registration/:id"
+          element={<AssetsRegistration />}
+        />
         <Route path="/assets/check-in/:id" element={<CheckInAsset />} />
         <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
         <Route path="/accessories" element={<Accessories />} />
@@ -82,11 +100,23 @@ function App() {
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
         <Route path="/accessories/edit" element={<EditAccessories />} />
         <Route path="/components" element={<Components />} />
-        <Route path="/components/check-out/:id" element={<CheckOutComponent />} />
-        <Route path="/components/checked-out-list/:id" element={<CheckedOutList />} />
+        <Route
+          path="/components/check-out/:id"
+          element={<CheckOutComponent />}
+        />
+        <Route
+          path="/components/checked-out-list/:id"
+          element={<CheckedOutList />}
+        />
         <Route path="/components/check-in/:id" element={<CheckInComponent />} />
-        <Route path="/components/registration" element={<ComponentsRegistration />} />
-        <Route path="/components/registration/:id" element={<ComponentsRegistration />} />
+        <Route
+          path="/components/registration"
+          element={<ComponentsRegistration />}
+        />
+        <Route
+          path="/components/registration/:id"
+          element={<ComponentsRegistration />}
+        />
         <Route path="/audits/" element={<AssetAudits />} />
         <Route path="/audits/overdue" element={<OverdueAudits />} />
         <Route path="/audits/scheduled" element={<ScheduledAudits />} />
@@ -96,8 +126,14 @@ function App() {
         <Route path="/audits/edit" element={<EditAudits />} />
         <Route path="/audits/view" element={<ViewAudits />} />
         <Route path="/dashboard/Repair/Maintenance" element={<Maintenance />} />
-        <Route path="/dashboard/Repair/MaintenanceRegistration" element={<MaintenanceRegistration />} />
-        <Route path="/dashboard/Repair/EditMaintenance" element={<EditMaintenance />} />
+        <Route
+          path="/dashboard/Repair/MaintenanceRegistration"
+          element={<MaintenanceRegistration />}
+        />
+        <Route
+          path="/dashboard/Repair/EditMaintenance"
+          element={<EditMaintenance />}
+        />
         <Route path="/Consumables/ViewConsumables" element={<Consumables />} />
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
