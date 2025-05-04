@@ -63,13 +63,20 @@ function Register() {
         email: data.email,
         password: data.password,
       });
-      setSuccessMessage("Registration successful! Please log in.");
+      setSuccessMessage("Registration successful! You can now log in.");
       setErrorMessage("");
-      navigate("/login"); 
+
+      setTimeout(() => {
+        navigate("/login")}, 3000);
     } catch (error) {
       console.error("Error response:", error.response?.data || error);
-      setErrorMessage("Registration failed.");
+      setErrorMessage("Registration failed. Please try again.");
       setSuccessMessage("");
+
+      setTimeout(() => {
+        setErrorMessage("");
+        setSuccessMessage("");
+      }, 3000);
     }
   };  
 

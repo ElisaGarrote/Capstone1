@@ -2,6 +2,7 @@ import "../styles/custom-colors.css";
 import "../styles/Login.css";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
 import loginImage from "../assets/img/login.png";
 import Alert from "../components/Alert.jsx";
 import AxiosInstance from "../components/AxiosInstance.jsx";
@@ -9,35 +10,63 @@ import AxiosInstance from "../components/AxiosInstance.jsx";
 function PasswordReset() {
   const { token } = useParams();
   const navigate = useNavigate();
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const submitNewPassword = async (e) => {
-    e.preventDefault();
+  const {
+    control,
+    handleSubmit,
+    watch,
+    getValues,
+    formState: { errors },
+  } = useForm();
 
-    if (newPassword !== confirmPassword) {
-      alert('Passwords do not match!');
+  const password = watch("password", "");
+
+  const passwordRequirements = [
+    {
+      test: password.length >= 8,
+      message: "Password must be at least 8 characters long",
+    },
+    {
+      test: /[a-z]/.test(password),
+      message: "Password must contain at least one lowercase letter",
+    },
+    {
+      test: /[A-Z]/.test(password),
+      message: "Password must contain at least one uppercase letter",
+    },
+    {
+      test: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+      message: "Password must contain at least one special character",
+    },
+  ];
+
+  const submitNewPassword = async (data) => {
+    if (data.password !== data.confirmPassword) {
+      setErrorMessage("Passwords do not match!");
       return;
     }
 
     try {
       const response = await AxiosInstance.post("api/password_reset/confirm/", {
-        password: confirmPassword,
+        password: data.confirmPassword,
         token: token,
       });
 
-      console.log("Response:", response);
-      setSuccessMessage("Your password reset was successful, you can now log in with your new password. You will be redirected to the login page in a second.");
+      setSuccessMessage("Password reset was successful! You can now log in to your account with your new password.");
       setErrorMessage("");
 
-      setTimeout(() => {
-        navigate("/login")}, 3000); // Redirect after 5 seconds
+      setTimeout(() => navigate("/login"), 3000);
     } catch (error) {
       console.error("Error response:", error.response?.data || error);
       setErrorMessage("Failed to reset password. Please try again.");
       setSuccessMessage("");
+
+      setTimeout(() => {
+        setErrorMessage("");
+        setSuccessMessage("");
+      }, 3000);
     }
   };
 
@@ -53,28 +82,55 @@ function PasswordReset() {
         {errorMessage && <Alert message={errorMessage} type="danger" />}
         {successMessage && <Alert message={successMessage} type="success" />}
 
-        <form onSubmit={submitNewPassword}>
+        <form onSubmit={handleSubmit(submitNewPassword)}>
           <fieldset>
-            <label>New Password:</label>
-            <input
-              type="password"
-              placeholder="Enter your new password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
+            <label>Password:</label>
+            <Controller
+              name="password"
+              control={control}
+              rules={{ required: "Password is required" }}
+              render={({ field }) => (
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  {...field}
+                />
+              )}
             />
+            {errors.password && <span className="error-msg">{errors.password.message}</span>}
+            {password && (
+              <div className="password-requirements">
+                {passwordRequirements.map((req, index) =>
+                  !req.test ? (
+                    <div key={index} className="error-msg">{req.message}</div>
+                  ) : null
+                )}
+              </div>
+            )}
           </fieldset>
 
           <fieldset>
             <label>Confirm Password:</label>
-            <input
-              type="password"
-              placeholder="Confirm your new password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
+            <Controller
+              name="confirmPassword"
+              control={control}
+              rules={{
+                required: "Please confirm your password",
+                validate: value => value === getValues("password") || "Passwords do not match",
+              }}
+              render={({ field }) => (
+                <input
+                  type="password"
+                  placeholder="Confirm your password"
+                  {...field}
+                />
+              )}
             />
+            {errors.confirmPassword && (
+              <span className="error-msg">{errors.confirmPassword.message}</span>
+            )}
           </fieldset>
+
           <button type="submit">Reset Password</button>
         </form>
         <a onClick={() => navigate("/login")}>Login</a>
