@@ -200,7 +200,11 @@ export default function Accessories() {
                     <input type="checkbox" name="" id="" />
                   </td>
                   <td>
-                    <img src={SampleImage} alt="sample-img" />
+                    <img
+                      className="accessories-image"
+                      src={SampleImage}
+                      alt="sample-img"
+                    />
                   </td>
                   <td>{accessoryName1}</td>
                   <td>
@@ -258,7 +262,11 @@ export default function Accessories() {
                     <input type="checkbox" name="" id="" />
                   </td>
                   <td>
-                    <img src={SampleImage} alt="sample-img" />
+                    <img
+                      className="accessories-image"
+                      src={SampleImage}
+                      alt="sample-img"
+                    />
                   </td>
                   <td>{accessoryName2}</td>
                   <td>

@@ -134,7 +134,7 @@ td {
   width: 5.7vw;
 }
 
-.accessories-page img {
+.accessories-page .accessories-image {
   height: 5vh;
   width: 5vw;
   object-fit: cover;
