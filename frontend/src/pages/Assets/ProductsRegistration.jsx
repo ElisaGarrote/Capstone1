@@ -141,11 +141,6 @@ export default function ProductsRegistration() {
             </fieldset>
 
             <fieldset>
-              <label htmlFor='model-number'>Model Number</label>
-              <input type='text' {...register('modelNumber')} maxLength='100' />
-            </fieldset>
-
-            <fieldset>
               <label htmlFor='manufacturer'>Manufacturer</label>
               <div>
                 <select {...register('manufacturer')}>
@@ -172,12 +167,38 @@ export default function ProductsRegistration() {
             </fieldset>
 
             <fieldset>
+              <label htmlFor='model-number'>Model Number</label>
+              <input type='text' {...register('modelNumber')} maxLength='100' />
+            </fieldset>
+
+            <fieldset>
               <label htmlFor='end-of-life-date'>End of Life Date</label>
               <input
                 type='date'
                 {...register('endOfLifeDate')}
                 min={!id ? currentDate : undefined}
               />
+            </fieldset>
+
+            <fieldset>
+              <label> Default Purchase Cost</label>
+              <div>
+                <p>PHP</p>
+                <input type="number" step="0.01" min="1" {...register("purchaseCost", {valueAsNumber: true})} />
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor='supplier'>Default Supplier</label>
+              <div>
+                <select {...register('supplier')}>
+                  <option value=''>Select Supplier</option>
+                  {manufacturerList.map((cat, idx) => (
+                    <option key={idx} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <MediumButtons type='new' />
+              </div>
             </fieldset>
 
             <fieldset>

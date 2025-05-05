@@ -1,59 +1,56 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
-import SampleImage from "../../assets/img/dvi.jpeg";
+import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 
-// Sample asset data
-const sampleItems = [
-  {
-    id: 1,
-    image: SampleImage,
-    productName: 'Dell Latitude',
-    category: 'Laptop',
-    modelNumber: 'DL-2025',
-    manufacturer: 'Dell',
-    depreciation: 'Straight Line',
-    endOfLife: '2028-12-31',
-    minimumQuantity: 10,
-    imeiNumber: '123456789012345',
-    ssdEncryption: 'Enabled',
-    notes: 'Sample notes for Dell Latitude',
-  },
-  {
-    id: 2,
-    image: SampleImage,
-    productName: 'iPhone 15 Pro',
-    category: 'Mobile Phone',
-    modelNumber: 'IPH15P',
-    manufacturer: 'Apple',
-    depreciation: 'Declining Balance',
-    endOfLife: '2027-11-20',
-    minimumQuantity: 10,
-    imeiNumber: '123456789012345',
-    ssdEncryption: 'Disabled',
-    notes: null,
-  },
-];
-
 export default function Products() {
+  const [products, setProducts] = useState([]);
   const [checkedItems, setCheckedItems] = useState([]);
-  const allChecked = checkedItems.length === sampleItems.length;
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("http://localhost:8001/products/");
+      const data = await response.json();
+      setProducts(data);
+      console.log(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const allChecked = checkedItems.length === products.length;
 
   const toggleSelectAll = () => {
     if (allChecked) {
       setCheckedItems([]);
     } else {
-      setCheckedItems(sampleItems.map((item) => item.id));
+      setCheckedItems(products.map((item) => item.id));
     }
   };
 
   const toggleItem = (id) => {
     setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((itemId) => itemId !== id)
+        : [...prev, id]
     );
+  };
+
+  const handleDelete = (id) => {
+    console.log("Delete product with id:", id);
+    
+  };
+
+  const handleView = (id) => {
+    console.log("View product with id:", id);
+    
   };
 
   return (
@@ -96,31 +93,44 @@ export default function Products() {
                 </tr>
               </thead>
               <tbody>
-                {sampleItems.map((item) => (
-                  <tr key={item.id}>
+                {products.map((product) => (
+                  <tr key={product.id}>
                     <td>
                       <input
                         type="checkbox"
-                        checked={checkedItems.includes(item.id)}
-                        onChange={() => toggleItem(item.id)}
+                        checked={checkedItems.includes(product.id)}
+                        onChange={() => toggleItem(product.id)}
                       />
                     </td>
                     <td>
-                      <img src={item.image} alt={item.product} width="50" />
+                      <img
+                        src={product.first_image || DefaultImage}
+                        alt={product.name}
+                        width="50"
+                      />
                     </td>
-                    <td>{item.productName}</td>
-                    <td>{item.modelNumber}</td>
-                    <td>{item.category}</td>
-                    <td>{item.manufacturer}</td>
-                    <td>{item.endOfLife}</td>
+                    <td>{product.name}</td>
+                    <td>{product.model_number}</td>
+                    <td>{product.category_name}</td>
+                    <td>{product.manufacturer_name}</td>
+                    <td>{product.end_of_life}</td>
                     <td>
-                      <TableBtn type="edit" navigatePage={`/products/registration/${item.id}`} />
+                      <TableBtn
+                        type="edit"
+                        navigatePage={`/products/registration/${product.id}`}
+                      />
                     </td>
                     <td>
-                      <TableBtn type="delete" onClick={() => handleDelete(item.id)} />
+                      <TableBtn
+                        type="delete"
+                        onClick={() => handleDelete(product.id)}
+                      />
                     </td>
                     <td>
-                      <TableBtn type="view" onClick={() => handleView(item.id)} />
+                      <TableBtn
+                        type="view"
+                        onClick={() => handleView(product.id)}
+                      />
                     </td>
                   </tr>
                 ))}

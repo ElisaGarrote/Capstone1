@@ -6,9 +6,12 @@ from .serializer import *
 
 @api_view(['GET'])
 def get_products(request):
-    users = Product.objects.all()
-    serializedData = ProductSerializer(users, many=True).data
-    return Response(serializedData)
+    products = Product.objects.all()
+    serializedProducts = AllProductSerializer(products, many=True).data
+    return Response(serializedProducts)
+
+
+
 
 @api_view(['POST'])
 def create_product(request):
