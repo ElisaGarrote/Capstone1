@@ -114,7 +114,7 @@ class AuditSchedule(models.Model):
 class Audit(models.Model):
     location = models.CharField(max_length=50)
     user_id = models.IntegerField()
-    date = models.DateField(default=timezone.now)
+    date = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     audit_schedule = models.ForeignKey(AuditSchedule, on_delete=models.CASCADE, related_name='asset_audits')
