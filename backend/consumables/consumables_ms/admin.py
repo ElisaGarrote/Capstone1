@@ -3,4 +3,4 @@ from .models import *
 
 # Register your models here.
 admin.site.register(Consumable)
-admin.site.register(ConsumableImages)
+admin.site.register(ConsumableImage)

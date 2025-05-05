@@ -19,7 +19,7 @@ class Consumable(models.Model):
     def __str__(self):
         return self.name
     
-class ConsumableImages(models.Model):
+class ConsumableImage(models.Model):
     consumable = models.ForeignKey(Consumable, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='consumable_images/')
     is_deleted = models.BooleanField(default=False)
