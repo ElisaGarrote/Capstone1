@@ -72,7 +72,10 @@ const AssetMetrics = () => {
             <div className="time-period-buttons">
               <button
                 className={`time-button ${selectedPeriod2 === 'This month' ? 'active pulse' : ''}`}
-                onClick={() => setSelectedPeriod2('This month')}
+                onClick={() => {
+                  setSelectedPeriod2('This month');
+                  setAssetUtilization('60%');
+                }}
               >
                 This month
               </button>

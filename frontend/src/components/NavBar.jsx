@@ -99,6 +99,8 @@ export default function NavBar() {
       setActiveMenu("repairs");
     } else if (location.pathname.startsWith("/audits")) {
       setActiveMenu("audits");
+    } else if (location.pathname.startsWith("/approved-tickets")) {
+      setActiveMenu("tickets");
     } else if (location.pathname.startsWith("/reports")) {
       setActiveMenu("reports");
     } else {
@@ -209,6 +211,17 @@ export default function NavBar() {
               }}
             >
               Audits
+            </a>
+          </li>
+          <li>
+            <a
+              className={activeMenu === "tickets" ? "active" : ""}
+              onClick={() => {
+                navigate("/approved-tickets");
+                setActiveMenu("tickets");
+              }}
+            >
+              Tickets
             </a>
           </li>
           <li className={`dropdown-container reports-dropdown-container ${showReportsMenu ? 'open' : ''}`}>

@@ -1,0 +1,60 @@
+/* Approved Tickets page specific styles */
+
+/* View button styling */
+.view-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s ease;
+  min-width: 60px;
+  text-align: center;
+}
+
+.view-btn:hover {
+  background-color: var(--primary-color-hover);
+}
+
+/* Table column widths */
+.page table th:nth-child(1),
+.page table td:nth-child(1) {
+  width: 3vw;
+}
+
+.page table th:nth-child(2),
+.page table td:nth-child(2) {
+  width: 10vw;
+}
+
+.page table th:nth-child(3),
+.page table td:nth-child(3) {
+  width: 15vw;
+}
+
+.page table th:nth-child(4),
+.page table td:nth-child(4) {
+  width: 12vw;
+}
+
+.page table th:nth-child(5),
+.page table td:nth-child(5) {
+  width: 12vw;
+}
+
+.page table th:nth-child(6),
+.page table td:nth-child(6) {
+  width: 10vw;
+}
+
+.page table th:nth-child(7),
+.page table td:nth-child(7) {
+  width: 10vw;
+}
+
+.page table th:nth-child(8),
+.page table td:nth-child(8) {
+  width: 6vw;
+}

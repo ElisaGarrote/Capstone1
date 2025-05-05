@@ -14,6 +14,7 @@ import Assets from "./pages/Assets/Assets";
 import AssetsRegistration from "./pages/Assets/AssetsRegistration";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
+import ApprovedTickets from "./pages/Assets/ApprovedTickets";
 import Accessories from "./pages/Accessories/Accessories";
 import AccessoriesRegistration from "./pages/accessories/AccessoriesRegistration";
 import CheckinAccessory from "./pages/accessories/CheckinAccessory";
@@ -32,7 +33,7 @@ import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
 import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
-import Maintenance from "./pages/Repair/Maintenance";
+import AssetRepairs from "./pages/Repair/Maintenance";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
 import Consumables from './pages/Consumables/Consumables';
@@ -88,6 +89,7 @@ function App() {
         <Route path="/assets/registration/:id" element={<AssetsRegistration />} />
         <Route path="/assets/check-in/:id" element={<CheckInAsset />} />
         <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
+        <Route path="/approved-tickets" element={<ApprovedTickets />} />
         <Route path="/accessories" element={<Accessories />} />
         <Route
           path="/accessories/registration"
@@ -110,7 +112,7 @@ function App() {
         <Route path="/audits/schedule" element={<ScheduleRegistration />} />
         <Route path="/audits/edit" element={<EditAudits />} />
         <Route path="/audits/view" element={<ViewAudits />} />
-        <Route path="/dashboard/Repair/Maintenance" element={<Maintenance />} />
+        <Route path="/dashboard/Repair/Maintenance" element={<AssetRepairs />} />
         <Route path="/dashboard/Repair/MaintenanceRegistration" element={<MaintenanceRegistration />} />
         <Route path="/dashboard/Repair/EditMaintenance" element={<EditMaintenance />} />
         <Route path="/consumables" element={<Consumables />} />

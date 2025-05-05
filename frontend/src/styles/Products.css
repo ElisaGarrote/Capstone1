@@ -1,0 +1,33 @@
+/* Products table specific styles */
+
+/* Action buttons container */
+.page table td:nth-last-child(1),
+.page table td:nth-last-child(2),
+.page table td:nth-last-child(3) {
+  text-align: center;
+  padding: 0.5rem;
+  width: 40px !important;
+}
+
+/* Ensure buttons are centered */
+.page table td:nth-last-child(1) button,
+.page table td:nth-last-child(2) button,
+.page table td:nth-last-child(3) button {
+  margin: 0 auto;
+}
+
+/* Adjust header text alignment for action columns */
+.page table th:nth-last-child(1),
+.page table th:nth-last-child(2),
+.page table th:nth-last-child(3) {
+  text-align: center;
+  width: 40px !important;
+}
+
+/* Create a container for action buttons to keep them close together */
+.page table tr td:nth-last-child(1),
+.page table tr td:nth-last-child(2),
+.page table tr td:nth-last-child(3) {
+  padding-left: 0;
+  padding-right: 0;
+}

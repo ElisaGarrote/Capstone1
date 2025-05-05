@@ -108,18 +108,15 @@
     width: 3vw;
   }
 
-  /* Set the width of the edit, and more header and its data*/
+  /* Set the width of the edit, delete, and view header and its data*/
   .page table th:nth-last-child(1),
   .page table td:nth-last-child(1),
+  .page table th:nth-last-child(2),
+  .page table td:nth-last-child(2),
   .page table th:nth-last-child(3),
   .page table td:nth-last-child(3) {
-    width: 4.8vw;
-  }
-
-  /* Set the width of the delete header and its data*/
-  .page table th:nth-last-child(2),
-  .page table td:nth-last-child(2) {
-    width: 5.7vw;
+    width: 60px;
+    text-align: center;
   }
   /* Button icon images */
   .page img {

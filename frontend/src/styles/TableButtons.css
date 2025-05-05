@@ -15,11 +15,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 5px 8px;
+  padding: 6px;
   border-radius: 4px;
   cursor: pointer;
-  width: 30px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
 }
 
 .table-buttons-checkin,
