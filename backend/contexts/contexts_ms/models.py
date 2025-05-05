@@ -30,8 +30,8 @@ class Category(models.Model):
         ('asset', 'Asset'), ('accessory', 'Accessory'), ('consumble', 'Consumable'), ('component', 'Component'),
     ]
     name = models.CharField(max_length=50, unique=True)
-    type = models.CharField(max_length=10, choices=CATEGORY_CHOICES, blank=True, null=True)
-    image = models.ImageField(upload_to='category_logos/', blank=True, null=True)
+    type = models.CharField(max_length=10, choices=CATEGORY_CHOICES)
+    logo = models.ImageField(upload_to='category_logos/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -43,7 +43,8 @@ class Manufacturer(models.Model):
     support_url = models.URLField(blank=True, null=True)
     support_phone = models.CharField(max_length=13, blank=True, null=True)
     support_email = models.EmailField(blank=True, null=True)
-    image = models.ImageField(upload_to='manufacturer_logos/', blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    logo = models.ImageField(upload_to='manufacturer_logos/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
