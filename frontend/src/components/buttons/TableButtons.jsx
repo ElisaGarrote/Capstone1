@@ -50,7 +50,13 @@ export default function TableButtons({
           : showModal
       }
     >
-      <img src={icon} alt="" />
+      {type === "checkin" ? (
+        "Check-In"
+      ) : type === "checkout" ? (
+        "Check-Out"
+      ) : (
+        <img src={icon} alt="" />
+      )}
     </button>
   );
 }

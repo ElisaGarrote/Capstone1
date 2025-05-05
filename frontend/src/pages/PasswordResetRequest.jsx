@@ -28,8 +28,11 @@ function PasswordResetRequest() {
       console.log("Response status:", response.status);
       console.log("Response data:", response.data);
 
-      setSuccessMessage("If your email is registered, the password reset link has been sent. Please check your inbox.");
+      setSuccessMessage("Password reset link has been sent. Please check your inbox.");
       setErrorMessage("");
+
+      setTimeout(() => {
+        navigate("/login")}, 3000);
     } catch (error) {
       console.error("Error response:", error.response?.data || error);
       console.log("Error status:", error.response?.status);
@@ -37,6 +40,11 @@ function PasswordResetRequest() {
 
       setErrorMessage("Failed to send reset password link. Please try again.");
       setSuccessMessage("");
+
+      setTimeout(() => {
+        setErrorMessage("");
+        setSuccessMessage("");
+      }, 3000);
     }
   };
 
