@@ -73,6 +73,14 @@ const ApprovedTickets = () => {
     // navigate(`/approved-tickets/view/${id}`);
   };
 
+  // Function to handle checkout button click
+  const handleCheckout = (id) => {
+    console.log(`Checkout ticket ${id}`);
+    // Implement checkout functionality (to be implemented)
+    // This would typically navigate to an asset checkout page or open a modal
+    alert(`Asset checkout initiated for ticket ${id}`);
+  };
+
   // Filter items based on search query
   const filteredItems = ticketItems.filter(item =>
     item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -103,42 +111,51 @@ const ApprovedTickets = () => {
             </div>
           </section>
           <section className="middle">
-            <table>
+            <table style={{ borderSpacing: '0', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th>
+                  <th style={{ textAlign: 'center' }}>
                     <input
                       type="checkbox"
                       checked={allChecked}
                       onChange={toggleSelectAll}
                     />
                   </th>
-                  <th>TICKET NUMBER</th>
-                  <th>SUBJECT</th>
-                  <th>REQUESTOR</th>
-                  <th>CATEGORY</th>
-                  <th>LAST UPDATED</th>
-                  <th>CREATION DATE</th>
-                  <th>ACTION</th>
+                  <th style={{ textAlign: 'left', paddingRight: '0', width: '120px' }}>TICKET NUMBER</th>
+                  <th style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0', width: '90px' }}>CHECKOUT</th>
+                  <th style={{ textAlign: 'left' }}>SUBJECT</th>
+                  <th style={{ textAlign: 'left' }}>REQUESTOR</th>
+                  <th style={{ textAlign: 'left' }}>CATEGORY</th>
+                  <th style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>LAST UPDATED</th>
+                  <th style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>CREATION DATE</th>
+                  <th style={{ textAlign: 'center', width: '80px' }}>ACTION</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredItems.map((item) => (
                   <tr key={item.id}>
-                    <td>
+                    <td style={{ textAlign: 'center' }}>
                       <input
                         type="checkbox"
                         checked={checkedItems.includes(item.id)}
                         onChange={() => toggleItemCheck(item.id)}
                       />
                     </td>
-                    <td>{item.id}</td>
-                    <td>{item.subject}</td>
-                    <td>{item.requestor}</td>
-                    <td>{item.category}</td>
-                    <td>{item.lastUpdated}</td>
-                    <td>{item.creationDate}</td>
-                    <td>
+                    <td style={{ textAlign: 'left', paddingRight: '0', width: '120px' }}>{item.id}</td>
+                    <td style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0', width: '90px' }}>
+                      <button
+                        className="checkout-btn"
+                        onClick={() => handleCheckout(item.id)}
+                      >
+                        Check-Out
+                      </button>
+                    </td>
+                    <td style={{ textAlign: 'left' }}>{item.subject}</td>
+                    <td style={{ textAlign: 'left' }}>{item.requestor}</td>
+                    <td style={{ textAlign: 'left' }}>{item.category}</td>
+                    <td style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>{item.lastUpdated}</td>
+                    <td style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>{item.creationDate}</td>
+                    <td style={{ textAlign: 'center', width: '80px' }}>
                       <button
                         className="view-btn"
                         onClick={() => handleViewClick(item.id)}
