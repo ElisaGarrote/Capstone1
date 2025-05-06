@@ -27,18 +27,11 @@ class Product(models.Model):
     operating_system = models.CharField(max_length=20, blank=True, null=True)
     imei_number = models.CharField(max_length=20, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     
     def __str__(self):
         return self.name
-    
-class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='product_images/')
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Image(s) for {self.product.name}"
 
 class Status(models.Model):
     STATUS_CHOICES = [

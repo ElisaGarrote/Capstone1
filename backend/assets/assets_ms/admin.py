@@ -4,7 +4,6 @@ from .models import *
 # Register your models here.
 admin.site.register(Depreciation)
 admin.site.register(Product)
-admin.site.register(ProductImage)
 admin.site.register(Status)
 admin.site.register(Asset)
 admin.site.register(AssetImage)
