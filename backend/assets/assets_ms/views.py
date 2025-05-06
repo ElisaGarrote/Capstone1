@@ -14,7 +14,7 @@ def get_products(request):
 @api_view(['GET', 'PUT'])
 def get_product_by_id(request, id):
     try:
-        product = Product.objects.prefetch_related('images').get(pk=id, is_deleted=False)
+        product = Product.objects.get(pk=id, is_deleted=False)
     except Product.DoesNotExist:
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -23,12 +23,17 @@ def get_product_by_id(request, id):
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = ProductSerializer(product, data=request.data)
+        # Check for image removal flag
+        remove_image = request.data.get('remove_image')
+        if remove_image == 'true' and product.image:
+            product.image.delete(save=False)
+            product.image = None
+
+        serializer = ProductSerializer(product, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['GET'])
 def get_product_depreciations(request):

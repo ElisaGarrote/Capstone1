@@ -88,74 +88,80 @@ export default function Products() {
             </div>
           </section>
           <section className="middle">
-            <table>
-              <thead>
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={allChecked}
-                      onChange={toggleSelectAll}
-                    />
-                  </th>
-                  <th>IMAGE</th>
-                  <th>NAME</th>
-                  <th>MODEL NUMBER</th>
-                  <th>CATEGORY</th>
-                  <th>MANUFACTURER</th>
-                  <th>END OF LIFE</th>
-                  <th>EDIT</th>
-                  <th>DELETE</th>
-                  <th>VIEW</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={checkedItems.includes(product.id)}
-                        onChange={() => toggleItem(product.id)}
-                      />
-                    </td>
-                    <td>
-                      <img
-                        src={product.image ? `http://127.0.0.1:8001${product.image}` : DefaultImage}
-                        alt="Product-Image"
-                        width="50"
-                      />
-                    </td>
-                    <td>{product.name}</td>
-                    <td>{product.model_number}</td>
-                    <td>{product.category_name}</td>
-                    <td>{product.manufacturer_name}</td>
-                    <td>{product.end_of_life}</td>
-                    <td>
-                      <TableBtn
-                        type="edit"
-                        navigatePage={`/products/registration/${product.id}`}
-                      />
-                    </td>
-                    <td>
-                      <TableBtn
-                        type="delete"
-                        showModal={() => {
-                          setDeleteModalOpen(true);
-                          setSelectedRowId(product.id);
-                        }}
-                      />
-                    </td>
-                    <td>
-                      <TableBtn
-                        type="view"
-                        onClick={() => handleView(product.id)}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {products.length === 0 ? (
+                  <section className="no-products-message">
+                    <p>No products found. Please add some products.</p>
+                  </section>
+                ) : (
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>
+                          <input
+                            type="checkbox"
+                            checked={allChecked}
+                            onChange={toggleSelectAll}
+                          />
+                        </th>
+                        <th>IMAGE</th>
+                        <th>NAME</th>
+                        <th>MODEL NUMBER</th>
+                        <th>CATEGORY</th>
+                        <th>MANUFACTURER</th>
+                        <th>END OF LIFE</th>
+                        <th>EDIT</th>
+                        <th>DELETE</th>
+                        <th>VIEW</th>
+                      </tr>
+                    </thead>
+                      <tbody>
+                        {products.map((product) => (
+                          <tr key={product.id}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={checkedItems.includes(product.id)}
+                                onChange={() => toggleItem(product.id)}
+                              />
+                            </td>
+                            <td>
+                              <img
+                                src={product.image ? `http://127.0.0.1:8001${product.image}` : DefaultImage}
+                                alt="Product-Image"
+                                width="50"
+                              />
+                            </td>
+                            <td>{product.name}</td>
+                            <td>{product.model_number}</td>
+                            <td>{product.category_name}</td>
+                            <td>{product.manufacturer_name}</td>
+                            <td>{product.end_of_life}</td>
+                            <td>
+                              <TableBtn
+                                type="edit"
+                                navigatePage={`/products/registration/${product.id}`}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="delete"
+                                showModal={() => {
+                                  setDeleteModalOpen(true);
+                                  setSelectedRowId(product.id);
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="view"
+                                onClick={() => handleView(product.id)}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                  </table>
+                )}
           </section>
           <section className="bottom"></section>
         </div>

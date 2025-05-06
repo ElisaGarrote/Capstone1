@@ -201,4 +201,9 @@ progress::-moz-progress-bar {
   display: block;
 }
 
-
+.no-products-message {
+  font-size: 18px;
+  color: #555;
+  text-align: center;
+  margin: 50px;
+}

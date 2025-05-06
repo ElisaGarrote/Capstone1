@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 import Alert from "../../components/Alert";
+import DefaultImage from "../../assets/img/default-image.jpg";
 
 export default function ProductsRegistration() {
   const [suppliers, setSuppliers] = useState([]);
@@ -20,6 +21,10 @@ export default function ProductsRegistration() {
 
   const currentDate = new Date().toISOString().split('T')[0];
   const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+
+
   const navigate = useNavigate();
 
   const [errorMessage, setErrorMessage] = useState("");
@@ -41,16 +46,21 @@ export default function ProductsRegistration() {
 
           // Set form values
           setValue('productName', data.name);
-          setValue('modelNumber', data.model_number);
-          setValue('endOfLifeDate', data.end_of_life);
-          setValue('defaultPurchaseCost', data.purchase_cost);
           setValue('category', data.category_id);
-          setValue('manufacturer', data.manufacturer_id);
-          setValue('supplier', data.default_supplier_id);
-          setValue('depreciation', data.depreciation.id);
-
-          if (data.images && data.images.length > 0) {
-            setPreviewImage(data.images[0].image);
+          setValue('manufacturer', data.manufacturer_id || '');
+          setValue('depreciation', data.depreciation || '');
+          setValue('modelNumber', data.model_number || '');
+          setValue('endOfLifeDate', data.end_of_life || '');
+          setValue('defaultPurchaseCost', data.purchase_cost || '');
+          setValue('supplier', data.default_supplier_id || '');
+          setValue('minimumQuantity', data.minimum_quantity || '');
+          setValue('operatingSystem', data.operating_system || '');
+          setValue('imeiNumber', data.imei_number || '');
+          setValue('ssdEncryption', data.ssd_encryption || '');
+          setValue('notes', data.notes || '');
+          
+          if (data.image) {
+            setPreviewImage(`http://localhost:8001${data.image}`);
           }
         } catch (err) {
           console.log(err);
@@ -98,15 +108,17 @@ export default function ProductsRegistration() {
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setValue('image', file);
+      setSelectedImage(file); // store the actual file
+      setValue('image', file); // optional: sync with react-hook-form
+  
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewImage(reader.result);
+        setPreviewImage(reader.result); // this is only for display
       };
       reader.readAsDataURL(file);
     }
-  };
-
+  };  
+  
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
@@ -130,7 +142,7 @@ export default function ProductsRegistration() {
         console.log("manufacturer name:" ,selectedManufacturer.name);
         formData.append('manufacturer_name', selectedManufacturer.name);
       }
-      formData.append('depreciation', data.depreciation.id || '');
+      formData.append('depreciation', data.depreciation || '');
       formData.append('model_number', data.modelNumber || '');
       formData.append('end_of_life', data.endOfLifeDate || '');
       formData.append('purchase_cost', data.defaultPurchaseCost || '');
@@ -144,9 +156,14 @@ export default function ProductsRegistration() {
       formData.append('imei_number', data.imeiNumber);
       formData.append('notes', data.notes);
       
-      if (data.image instanceof File) {
-        formData.append('image', data.image);
+      if (selectedImage) {
+        formData.append('image', selectedImage);
       }
+
+      if (removeImage) {
+        formData.append('remove_image', 'true');
+      }
+      
 
       if (id) {
         try {
@@ -154,6 +171,8 @@ export default function ProductsRegistration() {
             method: 'PUT',
             body: formData,
           });
+
+          console.log("Image", formData.image);
       
           if (!response.ok) {
             throw new Error(`Failed to update product. Status: ${response.status}`);
@@ -346,12 +365,22 @@ export default function ProductsRegistration() {
             </fieldset>
 
             <fieldset>
-              <label htmlFor='operating-system'>Operating System</label>
-              <input
-                type='text'
-                {...register('operatingSystem')}
-                placeholder='Operating System'
-              />
+              <label htmlFor='operating_system'>Operating System</label>
+              <div>
+                <select {...register('operatingSystem')}>
+                  <option value='' disabled selected>
+                    Select Operating System
+                  </option>
+                  <option value='linux'>Linux</option>
+                  <option value='windows'>Windows</option>
+                  <option value='macos'>macOS</option>
+                  <option value='ubuntu'>Ubuntu</option>
+                  <option value='centos'>CentOS</option>
+                  <option value='debian'>Debian</option>
+                  <option value='fedora'>Fedora</option>
+                  <option value='other'>Other</option>
+                </select>
+              </div>
             </fieldset>
 
             <fieldset>
@@ -360,15 +389,6 @@ export default function ProductsRegistration() {
                 type='text'
                 {...register('imeiNumber', { maxLength: 15 })}
                 placeholder='IMEI Number'
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='ssd-encryption'>SSD Encryption</label>
-              <input
-                type='text'
-                {...register('ssdEncryption')}
-                placeholder='SSD Encryption'
               />
             </fieldset>
 
@@ -382,7 +402,7 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor='upload-image'>Image</label>
               <div>
-                {previewImage && (
+                {previewImage ? (
                   <div className='image-selected'>
                     <img src={previewImage} alt='Preview' />
                     <button
@@ -391,11 +411,14 @@ export default function ProductsRegistration() {
                         setPreviewImage(null);
                         setValue('image', null);
                         document.getElementById('image').value = '';
+                        setRemoveImage(true);
                       }}
                     >
                       <img src={CloseIcon} alt='Remove' />
                     </button>
                   </div>
+                ) : (
+                  <img src={DefaultImage} alt='Default Preview' className='image-selected' />
                 )}
                 <input
                   type='file'
