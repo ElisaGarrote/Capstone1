@@ -6,6 +6,7 @@ import TopSecFormPage from '../../components/TopSecFormPage';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
+import Alert from "../../components/Alert";
 
 export default function ProductsRegistration() {
   const [suppliers, setSuppliers] = useState([]);
@@ -20,6 +21,9 @@ export default function ProductsRegistration() {
   const currentDate = new Date().toISOString().split('T')[0];
   const [previewImage, setPreviewImage] = useState(null);
   const navigate = useNavigate();
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     const initialize = async () => {
@@ -106,42 +110,92 @@ export default function ProductsRegistration() {
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-  
+
+      const categoryId = Number(data.category);
+      const manufacturerId = Number(data.manufacturer);
+      const supplierId = Number(data.supplier);
+
       // Find the category object using selected category ID
-      const selectedCategory = categories.find(category => category.id.toString() === data.category);
-      const selectedManufacturer = manufacturers.find(manufacturer => manufacturer.id.toString() === data.manufacturer);
-      const selectedSupplier = suppliers.find(supplier => supplier.id.toString() === data.supplier);
-  
+      const selectedCategory = categories.find(category => category.id === categoryId);
+      const selectedManufacturer = manufacturers.find(manufacturer => manufacturer.id === manufacturerId);
+      const selectedSupplier = suppliers.find(supplier => supplier.id === supplierId);
+
+      console.log("category name:" ,selectedCategory.name);
+ 
       formData.append('name', data.productName);
-      formData.append('model_number', data.modelNumber || '');
-      formData.append('end_of_life', data.endOfLifeDate || '');
-      formData.append('purchase_cost', data.defaultPurchaseCost || '');
       formData.append('category_id', data.category);
       formData.append('category_name', selectedCategory.name);
       formData.append('manufacturer_id', data.manufacturer || '');
-      formData.append('manufacturer_name', selectedManufacturer.name);
-      formData.append('default_supplier_id', data.supplier || '');
-      formData.append('default_supplier_name', selectedSupplier.name);
+      if (selectedManufacturer) {
+        console.log("manufacturer name:" ,selectedManufacturer.name);
+        formData.append('manufacturer_name', selectedManufacturer.name);
+      }
       formData.append('depreciation', data.depreciation.id || '');
-  
+      formData.append('model_number', data.modelNumber || '');
+      formData.append('end_of_life', data.endOfLifeDate || '');
+      formData.append('purchase_cost', data.defaultPurchaseCost || '');
+      formData.append('default_supplier_id', data.supplier || '');
+      if (selectedSupplier) {
+        console.log("supplier name:" ,selectedSupplier.name);
+        formData.append('default_supplier_name', selectedSupplier.name);
+      }
+      formData.append('minimum_quantity', data.minimumQuantity);
+      formData.append('operating_system', data.operatingSystem);
+      formData.append('imei_number', data.imeiNumber);
+      formData.append('notes', data.notes);
+      
       if (data.image instanceof File) {
         formData.append('image', data.image);
       }
-  
-      const response = await fetch("http://localhost:8001/products/registration/", {
-        method: 'POST',
-        body: formData,
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Failed to submit product. Status: ${response.status}`);
+
+      if (id) {
+        try {
+          const response = await fetch(`http://localhost:8001/products/${id}/`, {
+            method: 'PUT',
+            body: formData,
+          });
+      
+          if (!response.ok) {
+            throw new Error(`Failed to update product. Status: ${response.status}`);
+          }
+      
+          const result = await response.json();
+          console.log('Updated product:', result);
+          setSuccessMessage("Product has been updated successfully!");
+          setErrorMessage("");
+      
+          setTimeout(() => {
+            setErrorMessage("");
+            setSuccessMessage("");
+          }, 5000);
+      
+          navigate('/products');
+        } catch (error) {
+          console.error('Update error:', error);
+          setSuccessMessage("");
+          setErrorMessage("Updating product failed. Please try again.");
+      
+          setTimeout(() => {
+            setErrorMessage("");
+            setSuccessMessage("");
+          }, 5000);
+        }
+      } else {
+        try {
+          const response = await fetch("http://localhost:8001/products/registration/", {
+            method: 'POST',
+            body: formData,
+          });
+    
+          const result = await response.json();
+          console.log('Product registered:', result);
+          navigate('/products');        
+        } catch (error) {
+          throw new Error(`Failed to submit product. Status: ${response.status}`);
+        }
       }
-  
-      const result = await response.json();
-      console.log('Product registered:', result);
-      navigate('/products');
     } catch (error) {
-      console.error('Error submitting product:', error);
+      console.error('Error submitting/updating product:', error);
     }
   };  
 
@@ -150,6 +204,8 @@ export default function ProductsRegistration() {
       <nav>
         <NavBar />
       </nav>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
       <main className='registration'>
         <section className='top'>
           <TopSecFormPage
@@ -230,7 +286,12 @@ export default function ProductsRegistration() {
             {/* Model Number */}
             <fieldset>
               <label htmlFor='model-number'>Model Number</label>
-              <input type='text' {...register('modelNumber')} maxLength='100' />
+              <input 
+              type='text'
+              {...register('modelNumber')} maxLength='100'
+              placeholder='Model Number'
+              />
+
             </fieldset>
 
             {/* End of Life Date */}
@@ -248,7 +309,14 @@ export default function ProductsRegistration() {
               <label> Default Purchase Cost</label>
               <div>
                 <p>PHP</p>
-                <input type="number" step="0.01" min="1" {...register("defaultPurchaseCost", { valueAsNumber: true })} />
+                <input 
+                type="number"
+                step="0.01"
+                min="1"
+                {...register("defaultPurchaseCost", { valueAsNumber: true })}
+                placeholder='Default Purchase Cost'
+                />
+                
               </div>
             </fieldset>
 
@@ -278,6 +346,15 @@ export default function ProductsRegistration() {
             </fieldset>
 
             <fieldset>
+              <label htmlFor='operating-system'>Operating System</label>
+              <input
+                type='text'
+                {...register('operatingSystem')}
+                placeholder='Operating System'
+              />
+            </fieldset>
+
+            <fieldset>
               <label htmlFor='imei-number'>IMEI Number</label>
               <input
                 type='text'
@@ -297,7 +374,9 @@ export default function ProductsRegistration() {
 
             <fieldset>
               <label htmlFor='notes'>Notes</label>
-              <textarea {...register('notes')} maxLength='500' />
+              <textarea {...register('notes')} maxLength='500'
+              placeholder='Notes...'
+              />
             </fieldset>
 
             <fieldset>
