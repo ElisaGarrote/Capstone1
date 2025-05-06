@@ -5,12 +5,17 @@ import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import DeleteModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   
   const [checkedItems, setCheckedItems] = useState([]);
   const allChecked = checkedItems.length === products.length;
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedRowId, setSelectedRowId] = useState(null);
+  const [isDeleteSuccess, setDeleteSucess] = useState(false);
 
   useEffect(() => {
     fetchProducts();
@@ -43,11 +48,6 @@ export default function Products() {
     );
   };
 
-  const handleDelete = (id) => {
-    console.log("Delete product with id:", id);
-    
-  };
-
   const handleView = (id) => {
     console.log("View product with id:", id);
     
@@ -58,6 +58,23 @@ export default function Products() {
       <nav>
         <NavBar />
       </nav>
+      {isDeleteModalOpen && (
+        <DeleteModal
+          id={selectedRowId}
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={() => {
+            setDeleteSucess(true);
+            setTimeout(() => {
+              setDeleteSucess(false);
+            }, 5000);
+          }}
+        />
+      )}
+
+      {isDeleteSuccess && (
+        <Alert message="Deleted Successfully!" type="success" />
+      )}
+
       <main className="page">
         <div className="container">
           <section className="top">
@@ -104,8 +121,8 @@ export default function Products() {
                     </td>
                     <td>
                       <img
-                        src={`http://127.0.0.1:8001${product.first_image}`}
-                        alt={DefaultImage}
+                        src={product.first_image ? `http://127.0.0.1:8001${product.first_image}` : DefaultImage}
+                        alt="Product-Image"
                         width="50"
                       />
                     </td>
@@ -123,7 +140,10 @@ export default function Products() {
                     <td>
                       <TableBtn
                         type="delete"
-                        onClick={() => handleDelete(product.id)}
+                        showModal={() => {
+                          setDeleteModalOpen(true);
+                          setSelectedRowId(product.id);
+                        }}
                       />
                     </td>
                     <td>
