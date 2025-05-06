@@ -4,13 +4,21 @@ from rest_framework import status
 from .models import *
 from .serializer import *
 
+# Get all products
 @api_view(['GET'])
 def get_products(request):
-    products = Product.objects.all()
+    products = Product.objects.filter(is_deleted=False)
     serializedProducts = AllProductSerializer(products, many=True).data
     return Response(serializedProducts)
 
-
+@api_view(['GET'])
+def get_product_by_id(request, id):
+    try:
+        product = Product.objects.prefetch_related('images').get(pk=id, is_deleted=False)  # Query by 'id'
+        serializer = ProductSerializer(product)
+        return Response(serializer.data)
+    except Product.DoesNotExist:
+        return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])

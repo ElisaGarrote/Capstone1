@@ -8,7 +8,9 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
+  
   const [checkedItems, setCheckedItems] = useState([]);
+  const allChecked = checkedItems.length === products.length;
 
   useEffect(() => {
     fetchProducts();
@@ -24,8 +26,6 @@ export default function Products() {
       console.log(err);
     }
   };
-
-  const allChecked = checkedItems.length === products.length;
 
   const toggleSelectAll = () => {
     if (allChecked) {
