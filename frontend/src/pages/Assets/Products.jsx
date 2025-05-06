@@ -104,8 +104,8 @@ export default function Products() {
                     </td>
                     <td>
                       <img
-                        src={product.first_image || DefaultImage}
-                        alt={product.name}
+                        src={`http://127.0.0.1:8001${product.first_image}`}
+                        alt={DefaultImage}
                         width="50"
                       />
                     </td>
