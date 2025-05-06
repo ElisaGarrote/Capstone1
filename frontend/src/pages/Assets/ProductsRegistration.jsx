@@ -12,6 +12,8 @@ export default function ProductsRegistration() {
   const [categories, setCategories] = useState([]);
   const [manufacturers, setManufacturers] = useState([]);
   const [product, setProduct] = useState(null);
+  const [depreciations, setDepreciations] = useState([]);
+
   const { id } = useParams();
   const { setValue, register, handleSubmit, formState: { errors } } = useForm();
 
@@ -19,29 +21,51 @@ export default function ProductsRegistration() {
   const [previewImage, setPreviewImage] = useState(null);
   const navigate = useNavigate();
 
-  const depreciationList = ['Straight Line', 'Declining Balance', 'Units of Production'];
-
   useEffect(() => {
-    fetchContexts();
-    if (id && product) {
-      fetchProductDetails();
+    const initialize = async () => {
+      await fetchContexts();
+      await fetchDepreciations();
 
-      Object.entries(product).forEach(([key, value]) => {
-        if (value !== null) {
-          setValue(key, value);
+      if (id) {
+        try {
+          const response = await fetch(`http://localhost:8001/products/${id}/`);
+          if (!response.ok) throw new Error("Failed to fetch product details");
+
+          const data = await response.json();
+          setProduct(data);
+          console.log("Product Details:", data);
+
+          // Set form values
+          setValue('productName', data.name);
+          setValue('modelNumber', data.model_number);
+          setValue('endOfLifeDate', data.end_of_life);
+          setValue('defaultPurchaseCost', data.purchase_cost);
+          setValue('category', data.category_id);
+          setValue('manufacturer', data.manufacturer_id);
+          setValue('supplier', data.default_supplier_id);
+          setValue('depreciation', data.depreciation.id);
+
+          if (data.images && data.images.length > 0) {
+            setPreviewImage(data.images[0].image);
+          }
+        } catch (err) {
+          console.log(err);
         }
-      });
-
-      if (product.images && product.images.length > 0) {
-        setPreviewImage(product.images[0].image);
       }
-    }
-  }, [product, id, setValue]);
-  
+    };
+
+    initialize();
+  }, [id, setValue]);
+
   const fetchContexts = async () => {
     try {
       const response = await fetch("http://localhost:8000/contexts/product/");
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch contexts. Status: ${response.status}`);
+      }
+
       setSuppliers(data.suppliers);
       setCategories(data.categories);
       setManufacturers(data.manufacturers);
@@ -51,16 +75,19 @@ export default function ProductsRegistration() {
     }
   };
 
-  const fetchProductDetails = async () => {
-    if (id) {
-      try {
-        const response = await fetch(`http://localhost:8001/products/${id}/`);
-        const data = await response.json();
-        setProduct(data);
-        console.log("Product Details:", data);
-      } catch (err) {
-        console.log(err);
+  const fetchDepreciations = async () => {
+    try {
+      const response = await fetch("http://localhost:8001/depreciations/");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch depreciations. Status: ${response.status}`);
       }
+
+      setDepreciations(data);
+      console.log("Depreciations:", data);
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -102,6 +129,7 @@ export default function ProductsRegistration() {
         </section>
         <section className='registration-form'>
           <form onSubmit={handleSubmit(onSubmit)}>
+
             {/* Product Name */}
             <fieldset>
               <label htmlFor='product-name'>Product Name *</label>
@@ -125,12 +153,8 @@ export default function ProductsRegistration() {
                 >
                   <option value=''>Select Category</option>
                   {categories.map((category) => (
-                    <option
-                      key={category.id}
-                      value={category.id}
-                      selected={id && product && category.id === product.category_id} 
-                    >
-                      {id && product && product.category_name ? product.category_name : category.name}
+                    <option key={category.id} value={category.id}>
+                      {category.name}
                     </option>
                   ))}
                 </select>
@@ -146,12 +170,8 @@ export default function ProductsRegistration() {
                 <select {...register('manufacturer')}>
                   <option value=''>Select Manufacturer</option>
                   {manufacturers.map((manufacturer) => (
-                    <option
-                      key={manufacturer.id}
-                      value={manufacturer.id}
-                      selected={id && product && manufacturer.id === product.manufacturer_id}
-                    >
-                      {id && product && product.manufacturer_name ? product.manufacturer_name : manufacturer.name}
+                    <option key={manufacturer.id} value={manufacturer.id}>
+                      {manufacturer.name}
                     </option>
                   ))}
                 </select>
@@ -165,9 +185,9 @@ export default function ProductsRegistration() {
               <div>
                 <select {...register('depreciation')}>
                   <option value=''>Select Depreciation Method</option>
-                  {depreciationList.map((cat, idx) => (
-                    <option key={idx} value={cat}>
-                      {cat}
+                  {depreciations.map((depreciation) => (
+                    <option key={depreciation.id} value={depreciation.id}>
+                      {depreciation.name}
                     </option>
                   ))}
                 </select>
@@ -187,7 +207,7 @@ export default function ProductsRegistration() {
               <input
                 type='date'
                 {...register('endOfLifeDate')}
-                min={!id ? currentDate : undefined} // Disable past dates if creating new product
+                min={!id ? currentDate : undefined}
               />
             </fieldset>
 
@@ -196,7 +216,7 @@ export default function ProductsRegistration() {
               <label> Default Purchase Cost</label>
               <div>
                 <p>PHP</p>
-                <input type="number" step="0.01" min="1" {...register("purchaseCost", { valueAsNumber: true })} />
+                <input type="number" step="0.01" min="1" {...register("defaultPurchaseCost", { valueAsNumber: true })} />
               </div>
             </fieldset>
 
@@ -204,23 +224,21 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor='supplier'>Default Supplier</label>
               <div>
-                <select {...register('supplier')}>
+                <select
+                  className={errors.supplier ? 'input-error' : ''}
+                  {...register('supplier', { required: 'Supplier is required' })}
+                >
                   <option value=''>Select Supplier</option>
                   {suppliers.map((supplier) => (
-                    <option
-                      key={supplier.id}
-                      value={supplier.id}
-                      selected={id && product && supplier.id === product.supplier_id} 
-                    >
-                      {id && product && product.supplier_name ? product.supplier_name : supplier.name}
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
                     </option>
                   ))}
                 </select>
                 <MediumButtons type='new' />
               </div>
+              {errors.supplier && <span className='error-message'>{errors.supplier.message}</span>}
             </fieldset>
-
-            {/* Other fields... */}
 
             {/* Image upload */}
             <fieldset>

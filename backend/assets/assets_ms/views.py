@@ -14,12 +14,17 @@ def get_products(request):
 @api_view(['GET'])
 def get_product_by_id(request, id):
     try:
-        product = Product.objects.prefetch_related('images').get(pk=id, is_deleted=False)  # Query by 'id'
+        product = Product.objects.prefetch_related('images').get(pk=id, is_deleted=False)
         serializer = ProductSerializer(product)
         return Response(serializer.data)
     except Product.DoesNotExist:
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
+@api_view(['GET'])
+def get_depreciations(request):
+    depreciations = Depreciation.objects.filter(is_deleted=False)
+    serializedDepreciations = DepreciationSerializer(depreciations, many=True).data
+    return Response(serializedDepreciations)
 
 @api_view(['POST'])
 def create_product(request):

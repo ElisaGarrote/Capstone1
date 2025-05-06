@@ -15,15 +15,26 @@ class AllProductSerializer(serializers.ModelSerializer):
             return first_image.image.url 
         return None
 
+class ProductDepreciationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Depreciation
+        fields = ['id', 'name']
+
 
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = ['id', 'image', 'is_deleted']
+        fields = ['id', 'image']
 
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
+    depreciation = ProductDepreciationSerializer(read_only=True)
 
     class Meta:
         model = Product
+        fields = '__all__'
+
+class DepreciationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Depreciation
         fields = '__all__'

@@ -17,7 +17,7 @@ class Product(models.Model):
     category_name = models.CharField(max_length=50)
     manufacturer_id = models.IntegerField(blank=True, null=True)
     manufacturer_name = models.CharField(max_length=50, blank=True, null=True)
-    depreciation = models.ForeignKey(Depreciation, on_delete=models.SET_NULL, blank=True, null=True, related_name='products')
+    depreciation = models.ForeignKey(Depreciation, on_delete=models.SET_NULL, blank=True, null=True, related_name='depreciations')
     model_number = models.CharField(max_length=20, blank=True, null=True)
     end_of_life = models.DateField(blank=True, null=True)
     purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
