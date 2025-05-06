@@ -2,49 +2,71 @@ import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
-import SampleImage from "../../assets/img/dvi.jpeg";
+import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import { useState } from "react";
 import AccessoriesViewModal from "../../components/Modals/AccessoriesViewModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 
 
+
+import { useState,  useEffect } from "react";
+import { useLocation } from "react-router-dom";
+
+import SampleImage from "../../assets/img/dvi.jpeg";
+
+
 export default function Accessories() {
-  const location = useLocation();
-  let maxAvail = 10;
-  let availValue = 7;
-  let accessoryName1 = "DVI Cable";
-  let accessoryName2 = "HDMI Cable";
+  const [selectedRowId, setSelectedRowId] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedRowId, setSelectedRowId] = useState(null);
-  const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [isExportModalOpen, setExportModalOpen] = useState(false);
   const [isNewAccessoryAdded, setNewAccessoryAdde] = useState(false);
   const [isEditSuccess, setEditSuccess] = useState(false);
-  const [isExportModalOpen, setExportModalOpen] = useState(false);
+  const [isDeleteSuccess, setDeleteSucess] = useState(false);
 
+  const [accessories, setAccessories] = useState ([]);
 
-  // Add checkbox functionality
   const [checkedItems, setCheckedItems] = useState([]);
-  const allChecked = checkedItems.length === 2; // 2 items in the table
+  const allChecked = checkedItems.length === accessories.length;
+
+  useEffect(() => {
+    fetchAccessories();
+  }, []);
+
+  const fetchAccessories = async () => {
+    try {
+      const response = await fetch("http://localhost:8004/accessories/");
+      const data = await response.json();
+      setAccessories(data);
+      console.log("Accessories:", data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const toggleSelectAll = () => {
     if (allChecked) {
       setCheckedItems([]);
     } else {
-      setCheckedItems([accessoryName1, accessoryName2]);
+      setCheckedItems(products.map((item) => item.id));
     }
   };
 
   const toggleItem = (id) => {
     setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((itemId) => itemId !== id)
+        : [...prev, id]
     );
   };
+
+  
+
+  const location = useLocation();
+  // should fetch how many of that specific accesory is checked out and then minus to quantity
+  let availValue = 7;
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
@@ -146,149 +168,102 @@ export default function Accessories() {
             </div>
           </section>
           <section className="middle">
-            <table>
-              <thead>
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={allChecked}
-                      onChange={toggleSelectAll}
-                    />
-                  </th>
-                  <th>IMAGE</th>
-                  <th>NAME</th>
-                  <th>AVAILABLE</th>
-                  <th>CHECKOUT</th>
-                  <th>CHECKIN</th>
-                  <th>MODEL NUMBER</th>
-                  <th>PURCHASE DATE</th>
-                  <th>EDIT</th>
-                  <th>DELETE</th>
-                  <th>VIEW</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={checkedItems.includes(accessoryName1)}
-                      onChange={() => toggleItem(accessoryName1)}
-                    />
-                  </td>
-                  <td>
-                    <img src={SampleImage} alt="sample-img" />
-                  </td>
-                  <td>{accessoryName1}</td>
-                  <td>
-                    <span style={{ color: '#34c759' }}>
-                      {availValue}/{maxAvail} <progress value={availValue} max={maxAvail}></progress>
-                    </span>
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="checkout"
-                      navigatePage={"/accessories/checkout"}
-                      id={accessoryName1}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="checkin"
-                      navigatePage={"/accessories/checkin"}
-                      id={accessoryName1}
-                    />
-                  </td>
-                  <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
-                  <td>December 31, 2025</td>
-                  <td>
-                    <TableBtn
-                      type="edit"
-                      navigatePage={"/accessories/edit"}
-                      id={accessoryName1}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="delete"
-                      showModal={() => {
-                        setDeleteModalOpen(true);
-                        setSelectedRowId(accessoryName1);
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="view"
-                      showModal={() => {
-                        setViewModalOpen(true);
-                        setSelectedRowId(accessoryName1);
-                      }}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={checkedItems.includes(accessoryName2)}
-                      onChange={() => toggleItem(accessoryName2)}
-                    />
-                  </td>
-                  <td>
-                    <img src={SampleImage} alt="sample-img" />
-                  </td>
-                  <td>{accessoryName2}</td>
-                  <td>
-                    <span style={{ color: '#34c759' }}>
-                      {availValue}/{maxAvail} <progress value={availValue} max={maxAvail}></progress>
-                    </span>
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="checkout"
-                      navigatePage={"/accessories/checkout"}
-                      id={accessoryName2}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="checkin"
-                      navigatePage={"/accessories/checkin"}
-                      id={accessoryName2}
-                    />
-                  </td>
-                  <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
-                  <td>December 31, 2025</td>
-                  <td>
-                    <TableBtn
-                      type="edit"
-                      navigatePage={"/accessories/edit"}
-                      id={accessoryName2}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="delete"
-                      showModal={() => {
-                        setDeleteModalOpen(true);
-                        setSelectedRowId(accessoryName1);
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="view"
-                      showModal={() => {
-                        setViewModalOpen(true);
-                        setSelectedRowId(accessoryName2);
-                      }}
-                    />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            {accessories.length === 0 ? (
+                    <section className="no-products-message">
+                      <p>No products found. Please add some products.</p>
+                    </section>
+                  ) : (
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>
+                            <input
+                              type="checkbox"
+                              checked={allChecked}
+                              onChange={toggleSelectAll}
+                            />
+                          </th>
+                          <th>IMAGE</th>
+                          <th>NAME</th>
+                          <th>AVAILABLE</th>
+                          <th>CHECKOUT</th>
+                          <th>CHECKIN</th>
+                          <th>MODEL NUMBER</th>
+                          <th>LOCATION</th>
+                          <th>EDIT</th>
+                          <th>DELETE</th>
+                          <th>VIEW</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accessories.map((accessory) => (
+                          <tr key={accessory.id}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={checkedItems.includes(accessory.id)}
+                                onChange={() => toggleItem(accessory.id)}
+                              />
+                            </td>
+                            <td>
+                              <img
+                                src={accessory.image ? `http://127.0.0.1:8004${accessory.image}` : DefaultImage}
+                                alt="Accessory-Image"
+                                width="50"
+                              />
+                            </td>
+                            <td>{accessory.name}</td>
+                            <td>
+                              <span style={{ color: '#34c759' }}>
+                                {availValue}/{accessory.quantity} <progress value={availValue} max={accessory.quantity}></progress>
+                              </span>
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="checkout"
+                                navigatePage={"/accessories/checkout"}
+                                id={accessory.id}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="checkin"
+                                navigatePage={"/accessories/checkin"}
+                                id={accessory.id}
+                              />
+                            </td>
+                            <td>{accessory.model_number}</td>
+                            <td>{accessory.location}</td>
+                            <td>
+                              <TableBtn
+                                type="edit"
+                                navigatePage={"/accessories/edit"}
+                                id={accessory.id}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="delete"
+                                showModal={() => {
+                                  setDeleteModalOpen(true);
+                                  setSelectedRowId(accessory.id);
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="view"
+                                showModal={() => {
+                                  setViewModalOpen(true);
+                                  setSelectedRowId(accessory.id);
+                                }}
+                              />
+                            </td>
+                          </tr>
+                        ))};
+                      </tbody>
+                    </table>
+                  )};
           </section>
           <section className="bottom"></section>
         </div>

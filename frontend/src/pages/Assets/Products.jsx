@@ -105,8 +105,8 @@ export default function Products() {
                         </th>
                         <th>IMAGE</th>
                         <th>NAME</th>
-                        <th>MODEL NUMBER</th>
                         <th>CATEGORY</th>
+                        <th>MODEL NUMBER</th>
                         <th>MANUFACTURER</th>
                         <th>END OF LIFE</th>
                         <th>EDIT</th>
@@ -132,8 +132,8 @@ export default function Products() {
                               />
                             </td>
                             <td>{product.name}</td>
-                            <td>{product.model_number}</td>
                             <td>{product.category_name}</td>
+                            <td>{product.model_number}</td>
                             <td>{product.manufacturer_name}</td>
                             <td>{product.end_of_life}</td>
                             <td>
