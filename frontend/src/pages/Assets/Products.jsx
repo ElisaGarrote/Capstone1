@@ -23,7 +23,7 @@ export default function Products() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch("http://localhost:8001/products/");
+      const response = await fetch("http://localhost:8003/products/");
       const data = await response.json();
       setProducts(data);
       console.log(data);
@@ -126,7 +126,7 @@ export default function Products() {
                             </td>
                             <td>
                               <img
-                                src={product.image ? `http://127.0.0.1:8001${product.image}` : DefaultImage}
+                                src={product.image ? `http://127.0.0.1:8003${product.image}` : DefaultImage}
                                 alt="Product-Image"
                                 width="50"
                               />

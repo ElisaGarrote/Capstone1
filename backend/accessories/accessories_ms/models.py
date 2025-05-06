@@ -14,15 +14,8 @@ class Accessory(models.Model):
     quantity = models.IntegerField(blank=True, null=True)
     minimum_quantity = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)  
+    image = models.ImageField(upload_to='accessory_images/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     
     def __str__(self):
         return self.name
-    
-class AccessoryImage(models.Model):
-    accessory = models.ForeignKey(Accessory, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='accessory_images/')
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Image for {self.accessory.name}"

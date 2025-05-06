@@ -37,7 +37,7 @@ export default function ProductsRegistration() {
 
       if (id) {
         try {
-          const response = await fetch(`http://localhost:8001/products/${id}/`);
+          const response = await fetch(`http://localhost:8003/products/${id}/`);
           if (!response.ok) throw new Error("Failed to fetch product details");
 
           const data = await response.json();
@@ -60,7 +60,7 @@ export default function ProductsRegistration() {
           setValue('notes', data.notes || '');
           
           if (data.image) {
-            setPreviewImage(`http://localhost:8001${data.image}`);
+            setPreviewImage(`http://localhost:8003${data.image}`);
           }
         } catch (err) {
           console.log(err);
@@ -73,7 +73,7 @@ export default function ProductsRegistration() {
 
   const fetchContexts = async () => {
     try {
-      const response = await fetch("http://localhost:8000/contexts/product/");
+      const response = await fetch("http://localhost:8002/contexts/product/");
       const data = await response.json();
 
       if (!response.ok) {
@@ -91,7 +91,7 @@ export default function ProductsRegistration() {
 
   const fetchDepreciations = async () => {
     try {
-      const response = await fetch("http://localhost:8001/depreciations/product_registration");
+      const response = await fetch("http://localhost:8003/depreciations/product_registration");
       const data = await response.json();
 
       if (!response.ok) {
@@ -167,7 +167,7 @@ export default function ProductsRegistration() {
 
       if (id) {
         try {
-          const response = await fetch(`http://localhost:8001/products/${id}/`, {
+          const response = await fetch(`http://localhost:8003/products/${id}/`, {
             method: 'PUT',
             body: formData,
           });
@@ -201,7 +201,7 @@ export default function ProductsRegistration() {
         }
       } else {
         try {
-          const response = await fetch("http://localhost:8001/products/registration/", {
+          const response = await fetch("http://localhost:8003/products/registration/", {
             method: 'POST',
             body: formData,
           });
