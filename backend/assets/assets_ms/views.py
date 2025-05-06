@@ -21,22 +21,13 @@ def get_product_by_id(request, id):
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
-def get_depreciations(request):
+def get_product_depreciations(request):
     depreciations = Depreciation.objects.filter(is_deleted=False)
-    serializedDepreciations = DepreciationSerializer(depreciations, many=True).data
+    serializedDepreciations = ProductDepreciationSerializer(depreciations, many=True).data
     return Response(serializedDepreciations)
 
 @api_view(['POST'])
 def create_product(request):
-    data = request.data
-    serializer = ProductSerializer(data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['POST'])
-def add_product_image(request):
     data = request.data
     serializer = ProductSerializer(data=data)
     if serializer.is_valid():

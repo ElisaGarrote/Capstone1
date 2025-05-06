@@ -77,14 +77,14 @@ export default function ProductsRegistration() {
 
   const fetchDepreciations = async () => {
     try {
-      const response = await fetch("http://localhost:8001/depreciations/");
+      const response = await fetch("http://localhost:8001/depreciations/product_registration");
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch depreciations. Status: ${response.status}`);
+        throw new Error(`Failed to fetch contexts. Status: ${response.status}`);
       }
 
-      setDepreciations(data);
+      setDepreciations(data)
       console.log("Depreciations:", data);
     } catch (err) {
       console.log(err);
@@ -103,15 +103,47 @@ export default function ProductsRegistration() {
     }
   };
 
-  const onSubmit = (data) => {
-    console.log('Form submitted:', data);
-    if (id) {
-      console.log('Updating product...');
-    } else {
-      console.log('Creating new product...');
+  const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
+  
+      // Find the category object using selected category ID
+      const selectedCategory = categories.find(category => category.id.toString() === data.category);
+      const selectedManufacturer = manufacturers.find(manufacturer => manufacturer.id.toString() === data.manufacturer);
+      const selectedSupplier = suppliers.find(supplier => supplier.id.toString() === data.supplier);
+  
+      formData.append('name', data.productName);
+      formData.append('model_number', data.modelNumber || '');
+      formData.append('end_of_life', data.endOfLifeDate || '');
+      formData.append('purchase_cost', data.defaultPurchaseCost || '');
+      formData.append('category_id', data.category);
+      formData.append('category_name', selectedCategory.name);
+      formData.append('manufacturer_id', data.manufacturer || '');
+      formData.append('manufacturer_name', selectedManufacturer.name);
+      formData.append('default_supplier_id', data.supplier || '');
+      formData.append('default_supplier_name', selectedSupplier.name);
+      formData.append('depreciation', data.depreciation.id || '');
+  
+      if (data.image instanceof File) {
+        formData.append('image', data.image);
+      }
+  
+      const response = await fetch("http://localhost:8001/products/registration/", {
+        method: 'POST',
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to submit product. Status: ${response.status}`);
+      }
+  
+      const result = await response.json();
+      console.log('Product registered:', result);
+      navigate('/products');
+    } catch (error) {
+      console.error('Error submitting product:', error);
     }
-    navigate('/products');
-  };
+  };  
 
   return (
     <>
@@ -224,11 +256,8 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor='supplier'>Default Supplier</label>
               <div>
-                <select
-                  className={errors.supplier ? 'input-error' : ''}
-                  {...register('supplier', { required: 'Supplier is required' })}
-                >
-                  <option value=''>Select Supplier</option>
+                <select {...register('supplier')}>
+                  <option value=''>Select Suppler</option>
                   {suppliers.map((supplier) => (
                     <option key={supplier.id} value={supplier.id}>
                       {supplier.name}
@@ -237,10 +266,40 @@ export default function ProductsRegistration() {
                 </select>
                 <MediumButtons type='new' />
               </div>
-              {errors.supplier && <span className='error-message'>{errors.supplier.message}</span>}
             </fieldset>
 
-            {/* Image upload */}
+            <fieldset>
+              <label htmlFor='minimum-quantity'>Minimum Quantity</label>
+              <input
+                type='number'
+                {...register('minimumQuantity')}
+                placeholder='Minimum Quantity'
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor='imei-number'>IMEI Number</label>
+              <input
+                type='text'
+                {...register('imeiNumber', { maxLength: 15 })}
+                placeholder='IMEI Number'
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor='ssd-encryption'>SSD Encryption</label>
+              <input
+                type='text'
+                {...register('ssdEncryption')}
+                placeholder='SSD Encryption'
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor='notes'>Notes</label>
+              <textarea {...register('notes')} maxLength='500' />
+            </fieldset>
+
             <fieldset>
               <label htmlFor='upload-image'>Image</label>
               <div>
@@ -272,7 +331,6 @@ export default function ProductsRegistration() {
               </label>
             </fieldset>
 
-            {/* Save Button */}
             <button type='submit' className='save-btn'>
               Save
             </button>

@@ -28,8 +28,9 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
-    depreciation = ProductDepreciationSerializer(read_only=True)
-
+    depreciation = serializers.PrimaryKeyRelatedField(
+        queryset=Depreciation.objects.all(), required=False, allow_null=True
+    )
     class Meta:
         model = Product
         fields = '__all__'
