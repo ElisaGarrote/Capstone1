@@ -7,7 +7,7 @@ from .serializer import *
 @api_view(['GET'])
 def get_product_contexts(request):
     suppliers = Supplier.objects.filter(is_deleted=False)
-    categories = Category.objects.filter(is_deleted=False)
+    categories = Category.objects.filter(is_deleted=False, type="asset")
     manufacturers = Manufacturer.objects.filter(is_deleted=False)
 
     serializedSupplier = SupplierNameSerializer(suppliers, many=True).data
