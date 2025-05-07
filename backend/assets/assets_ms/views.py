@@ -49,3 +49,13 @@ def create_product(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def soft_delete_product(request, id):
+    try:
+        product = Product.objects.get(pk=id)
+        product.is_deleted = True
+        product.save()
+        return Response({'detail': 'Product soft-deleted'})
+    except Product.DoesNotExist:
+        return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)

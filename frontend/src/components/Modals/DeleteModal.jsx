@@ -3,7 +3,7 @@ import DeleteIcon from "../../assets/icons/delete-red.svg";
 import CloseIcon from "../../assets/icons/close.svg";
  
 
-export default function DeleteModal({ id, closeModal, confirmDelete, endPoint }) {
+export default function DeleteModal({ closeModal, confirmDelete, endPoint, onDeleteFail }) {
   const handleDelete = async (endPoint) => {
     try {
       const response = await fetch(endPoint, {
@@ -39,8 +39,10 @@ export default function DeleteModal({ id, closeModal, confirmDelete, endPoint })
             onClick={async () => {
               const success = await handleDelete(endPoint);
               if (success) {
-                confirmDelete();  // triggers refresh + alert
+                await confirmDelete();
                 closeModal();
+              } else {
+                onDeleteFail();
               }
             }}
           >

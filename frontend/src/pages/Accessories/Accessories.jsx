@@ -8,15 +8,8 @@ import AccessoriesViewModal from "../../components/Modals/AccessoriesViewModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import ExportModal from "../../components/Modals/ExportModal";
-
-
-
 import { useState,  useEffect } from "react";
 import { useLocation } from "react-router-dom";
-
-
-
-
 
 export default function Accessories() {
   const [selectedRowId, setSelectedRowId] = useState(null);
@@ -26,11 +19,12 @@ export default function Accessories() {
   const [isNewAccessoryAdded, setNewAccessoryAdde] = useState(false);
   const [isEditSuccess, setEditSuccess] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [isDeleteFailed, setDeleteFailed] = useState(false);
   const [accessories, setAccessories] = useState ([]);
   const [endPoint, setEndPoint] = useState(null);
-
   const [checkedItems, setCheckedItems] = useState([]);
   const allChecked = checkedItems.length === accessories.length;
+  const location = useLocation();
 
   useEffect(() => {
     fetchAccessories();
@@ -51,7 +45,7 @@ export default function Accessories() {
     if (allChecked) {
       setCheckedItems([]);
     } else {
-      setCheckedItems(products.map((item) => item.id));
+      setCheckedItems(accessories.map((item) => item.id));
     }
   };
 
@@ -63,11 +57,6 @@ export default function Accessories() {
     );
   };
 
-  
-
-
-
-  const location = useLocation();
   // should fetch how many of that specific accesory is checked out and then minus to quantity
   let availValue = 7;
 
@@ -112,12 +101,6 @@ export default function Accessories() {
   console.log("delete confirm: ", isDeleteSuccess);
   console.log("delete from edit: ", isDeleteSuccessFromEdit);
 
-
-
-
-
-
-
   return (
     <>
       {isViewModalOpen && (
@@ -129,20 +112,28 @@ export default function Accessories() {
       
       {isDeleteModalOpen && (
         <DeleteModal
-          id={selectedRowId}
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={async () => {
-            setDeleteSucess(true);
-            await fetchAccessories();
-            setTimeout(() => setDeleteSucess(false), 5000);
-          }}
-        />
+        endPoint={endPoint}
+        closeModal={() => setDeleteModalOpen(false)}
+        confirmDelete={async () => {
+          await fetchAccessories();
+          setDeleteSucess(true);
+          setTimeout(() => setDeleteSucess(false), 5000);
+        }}
+        onDeleteFail={() => {
+          setDeleteFailed(true);
+          setTimeout(() => setDeleteFailed(false), 5000);
+        }}
+      />      
       )}
 
       {isDeleteSuccess && (
         <Alert message="Deleted Successfully!" type="success" />
       )}
+
+      {isDeleteFailed && (
+        <Alert message="Delete failed. Please try again." type="error" />
+      )}
+
 
       {isNewAccessoryAdded && (
         <Alert message="New accessory added!" type="success" />
@@ -179,7 +170,7 @@ export default function Accessories() {
           <section className="middle">
             {accessories.length === 0 ? (
                     <section className="no-products-message">
-                      <p>No products found. Please add some products.</p>
+                      <p>No accessories found. Please add some accessory.</p>
                     </section>
                   ) : (
                     <table>
@@ -227,11 +218,6 @@ export default function Accessories() {
                                 {availValue}/{accessory.quantity} <progress value={availValue} max={accessory.quantity}></progress>
                               </span>
                             </td>
-
-
-
-
-
                             <td>
                               <TableBtn
                                 type="checkout"
@@ -246,18 +232,8 @@ export default function Accessories() {
                                 id={accessory.id}
                               />
                             </td>
-
-
-
-
-
-
                             <td>{accessory.model_number}</td>
-                            <td>{accessory.location}</td>
-
-
-
-                            
+                            <td>{accessory.location}</td>   
                             <td>
                               <TableBtn
                                 type="edit"
@@ -265,16 +241,12 @@ export default function Accessories() {
                                 id={accessory.id}
                               />
                             </td>
-
-                            
                             <td>
                               <TableBtn
                                 type="delete"
                                 showModal={() => {
-                                  setDeleteModalOpen(true);
-                                  setSelectedRowId(accessory.id);
                                   setEndPoint(`http://localhost:8004/accessories/delete/${accessory.id}`)
-                                  console.log("endpoint:", endPoint)
+                                  setDeleteModalOpen(true);
                                 }}
                               />
                             </td>
