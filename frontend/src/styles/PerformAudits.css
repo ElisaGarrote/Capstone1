@@ -52,6 +52,11 @@
   font-weight: 600;
 }
 
+.perform-audit-form fieldset span {
+  color: red;
+  font-size: 0.875rem;
+}
+
 .perform-audit-page input,
 .perform-audit-page select,
 .perform-audit-page textarea {
@@ -85,7 +90,12 @@
   cursor: pointer;
 }
 
-.perform-audit-page .save-btn:hover {
+.perform-audit-page button:disabled {
+  cursor: not-allowed;
+  background-color: #d3d3d3;
+}
+
+.perform-audit-page .save-btn:hover:not(button:disabled) {
   background-color: var(--primary-color-hover);
 }
 
