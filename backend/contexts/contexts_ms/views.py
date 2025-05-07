@@ -22,6 +22,21 @@ def get_context_names(request):
 
     return Response(data)
 
+@api_view(['GET'])
+def get_contexts_names(request):
+    suppliers = Supplier.objects.filter(is_deleted=False)
+    manufacturers = Manufacturer.objects.filter(is_deleted=False)
+
+    serializedSupplier = SupplierNameSerializer(suppliers, many=True).data
+    serializedManufacturer = ManufacturerNameSerializer(manufacturers, many=True).data
+
+    data = {
+        'suppliers': serializedSupplier,
+        'manufacturers': serializedManufacturer,
+    }
+
+    return Response(data)
+
 # Get all suppliers
 @api_view(['GET'])
 def get_suppliers(request):

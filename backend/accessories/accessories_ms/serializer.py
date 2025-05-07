@@ -5,3 +5,8 @@ class AllAccessorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Accessory
         fields = ['id', 'image', 'name', 'quantity', 'model_number', 'location']
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'is_deleted']

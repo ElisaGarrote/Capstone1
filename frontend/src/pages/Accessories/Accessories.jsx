@@ -14,7 +14,8 @@ import ExportModal from "../../components/Modals/ExportModal";
 import { useState,  useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-import SampleImage from "../../assets/img/dvi.jpeg";
+
+
 
 
 export default function Accessories() {
@@ -25,8 +26,8 @@ export default function Accessories() {
   const [isNewAccessoryAdded, setNewAccessoryAdde] = useState(false);
   const [isEditSuccess, setEditSuccess] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
-
   const [accessories, setAccessories] = useState ([]);
+  const [endPoint, setEndPoint] = useState(null);
 
   const [checkedItems, setCheckedItems] = useState([]);
   const allChecked = checkedItems.length === accessories.length;
@@ -63,6 +64,8 @@ export default function Accessories() {
   };
 
   
+
+
 
   const location = useLocation();
   // should fetch how many of that specific accesory is checked out and then minus to quantity
@@ -109,6 +112,12 @@ export default function Accessories() {
   console.log("delete confirm: ", isDeleteSuccess);
   console.log("delete from edit: ", isDeleteSuccessFromEdit);
 
+
+
+
+
+
+
   return (
     <>
       {isViewModalOpen && (
@@ -117,16 +126,16 @@ export default function Accessories() {
           closeModal={() => setViewModalOpen(false)}
         />
       )}
-
+      
       {isDeleteModalOpen && (
         <DeleteModal
           id={selectedRowId}
+          endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
+          confirmDelete={async () => {
             setDeleteSucess(true);
-            setTimeout(() => {
-              setDeleteSucess(false);
-            }, 5000);
+            await fetchAccessories();
+            setTimeout(() => setDeleteSucess(false), 5000);
           }}
         />
       )}
@@ -218,6 +227,11 @@ export default function Accessories() {
                                 {availValue}/{accessory.quantity} <progress value={availValue} max={accessory.quantity}></progress>
                               </span>
                             </td>
+
+
+
+
+
                             <td>
                               <TableBtn
                                 type="checkout"
@@ -232,8 +246,18 @@ export default function Accessories() {
                                 id={accessory.id}
                               />
                             </td>
+
+
+
+
+
+
                             <td>{accessory.model_number}</td>
                             <td>{accessory.location}</td>
+
+
+
+                            
                             <td>
                               <TableBtn
                                 type="edit"
@@ -241,12 +265,16 @@ export default function Accessories() {
                                 id={accessory.id}
                               />
                             </td>
+
+                            
                             <td>
                               <TableBtn
                                 type="delete"
                                 showModal={() => {
                                   setDeleteModalOpen(true);
                                   setSelectedRowId(accessory.id);
+                                  setEndPoint(`http://localhost:8004/accessories/delete/${accessory.id}`)
+                                  console.log("endpoint:", endPoint)
                                 }}
                               />
                             </td>

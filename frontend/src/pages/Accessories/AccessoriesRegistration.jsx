@@ -1,8 +1,11 @@
 import NavBar from "../../components/NavBar";
+import TopSecFormPage from "../../components/TopSecFormPage";
+
+
 import "../../styles/AccessoriesRegistration.css";
 import { useNavigate } from "react-router-dom";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import TopSecFormPage from "../../components/TopSecFormPage";
+
 import CloseIcon from "../../assets/icons/close.svg";
 import { useEffect, useState } from "react";
 import Select from "react-select";
