@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
+import "../../styles/ComponentsButtons.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
+import ComponentsTableBtn from "../../components/buttons/ComponentsTableButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 
@@ -64,6 +66,11 @@ export default function Components() {
     );
   };
 
+  const handleDelete = (id) => {
+    console.log(`Delete component with id: ${id}`);
+    // Add delete logic here
+  };
+
   const handleCheckInOut = (item) => {
     if (item.status === 'Deployed') {
       navigate(`/components/checked-out-list/${item.id}`, {
@@ -90,7 +97,7 @@ export default function Components() {
       <nav>
         <NavBar />
       </nav>
-      <main className="page">
+      <main className="page components-page">
         <div className="container">
           <section className="top">
             <h1>Components</h1>
@@ -103,7 +110,7 @@ export default function Components() {
             </div>
           </section>
           <section className="middle">
-            <table>
+            <table className="components-table">
               <thead>
                 <tr>
                   <th>
@@ -150,13 +157,13 @@ export default function Components() {
                     <td>{item.category}</td>
                     <td>{item.modelNumber}</td>
                     <td>
-                      <TableBtn type="edit" navigatePage={`/components/registration/${item.id}`} />
+                      <ComponentsTableBtn type="edit" navigatePage={`/components/registration/${item.id}`} />
                     </td>
                     <td>
-                      <TableBtn type="delete" onClick={() => handleDelete(item.id)} />
+                      <ComponentsTableBtn type="delete" onClick={() => handleDelete(item.id)} />
                     </td>
                     <td>
-                      <TableBtn type="view" navigatePage={`/assets/view/${item.id}`} />
+                      <ComponentsTableBtn type="view" navigatePage={`/assets/view/${item.id}`} />
                     </td>
                   </tr>
                 ))}

@@ -1,78 +1,81 @@
 import React, { useState } from 'react';
 import NavBar from '../../components/NavBar';
 import '../../styles/PageTable.css';
+import '../../styles/Consumables.css';
+import '../../styles/ConsumablesButtons.css';
 import TableBtn from "../../components/buttons/TableButtons";
+import ConsumablesTableBtn from "../../components/buttons/ConsumablesTableButtons";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
 
 export default function Consumables() {
   const [consumables, setConsumables] = useState([
-    { 
-      id: 1, 
-      image: SampleImage, 
-      name: "A3 Paper", 
-      available: 142, 
-      category: "Printer Paper", 
+    {
+      id: 1,
+      image: SampleImage,
+      name: "A3 Paper",
+      available: 142,
+      category: "Printer Paper",
       location: "Sydney",
       manufacturer: "Canon",
       supplier: "WalMart",
       color: "White",
-      paperSize: "A3" 
+      paperSize: "A3"
     },
-    { 
-      id: 2, 
-      image: SampleImage, 
-      name: "A4 Paper", 
-      available: 120, 
-      category: "Printer Paper", 
+    {
+      id: 2,
+      image: SampleImage,
+      name: "A4 Paper",
+      available: 120,
+      category: "Printer Paper",
       location: "Palo Alto",
       manufacturer: "Canon",
       supplier: "WalMart",
       color: "White",
-      paperSize: "A4" 
+      paperSize: "A4"
     },
-    { 
-      id: 3, 
-      image: SampleImage, 
-      name: "Canon 580 PGBK Ink", 
-      available: 30, 
-      category: "Printer Ink", 
+    {
+      id: 3,
+      image: SampleImage,
+      name: "Canon 580 PGBK Ink",
+      available: 30,
+      category: "Printer Ink",
       location: "New York",
       manufacturer: "Canon",
       supplier: "Staples",
       color: "Multicolor",
       model: "580 PGBK"
     },
-    { 
-      id: 4, 
-      image: SampleImage, 
-      name: "Canon 581 CLI Ink", 
-      available: 31, 
-      category: "Printer Ink", 
+    {
+      id: 4,
+      image: SampleImage,
+      name: "Canon 581 CLI Ink",
+      available: 31,
+      category: "Printer Ink",
       location: "New York",
       manufacturer: "Canon",
       supplier: "Staples",
       color: "Black",
       model: "581 CLI"
     },
-    { 
-      id: 5, 
-      image: SampleImage, 
-      name: "Canon 581 XL Ink", 
-      available: 28, 
-      category: "Printer Ink", 
+    {
+      id: 5,
+      image: SampleImage,
+      name: "Canon 581 XL Ink",
+      available: 28,
+      category: "Printer Ink",
       location: "New York",
       manufacturer: "Canon",
       supplier: "Staples",
       color: "Yellow",
       model: "581 XL"
     },
-    { 
-      id: 6, 
-      image: SampleImage, 
-      name: "Lexmark CX 317 Ink", 
-      available: 6, 
-      category: "Printer Ink", 
+    {
+      id: 6,
+      image: SampleImage,
+      name: "Lexmark CX 317 Ink",
+      available: 6,
+      category: "Printer Ink",
       location: "Berlin",
       manufacturer: "Lexmark",
       supplier: "Staples",
@@ -111,7 +114,7 @@ export default function Consumables() {
       <nav>
         <NavBar />
       </nav>
-      <main className="page">
+      <main className="page consumables-page">
         <div className="container">
           <section className="top">
             <h1>Consumables</h1>
@@ -124,7 +127,7 @@ export default function Consumables() {
             </div>
           </section>
           <section className="middle">
-            <table>
+            <table className="consumables-table">
               <thead>
                 <tr>
                   <th>
@@ -162,13 +165,13 @@ export default function Consumables() {
                     <td>{item.category}</td>
                     <td>{item.location}</td>
                     <td>
-                      <TableBtn type="edit" navigatePage={`/consumables/edit/${item.id}`} />
+                      <ConsumablesTableBtn type="edit" navigatePage={`/consumables/edit/${item.id}`} />
                     </td>
                     <td>
-                      <TableBtn type="delete" showModal={() => handleDelete(item.id)} />
+                      <ConsumablesTableBtn type="delete" showModal={() => handleDelete(item.id)} />
                     </td>
                     <td>
-                      <TableBtn type="view" showModal={() => handleView(item.id)} />
+                      <ConsumablesTableBtn type="view" showModal={() => handleView(item.id)} />
                     </td>
                   </tr>
                 ))}

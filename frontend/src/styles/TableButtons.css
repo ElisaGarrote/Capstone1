@@ -15,11 +15,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 6px;
+  padding: 4px;
   border-radius: 4px;
   cursor: pointer;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   margin: 0 auto;
 }
 
@@ -71,4 +71,46 @@
 
 .table-buttons-delete:hover {
   background-color: rgba(255, 0, 0, 0.2);
+}
+
+/* Specific styles for Products table buttons */
+.products-table .table-buttons-edit,
+.products-table .table-buttons-delete,
+.products-table .table-buttons-view {
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+  margin: 0 auto; /* Center the button in its cell */
+}
+
+/* Specific styles for Assets table buttons */
+.assets-table .table-buttons-edit,
+.assets-table .table-buttons-delete,
+.assets-table .table-buttons-view {
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+  margin: 0 auto; /* Center the button in its cell */
+}
+
+/* Specific styles for Accessories table buttons */
+.accessories-page .table-buttons-edit,
+.accessories-page .table-buttons-delete,
+.accessories-page .table-buttons-view {
+  padding: 4px !important;
+  width: 26px !important;
+  height: 26px !important;
+  margin: 0 auto !important; /* Center the button in its cell */
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Fix for button images in Accessories table */
+.accessories-page .table-buttons-edit img,
+.accessories-page .table-buttons-delete img,
+.accessories-page .table-buttons-view img {
+  width: 16px !important;
+  height: 16px !important;
+  object-fit: contain !important;
 }

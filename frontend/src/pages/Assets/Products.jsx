@@ -75,7 +75,7 @@ export default function Products() {
             </div>
           </section>
           <section className="middle">
-            <table>
+            <table className="products-table">
               <thead>
                 <tr>
                   <th>

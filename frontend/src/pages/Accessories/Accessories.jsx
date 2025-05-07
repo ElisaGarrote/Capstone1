@@ -1,7 +1,11 @@
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
+import "../../styles/AccessoriesButtons.css";
+import "../../styles/AccessoriesAvailability.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
+import AccessoriesTableBtn from "../../components/buttons/AccessoriesTableButtons";
+import AccessoriesAvailability from "../../components/accessories/AccessoriesAvailability";
 import SampleImage from "../../assets/img/dvi.jpeg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import { useState } from "react";
@@ -126,7 +130,7 @@ export default function Accessories() {
       <nav>
         <NavBar />
       </nav>
-      <main className="page">
+      <main className="page accessories-page">
         <div className="container">
           <section className="top">
             <h1>Accessories</h1>
@@ -146,7 +150,7 @@ export default function Accessories() {
             </div>
           </section>
           <section className="middle">
-            <table>
+            <table className="accessories-table">
               <thead>
                 <tr>
                   <th>
@@ -182,9 +186,7 @@ export default function Accessories() {
                   </td>
                   <td>{accessoryName1}</td>
                   <td>
-                    <span style={{ color: '#34c759' }}>
-                      {availValue}/{maxAvail} <progress value={availValue} max={maxAvail}></progress>
-                    </span>
+                    <AccessoriesAvailability available={availValue} total={maxAvail} />
                   </td>
                   <td>
                     <TableBtn
@@ -203,14 +205,14 @@ export default function Accessories() {
                   <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
                   <td>December 31, 2025</td>
                   <td>
-                    <TableBtn
+                    <AccessoriesTableBtn
                       type="edit"
                       navigatePage={"/accessories/edit"}
                       id={accessoryName1}
                     />
                   </td>
                   <td>
-                    <TableBtn
+                    <AccessoriesTableBtn
                       type="delete"
                       showModal={() => {
                         setDeleteModalOpen(true);
@@ -219,7 +221,7 @@ export default function Accessories() {
                     />
                   </td>
                   <td>
-                    <TableBtn
+                    <AccessoriesTableBtn
                       type="view"
                       showModal={() => {
                         setViewModalOpen(true);
@@ -241,9 +243,7 @@ export default function Accessories() {
                   </td>
                   <td>{accessoryName2}</td>
                   <td>
-                    <span style={{ color: '#34c759' }}>
-                      {availValue}/{maxAvail} <progress value={availValue} max={maxAvail}></progress>
-                    </span>
+                    <AccessoriesAvailability available={availValue} total={maxAvail} />
                   </td>
                   <td>
                     <TableBtn
@@ -262,14 +262,14 @@ export default function Accessories() {
                   <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
                   <td>December 31, 2025</td>
                   <td>
-                    <TableBtn
+                    <AccessoriesTableBtn
                       type="edit"
                       navigatePage={"/accessories/edit"}
                       id={accessoryName2}
                     />
                   </td>
                   <td>
-                    <TableBtn
+                    <AccessoriesTableBtn
                       type="delete"
                       showModal={() => {
                         setDeleteModalOpen(true);
@@ -278,7 +278,7 @@ export default function Accessories() {
                     />
                   </td>
                   <td>
-                    <TableBtn
+                    <AccessoriesTableBtn
                       type="view"
                       showModal={() => {
                         setViewModalOpen(true);

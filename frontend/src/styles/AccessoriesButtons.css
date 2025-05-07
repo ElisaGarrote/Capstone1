@@ -1,0 +1,49 @@
+/* AccessoriesButtons.css - Specific styles for buttons in the Accessories table */
+
+/* Fix for edit, delete, and view buttons in Accessories table */
+.accessories-page .table-buttons-edit,
+.accessories-page .table-buttons-delete,
+.accessories-page .table-buttons-view,
+.accessories-table-buttons-edit,
+.accessories-table-buttons-delete,
+.accessories-table-buttons-view {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 4px !important;
+  width: 26px !important;
+  height: 26px !important;
+  margin: 0 auto !important;
+  background-color: var(--bg-color) !important;
+  border: 1px solid #d3d3d3 !important;
+  border-radius: 4px !important;
+  box-sizing: content-box !important;
+  cursor: pointer !important;
+}
+
+/* Fix for button images in Accessories table */
+.accessories-page .table-buttons-edit img,
+.accessories-page .table-buttons-delete img,
+.accessories-page .table-buttons-view img,
+.accessories-table-buttons-edit img,
+.accessories-table-buttons-delete img,
+.accessories-table-buttons-view img {
+  width: 16px !important;
+  height: 16px !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+/* Hover effects */
+.accessories-page .table-buttons-edit:hover,
+.accessories-page .table-buttons-view:hover,
+.accessories-table-buttons-edit:hover,
+.accessories-table-buttons-view:hover {
+  background-color: rgba(0, 123, 255, 0.2) !important;
+}
+
+.accessories-page .table-buttons-delete:hover,
+.accessories-table-buttons-delete:hover {
+  background-color: rgba(255, 0, 0, 0.2) !important;
+}

@@ -76,6 +76,12 @@
   table-layout: fixed;
 }
 
+/* Specific styles for the accessories-table class */
+.accessories-page table.accessories-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
 .accessories-page table th {
   background-color: rgba(211, 211, 211, 0.2);
 }
@@ -98,14 +104,10 @@
 }
 
 /* Available column styling */
-.accessories-page table td:nth-child(4) span {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-  color: #34c759;
-  font-weight: 500;
+.accessories-page table td:nth-child(4) {
+  padding: 8px !important;
+  vertical-align: middle !important;
+  text-align: center !important;
 }
 
 /* Set the width of the checkbox column */
@@ -152,8 +154,56 @@
 .accessories-page table td:nth-child(10),
 .accessories-page table th:nth-child(11),
 .accessories-page table td:nth-child(11) {
-  width: 4.8vw;
-  text-align: center;
+  width: 40px !important;
+  padding: 4px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* Ensure buttons are properly centered in their cells */
+.accessories-page table td:nth-child(9) button,
+.accessories-page table td:nth-child(10) button,
+.accessories-page table td:nth-child(11) button {
+  display: block;
+  margin: 0 auto;
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+}
+
+/* Specific styles for accessories-table action columns */
+.accessories-page table.accessories-table td:nth-child(9),
+.accessories-page table.accessories-table td:nth-child(10),
+.accessories-page table.accessories-table td:nth-child(11) {
+  padding: 4px !important;
+  width: 40px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  height: 40px !important;
+}
+
+.accessories-page table.accessories-table th:nth-child(9),
+.accessories-page table.accessories-table th:nth-child(10),
+.accessories-page table.accessories-table th:nth-child(11) {
+  width: 40px !important;
+  padding: 4px !important;
+  text-align: center !important;
+}
+
+/* Add specific spacing for the action columns */
+.accessories-page table.accessories-table th:nth-child(9),
+.accessories-page table.accessories-table th:nth-child(10),
+.accessories-page table.accessories-table th:nth-child(11) {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  min-width: 40px !important;
+}
+
+.accessories-page table.accessories-table td:nth-child(9),
+.accessories-page table.accessories-table td:nth-child(10),
+.accessories-page table.accessories-table td:nth-child(11) {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
 }
 
 .accessories-page table td img {
@@ -163,22 +213,14 @@
   border-radius: 4px;
 }
 
-.accessories-page progress {
-  display: flex;
-  height: 5px;
-  width: 60px;
-  border-radius: 8px;
-  margin-left: 5px;
+/* Specific styles for action button images */
+.accessories-page table td:nth-child(9) img,
+.accessories-page table td:nth-child(10) img,
+.accessories-page table td:nth-child(11) img {
+  height: 16px !important;
+  width: 16px !important;
+  object-fit: contain !important;
+  border-radius: 0 !important;
 }
 
-/* Background of the progress bar */
-progress::-webkit-progress-bar {
-  background-color: rgba(0, 123, 255, 0.2);
-  border-radius: 10px;
-}
-
-/* Color of the progress fill */
-progress::-webkit-progress-value {
-  background-color: #34c759;
-  border-radius: 10px;
-}
+/* Progress bar styling moved to AccessoriesAvailability.css */
