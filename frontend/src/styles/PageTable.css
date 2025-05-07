@@ -1,0 +1,209 @@
+* {
+    outline: none;
+  }
+
+  .page {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    padding: 100px 38px 38px 38px;
+  }
+
+  .page .container {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    height: auto;
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 40px;
+    border: 1px solid #d3d3d3;
+    box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
+    padding-bottom: 28px;
+    overflow: none;
+  }
+
+  .page section {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .page .top {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 16px 34px;
+    border-bottom: 1px solid #d3d3d3;
+    border-collapse: collapse;
+  }
+
+  .page .top div {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    align-items: center;
+    width: 40vw;
+    gap: 1vw;
+  }
+
+  .page .top input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 40px;
+    border: 1px solid #d3d3d3;
+  }
+
+  .page .top input:hover {
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.15);
+  }
+
+  .page table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .page table th {
+    background-color: rgba(211, 211, 211, 0.2);
+  }
+
+  .page table th,
+  td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #d3d3d3;
+    font-size: 0.75rem;
+    color: var(--secondary-text-color);
+    text-align: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .page table td {
+    font-size: 0.88rem;
+    color: var(--secondary-text-color);
+  }
+
+  .page span {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    color: #34c759;
+  }
+
+  /* Set the width of the image header and its data*/
+  .page table th:nth-child(1),
+  .page table td:nth-child(1) {
+    width: 3vw;
+  }
+
+  /* Set the width of the edit, and more header and its data*/
+  .page table th:nth-last-child(1),
+  .page table td:nth-last-child(1),
+  .page table th:nth-last-child(3),
+  .page table td:nth-last-child(3) {
+    width: 4.8vw;
+  }
+
+  /* Set the width of the delete header and its data*/
+  .page table th:nth-last-child(2),
+  .page table td:nth-last-child(2) {
+    width: 5.7vw;
+  }
+  /* Button icon images */
+  .page img {
+    height: 5vh;
+    width: 5vw;
+    object-fit: cover;
+  }
+
+  /* Check-In button (Blue) */
+.check-in-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s ease;
+  min-width: 70px;
+  text-align: center;
+}
+
+.check-in-btn:hover {
+  background-color: var(--primary-color-hover);
+}
+
+/* Check-Out button (Green) */
+.check-out-btn {
+  background-color: var(--deployable-text);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s ease;
+  min-width: 70px;
+  text-align: center;
+}
+
+/* Progress bar styling */
+progress {
+  height: 6px;
+  width: 60px;
+  border-radius: 10px;
+  margin-left: 5px;
+  background-color: rgba(52, 199, 89, 0.2);
+  border: none;
+}
+
+progress::-webkit-progress-bar {
+  background-color: rgba(52, 199, 89, 0.2);
+  border-radius: 10px;
+}
+
+progress::-webkit-progress-value {
+  background-color: #34c759;
+  border-radius: 10px;
+}
+
+progress::-moz-progress-bar {
+  background-color: #34c759;
+  border-radius: 10px;
+}
+
+.check-out-btn:hover {
+  background-color: rgba(52, 199, 89, 0.8);
+}
+
+.input-error {
+  border: 1px solid var(--warning-text) !important;
+  outline: none;
+}
+
+.error-message {
+  color: var(--warning-text);
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
+}
+
+.no-products-message {
+  font-size: 18px;
+  color: #555;
+  text-align: center;
+  margin: 50px;
+}

@@ -2,7 +2,9 @@
 .medium-button-export,
 .medium-button-schedule-audits,
 .medium-button-perform-audits,
-.medium-button-delete {
+.medium-button-delete,
+.medium-button-sort,
+.medium-button-filter {
   display: flex;
   height: 40px;
   justify-content: center;
@@ -30,13 +32,17 @@
   background-color: var(--primary-color-hover);
 }
 
-.medium-button-export {
+.medium-button-export,
+.medium-button-sort,
+.medium-button-filter {
   background-color: transparent;
   border: 1px solid #d3d3d3;
   color: var(--text-color);
 }
 
-.medium-button-export:hover {
+.medium-button-export:hover,
+.medium-button-sort:hover,
+.medium-button-filter:hover {
   background-color: var(--primary-color-hover);
   color: var(--bg-color);
   border: 1px solid var(--primary-color-hover);

@@ -1,36 +1,86 @@
 import "../../styles/custom-colors.css";
-import "../../styles/Accessories.css";
+import "../../styles/PageTable.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
-import SampleImage from "../../assets/img/dvi.jpeg";
+import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import { useState } from "react";
 import AccessoriesViewModal from "../../components/Modals/AccessoriesViewModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
+import ExportModal from "../../components/Modals/ExportModal";
+
+
+
+import { useState,  useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+
+
+
+
 
 export default function Accessories() {
-  const location = useLocation();
-  let maxAvail = 10;
-  let availValue = 7;
-  let accessoryName1 = "DVI Cable";
-  let accessoryName2 = "HDMI Cable";
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [selectedRowId, setSelectedRowId] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedRowId, setSelectedRowId] = useState(null);
+  const [isExportModalOpen, setExportModalOpen] = useState(false);
+  const [isNewAccessoryAdded, setNewAccessoryAdde] = useState(false);
+  const [isEditSuccess, setEditSuccess] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [accessories, setAccessories] = useState ([]);
+  const [endPoint, setEndPoint] = useState(null);
+
+  const [checkedItems, setCheckedItems] = useState([]);
+  const allChecked = checkedItems.length === accessories.length;
+
+  useEffect(() => {
+    fetchAccessories();
+  }, []);
+
+  const fetchAccessories = async () => {
+    try {
+      const response = await fetch("http://localhost:8004/accessories/");
+      const data = await response.json();
+      setAccessories(data);
+      console.log("Accessories:", data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (allChecked) {
+      setCheckedItems([]);
+    } else {
+      setCheckedItems(products.map((item) => item.id));
+    }
+  };
+
+  const toggleItem = (id) => {
+    setCheckedItems((prev) =>
+      prev.includes(id)
+        ? prev.filter((itemId) => itemId !== id)
+        : [...prev, id]
+    );
+  };
+
+  
+
+
+
+  const location = useLocation();
+  // should fetch how many of that specific accesory is checked out and then minus to quantity
+  let availValue = 7;
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
   const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
+  const newAccessoryAdded = location.state?.newAccessoryAdded;
+  const editSuccess = location.state?.editSuccess;
 
   // Set the setDeleteSuccess to true when the isDeleteSuccessFromEdit is true.
   // And reset the setDeleteSucces to false after 5 seconds.
   useEffect(() => {
-    if (isDeleteSuccessFromEdit == true) {
+    if (isDeleteSuccessFromEdit) {
       setDeleteSucess(true);
       setTimeout(() => {
         setDeleteSucess(false);
@@ -38,12 +88,35 @@ export default function Accessories() {
     }
   }, [isDeleteSuccessFromEdit]); // This will be executed every time the isDeleteSucessFromEdit changes.
 
+  useEffect(() => {
+    if (newAccessoryAdded) {
+      setNewAccessoryAdde(true);
+      setTimeout(() => {
+        setNewAccessoryAdde(false);
+      }, 5000);
+    }
+  }, [newAccessoryAdded]);
+
+  useEffect(() => {
+    if (editSuccess) {
+      setEditSuccess(true);
+      setTimeout(() => {
+        setEditSuccess(false);
+      }, 5000);
+    }
+  }, [editSuccess]);
+
   // For debugging only.
-  console.log("modal edit: ", isEditModalOpen);
   console.log("modal delete: ", isDeleteModalOpen);
   console.log("modal view: ", isViewModalOpen);
   console.log("delete confirm: ", isDeleteSuccess);
   console.log("delete from edit: ", isDeleteSuccessFromEdit);
+
+
+
+
+
+
 
   return (
     <>
@@ -53,16 +126,16 @@ export default function Accessories() {
           closeModal={() => setViewModalOpen(false)}
         />
       )}
-
+      
       {isDeleteModalOpen && (
         <DeleteModal
           id={selectedRowId}
+          endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
+          confirmDelete={async () => {
             setDeleteSucess(true);
-            setTimeout(() => {
-              setDeleteSucess(false);
-            }, 5000);
+            await fetchAccessories();
+            setTimeout(() => setDeleteSucess(false), 5000);
           }}
         />
       )}
@@ -71,10 +144,20 @@ export default function Accessories() {
         <Alert message="Deleted Successfully!" type="success" />
       )}
 
+      {isNewAccessoryAdded && (
+        <Alert message="New accessory added!" type="success" />
+      )}
+
+      {isEditSuccess && <Alert message="Accessory updated!" type="success" />}
+
+      {isExportModalOpen && (
+        <ExportModal closeModal={() => setExportModalOpen(false)} />
+      )}
+
       <nav>
         <NavBar />
       </nav>
-      <main className="accessories-page">
+      <main className="page">
         <div className="container">
           <section className="top">
             <h1>Accessories</h1>
@@ -82,7 +165,11 @@ export default function Accessories() {
               <form action="" method="post">
                 <input type="text" placeholder="Search..." />
               </form>
-              <MediumButtons type="export" />
+
+              <MediumButtons
+                type="export"
+                deleteModalOpen={() => setExportModalOpen(true)}
+              />
               <MediumButtons
                 type="new"
                 navigatePage="/accessories/registration"
@@ -90,143 +177,121 @@ export default function Accessories() {
             </div>
           </section>
           <section className="middle">
-            <table>
-              <thead>
-                <tr>
-                  <th>
-                    <input type="checkbox" name="" id="" />
-                  </th>
-                  <th>IMAGE</th>
-                  <th>NAME</th>
-                  <th>AVAILABLE</th>
-                  <th>CHECKOUT</th>
-                  <th>CHECKIN</th>
-                  <th>MODEL NUMBER</th>
-                  <th>PURCHASE DATE</th>
-                  <th>EDIT</th>
-                  <th>DELETE</th>
-                  <th>VIEW</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <input type="checkbox" name="" id="" />
-                  </td>
-                  <td>
-                    <img src={SampleImage} alt="sample-img" />
-                  </td>
-                  <td>{accessoryName1}</td>
-                  <td>
-                    <span>
-                      {availValue}/{maxAvail}
-                      <progress value={availValue} max={maxAvail}>
-                        3
-                      </progress>
-                    </span>
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="checkout"
-                      navigatePage={"/accessories/checkout"}
-                      id={accessoryName1}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="checkin"
-                      navigatePage={"/accessories/checkin"}
-                      id={accessoryName1}
-                    />
-                  </td>
-                  <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
-                  <td>December 31, 2025</td>
-                  <td>
-                    <TableBtn
-                      type="edit"
-                      navigatePage={"/accessories/edit"}
-                      id={accessoryName1}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="delete"
-                      showModal={() => {
-                        setDeleteModalOpen(true);
-                        setSelectedRowId(accessoryName1);
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="view"
-                      showModal={() => {
-                        setViewModalOpen(true);
-                        setSelectedRowId(accessoryName1);
-                      }}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <input type="checkbox" name="" id="" />
-                  </td>
-                  <td>
-                    <img src={SampleImage} alt="sample-img" />
-                  </td>
-                  <td>{accessoryName2}</td>
-                  <td>
-                    <span>
-                      {availValue}/{maxAvail}
-                      <progress value={availValue} max={maxAvail}>
-                        3
-                      </progress>
-                    </span>
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="checkout"
-                      navigatePage={"/accessories/checkout"}
-                      id={accessoryName2}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="checkin"
-                      navigatePage={"/accessories/checkin"}
-                      id={accessoryName2}
-                    />
-                  </td>
-                  <td>MLA22LL/A sdfsdfsdfsdfsdfsdfsdf</td>
-                  <td>December 31, 2025</td>
-                  <td>
-                    <TableBtn
-                      type="edit"
-                      navigatePage={"/accessories/edit"}
-                      id={accessoryName2}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="delete"
-                      showModal={() => {
-                        setDeleteModalOpen(true);
-                        setSelectedRowId(accessoryName1);
-                      }}
-                    />
-                  </td>
-                  <td>
-                    <TableBtn
-                      type="view"
-                      showModal={() => {
-                        setViewModalOpen(true);
-                        setSelectedRowId(accessoryName2);
-                      }}
-                    />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            {accessories.length === 0 ? (
+                    <section className="no-products-message">
+                      <p>No products found. Please add some products.</p>
+                    </section>
+                  ) : (
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>
+                            <input
+                              type="checkbox"
+                              checked={allChecked}
+                              onChange={toggleSelectAll}
+                            />
+                          </th>
+                          <th>IMAGE</th>
+                          <th>NAME</th>
+                          <th>AVAILABLE</th>
+                          <th>CHECKOUT</th>
+                          <th>CHECKIN</th>
+                          <th>MODEL NUMBER</th>
+                          <th>LOCATION</th>
+                          <th>EDIT</th>
+                          <th>DELETE</th>
+                          <th>VIEW</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accessories.map((accessory) => (
+                          <tr key={accessory.id}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={checkedItems.includes(accessory.id)}
+                                onChange={() => toggleItem(accessory.id)}
+                              />
+                            </td>
+                            <td>
+                              <img
+                                src={accessory.image ? `http://127.0.0.1:8004${accessory.image}` : DefaultImage}
+                                alt="Accessory-Image"
+                                width="50"
+                              />
+                            </td>
+                            <td>{accessory.name}</td>
+                            <td>
+                              <span style={{ color: '#34c759' }}>
+                                {availValue}/{accessory.quantity} <progress value={availValue} max={accessory.quantity}></progress>
+                              </span>
+                            </td>
+
+
+
+
+
+                            <td>
+                              <TableBtn
+                                type="checkout"
+                                navigatePage={"/accessories/checkout"}
+                                id={accessory.id}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="checkin"
+                                navigatePage={"/accessories/checkin"}
+                                id={accessory.id}
+                              />
+                            </td>
+
+
+
+
+
+
+                            <td>{accessory.model_number}</td>
+                            <td>{accessory.location}</td>
+
+
+
+                            
+                            <td>
+                              <TableBtn
+                                type="edit"
+                                navigatePage={"/accessories/edit"}
+                                id={accessory.id}
+                              />
+                            </td>
+
+                            
+                            <td>
+                              <TableBtn
+                                type="delete"
+                                showModal={() => {
+                                  setDeleteModalOpen(true);
+                                  setSelectedRowId(accessory.id);
+                                  setEndPoint(`http://localhost:8004/accessories/delete/${accessory.id}`)
+                                  console.log("endpoint:", endPoint)
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="view"
+                                showModal={() => {
+                                  setViewModalOpen(true);
+                                  setSelectedRowId(accessory.id);
+                                }}
+                              />
+                            </td>
+                          </tr>
+                        ))};
+                      </tbody>
+                    </table>
+                  )};
           </section>
           <section className="bottom"></section>
         </div>

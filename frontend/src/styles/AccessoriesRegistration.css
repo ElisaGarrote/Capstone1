@@ -19,6 +19,7 @@
 
 .accessories-registration .registration-form {
   display: flex;
+  flex-direction: column;
   height: auto;
   width: 60vw;
   align-self: center;
@@ -28,6 +29,7 @@
   box-shadow: 0 0 20px rgba(211, 211, 211, 0.3);
   border-radius: 40px;
   border: 1px solid #d3d3d3;
+  gap: 20px;
 }
 
 .accessories-registration form {
@@ -43,7 +45,8 @@
   gap: 5px;
 }
 
-.accessories-registration fieldset div {
+.accessories-registration fieldset .dropdown-container,
+.accessories-registration fieldset .purchase-cost-container {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -62,10 +65,6 @@
   padding: 13px 16px;
   border-radius: 10px;
   border: 1px solid #d3d3d3;
-}
-
-.accessories-registration textarea {
-  height: 13vh;
 }
 
 .accessories-registration fieldset p {
@@ -90,12 +89,17 @@
   background-color: var(--primary-color-hover);
 }
 
+.accessories-registration .save-btn:disabled {
+  cursor: no-drop;
+  background-color: #d3d3d3;
+}
+
 .accessories-registration .image-selected {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100px;
-  width: auto;
+  width: 100px;
   border-radius: 10px;
   position: relative;
 }
@@ -150,4 +154,9 @@
 
 .accessories-registration .upload-image-btn:hover {
   background-color: var(--primary-color-hover);
+}
+
+.accessories-registration span {
+  color: red;
+  font-size: 0.875rem;
 }

@@ -2,9 +2,11 @@
 .status-deployed,
 .status-undeployable,
 .status-pending,
-.status-deployable {
+.status-deployable,
+.status-lost {
   display: inline-flex;
-  height: 4vh;
+  height: auto;
+  min-height: 4vh;
   width: auto;
   flex-direction: row;
   align-items: center;
@@ -12,18 +14,33 @@
   border-radius: 40px;
   gap: 5px;
   font-size: 0.75rem;
-  overflow: hidden;
+  overflow: visible;
+  white-space: normal;
 }
 
 .status-archived .circle,
 .status-deployed .circle,
 .status-undeployable .circle,
 .status-pending .circle,
-.status-deployable .circle {
+.status-deployable .circle,
+.status-lost .circle {
   height: 6px;
   width: 6px;
   border-radius: 50%;
   margin-right: 3px;
+  animation: statusPulse 2s infinite;
+}
+
+@keyframes statusPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--pulse-color), 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(var(--pulse-color), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--pulse-color), 0);
+  }
 }
 
 .status-deployed .icon img {
@@ -38,7 +55,7 @@
 
 .status-archived .circle {
   background-color: #132144;
-  box-shadow: 0 0 0 2px rgba(19, 33, 68, 0.25), 0 0 0 4px rgba(19, 33, 68, 0.25);
+  --pulse-color: 19, 33, 68;
 }
 
 .status-deployed {
@@ -48,8 +65,7 @@
 
 .status-deployed .circle {
   background-color: var(--deployed-text);
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25),
-    0 0 0 4px rgba(0, 123, 255, 0.25);
+  --pulse-color: 0, 123, 255;
 }
 
 .status-undeployable {
@@ -59,8 +75,7 @@
 
 .status-undeployable .circle {
   background-color: var(--undeployable-text);
-  box-shadow: 0 0 0 2px rgba(204, 47, 38, 0.25),
-    0 0 0 4px rgba(204, 47, 38, 0.25);
+  --pulse-color: 204, 47, 38;
 }
 
 .status-pending {
@@ -70,8 +85,7 @@
 
 .status-pending .circle {
   background-color: var(--pending-text);
-  box-shadow: 0 0 0 2px rgba(255, 149, 0, 0.25),
-    0 0 0 4px rgba(255, 149, 0, 0.25);
+  --pulse-color: 255, 149, 0;
 }
 
 .status-deployable {
@@ -81,6 +95,15 @@
 
 .status-deployable .circle {
   background-color: var(--deployable-text);
-  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.25),
-    0 0 0 4px rgba(52, 199, 89, 0.25);
+  --pulse-color: 52, 199, 89;
+}
+
+.status-lost {
+  background-color: rgba(255, 59, 48, 0.1);
+  color: #FF3B30;
+}
+
+.status-lost .circle {
+  background-color: #FF3B30;
+  --pulse-color: 255, 59, 48;
 }

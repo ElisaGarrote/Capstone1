@@ -1,0 +1,145 @@
+* {
+    outline: none;
+  }
+
+  .list-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 100px 38px 38px 38px;
+    background-color: var(--bg-color);
+  }
+
+  .list-page section {
+    width: 100%;
+  }
+
+  .list-page .table-header {
+    margin-bottom: 20px;
+  }
+
+  .list-page .container {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 40px;
+    border: 1px solid #d3d3d3;
+    box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
+    overflow: hidden; /* Changed from 'none' */
+  }
+
+  .list-page .top {
+    padding: 20px;
+    border-bottom: 1px solid #d3d3d3;
+  }
+
+  .list-page .top h3 {
+    margin: 0;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+  }
+
+  .list-page table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    padding: 10px;
+  }
+
+  .list-page table thead {
+    background-color: rgba(211, 211, 211, 0.2);
+  }
+
+  .list-page table th {
+    padding: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--secondary-text-color);
+    text-align: left;
+    border-bottom: 1px solid #d3d3d3;
+    width: 100%;
+  }
+
+  .list-page table td {
+    padding: 12px;
+    font-size: 0.88rem;
+    color: var(--secondary-text-color);
+    border-bottom: 1px solid #d3d3d3;
+    vertical-align: middle;
+    width: 100%;
+  }
+
+  .list-page table tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Set equal column widths */
+  .list-page table th:nth-child(1),
+  .list-page table td:nth-child(1) {
+    width: 5%;
+  }
+
+  .list-page table th:nth-child(2),
+  .list-page table td:nth-child(2) {
+    width: 20%;
+  }
+
+  .list-page table th:nth-child(3),
+  .list-page table td:nth-child(3) {
+    width: 20%;
+  }
+
+  .list-page table th:nth-child(4),
+  .list-page table td:nth-child(4) {
+    width: 20%;
+  }
+
+  .list-page table th:nth-child(5),
+  .list-page table td:nth-child(5) {
+    width: 20%;
+    text-align: center;
+  }
+
+  .list-page table th:nth-child(6),
+  .list-page table td:nth-child(6) {
+    width: 15%;
+    text-align: center;
+  }
+
+  .cmp-check-in-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.3s ease;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  .cmp-check-in-btn:hover {
+    background-color: var(--primary-color-hover);
+  }
+
+.list-page .top button {
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 40px;
+  gap: 5px;
+  cursor: pointer;
+  text-transform: capitalize;
+  background-color: var(--primary-color);
+  color: var(--bg-color);
+  transition: 0.5s ease;
+  margin-top: 20px;
+
+}
+
+.list-page .top button:hover {
+  background-color: var(--primary-color-hover);
+}

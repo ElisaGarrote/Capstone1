@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,8 +30,21 @@ SECRET_KEY = 'django-insecure-3zr80f0u_sb4+0w%fxtag&30v5zdvde0(+hj55%h$wz7c$z7w-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
+    ],
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
 
 # Application definition
 
@@ -37,9 +55,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
+    'auth_service',
+    'django_rest_passwordreset',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -51,10 +74,16 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'authentication.urls'
 
+AUTH_USER_MODEL = 'auth_service.CustomUser'
+
+ATUHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]    # 'django.contrib.auth.backends.ModelBackend'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -78,9 +107,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'ams_authentication',
         'USER': 'postgres',
-        # 'PASSWORD': 'Macx77',
-        'PASSWORD': 'passwordnibengie',
+        'PASSWORD': 'root',
         'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -125,3 +154,17 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_HTTPONLY = False  # Allows JavaScript to read the CSRF cookie
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'edzram7@gmail.com'
+EMAIL_HOST_PASSWORD = 'xxys kxho tkbe rqhm'
