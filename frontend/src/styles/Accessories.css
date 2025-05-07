@@ -1,184 +1,112 @@
-* {
-  outline: none;
-}
-
-.accessories-page {
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
-  align-items: center;
-  height: 100vh;
-  width: 100vw;
-  padding: 100px 38px 38px 38px;
-}
-
-.accessories-page .container {
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
-  align-items: center;
-  height: auto;
-  width: 100%;
-  background-color: #ffffff;
-  border-radius: 40px;
-  border: 1px solid #d3d3d3;
-  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
-  padding-bottom: 28px;
-  overflow: hidden;
-}
-
-.accessories-page section {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.accessories-page .top {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: 16px 34px;
-  border-bottom: 1px solid #d3d3d3;
-  border-collapse: collapse;
-}
-
-.accessories-page .group-buttons {
-  display: flex;
-  flex-direction: row;
-  justify-content: end;
-  align-items: center;
-  width: 40vw;
-  gap: 1vw;
-}
-
-.accessories-page .top input {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 40px;
-  border: 1px solid #d3d3d3;
-}
-
-.accessories-page .top input:hover {
-  border: 1px solid var(--primary-color);
-  box-shadow: 0 0 10px rgba(0, 123, 255, 0.15);
-}
-
-.accessories-page .middle {
-  width: 100%;
-  overflow-x: auto;
-}
-
+/* Fix for all tables */
+.page table,
 .accessories-page table {
-  border-collapse: collapse;
-  width: 100%;
-  table-layout: fixed;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
 }
 
-.accessories-page table th {
-  background-color: rgba(211, 211, 211, 0.2);
+/* Fix for specific table classes */
+.page table.products-table,
+.page table.assets-table,
+.accessories-page table.accessories-table {
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
 }
 
+/* Fix for all table cells */
+.page table th,
+.page table td,
 .accessories-page table th,
 .accessories-page table td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #d3d3d3;
-  font-size: 0.75rem;
-  color: var(--secondary-text-color);
-  text-align: left;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  border-radius: 0 !important;
 }
 
-.accessories-page table td {
-  font-size: 0.88rem;
-  color: var(--secondary-text-color);
+/* Fix for specific table cells */
+.page table.products-table th,
+.page table.products-table td,
+.page table.assets-table th,
+.page table.assets-table td,
+.accessories-page table.accessories-table th,
+.accessories-page table.accessories-table td {
+  border-radius: 0 !important;
 }
 
-/* Available column styling */
-.accessories-page table td:nth-child(4) span {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-  color: #34c759;
-  font-weight: 500;
+/* Fix for first and last rows */
+.page table tr:first-child th,
+.page table tr:first-child td,
+.accessories-page table tr:first-child th,
+.accessories-page table tr:first-child td {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
 }
 
-/* Set the width of the checkbox column */
-.accessories-page table th:nth-child(1),
-.accessories-page table td:nth-child(1) {
-  width: 3vw;
-  text-align: center;
+.page table tr:last-child th,
+.page table tr:last-child td,
+.accessories-page table tr:last-child th,
+.accessories-page table tr:last-child td {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
 }
 
-/* Set the width of the image column */
-.accessories-page table th:nth-child(2),
-.accessories-page table td:nth-child(2) {
-  width: 80px;
-  text-align: center;
+/* Fix for first and last cells in each row */
+.page table tr th:first-child,
+.page table tr td:first-child,
+.accessories-page table tr th:first-child,
+.accessories-page table tr td:first-child {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
 }
 
-/* Set the width of the name column */
-.accessories-page table th:nth-child(3),
-.accessories-page table td:nth-child(3) {
-  width: 150px;
-  padding-left: 20px;
+.page table tr th:last-child,
+.page table tr td:last-child,
+.accessories-page table tr th:last-child,
+.accessories-page table tr td:last-child {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
 }
 
-/* Set the width of the available column */
-.accessories-page table th:nth-child(4),
-.accessories-page table td:nth-child(4) {
-  width: 100px;
-  text-align: center;
+<<<<<<< HEAD
+.accessories-page .accessories-image {
+  height: 5vh;
+  width: 5vw;
+  object-fit: cover;
+=======
+/* Fix for corner cells */
+.page table tr:first-child th:first-child,
+.page table tr:first-child td:first-child,
+.accessories-page table tr:first-child th:first-child,
+.accessories-page table tr:first-child td:first-child {
+  border-top-left-radius: 0 !important;
+>>>>>>> origin/UI-Capstone
 }
 
-/* Set the width of the checkout and checkin header and its data*/
-.accessories-page table th:nth-child(5),
-.accessories-page table td:nth-child(5),
-.accessories-page table th:nth-child(6),
-.accessories-page table td:nth-child(6) {
-  width: 80px;
-  text-align: center;
+.page table tr:first-child th:last-child,
+.page table tr:first-child td:last-child,
+.accessories-page table tr:first-child th:last-child,
+.accessories-page table tr:first-child td:last-child {
+  border-top-right-radius: 0 !important;
 }
 
-/* Set the width of the edit, view and delete columns */
-.accessories-page table th:nth-child(9),
-.accessories-page table td:nth-child(9),
-.accessories-page table th:nth-child(10),
-.accessories-page table td:nth-child(10),
-.accessories-page table th:nth-child(11),
-.accessories-page table td:nth-child(11) {
-  width: 4.8vw;
-  text-align: center;
+.page table tr:last-child th:first-child,
+.page table tr:last-child td:first-child,
+.accessories-page table tr:last-child th:first-child,
+.accessories-page table tr:last-child td:first-child {
+  border-bottom-left-radius: 0 !important;
 }
 
-.accessories-page table td img {
-  height: 35px;
-  width: 35px;
-  object-fit: contain;
-  border-radius: 4px;
+.page table tr:last-child th:last-child,
+.page table tr:last-child td:last-child,
+.accessories-page table tr:last-child th:last-child,
+.accessories-page table tr:last-child td:last-child {
+  border-bottom-right-radius: 0 !important;
 }
 
-.accessories-page progress {
-  display: flex;
-  height: 5px;
-  width: 60px;
-  border-radius: 8px;
-  margin-left: 5px;
-}
-
-/* Background of the progress bar */
-progress::-webkit-progress-bar {
-  background-color: rgba(0, 123, 255, 0.2);
-  border-radius: 10px;
-}
-
-/* Color of the progress fill */
-progress::-webkit-progress-value {
-  background-color: #34c759;
-  border-radius: 10px;
+/* Fix for the container to not affect the table corners */
+.accessories-page .middle {
+  border-radius: 0 !important;
+  overflow: visible !important;
 }

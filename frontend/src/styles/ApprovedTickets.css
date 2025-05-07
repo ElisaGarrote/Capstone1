@@ -1,0 +1,199 @@
+/* Approved Tickets page specific styles */
+
+/* Table container styling */
+.middle {
+  overflow-x: auto;
+  width: 100%;
+}
+
+/* Table styling */
+.page table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+  min-width: 1300px;
+  table-layout: fixed;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  margin: 0 auto;
+}
+
+/* Table header styling */
+.page table th {
+  background-color: rgba(211, 211, 211, 0.2);
+  height: 50px;
+  vertical-align: middle;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+  text-align: left;
+  padding: 8px 10px;
+  white-space: normal;
+  border-bottom: 1px solid #d3d3d3;
+}
+
+/* Table cell styling */
+.page table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #d3d3d3;
+  font-size: 0.88rem;
+  color: var(--secondary-text-color);
+  height: 50px;
+  vertical-align: middle;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* View button styling */
+.view-btn {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+  border: none !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  transition: background-color 0.3s ease !important;
+  min-width: 50px !important;
+  text-align: center !important;
+  display: block !important;
+  margin: 0 auto !important;
+  height: 26px !important;
+  box-sizing: border-box !important;
+}
+
+.view-btn:hover {
+  background-color: var(--primary-color-hover) !important;
+}
+
+/* Checkout button styling */
+.checkout-btn {
+  background-color: var(--deployable-text) !important;
+  color: white !important;
+  border: none !important;
+  padding: 4px 6px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  transition: background-color 0.3s ease !important;
+  width: 70px !important;
+  text-align: center !important;
+  display: block !important;
+  margin: 0 auto !important;
+  height: 26px !important;
+  box-sizing: border-box !important;
+}
+
+.checkout-btn:hover {
+  background-color: rgba(52, 199, 89, 0.8) !important;
+}
+
+/* Table column widths - using pixel-based widths for more consistent layout */
+.page table th:nth-child(1),
+.page table td:nth-child(1) {
+  width: 40px;
+  text-align: center;
+}
+
+.page table th:nth-child(2),
+.page table td:nth-child(2) {
+  width: 120px !important;
+  padding-right: 0;
+  max-width: 120px;
+}
+
+.page table th:nth-child(3),
+.page table td:nth-child(3) {
+  width: 90px !important;
+  padding-left: 0;
+  max-width: 90px;
+}
+
+.page table th:nth-child(4),
+.page table td:nth-child(4) {
+  width: 180px;
+}
+
+.page table th:nth-child(5),
+.page table td:nth-child(5) {
+  width: 150px;
+}
+
+.page table th:nth-child(6),
+.page table td:nth-child(6) {
+  width: 150px;
+}
+
+.page table th:nth-child(7),
+.page table td:nth-child(7) {
+  width: 130px !important;
+  padding-right: 15px;
+  max-width: 130px;
+  text-align: center;
+}
+
+.page table th:nth-child(7) {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.page table td:nth-child(7) {
+  font-size: 0.8rem;
+}
+
+.page table th:nth-child(8),
+.page table td:nth-child(8) {
+  width: 130px !important;
+  padding-right: 15px;
+  max-width: 130px;
+  text-align: center;
+}
+
+.page table th:nth-child(8) {
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.page table td:nth-child(8) {
+  font-size: 0.8rem;
+}
+
+.page table th:nth-child(9),
+.page table td:nth-child(9) {
+  width: 80px !important;
+  text-align: center !important;
+  padding: 8px !important;
+  max-width: 80px !important;
+  vertical-align: middle !important;
+}
+
+/* Make cells of the same size maintain consistent styling */
+.page table th,
+.page table td {
+  padding: 8px 6px;
+  vertical-align: middle;
+}
+
+/* Ensure checkbox cells are centered */
+.page table td:first-child input[type="checkbox"],
+.page table th:first-child input[type="checkbox"] {
+  margin: 0 auto;
+  display: block;
+}
+
+/* Ensure headers don't wrap */
+.page table th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Additional responsive enhancements */
+@media screen and (max-width: 1400px) {
+  .page table {
+    min-width: 1300px; /* Maintain minimum width to prevent squishing */
+  }
+}

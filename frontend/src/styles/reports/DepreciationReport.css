@@ -55,6 +55,7 @@
 .depreciation-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .depreciation-table th {
@@ -144,4 +145,29 @@
 .pagination span {
   font-size: 14px;
   color: #6B7280;
+}
+
+/* Column width adjustments for the last three columns */
+.depreciation-table th:nth-last-child(1),
+.depreciation-table td:nth-last-child(1) {
+  width: 8%;
+  text-align: center;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.depreciation-table th:nth-last-child(2),
+.depreciation-table td:nth-last-child(2) {
+  width: 12%;
+  text-align: center;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.depreciation-table th:nth-last-child(3),
+.depreciation-table td:nth-last-child(3) {
+  width: 10%;
+  text-align: center;
+  padding-left: 15px;
+  padding-right: 15px;
 }

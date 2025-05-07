@@ -16,6 +16,7 @@
   font-size: 0.75rem;
   overflow: visible;
   white-space: normal;
+  max-width: 100%;
 }
 
 .status-archived .circle,
@@ -43,9 +44,54 @@
   }
 }
 
-.status-deployed .icon img {
+.status-details {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+  max-width: 100%;
+}
+
+.status-to {
+  margin: 0 2px;
+  white-space: nowrap;
+}
+
+/* Ensure the "to" text in deployed status is blue */
+.status-deployed .status-to {
+  color: var(--deployed-text);
+}
+
+.status-target {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* Ensure the person name in deployed status is blue */
+.status-deployed .status-target {
+  color: var(--deployed-text);
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-deployed .icon img,
+.status-undeployable .icon img,
+.status-pending .icon img,
+.status-deployable .icon img {
   height: 12px;
   width: 12px;
+  flex-shrink: 0;
+}
+
+/* Ensure person icon in deployed status is blue */
+.status-deployed .icon img {
+  filter: invert(40%) sepia(85%) saturate(1500%) hue-rotate(199deg) brightness(100%) contrast(101%);
 }
 
 .status-archived {

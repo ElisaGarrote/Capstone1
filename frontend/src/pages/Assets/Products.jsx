@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
+import "../../styles/Products.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
@@ -74,7 +75,7 @@ export default function Products() {
             </div>
           </section>
           <section className="middle">
-            <table>
+            <table className="products-table">
               <thead>
                 <tr>
                   <th>

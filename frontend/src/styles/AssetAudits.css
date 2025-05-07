@@ -130,7 +130,7 @@
 }
 
 .asset-audits-page table th,
-td {
+.asset-audits-page table td {
   padding: 0.75rem;
   border-bottom: 1px solid #d3d3d3;
   font-size: 0.75rem;
@@ -175,16 +175,35 @@ td {
   width: 16vw;
 }
 
-/* Set the width of the edit, and view header and its data*/
-.asset-audits-page table th:nth-last-child(1),
-.asset-audits-page table td:nth-last-child(1),
-.asset-audits-page table th:nth-last-child(3),
-.asset-audits-page table td:nth-last-child(3) {
-  width: 4.8vw;
+/* Set the width of the status column */
+.asset-audits-page table th:nth-child(4),
+.asset-audits-page table td:nth-child(4) {
+  width: 12vw;
 }
 
-/* Set the width of the delete header and its data*/
+/* Set the width of the notes column */
+.asset-audits-page table th:nth-child(5),
+.asset-audits-page table td:nth-child(5) {
+  width: 12vw;
+}
+
+/* Set the width of the edit, delete, and view header and its data*/
+.asset-audits-page table th:nth-last-child(1),
+.asset-audits-page table td:nth-last-child(1),
 .asset-audits-page table th:nth-last-child(2),
-.asset-audits-page table td:nth-last-child(2) {
-  width: 5.7vw;
+.asset-audits-page table td:nth-last-child(2),
+.asset-audits-page table th:nth-last-child(3),
+.asset-audits-page table td:nth-last-child(3) {
+  width: 5vw;
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Center the action buttons */
+.asset-audits-page table td:nth-last-child(1) button,
+.asset-audits-page table td:nth-last-child(2) button,
+.asset-audits-page table td:nth-last-child(3) button {
+  margin: 0 auto;
+  display: block;
 }
