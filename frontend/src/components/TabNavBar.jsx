@@ -1,8 +1,26 @@
 import "../styles/TabNavBar.css";
 import { useNavigate } from "react-router-dom";
+import assetsService from "../services/assets-service";
+import { useEffect, useState } from "react";
 
 export default function TabNavBar() {
   const navigate = useNavigate();
+  const [scheduleAuditData, setScheduleAuditData] = useState([]);
+  const [auditData, setAuditData] = useState([]);
+
+  // Retrieve all the schedule audits and audits records.
+  useEffect(() => {
+    const makeRequest = async () => {
+      const auditSchedulesResponse =
+        await assetsService.fetchAllAuditSchedules();
+      const auditsResponse = await assetsService.fetchAllAudits();
+
+      setScheduleAuditData(auditSchedulesResponse);
+      setAuditData(auditsResponse);
+    };
+
+    makeRequest();
+  }, []);
 
   return (
     <nav className="tab-nav">
@@ -32,7 +50,7 @@ export default function TabNavBar() {
             }
             onClick={() => navigate("/audits/scheduled")}
           >
-            Scheduled Audits (3)
+            Scheduled Audits ({scheduleAuditData.length})
           </a>
         </li>
         <li
@@ -44,7 +62,7 @@ export default function TabNavBar() {
             }
             onClick={() => navigate("/audits/completed")}
           >
-            Completed Audits (3)
+            Completed Audits ({auditData.length})
           </a>
         </li>
       </ul>
