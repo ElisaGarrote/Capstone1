@@ -1,21 +1,117 @@
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
-
-
 import "../../styles/AccessoriesRegistration.css";
 import { useNavigate } from "react-router-dom";
 import MediumButtons from "../../components/buttons/MediumButtons";
-
+import DefaultImage from "../../assets/img/default-image.jpg";
 import CloseIcon from "../../assets/icons/close.svg";
+import NewAccessoryModal from "../../components/Modals/NewAccessoryModal";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 import NewAccessoryModal from "../../components/Modals/NewAccessoryModal";
 import Alert from "../../components/Alert";
 
 export default function AccessoriesRegistration() {
+  const [suppliers, setSuppliers] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [accessory, setAccessory] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  useEffect(() => {
+    const initialize = async () => {
+      await fetchContexts();
+      await fetchCategories();
+
+      if (id) {
+        try {
+          const response = await fetch(`http://localhost:8004/accessories/${id}`);
+          if (!response.ok) throw new Error("Failed to fetch accessory details");
+
+          const data = await response.json();
+          setAccessory(data);
+          console.log("Accessory Details:", data);
+
+          // Set form values
+          setValue('accessoryName', data.name);
+          setValue('category', data.category);
+          setValue('manufacturer', data.manufacturer || '');
+          setValue('supplier', data.supplier || '');
+          setValue('location', data.location || '');
+          setValue('modelNumber', data.model_number || '');
+          setValue('orderNumber', data.order_number || '');
+          setValue('purchaseDate', data.purchase_date || '');
+          setValue('purchaseCost', data.purchase_cost || '');
+          setValue('quantity', data.quantity || '');
+          setValue('minimumQuantity', data.minimum_quantity || '');
+          setValue('Notes', data.notes || '');
+          
+          if (data.image) {
+            setPreviewImage(`http://localhost:8004${data.image}`);
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    };
+
+    initialize();
+  }, [id, setValue]);
+
+  const fetchContexts = async () => {
+    try {
+      const response = await fetch("http://localhost:8002/contexts/names/");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch contexts. Status: ${response.status}`);
+      }
+
+      setSuppliers(data.suppliers);
+      setManufacturers(data.manufacturers);
+      console.log("Contexts:", data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch("http://localhost:8004/accessories/categories");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories. Status: ${response.status}`);
+      }
+
+      setCategories(data)
+      console.log("Categories:", data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleImageSelection = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file); // store the actual file
+      setValue('image', file); // optional: sync with react-hook-form
+  
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result); // this is only for display
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  
+
+
+
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
-  const [previewImage, setPreviewImage] = useState(null);
   const [isPurchaseCostValid, setPurchaseCostValid] = useState(false);
   const [isQuantityNegative, setQuantityNegative] = useState(false);
   const [isMinQuantityValid, setMinQuantityValid] = useState(false);
@@ -26,14 +122,6 @@ export default function AccessoriesRegistration() {
 
   console.log("new category: ", isNewCategoryAdded);
 
-  const handleImageSelection = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
-    } else {
-      setPreviewImage(null);
-    }
-  };
 
   const [categoryOptions, setCategoryOptions] = useState([
     { value: "cable", label: "Cable" },
