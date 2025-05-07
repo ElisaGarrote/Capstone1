@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
+import "../../styles/Assets.css"; // Import Assets-specific styles
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
@@ -106,7 +107,7 @@ export default function Assets() {
             </div>
           </section>
           <section className="middle">
-            <table>
+            <table className="assets-table">
               <thead>
                 <tr>
                   <th>
@@ -146,7 +147,7 @@ export default function Assets() {
                         className={item.status === 'Deployed' ? "check-in-btn" : "check-out-btn"}
                         onClick={() => handleCheckInOut(item)}
                       >
-                        {item.status === 'Deployed' ? "< Check-In" : "> Check-Out"}
+                        {item.status === 'Deployed' ? "Check-In" : "Check-Out"}
                       </button>
                     </td>
                     <td>{item.product}</td>

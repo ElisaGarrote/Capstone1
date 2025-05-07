@@ -4,24 +4,42 @@
 .table-buttons-delete img,
 .table-buttons-view img {
   display: flex;
-  height: 3vh;
-  width: auto;
-  object-fit: fill;
+  height: 16px;
+  width: 16px;
+  object-fit: contain;
 }
 
-.table-buttons-checkin,
-.table-buttons-checkout,
 .table-buttons-edit,
 .table-buttons-delete,
 .table-buttons-view {
   display: flex;
-  padding: 8% 12%;
-  border-radius: 5px;
+  justify-content: center;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
   cursor: pointer;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.table-buttons-checkin,
+.table-buttons-checkout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  min-width: 70px;
+  height: 28px;
 }
 
 .table-buttons-checkout {
   background-color: #34c759;
+  color: white;
   transition: 0.5s ease;
 }
 
@@ -31,6 +49,7 @@
 
 .table-buttons-checkin {
   background-color: var(--primary-color);
+  color: white;
   transition: 0.5s ease;
 }
 
@@ -53,4 +72,46 @@
 
 .table-buttons-delete:hover {
   background-color: rgba(255, 0, 0, 0.2);
+}
+
+/* Specific styles for Products table buttons */
+.products-table .table-buttons-edit,
+.products-table .table-buttons-delete,
+.products-table .table-buttons-view {
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+  margin: 0 auto; /* Center the button in its cell */
+}
+
+/* Specific styles for Assets table buttons */
+.assets-table .table-buttons-edit,
+.assets-table .table-buttons-delete,
+.assets-table .table-buttons-view {
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+  margin: 0 auto; /* Center the button in its cell */
+}
+
+/* Specific styles for Accessories table buttons */
+.accessories-page .table-buttons-edit,
+.accessories-page .table-buttons-delete,
+.accessories-page .table-buttons-view {
+  padding: 4px !important;
+  width: 26px !important;
+  height: 26px !important;
+  margin: 0 auto !important; /* Center the button in its cell */
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+/* Fix for button images in Accessories table */
+.accessories-page .table-buttons-edit img,
+.accessories-page .table-buttons-delete img,
+.accessories-page .table-buttons-view img {
+  width: 16px !important;
+  height: 16px !important;
+  object-fit: contain !important;
 }

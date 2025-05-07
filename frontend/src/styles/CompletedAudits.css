@@ -5,6 +5,8 @@
   height: 100vh;
   width: 100vw;
   padding: 100px 38px 38px 38px;
+  position: relative;
+  z-index: 1; /* Lower z-index to ensure it doesn't appear in front of overlays */
 }
 
 .completed-audits-page section {
@@ -126,7 +128,7 @@
 }
 
 .completed-audits-page table th,
-td {
+.completed-audits-page table td {
   padding: 0.75rem;
   border-bottom: 1px solid #d3d3d3;
   font-size: 0.75rem;
@@ -171,6 +173,12 @@ td {
   width: 16vw;
 }
 
+/* Set the width of the status column */
+.completed-audits-page table th:nth-child(4),
+.completed-audits-page table td:nth-child(4) {
+  width: 12vw;
+}
+
 /* Set the width of the location and perform by header and its data */
 .completed-audits-page table th:nth-child(5),
 .completed-audits-page table td:nth-child(5),
@@ -179,14 +187,23 @@ td {
   width: 13vw;
 }
 
-/* Set the width of the view header and its data*/
+/* Set the width of the edit, delete, and view header and its data*/
 .completed-audits-page table th:nth-last-child(1),
-.completed-audits-page table td:nth-last-child(1) {
-  width: 4.8vw;
+.completed-audits-page table td:nth-last-child(1),
+.completed-audits-page table th:nth-last-child(2),
+.completed-audits-page table td:nth-last-child(2),
+.completed-audits-page table th:nth-last-child(3),
+.completed-audits-page table td:nth-last-child(3) {
+  width: 5vw;
+  text-align: center;
+  padding-left: 0;
+  padding-right: 0;
 }
 
-/* Set the width of the delete header and its data*/
-.completed-audits-page table th:nth-last-child(2),
-.completed-audits-page table td:nth-last-child(2) {
-  width: 5.7vw;
+/* Center the action buttons */
+.completed-audits-page table td:nth-last-child(1) button,
+.completed-audits-page table td:nth-last-child(2) button,
+.completed-audits-page table td:nth-last-child(3) button {
+  margin: 0 auto;
+  display: block;
 }

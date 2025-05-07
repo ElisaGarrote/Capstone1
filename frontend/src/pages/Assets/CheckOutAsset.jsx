@@ -12,14 +12,22 @@ import { useForm } from "react-hook-form";
 export default function CheckOutAsset() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { id, assetId, product, image } = location.state || {};
-  
+  const {
+    id,
+    assetId,
+    product,
+    image,
+    ticketId,
+    ticketSubject,
+    ticketRequestor
+  } = location.state || {};
+
   // Dropdown lists for easier maintenance
   const employeeList = ['Employee 1', 'Employee 2', 'Employee 3'];
   const locationList = ['Location 1', 'Location 2', 'Location 3'];
   const conditionList = ['Excellent', 'Good', 'Fair', 'Poor'];
   const currentDate = new Date().toISOString().split("T")[0];
-  
+
   const {
     register,
     handleSubmit,
@@ -58,7 +66,25 @@ export default function CheckOutAsset() {
   const onSubmit = (data) => {
     console.log("Form submitted:", data);
     console.log("Asset ID:", id);
-    navigate("/assets");
+
+    // Include ticket information in the submission if available
+    if (ticketId) {
+      console.log("Ticket Information:", {
+        ticketId,
+        ticketSubject,
+        ticketRequestor
+      });
+
+      // You would typically send this data to your backend API
+      // For now, we'll just show a success message
+      alert(`Asset ${assetId} has been checked out successfully for ticket ${ticketId}`);
+
+      // Navigate back to the approved tickets page
+      navigate("/approved-tickets");
+    } else {
+      // If not from a ticket, navigate back to assets page
+      navigate("/assets");
+    }
   };
 
   return (
@@ -67,9 +93,9 @@ export default function CheckOutAsset() {
       <main className="check-in-out-page">
         <section className="top">
           <TopSecFormPage
-            root="Assets"
+            root={ticketId ? "Approved Tickets" : "Assets"}
             currentPage="Check-Out Asset"
-            rootNavigatePage="/assets"
+            rootNavigatePage={ticketId ? "/approved-tickets" : "/assets"}
             title={assetId}
           />
         </section>
@@ -87,8 +113,27 @@ export default function CheckOutAsset() {
               <label>Product:</label>
               <p>{product}</p>
             </fieldset>
+
+            {/* Display ticket information if available */}
+            {ticketId && (
+              <>
+                <h2 style={{ marginTop: '20px' }}>Ticket Information</h2>
+                <fieldset>
+                  <label>Ticket ID:</label>
+                  <p>{ticketId}</p>
+                </fieldset>
+                <fieldset>
+                  <label>Subject:</label>
+                  <p>{ticketSubject}</p>
+                </fieldset>
+                <fieldset>
+                  <label>Requestor:</label>
+                  <p>{ticketRequestor}</p>
+                </fieldset>
+              </>
+            )}
           </section>
-          
+
           <section className="checkin-form">
             <h2>Check-Out Form</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
@@ -149,7 +194,7 @@ export default function CheckOutAsset() {
                   {errors.location && <span className='error-message'>{errors.location.message}</span>}
                 </fieldset>
               )}
-          
+
               <fieldset>
                 <label>Check-Out Date *</label>
                 <input

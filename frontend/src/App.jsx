@@ -1,5 +1,7 @@
 import React from "react";
+import react from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import ChatBot from "./components/ChatBot";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
@@ -12,6 +14,7 @@ import Assets from "./pages/Assets/Assets";
 import AssetsRegistration from "./pages/Assets/AssetsRegistration";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
+import ApprovedTickets from "./pages/Assets/ApprovedTickets";
 import Accessories from "./pages/Accessories/Accessories";
 import AccessoriesRegistration from "./pages/accessories/AccessoriesRegistration";
 import CheckinAccessory from "./pages/accessories/CheckinAccessory";
@@ -30,12 +33,29 @@ import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
 import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
-import Maintenance from "./pages/Repair/Maintenance";
+import AssetRepairs from "./pages/Repair/Maintenance";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
+<<<<<<< HEAD
 import Consumables from './pages/Consumables/ViewConsumables';
 import PasswordResetRequest from "./pages/PasswordResetRequest";
 import PasswordReset from "./pages/PasswordReset"
+=======
+import Consumables from './pages/Consumables/Consumables';
+import ResetPasswordEmail from "./pages/ResetPasswordEmail"
+import SetPassword from "./pages/SetPassword"
+import UpcomingEndOfLife from "./pages/UpcomingEndOfLife";
+import ExpiringWarranties from "./pages/ExpiringWarranties";
+import ReachedEndOfLife from "./pages/ReachedEndOfLife";
+import ExpiredWarranties from "./pages/ExpiredWarranties";
+import AssetReport from "./pages/reports/AssetReport";
+import DepreciationReport from "./pages/reports/DepreciationReport";
+import DueBackReport from "./pages/reports/DueBackReport";
+import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
+import ActivityReport from "./pages/reports/ActivityReport";
+import Settings from "./pages/Settings";
+import UserManagement from "./pages/UserManagement";
+>>>>>>> origin/UI-Capstone
 
 function Logout() {
   localStorage.clear();
@@ -50,6 +70,7 @@ function RegisterAndLogout() {
 function App() {
   return (
     <BrowserRouter>
+      <ChatBot />
       <Routes>
         <Route
           path="/"
@@ -62,8 +83,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/register" element={<Register />} />
+<<<<<<< HEAD
         <Route path="/request/password_reset" element={<PasswordResetRequest />} />
         <Route path="/password-reset/:token" element={<PasswordReset />} />
+=======
+        <Route path="/reset-password-email" element={<ResetPasswordEmail />} />
+        <Route path="/set-password" element={<SetPassword />} />
+        <Route path="/register" element={<RegisterAndLogout />} />
+>>>>>>> origin/UI-Capstone
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/registration" element={<ProductsRegistration />} />
@@ -73,6 +100,7 @@ function App() {
         <Route path="/assets/registration/:id" element={<AssetsRegistration />} />
         <Route path="/assets/check-in/:id" element={<CheckInAsset />} />
         <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
+        <Route path="/approved-tickets" element={<ApprovedTickets />} />
         <Route path="/accessories" element={<Accessories />} />
         <Route
           path="/accessories/registration"
@@ -95,10 +123,22 @@ function App() {
         <Route path="/audits/schedule" element={<ScheduleRegistration />} />
         <Route path="/audits/edit" element={<EditAudits />} />
         <Route path="/audits/view" element={<ViewAudits />} />
-        <Route path="/dashboard/Repair/Maintenance" element={<Maintenance />} />
+        <Route path="/dashboard/Repair/Maintenance" element={<AssetRepairs />} />
         <Route path="/dashboard/Repair/MaintenanceRegistration" element={<MaintenanceRegistration />} />
         <Route path="/dashboard/Repair/EditMaintenance" element={<EditMaintenance />} />
-        <Route path="/Consumables/ViewConsumables" element={<Consumables />} />
+        <Route path="/consumables" element={<Consumables />} />
+        <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
+        <Route path="/warranties" element={<ExpiringWarranties />} />
+        <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />
+        <Route path="/expired-warranties" element={<ExpiredWarranties />} />
+        <Route path="/reports/asset" element={<AssetReport />} />
+        <Route path="/reports/depreciation" element={<DepreciationReport />} />
+        <Route path="/reports/due-back" element={<DueBackReport />} />
+        <Route path="/reports/eol-warranty" element={<EndOfLifeWarrantyReport />} />
+        <Route path="/reports/activity" element={<ActivityReport />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/user-management" element={<UserManagement />} />
+        <Route path="*" element={<NotFound />}></Route>
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>

@@ -1,0 +1,221 @@
+[33m4822a0f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mSillano[m[33m, [m[1;31morigin/Sillano[m[33m)[m Merge branch 'TestingForMerging-S' into Sillano
+[33m06f20ac[m Fixed the settings.
+[33m863f33c[m Fixed the issue on Asset report.
+[33m872c311[m Fixed the issue.
+[33m2759b1e[m routes
+[33m9d619b0[m Dashboard, reports, and profile.
+[33mc61d095[m Dashboard
+[33m1761951[m[33m ([m[1;31morigin/benj/dev[m[33m, [m[1;31morigin/TestingForMerging-S[m[33m, [m[1;32mui-merge-area[m[33m, [m[1;32mTestingForMerging-S[m[33m)[m Update style for accessories page.
+[33m3e0467e[m Update:  Added sort and filter button with functionality.
+[33m84616f9[m Update the style for the medium buttons component
+[33mf94b59a[m Update the comment to include the sort and filter type of buttons.
+[33m8dc9bf7[m Added style for filter modal component.
+[33m3dd2665[m Added Filter Modal component
+[33md7633ca[m Added style for sort modal component
+[33md0230fe[m Added sort modal component.
+[33m9e52fdb[m Update: Ensure that the location field only appear when a user click the Employee in the radio button.
+[33mfc96bc1[m Update: Make the export button functional.
+[33m4e4f650[m Update the color of the p element in the export modal
+[33m3d40cb9[m Update: Make the export button as functional.
+[33m9095150[m Added style for export modal component.
+[33m5fd25dd[m UI: Added export modal component
+[33m1345b73[m Update the style for accessories registration paage.
+[33m70a1a6d[m Update: Display the success alert for editing the accessories.
+[33m0c07258[m Update: - Make the save and new button for category functional. - Ensure the category, manufacturer, and location dropdown is required.
+[33m0f95a58[m Update: Display the success alert for the new accessory added.
+[33m99138cc[m Update the style for accessory registration page.
+[33m1386446[m Update: - Make the save and new buttons for the category functional. - Display the success alert for new category added. - Make the category, manufacturer, and location searchable dropdown as required field.
+[33m6dda77e[m Added style for new accessory modal
+[33m2e10b1b[m UI: Added new accessory modal
+[33m6740783[m Update: Modify the condition in the onClick function.
+[33m62f428d[m Update: Added Alert to display the success of the new schedule audit added.
+[33mb544cef[m Update: Added Alert to display the success of the new audit added.
+[33m8d32fb6[m Update: Make the save button functional for schedule audits (no validation yet)
+[33m6b2bd10[m Update: Make the save button functional (no validation yet).
+[33me3f25dc[m Update style for accessories registration page.
+[33m8274e5c[m Update: - Replaced dropdown with select component from react-select library. - Added error display for validation (work in progress).
+[33mbcb9980[m Update: Replaced the dropdown to select from react-select library.
+[33m78550b9[m Add hover effect in status card.
+[33m94c5011[m Dashboard style css
+[33m4f29488[m Asset Info card component
+[33m357710d[m Pie Chart card component
+[33m7075021[m AssetMetrics component
+[33mb824706[m Activity Table component
+[33m6a8c32f[m Status card and Summary Card (Components)
+[33m69b23b3[m Dashboard Page
+[33m508a052[m App.jsx and Login.jsx (Due to merging)
+[33m695ed10[m Update the style for compled audits page
+[33mabdc73d[m Update the style for asset audits page
+[33m4fc192d[m Update: Make the edit, delete and view button functional
+[33m3f60929[m Update
+[33m9ed20a3[m Added style for view audits page
+[33me429c3d[m UI: Added view audit page
+[33mfea14c8[m UI: Added Edit audit page
+[33m3fc3ea3[m Update to make sure that the delete modal component will be in the hight level of stack
+[33m59cf850[m Update: Added previousPage as prop and pass it to the navigation page when the button click
+[33mfbbdf85[m Update: Added route for edit and view audits page
+[33ma797c88[m UI: Added edit accessories page (not yet finish).
+[33mb093da4[m Update: Make the edit button as functional
+[33m17b6e23[m Update: Ensure that the modal position is fixed
+[33macba6ee[m Update: Added style for the delete button
+[33mb97498a[m Update: hilde the scroll when the hide-scroll class is exist
+[33m1b24d23[m Update: Added deleteModalOpen prop to execute the callback function if the type is delete and the button is click
+[33m9f149f9[m Update: Added deleteModalOpen prop to pass the callback function when the button is click
+[33m9bf3ab6[m Update: Added route for edit accessories page
+[33m0fb250d[m Added new icon
+[33m40571d3[m Update: Make the delete button functional.
+[33m2198cea[m Added new icons
+[33m55af70b[m Update: Make the delete button as functional
+[33me95722d[m Added style for the delete modal component
+[33me15dccf[m UI: Added Delete Modal component
+[33mde94deb[m update the correct path of the close icon
+[33mab31ede[m Update style of the alert component
+[33m11f0e6e[m Update icon use
+[33m0ecffdc[m Update: Make the view button as functional and show the modal.
+[33m0966b98[m Update: Replace the condition in the onClick to include the execution of the modal
+[33m9fc4a4e[m Added style for Accessories View Modal
+[33mddb3c7d[m UI: Added Accessories View Modal
+[33mc2762ec[m Merge branch 'benj/dev' into Sillano
+[33m92ca35f[m Merge branch 'merge-area' into Sillano
+[33mbd10f5d[m[33m ([m[1;32mbenj/dev[m[33m)[m Update: - Replace the button at the top with the Medium Buttons component, including navigation functionality. - Remove the new button in the table container.
+[33mc4c2e28[m Added style for schedule registration page
+[33m90d7c6a[m UI: Added Schedule Registration Page (not yet finish)
+[33m67294a0[m Update: Added route for schedule registration page.
+[33m7ab83bf[m Update: Added style for the schedule audits and perform audits.
+[33maea16f5[m Update: Added new accepted button type
+[33m0371aff[m Update: Added commnents for list of button types
+[33m85fbe39[m Added style for perform audits page.
+[33m4d794d6[m UI: Added Perform Audits page (not yet finish)
+[33me57b504[m Update: Addde route for Perform Audits page.
+[33m16cd63f[m Update: - Added navigation functionality to Perform Audits button. - Removed the new button.
+[33m279282a[m Update: Added gap in the images-container
+[33m9550be1[m Update the style of the checkout accessory page.
+[33mcde61bb[m Update: Added UI for checkout accessory page (not yet finish).
+[33m46dc2cb[m Automatically update the format using Prettier.
+[33m9a871a3[m Update: Pass the accessoryName1 to the id props in the TableBtn component.
+[33m6535048[m Update: Ensure that the nav bar is in the first stock.
+[33m9f781be[m Added style for checkin accessory page
+[33m76afcf2[m UI: Added checkin accessory page (not yet finish)
+[33m8e3f6e5[m Update the style of the accessories registration page.
+[33mad66ee0[m Update: - Replace the previous section for navigation and title to the TopSecFormPage component. - Replace the image field to the new with preview image.
+[33m0c30a54[m Update: Added sample row and pass the accessory name
+[33md8ecc85[m Update: Added id as new props and pass the id as state in the next page.
+[33m690213d[m Added style for top section form page component
+[33m52fcf53[m Added top section form page componet
+[33m453479a[m Added route for checkin accessory
+[33mf0d4164[m Added new icons
+[33m0d53a3d[m Added style for accessories registration page.
+[33m96fa27b[m UI: Added Accessories Registration page (not yet finish)
+[33m951b25a[m Update: Added navigation functionality to the new button.
+[33m0099b46[m Update: Added route for accessories registration page
+[33mabcf933[m Update: Replace the condition for the currentDropdownPage function
+[33m5c279f2[m Added style for checkout accessories page
+[33m0de88ca[m Update: Added classname for the main tag and import its style sheet
+[33m611a95d[m Update style for dashboard page
+[33m24dc84e[m Update the correct path of the checkout accessories page
+[33m9d67d34[m remove empty line
+[33m9775cb2[m Update style for table buttons component
+[33m150c06f[m Added style for completed audits
+[33m4d6c759[m UI: Added completed audits page
+[33m64244da[m UI: Added schedule audits page
+[33m760726a[m Added style for overdue for an audits page
+[33m0a6f5c3[m UI: Added overdue for audits page
+[33mc15dc3c[m Added style for asset audits page
+[33mb09612a[m UI: Added asset audits page
+[33m7d2db3e[m Update the style of the accessories page
+[33m8f185ea[m Update: Replace old buttons to medium buttons component
+[33mfacb4ce[m Added style for tab nav bar component
+[33m4135787[m Added tab bar navigation component
+[33m32501e1[m Added style for Status component
+[33mf12e99e[m UI: Added Status component
+[33m403bd32[m Update: Added several custom colors
+[33mebc484c[m Added style for medium buttons component
+[33m338a81e[m Added medium buttons component
+[33me953116[m Update: adjust classname condition to activate audits when location path starts with '/audits'
+[33m37e982b[m Update: Make the navigation bar as fixed to its position.
+[33m2c74726[m Added routes for asset audits, overdue, scheduled, and completed
+[33mec93af3[m Added new icons
+[33m2e8b944[m Update: use the classname for all selection
+[33m38bf318[m Update: use the classname for selection
+[33m6500d71[m Update: Added class for the nav tag
+[33m6cea12a[m Added Checkout Accessory page for testing
+[33m5da6291[m Added style sheet for the accessories page
+[33mb44fdd4[m UI: Added Accessories page with some navigation
+[33mad5facd[m Added style sheet for the dashboard page
+[33ma7b8808[m Created Dashboard page for testing
+[33mb963ed8[m Added style sheet for the table buttons component
+[33mb3cc600[m Added Table Buttons component with navigation
+[33mcc0b31b[m Import the style sheet of custom colors and alert.
+[33m2aa3614[m Added style sheet for the nav bar component
+[33mac3cad6[m Created Nav Bar component with some navigation
+[33mbba6bf6[m Added cursor in anchor tag
+[33meda3b62[m Added link to redirect to dashboard
+[33m758e8f5[m Added routes for dashboard, accessories, and checkout accessory
+[33m58c21c3[m Added images
+[33ma48054c[m Added icons
+[33ma9c8941[m[33m ([m[1;31morigin/merge-area[m[33m, [m[1;32mmerge-area[m[33m)[m Register connected to backend
+[33m30d5f6f[m added react-hook-form
+[33m72924b5[m added axios
+[33mf12e6f8[m register backend
+[33med1fae2[m register
+[33m241bb83[m custom user
+[33mcf9049d[m Reset UI
+[33mf0adf16[m Reset Password Backend
+[33m7e082f3[m Reset Password UI update
+[33m3b41a53[m Resend Link UI update
+[33mc8179a6[m Reset Password UI
+[33m195af9d[m UI: Update - Used the fieldset tag to group the input fields. - Replaced the previous alert to alert component.
+[33m8816782[m Update custom colors
+[33m2e6bf97[m Added style for alert component.
+[33m070f57c[m Added Alert as component
+[33mbc34dfc[m Added check icon
+[33m2ce8442[m .
+[33m29a44c5[m Added datase password for Benj.
+[33mc7774d4[m Merge branch 'benj/dev' of https://github.com/ElisaGarrote/Capstone1 into benj/dev
+[33m6fd225d[m update to latest version of react-router-dom
+[33m850cb67[m Added alert warning for invalid credentials
+[33mdc0fdf9[m Added style sheet for alert message invalid credentials
+[33mfa90b9e[m Added warning colors
+[33m262f6af[m Added icon folder and close .png inside assets folder.
+[33mc3f1bca[m Move the login image to assets/img folder.
+[33me50ea3c[m Update
+[33m10815e7[m Added new login illustration.
+[33m1baad9d[m Deleted old login illustration
+[33mc3858ba[m Update Login Page.
+[33m2961f87[m Update stylesheet for login
+[33m8692d01[m update custom colors css
+[33m0e6259b[m Added Login stylesheet (not yet final).
+[33m20b8d28[m Added codes. (Not yet final).
+[33m772d7e8[m Added custom-colors.
+[33m42623a8[m comment out some codes.
+[33me199209[m Added Login.css file.
+[33mb8e2fd8[m created images folder and added login illustration image.
+[33mba9117c[m update to latest version of react-router-dom
+[33m525bc8a[m Merge remote-tracking branch 'origin/edzra/dev' into benj/dev
+[33m67d7359[m improved project tree
+[33m7d4bebe[m changed project structure and connected changed db from sqlite to postgresql
+[33mbc569a6[m[33m ([m[1;31morigin/edzraa/dev[m[33m, [m[1;31morigin/edzra2[m[33m, [m[1;32medzra2[m[33m)[m d
+[33mabf23d3[m Added alert warning for invalid credentials
+[33m02d8e37[m Added style sheet for alert message invalid credentials
+[33m33c7173[m Added warning colors
+[33mc6cf487[m Added icon folder and close .png inside assets folder.
+[33m13986cb[m Move the login image to assets/img folder.
+[33mefeadbd[m Update
+[33m832e96f[m Added new login illustration.
+[33m21c2f4b[m Deleted old login illustration
+[33m17646a1[m Update Login Page.
+[33m47e54c4[m Update stylesheet for login
+[33m98a3461[m update custom colors css
+[33m4bec321[m Version
+[33m43db0f5[m Added Login stylesheet (not yet final).
+[33m57eaeee[m Added codes. (Not yet final).
+[33m4a2ad4b[m Added custom-colors.
+[33maf267ec[m comment out some codes.
+[33m1122674[m Added Login.css file.
+[33m60a891e[m created images folder and added login illustration image.
+[33m1c95948[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;31morigin/Edzra/dev[m[33m, [m[1;32mmain[m[33m)[m moved requirements for easier access
+[33macf9278[m[33m ([m[1;31morigin/cloneTest[m[33m)[m frontend connected to backend
+[33m3cc888f[m react navi
+[33mcedec63[m for react
+[33m7842046[m ini
+[33m41d1d63[m[33m ([m[1;31morigin/reserve/sample1[m[33m, [m[1;31morigin/fix/sample1[m[33m, [m[1;31morigin/feature/Sample1[m[33m, [m[1;31morigin/elisa/dev[m[33m)[m Create DUMP
