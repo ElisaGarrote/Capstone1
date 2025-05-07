@@ -23,3 +23,30 @@ class DepreciationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Depreciation
         fields = '__all__'
+
+class AssetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Asset
+        fields = '__all__'
+
+class AuditSerializer(serializers.ModelSerializer):
+    audit_files = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Audit
+        fields = '__all__'
+
+    def get_audit_files(self, obj):
+        # Retrieve all files that are not deleted and the audit matches the current audit instance.
+        files = obj.files.filter(is_deleted=False, audit=obj.id)
+        return AuditFileSerializer(files, many=True).data
+
+class AuditFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditFile
+        fields = "__all__"
+
+class AuditScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditSchedule
+        fields = '__all__'

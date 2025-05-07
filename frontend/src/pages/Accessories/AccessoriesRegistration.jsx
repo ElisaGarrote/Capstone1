@@ -8,7 +8,6 @@ import CloseIcon from "../../assets/icons/close.svg";
 import NewAccessoryModal from "../../components/Modals/NewAccessoryModal";
 import { useEffect, useState } from "react";
 import Select from "react-select";
-import NewAccessoryModal from "../../components/Modals/NewAccessoryModal";
 import Alert from "../../components/Alert";
 
 export default function AccessoriesRegistration() {
