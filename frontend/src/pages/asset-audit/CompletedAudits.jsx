@@ -161,69 +161,9 @@ export default function CompletedAudits() {
               </section>
               <section></section>
             </section>
-            <section className="middle">
-              <table>
-                <thead>
-                  <tr>
-                    <th>
-                      <input type="checkbox" name="" id="" />
-                    </th>
-                    <th>AUDIT DATE</th>
-                    <th>ASSET</th>
-                    <th>STATUS</th>
-                    <th>LOCATION</th>
-                    <th>PERFORM BY</th>
-                    <th>EDIT</th>
-                    <th>DELETE</th>
-                    <th>VIEW</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <input type="checkbox" name="" id="" />
-                    </td>
-                    <td>December 31, 2025</td>
-                    <td>
-                      {assetId} - {assetName}
-                    </td>
-                    <td>
-                      <Status type="undeployable" name="Being Repaired" />
-                    </td>
-                    <td>General Santos City</td>
-                    <td>Pia Piatos-Lim</td>
-                    <td>
-                      <TableBtn
-                        type="edit"
-                        navigatePage={"/audits/edit"}
-                        id={`${assetId} - ${assetName}`}
-                        previousPage={location.pathname}
-                      />
-                    </td>
-                    <td>
-                      <TableBtn
-                        type="delete"
-                        showModal={() => {
-                          setDeleteModalOpen(true);
-                          setSelectedRowId(assetId);
-                        }}
-                      />
-                    </td>
-                    <td>
-                      <TableBtn
-                        type="view"
-                        navigatePage="/audits/view"
-                        id={`${assetId} - ${assetName}`}
-                        previousPage={location.pathname}
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </section>
-            <section></section>
-          </section>
-                      }
+          ) : (
+            "No records available."
+          )}
         </section>
       </main>
     </>
