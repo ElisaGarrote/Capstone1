@@ -33,8 +33,16 @@ class AssetSerializer(serializers.ModelSerializer):
         model = Asset
         fields = '__all__'
 
+class AuditScheduleSerializer(serializers.ModelSerializer):
+    asset_info = AssetSerializer(source='asset', read_only=True)
+
+    class Meta:
+        model = AuditSchedule
+        fields = '__all__'
+
 class AuditSerializer(serializers.ModelSerializer):
     audit_files = serializers.SerializerMethodField()
+    audit_schedule_info = AuditScheduleSerializer(source='audit_schedule', read_only=True)
 
     class Meta:
         model = Audit
@@ -49,8 +57,3 @@ class AuditFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditFile
         fields = "__all__"
-
-class AuditScheduleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AuditSchedule
-        fields = '__all__'
