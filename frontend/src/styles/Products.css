@@ -1,5 +1,4 @@
 /* Products table specific styles */
-
 /* Action buttons container */
 .page table td:nth-last-child(1),
 .page table td:nth-last-child(2),
@@ -8,14 +7,12 @@
   padding: 0.25rem;
   width: 30px !important;
 }
-
 /* Ensure buttons are centered */
 .page table td:nth-last-child(1) button,
 .page table td:nth-last-child(2) button,
 .page table td:nth-last-child(3) button {
   margin: 0 auto;
 }
-
 /* Adjust header text alignment for action columns */
 .page table th:nth-last-child(1),
 .page table th:nth-last-child(2),
@@ -23,7 +20,6 @@
   text-align: center;
   width: 30px !important;
 }
-
 /* Create a container for action buttons to keep them close together */
 .page table tr td:nth-last-child(1),
 .page table tr td:nth-last-child(2),
@@ -31,7 +27,6 @@
   padding-left: 0;
   padding-right: 0;
 }
-
 /* Specific styles for Products table */
 .page table.products-table td:nth-last-child(1),
 .page table.products-table td:nth-last-child(2),
@@ -40,7 +35,6 @@
   width: 40px !important;
   text-align: center;
 }
-
 .page table.products-table th:nth-last-child(1),
 .page table.products-table th:nth-last-child(2),
 .page table.products-table th:nth-last-child(3) {
@@ -48,19 +42,16 @@
   padding: 4px;
   text-align: center;
 }
-
 /* Make the action buttons appear properly aligned */
 .page table.products-table tr {
   white-space: nowrap;
 }
-
 /* Ensure proper spacing between action columns */
 .page table.products-table th:nth-last-child(1),
 .page table.products-table th:nth-last-child(2),
 .page table.products-table th:nth-last-child(3) {
   min-width: 40px;
 }
-
 /* Ensure buttons are properly centered in their cells */
 .page table.products-table td:nth-last-child(1) button,
 .page table.products-table td:nth-last-child(2) button,
@@ -68,11 +59,17 @@
   display: block;
   margin: 0 auto;
 }
-
 /* Create a compact action column layout for Products table */
 .page table.products-table {
-  border-collapse: separate;
+  border-collapse: collapse;
   border-spacing: 0;
+  border-radius: 0;
+}
+
+/* Remove any potential border-radius from table cells */
+.page table.products-table th,
+.page table.products-table td {
+  border-radius: 0;
 }
 
 /* Add specific spacing for the action columns */
@@ -82,7 +79,6 @@
   padding-left: 8px;
   padding-right: 8px;
 }
-
 .page table.products-table td:nth-child(8),
 .page table.products-table td:nth-child(9),
 .page table.products-table td:nth-child(10) {
