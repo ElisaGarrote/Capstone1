@@ -234,13 +234,14 @@ export default function Accessories() {
                             </td>
                             <td>{accessory.model_number}</td>
                             <td>{accessory.location}</td>   
+
                             <td>
                               <TableBtn
                                 type="edit"
-                                navigatePage={"/accessories/edit"}
-                                id={accessory.id}
+                                navigatePage={`/accessories/${accessory.id}`}
                               />
                             </td>
+
                             <td>
                               <TableBtn
                                 type="delete"
@@ -260,10 +261,10 @@ export default function Accessories() {
                               />
                             </td>
                           </tr>
-                        ))};
+                        ))}
                       </tbody>
                     </table>
-                  )};
+                  )}
           </section>
           <section className="bottom"></section>
         </div>

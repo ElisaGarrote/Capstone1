@@ -15,7 +15,7 @@ import AssetsRegistration from "./pages/Assets/AssetsRegistration";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
 import Accessories from "./pages/Accessories/Accessories";
-import AccessoriesRegistration from "./pages/accessories/AccessoriesRegistration";
+import AccessoriesRegistration from "./pages/Accessories/AccessoriesRegistration";
 import CheckinAccessory from "./pages/accessories/CheckinAccessory";
 import CheckoutAccessory from "./pages/accessories/CheckoutAccessory";
 import EditAccessories from "./pages/accessories/EditAccessories";
@@ -113,7 +113,7 @@ function App() {
         />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
-        <Route path="/accessories/edit" element={<EditAccessories />} />
+        <Route path="/accessories/:id" element={<AccessoriesRegistration />} />
         <Route path="/components" element={<Components />} />
         <Route
           path="/components/check-out/:id"

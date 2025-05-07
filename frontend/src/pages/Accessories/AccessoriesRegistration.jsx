@@ -1,7 +1,7 @@
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import "../../styles/AccessoriesRegistration.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useParams } from "react-router-dom";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import CloseIcon from "../../assets/icons/close.svg";
@@ -9,17 +9,24 @@ import NewAccessoryModal from "../../components/Modals/NewAccessoryModal";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 import Alert from "../../components/Alert";
+import { useForm } from 'react-hook-form';
 
 export default function AccessoriesRegistration() {
+  const { id } = useParams();
   const [suppliers, setSuppliers] = useState([]);
   const [manufacturers, setManufacturers] = useState([]);
   const [categories, setCategories] = useState([]);
   const [accessory, setAccessory] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const { setValue, register, handleSubmit, formState: { errors } } = useForm();
+  const [removeImage, setRemoveImage] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     const initialize = async () => {
+      console.log("id:" ,id);
       await fetchContexts();
       await fetchCategories();
 
@@ -35,8 +42,8 @@ export default function AccessoriesRegistration() {
           // Set form values
           setValue('accessoryName', data.name);
           setValue('category', data.category);
-          setValue('manufacturer', data.manufacturer || '');
-          setValue('supplier', data.supplier || '');
+          setValue('manufacturer', data.manufacturer_id || '');
+          setValue('supplier', data.supplier_id || '');
           setValue('location', data.location || '');
           setValue('modelNumber', data.model_number || '');
           setValue('orderNumber', data.order_number || '');
@@ -44,7 +51,7 @@ export default function AccessoriesRegistration() {
           setValue('purchaseCost', data.purchase_cost || '');
           setValue('quantity', data.quantity || '');
           setValue('minimumQuantity', data.minimum_quantity || '');
-          setValue('Notes', data.notes || '');
+          setValue('notes', data.notes || '');
           
           if (data.image) {
             setPreviewImage(`http://localhost:8004${data.image}`);
@@ -105,9 +112,89 @@ export default function AccessoriesRegistration() {
     }
   };
 
-  
+  const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
 
+      formData.append('name', data.accessoryName);
+      formData.append('category', data.category);
+      formData.append('manufacturer_id', data.manufacturer || '');
+      formData.append('supplier_id', data.supplier || '');
+      formData.append('location', data.location || '');
+      formData.append('model_number', data.modelNumber || '');
+      formData.append('order_number', data.orderNumber || '');
+      formData.append('purchase_date', data.purchaseDate || '');
+      formData.append('purchase_cost', data.purchaseCost || '');
+      formData.append('quantity', data.quantity || '');
+      formData.append('minimum_quantity', data.minimumQuantity || '');
+      formData.append('notes', data.notes);
+      
+      if (selectedImage) {
+        formData.append('image', selectedImage);
+      }
 
+      if (removeImage) {
+        formData.append('remove_image', 'true');
+      }
+
+      console.log("Form data:", formData);
+
+      if (id) {
+        try {
+          const response = await fetch(`http://localhost:8004/accessories/${id}`, {
+            method: 'PUT',
+            body: formData,
+          });
+      
+          if (!response.ok) {
+            throw new Error(`Failed to update accessory. Status: ${response.status}`);
+          }
+      
+          const result = await response.json();
+          console.log('Updated accessory:', result);
+          setSuccessMessage("Accessory has been updated successfully!");
+          setErrorMessage("");
+      
+          setTimeout(() => {
+            setErrorMessage("");
+            setSuccessMessage("");
+          }, 5000);
+      
+          navigate('/accessories');
+        } catch (error) {
+          console.error('Update error:', error);
+          setSuccessMessage("");
+          setErrorMessage("Updating accessory failed. Please try again.");
+      
+          setTimeout(() => {
+            setErrorMessage("");
+            setSuccessMessage("");
+          }, 5000);
+        }
+      } else {
+        try {
+          const response = await fetch("http://localhost:8004/accessories/registration", {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Registration failed:', errorData);
+            throw new Error(`Failed to register accessory. Status: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          console.log('Accessory registered:', result);
+          navigate('/accessories', { state: { newAccessoryAdded: true } });
+        } catch (error) {
+          throw new Error(`Failed to submit accessory. Status: ${response.status}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting/updating accessory:', error);
+    }
+  };  
 
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
@@ -121,13 +208,6 @@ export default function AccessoriesRegistration() {
 
   console.log("new category: ", isNewCategoryAdded);
 
-
-  const [categoryOptions, setCategoryOptions] = useState([
-    { value: "cable", label: "Cable" },
-    { value: "charger", label: "Charger" },
-    { value: "keyboard", label: "Keyboard" },
-  ]);
-
   useEffect(() => {
     if (isFirstRender) {
       setFirstRender(false);
@@ -140,25 +220,14 @@ export default function AccessoriesRegistration() {
         setNewCategoryAdded(false);
       }, 5000);
     }
-  }, [categoryOptions]);
-
-  const manufacturerOptions = [
-    { value: "apple", label: "Apple" },
-    { value: "lenovo", label: "Lenovo" },
-    { value: "asus", label: "Asus" },
-  ];
-
-  const supplierOptions = [
-    { value: "amazon", label: "Amazon" },
-    { value: "wsi", label: "WSI" },
-    { value: "iontech inc.", label: "Iontech Inc." },
-  ];
+  }, [categories]);
 
   const locationOptions = [
     { value: "makati", label: "Makati" },
     { value: "pasig", label: "Pasig" },
     { value: "marikina", label: "Marikina" },
   ];
+  
 
   const customStylesDropdown = {
     control: (provided) => ({
@@ -221,7 +290,7 @@ export default function AccessoriesRegistration() {
       {isModalOpen && (
         <NewAccessoryModal
           save={(name) => {
-            setCategoryOptions((prev) => [
+            categories((prev) => [
               ...prev,
               { value: name.toLowerCase(), label: name },
             ]);
@@ -243,102 +312,147 @@ export default function AccessoriesRegistration() {
           isModalOpen ? "hide-scroll" : ""
         }`}
       >
-        <section className="top">
+        <section className='top'>
           <TopSecFormPage
-            root="Accessories"
-            currentPage="New Accessory"
-            rootNavigatePage="/accessories"
-            title="New Accessory"
+            root='Accessories'
+            currentPage={id ? 'Edit Accessory' : 'New Accessory'}
+            rootNavigatePage='/accessories'
+            title={id ? 'Edit Accessory' : 'New Accessory'}
           />
         </section>
+
         <section className="registration-form">
-          <form action="" method="post">
+          <form onSubmit={handleSubmit(onSubmit)}>
             <fieldset>
-              <label htmlFor="accessory-name">Accessory Name *</label>
+              <label htmlFor='accessory-name'>Accessory Name *</label>
               <input
-                type="text"
-                placeholder="Accessory Name"
-                maxLength="100"
-                required
+                type='text'
+                className={errors.accessoryName ? 'input-error' : ''}
+                {...register('accessoryName', { required: 'Accessory Name is required' })}
+                maxLength='100'
+                placeholder='Accessory Name'
               />
+              {errors.accessoryName && <span className='error-message'>{errors.accessoryName.message}</span>}
             </fieldset>
+
             <fieldset>
-              <label htmlFor="category">Category *</label>
+              <label htmlFor='category'>Category *</label>
               <div className="dropdown-container">
-                <Select
-                  options={categoryOptions}
-                  styles={customStylesDropdown}
-                  placeholder="Select category..."
-                  required
-                />
-                <MediumButtons
-                  type="new"
-                  deleteModalOpen={() => setModalOpen(true)}
+                <select
+                  className={errors.category ? 'input-error' : ''}
+                  {...register('category', { required: 'Category is required', valueAsNumber: true })}
+                  defaultValue=""
+                >
+                  <option value="" disabled hidden>
+                    Select Category
+                  </option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <MediumButtons 
+                type='new' 
+                deleteModalOpen={() => setModalOpen(true)}
                 />
               </div>
+              {errors.category && <span className='error-message'>{errors.category.message}</span>}
             </fieldset>
+
             <fieldset>
-              <label htmlFor="manufacturer">Manufacturer *</label>
-              <Select
-                options={manufacturerOptions}
-                styles={customStylesDropdown}
-                placeholder="Select manufacturer..."
-                required
+              <label htmlFor='manufacturer'>Manufacturer</label>
+              <div>
+                <select 
+                {...register('manufacturer', { valueAsNumber: true })}
+                defaultValue=""
+                >
+                <option value="" disabled hidden>
+                  Select Manufacturer
+                </option>
+                  {manufacturers.map((manufacturer) => (
+                    <option key={manufacturer.id} value={manufacturer.id}>
+                      {manufacturer.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor='supplier'>Supplier</label>
+              <div>
+                <select 
+                {...register('supplier', { valueAsNumber: true })}
+                defaultValue=""
+                >
+                <option value="" disabled hidden>
+                  Select Supplier
+                </option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor='location'>Location</label>
+              <div>
+              <select 
+                {...register('location')}
+                defaultValue=""
+              >
+                <option value="" disabled hidden>
+                  Select Location
+                </option>
+                {locationOptions.map((location) => (
+                  <option key={location.value} value={location.value}>
+                    {location.label}
+                  </option>
+                ))}
+              </select>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor='model-number'>Model Number</label>
+              <input 
+              type='text'
+              name="model-number"
+              {...register('modelNumber')} 
+              maxLength='50'
+              placeholder='Model Number'
               />
             </fieldset>
+
             <fieldset>
-              <label htmlFor="supplier">Supplier</label>
-              <Select
-                options={supplierOptions}
-                styles={customStylesDropdown}
-                placeholder="Select supplier..."
+              <label htmlFor='order-number'>Order Number</label>
+              <input 
+              type='text'
+              name="order-number"
+              {...register('orderNumber')} 
+              maxLength='30'
+              placeholder='Order Number'
               />
             </fieldset>
+
             <fieldset>
-              <label htmlFor="location">Location *</label>
-              <Select
-                options={locationOptions}
-                styles={customStylesDropdown}
-                placeholder="Select location..."
-                required
-              />
-            </fieldset>
-            <fieldset>
-              <label htmlFor="model-number">Model Number</label>
+              <label htmlFor='purchase-date'>Purchase Date</label>
               <input
-                type="text"
-                name="model-number"
-                id="model-number"
-                placeholder="Model Number"
-                maxLength="50"
-              />
-            </fieldset>
-            <fieldset>
-              <label htmlFor="order-number">Order Number</label>
-              <input
-                type="text"
-                name="order-number"
-                id="order-number"
-                placeholder="Order Number"
-                maxLength="30"
-              />
-            </fieldset>
-            <fieldset>
-              <label htmlFor="purchase-date">Purchase Date *</label>
-              <input
-                type="date"
+                type='date'
                 name="purchase-date"
                 id="purchase-date"
+                {...register('purchaseDate')}
                 max={currentDate}
-                defaultValue={currentDate}
-                required
               />
             </fieldset>
+
             <fieldset>
               <label htmlFor="purchase-cost">Purchase Cost *</label>
-
               {isPurchaseCostValid && <span>Must not a negative value.</span>}
-
               <div className="purchase-cost-container">
                 <p>PHP</p>
                 <input
@@ -347,34 +461,33 @@ export default function AccessoriesRegistration() {
                   id="purchase-cost"
                   step="0.01"
                   min="0"
-                  required
                   onChange={handlePurchaseCostInput}
+                  {...register("purchaseCost", { valueAsNumber: true })}
+                  placeholder='Purchase Cost'
                 />
               </div>
             </fieldset>
+
             <fieldset>
-              <label htmlFor="quantity">Quantity *</label>
-
+              <label htmlFor='quantity'>Quantity *</label>
               {isQuantityNegative && <span>Must not be a negative value.</span>}
-
               <input
                 type="number"
                 name="quantity"
                 id="quantity"
                 min="1"
                 max="9999"
-                defaultValue="1"
-                required
                 onChange={handleQuantityInput}
+                className={errors.quantity ? 'input-error' : ''}
+                {...register('quantity', { required: 'Quantity is required' })}
+                placeholder='Quantity'
               />
+              {errors.accessoryName && <span className='error-message'>{errors.accessoryName.message}</span>}
             </fieldset>
+
             <fieldset>
               <label htmlFor="minimum-quantity">Min Quantity *</label>
-
-              {isMinQuantityValid && (
-                <span>Must not be a negative value or has decimal.</span>
-              )}
-
+              {isMinQuantityValid && (<span>Must not be a negative value or has decimal.</span>)}
               <input
                 type="number"
                 name="min-quantity"
@@ -382,10 +495,12 @@ export default function AccessoriesRegistration() {
                 min="0"
                 max="9999"
                 defaultValue="0"
-                required
                 onChange={handleMinQuantityInput}
+                {...register("minimumQuantity", { valueAsNumber: true })}
+                placeholder='Minimum Quantity'
               />
             </fieldset>
+
             <fieldset>
               <label htmlFor="notes">Notes</label>
               <textarea
@@ -393,49 +508,51 @@ export default function AccessoriesRegistration() {
                 id="notes"
                 maxLength="500"
                 rows="3"
+                {...register('notes')}
+                placeholder='Notes...'
               ></textarea>
             </fieldset>
+
             <fieldset>
-              <label htmlFor="upload-image">Image</label>
+              <label htmlFor='upload-image'>Image</label>
               <div>
-                {previewImage && (
-                  <div className="image-selected">
-                    <img src={previewImage} alt="" />
+                {previewImage ? (
+                  <div className='image-selected'>
+                    <img src={previewImage} alt='Preview' />
                     <button
                       onClick={(event) => {
                         event.preventDefault();
                         setPreviewImage(null);
-                        document.getElementById("image").value = "";
+                        setValue('image', null);
+                        document.getElementById('image').value = '';
+                        setRemoveImage(true);
                       }}
                     >
-                      <img src={CloseIcon} alt="" />
+                      <img src={CloseIcon} alt='Remove' />
                     </button>
                   </div>
+                ) : (
+                  <img src={DefaultImage} alt='Default Preview' className='image-selected' />
                 )}
                 <input
-                  type="file"
-                  name="image"
-                  id="image"
-                  accept="image/*"
+                  type='file'
+                  id='image'
+                  accept='image/*'
                   onChange={handleImageSelection}
-                  style={{ display: "none" }}
+                  style={{ display: 'none' }}
                 />
               </div>
-              <label htmlFor="image" className="upload-image-btn">
-                {!previewImage ? "Choose Image" : "Change Image"}
+              <label htmlFor='image' className='upload-image-btn'>
+                {!previewImage ? 'Choose Image' : 'Change Image'}
               </label>
             </fieldset>
+              <button
+                type="submit"
+                className="save-btn"
+              >
+                Save
+              </button>
           </form>
-          {/* Place this button inside the form when working on the backend. */}
-          <button
-            type="submit"
-            className="save-btn"
-            onClick={() =>
-              navigate("/accessories", { state: { newAccessoryAdded: true } })
-            }
-          >
-            Save
-          </button>
         </section>
       </main>
     </>

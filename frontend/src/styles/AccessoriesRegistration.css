@@ -160,3 +160,32 @@
   color: red;
   font-size: 0.875rem;
 }
+
+.custom-dropdown {
+  width: 100%;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  padding: 3px 8px;
+  border: 1px solid #ccc;
+  background-color: white;
+  color: grey;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg fill='gray' height='12' viewBox='0 0 24 24' width='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+}
+
+.custom-dropdown option {
+  font-size: 0.875rem;
+  color: grey;
+}
+
+.custom-dropdown option:checked {
+  color: white;
+  background-color: #007bff; /* mimic selection highlight */
+}
+
+.input-error {
+  border-color: red;
+}
