@@ -1,5 +1,4 @@
 import React from "react";
-import react from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ChatBot from "./components/ChatBot";
 import Login from "./pages/Login";
@@ -16,10 +15,10 @@ import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
 import ApprovedTickets from "./pages/Assets/ApprovedTickets";
 import Accessories from "./pages/Accessories/Accessories";
-import AccessoriesRegistration from "./pages/accessories/AccessoriesRegistration";
-import CheckinAccessory from "./pages/accessories/CheckinAccessory";
-import CheckoutAccessory from "./pages/accessories/CheckoutAccessory";
-import EditAccessories from "./pages/accessories/EditAccessories";
+import AccessoriesRegistration from "./pages/Accessories/AccessoriesRegistration";
+import CheckinAccessory from "./pages/Accessories/CheckinAccessory";
+import CheckoutAccessory from "./pages/Accessories/CheckoutAccessory";
+import EditAccessories from "./pages/Accessories/EditAccessories";
 import Components from "./pages/Components/Components";
 import CheckOutComponent from "./pages/Components/CheckOutComponent";
 import CheckedOutList from "./pages/Components/CheckedOutList";
@@ -28,7 +27,7 @@ import ComponentsRegistration from "./pages/Components/ComponentsRegistration";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
-import CompletedAudits from "./pages/asset-audit/CompletedAudtis";
+import CompletedAudits from "./pages/asset-audit/CompletedAudits";
 import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
 import EditAudits from "./pages/asset-audit/EditAudits";
@@ -36,14 +35,11 @@ import ViewAudits from "./pages/asset-audit/ViewAudits";
 import AssetRepairs from "./pages/Repair/Maintenance";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
-<<<<<<< HEAD
-import Consumables from './pages/Consumables/ViewConsumables';
-import PasswordResetRequest from "./pages/PasswordResetRequest";
-import PasswordReset from "./pages/PasswordReset"
-=======
 import Consumables from './pages/Consumables/Consumables';
-import ResetPasswordEmail from "./pages/ResetPasswordEmail"
-import SetPassword from "./pages/SetPassword"
+import PasswordResetRequest from "./pages/PasswordResetRequest";
+import PasswordReset from "./pages/PasswordReset";
+import ResetPasswordEmail from "./pages/ResetPasswordEmail";
+import SetPassword from "./pages/SetPassword";
 import UpcomingEndOfLife from "./pages/UpcomingEndOfLife";
 import ExpiringWarranties from "./pages/ExpiringWarranties";
 import ReachedEndOfLife from "./pages/ReachedEndOfLife";
@@ -55,7 +51,6 @@ import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
 import ActivityReport from "./pages/reports/ActivityReport";
 import Settings from "./pages/Settings";
 import UserManagement from "./pages/UserManagement";
->>>>>>> origin/UI-Capstone
 
 function Logout() {
   localStorage.clear();
@@ -82,15 +77,11 @@ function App() {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/register" element={<Register />} />
-<<<<<<< HEAD
+        <Route path="/register" element={<RegisterAndLogout />} />
         <Route path="/request/password_reset" element={<PasswordResetRequest />} />
         <Route path="/password-reset/:token" element={<PasswordReset />} />
-=======
         <Route path="/reset-password-email" element={<ResetPasswordEmail />} />
         <Route path="/set-password" element={<SetPassword />} />
-        <Route path="/register" element={<RegisterAndLogout />} />
->>>>>>> origin/UI-Capstone
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route path="/products/registration" element={<ProductsRegistration />} />
@@ -138,7 +129,6 @@ function App() {
         <Route path="/reports/activity" element={<ActivityReport />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/user-management" element={<UserManagement />} />
-        <Route path="*" element={<NotFound />}></Route>
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
