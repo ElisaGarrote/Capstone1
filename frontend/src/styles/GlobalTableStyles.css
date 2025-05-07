@@ -20,6 +20,29 @@ table td:nth-last-child(3) {
   padding: 8px !important;
 }
 
+/* Specific spacing for Depreciation Report table last three columns */
+.depreciation-table th:nth-last-child(1),
+.depreciation-table th:nth-last-child(2),
+.depreciation-table th:nth-last-child(3) {
+  padding-left: 15px !important;
+  padding-right: 15px !important;
+  min-width: 80px !important;
+}
+
+.depreciation-table td:nth-last-child(1),
+.depreciation-table td:nth-last-child(2),
+.depreciation-table td:nth-last-child(3) {
+  padding-left: 15px !important;
+  padding-right: 15px !important;
+  min-width: 80px !important;
+}
+
+/* Global fix for Notes column spacing in all tables */
+table th:last-child,
+table td:last-child {
+  padding-right: 25px !important;
+}
+
 /* Fix for action buttons alignment */
 table td:nth-last-child(1) button,
 table td:nth-last-child(2) button,

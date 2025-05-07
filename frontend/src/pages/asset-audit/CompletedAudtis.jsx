@@ -1,5 +1,6 @@
 import "../../styles/custom-colors.css";
 import "../../styles/CompletedAudits.css";
+import "../../styles/AuditTablesGlobal.css";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
@@ -88,6 +89,7 @@ export default function CompletedAudits() {
                     <th>STATUS</th>
                     <th>LOCATION</th>
                     <th>PERFORM BY</th>
+                    <th>EDIT</th>
                     <th>DELETE</th>
                     <th>VIEW</th>
                   </tr>
@@ -106,6 +108,14 @@ export default function CompletedAudits() {
                     </td>
                     <td>General Santos City</td>
                     <td>Pia Piatos-Lim</td>
+                    <td>
+                      <TableBtn
+                        type="edit"
+                        navigatePage={"/audits/edit"}
+                        id={`${assetId} - ${assetName}`}
+                        previousPage={location.pathname}
+                      />
+                    </td>
                     <td>
                       <TableBtn
                         type="delete"

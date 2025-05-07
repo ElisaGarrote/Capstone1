@@ -45,7 +45,7 @@ const DepreciationReport = () => {
       <main className="reports-page">
         <div className="reports-container">
           <h1>Depreciation Report</h1>
-          
+
           <div className="table-container">
             <div className="table-header">
               <div className="header-left">
@@ -60,9 +60,9 @@ const DepreciationReport = () => {
                 <MediumButtons type="export" navigatePage="" />
               </div>
             </div>
-            
+
             <div className="table-scroll-container">
-              <table className="table">
+              <table className="table depreciation-table">
                 <thead>
                   <tr>
                     <th>ASSET</th>
@@ -114,4 +114,4 @@ const DepreciationReport = () => {
   );
 };
 
-export default DepreciationReport; 
+export default DepreciationReport;

@@ -1,5 +1,6 @@
 import "../../styles/custom-colors.css";
 import "../../styles/AssetRepairs.css";
+import "../../styles/AssetRepairsButtons.css";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";

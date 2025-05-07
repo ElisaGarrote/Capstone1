@@ -65,6 +65,14 @@
   border-bottom: none;
 }
 
+/* Fix for Notes column spacing */
+.activity-table th:last-child,
+.activity-table td:last-child {
+  padding-right: 30px !important;
+  text-align: center;
+  min-width: 80px;
+}
+
 /* Status badge styles */
 .status-badge {
   display: inline-flex;
@@ -123,4 +131,4 @@
     opacity: 1;
     transform: translateY(0);
   }
-} 
+}

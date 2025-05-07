@@ -81,7 +81,7 @@ const ActivityReport = () => {
       <main className="reports-page">
         <div className="reports-container">
           <h1>Activity Report</h1>
-          
+
           <div className="table-container">
             <div className="table-header">
               <div className="header-left">
@@ -96,8 +96,8 @@ const ActivityReport = () => {
                 <MediumButtons type="export" navigatePage="" />
               </div>
             </div>
-            
-            <table className="table">
+
+            <table className="table activity-table activity-report-table">
               <thead>
                 <tr>
                   <th>DATE</th>
@@ -112,8 +112,8 @@ const ActivityReport = () => {
               <tbody>
                 {activities.map((activity, index) => (
                   <tr key={index}>
-                    <td>{activity.date}</td>
-                    <td>{activity.user}</td>
+                    <td><div className="cell-content">{activity.date}</div></td>
+                    <td><div className="cell-content">{activity.user}</div></td>
                     <td>
                       <div className="type-info">
                         {getTypeIcon(activity.type)}
@@ -121,10 +121,12 @@ const ActivityReport = () => {
                       </div>
                     </td>
                     <td>
-                      <Status
-                        type={getEventStatus(activity.event)}
-                        name={activity.event}
-                      />
+                      <div className="status-container">
+                        <Status
+                          type={getEventStatus(activity.event)}
+                          name={activity.event}
+                        />
+                      </div>
                     </td>
                     <td>
                       <div className="asset-cell">
@@ -139,7 +141,7 @@ const ActivityReport = () => {
                         <a href="#" className="user-link">{activity.toFrom}</a>
                       </div>
                     </td>
-                    <td>{activity.notes}</td>
+                    <td><div className="cell-content">{activity.notes}</div></td>
                   </tr>
                 ))}
               </tbody>
@@ -151,4 +153,4 @@ const ActivityReport = () => {
   );
 };
 
-export default ActivityReport; 
+export default ActivityReport;

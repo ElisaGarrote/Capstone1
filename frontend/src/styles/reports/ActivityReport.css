@@ -77,6 +77,7 @@
 .activity-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .activity-table th {
@@ -87,14 +88,20 @@
   font-weight: 500;
   color: #6B7280;
   border-bottom: 1px solid #E5E7EB;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .activity-table td {
-  padding: 12px 16px;
   font-size: 14px;
   color: #374151;
   border-bottom: 1px solid #E5E7EB;
   background-color: white;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .activity-table tbody tr:hover {
@@ -121,10 +128,86 @@
 .user-icon {
   color: #0D6EFD;
   font-size: 16px;
+  min-width: 16px;
+  margin-right: 4px;
 }
 
-.user-info span {
+.user-info .user-link {
   color: #0D6EFD;
   text-decoration: underline;
   cursor: pointer;
-} 
+}
+
+.asset-cell .asset-link {
+  color: #0D6EFD;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Column width definitions for activity report table */
+.activity-report-table th:nth-child(1),
+.activity-report-table td:nth-child(1) {
+  width: 10%;
+}
+
+.activity-report-table th:nth-child(2),
+.activity-report-table td:nth-child(2) {
+  width: 12%;
+}
+
+.activity-report-table th:nth-child(3),
+.activity-report-table td:nth-child(3) {
+  width: 12%;
+}
+
+.activity-report-table th:nth-child(4),
+.activity-report-table td:nth-child(4) {
+  width: 12%;
+}
+
+.activity-report-table th:nth-child(5),
+.activity-report-table td:nth-child(5) {
+  width: 20%;
+}
+
+.activity-report-table th:nth-child(6),
+.activity-report-table td:nth-child(6) {
+  width: 15%;
+}
+
+/* Fix for Notes column spacing */
+.activity-report-table th:last-child,
+.activity-report-table td:last-child {
+  width: 10%;
+  padding-right: 30px !important;
+  text-align: center;
+}
+
+/* Reset all cell padding */
+.activity-report-table td {
+  padding: 0 !important;
+}
+
+/* Style for all cell content containers */
+.activity-report-table .cell-content,
+.activity-report-table .type-info,
+.activity-report-table .status-container,
+.activity-report-table .asset-cell,
+.activity-report-table .user-info {
+  padding: 0 16px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+}
+
+/* Ensure Status component is properly aligned */
+.activity-report-table .status-container {
+  justify-content: flex-start;
+}
+
+/* Fix vertical alignment for all cells */
+.activity-report-table td {
+  vertical-align: middle;
+  height: 50px;
+}
+
