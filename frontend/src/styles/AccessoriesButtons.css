@@ -47,3 +47,63 @@
 .accessories-table-buttons-delete:hover {
   background-color: rgba(255, 0, 0, 0.2) !important;
 }
+
+/* Additional fixes for Accessories table cell alignment */
+.accessories-page table th:nth-last-child(1),
+.accessories-page table th:nth-last-child(2),
+.accessories-page table th:nth-last-child(3),
+.accessories-page table td:nth-last-child(1),
+.accessories-page table td:nth-last-child(2),
+.accessories-page table td:nth-last-child(3) {
+  text-align: center !important;
+  vertical-align: middle !important;
+  width: 60px !important;
+  padding: 8px !important;
+}
+
+/* Fix for header text alignment */
+.accessories-page table th:nth-last-child(1),
+.accessories-page table th:nth-last-child(2),
+.accessories-page table th:nth-last-child(3) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Ensure buttons are centered in their cells */
+.accessories-page table td:nth-last-child(1) button,
+.accessories-page table td:nth-last-child(2) button,
+.accessories-page table td:nth-last-child(3) button {
+  margin: 0 auto !important;
+  display: block !important;
+  width: 34px !important;
+  height: 34px !important;
+}
+
+/* Fix for the button images */
+.accessories-page table td:nth-last-child(1) button img,
+.accessories-page table td:nth-last-child(2) button img,
+.accessories-page table td:nth-last-child(3) button img {
+  width: 16px !important;
+  height: 16px !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+/* Remove border radius from accessories table */
+.accessories-page .accessories-table {
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Ensure the table header has no border radius */
+.accessories-page .accessories-table thead tr th:first-child,
+.accessories-page .accessories-table thead tr th:last-child {
+  border-radius: 0 !important;
+}
+
+/* Ensure the container has proper styling */
+.accessories-page .container {
+  border-radius: 40px !important;
+  overflow: hidden !important;
+}

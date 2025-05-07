@@ -49,44 +49,46 @@
 
 /* View button styling */
 .view-btn {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.3s ease;
-  min-width: 50px;
-  text-align: center;
-  display: block;
-  margin: 0 auto;
-  height: 26px;
+  background-color: var(--primary-color) !important;
+  color: white !important;
+  border: none !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  transition: background-color 0.3s ease !important;
+  min-width: 50px !important;
+  text-align: center !important;
+  display: block !important;
+  margin: 0 auto !important;
+  height: 26px !important;
+  box-sizing: border-box !important;
 }
 
 .view-btn:hover {
-  background-color: var(--primary-color-hover);
+  background-color: var(--primary-color-hover) !important;
 }
 
 /* Checkout button styling */
 .checkout-btn {
-  background-color: var(--deployable-text);
-  color: white;
-  border: none;
-  padding: 4px 6px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.3s ease;
-  width: 70px;
-  text-align: center;
-  display: block;
-  margin: 0 auto;
-  height: 26px;
+  background-color: var(--deployable-text) !important;
+  color: white !important;
+  border: none !important;
+  padding: 4px 6px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  transition: background-color 0.3s ease !important;
+  width: 70px !important;
+  text-align: center !important;
+  display: block !important;
+  margin: 0 auto !important;
+  height: 26px !important;
+  box-sizing: border-box !important;
 }
 
 .checkout-btn:hover {
-  background-color: rgba(52, 199, 89, 0.8);
+  background-color: rgba(52, 199, 89, 0.8) !important;
 }
 
 /* Table column widths - using pixel-based widths for more consistent layout */
@@ -162,9 +164,10 @@
 .page table th:nth-child(9),
 .page table td:nth-child(9) {
   width: 80px !important;
-  text-align: center;
-  padding-left: 15px;
-  max-width: 80px;
+  text-align: center !important;
+  padding: 8px !important;
+  max-width: 80px !important;
+  vertical-align: middle !important;
 }
 
 /* Make cells of the same size maintain consistent styling */

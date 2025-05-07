@@ -65,3 +65,27 @@
   padding: 4px !important;
   text-align: center !important;
 }
+
+/* Remove border radius from consumables table */
+.consumables-page .consumables-table {
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Ensure the container has proper styling */
+.consumables-page .container {
+  border-radius: 40px !important;
+  overflow: hidden !important;
+}
+
+/* Ensure the table header has no border radius */
+.consumables-page .consumables-table thead tr th:first-child,
+.consumables-page .consumables-table thead tr th:last-child {
+  border-radius: 0 !important;
+}
+
+/* Remove border radius from all table cells */
+.consumables-page .consumables-table th,
+.consumables-page .consumables-table td {
+  border-radius: 0 !important;
+}

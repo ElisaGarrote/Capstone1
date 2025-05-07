@@ -73,7 +73,7 @@
   border-collapse: collapse;
   width: 100%;
   table-layout: fixed;
-  border-radius: 40px;
+  border-radius: 0;
   overflow: hidden;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
@@ -96,6 +96,7 @@
   overflow: visible;
   white-space: normal;
   position: relative;
+  border-radius: 0;
 }
 
 .page table td {

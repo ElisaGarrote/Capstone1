@@ -47,20 +47,6 @@ export default function AccessoriesTableButtons({
           ? () => navigate(navigatePage, { state: { id, previousPage } })
           : showModal
       }
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        width: "26px",
-        height: "26px",
-        padding: "4px",
-        margin: "0 auto",
-        backgroundColor: "var(--bg-color)",
-        border: "1px solid #d3d3d3",
-        borderRadius: "4px",
-        boxSizing: "content-box",
-        cursor: "pointer"
-      }}
     >
       {type === "checkin" ? (
         "Check-In"
@@ -70,13 +56,6 @@ export default function AccessoriesTableButtons({
         <img
           src={icon}
           alt=""
-          style={{
-            width: "16px",
-            height: "16px",
-            objectFit: "contain",
-            display: "block",
-            margin: "0 auto"
-          }}
         />
       )}
     </button>

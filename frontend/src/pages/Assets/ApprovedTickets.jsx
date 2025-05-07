@@ -5,12 +5,21 @@ import "../../styles/PageTable.css";
 import "../../styles/ApprovedTickets.css";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import TicketViewModal from "../../components/Modals/TicketViewModal";
 
 const ApprovedTickets = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [checkedItems, setCheckedItems] = useState([]);
   const [allChecked, setAllChecked] = useState(false);
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+
+  // Import images for tickets
+  const laptopImage = "/src/assets/img/laptop.png";
+  const keyboardImage = "/src/assets/img/keyboard.png";
+  const mouseImage = "/src/assets/img/mouse.png";
+  const dviImage = "/src/assets/img/dvi.jpeg";
 
   // Mock data for approved tickets
   const ticketItems = [
@@ -21,7 +30,9 @@ const ApprovedTickets = () => {
       category: "Software Installation",
       lastUpdated: "April 2, 2025",
       creationDate: "April 2, 2025",
-      status: "Resolved"
+      status: "Resolved",
+      notes: "Laptop won't boot past the BIOS screen. User needs this fixed urgently as they have a presentation tomorrow.",
+      image: laptopImage
     },
     {
       id: "10235-EMP",
@@ -30,7 +41,9 @@ const ApprovedTickets = () => {
       category: "Hardware Replacement",
       lastUpdated: "April 4, 2025",
       creationDate: "April 3, 2025",
-      status: "In Progress"
+      status: "In Progress",
+      notes: "Several keys on the keyboard are not working. User needs a replacement as soon as possible.",
+      image: keyboardImage
     },
     {
       id: "10236-EMP",
@@ -39,7 +52,9 @@ const ApprovedTickets = () => {
       category: "Peripheral Request",
       lastUpdated: "April 5, 2025",
       creationDate: "April 4, 2025",
-      status: "Approved"
+      status: "Approved",
+      notes: "User needs a new mouse for their workstation. Current one is not working properly.",
+      image: mouseImage
     }
   ];
 
@@ -67,18 +82,43 @@ const ApprovedTickets = () => {
   };
 
   // Function to handle view button click
-  const handleViewClick = (id) => {
-    console.log(`View ticket ${id}`);
-    // Navigate to view ticket page (to be implemented)
-    // navigate(`/approved-tickets/view/${id}`);
+  const handleViewClick = (item) => {
+    console.log(`View ticket ${item.id}`);
+    setSelectedTicket(item);
+    setViewModalOpen(true);
   };
 
   // Function to handle checkout button click
-  const handleCheckout = (id) => {
-    console.log(`Checkout ticket ${id}`);
-    // Implement checkout functionality (to be implemented)
-    // This would typically navigate to an asset checkout page or open a modal
-    alert(`Asset checkout initiated for ticket ${id}`);
+  const handleCheckout = (item) => {
+    console.log(`Checkout ticket ${item.id}`);
+
+    // Map ticket categories to asset types for demonstration
+    const assetTypeMap = {
+      "Software Installation": "Laptop",
+      "Hardware Replacement": "Keyboard",
+      "Peripheral Request": "Mouse"
+    };
+
+    // Create a mock asset based on the ticket information
+    const mockAsset = {
+      id: item.id,
+      image: dviImage, // Always use dvi.jpeg image
+      assetId: `ASSET-${item.id}`,
+      product: assetTypeMap[item.category] || "Generic Asset",
+    };
+
+    // Navigate to the asset checkout page with the mock asset information
+    navigate(`/assets/check-out/${item.id}`, {
+      state: {
+        id: item.id,
+        image: mockAsset.image,
+        assetId: mockAsset.assetId,
+        product: mockAsset.product,
+        ticketId: item.id,
+        ticketSubject: item.subject,
+        ticketRequestor: item.requestor
+      },
+    });
   };
 
   // Filter items based on search query
@@ -91,6 +131,13 @@ const ApprovedTickets = () => {
 
   return (
     <>
+      {isViewModalOpen && selectedTicket && (
+        <TicketViewModal
+          ticket={selectedTicket}
+          closeModal={() => setViewModalOpen(false)}
+        />
+      )}
+
       <nav>
         <NavBar />
       </nav>
@@ -145,7 +192,7 @@ const ApprovedTickets = () => {
                     <td style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0', width: '90px' }}>
                       <button
                         className="checkout-btn"
-                        onClick={() => handleCheckout(item.id)}
+                        onClick={() => handleCheckout(item)}
                       >
                         Check-Out
                       </button>
@@ -155,10 +202,24 @@ const ApprovedTickets = () => {
                     <td style={{ textAlign: 'left' }}>{item.category}</td>
                     <td style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>{item.lastUpdated}</td>
                     <td style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>{item.creationDate}</td>
-                    <td style={{ textAlign: 'center', width: '80px' }}>
+                    <td style={{ textAlign: 'center', width: '80px', padding: '8px' }}>
                       <button
                         className="view-btn"
-                        onClick={() => handleViewClick(item.id)}
+                        onClick={() => handleViewClick(item)}
+                        style={{
+                          backgroundColor: '#007bff',
+                          color: 'white',
+                          border: 'none',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          minWidth: '50px',
+                          textAlign: 'center',
+                          display: 'block',
+                          margin: '0 auto',
+                          height: '26px'
+                        }}
                       >
                         View
                       </button>

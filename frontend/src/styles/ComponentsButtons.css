@@ -65,3 +65,21 @@
   padding: 4px !important;
   text-align: center !important;
 }
+
+/* Remove border radius from components table */
+.components-page .components-table {
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Ensure the container has proper styling */
+.components-page .container {
+  border-radius: 40px !important;
+  overflow: hidden !important;
+}
+
+/* Ensure the table header has no border radius */
+.components-page .components-table thead tr th:first-child,
+.components-page .components-table thead tr th:last-child {
+  border-radius: 0 !important;
+}

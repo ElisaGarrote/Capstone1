@@ -1,5 +1,33 @@
 /* Global table styles */
 
+/* Fix for action column headers alignment */
+table th:nth-last-child(1),
+table th:nth-last-child(2),
+table th:nth-last-child(3) {
+  text-align: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  font-size: 0.7rem !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* Fix for action column cells alignment */
+table td:nth-last-child(1),
+table td:nth-last-child(2),
+table td:nth-last-child(3) {
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 8px !important;
+}
+
+/* Fix for action buttons alignment */
+table td:nth-last-child(1) button,
+table td:nth-last-child(2) button,
+table td:nth-last-child(3) button {
+  margin: 0 auto !important;
+  display: block !important;
+}
+
 /* Remove three dots from checkboxes in all tables */
 table input[type="checkbox"] {
   appearance: auto !important;
@@ -71,4 +99,22 @@ table td:first-child::after {
   -moz-appearance: checkbox !important;
   content: none !important;
   font-size: 0 !important;
+}
+
+/* Fix for view buttons in Approved Tickets */
+.page table td:nth-child(9) .view-btn {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background-color: #007bff !important;
+  color: white !important;
+  border: none !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  min-width: 50px !important;
+  text-align: center !important;
+  margin: 0 auto !important;
+  height: 26px !important;
 }
