@@ -37,7 +37,7 @@ def add_product_image(request):
 @permission_classes([AllowAny]) # Set this to 'IsAuthenticated' when working on the frontend.
 def create_asset(request):
     data = request.data
-    serializer = AuditSerializer(data=data)
+    serializer = AssetSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
