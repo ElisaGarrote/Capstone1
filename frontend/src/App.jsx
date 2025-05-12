@@ -141,7 +141,10 @@ function App() {
         <Route path="/audits/schedule" element={<ScheduleRegistration />} />
         <Route path="/audits/edit" element={<EditAudits />} />
         <Route path="/audits/view" element={<ViewAudits />} />
-        <Route path="/dashboard/Repair/Maintenance" element={<Maintenance />} />
+        <Route
+          path="/dashboard/Repair/Maintenance"
+          element={<AssetRepairs />}
+        />
         <Route
           path="/dashboard/Repair/MaintenanceRegistration"
           element={<MaintenanceRegistration />}
