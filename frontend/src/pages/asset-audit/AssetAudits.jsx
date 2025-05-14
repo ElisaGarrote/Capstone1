@@ -180,14 +180,7 @@ export default function AssetAudits() {
                   <tbody>
                     {scheduleAuditData.map((data, index) => {
                       return (
-                        <tr
-                          key={index}
-                          data-id={
-                            data.audit_info.length == 1
-                              ? data.audit_info[0].id
-                              : data.id
-                          }
-                        >
+                        <tr key={index}>
                           <td>
                             <input type="checkbox" name="" id="" />
                           </td>
