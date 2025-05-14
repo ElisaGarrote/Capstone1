@@ -128,8 +128,8 @@ export default function CompletedAudits() {
                           </td>
                           <td>{data.audit_date}</td>
                           <td>
-                            {data.audit_schedule_info.asset_info.displayed_id} -{" "}
-                            {data.audit_schedule_info.asset_info.name}
+                            {data.asset_info.displayed_id} -{" "}
+                            {data.asset_info.name}
                           </td>
                           <td>
                             <Status type="undeployable" name="Being Repaired" />
