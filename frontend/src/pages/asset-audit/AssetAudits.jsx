@@ -35,8 +35,6 @@ export default function AssetAudits() {
   const addedNewAudit = location.state?.addedNewAudit;
   const addedScheduleAudit = location.state?.addedScheduleAudit;
 
-  console.log("is update from audit: ", isUpdateFromEdit);
-
   // Set the setDeleteSuccess state to true when the isDeleteSuccessFromEdit is true.
   // And reset the setDeleteSucces state to false after 5 seconds.
   useEffect(() => {
@@ -91,6 +89,9 @@ export default function AssetAudits() {
       setLoading(false);
     }, 300);
   }, []);
+
+  // For debugging only.
+  console.table(scheduleAuditData);
 
   return (
     <>
@@ -179,7 +180,14 @@ export default function AssetAudits() {
                   <tbody>
                     {scheduleAuditData.map((data, index) => {
                       return (
-                        <tr key={index}>
+                        <tr
+                          key={index}
+                          data-id={
+                            data.audit_info.length == 1
+                              ? data.audit_info[0].id
+                              : data.id
+                          }
+                        >
                           <td>
                             <input type="checkbox" name="" id="" />
                           </td>
@@ -196,7 +204,7 @@ export default function AssetAudits() {
                             <TableBtn
                               type="edit"
                               navigatePage={"/audits/edit"}
-                              id={`${assetId} - ${assetName}`}
+                              data={data}
                               previousPage={location.pathname}
                             />
                           </td>
@@ -213,7 +221,7 @@ export default function AssetAudits() {
                             <TableBtn
                               type="view"
                               navigatePage="/audits/view"
-                              id={`${assetId} - ${assetName}`}
+                              data={data}
                               previousPage={location.pathname}
                             />
                           </td>
