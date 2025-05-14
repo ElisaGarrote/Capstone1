@@ -214,7 +214,6 @@ export default function ScheduledAudits() {
                               <TableBtn
                                 type="edit"
                                 navigatePage={"/audits/edit"}
-                                id={`${assetId} - ${assetName}`}
                                 previousPage={location.pathname}
                               />
                             </td>
@@ -231,7 +230,6 @@ export default function ScheduledAudits() {
                               <TableBtn
                                 type="view"
                                 navigatePage="/audits/view"
-                                id={`${assetId} - ${assetName}`}
                                 previousPage={location.pathname}
                               />
                             </td>

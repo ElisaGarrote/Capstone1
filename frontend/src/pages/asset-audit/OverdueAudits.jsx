@@ -188,7 +188,9 @@ export default function OverdueAudits() {
                             <input type="checkbox" name="" id="" />
                           </td>
                           <td>{data.date}</td>
-                          <td>{dayDifference}</td>
+                          <td>
+                            {dayDifference} {dayDifference > 1 ? "days" : "day"}
+                          </td>
                           <td>
                             {data.asset_info.displayed_id} -{" "}
                             {data.asset_info.name}
@@ -209,7 +211,6 @@ export default function OverdueAudits() {
                             <TableBtn
                               type="edit"
                               navigatePage={"/audits/edit"}
-                              id={`${assetId} - ${assetName}`}
                               previousPage={location.pathname}
                             />
                           </td>
@@ -226,7 +227,6 @@ export default function OverdueAudits() {
                             <TableBtn
                               type="view"
                               navigatePage="/audits/view"
-                              id={`${assetId} - ${assetName}`}
                               previousPage={location.pathname}
                             />
                           </td>

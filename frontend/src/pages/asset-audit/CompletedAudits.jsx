@@ -149,7 +149,6 @@ export default function CompletedAudits() {
                             <TableBtn
                               type="view"
                               navigatePage="/audits/view"
-                              id={`${assetId} - ${assetName}`}
                               previousPage={location.pathname}
                             />
                           </td>
