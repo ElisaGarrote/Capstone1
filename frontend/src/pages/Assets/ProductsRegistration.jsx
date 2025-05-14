@@ -167,7 +167,7 @@ export default function ProductsRegistration() {
 
       if (id) {
         try {
-          const response = await fetch(`http://localhost:8003/products/${id}/`, {
+          const response = await fetch(`http://localhost:8003/products/${id}`, {
             method: 'PUT',
             body: formData,
           });
@@ -363,8 +363,11 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor='operating_system'>Operating System</label>
               <div>
-                <select {...register('operatingSystem')}>
-                  <option value='' disabled selected>
+                <select 
+                {...register('operatingSystem')}
+                defaultValue=""
+                >
+                  <option value='' disabled hidden>
                     Select Operating System
                   </option>
                   <option value='linux'>Linux</option>

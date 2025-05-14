@@ -83,7 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'ams_assets',
         'USER': 'postgres',
-        'PASSWORD': 'password',
+        'PASSWORD': 'capstone',
         'HOST': 'localhost',
     }
 }

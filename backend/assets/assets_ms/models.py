@@ -30,8 +30,13 @@ class Product(models.Model):
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='product_images/')
+    is_deleted = models.BooleanField(default=False)
+
     def __str__(self):
-        return self.name
+        return f"Image(s) for {self.product.name}"
 
 class Status(models.Model):
     STATUS_CHOICES = [

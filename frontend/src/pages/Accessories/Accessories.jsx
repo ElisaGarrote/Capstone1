@@ -1,7 +1,5 @@
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
-import "../../styles/AccessoriesButtons.css";
-import "../../styles/AccessoriesAvailability.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import DefaultImage from "../../assets/img/default-image.jpg";
@@ -150,7 +148,7 @@ export default function Accessories() {
       <nav>
         <NavBar />
       </nav>
-      <main className="page accessories-page">
+      <main className="page">
         <div className="container">
           <section className="top">
             <h1>Accessories</h1>

@@ -59,4 +59,3 @@ def get_categories(request):
     categories = Category.objects.filter(is_deleted=False)
     serializer = AccessoryCategorySerializer(categories, many=True).data
     return Response(serializer)
-

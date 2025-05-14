@@ -69,7 +69,6 @@ def soft_delete_product(request, id):
         return Response({'detail': 'Product soft-deleted'})
     except Product.DoesNotExist:
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
-
 # END PRODUCT
 
 
