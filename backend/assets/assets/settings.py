@@ -84,7 +84,7 @@ DATABASES = {
         'NAME': 'ams_assets',
         'USER': 'postgres',
         # 'PASSWORD': 'Macx77',
-        'PASSWORD': 'passwordnibengie',
+        'PASSWORD': 'capstone',
         'HOST': 'localhost',
     }
 }
