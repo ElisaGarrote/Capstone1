@@ -65,13 +65,11 @@ export default function ViewAudits() {
             <p>{data.asset_info.displayed_id}</p>
           </fieldset>
 
-          {data.audit_info.length == 1 ? (
+          {data.audit_info != null && (
             <fieldset>
               <label htmlFor="location">Location</label>
-              <p>{data.audit_info[0].location}</p>
+              <p>{data.audit_info.location}</p>
             </fieldset>
-          ) : (
-            ""
           )}
 
           <fieldset>
@@ -81,7 +79,7 @@ export default function ViewAudits() {
             <p>
               {previousPage != "/audits/completed"
                 ? data.date
-                : data.audit_info[0].audit_date}
+                : data.audit_info.audit_date}
             </p>
           </fieldset>
 
