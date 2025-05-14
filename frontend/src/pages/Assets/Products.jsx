@@ -1,67 +1,86 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
 import "../../styles/Products.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
-import SampleImage from "../../assets/img/dvi.jpeg";
+import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
-
-// Sample asset data
-const sampleItems = [
-  {
-    id: 1,
-    image: SampleImage,
-    productName: 'Dell Latitude',
-    category: 'Laptop',
-    modelNumber: 'DL-2025',
-    manufacturer: 'Dell',
-    depreciation: 'Straight Line',
-    endOfLife: '2028-12-31',
-    minimumQuantity: 10,
-    imeiNumber: '123456789012345',
-    ssdEncryption: 'Enabled',
-    notes: 'Sample notes for Dell Latitude',
-  },
-  {
-    id: 2,
-    image: SampleImage,
-    productName: 'iPhone 15 Pro',
-    category: 'Mobile Phone',
-    modelNumber: 'IPH15P',
-    manufacturer: 'Apple',
-    depreciation: 'Declining Balance',
-    endOfLife: '2027-11-20',
-    minimumQuantity: 10,
-    imeiNumber: '123456789012345',
-    ssdEncryption: 'Disabled',
-    notes: null,
-  },
-];
+import DeleteModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
 
 export default function Products() {
+  const [products, setProducts] = useState([]);
   const [checkedItems, setCheckedItems] = useState([]);
-  const allChecked = checkedItems.length === sampleItems.length;
+  const allChecked = checkedItems.length === products.length;
+
+  const [endPoint, setEndPoint] = useState(null);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [isDeleteFailed, setDeleteFailed] = useState(false);
+
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("http://localhost:8003/products/");
+      const data = await response.json();
+      setProducts(data);
+      console.log(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const toggleSelectAll = () => {
     if (allChecked) {
       setCheckedItems([]);
     } else {
-      setCheckedItems(sampleItems.map((item) => item.id));
+      setCheckedItems(products.map((item) => item.id));
     }
   };
 
   const toggleItem = (id) => {
     setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((itemId) => itemId !== id)
+        : [...prev, id]
     );
   };
 
   return (
     <>
+      {isDeleteSuccess && (
+        <Alert message="Deleted Successfully!" type="success" />
+      )}
+      
+      {isDeleteFailed && (
+        <Alert message="Delete failed. Please try again." type="error" />
+      )}
+
+      {isDeleteModalOpen && (
+        <DeleteModal
+        endPoint={endPoint}
+        closeModal={() => setDeleteModalOpen(false)}
+        confirmDelete={async () => {
+          await fetchProducts();
+          setDeleteSucess(true);
+          setTimeout(() => setDeleteSucess(false), 5000);
+        }}
+        onDeleteFail={() => {
+          setDeleteFailed(true);
+          setTimeout(() => setDeleteFailed(false), 5000);
+        }}
+      />      
+      )}
+
       <nav>
         <NavBar />
       </nav>
+      
       <main className="page">
         <div className="container">
           <section className="top">
@@ -75,58 +94,80 @@ export default function Products() {
             </div>
           </section>
           <section className="middle">
-            <table className="products-table">
-              <thead>
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={allChecked}
-                      onChange={toggleSelectAll}
-                    />
-                  </th>
-                  <th>IMAGE</th>
-                  <th>NAME</th>
-                  <th>MODEL NUMBER</th>
-                  <th>CATEGORY</th>
-                  <th>MANUFACTURER</th>
-                  <th>END OF LIFE</th>
-                  <th>EDIT</th>
-                  <th>DELETE</th>
-                  <th>VIEW</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sampleItems.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={checkedItems.includes(item.id)}
-                        onChange={() => toggleItem(item.id)}
-                      />
-                    </td>
-                    <td>
-                      <img src={item.image} alt={item.product} width="50" />
-                    </td>
-                    <td>{item.productName}</td>
-                    <td>{item.modelNumber}</td>
-                    <td>{item.category}</td>
-                    <td>{item.manufacturer}</td>
-                    <td>{item.endOfLife}</td>
-                    <td>
-                      <TableBtn type="edit" navigatePage={`/products/registration/${item.id}`} />
-                    </td>
-                    <td>
-                      <TableBtn type="delete" onClick={() => handleDelete(item.id)} />
-                    </td>
-                    <td>
-                      <TableBtn type="view" onClick={() => handleView(item.id)} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {products.length === 0 ? (
+                  <section className="no-products-message">
+                    <p>No products found. Please add some products.</p>
+                  </section>
+                ) : (
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>
+                          <input
+                            type="checkbox"
+                            checked={allChecked}
+                            onChange={toggleSelectAll}
+                          />
+                        </th>
+                        <th>IMAGE</th>
+                        <th>NAME</th>
+                        <th>CATEGORY</th>
+                        <th>MODEL NUMBER</th>
+                        <th>MANUFACTURER</th>
+                        <th>END OF LIFE</th>
+                        <th>EDIT</th>
+                        <th>DELETE</th>
+                        <th>VIEW</th>
+                      </tr>
+                    </thead>
+                      <tbody>
+                        {products.map((product) => (
+                          <tr key={product.id}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={checkedItems.includes(product.id)}
+                                onChange={() => toggleItem(product.id)}
+                              />
+                            </td>
+                            <td>
+                              <img
+                                src={product.image ? `http://127.0.0.1:8003${product.image}` : DefaultImage}
+                                alt="Product-Image"
+                                width="50"
+                              />
+                            </td>
+                            <td>{product.name}</td>
+                            <td>{product.category_name}</td>
+                            <td>{product.model_number}</td>
+                            <td>{product.manufacturer_name}</td>
+                            <td>{product.end_of_life}</td>
+                            <td>
+                              <TableBtn
+                                type="edit"
+                                navigatePage={`/products/registration/${product.id}`}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="delete"
+                                showModal={() => {
+                                  setEndPoint(`http://localhost:8003/products/delete/${product.id}`)
+                                  setDeleteModalOpen(true);
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="view"
+                                onClick={() => handleView(product.id)}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                  </table>
+                )}
           </section>
           <section className="bottom"></section>
         </div>

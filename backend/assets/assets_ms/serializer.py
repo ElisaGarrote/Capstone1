@@ -2,30 +2,26 @@ from rest_framework import serializers
 from .models import *
 
 class AllProductSerializer(serializers.ModelSerializer):
-    first_image = serializers.SerializerMethodField()
-
     class Meta:
         model = Product
-        fields = ['id', 'first_image', '']
-
-    def get_first_image(self, obj):
-        # gets the first not deleted image
-        first_image = obj.images.filter(is_deleted=False).first()  
-        if first_image:
-            return first_image.image.url 
-        return None
-
-
-class ProductImageSerializer(serializers.ModelSerializer):
+        fields = ['id', 'image', 'name', 'model_number', 'category_name', 'manufacturer_name', 'end_of_life']
+        
+class ProductDepreciationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ProductImage
-        fields = ['id', 'image', 'is_deleted']
+        model = Depreciation
+        fields = ['id', 'name']
 
 class ProductSerializer(serializers.ModelSerializer):
-    images = ProductImageSerializer(many=True, read_only=True)
-
+    depreciation = serializers.PrimaryKeyRelatedField(
+        queryset=Depreciation.objects.all(), required=False, allow_null=True
+    )
     class Meta:
         model = Product
+        fields = '__all__'
+
+class DepreciationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Depreciation
         fields = '__all__'
 
 class AssetSerializer(serializers.ModelSerializer):

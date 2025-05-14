@@ -83,8 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'ams_consumables',
         'USER': 'postgres',
-        # 'PASSWORD': 'Macx77',
-        'PASSWORD': 'passwordnibengie',
+        'PASSWORD': 'capstone',
         'HOST': 'localhost',
     }
 }
