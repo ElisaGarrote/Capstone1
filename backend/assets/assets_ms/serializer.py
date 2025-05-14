@@ -33,16 +33,9 @@ class AssetSerializer(serializers.ModelSerializer):
         model = Asset
         fields = '__all__'
 
-class AuditScheduleSerializer(serializers.ModelSerializer):
-    asset_info = AssetSerializer(source='asset', read_only=True)
-
-    class Meta:
-        model = AuditSchedule
-        fields = '__all__'
-
 class AuditSerializer(serializers.ModelSerializer):
     audit_files = serializers.SerializerMethodField()
-    audit_schedule_info = AuditScheduleSerializer(source='audit_schedule', read_only=True)
+    # audit_schedule_info = AuditScheduleSerializer(source='audit_schedule', read_only=True)
 
     class Meta:
         model = Audit
@@ -52,6 +45,14 @@ class AuditSerializer(serializers.ModelSerializer):
         # Retrieve all files that are not deleted and the audit matches the current audit instance.
         files = obj.files.filter(is_deleted=False, audit=obj.id)
         return AuditFileSerializer(files, many=True).data
+
+class AuditScheduleSerializer(serializers.ModelSerializer):
+    asset_info = AssetSerializer(source='asset', read_only=True)
+    audit_info = AuditSerializer(source='asset_audits', many=True, read_only=True)
+
+    class Meta:
+        model = AuditSchedule
+        fields = '__all__'
 
 class AuditFileSerializer(serializers.ModelSerializer):
     class Meta:
