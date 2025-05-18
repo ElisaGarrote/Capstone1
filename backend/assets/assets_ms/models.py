@@ -14,20 +14,21 @@ class Depreciation(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=50, unique=True)
     category_id = models.IntegerField()
+    category_name = models.CharField(max_length=50)
     manufacturer_id = models.IntegerField(blank=True, null=True)
-    depreciation = models.ForeignKey(Depreciation, on_delete=models.SET_NULL, blank=True, null=True, related_name='products')
+    manufacturer_name = models.CharField(max_length=50, blank=True, null=True)
+    depreciation = models.ForeignKey(Depreciation, on_delete=models.SET_NULL, blank=True, null=True, related_name='depreciations')
     model_number = models.CharField(max_length=20, blank=True, null=True)
     end_of_life = models.DateField(blank=True, null=True)
     purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     default_supplier_id = models.IntegerField(blank=True, null=True)
+    default_supplier_name = models.CharField(max_length=50, blank=True, null=True)
     minimum_quantity = models.IntegerField(blank=True, null=True)
     operating_system = models.CharField(max_length=20, blank=True, null=True)
     imei_number = models.CharField(max_length=20, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
-    
-    def __str__(self):
-        return self.name
     
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')

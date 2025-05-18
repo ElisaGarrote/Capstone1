@@ -114,7 +114,7 @@ function App() {
         />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
-        <Route path="/accessories/edit" element={<EditAccessories />} />
+        <Route path="/accessories/:id" element={<AccessoriesRegistration />} />
         <Route path="/components" element={<Components />} />
         <Route
           path="/components/check-out/:id"

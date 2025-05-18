@@ -12,6 +12,7 @@ class User(models.Model):
     email = models.EmailField(max_length=50, unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)    
     contact_number = models.CharField(max_length=13)
+    created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
 
