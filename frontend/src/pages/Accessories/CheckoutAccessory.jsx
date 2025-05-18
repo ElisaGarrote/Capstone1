@@ -4,15 +4,12 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
-import PersonIcon from "../../assets/icons/person.svg";
-import LocationIcon from "../../assets/icons/location.svg";
 
 export default function CheckoutAccessory() {
   const location = useLocation();
-  const { id } = location.state || {}; // Retrieve the data that pass from the previous page. Set this empty if the id state is undefined or null.
+  const { data } = location.state || {}; // Retrieve the data that pass from the previous page. Set this empty if the data state is undefined or null.
   const [currentDate, setCurrentDate] = useState("");
   const [previewImages, setPreviewImages] = useState([]);
-  const [checkoutTo, setCheckoutTo] = useState("employee");
   const [checkoutDate, setCheckoutDate] = useState("");
 
   useEffect(() => {
@@ -53,7 +50,7 @@ export default function CheckoutAccessory() {
             root="Accessory"
             currentPage="Checkout Accessory"
             rootNavigatePage="/accessories"
-            title={id}
+            title={data}
           />
         </section>
         <section className="checkout-form">
@@ -61,56 +58,36 @@ export default function CheckoutAccessory() {
           <form action="" method="post">
             <fieldset>
               <label htmlFor="checkout-to">Check-Out to *</label>
-              <div>
-                <section
-                  className="employee-radio-container"
-                  onClick={() => setCheckoutTo("employee")}
-                >
-                  <input
-                    type="radio"
-                    name="checkout-to"
-                    id="radio-employee"
-                    checked={checkoutTo == "employee" ? true : false}
-                    onClick={() => setCheckoutTo("employee")}
-                  />
-                  <img src={PersonIcon} alt="person-icon" />
-                  <label htmlFor="employee">Employee</label>
-                </section>
-                <section
-                  className="location-radio-container"
-                  onClick={() => setCheckoutTo("location")}
-                >
-                  <input
-                    type="radio"
-                    name="checkout-to"
-                    id="radio-location"
-                    checked={checkoutTo == "location" ? true : false}
-                    onClick={() => setCheckoutTo("location")}
-                  />
-                  <img src={LocationIcon} alt="location-icon" />
-                  <label htmlFor="location">Location</label>
-                </section>
-              </div>
+              <select
+                name="checkout-to"
+                id="checkout-to"
+                required
+                defaultValue="default"
+              >
+                <option value="default" disabled>
+                  Select employee...
+                </option>
+                <option value="employee1">Employee 1</option>
+                <option value="employee2">Employee 2</option>
+                <option value="employee3">Employee 3</option>
+              </select>
             </fieldset>
-            {checkoutTo == "employee" ? (
-              <fieldset>
-                <label htmlFor="employee">Employee *</label>
-                <select name="employee" id="employee">
-                  <option value="employee1">Employee 1</option>
-                  <option value="employee2">Employee 2</option>
-                  <option value="employee3">Employee 3</option>
-                </select>
-              </fieldset>
-            ) : (
-              <fieldset>
-                <label htmlFor="location">Location *</label>
-                <select name="location" id="location">
-                  <option value="location1">Location 1</option>
-                  <option value="location2">Location 2</option>
-                  <option value="location3">Location 3</option>
-                </select>
-              </fieldset>
-            )}
+            <fieldset>
+              <label htmlFor="location">Location *</label>
+              <select
+                name="location"
+                id="location"
+                required
+                defaultValue={"default"}
+              >
+                <option value="default" disabled>
+                  Select location...
+                </option>
+                <option value="Makati">Makati</option>
+                <option value="Pasig">Pasig</option>
+                <option value="Marikina">Marikina</option>
+              </select>
+            </fieldset>
             <fieldset>
               <label htmlFor="checkout-date">Check-Out Date *</label>
               <input
@@ -138,6 +115,16 @@ export default function CheckoutAccessory() {
                 <option value="option2">Option 2</option>
                 <option value="option3">Option 3</option>
               </select>
+            </fieldset>
+            <fieldset>
+              <label htmlFor="notes">Notes</label>
+              <textarea name="notes" id="notes" maxLength="500"></textarea>
+            </fieldset>
+            <fieldset>
+              <label htmlFor="confirmation-email-notes">
+                Confirmation Email Notes
+              </label>
+              <textarea name="notes" id="notes" maxLength="500"></textarea>
             </fieldset>
             <fieldset>
               <label htmlFor="upload-images">Photos</label>
@@ -173,28 +160,6 @@ export default function CheckoutAccessory() {
                 {previewImages.length == 0 ? "Choose Image" : "Change Image"}
               </label>
             </fieldset>
-            <fieldset>
-              <label htmlFor="notes">Notes</label>
-              <textarea name="notes" id="notes" maxLength="500"></textarea>
-            </fieldset>
-            <fieldset>
-              <label htmlFor="confirmation-email-notes">
-                Confirmation Email Notes
-              </label>
-              <textarea name="notes" id="notes" maxLength="500"></textarea>
-            </fieldset>
-            {checkoutTo == "employee" ? (
-              <fieldset>
-                <label htmlFor="location">Location *</label>
-                <select name="location" id="location" required>
-                  <option value="option1">Option 1</option>
-                  <option value="option2">Option 2</option>
-                  <option value="option3">Option 3</option>
-                </select>
-              </fieldset>
-            ) : (
-              ""
-            )}
             <button type="submit" className="save-btn">
               Save
             </button>
