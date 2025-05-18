@@ -8,7 +8,7 @@ import AccessoriesViewModal from "../../components/Modals/AccessoriesViewModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import ExportModal from "../../components/Modals/ExportModal";
-import { useState,  useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 export default function Accessories() {
@@ -20,7 +20,7 @@ export default function Accessories() {
   const [isEditSuccess, setEditSuccess] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isDeleteFailed, setDeleteFailed] = useState(false);
-  const [accessories, setAccessories] = useState ([]);
+  const [accessories, setAccessories] = useState([]);
   const [endPoint, setEndPoint] = useState(null);
   const [checkedItems, setCheckedItems] = useState([]);
   const allChecked = checkedItems.length === accessories.length;
@@ -51,9 +51,7 @@ export default function Accessories() {
 
   const toggleItem = (id) => {
     setCheckedItems((prev) =>
-      prev.includes(id)
-        ? prev.filter((itemId) => itemId !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
   };
 
@@ -109,21 +107,21 @@ export default function Accessories() {
           closeModal={() => setViewModalOpen(false)}
         />
       )}
-      
+
       {isDeleteModalOpen && (
         <DeleteModal
-        endPoint={endPoint}
-        closeModal={() => setDeleteModalOpen(false)}
-        confirmDelete={async () => {
-          await fetchAccessories();
-          setDeleteSucess(true);
-          setTimeout(() => setDeleteSucess(false), 5000);
-        }}
-        onDeleteFail={() => {
-          setDeleteFailed(true);
-          setTimeout(() => setDeleteFailed(false), 5000);
-        }}
-      />      
+          endPoint={endPoint}
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={async () => {
+            await fetchAccessories();
+            setDeleteSucess(true);
+            setTimeout(() => setDeleteSucess(false), 5000);
+          }}
+          onDeleteFail={() => {
+            setDeleteFailed(true);
+            setTimeout(() => setDeleteFailed(false), 5000);
+          }}
+        />
       )}
 
       {isDeleteSuccess && (
@@ -133,7 +131,6 @@ export default function Accessories() {
       {isDeleteFailed && (
         <Alert message="Delete failed. Please try again." type="error" />
       )}
-
 
       {isNewAccessoryAdded && (
         <Alert message="New accessory added!" type="success" />
@@ -169,102 +166,112 @@ export default function Accessories() {
           </section>
           <section className="middle">
             {accessories.length === 0 ? (
-                    <section className="no-products-message">
-                      <p>No accessories found. Please add some accessory.</p>
-                    </section>
-                  ) : (
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>
-                            <input
-                              type="checkbox"
-                              checked={allChecked}
-                              onChange={toggleSelectAll}
-                            />
-                          </th>
-                          <th>IMAGE</th>
-                          <th>NAME</th>
-                          <th>AVAILABLE</th>
-                          <th>CHECKOUT</th>
-                          <th>CHECKIN</th>
-                          <th>MODEL NUMBER</th>
-                          <th>LOCATION</th>
-                          <th>EDIT</th>
-                          <th>DELETE</th>
-                          <th>VIEW</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {accessories.map((accessory) => (
-                          <tr key={accessory.id}>
-                            <td>
-                              <input
-                                type="checkbox"
-                                checked={checkedItems.includes(accessory.id)}
-                                onChange={() => toggleItem(accessory.id)}
-                              />
-                            </td>
-                            <td>
-                              <img
-                                src={accessory.image ? `http://127.0.0.1:8004${accessory.image}` : DefaultImage}
-                                alt="Accessory-Image"
-                                width="50"
-                              />
-                            </td>
-                            <td>{accessory.name}</td>
-                            <td>
-                              <span style={{ color: '#34c759' }}>
-                                {availValue}/{accessory.quantity} <progress value={availValue} max={accessory.quantity}></progress>
-                              </span>
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="checkout"
-                                navigatePage={"/accessories/checkout"}
-                                id={accessory.id}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="checkin"
-                                navigatePage={"/accessories/checkin"}
-                                id={accessory.id}
-                              />
-                            </td>
-                            <td>{accessory.model_number}</td>
-                            <td>{accessory.location}</td>   
+              <section className="no-products-message">
+                <p>No accessories found. Please add some accessory.</p>
+              </section>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={allChecked}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th>IMAGE</th>
+                    <th>NAME</th>
+                    <th>AVAILABLE</th>
+                    <th>CHECKOUT</th>
+                    <th>CHECKIN</th>
+                    <th>MODEL NUMBER</th>
+                    <th>LOCATION</th>
+                    <th>EDIT</th>
+                    <th>DELETE</th>
+                    <th>VIEW</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {accessories.map((accessory) => (
+                    <tr key={accessory.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={checkedItems.includes(accessory.id)}
+                          onChange={() => toggleItem(accessory.id)}
+                        />
+                      </td>
+                      <td>
+                        <img
+                          src={
+                            accessory.image
+                              ? `http://127.0.0.1:8004${accessory.image}`
+                              : DefaultImage
+                          }
+                          alt="Accessory-Image"
+                          width="50"
+                        />
+                      </td>
+                      <td>{accessory.name}</td>
+                      <td>
+                        <span style={{ color: "#34c759" }}>
+                          {availValue}/{accessory.quantity}{" "}
+                          <progress
+                            value={availValue}
+                            max={accessory.quantity}
+                          ></progress>
+                        </span>
+                      </td>
+                      <td>
+                        <TableBtn
+                          type="checkout"
+                          navigatePage={"/accessories/checkout"}
+                          data={accessory.name}
+                        />
+                      </td>
+                      <td>
+                        <TableBtn
+                          type="checkin"
+                          navigatePage={"/accessories/checkin"}
+                          data={accessory.name}
+                        />
+                      </td>
+                      <td>{accessory.model_number}</td>
+                      <td>{accessory.location}</td>
 
-                            <td>
-                              <TableBtn
-                                type="edit"
-                                navigatePage={`/accessories/${accessory.id}`}
-                              />
-                            </td>
+                      <td>
+                        <TableBtn
+                          type="edit"
+                          navigatePage={`/accessories/${accessory.id}`}
+                        />
+                      </td>
 
-                            <td>
-                              <TableBtn
-                                type="delete"
-                                showModal={() => {
-                                  setEndPoint(`http://localhost:8004/accessories/delete/${accessory.id}`)
-                                  setDeleteModalOpen(true);
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="view"
-                                showModal={() => {
-                                  setViewModalOpen(true);
-                                  setSelectedRowId(accessory.id);
-                                }}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
+                      <td>
+                        <TableBtn
+                          type="delete"
+                          showModal={() => {
+                            setEndPoint(
+                              `http://localhost:8004/accessories/delete/${accessory.id}`
+                            );
+                            setDeleteModalOpen(true);
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <TableBtn
+                          type="view"
+                          showModal={() => {
+                            setViewModalOpen(true);
+                            setSelectedRowId(accessory.id);
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </section>
           <section className="bottom"></section>
         </div>
