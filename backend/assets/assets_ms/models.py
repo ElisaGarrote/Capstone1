@@ -108,6 +108,7 @@ class AuditSchedule(models.Model):
     date = models.DateField()
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now(), editable=False)
 
     def __str__(self):
         return f"Audit Schedule for {self.asset.displayed_id} on {self.date}"
@@ -120,6 +121,7 @@ class Audit(models.Model):
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     audit_schedule = models.ForeignKey(AuditSchedule, on_delete=models.CASCADE, related_name='asset_audits')
+    created_at = models.DateTimeField(default=timezone.now(), editable=False)
 
     def __str__(self):
         return f"Audit on {self.created_at} for {self.audit_schedule.asset.displayed_id}"
