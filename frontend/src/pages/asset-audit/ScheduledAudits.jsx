@@ -185,58 +185,60 @@ export default function ScheduledAudits() {
                     </tr>
                   </thead>
                   <tbody>
-                    {scheduleAuditData.map((data, index) => {
-                      return (
-                        <tr key={index}>
-                          <td>
-                            <input type="checkbox" name="" id="" />
-                          </td>
-                          <td>{data.date}</td>
-                          <td>
-                            {data.asset_info.displayed_id} -{" "}
-                            {data.asset_info.name}
-                          </td>
-                          <td>
-                            <Status
-                              type="deployed"
-                              name="Deployed"
-                              location="Makati"
-                            />
-                          </td>
-                          <td className={data.notes == null ? "blank" : ""}>
-                            {data.notes === null || data.notes == ""
-                              ? "-"
-                              : data.notes}
-                          </td>
-                          <td>December 31, 2025</td>
-                          <td>
-                            <TableBtn
-                              type="edit"
-                              navigatePage={"/audits/edit"}
-                              id={`${assetId} - ${assetName}`}
-                              previousPage={location.pathname}
-                            />
-                          </td>
-                          <td>
-                            <TableBtn
-                              type="delete"
-                              showModal={() => {
-                                setDeleteModalOpen(true);
-                                setSelectedRowId(assetId);
-                              }}
-                            />
-                          </td>
-                          <td>
-                            <TableBtn
-                              type="view"
-                              navigatePage="/audits/view"
-                              id={`${assetId} - ${assetName}`}
-                              previousPage={location.pathname}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {scheduleAuditData.length > 0 ? (
+                      scheduleAuditData.map((data, index) => {
+                        return (
+                          <tr key={index}>
+                            <td>
+                              <input type="checkbox" name="" id="" />
+                            </td>
+                            <td>{data.date}</td>
+                            <td>
+                              {data.asset_info.displayed_id} -{" "}
+                              {data.asset_info.name}
+                            </td>
+                            <td>
+                              <Status
+                                type="deployed"
+                                name="Deployed"
+                                location="Makati"
+                              />
+                            </td>
+                            <td className={data.notes == null ? "blank" : ""}>
+                              {data.notes === null || data.notes == ""
+                                ? "-"
+                                : data.notes}
+                            </td>
+                            <td>December 31, 2025</td>
+                            <td>
+                              <TableBtn
+                                type="edit"
+                                navigatePage={"/audits/edit"}
+                                previousPage={location.pathname}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="delete"
+                                showModal={() => {
+                                  setDeleteModalOpen(true);
+                                  setSelectedRowId(assetId);
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="view"
+                                navigatePage="/audits/view"
+                                previousPage={location.pathname}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <p>No records found!</p>
+                    )}
                   </tbody>
                 </table>
               </section>

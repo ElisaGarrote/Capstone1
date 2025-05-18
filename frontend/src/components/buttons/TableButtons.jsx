@@ -12,14 +12,13 @@ export default function TableButtons({
   type,
   navigatePage,
   previousPage,
-  id,
+  data,
   showModal,
 }) {
   let icon;
   const navigate = useNavigate();
 
-  console.log("id e2: ", id);
-  console.log("previous page buttons: ", previousPage);
+  console.log("table button id received:", data);
 
   // Assign the correct icon based on the type
   switch (type) {
@@ -46,7 +45,7 @@ export default function TableButtons({
       className={`table-buttons-${type}`}
       onClick={
         navigatePage != null
-          ? () => navigate(navigatePage, { state: { id, previousPage } })
+          ? () => navigate(navigatePage, { state: { data, previousPage } })
           : showModal
       }
     >
