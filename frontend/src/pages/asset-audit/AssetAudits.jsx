@@ -237,7 +237,7 @@ export default function AssetAudits() {
               <section></section>
             </section>
           ) : (
-            "No records available."
+            "No Asset Audit Found."
           )}
         </section>
       </main>

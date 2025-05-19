@@ -248,7 +248,7 @@ export default function ScheduledAudits() {
               <section></section>
             </section>
           ) : (
-            "No records available."
+            "No Schedule Audit Found."
           )}
         </section>
       </main>

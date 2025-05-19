@@ -242,7 +242,7 @@ export default function OverdueAudits() {
               <section></section>
             </section>
           ) : (
-            "No records available"
+            "No Overdue for an Audit Found."
           )}
         </section>
       </main>

@@ -162,7 +162,7 @@ export default function CompletedAudits() {
               <section></section>
             </section>
           ) : (
-            "No records available."
+            "No Completed Audit Found."
           )}
         </section>
       </main>
