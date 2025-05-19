@@ -151,35 +151,25 @@
   max-width: 15vw;
 }
 
-/* Set the width of the notes header and its data */
-.overdue-audits-page table th:nth-last-child(4),
-.overdue-audits-page table td:nth-last-child(4) {
-  width: 10vw;
-}
-
-/* Set the width of the notes head and its data when the notes is null (added classname of blank) */
-.overdue-audits-page table th:nth-last-child(4).blank,
-.overdue-audits-page table td:nth-last-child(4).blank {
-  width: 5.5vw;
-}
-
-/* Set the width of the edit, delete, and view header and its data*/
+/* Set the width of the audit, edit, delete, and view header and its data*/
 .overdue-audits-page table th:nth-last-child(1),
 .overdue-audits-page table td:nth-last-child(1),
 .overdue-audits-page table th:nth-last-child(2),
 .overdue-audits-page table td:nth-last-child(2),
 .overdue-audits-page table th:nth-last-child(3),
-.overdue-audits-page table td:nth-last-child(3) {
-  width: 5vw;
+.overdue-audits-page table td:nth-last-child(3),
+.overdue-audits-page table th:nth-last-child(4),
+.overdue-audits-page table td:nth-last-child(4) {
+  width: 50px;
   text-align: center;
   padding-left: 0;
   padding-right: 0;
 }
 
 /* Center the action buttons */
-.overdue-audits-page table td:nth-last-child(1) button,
+/* .overdue-audits-page table td:nth-last-child(1) button,
 .overdue-audits-page table td:nth-last-child(2) button,
 .overdue-audits-page table td:nth-last-child(3) button {
   margin: 0 auto;
   display: block;
-}
+} */

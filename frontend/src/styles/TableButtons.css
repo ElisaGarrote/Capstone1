@@ -2,16 +2,22 @@
 .table-buttons-checkout img,
 .table-buttons-edit img,
 .table-buttons-delete img,
-.table-buttons-view img {
+.table-buttons-view img,
+.table-buttons-audit img {
   display: flex;
   height: 16px;
   width: 16px;
   object-fit: contain;
 }
+.table-buttons-audit img {
+  width: 24px;
+  height: 24px;
+}
 
 .table-buttons-edit,
 .table-buttons-delete,
-.table-buttons-view {
+.table-buttons-view,
+.table-buttons-audit {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -59,14 +65,16 @@
 
 .table-buttons-edit,
 .table-buttons-delete,
-.table-buttons-view {
+.table-buttons-view,
+.table-buttons-audit {
   background-color: var(--bg-color);
   border: 1px solid #d3d3d3;
   transition: 0.5s ease;
 }
 
 .table-buttons-edit:hover,
-.table-buttons-view:hover {
+.table-buttons-view:hover,
+.table-buttons-audit:hover {
   background-color: rgba(0, 123, 255, 0.2);
 }
 

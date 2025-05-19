@@ -159,9 +159,11 @@
   width: 3vw;
 }
 
-/* Set the width of the audit date and perform by header and its data */
+/* Set the width of the audit date, location and perform by header and its data */
 .completed-audits-page table th:nth-child(2),
 .completed-audits-page table td:nth-child(2),
+.completed-audits-page table th:nth-last-child(3),
+.completed-audits-page table td:nth-last-child(3),
 .completed-audits-page table th:nth-last-child(4),
 .completed-audits-page table td:nth-last-child(4) {
   width: 12vw;
@@ -187,14 +189,13 @@
   width: 13vw;
 }
 
-/* Set the width of the edit, delete, and view header and its data*/
+/* Set the width of the delete and view header and its data*/
 .completed-audits-page table th:nth-last-child(1),
 .completed-audits-page table td:nth-last-child(1),
 .completed-audits-page table th:nth-last-child(2),
-.completed-audits-page table td:nth-last-child(2),
-.completed-audits-page table th:nth-last-child(3),
-.completed-audits-page table td:nth-last-child(3) {
-  width: 5vw;
+.completed-audits-page table td:nth-last-child(2) {
+  /* width: 5vw; */
+  width: 50px;
   text-align: center;
   padding-left: 0;
   padding-right: 0;
@@ -202,8 +203,7 @@
 
 /* Center the action buttons */
 .completed-audits-page table td:nth-last-child(1) button,
-.completed-audits-page table td:nth-last-child(2) button,
-.completed-audits-page table td:nth-last-child(3) button {
+.completed-audits-page table td:nth-last-child(2) button {
   margin: 0 auto;
   display: block;
 }
