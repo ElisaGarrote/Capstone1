@@ -52,6 +52,7 @@ export default function TableButtons({
           ? () => navigate(navigatePage, { state: { data, previousPage } })
           : showModal
       }
+      title={type === "audit" ? "Perform Audit" : null}
     >
       {type === "checkin" ? (
         "Check-In"
