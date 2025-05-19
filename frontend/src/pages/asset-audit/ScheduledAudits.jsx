@@ -178,8 +178,8 @@ export default function ScheduledAudits() {
                       <th>DUE DATE</th>
                       <th>ASSET</th>
                       <th>STATUS</th>
-                      <th className={notes == null ? "blank" : ""}>NOTES</th>
                       <th>CREATED</th>
+                      <th>AUDIT</th>
                       <th>EDIT</th>
                       <th>DELETE</th>
                       <th>VIEW</th>
@@ -205,12 +205,14 @@ export default function ScheduledAudits() {
                                 location="Makati"
                               />
                             </td>
-                            <td className={data.notes == null ? "blank" : ""}>
-                              {data.notes === null || data.notes == ""
-                                ? "-"
-                                : data.notes}
-                            </td>
                             <td>December 31, 2025</td>
+                            <td>
+                              <TableBtn
+                                type="audit"
+                                navigatePage="/audits/new"
+                                previousPage={location.pathname}
+                              />
+                            </td>
                             <td>
                               <TableBtn
                                 type="edit"

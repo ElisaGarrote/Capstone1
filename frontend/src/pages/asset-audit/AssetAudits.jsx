@@ -173,6 +173,7 @@ export default function AssetAudits() {
                       <th>ASSET</th>
                       <th>STATUS</th>
                       <th>CREATED</th>
+                      <th>AUDIT</th>
                       <th>EDIT</th>
                       <th>DELETE</th>
                       <th>VIEW</th>
@@ -194,6 +195,14 @@ export default function AssetAudits() {
                             <Status type="deployable" name="Ready to Deploy" />
                           </td>
                           <td>December 30, 2025</td>
+                          <td>
+                            <TableBtn
+                              type="audit"
+                              navigatePage="/audits/new"
+                              data={data}
+                              previousPage={location.pathname}
+                            />
+                          </td>
                           <td>
                             <TableBtn
                               type="edit"

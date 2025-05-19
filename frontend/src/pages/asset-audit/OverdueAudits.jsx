@@ -169,7 +169,7 @@ export default function OverdueAudits() {
                       <th>OVERDUE BY</th>
                       <th>ASSET</th>
                       <th>STATUS</th>
-                      <th className={notes == null ? "blank" : ""}>NOTES</th>
+                      <th>AUDIT</th>
                       <th>EDIT</th>
                       <th>DELETE</th>
                       <th>VIEW</th>
@@ -203,10 +203,12 @@ export default function OverdueAudits() {
                               personName="Mary Grace Piattos"
                             />
                           </td>
-                          <td className={data.notes == null ? "blank" : ""}>
-                            {data.notes === null || data.notes == ""
-                              ? "-"
-                              : data.notes}
+                          <td>
+                            <TableBtn
+                              type="audit"
+                              navigatePage="/audits/new"
+                              previousPage={location.pathname}
+                            />
                           </td>
                           <td>
                             <TableBtn
