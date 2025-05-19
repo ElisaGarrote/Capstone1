@@ -5,13 +5,14 @@ import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
 import Status from "../../components/Status";
-import { data, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import TabNavBar from "../../components/TabNavBar";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
+import { formatDate } from "../../utils/dateFormatter";
 
 export default function CompletedAudits() {
   const location = useLocation();
@@ -126,7 +127,7 @@ export default function CompletedAudits() {
                           <td>
                             <input type="checkbox" name="" id="" />
                           </td>
-                          <td>{data.audit_date}</td>
+                          <td>{formatDate(data.audit_date)}</td>
                           <td>
                             {data.asset_info.displayed_id} -{" "}
                             {data.asset_info.name}

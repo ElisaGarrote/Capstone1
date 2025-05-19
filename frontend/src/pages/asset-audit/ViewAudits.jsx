@@ -3,6 +3,7 @@ import "../../styles/ViewAudits.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useLocation } from "react-router-dom";
 import Status from "../../components/Status";
+import { formatDate } from "../../utils/dateFormatter";
 
 export default function ViewAudits() {
   const location = useLocation();
@@ -78,15 +79,15 @@ export default function ViewAudits() {
             </label>
             <p>
               {previousPage != "/audits/completed"
-                ? data.date
-                : data.audit_info.audit_date}
+                ? formatDate(data.date)
+                : formatDate(data.audit_info.audit_date)}
             </p>
           </fieldset>
 
           {previousPage == "/audits/completed" && (
             <fieldset>
               <label htmlFor="next-audit-date">Next Audit Date</label>
-              <p>{data.date}</p>
+              <p>{formatDate(data.date)}</p>
             </fieldset>
           )}
 

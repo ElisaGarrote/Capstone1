@@ -12,6 +12,7 @@ import Alert from "../../components/Alert";
 import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
+import { formatDate } from "../../utils/dateFormatter";
 
 export default function OverdueAudits() {
   let notes = null;
@@ -187,7 +188,7 @@ export default function OverdueAudits() {
                           <td>
                             <input type="checkbox" name="" id="" />
                           </td>
-                          <td>{data.date}</td>
+                          <td>{formatDate(data.date)}</td>
                           <td>
                             {dayDifference} {dayDifference > 1 ? "days" : "day"}
                           </td>
