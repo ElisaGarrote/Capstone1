@@ -7,6 +7,7 @@ import checkoutIcon from "../../assets/icons/right-arrow.svg";
 import editIcon from "../../assets/icons/edit.svg";
 import deleteIcon from "../../assets/icons/delete.svg";
 import viewIcon from "../../assets/icons/eye.svg";
+import auditIcon from "../../assets/icons/audit-secondary-text-color.svg";
 
 export default function TableButtons({
   type,
@@ -36,6 +37,9 @@ export default function TableButtons({
       break;
     case "view":
       icon = viewIcon;
+      break;
+    case "audit":
+      icon = auditIcon;
       break;
   }
 
