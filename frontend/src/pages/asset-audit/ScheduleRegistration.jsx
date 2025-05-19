@@ -104,16 +104,6 @@ export default function ScheduleRegistration() {
     }
   };
 
-  // const assetOptions = [
-  //   { value: "100000 - XPS 13", label: "100000 - XPS 13" },
-  //   { value: "100001 - ThinkPad E15 G4", label: "100001 - ThinkPad E15 G4" },
-  //   { value: '100008 - Macbook Pro 16"', label: '100008 - Macbook Pro 16"' },
-  //   {
-  //     value: "100036 - Microsoft Surface Pro 11",
-  //     label: "100036 - Microsoft Surface Pro 11",
-  //   },
-  // ];
-
   const customStylesDropdown = {
     control: (provided) => ({
       ...provided,
@@ -162,6 +152,7 @@ export default function ScheduleRegistration() {
                     styles={customStylesDropdown}
                     placeholder="Select locatioin..."
                     {...field}
+                    isMulti={true}
                   />
                 )}
               />
@@ -193,16 +184,7 @@ export default function ScheduleRegistration() {
                 {...register("notes")}
               ></textarea>
             </fieldset>
-            <button
-              type="submit"
-              className="save-btn"
-              disabled={!isValid}
-              // onClick={() =>
-              //   navigate("/audits/scheduled", {
-              //     state: { addedScheduleAudit: true },
-              //   })
-              // }
-            >
+            <button type="submit" className="save-btn" disabled={!isValid}>
               Save
             </button>
           </form>
