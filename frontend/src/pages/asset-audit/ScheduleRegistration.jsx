@@ -4,10 +4,14 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useState, useEffect } from "react";
 import Select from "react-select";
 import { useNavigate } from "react-router-dom";
+import assetsService from "../../services/assets-service";
+import { useForm, Controller } from "react-hook-form";
 
 export default function ScheduleRegistration() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState("");
+  const [allAssets, setAllAssets] = useState([]);
+  const [assetAndName, setAssetAndName] = useState([]);
 
   // Handle current date
   useEffect(() => {
@@ -23,15 +27,82 @@ export default function ScheduleRegistration() {
     setCurrentDate(formattedDate);
   }, []);
 
-  const assetOptions = [
-    { value: "100000 - XPS 13", label: "100000 - XPS 13" },
-    { value: "100001 - ThinkPad E15 G4", label: "100001 - ThinkPad E15 G4" },
-    { value: '100008 - Macbook Pro 16"', label: '100008 - Macbook Pro 16"' },
-    {
-      value: "100036 - Microsoft Surface Pro 11",
-      label: "100036 - Microsoft Surface Pro 11",
-    },
-  ];
+  // Fetch all assets
+  useEffect(() => {
+    const asset = async () => {
+      try {
+        const dataFetched = await assetsService.fetchAllAssets();
+
+        if (dataFetched) {
+          console.log("Schedule Audits fetch all assets: ", dataFetched);
+          setAllAssets(dataFetched);
+        }
+      } catch (error) {
+        console.log("Error whilte fetching all assets!", error);
+      }
+    };
+
+    asset();
+  }, []);
+
+  // Retrieve all the schedule audits records and get only the displayed_id and asset name.
+  useEffect(() => {
+    const fetchAllScheduleAudits = async () => {
+      const allAuditSchedule = await assetsService.fetchAllAuditSchedules();
+
+      // Get only the displayed_id of the asset and asset name.
+      if (allAuditSchedule) {
+        console.log(allAuditSchedule);
+
+        const asset = allAuditSchedule.map((item) => ({
+          displayedId: item.asset_info.displayed_id,
+          name: item.asset_info.name,
+        }));
+        setAssetAndName(asset);
+      }
+    };
+
+    fetchAllScheduleAudits();
+  }, []);
+
+  const assetOptions = allAssets
+    .filter(
+      (item) =>
+        !assetAndName.some(
+          (existing) => existing.displayedId === item.displayed_id
+        )
+    )
+    .map((item) => ({
+      id: item.id,
+      value: item.id,
+      label: item.displayed_id + " - " + item.name,
+    }));
+
+  // Handle form
+  const {
+    control,
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm({
+    mode: "all",
+  });
+
+  const submission = async (data) => {
+    console.table(data);
+    const success = await assetsService.postScheduleAudit(
+      data.asset.id,
+      data.auditDueDate,
+      data.notes
+    );
+
+    if (success) {
+      console.log("Schedule audit successfully created!");
+      navigate("/audits/scheduled", { state: { addedScheduleAudit: true } });
+    } else {
+      console.log("Failed to create schedule audit!");
+    }
+  };
 
   const customStylesDropdown = {
     control: (provided) => ({
@@ -67,14 +138,26 @@ export default function ScheduleRegistration() {
           />
         </section>
         <section className="schedule-registration-form">
-          <form action="" method="post">
+          <form onSubmit={handleSubmit(submission)}>
             <fieldset>
               <label htmlFor="asset">Select Asset *</label>
-              <Select
-                options={assetOptions}
-                styles={customStylesDropdown}
-                placeholder="Select locatioin..."
+
+              <Controller
+                name="asset"
+                control={control}
+                rules={{ required: "Asset is required" }}
+                render={({ field }) => (
+                  <Select
+                    options={assetOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select locatioin..."
+                    {...field}
+                    isMulti={true}
+                  />
+                )}
               />
+
+              {errors.asset && <span>{errors.asset.message}</span>}
             </fieldset>
             <fieldset>
               <label htmlFor="audit-due-date">Audit Due Date *</label>
@@ -83,13 +166,27 @@ export default function ScheduleRegistration() {
                 name="audit-due-date"
                 id="audit-due-date"
                 min={currentDate}
-                required
+                {...register("auditDueDate", {
+                  required: "Audit due date is required",
+                })}
               />
+
+              {errors.auditDueDate && (
+                <span>{errors.auditDueDate.message}</span>
+              )}
             </fieldset>
             <fieldset>
               <label htmlFor="notes">Notes</label>
-              <textarea name="notes" id="notes" maxLength="2000"></textarea>
+              <textarea
+                name="notes"
+                id="notes"
+                maxLength="500"
+                {...register("notes")}
+              ></textarea>
             </fieldset>
+            <button type="submit" className="save-btn" disabled={!isValid}>
+              Save
+            </button>
           </form>
           {/* Place this button inside the form when working on the backend. */}
           <button

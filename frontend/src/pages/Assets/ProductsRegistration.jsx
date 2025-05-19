@@ -167,12 +167,10 @@ export default function ProductsRegistration() {
 
       if (id) {
         try {
-          const response = await fetch(`http://localhost:8003/products/${id}/`, {
+          const response = await fetch(`http://localhost:8003/products/${id}`, {
             method: 'PUT',
             body: formData,
           });
-
-          console.log("Image", formData.image);
       
           if (!response.ok) {
             throw new Error(`Failed to update product. Status: ${response.status}`);
@@ -220,11 +218,11 @@ export default function ProductsRegistration() {
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
       <nav>
         <NavBar />
       </nav>
-      {errorMessage && <Alert message={errorMessage} type="danger" />}
-      {successMessage && <Alert message={successMessage} type="success" />}
       <main className='registration'>
         <section className='top'>
           <TopSecFormPage
@@ -310,7 +308,6 @@ export default function ProductsRegistration() {
               {...register('modelNumber')} maxLength='100'
               placeholder='Model Number'
               />
-
             </fieldset>
 
             {/* End of Life Date */}
@@ -331,11 +328,10 @@ export default function ProductsRegistration() {
                 <input 
                 type="number"
                 step="0.01"
-                min="1"
+                min="0"
                 {...register("defaultPurchaseCost", { valueAsNumber: true })}
                 placeholder='Default Purchase Cost'
                 />
-                
               </div>
             </fieldset>
 
@@ -344,7 +340,7 @@ export default function ProductsRegistration() {
               <label htmlFor='supplier'>Default Supplier</label>
               <div>
                 <select {...register('supplier')}>
-                  <option value=''>Select Suppler</option>
+                  <option value=''>Select Supplier</option>
                   {suppliers.map((supplier) => (
                     <option key={supplier.id} value={supplier.id}>
                       {supplier.name}
@@ -367,8 +363,11 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor='operating_system'>Operating System</label>
               <div>
-                <select {...register('operatingSystem')}>
-                  <option value='' disabled selected>
+                <select 
+                {...register('operatingSystem')}
+                defaultValue=""
+                >
+                  <option value='' disabled hidden>
                     Select Operating System
                   </option>
                   <option value='linux'>Linux</option>

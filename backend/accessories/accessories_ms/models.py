@@ -19,7 +19,7 @@ class Accessory(models.Model):
     model_number = models.CharField(max_length=20, blank=True, null=True)
     purchase_date = models.DateField(blank=True, null=True)
     purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    quantity = models.IntegerField(blank=True, null=True)
+    quantity = models.IntegerField()
     minimum_quantity = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)  
     image = models.ImageField(upload_to='accessory_images/', blank=True, null=True)

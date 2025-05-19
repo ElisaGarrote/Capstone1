@@ -83,9 +83,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'ams_assets',
         'USER': 'postgres',
-        'PASSWORD': 'root',
+        'PASSWORD': 'capstone',
         'HOST': 'localhost',
-        
     }
 }
 
@@ -129,6 +128,12 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny'
+    ],
+}
 
 MEDIA_URL = '/media/'
 

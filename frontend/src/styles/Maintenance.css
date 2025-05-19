@@ -1,47 +1,45 @@
-/* Overall layout structure */
-.app-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
+/* Page specific styles */
+.page {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-color);
+  height: 100vh;
+  width: 100vw;
+  padding: 100px 38px 38px 38px;
+  position: relative;
+  z-index: 1;
+}
 
-  .app-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    width: 100%;
-    background-color: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  height: auto;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 40px;
+  border: 1px solid #d3d3d3;
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
+  padding-bottom: 28px;
+  overflow: hidden;
+}
 
-  /* Maintenance page specific styles */
-  .maintenance-page {
-    display: flex;
-    flex-direction: column;
-    background-color: var(--bg-color);
-    height: 100vh;
-    width: 100vw;
-    padding: 100px 38px 38px 38px;
-    position: relative;
-    z-index: 1;
-  }
+.top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 28px 28px 0 28px;
+}
 
-  .main-top {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 16px 0;
-    margin-bottom: 16px;
-  }
-
-  .main-top h1 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-    color: var(--secondary-text-color);
-  }
+.top h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--secondary-text-color);
+}
 
   .actions-container {
     display: flex;

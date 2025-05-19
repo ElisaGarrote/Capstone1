@@ -8,7 +8,7 @@ import CloseIcon from "../../assets/icons/close.svg";
 
 export default function CheckinAccessory() {
   const location = useLocation();
-  const { id } = location.state || {}; // Retrieve the data that pass from the previous page. Set this empty if the id state is undefined or null.
+  const { data } = location.state || {}; // Retrieve the data that pass from the previous page. Set this empty if the data state is undefined or null.
   const [currentDate, setCurrentDate] = useState("");
   const [previewImages, setPreviewImages] = useState([]);
 
@@ -49,7 +49,7 @@ export default function CheckinAccessory() {
             root="Accessories"
             currentPage="Checkin Accessory"
             rootNavigatePage="/accessories"
-            title={id}
+            title={data}
           />
         </section>
         <section className="middle">

@@ -40,7 +40,7 @@ export default function EditMaintenance() {
                 notes: "Replaced battery due to reduced capacity. Battery health was at 78%.",
                 attachmentName: "battery_replacement_receipt.pdf"
             };
-            
+
             setMaintenanceData(mockData);
             if (mockData.attachmentName) {
                 setAttachmentFile({ name: mockData.attachmentName });
@@ -96,21 +96,21 @@ export default function EditMaintenance() {
     return (
         <div className="maintenance-page-container">
             <NavBar />
-            
+
             <div className="maintenance-page-content">
                 <div className="breadcrumb">
-                    <span className="root-link" onClick={() => navigate('/dashboard/Repair/Maintenance')}>Maintenances</span>
+                    <span className="root-link" onClick={() => navigate('/dashboard/Repair/Maintenance')}>Asset Repairs</span>
                     <span className="separator"> / </span>
-                    <span className="current-page">Edit Maintenance</span>
+                    <span className="current-page">Edit Repair</span>
                 </div>
-                
+
                 <div className="page-header">
                     <h1 className="page-title">{maintenanceData.maintenanceName}</h1>
                     <button className="delete-btn" onClick={handleDelete}>
                         <i className="fa fa-trash"></i> Delete
                     </button>
                 </div>
-                
+
                 <div className="form-container">
                     <form onSubmit={handleSubmit}>
                         <div className="form-field">
@@ -126,7 +126,7 @@ export default function EditMaintenance() {
                                 }}>×</button>
                             </div>
                         </div>
-                        
+
                         <div className="form-field">
                             <label htmlFor="supplier">Supplier</label>
                             <div className="selected-field">
@@ -139,19 +139,19 @@ export default function EditMaintenance() {
                                 }}>×</button>
                             </div>
                         </div>
-                        
+
                         <div className="form-field">
-                            <label htmlFor="maintenanceType">Maintenance Type <span className="required">*</span></label>
+                            <label htmlFor="maintenanceType">Repair Type <span className="required">*</span></label>
                             <div className="select-wrapper">
-                                <select 
-                                    name="maintenanceType" 
-                                    id="maintenanceType" 
-                                    required 
+                                <select
+                                    name="maintenanceType"
+                                    id="maintenanceType"
+                                    required
                                     className="form-input"
                                     value={maintenanceData.maintenanceType}
                                     onChange={handleInputChange}
                                 >
-                                    <option value="">Select Maintenance Type</option>
+                                    <option value="">Select Repair Type</option>
                                     <option value="Hardware">Hardware</option>
                                     <option value="Software">Software</option>
                                     <option value="Inspection">Inspection</option>
@@ -161,14 +161,14 @@ export default function EditMaintenance() {
                                 <span className="dropdown-arrow"></span>
                             </div>
                         </div>
-                        
+
                         <div className="form-field">
-                            <label htmlFor="maintenanceName">Maintenance Name <span className="required">*</span></label>
+                            <label htmlFor="maintenanceName">Repair Name <span className="required">*</span></label>
                             <input
                                 type="text"
                                 name="maintenanceName"
                                 id="maintenanceName"
-                                placeholder="Maintenance Name"
+                                placeholder="Repair Name"
                                 maxLength="100"
                                 required
                                 className="form-input"
@@ -176,7 +176,7 @@ export default function EditMaintenance() {
                                 onChange={handleInputChange}
                             />
                         </div>
-                        
+
                         <div className="form-field">
                             <label htmlFor="startDate">Start Date <span className="required">*</span></label>
                             <div className="date-picker-wrapper">
@@ -192,7 +192,7 @@ export default function EditMaintenance() {
                                 <span className="calendar-icon"></span>
                             </div>
                         </div>
-                        
+
                         <div className="form-field">
                             <label htmlFor="endDate">End Date</label>
                             <div className="date-picker-wrapper">
@@ -207,7 +207,7 @@ export default function EditMaintenance() {
                                 <span className="calendar-icon"></span>
                             </div>
                         </div>
-                        
+
                         <div className="form-field">
                             <label htmlFor="cost">Cost</label>
                             <div className="cost-input">
@@ -234,12 +234,12 @@ export default function EditMaintenance() {
                                 />
                             </div>
                         </div>
-                        
+
                         <div className="form-field">
                             <label htmlFor="notes">Notes</label>
-                            <textarea 
-                                name="notes" 
-                                id="notes" 
+                            <textarea
+                                name="notes"
+                                id="notes"
                                 maxLength="500"
                                 rows="6"
                                 className="form-input"
@@ -247,7 +247,7 @@ export default function EditMaintenance() {
                                 onChange={handleInputChange}
                             ></textarea>
                         </div>
-                        
+
                         <div className="form-field">
                             <label>Attachments</label>
                             <div className="attachments-container">
@@ -267,7 +267,7 @@ export default function EditMaintenance() {
                                     />
                                     <p className="file-size-limit">Maximum file size must be 5MB</p>
                                 </div>
-                                
+
                                 {attachmentFile ? (
                                     <div className="file-selected">
                                         <p className="file-name">{attachmentFile.name}</p>
@@ -291,7 +291,7 @@ export default function EditMaintenance() {
                                 )}
                             </div>
                         </div>
-                        
+
                         <div className="form-actions">
                             <button type="submit" className="save-btn">
                                 Save

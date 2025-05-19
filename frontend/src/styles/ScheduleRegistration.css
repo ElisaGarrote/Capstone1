@@ -79,6 +79,16 @@
   cursor: pointer;
 }
 
-.schedule-registration-page .save-btn:hover {
+.schedule-registration-page button:disabled {
+  cursor: not-allowed;
+  background-color: #d3d3d3;
+}
+
+.schedule-registration-page .save-btn:hover:not(button:disabled) {
   background-color: var(--primary-color-hover);
+}
+
+.schedule-registration-page form span {
+  color: red;
+  font-size: 0.875rem;
 }

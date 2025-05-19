@@ -30,8 +30,13 @@ class Product(models.Model):
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='product_images/')
+    is_deleted = models.BooleanField(default=False)
+
     def __str__(self):
-        return self.name
+        return f"Image(s) for {self.product.name}"
 
 class Status(models.Model):
     STATUS_CHOICES = [
@@ -103,6 +108,7 @@ class AuditSchedule(models.Model):
     date = models.DateField()
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now(), editable=False)
 
     def __str__(self):
         return f"Audit Schedule for {self.asset.displayed_id} on {self.date}"
@@ -110,10 +116,12 @@ class AuditSchedule(models.Model):
 class Audit(models.Model):
     location = models.CharField(max_length=50)
     user_id = models.IntegerField()
-    date = models.DateTimeField(default=timezone.now)
+    audit_date = models.DateField(default=timezone.now().date())
+    next_audit_date = models.DateField(default=timezone.now().date())
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     audit_schedule = models.ForeignKey(AuditSchedule, on_delete=models.CASCADE, related_name='asset_audits')
+    created_at = models.DateTimeField(default=timezone.now(), editable=False)
 
     def __str__(self):
         return f"Audit on {self.created_at} for {self.audit_schedule.asset.displayed_id}"

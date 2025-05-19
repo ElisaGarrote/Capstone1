@@ -99,16 +99,16 @@ export default function MaintenanceRegistration() {
     return (
       <div className="maintenance-page-container">
         <NavBar />
-        
+
         <div className="maintenance-page-content">
           <div className="breadcrumb">
-            <span className="root-link" onClick={() => navigate('/dashboard/Repair/Maintenance')}>Maintenance</span>
+            <span className="root-link" onClick={() => navigate('/dashboard/Repair/Maintenance')}>Asset Repairs</span>
             <span className="separator">/</span>
-            <span className="current-page">New Maintenance</span>
+            <span className="current-page">New Repair</span>
           </div>
-          
-          <h1 className="page-title">New Maintenance</h1>
-          
+
+          <h1 className="page-title">New Repair</h1>
+
           <div className="form-container">
             <form onSubmit={handleSubmit}>
               <div className="form-field">
@@ -129,7 +129,7 @@ export default function MaintenanceRegistration() {
                   <span className="dropdown-arrow"></span>
                 </div>
               </div>
-              
+
               <div className="form-field">
                 <label htmlFor="supplier">Supplier</label>
                 <div className="select-wrapper">
@@ -147,7 +147,7 @@ export default function MaintenanceRegistration() {
                   <span className="dropdown-arrow"></span>
                 </div>
               </div>
-              
+
               <div className="form-field">
                 <label htmlFor="type">Maintenance Type *</label>
                 <div className="select-wrapper">
@@ -166,7 +166,7 @@ export default function MaintenanceRegistration() {
                   <span className="dropdown-arrow"></span>
                 </div>
               </div>
-              
+
               <div className="form-field">
                 <label htmlFor="maintenanceName">Maintenance Name *</label>
                 <input
@@ -180,7 +180,7 @@ export default function MaintenanceRegistration() {
                   required
                 />
               </div>
-              
+
               <div className="form-field">
                 <label htmlFor="startDate">Start Date *</label>
                 <div className="date-picker-wrapper">
@@ -196,7 +196,7 @@ export default function MaintenanceRegistration() {
                   <span className="calendar-icon"></span>
                 </div>
               </div>
-              
+
               <div className="form-field">
                 <label htmlFor="endDate">End Date</label>
                 <div className="date-picker-wrapper">
@@ -211,7 +211,7 @@ export default function MaintenanceRegistration() {
                   <span className="calendar-icon"></span>
                 </div>
               </div>
-              
+
               <div className="form-field">
                 <label htmlFor="cost">Cost</label>
                 <div className="cost-input">
@@ -227,19 +227,19 @@ export default function MaintenanceRegistration() {
                   />
                 </div>
               </div>
-              
+
               <div className="form-field">
                 <label htmlFor="notes">Notes</label>
-                <textarea 
-                  name="notes" 
-                  id="notes" 
+                <textarea
+                  name="notes"
+                  id="notes"
                   maxLength="500"
                   rows="6"
                   value={formData.notes}
                   onChange={handleInputChange}
                 ></textarea>
               </div>
-              
+
               <div className="form-field">
                 <label>Attachments</label>
                 <div className="attachments-container">
@@ -276,7 +276,7 @@ export default function MaintenanceRegistration() {
                   <p className="file-size-limit">Maximum file size must be 5MB</p>
                 </div>
               </div>
-              
+
               <div className="form-actions">
                 <button type="submit" className="save-btn">
                   Save

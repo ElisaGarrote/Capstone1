@@ -20,17 +20,16 @@ export default function Status({
     <main className={`status-${type.split(" ").join("-")}`}>
       <div className="circle"></div>
       {name}
-      {/* Below will be rendered when any of these (i.e personName or location) 
+      {/* Below will be rendered when any of these (i.e personName or location)
       is not equal to null*/}
       {(personName != null || location != null) && (
-        <>
-          {" "}
-          to
+        <span className="status-details">
+          <span className="status-to">to</span>
           <div className="icon">
             <img src={personName != null ? personIcon : locationIcon} alt="" />
           </div>
-          {personName != null ? personName : location}
-        </>
+          <span className="status-target">{personName != null ? personName : location}</span>
+        </span>
       )}
     </main>
   );

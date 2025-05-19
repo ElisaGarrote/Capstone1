@@ -1,5 +1,6 @@
 import "../../styles/custom-colors.css";
 import "../../styles/AssetAudits.css";
+import "../../styles/AuditTablesGlobal.css";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
@@ -10,6 +11,8 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
+import assetsService from "../../services/assets-service";
+import { formatDate } from "../../utils/dateFormatter";
 
 export default function AssetAudits() {
   let notes = "sdfsdfsdfdfdfdfdfdfdfsdfsdfsdf";
@@ -20,15 +23,18 @@ export default function AssetAudits() {
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isUpdated, setUpdated] = useState(false);
   const [isNewAuditAdded, setNewAuditAdded] = useState(false);
+  const [isAddScheduleAuditSuccess, setAddScheduleAuditSuccess] =
+    useState(false);
   const [isExportModalOpen, setExportModalOpen] = useState(false);
+  const [scheduleAuditData, setScheduleAuditData] = useState([]);
+  const [isLoading, setLoading] = useState(true);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
   const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
   const isUpdateFromEdit = location.state?.isUpdateFromEdit;
   const addedNewAudit = location.state?.addedNewAudit;
-
-  console.log("is update from audit: ", isUpdateFromEdit);
+  const addedScheduleAudit = location.state?.addedScheduleAudit;
 
   // Set the setDeleteSuccess state to true when the isDeleteSuccessFromEdit is true.
   // And reset the setDeleteSucces state to false after 5 seconds.
@@ -59,6 +65,35 @@ export default function AssetAudits() {
     }
   }, [addedNewAudit]);
 
+  useEffect(() => {
+    if (addedScheduleAudit == true) {
+      setAddScheduleAuditSuccess(true);
+      setTimeout(() => {
+        setAddScheduleAuditSuccess(false);
+      }, 5000);
+    }
+  }, [addedScheduleAudit]);
+
+  // Retrieve all the schedule audits records.
+  useEffect(() => {
+    const fetchAllScheduleAudits = async () => {
+      const fetchedData = await assetsService.fetchAllAuditSchedules();
+      setScheduleAuditData(fetchedData);
+    };
+
+    fetchAllScheduleAudits();
+  }, []);
+
+  // Set the isLoading state to false
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 300);
+  }, []);
+
+  // For debugging only.
+  console.table(scheduleAuditData);
+
   return (
     <>
       {/* Handle the delete modal.
@@ -85,6 +120,10 @@ export default function AssetAudits() {
 
       {isNewAuditAdded && <Alert message="New audit added!" type="success" />}
 
+      {isAddScheduleAuditSuccess && (
+        <Alert message="New schedule audit added!" type="success" />
+      )}
+
       {isExportModalOpen && (
         <ExportModal closeModal={() => setExportModalOpen(false)} />
       )}
@@ -107,79 +146,99 @@ export default function AssetAudits() {
           <section>
             <TabNavBar />
           </section>
-          <section className="container">
-            <section className="top">
-              <h2>Due to be Audited</h2>
-              <div>
-                <form action="" method="post">
-                  <input type="text" placeholder="Search..." />
-                </form>
-                <MediumButtons
-                  type="export"
-                  deleteModalOpen={() => setExportModalOpen(true)}
-                />
-              </div>
+          {isLoading ? (
+            "Loading..."
+          ) : scheduleAuditData.length > 0 ? (
+            <section className="container">
+              <section className="top">
+                <h2>Due to be Audited</h2>
+                <div>
+                  <form action="" method="post">
+                    <input type="text" placeholder="Search..." />
+                  </form>
+                  <MediumButtons
+                    type="export"
+                    deleteModalOpen={() => setExportModalOpen(true)}
+                  />
+                </div>
+              </section>
+              <section className="middle">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>
+                        <input type="checkbox" name="" id="" />
+                      </th>
+                      <th>DUE DATE</th>
+                      <th>ASSET</th>
+                      <th>STATUS</th>
+                      <th>CREATED</th>
+                      <th>AUDIT</th>
+                      <th>EDIT</th>
+                      <th>DELETE</th>
+                      <th>VIEW</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {scheduleAuditData.map((data, index) => {
+                      return (
+                        <tr key={index}>
+                          <td>
+                            <input type="checkbox" name="" id="" />
+                          </td>
+                          <td>{formatDate(data.date)}</td>
+                          <td>
+                            {data.asset_info.displayed_id} -{" "}
+                            {data.asset_info.name}
+                          </td>
+                          <td>
+                            <Status type="deployable" name="Ready to Deploy" />
+                          </td>
+                          <td>December 30, 2025</td>
+                          <td>
+                            <TableBtn
+                              type="audit"
+                              navigatePage="/audits/new"
+                              data={data}
+                              previousPage={location.pathname}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="edit"
+                              navigatePage={"/audits/edit"}
+                              data={data}
+                              previousPage={location.pathname}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="delete"
+                              showModal={() => {
+                                setDeleteModalOpen(true);
+                                setSelectedRowId(assetId);
+                              }}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="view"
+                              navigatePage="/audits/view"
+                              data={data}
+                              previousPage={location.pathname}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </section>
+              <section></section>
             </section>
-            <section className="middle">
-              <table>
-                <thead>
-                  <tr>
-                    <th>
-                      <input type="checkbox" name="" id="" />
-                    </th>
-                    <th>DUE DATE</th>
-                    <th>ASSET</th>
-                    <th>STATUS</th>
-                    <th>CREATED</th>
-                    <th>EDIT</th>
-                    <th>DELETE</th>
-                    <th>VIEW</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <input type="checkbox" name="" id="" />
-                    </td>
-                    <td>December 31, 2025</td>
-                    <td>
-                      {assetId} - {assetName}
-                    </td>
-                    <td>
-                      <Status type="deployable" name="Ready to Deploy" />
-                    </td>
-                    <td>December 30, 2025</td>
-                    <td>
-                      <TableBtn
-                        type="edit"
-                        navigatePage={"/audits/edit"}
-                        id={`${assetId} - ${assetName}`}
-                        previousPage={location.pathname}
-                      />
-                    </td>
-                    <td>
-                      <TableBtn
-                        type="delete"
-                        showModal={() => {
-                          setDeleteModalOpen(true);
-                          setSelectedRowId(assetId);
-                        }}
-                      />
-                    </td>
-                    <td>
-                      <TableBtn
-                        type="view"
-                        navigatePage="/audits/view"
-                        id={`${assetId} - ${assetName}`}
-                        previousPage={location.pathname}
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </section>
-            <section></section>
-          </section>
+          ) : (
+            "No Asset Audit Found."
+          )}
         </section>
       </main>
     </>

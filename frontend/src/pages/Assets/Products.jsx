@@ -10,12 +10,14 @@ import Alert from "../../components/Alert";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
-  
   const [checkedItems, setCheckedItems] = useState([]);
   const allChecked = checkedItems.length === products.length;
+
+  const [endPoint, setEndPoint] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedRowId, setSelectedRowId] = useState(null);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [isDeleteFailed, setDeleteFailed] = useState(false);
+
 
   useEffect(() => {
     fetchProducts();
@@ -48,33 +50,36 @@ export default function Products() {
     );
   };
 
-  const handleView = (id) => {
-    console.log("View product with id:", id);
-    
-  };
-
   return (
     <>
-      <nav>
-        <NavBar />
-      </nav>
-      {isDeleteModalOpen && (
-        <DeleteModal
-          id={selectedRowId}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
-            setDeleteSucess(true);
-            setTimeout(() => {
-              setDeleteSucess(false);
-            }, 5000);
-          }}
-        />
-      )}
-
       {isDeleteSuccess && (
         <Alert message="Deleted Successfully!" type="success" />
       )}
+      
+      {isDeleteFailed && (
+        <Alert message="Delete failed. Please try again." type="error" />
+      )}
 
+      {isDeleteModalOpen && (
+        <DeleteModal
+        endPoint={endPoint}
+        closeModal={() => setDeleteModalOpen(false)}
+        confirmDelete={async () => {
+          await fetchProducts();
+          setDeleteSucess(true);
+          setTimeout(() => setDeleteSucess(false), 5000);
+        }}
+        onDeleteFail={() => {
+          setDeleteFailed(true);
+          setTimeout(() => setDeleteFailed(false), 5000);
+        }}
+      />      
+      )}
+
+      <nav>
+        <NavBar />
+      </nav>
+      
       <main className="page">
         <div className="container">
           <section className="top">
@@ -146,8 +151,8 @@ export default function Products() {
                               <TableBtn
                                 type="delete"
                                 showModal={() => {
+                                  setEndPoint(`http://localhost:8003/products/delete/${product.id}`)
                                   setDeleteModalOpen(true);
-                                  setSelectedRowId(product.id);
                                 }}
                               />
                             </td>
