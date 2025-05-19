@@ -23,3 +23,29 @@ class DepreciationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Depreciation
         fields = '__all__'
+
+class RepairFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RepairFile
+        fields = ['id', 'file']
+
+class RepairSerializer(serializers.ModelSerializer):
+    files = RepairFileSerializer(many=True, read_only=True)
+    asset_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Repair
+        fields = '__all__'
+    
+    def get_asset_name(self, obj):
+        return obj.asset.displayed_id if obj.asset else None
+
+class RepairListSerializer(serializers.ModelSerializer):
+    asset_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Repair
+        fields = ['id', 'name', 'asset_name', 'type', 'start_date', 'end_date', 'cost']
+    
+    def get_asset_name(self, obj):
+        return obj.asset.displayed_id if obj.asset else None

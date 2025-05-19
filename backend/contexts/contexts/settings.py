@@ -83,7 +83,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'ams_contexts',
         'USER': 'postgres',
-        'PASSWORD': 'Macx77',
+        'PASSWORD': 'root',
         'HOST': 'localhost',
     }
 }

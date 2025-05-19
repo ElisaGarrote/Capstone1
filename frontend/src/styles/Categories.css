@@ -1,0 +1,257 @@
+/* Categories Page Styles */
+.categories-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f6f8fa;
+  }
+  
+  .content-container {
+    padding: 20px;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 1400px;
+  }
+  
+  .page-header {
+    display: flex;
+    align-items: flex-end; /* Change this from center to flex-end */
+    justify-content: space-between;
+    padding-bottom: 8px;    /* Add spacing to match table header padding */
+  }
+  
+  .page-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    line-height: 1;         /* Consistent vertical spacing */
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center; /* Aligns buttons vertically with parent */
+    height: 100%;  
+  }
+  
+  .action-buttons button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;         /* Adjust to match table row height */
+    padding: 0 12px;
+    font-size: 14px;
+    line-height: 1;
+    border: none;
+    cursor: pointer;  
+    margin: 0;        /* make all buttons uniform height */
+  }
+  
+  .action-buttons .add-btn {
+    background-color: #1e88e5;
+    color: white;
+    border: none;
+  }
+  
+  /* Search Container */
+  .search-container {
+    margin-bottom: 20px;
+  }
+  
+  .search-input {
+    width: 300px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  /* Categories Table */
+  .categories-table {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  thead {
+    background-color: #f8f9fa;
+  }
+  
+  th, td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    font-weight: 600;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .checkbox-col {
+    width: 40px;
+  }
+  
+  .name-col {
+    width: 30%;
+  }
+  
+  .type-col {
+    width: 20%;
+  }
+  
+  .quantity-col {
+    width: 20%;
+  }
+  
+  .edit-col, .delete-col {
+    width: 80px;
+    text-align: center;
+  }
+  
+  /* Category Name with Icon */
+  .category-name {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .category-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .category-icon img {
+    max-width: 100%;
+    max-height: 100%;
+  }
+  
+  /* Quantity Icons */
+  .quantity-icon {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .accessory-icon, .license-icon, .consumable-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  
+  .accessory-icon {
+    background-image: url('/images/accessory-icon.png');
+  }
+  
+  .license-icon {
+    background-image: url('/images/license-icon.png');
+  }
+  
+  .consumable-icon {
+    background-image: url('/images/consumable-icon.png');
+  }
+  
+  /* Action Buttons */
+  .edit-btn, .delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+  }
+  
+  .edit-btn:hover {
+    background-color: #f0f7ff;
+  }
+  
+  .delete-btn:hover {
+    background-color: #fff0f0;
+  }
+  
+  .edit-icon {
+    background-image: url('/images/edit-icon.png');
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    background-size: contain;
+  }
+  
+  .delete-icon {
+    background-image: url('/images/delete-icon.png');
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    background-size: contain;
+  }
+  
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+  }
+  
+  .items-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .items-per-page select {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+  }
+  
+  .page-navigation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .prev-btn, .next-btn {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+  }
+  
+  .prev-btn:disabled, .next-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .page-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: #1e88e5;
+    color: white;
+    border-radius: 4px;
+  }

@@ -49,6 +49,7 @@ import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
 import ActivityReport from "./pages/reports/ActivityReport";
 import Settings from "./pages/Settings";
 import UserManagement from "./pages/UserManagement";
+import ViewCategories from "./pages/More/ViewCategories";
 
 function Logout() {
   localStorage.clear();
@@ -93,6 +94,7 @@ function App() {
           path="/accessories/registration"
           element={<AccessoriesRegistration />}
         />
+        <Route path="/categories" element={<ViewCategories />} />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
         <Route path="/accessories/edit" element={<EditAccessories />} />
