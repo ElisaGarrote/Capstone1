@@ -12,6 +12,7 @@ djangorestframework_simplejwt
 djoser
 idna
 oauthlib
+Pillow
 psycopg2
 psycopg2-binary
 pycparser
