@@ -4,6 +4,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
+import Select from "react-select";
 
 export default function CheckoutAccessory() {
   const location = useLocation();
@@ -11,6 +12,8 @@ export default function CheckoutAccessory() {
   const [currentDate, setCurrentDate] = useState("");
   const [previewImages, setPreviewImages] = useState([]);
   const [checkoutDate, setCheckoutDate] = useState("");
+  const [externalEmployeeList, setExternalEmployeeList] = useState([]);
+  const [dropdownLocation, setDropdownLocation] = useState();
 
   useEffect(() => {
     const today = new Date();
@@ -39,6 +42,59 @@ export default function CheckoutAccessory() {
     }
   };
 
+  // Fetch list of external employee from the json file mockup data.
+  useEffect(() => {
+    fetch("/ExternalEmployee.json")
+      .then((response) => response.json()) // Read the response as JSON
+      // Sort by firstname then lastname
+      .then((response) => {
+        const sortedData = response.sort((a, b) => {
+          const nameA = `${a.firstname} ${a.lastname}`.toLowerCase();
+          const nameB = `${b.firstname} ${b.lastname}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+        setExternalEmployeeList(sortedData);
+      })
+      .catch((error) => console.error("Error loading employee data: ", error));
+  }, []);
+
+  const employeeOptions = externalEmployeeList.map((employee) => ({
+    value: employee.id,
+    label: `${employee.firstname} ${employee.lastname}`,
+    branch: employee.branch,
+  }));
+
+  const conditionOptions = [
+    { value: "excellent", label: "Excellent" },
+    { value: "good", label: "Good" },
+    { value: "fair", label: "Fair" },
+    { value: "poor", label: "Poor" },
+  ];
+
+  // Set the custom styles for dropdown
+  const customStylesDropdown = {
+    control: (provided) => ({
+      ...provided,
+      width: "100%",
+      borderRadius: "10px",
+      fontSize: "0.875rem",
+      padding: "3px 8px",
+      cursor: "pointer",
+    }),
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "grey",
+      fontSize: "0.875rem",
+      cursor: "pointer",
+    }),
+  };
+
+  console.log("location:", dropdownLocation);
+
   return (
     <>
       <nav>
@@ -58,35 +114,24 @@ export default function CheckoutAccessory() {
           <form action="" method="post">
             <fieldset>
               <label htmlFor="checkout-to">Check-Out to *</label>
-              <select
-                name="checkout-to"
-                id="checkout-to"
-                required
-                defaultValue="default"
-              >
-                <option value="default" disabled>
-                  Select employee...
-                </option>
-                <option value="employee1">Employee 1</option>
-                <option value="employee2">Employee 2</option>
-                <option value="employee3">Employee 3</option>
-              </select>
+              <Select
+                options={employeeOptions}
+                styles={customStylesDropdown}
+                placeholder="Select employee..."
+                onChange={(option) => {
+                  setDropdownLocation(option.branch);
+                }}
+              />
             </fieldset>
             <fieldset>
               <label htmlFor="location">Location *</label>
-              <select
-                name="location"
-                id="location"
-                required
-                defaultValue={"default"}
-              >
-                <option value="default" disabled>
-                  Select location...
-                </option>
-                <option value="Makati">Makati</option>
-                <option value="Pasig">Pasig</option>
-                <option value="Marikina">Marikina</option>
-              </select>
+              <div className="location">
+                {dropdownLocation ? (
+                  <p>{dropdownLocation}</p>
+                ) : (
+                  <p>Select employee to set the location...</p>
+                )}
+              </div>
             </fieldset>
             <fieldset>
               <label htmlFor="checkout-date">Check-Out Date *</label>
@@ -110,11 +155,11 @@ export default function CheckoutAccessory() {
             </fieldset>
             <fieldset>
               <label htmlFor="condition">Condition *</label>
-              <select name="condition" id="condition" required>
-                <option value="option1">Option 1</option>
-                <option value="option2">Option 2</option>
-                <option value="option3">Option 3</option>
-              </select>
+              <Select
+                options={conditionOptions}
+                styles={customStylesDropdown}
+                placeholder="Select condition..."
+              />
             </fieldset>
             <fieldset>
               <label htmlFor="notes">Notes</label>
