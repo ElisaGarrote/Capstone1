@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
 import Select from "react-select";
+import mockupData from "../../services/mockup-data";
 
 export default function CheckoutAccessory() {
   const location = useLocation();
@@ -44,18 +45,12 @@ export default function CheckoutAccessory() {
 
   // Fetch list of external employee from the json file mockup data.
   useEffect(() => {
-    fetch("/ExternalEmployee.json")
-      .then((response) => response.json()) // Read the response as JSON
-      // Sort by firstname then lastname
-      .then((response) => {
-        const sortedData = response.sort((a, b) => {
-          const nameA = `${a.firstname} ${a.lastname}`.toLowerCase();
-          const nameB = `${b.firstname} ${b.lastname}`.toLowerCase();
-          return nameA.localeCompare(nameB);
-        });
-        setExternalEmployeeList(sortedData);
-      })
-      .catch((error) => console.error("Error loading employee data: ", error));
+    const getExternalEmployees = async () => {
+      const responseData = await mockupData.fetchExternalEmployee();
+      setExternalEmployeeList(responseData); // Store the responseData in the external employee list state.
+    };
+
+    getExternalEmployees();
   }, []);
 
   const employeeOptions = externalEmployeeList.map((employee) => ({
