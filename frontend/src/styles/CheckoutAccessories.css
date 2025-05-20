@@ -46,6 +46,12 @@
   font-weight: 600;
 }
 
+.checkout-accessories-page fieldset .location {
+  border-radius: 10px;
+  background-color: rgba(211, 211, 211, 0.5);
+  cursor: not-allowed;
+}
+
 .checkout-accessories-page input:not(input[type="radio"]),
 .checkout-accessories-page select,
 .checkout-accessories-page textarea {
@@ -65,13 +71,6 @@
   border: 1px solid #d3d3d3;
   font-size: 0.875rem;
   color: var(--secondary-text-color);
-}
-
-.checkout-accessories-page form fieldset:nth-child(1) div {
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-  cursor: pointer;
 }
 
 .checkout-accessories-page .employee-radio-container,
