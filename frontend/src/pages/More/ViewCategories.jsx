@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+ import React, { useState, useEffect } from 'react';
 import NavBar from '../../components/NavBar';
 import '../../styles/Categories.css';
+import MediumButtons from "../../components/buttons/MediumButtons";
 import keyboardIcon from '../../assets/img/keyboard_Icon.png';
 import chargerIcon from '../../assets/img/charger_Icon.png';
 import cablesIcon from '../../assets/img/cables_Icon.png';
@@ -69,24 +70,17 @@ export default function ViewCategories() {
       <div className="content-container">
         <div className="page-header">
           <h1>Categories ({categories.length})</h1>
-          <div className="action-buttons">
-            <button className="bulk-edit-btn">Bulk Edit</button>
-            <button className="columns-btn">Columns</button>
-            <button className="sort-btn">Sort</button>
-            <button className="filter-btn">Filter</button>
-            <button className="export-btn">Export</button>
-            <button className="add-btn">Add</button>
-          </div>
-        </div>
-
-        <div className="search-container">
-          <input 
-            type="text" 
-            placeholder="Search" 
-            value={searchQuery} 
-            onChange={handleSearchChange}
-            className="search-input"
-          />
+            <div className="search-container">
+            <input 
+                type="text" 
+                placeholder="Search" 
+                value={searchQuery} 
+                onChange={handleSearchChange}
+                className="search-input"
+            />
+            </div>
+              <MediumButtons type="export" />
+              <MediumButtons type="new" navigatePage="/More/CategoryRegistration" />
         </div>
 
         <div className="categories-table">

@@ -50,6 +50,8 @@ import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
 import ActivityReport from "./pages/reports/ActivityReport";
 import Settings from "./pages/Settings";
 import UserManagement from "./pages/UserManagement";
+import ViewCategories from "./pages/More/ViewCategories";
+import CategoryRegistration from "./pages/More/CategoryRegistration";
 
 function Logout() {
   localStorage.clear();
@@ -113,7 +115,8 @@ function App() {
           path="/accessories/registration"
           element={<AccessoriesRegistration />}
         />
-        <Route path="/categories" element={<ViewCategories />} />
+        <Route path="/More/ViewCategories" element={<ViewCategories />} />
+        <Route path="/More/CategoryRegistration" element={<CategoryRegistration />} />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
         <Route path="/accessories/:id" element={<AccessoriesRegistration />} />
