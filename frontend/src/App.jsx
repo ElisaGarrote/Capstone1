@@ -19,6 +19,7 @@ import AccessoriesRegistration from "./pages/Accessories/AccessoriesRegistration
 import CheckinAccessory from "./pages/Accessories/CheckinAccessory";
 import CheckoutAccessory from "./pages/Accessories/CheckoutAccessory";
 import EditAccessories from "./pages/Accessories/EditAccessories";
+import AccessoriesCheckoutList from "./pages/Accessories/AccessoriesCheckoutList";
 import Components from "./pages/Components/Components";
 import CheckOutComponent from "./pages/Components/CheckOutComponent";
 import CheckedOutList from "./pages/Components/CheckedOutList";
@@ -115,6 +116,10 @@ function App() {
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
         <Route path="/accessories/:id" element={<AccessoriesRegistration />} />
+        <Route
+          path="/accessories/checkout-list"
+          element={<AccessoriesCheckoutList />}
+        />
         <Route path="/components" element={<Components />} />
         <Route
           path="/components/check-out/:id"
