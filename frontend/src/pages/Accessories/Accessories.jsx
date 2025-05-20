@@ -233,7 +233,7 @@ export default function Accessories() {
                       <td>
                         <TableBtn
                           type="checkin"
-                          navigatePage={"/accessories/checkin"}
+                          navigatePage={"/accessories/checkout-list"}
                           data={accessory.name}
                         />
                       </td>
