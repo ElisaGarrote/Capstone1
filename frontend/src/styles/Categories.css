@@ -17,16 +17,18 @@
 .categories-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  justify-content: start;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  padding: 100px 38px 38px 38px;
+  background-color: #f5f5f5;
 }
 
 .content-container {
   display: flex;
   flex-direction: column;
-  background-color: var(--bg-color);
-  height: 100vh;
-  width: 100vw;
-  padding: 100px 38px 38px 38px;
+  width: 100%;
   position: relative;
   z-index: 1;
 }
@@ -37,7 +39,9 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  margin-bottom: 16px;
+  padding: 16px 34px;
+  border-bottom: 1px solid #d3d3d3;
+  border-collapse: collapse;
 }
 
 .page-header h1 {
@@ -50,14 +54,13 @@
 .search-container {
   flex-grow: 1;
   max-width: 300px;
-  margin: 0 8px;
 }
 
 .search-input {
   width: 100%;
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
+  padding: 12px 16px;
+  border-radius: 40px;
+  border: 1px solid #d3d3d3;
   font-size: 14px;
   background-color: white;
 }
@@ -65,6 +68,7 @@
 .search-input:focus {
   outline: none;
   border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.15);
 }
 
 .action-buttons {
@@ -104,29 +108,42 @@
 /* Table styles */
 .categories-table {
   background-color: white;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
+  border-radius: 40px;
+  border: 1px solid #d3d3d3;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
+  width: 100%;
 }
 
 .categories-table table {
   width: 100%;
   border-collapse: collapse;
+  border-spacing: 0;
+  border-radius: 0;
 }
 
 .categories-table th,
 .categories-table td {
-  padding: 10px 16px;
+  padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid var(--table-border);
+  border-bottom: 1px solid #d3d3d3;
+  border-radius: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .categories-table th {
-  background-color: var(--table-header-bg);
+  background-color: rgba(211, 211, 211, 0.2);
   font-weight: 500;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--secondary-text-color);
+}
+
+.categories-table td {
+  font-size: 0.88rem;
+  color: var(--secondary-text-color);
+  vertical-align: middle;
 }
 
 .categories-table tr:hover {
@@ -155,8 +172,9 @@
 }
 
 .edit-col, .delete-col {
-  width: 60px;
+  width: 40px !important;
   text-align: center;
+  padding: 4px;
 }
 
 /* Category name cell styling */
@@ -215,9 +233,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: 16px 34px;
   background-color: white;
   border-top: 1px solid var(--table-border);
+  border-bottom-left-radius: 40px;
+  border-bottom-right-radius: 40px;
 }
 
 .items-per-page {
@@ -274,4 +294,36 @@ input[type="checkbox"] {
   height: 16px;
   accent-color: var(--primary-color);
   cursor: pointer;
+}
+
+/* Action buttons styling */
+.categories-table .edit-button,
+.categories-table .delete-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+}
+
+/* Ensure buttons are properly centered in their cells */
+.categories-table td:nth-child(5) button,
+.categories-table td:nth-child(6) button {
+  display: block;
+  margin: 0 auto;
+  padding: 4px;
+  width: 26px;
+  height: 26px;
+}
+
+/* Add specific spacing for the action columns */
+.categories-table th:nth-child(5),
+.categories-table th:nth-child(6),
+.categories-table td:nth-child(5),
+.categories-table td:nth-child(6) {
+  padding-left: 8px;
+  padding-right: 8px;
+  min-width: 40px;
 }

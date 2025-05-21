@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
+import '../../styles/custom-colors.css';
+import '../../styles/PageTable.css';
+import '../../styles/GlobalTableStyles.css';
 import '../../styles/Categories.css';
+import '../../styles/Assets.css';
 import DeleteModal from '../../components/Modals/DeleteModal';
 import MediumButtons from "../../components/buttons/MediumButtons";
 import keyboardIcon from '../../assets/img/keyboard_Icon.png';
@@ -14,38 +18,38 @@ import TableBtn from "../../components/buttons/TableButtons";
 export default function ViewCategories() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([
-    { 
-      id: 1, 
-      icon: cablesIcon, 
-      name: "Cables", 
+    {
+      id: 1,
+      icon: cablesIcon,
+      name: "Cables",
       type: "Accessory",
       quantity: 2
     },
-    { 
-      id: 2, 
-      icon: chargerIcon, 
-      name: "Charger", 
+    {
+      id: 2,
+      icon: chargerIcon,
+      name: "Charger",
       type: "Accessory",
       quantity: 1
     },
-    { 
+    {
       id: 3,
-      icon: keyboardIcon, 
+      icon: keyboardIcon,
       name: "Keyboards",
       type: "Accessory",
       quantity: 2
     },
-    { 
-      id: 5, 
-      icon: paperprinterIcon, 
-      name: "Printer Paper", 
+    {
+      id: 5,
+      icon: paperprinterIcon,
+      name: "Printer Paper",
       type: "Consumable",
       quantity: 262
     },
-    { 
-      id: 6, 
-      icon: printerinkIcon, 
-      name: "Printer Ink", 
+    {
+      id: 6,
+      icon: printerinkIcon,
+      name: "Printer Ink",
       type: "Consumable",
       quantity: 95
     }
@@ -95,129 +99,135 @@ export default function ViewCategories() {
   };
 
   // Filter categories based on search query
-  const filteredCategories = categories.filter(category => 
+  const filteredCategories = categories.filter(category =>
     category.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="categories-page">
-      <NavBar />
-      <div className="content-container">
-        <div className="page-header">
-          <h1>Categories ({categories.length})</h1>
-            <div className="search-container">
-            <input 
-                type="text" 
-                placeholder="Search" 
-                value={searchQuery} 
-                onChange={handleSearchChange}
-                className="search-input"
-            />
-            </div>
+    <>
+      <nav>
+        <NavBar />
+      </nav>
+      <main className="page">
+        <div className="container">
+          <section className="top">
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0', color: '#545f71' }}>Categories ({categories.length})</h1>
+            <div>
+              <form action="" method="post" style={{ marginRight: '10px' }}>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  style={{ padding: '12px 16px', borderRadius: '40px', border: '1px solid #d3d3d3' }}
+                />
+              </form>
               <MediumButtons type="export" />
               <MediumButtons type="new" navigatePage="/More/CategoryRegistration" />
-        </div>
-
-        <div className="categories-table">
-          <table>
-            <thead>
-              <tr>
-                <th className="checkbox-col"><input type="checkbox" /></th>
-                <th className="name-col">NAME</th>
-                <th className="type-col">TYPE</th>
-                <th className="quantity-col">QUANTITY</th>
-                <th className="edit-col">EDIT</th>
-                <th className="delete-col">DELETE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCategories.map((category) => (
-                <tr key={category.id}>
-                  <td className="checkbox-col"><input type="checkbox" /></td>
-                  <td className="name-col">
-                    <div className="category-name">
-                      <div className="category-icon">
-                        <img src={category.icon} alt={category.name} />
-                      </div>
-                      <span>{category.name}</span>
-                    </div>
-                  </td>
-                  <td className="type-col">{category.type}</td>
-                  <td className="quantity-col">
-                    <div className="quantity-icon">
-                      {category.type === "Accessory" ? (
-                        <span className="accessory-icon"></span>
-                      ) : category.type === "License" ? (
-                        <span className="license-icon"></span>
-                      ) : (
-                        <span className="consumable-icon"></span>
-                      )}
-                      {category.quantity}
-                    </div>
-                  </td>
-                  <td className="edit-col">
-                    <button 
-                      className="edit-button" 
-                      onClick={() => handleEditCategory(category.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                    >
-                      <TableBtn type="edit" />
-                    </button>
-                  </td>
-                  <td className="delete-col">
-                    <button 
-                      className="delete-button" 
-                      onClick={() => handleDeleteClick(category.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                    >
-                      <TableBtn type="delete" />
-                    </button>
-                  </td>
+            </div>
+          </section>
+          <section className="middle">
+            <table className="assets-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '40px' }}>
+                    <input type="checkbox" />
+                  </th>
+                  <th style={{ width: '30%' }}>NAME</th>
+                  <th style={{ width: '20%' }}>TYPE</th>
+                  <th style={{ width: '20%', textAlign: 'center' }}>QUANTITY</th>
+                  <th style={{ width: '40px', textAlign: 'center' }}>EDIT</th>
+                  <th style={{ width: '40px', textAlign: 'center' }}>DELETE</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        <div className="pagination">
-          <div className="items-per-page">
-            <span>Show</span>
-            <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))}>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-            <span>items per page</span>
-          </div>
-          <div className="page-navigation">
-            <button className="prev-btn" disabled={currentPage === 1}>Prev</button>
-            <span className="page-number">{currentPage}</span>
-            <button className="next-btn" disabled={filteredCategories.length <= itemsPerPage}>Next</button>
-          </div>
-        </div>
+              </thead>
+              <tbody>
+                {filteredCategories.map((category) => (
+                  <tr key={category.id}>
+                    <td style={{ width: '40px' }}>
+                      <input type="checkbox" />
+                    </td>
+                    <td style={{ width: '30%' }}>
+                      <div className="category-name">
+                        <div className="category-icon">
+                          <img src={category.icon} alt={category.name} />
+                        </div>
+                        <span style={{ color: '#545f71' }}>{category.name}</span>
+                      </div>
+                    </td>
+                    <td style={{ width: '20%', color: '#545f71' }}>{category.type}</td>
+                    <td style={{ width: '20%', textAlign: 'center' }}>
+                      <div className="quantity-icon" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71', justifyContent: 'center' }}>
+                        {category.type === "Accessory" ? (
+                          <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#007bff', borderRadius: '2px' }}></span>
+                        ) : category.type === "License" ? (
+                          <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#6f42c1', borderRadius: '2px' }}></span>
+                        ) : (
+                          <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#20c997', borderRadius: '2px' }}></span>
+                        )}
+                        {category.quantity}
+                      </div>
+                    </td>
+                    <td style={{ width: '40px', textAlign: 'center' }}>
+                      <button
+                        className="edit-button"
+                        onClick={() => handleEditCategory(category.id)}
+                      >
+                        <TableBtn type="edit" />
+                      </button>
+                    </td>
+                    <td style={{ width: '40px', textAlign: 'center' }}>
+                      <button
+                        className="delete-button"
+                        onClick={() => handleDeleteClick(category.id)}
+                      >
+                        <TableBtn type="delete" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+          <section className="bottom" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '16px 34px', borderTop: '1px solid #d3d3d3' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71' }}>
+              <span style={{ color: '#545f71' }}>Show</span>
+              <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))} style={{ color: '#545f71' }}>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span style={{ color: '#545f71' }}>items per page</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button className="prev-btn" disabled={currentPage === 1} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Prev</button>
+              <span className="page-number" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '30px', height: '30px', backgroundColor: '#007bff', color: 'white', borderRadius: '4px', fontSize: '14px' }}>{currentPage}</span>
+              <button className="next-btn" disabled={filteredCategories.length <= itemsPerPage} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Next</button>
+            </div>
+          </section>
 
-        {/* Delete Modal */}
-        {showDeleteModal && (
-          <DeleteModal 
-            isOpen={showDeleteModal}
-            onConfirm={confirmDelete}
-            onCancel={cancelDelete}
-            title="Delete Category"
-            message="Are you sure you want to delete this category? This action cannot be undone."
-          />
-        )}
-        
-        {/* Debug button to test modal */}
-        <button 
-          onClick={() => {
-            console.log("Manual modal trigger");
-            setShowDeleteModal(true);
-          }}
-          style={{ display: 'none' }}
-        >
-          Test Modal
-        </button>
-      </div>
-    </div>
+          {/* Delete Modal */}
+          {showDeleteModal && (
+            <DeleteModal
+              isOpen={showDeleteModal}
+              onConfirm={confirmDelete}
+              onCancel={cancelDelete}
+              title="Delete Category"
+              message="Are you sure you want to delete this category? This action cannot be undone."
+            />
+          )}
+
+          {/* Debug button to test modal */}
+          <button
+            onClick={() => {
+              console.log("Manual modal trigger");
+              setShowDeleteModal(true);
+            }}
+            style={{ display: 'none' }}
+          >
+            Test Modal
+          </button>
+        </div>
+      </main>
+    </>
   );
 }
