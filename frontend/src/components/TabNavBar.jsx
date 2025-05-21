@@ -5,18 +5,20 @@ import { useEffect, useState } from "react";
 
 export default function TabNavBar() {
   const navigate = useNavigate();
-  const [scheduleAuditData, setScheduleAuditData] = useState([]);
-  const [auditData, setAuditData] = useState([]);
+  const [countScheduleAudits, setCountScheduleAudits] = useState(0);
+  const [countAudits, setCountAudits] = useState(0);
+  const [countOverdueAudits, setCountOverdueAudits] = useState(0);
 
-  // Retrieve all the schedule audits and audits records.
+  // Retrieve the count of all the schedule audits, audits, and overdue audits.
   useEffect(() => {
     const makeRequest = async () => {
-      const auditSchedulesResponse =
-        await assetsService.fetchAllAuditSchedules();
-      const auditsResponse = await assetsService.fetchAllAudits();
+      const countScheduleAudits = await assetsService.countAllScheduleAudits();
+      const countAudits = await assetsService.countAllAudits();
+      const countOverdueAudits = await assetsService.countAllOverdueAudits();
 
-      setScheduleAuditData(auditSchedulesResponse);
-      setAuditData(auditsResponse);
+      setCountScheduleAudits(countScheduleAudits);
+      setCountAudits(countAudits);
+      setCountOverdueAudits(countOverdueAudits);
     };
 
     makeRequest();
@@ -30,7 +32,7 @@ export default function TabNavBar() {
             className={location.pathname === "/audits" ? "active" : ""}
             onClick={() => navigate("/audits")}
           >
-            Due to be Audited (3)
+            Due to be Audited ({countScheduleAudits})
           </a>
         </li>
         <li className={location.pathname === "/audits/overdue" ? "active" : ""}>
@@ -38,7 +40,7 @@ export default function TabNavBar() {
             className={location.pathname === "/audits/overdue" ? "active" : ""}
             onClick={() => navigate("/audits/overdue")}
           >
-            Overdue for an Audits (3)
+            Overdue for an Audits ({countOverdueAudits})
           </a>
         </li>
         <li
@@ -50,7 +52,7 @@ export default function TabNavBar() {
             }
             onClick={() => navigate("/audits/scheduled")}
           >
-            Scheduled Audits ({scheduleAuditData.length})
+            Scheduled Audits ({countScheduleAudits})
           </a>
         </li>
         <li
@@ -62,7 +64,7 @@ export default function TabNavBar() {
             }
             onClick={() => navigate("/audits/completed")}
           >
-            Completed Audits ({auditData.length})
+            Completed Audits ({countAudits})
           </a>
         </li>
       </ul>
