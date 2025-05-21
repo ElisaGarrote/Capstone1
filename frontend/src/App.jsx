@@ -53,6 +53,9 @@ import UserManagement from "./pages/UserManagement";
 import ViewCategories from "./pages/More/ViewCategories";
 import CategoryRegistration from "./pages/More/CategoryRegistration";
 import CategoryEdit from "./pages/More/CategoryEdit";
+import ViewManufacturer from "./pages/More/ViewManufacturer";
+import ManufacturerRegistration from "./pages/More/ManufacturerRegistration";
+import ManufacturerEdit from "./pages/More/ManufacturerEdit";
 
 function Logout() {
   localStorage.clear();
@@ -81,6 +84,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
+
         </Route>
 
         <Route path="/login" element={<Login />} />
@@ -116,7 +120,12 @@ function App() {
           path="/accessories/registration"
           element={<AccessoriesRegistration />}
         />
+
+        <Route path="/more/ViewManufacturer" element={<ViewManufacturer/> } />
+        <Route path="/more/ManufacturerRegistration" element={<ManufacturerRegistration/> } />
         <Route path="/More/ViewCategories" element={<ViewCategories />} />
+        <Route path="/More/ManufacturerEdit" element={<ManufacturerEdit />} />
+
         <Route path="/More/CategoryRegistration" element={<CategoryRegistration />} />
         <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />

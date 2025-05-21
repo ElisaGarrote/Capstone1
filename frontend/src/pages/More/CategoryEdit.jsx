@@ -4,7 +4,7 @@ import NavBar from '../../components/NavBar';
 import '../../styles/CategoryRegistration.css';
 
 //START - EDIT THIS TRIGGER SINCE IT IS FOR ADD / MODIFY IT TO PERFORM EDIT
-const CategoryRegistration = () => {
+const CategoryEdit = () => {
   const navigate = useNavigate();
   const [attachmentFile, setAttachmentFile] = useState(null);
   
@@ -55,7 +55,7 @@ const CategoryRegistration = () => {
         <div className="breadcrumb">
           <span className="root-link" onClick={() => navigate('/More/ViewCategories')}>Categories</span>
           <span className="separator">/</span>
-          <span className="current-page">New Category</span>
+          <span className="current-page">Update Category</span>
         </div>
 
         <h1 className="page-title">Edit Category</h1>
@@ -175,4 +175,4 @@ const CategoryRegistration = () => {
   );
 };
 
-export default CategoryRegistration;
+export default CategoryEdit;

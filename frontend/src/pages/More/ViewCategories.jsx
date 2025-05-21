@@ -69,7 +69,7 @@ export default function ViewCategories() {
   // Navigate to edit page
   const handleEditCategory = (categoryId) => {
     console.log("/More/CategoryEdit/${categoryId}");
-    navigate("/More/CategoryEdit/${categoryId}");
+    navigate("/More/CategoryEdit/");
   };
 
   // Show delete modal

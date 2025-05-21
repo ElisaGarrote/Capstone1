@@ -279,8 +279,8 @@ export default function NavBar() {
                     setShowMoreMenu(false);
                   }}>Categories</button>
                   <button onClick={() => {
-                    navigate("/manufacturers");
-                    setSelectedMore("Manufacturers");
+                    navigate("/More/Viewmanufacturer");
+                    setSelectedMore("Manufacturer");
                     setShowMoreMenu(false);
                   }}>Manufacturers</button>
                   <button onClick={() => {
