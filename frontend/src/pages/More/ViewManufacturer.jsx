@@ -6,7 +6,7 @@ import '../../styles/PageTable.css';
 import '../../styles/GlobalTableStyles.css';
 import '../../styles/ViewManufacturer.css';
 import '../../styles/TableButtons.css';
-import '../../styles/ManufacturersButtons.css';
+import '../../styles/ManufacturerNotesFix.css';
 import DeleteModal from '../../components/Modals/DeleteModal';
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
@@ -150,7 +150,9 @@ export default function ViewManufacturers() {
                   <th style={{ width: '15%' }}>SUPPORT URL</th>
                   <th style={{ width: '10%' }}>PHONE</th>
                   <th style={{ width: '15%' }}>EMAIL</th>
-                  <th style={{ width: '15%' }}>NOTES</th>
+                  <th className="notes-header" style={{ width: '15%', textAlign: 'left', paddingLeft: '12px' }}>
+                    <div style={{ textAlign: 'left', display: 'block' }}>NOTES</div>
+                  </th>
                   <th style={{ width: '40px', textAlign: 'center', paddingLeft: '12px', paddingRight: '12px' }}>EDIT</th>
                   <th style={{ width: '40px', textAlign: 'center', paddingLeft: '12px', paddingRight: '12px' }}>DELETE</th>
                 </tr>
@@ -187,7 +189,7 @@ export default function ViewManufacturers() {
                     <td style={{ width: '15%', color: '#545f71' }}>{manufacturer.supportUrl}</td>
                     <td style={{ width: '10%', color: '#545f71' }}>{manufacturer.phone}</td>
                     <td style={{ width: '15%', color: '#545f71' }}>{manufacturer.email}</td>
-                    <td style={{ width: '15%', color: '#545f71' }}>{manufacturer.notes}</td>
+                    <td style={{ width: '15%', color: '#545f71', textAlign: 'left', paddingLeft: '12px' }}>{manufacturer.notes}</td>
                     <td style={{ width: '40px', textAlign: 'center', paddingLeft: '12px', paddingRight: '12px' }}>
                       <TableBtn
                         type="edit"

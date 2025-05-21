@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
+import '../../styles/custom-colors.css';
+import '../../styles/PageTable.css';
+import '../../styles/GlobalTableStyles.css';
+import '../../styles/ViewSupplier.css';
+import '../../styles/TableButtons.css';
+import '../../styles/SupplierURLFix.css';
+import '../../styles/SupplierColumnSpacingFix.css';
 import DeleteModal from '../../components/Modals/DeleteModal';
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
@@ -131,116 +138,130 @@ export default function ViewSupplier() {
 
   // ----------------- Render -----------------
   return (
-    <div className="suppliers-page">
-      <NavBar />
-
-      <div className="content-container">
-        {/* Header Section */}
-        <div className="page-header">
-          <h1>Suppliers ({suppliers.length})</h1>
-          <div className="search-container">
-            <input
-              type="text"
-              placeholder="Search"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="search-input"
-            />
-          </div>
-          <MediumButtons type="export" />
-          <MediumButtons type="new" navigatePage="/More/SupplierRegistration" />
-        </div>
-
-        {/* Table Section */}
-        <div className="suppliers-table">
-          <table>
-            <thead>
-              <tr>
-                <th><input type="checkbox" /></th>
-                <th>NAME</th>
-                <th>ADDRESS</th>
-                <th>CITY</th>
-                <th>COUNTRY</th>
-                <th>CONTACT</th>
-                <th>PHONE</th>
-                <th>EMAIL</th>
-                <th>URL</th>
-                <th>EDIT</th>
-                <th>DELETE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredSuppliers.map((supplier) => (
-                <tr key={supplier.id}>
-                  <td><input type="checkbox" /></td>
-                  <td onClick={() => handleSupplierClick(supplier)} className="clickable-name">
-                    {supplier.logo && (
-                      <div className="supplier-logo">
-                        <img src={supplier.logo} alt={supplier.name} />
-                      </div>
-                    )}
-                    <span>{supplier.name}</span>
-                  </td>
-                  <td>{supplier.address}</td>
-                  <td>{supplier.city}</td>
-                  <td>{supplier.country}</td>
-                  <td>{supplier.contact}</td>
-                  <td>{supplier.phone}</td>
-                  <td>{supplier.email}</td>
-                  <td>{supplier.url}</td>
-                  <td>
-                    <button className="table-icon" onClick={() => handleEditSupplier(supplier.id)}>
-                      <TableBtn type="edit" />
-                    </button>
-                  </td>
-                  <td>
-                    <button className="table-icon" onClick={() => handleDeleteClick(supplier.id)}>
-                      <TableBtn type="delete" />
-                    </button>
-                  </td>
+    <>
+      <nav>
+        <NavBar />
+      </nav>
+      <main className="page">
+        <div className="container">
+          <section className="top">
+            <h1 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0', color: '#545f71' }}>Suppliers ({suppliers.length})</h1>
+            <div>
+              <form action="" method="post" style={{ marginRight: '10px' }}>
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="search-input"
+                />
+              </form>
+              <MediumButtons type="export" />
+              <MediumButtons type="new" navigatePage="/More/SupplierRegistration" />
+            </div>
+          </section>
+          <section className="middle">
+            <table className="suppliers-table">
+              <thead>
+                <tr>
+                  <th className="checkbox-header">
+                    <input type="checkbox" />
+                  </th>
+                  <th className="name-header">NAME</th>
+                  <th className="address-header">ADDRESS</th>
+                  <th className="city-header">CITY</th>
+                  <th className="country-header">COUNTRY</th>
+                  <th className="contact-header">CONTACT</th>
+                  <th className="phone-header">PHONE</th>
+                  <th className="email-header">EMAIL</th>
+                  <th className="url-header" style={{ textAlign: 'left', paddingLeft: '12px' }}>
+                    <div style={{ textAlign: 'left', display: 'block' }}>URL</div>
+                  </th>
+                  <th className="action-header">EDIT</th>
+                  <th className="action-header">DELETE</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredSuppliers.map((supplier) => (
+                  <tr key={supplier.id} className="supplier-row">
+                    <td className="checkbox-cell">
+                      <input type="checkbox" />
+                    </td>
+                    <td className="name-cell" onClick={() => handleSupplierClick(supplier)}>
+                      <div className="supplier-name-container">
+                        {supplier.logo && (
+                          <div className="supplier-logo">
+                            <img src={supplier.logo} alt={supplier.name} />
+                          </div>
+                        )}
+                        <span className="supplier-name" style={{ color: '#545f71' }}>{supplier.name}</span>
+                      </div>
+                    </td>
+                    <td className="address-cell" style={{ color: '#545f71' }}>{supplier.address}</td>
+                    <td className="city-cell" style={{ color: '#545f71' }}>{supplier.city}</td>
+                    <td className="country-cell" style={{ color: '#545f71' }}>{supplier.country}</td>
+                    <td className="contact-cell" style={{ color: '#545f71' }}>{supplier.contact}</td>
+                    <td className="phone-cell" style={{ color: '#545f71' }}>{supplier.phone}</td>
+                    <td className="email-cell" style={{ color: '#545f71' }} title={supplier.email}>{supplier.email}</td>
+                    <td className="url-cell" style={{ color: '#545f71', textAlign: 'left', paddingLeft: '12px', paddingRight: '20px' }} title={supplier.url}>{supplier.url}</td>
+                    <td className="action-cell" style={{ textAlign: 'center' }}>
+                      <button
+                        className="table-action-btn edit-btn"
+                        onClick={() => handleEditSupplier(supplier.id)}
+                        style={{ margin: '0 auto' }}
+                      >
+                        <TableBtn type="edit" />
+                      </button>
+                    </td>
+                    <td className="action-cell" style={{ textAlign: 'center' }}>
+                      <button
+                        className="table-action-btn delete-btn"
+                        onClick={() => handleDeleteClick(supplier.id)}
+                        style={{ margin: '0 auto' }}
+                      >
+                        <TableBtn type="delete" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+          <section className="bottom" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '16px 34px', borderTop: '1px solid #d3d3d3' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71' }}>
+              <span style={{ color: '#545f71' }}>Show</span>
+              <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))} style={{ color: '#545f71' }}>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span style={{ color: '#545f71' }}>items per page</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button className="prev-btn" disabled={currentPage === 1} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Prev</button>
+              <span className="page-number" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '30px', height: '30px', backgroundColor: '#007bff', color: 'white', borderRadius: '4px', fontSize: '14px' }}>{currentPage}</span>
+              <button className="next-btn" disabled={filteredSuppliers.length <= itemsPerPage} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Next</button>
+            </div>
+          </section>
+
+          {/* Delete Modal */}
+          {showDeleteModal && (
+            <DeleteModal
+              closeModal={cancelDelete}
+              confirmDelete={confirmDelete}
+            />
+          )}
+
+          {/* Supplier Details Modal */}
+          {showDetailsModal && selectedSupplier && (
+            <SupplierTableDetails
+              isOpen={showDetailsModal}
+              onClose={closeDetailsModal}
+              supplier={selectedSupplier}
+            />
+          )}
         </div>
-
-        {/* Pagination Section */}
-        <div className="pagination">
-          <div className="items-per-page">
-            <span>Show</span>
-            <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))}>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-            <span>items per page</span>
-          </div>
-          <div className="page-navigation">
-            <button className="prev-btn" disabled={currentPage === 1}>Prev</button>
-            <span className="page-number">{currentPage}</span>
-            <button className="next-btn" disabled={filteredSuppliers.length <= itemsPerPage}>Next</button>
-          </div>
-        </div>
-
-        {/* Modals */}
-        {showDeleteModal && (
-          <DeleteModal
-            isOpen={showDeleteModal}
-            onConfirm={confirmDelete}
-            onCancel={cancelDelete}
-            title="Delete Supplier"
-            message="Are you sure you want to delete this supplier? This action cannot be undone."
-          />
-        )}
-
-        {showDetailsModal && selectedSupplier && (
-          <SupplierTableDetails
-            isOpen={showDetailsModal}
-            onClose={closeDetailsModal}
-            supplier={selectedSupplier}
-          />
-        )}
-      </div>
-    </div>
+      </main>
+    </>
   );
 }

@@ -4,7 +4,6 @@ import NavBar from '../../components/NavBar';
 import '../../styles/Registration.css';
 import '../../styles/ManufacturerRegistration.css';
 import TopSecFormPage from '../../components/TopSecFormPage';
-import MediumButtons from '../../components/buttons/MediumButtons';
 import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 

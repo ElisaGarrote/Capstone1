@@ -6,6 +6,7 @@ import '../../styles/PageTable.css';
 import '../../styles/GlobalTableStyles.css';
 import '../../styles/Categories.css';
 import '../../styles/Assets.css';
+import '../../styles/CategoryQuantityFix.css';
 import DeleteModal from '../../components/Modals/DeleteModal';
 import MediumButtons from "../../components/buttons/MediumButtons";
 import keyboardIcon from '../../assets/img/keyboard_Icon.png';
@@ -135,7 +136,9 @@ export default function ViewCategories() {
                   </th>
                   <th style={{ width: '30%' }}>NAME</th>
                   <th style={{ width: '20%' }}>TYPE</th>
-                  <th style={{ width: '20%', textAlign: 'left' }}>QUANTITY</th>
+                  <th className="quantity-header" style={{ width: '20%', textAlign: 'left', paddingLeft: '12px' }}>
+                    <div style={{ textAlign: 'left', display: 'block' }}>QUANTITY</div>
+                  </th>
                   <th style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>EDIT</th>
                   <th style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>DELETE</th>
                 </tr>
@@ -155,8 +158,8 @@ export default function ViewCategories() {
                       </div>
                     </td>
                     <td style={{ width: '20%', color: '#545f71' }}>{category.type}</td>
-                    <td style={{ width: '20%', textAlign: 'left' }}>
-                      <div className="quantity-icon" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71', justifyContent: 'flex-start' }}>
+                    <td style={{ width: '20%', textAlign: 'left', paddingLeft: '12px' }}>
+                      <div className="quantity-icon" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71', justifyContent: 'flex-start', marginLeft: '0' }}>
                         {category.type === "Accessory" ? (
                           <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#007bff', borderRadius: '2px' }}></span>
                         ) : category.type === "License" ? (
@@ -164,7 +167,7 @@ export default function ViewCategories() {
                         ) : (
                           <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#20c997', borderRadius: '2px' }}></span>
                         )}
-                        {category.quantity}
+                        <span style={{ textAlign: 'left', color: '#545f71' }}>{category.quantity}</span>
                       </div>
                     </td>
                     <td style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>

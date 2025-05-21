@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
+import '../../styles/Registration.css';
 import '../../styles/SupplierRegistration.css';
+import TopSecFormPage from '../../components/TopSecFormPage';
 
 const SupplierEdit = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [logoFile, setLogoFile] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    city: '',
-    zip: '',
-    contact: '',
-    phone: '',
-    email: '',
-    url: '',
+    name: 'Sample Supplier',
+    address: '123 Main St',
+    city: 'Seattle',
+    zip: '98109',
+    contact: 'James Peterson',
+    phone: '123-456-7890',
+    email: 'contact@example.com',
+    url: 'https://example.com',
     notes: '',
   });
 
@@ -75,92 +78,178 @@ const SupplierEdit = () => {
   };
 
   return (
-    <div className="supplier-page-container">
-      <NavBar />
-      <div className="supplier-page-content">
-        <div className="breadcrumb">
-          <span className="root-link" onClick={() => navigate('/More/ViewSupplier')}>Suppliers</span>
-          <span className="separator">/</span>
-          <span className="current-page">Update Supplier</span>
-        </div>
-
-        <h1 className="page-title">Edit Supplier</h1>
-
-        <div className="form-container">
+    <>
+      <nav>
+        <NavBar />
+      </nav>
+      <main className="registration">
+        <section className="top">
+          <TopSecFormPage
+            root="Suppliers"
+            currentPage="Edit Supplier"
+            rootNavigatePage="/More/ViewSupplier"
+            title={`Edit Supplier - ${formData.name}`}
+          />
+        </section>
+        <section className="registration-form">
           <form onSubmit={handleSubmit}>
-            {[
-              { label: 'Supplier Name *', name: 'name', placeholder: 'Amazon' },
-              { label: 'Address *', name: 'address', placeholder: '123 Main St' },
-              { label: 'City *', name: 'city', placeholder: 'Seattle' },
-              { label: 'Zip *', name: 'zip', placeholder: '98109' },
-              { label: 'Contact Name *', name: 'contact', placeholder: 'James Peterson' },
-              { label: 'Phone Number *', name: 'phone', placeholder: '123-456-7890' },
-              { label: 'Email *', name: 'email', placeholder: 'example@email.com' },
-              { label: 'URL', name: 'url', placeholder: 'https://example.com' },
-              { label: 'Notes', name: 'notes', placeholder: 'Optional notes...' },
-            ].map((field) => (
-              <div className="form-field" key={field.name}>
-                <label htmlFor={field.name}>{field.label}</label>
-                <input
-                  type="text"
-                  name={field.name}
-                  id={field.name}
-                  placeholder={field.placeholder}
-                  value={formData[field.name]}
-                  onChange={handleInputChange}
-                  required={!['notes', 'url'].includes(field.name)}
-                />
-              </div>
-            ))}
+            <fieldset>
+              <label htmlFor="name">Supplier Name *</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Amazon"
+                value={formData.name}
+                onChange={handleInputChange}
+                maxLength="100"
+                required
+              />
+            </fieldset>
 
-            <div className="form-field">
+            <fieldset>
+              <label htmlFor="address">Address *</label>
+              <input
+                type="text"
+                id="address"
+                name="address"
+                placeholder="123 Main St"
+                value={formData.address}
+                onChange={handleInputChange}
+                maxLength="200"
+                required
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="city">City *</label>
+              <input
+                type="text"
+                id="city"
+                name="city"
+                placeholder="Seattle"
+                value={formData.city}
+                onChange={handleInputChange}
+                maxLength="50"
+                required
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="zip">Zip *</label>
+              <input
+                type="text"
+                id="zip"
+                name="zip"
+                placeholder="98109"
+                value={formData.zip}
+                onChange={handleInputChange}
+                maxLength="10"
+                required
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="contact">Contact Name *</label>
+              <input
+                type="text"
+                id="contact"
+                name="contact"
+                placeholder="James Peterson"
+                value={formData.contact}
+                onChange={handleInputChange}
+                maxLength="100"
+                required
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="phone">Phone Number *</label>
+              <input
+                type="text"
+                id="phone"
+                name="phone"
+                placeholder="123-456-7890"
+                value={formData.phone}
+                onChange={handleInputChange}
+                maxLength="20"
+                required
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="email">Email *</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="example@email.com"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="url">URL</label>
+              <input
+                type="text"
+                id="url"
+                name="url"
+                placeholder="https://example.com"
+                value={formData.url}
+                onChange={handleInputChange}
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="notes">Notes</label>
+              <textarea
+                id="notes"
+                name="notes"
+                placeholder="Optional notes..."
+                value={formData.notes}
+                onChange={handleInputChange}
+                maxLength="500"
+              ></textarea>
+            </fieldset>
+
+            <fieldset>
               <label>Logo</label>
-              <div className="attachments-container">
-                <button
-                  className="choose-file-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById('logo').click();
-                  }}
-                >
+              {logoFile ? (
+                <div className="image-selected">
+                  <img src={URL.createObjectURL(logoFile)} alt="Selected logo" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLogoFile(null);
+                      document.getElementById('logo').value = '';
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <label className="upload-image-btn">
                   Choose File
-                </button>
-                <input
-                  type="file"
-                  id="logo"
-                  name="logo"
-                  accept="image/png, image/jpeg"
-                  style={{ display: 'none' }}
-                  onChange={handleFileSelection}
-                />
-                {logoFile ? (
-                  <div className="file-selected">
-                    <p>{logoFile.name}</p>
-                    <button
-                      className="remove-file-btn"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setLogoFile(null);
-                        document.getElementById('logo').value = '';
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ) : (
-                  <span className="no-file">No file chosen</span>
-                )}
-                <p className="file-size-limit">Maximum file size is 5MB</p>
-              </div>
-            </div>
+                  <input
+                    type="file"
+                    id="logo"
+                    name="logo"
+                    accept="image/png, image/jpeg"
+                    onChange={handleFileSelection}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              )}
+              <small className="file-size-info">Maximum file size must be 5MB</small>
+            </fieldset>
 
-            <div className="form-actions">
-              <button type="submit" className="save-btn">Save</button>
-            </div>
+            <button type="submit" className="save-btn">Save</button>
           </form>
-        </div>
-      </div>
-    </div>
+        </section>
+      </main>
+    </>
   );
 };
 

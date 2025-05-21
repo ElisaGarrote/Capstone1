@@ -1,5 +1,4 @@
 import React from "react";
-import react from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/GlobalTableStyles.css";
 import ChatBot from "./components/ChatBot";
@@ -20,7 +19,6 @@ import Accessories from "./pages/Accessories/Accessories";
 import AccessoriesRegistration from "./pages/Accessories/AccessoriesRegistration";
 import CheckinAccessory from "./pages/Accessories/CheckinAccessory";
 import CheckoutAccessory from "./pages/Accessories/CheckoutAccessory";
-import EditAccessories from "./pages/Accessories/EditAccessories";
 import AccessoriesCheckoutList from "./pages/Accessories/AccessoriesCheckoutList";
 import Components from "./pages/Components/Components";
 import CheckOutComponent from "./pages/Components/CheckOutComponent";
@@ -68,11 +66,6 @@ function Logout() {
   return <Navigate to="/login" />;
 }
 
-function RegisterAndLogout() {
-  localStorage.clear();
-  return <Register />;
-}
-
 function App() {
   return (
     <BrowserRouter>
@@ -101,8 +94,6 @@ function App() {
           element={<PasswordResetRequest />}
         />
         <Route path="/password-reset/:token" element={<PasswordReset />} />
-        <Route path="/register" element={<RegisterAndLogout />} />
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
         <Route
           path="/products/registration"
@@ -132,13 +123,8 @@ function App() {
         <Route path="/More/ViewManufacturer" element={<ViewManufacturer/> } />
         <Route path="/More/ManufacturerRegistration" element={<ManufacturerRegistration/> } />
         <Route path="/More/ViewCategories" element={<ViewCategories />} />
-<<<<<<< HEAD
         <Route path="/More/ManufacturerEdit/:id" element={<ManufacturerEdit />} />
-
-=======
-        <Route path="/More/ManufacturerEdit" element={<ManufacturerEdit />} />
         <Route path="/More/ViewSupplier" element={<ViewSupplier/> } />
->>>>>>> elisaa/dev
         <Route path="/More/CategoryRegistration" element={<CategoryRegistration />} />
         <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />

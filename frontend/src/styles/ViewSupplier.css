@@ -1,0 +1,287 @@
+/* Suppliers Table Styles */
+.suppliers-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background: white;
+}
+
+/* Table Headers */
+.suppliers-table thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: #495057;
+  vertical-align: middle;
+}
+
+/* Header Specific Widths */
+.checkbox-header {
+  width: 40px;
+  text-align: center;
+  padding: 12px 4px !important;
+}
+
+.name-header {
+  width: 14%;
+}
+
+.address-header {
+  width: 15%;
+}
+
+.city-header {
+  width: 7%;
+}
+
+.country-header {
+  width: 7%;
+  padding-left: 0 !important;
+}
+
+.contact-header {
+  width: 11%;
+}
+
+.phone-header {
+  width: 10%;
+}
+
+.email-header {
+  width: 12%;
+}
+
+.url-header {
+  width: 15%;
+  text-align: left !important;
+  padding-left: 12px !important;
+}
+
+.action-header {
+  width: 55px;
+  text-align: center;
+  padding: 8px 6px !important;
+}
+
+/* Table Body Cells */
+.suppliers-table tbody td {
+  padding: 12px 8px;
+  border-bottom: 1px solid #dee2e6;
+  color: #545f71 !important; /* Force consistent text color */
+  vertical-align: middle;
+}
+
+/* Row Hover Effect */
+.supplier-row {
+  transition: background-color 0.2s ease;
+}
+
+.supplier-row:hover {
+  background-color: #f8f9fa;
+}
+
+/* Cell Specific Styles */
+.checkbox-cell {
+  width: 40px;
+  text-align: center;
+  padding: 12px 4px !important;
+}
+
+.name-cell {
+  width: 14%;
+  cursor: pointer;
+}
+
+.address-cell {
+  width: 15%;
+}
+
+.city-cell {
+  width: 7%;
+}
+
+.country-cell {
+  width: 7%;
+  padding-left: 0 !important;
+}
+
+.contact-cell {
+  width: 11%;
+}
+
+.phone-cell {
+  width: 10%;
+}
+
+.email-cell {
+  width: 12%;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.url-cell {
+  width: 15%;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: 12px !important;
+  padding-right: 20px !important;
+  text-align: left !important;
+  color: #545f71 !important;
+}
+
+.action-cell {
+  width: 55px;
+  text-align: center !important;
+  padding: 8px 6px !important;
+  padding-left: 15px !important;
+  vertical-align: middle !important;
+}
+
+/* Supplier Name Container */
+.supplier-name-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.supplier-logo {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.supplier-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.supplier-name {
+  color: #545f71 !important;
+  font-weight: 500;
+}
+
+/* Action Buttons */
+.table-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+.table-action-btn:hover.edit-btn {
+  background-color: #f8f9fa;
+}
+
+.table-action-btn:hover.delete-btn {
+  background-color: #ffebee;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .suppliers-table {
+    font-size: 13px;
+  }
+
+  .suppliers-table thead th,
+  .suppliers-table tbody td {
+    padding: 10px 6px;
+  }
+
+  .name-header,
+  .name-cell {
+    width: 13%;
+  }
+
+  .address-header,
+  .address-cell {
+    width: 14%;
+  }
+
+  .city-header,
+  .city-cell {
+    width: 6%;
+  }
+
+  .country-header,
+  .country-cell {
+    width: 6%;
+    padding-left: 0 !important;
+  }
+
+  .email-header,
+  .email-cell {
+    width: 11%;
+    max-width: 110px;
+  }
+
+  .url-header,
+  .url-cell {
+    width: 14%;
+    max-width: 140px;
+    padding-right: 15px !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .suppliers-table {
+    font-size: 12px;
+  }
+
+  .name-header,
+  .name-cell {
+    width: 12%;
+  }
+
+  .address-header,
+  .address-cell {
+    width: 13%;
+  }
+
+  .city-header,
+  .city-cell {
+    width: 5%;
+  }
+
+  .country-header,
+  .country-cell {
+    width: 5%;
+    padding-left: 0 !important;
+  }
+
+  .contact-header,
+  .contact-cell {
+    width: 10%;
+  }
+
+  .phone-header,
+  .phone-cell {
+    width: 9%;
+  }
+
+  .email-cell {
+    max-width: 90px;
+  }
+
+  .url-cell {
+    width: 13%;
+    max-width: 120px;
+    padding-right: 15px !important;
+  }
+}
