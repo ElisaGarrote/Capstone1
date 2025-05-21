@@ -52,6 +52,7 @@ import Settings from "./pages/Settings";
 import UserManagement from "./pages/UserManagement";
 import ViewCategories from "./pages/More/ViewCategories";
 import CategoryRegistration from "./pages/More/CategoryRegistration";
+import CategoryEdit from "./pages/More/CategoryEdit";
 
 function Logout() {
   localStorage.clear();
@@ -117,6 +118,7 @@ function App() {
         />
         <Route path="/More/ViewCategories" element={<ViewCategories />} />
         <Route path="/More/CategoryRegistration" element={<CategoryRegistration />} />
+        <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
         <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
         <Route path="/accessories/:id" element={<AccessoriesRegistration />} />

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import '../../styles/CategoryRegistration.css';
 
+//START - EDIT THIS TRIGGER SINCE IT IS FOR ADD / MODIFY IT TO PERFORM EDIT
 const CategoryRegistration = () => {
   const navigate = useNavigate();
   const [attachmentFile, setAttachmentFile] = useState(null);
@@ -43,6 +44,9 @@ const CategoryRegistration = () => {
     navigate('/More/ViewCategories');
   };
 
+//END PART OF TO MODIFY
+
+
   return (
     <div className="category-page-container">
       <NavBar />
@@ -54,7 +58,7 @@ const CategoryRegistration = () => {
           <span className="current-page">New Category</span>
         </div>
 
-        <h1 className="page-title">New Category</h1>
+        <h1 className="page-title">Edit Category</h1>
 
         <div className="form-container">
           <form onSubmit={handleSubmit}>

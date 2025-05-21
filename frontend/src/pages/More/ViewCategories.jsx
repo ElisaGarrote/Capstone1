@@ -1,6 +1,8 @@
- import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import '../../styles/Categories.css';
+import DeleteModal from '../../components/Modals/DeleteModal';
 import MediumButtons from "../../components/buttons/MediumButtons";
 import keyboardIcon from '../../assets/img/keyboard_Icon.png';
 import chargerIcon from '../../assets/img/charger_Icon.png';
@@ -9,9 +11,8 @@ import paperprinterIcon from '../../assets/img/paperprinter_Icon.png';
 import printerinkIcon from '../../assets/img/printerink_Icon.png';
 import TableBtn from "../../components/buttons/TableButtons";
 
-
-
 export default function ViewCategories() {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState([
     { 
       id: 1, 
@@ -53,10 +54,44 @@ export default function ViewCategories() {
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
+
+  useEffect(() => {
+    console.log("Component mounted with navigate:", navigate);
+  }, []);
 
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  // Navigate to edit page
+  const handleEditCategory = (categoryId) => {
+    console.log("/More/CategoryEdit/${categoryId}");
+    navigate("/More/CategoryEdit/${categoryId}");
+  };
+
+  // Show delete modal
+  const handleDeleteClick = (categoryId) => {
+    console.log(`Opening delete modal for category ${categoryId}`);
+    setCategoryToDelete(categoryId);
+    setShowDeleteModal(true);
+  };
+
+  // Handle actual deletion
+  const confirmDelete = () => {
+    if (categoryToDelete) {
+      setCategories(categories.filter(category => category.id !== categoryToDelete));
+      setShowDeleteModal(false);
+      setCategoryToDelete(null);
+    }
+  };
+
+  // Cancel delete
+  const cancelDelete = () => {
+    setShowDeleteModal(false);
+    setCategoryToDelete(null);
   };
 
   // Filter categories based on search query
@@ -121,10 +156,22 @@ export default function ViewCategories() {
                     </div>
                   </td>
                   <td className="edit-col">
-                    <TableBtn type="edit" onClick={() => console.log('Edit', category.id)} />
+                    <button 
+                      className="edit-button" 
+                      onClick={() => handleEditCategory(category.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      <TableBtn type="edit" />
+                    </button>
                   </td>
                   <td className="delete-col">
-                    <TableBtn type="delete" onClick={() => console.log('Delete', category.id)} />
+                    <button 
+                      className="delete-button" 
+                      onClick={() => handleDeleteClick(category.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      <TableBtn type="delete" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -148,6 +195,28 @@ export default function ViewCategories() {
             <button className="next-btn" disabled={filteredCategories.length <= itemsPerPage}>Next</button>
           </div>
         </div>
+
+        {/* Delete Modal */}
+        {showDeleteModal && (
+          <DeleteModal 
+            isOpen={showDeleteModal}
+            onConfirm={confirmDelete}
+            onCancel={cancelDelete}
+            title="Delete Category"
+            message="Are you sure you want to delete this category? This action cannot be undone."
+          />
+        )}
+        
+        {/* Debug button to test modal */}
+        <button 
+          onClick={() => {
+            console.log("Manual modal trigger");
+            setShowDeleteModal(true);
+          }}
+          style={{ display: 'none' }}
+        >
+          Test Modal
+        </button>
       </div>
     </div>
   );
