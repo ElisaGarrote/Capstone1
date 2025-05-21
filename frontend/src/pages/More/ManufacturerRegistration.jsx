@@ -1,28 +1,31 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
+import '../../styles/Registration.css';
 import '../../styles/ManufacturerRegistration.css';
+import TopSecFormPage from '../../components/TopSecFormPage';
+import MediumButtons from '../../components/buttons/MediumButtons';
+import { useForm } from 'react-hook-form';
+import CloseIcon from '../../assets/icons/close.svg';
 
 const ManufacturerRegistration = () => {
   const navigate = useNavigate();
   const [logoFile, setLogoFile] = useState(null);
-  
-  const [formData, setFormData] = useState({
-    manufacturerName: '',
-    url: '',
-    supportUrl: '',
-    supportPhone: '',
-    supportEmail: '',
-    notes: ''
-  });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      manufacturerName: '',
+      url: '',
+      supportUrl: '',
+      supportPhone: '',
+      supportEmail: '',
+      notes: ''
+    }
+  });
 
   const handleFileSelection = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -36,150 +39,114 @@ const ManufacturerRegistration = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const onSubmit = (data) => {
     // Here you would typically send the data to your API
-    console.log('Form submitted:', formData, logoFile);
-    
+    console.log('Form submitted:', data, logoFile);
+
     // Optional: navigate back to manufacturers view after successful submission
     navigate('/More/ViewManufacturer');
   };
 
   return (
-    <div className="manufacturer-page-container">
-      <NavBar />
-
-      <div className="manufacturer-page-content">
-        <div className="breadcrumb">
-          <span className="root-link" onClick={() => navigate('/More/ViewManufacturer')}>Manufacturers</span>
-          <span className="separator">/</span>
-          <span className="current-page">New Manufacturer</span>
-        </div>
-
-        <h1 className="page-title">New Manufacturer</h1>
-
-        <div className="form-container">
-          <form onSubmit={handleSubmit}>
-            <div className="form-field">
+    <>
+      <nav>
+        <NavBar />
+      </nav>
+      <main className="registration">
+        <section className="top">
+          <TopSecFormPage
+            root="Manufacturers"
+            currentPage="New Manufacturer"
+            rootNavigatePage="/More/ViewManufacturer"
+            title="New Manufacturer"
+          />
+        </section>
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <fieldset>
               <label htmlFor="manufacturerName">Manufacturer Name *</label>
               <input
                 type="text"
-                name="manufacturerName"
-                id="manufacturerName"
                 placeholder="Manufacturer Name"
-                value={formData.manufacturerName}
-                onChange={handleInputChange}
-                required
+                className={errors.manufacturerName ? 'input-error' : ''}
+                {...register("manufacturerName", { required: 'Manufacturer Name is required' })}
               />
-            </div>
+              {errors.manufacturerName && <span className='error-message'>{errors.manufacturerName.message}</span>}
+            </fieldset>
 
-            <div className="form-field">
+            <fieldset>
               <label htmlFor="url">URL</label>
               <input
                 type="url"
-                name="url"
-                id="url"
                 placeholder="URL"
-                value={formData.url}
-                onChange={handleInputChange}
+                {...register("url")}
               />
-            </div>
+            </fieldset>
 
-            <div className="form-field">
+            <fieldset>
               <label htmlFor="supportUrl">Support URL</label>
               <input
                 type="url"
-                name="supportUrl"
-                id="supportUrl"
                 placeholder="Support URL"
-                value={formData.supportUrl}
-                onChange={handleInputChange}
+                {...register("supportUrl")}
               />
-            </div>
+            </fieldset>
 
-            <div className="form-field">
+            <fieldset>
               <label htmlFor="supportPhone">Support Phone</label>
               <input
                 type="tel"
-                name="supportPhone"
-                id="supportPhone"
                 placeholder="Support Phone"
-                value={formData.supportPhone}
-                onChange={handleInputChange}
+                {...register("supportPhone")}
               />
-            </div>
+            </fieldset>
 
-            <div className="form-field">
+            <fieldset>
               <label htmlFor="supportEmail">Support Email</label>
               <input
                 type="email"
-                name="supportEmail"
-                id="supportEmail"
                 placeholder="Support Email"
-                value={formData.supportEmail}
-                onChange={handleInputChange}
+                {...register("supportEmail")}
               />
-            </div>
+            </fieldset>
 
-            <div className="form-field">
+            <fieldset>
               <label htmlFor="notes">Notes</label>
               <textarea
-                name="notes"
-                id="notes"
                 placeholder="Notes"
-                value={formData.notes}
-                onChange={handleInputChange}
                 rows="4"
+                {...register("notes")}
               />
-            </div>
+            </fieldset>
 
-            <div className="form-field">
+            <fieldset>
               <label>Logo</label>
-              <div className="attachments-container">
-                <button className="choose-file-btn" onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById("logo").click();
-                }}>
+              {logoFile ? (
+                <div className="image-selected">
+                  <img src={URL.createObjectURL(logoFile)} alt="Selected logo" />
+                  <button type="button" onClick={() => setLogoFile(null)}>
+                    <img src={CloseIcon} alt="Remove" />
+                  </button>
+                </div>
+              ) : (
+                <label className="upload-image-btn">
                   Choose File
-                </button>
-                <input
-                  type="file"
-                  name="logo"
-                  id="logo"
-                  accept="image/*"
-                  onChange={handleFileSelection}
-                  style={{ display: "none" }}
-                />
-                {logoFile ? (
-                  <div className="file-selected">
-                    <p>{logoFile.name}</p>
-                    <button
-                      className="remove-file-btn"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setLogoFile(null);
-                        document.getElementById("logo").value = "";
-                      }}
-                    >
-                      <span>×</span>
-                    </button>
-                  </div>
-                ) : (
-                  <span className="no-file">No file chosen</span>
-                )}
-                <p className="file-size-limit">Maximum file size must be 5MB</p>
-              </div>
-            </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelection}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              )}
+              <small className="file-size-info">Maximum file size must be 5MB</small>
+            </fieldset>
 
-            <div className="form-actions">
-              <button type="submit" className="save-btn">
-                Save
-              </button>
-            </div>
+            <button type="submit" className="save-btn">Save</button>
           </form>
-        </div>
-      </div>
-    </div>
+        </section>
+      </main>
+    </>
   );
 };
 export default ManufacturerRegistration;

@@ -1,6 +1,7 @@
 import React from "react";
 import react from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import "./styles/GlobalTableStyles.css";
 import ChatBot from "./components/ChatBot";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -125,7 +126,7 @@ function App() {
         <Route path="/more/ViewManufacturer" element={<ViewManufacturer/> } />
         <Route path="/more/ManufacturerRegistration" element={<ManufacturerRegistration/> } />
         <Route path="/More/ViewCategories" element={<ViewCategories />} />
-        <Route path="/More/ManufacturerEdit" element={<ManufacturerEdit />} />
+        <Route path="/More/ManufacturerEdit/:id" element={<ManufacturerEdit />} />
 
         <Route path="/More/CategoryRegistration" element={<CategoryRegistration />} />
         <Route path="/More/CategoryEdit" element={<CategoryEdit />} />

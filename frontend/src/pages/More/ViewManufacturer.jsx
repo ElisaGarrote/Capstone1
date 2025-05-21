@@ -84,8 +84,8 @@ export default function ViewManufacturers() {
 
   // Navigate to edit page
   const handleEditManufacturer = (manufacturerId) => {
-    console.log('/More/ManufacturerEdit/${manufacturerId}');
-    navigate('/More/ManufacturerEdit/');
+    console.log(`/More/ManufacturerEdit/${manufacturerId}`);
+    navigate(`/More/ManufacturerEdit/${manufacturerId}`);
   };
 
   // Show delete modal
@@ -131,7 +131,7 @@ export default function ViewManufacturers() {
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  style={{ padding: '12px 16px', borderRadius: '40px', border: '1px solid #d3d3d3' }}
+                  className="search-input"
                 />
               </form>
               <MediumButtons type="export" />

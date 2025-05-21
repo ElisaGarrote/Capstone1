@@ -1,26 +1,32 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
+import '../../styles/Registration.css';
 import '../../styles/CategoryRegistration.css';
+import TopSecFormPage from '../../components/TopSecFormPage';
+import MediumButtons from '../../components/buttons/MediumButtons';
+import { useForm } from 'react-hook-form';
+import CloseIcon from '../../assets/icons/close.svg';
 
 const CategoryRegistration = () => {
   const navigate = useNavigate();
   const [attachmentFile, setAttachmentFile] = useState(null);
-  
-  const [formData, setFormData] = useState({
-    categoryName: '',
-    categoryType: '',
-    customFields: '',
-    skipCheckoutConfirmation: false
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    defaultValues: {
+      categoryName: '',
+      categoryType: '',
+      customFields: '',
+      skipCheckoutConfirmation: false
+    }
   });
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
-  };
+  const categoryTypes = ['Asset', 'Accessory', 'Consumable', 'Component', 'License'];
+  const customFieldOptions = ['Serial Number', 'MAC Address', 'Asset Tag', 'Purchase Date', 'Warranty'];
 
   const handleFileSelection = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -34,140 +40,107 @@ const CategoryRegistration = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const onSubmit = (data) => {
     // Here you would typically send the data to your API
-    console.log('Form submitted:', formData, attachmentFile);
-    
+    console.log('Form submitted:', data, attachmentFile);
+
     // Optional: navigate back to categories view after successful submission
     navigate('/More/ViewCategories');
   };
 
   return (
-    <div className="category-page-container">
-      <NavBar />
-
-      <div className="category-page-content">
-        <div className="breadcrumb">
-          <span className="root-link" onClick={() => navigate('/More/ViewCategories')}>Categories</span>
-          <span className="separator">/</span>
-          <span className="current-page">New Category</span>
-        </div>
-
-        <h1 className="page-title">New Category</h1>
-
-        <div className="form-container">
-          <form onSubmit={handleSubmit}>
-            <div className="form-field">
+    <>
+      <nav>
+        <NavBar />
+      </nav>
+      <main className="registration">
+        <section className="top">
+          <TopSecFormPage
+            root="Categories"
+            currentPage="New Category"
+            rootNavigatePage="/More/ViewCategories"
+            title="New Category"
+          />
+        </section>
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <fieldset>
               <label htmlFor="categoryName">Category Name *</label>
               <input
                 type="text"
-                name="categoryName"
-                id="categoryName"
                 placeholder="Category Name"
                 maxLength="100"
-                value={formData.categoryName}
-                onChange={handleInputChange}
-                required
+                className={errors.categoryName ? 'input-error' : ''}
+                {...register("categoryName", { required: 'Category Name is required' })}
               />
-            </div>
+              {errors.categoryName && <span className='error-message'>{errors.categoryName.message}</span>}
+            </fieldset>
 
-            <div className="form-field">
+            <fieldset>
               <label htmlFor="categoryType">Category Type *</label>
-              <div className="select-wrapper">
-                <select 
-                  name="categoryType" 
-                  id="categoryType" 
-                  value={formData.categoryType}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select Category Type</option>
-                  <option value="Asset">Asset</option>
-                  <option value="Consumable">Consumable</option>
-                  <option value="Accessory">Accessory</option>
-                  <option value="License">License</option>
-                </select>
-                <span className="dropdown-arrow"></span>
-              </div>
-            </div>
+              <select
+                className={errors.categoryType ? 'input-error' : ''}
+                {...register("categoryType", { required: 'Category Type is required' })}
+              >
+                <option value="">Select Category Type</option>
+                {categoryTypes.map((type, idx) => (
+                  <option key={idx} value={type.toLowerCase()}>{type}</option>
+                ))}
+              </select>
+              {errors.categoryType && <span className='error-message'>{errors.categoryType.message}</span>}
+            </fieldset>
 
-            <div className="form-field">
+            <fieldset>
               <label htmlFor="customFields">Custom Fields</label>
-              <div className="select-wrapper">
-                <select 
-                  name="customFields" 
-                  id="customFields"
-                  value={formData.customFields}
-                  onChange={handleInputChange}
-                >
+              <div>
+                <select {...register("customFields")}>
                   <option value="">Select Custom Fields</option>
-                  <option value="Field1">Field 1</option>
-                  <option value="Field2">Field 2</option>
-                  <option value="Field3">Field 3</option>
+                  {customFieldOptions.map((field, idx) => (
+                    <option key={idx} value={field.toLowerCase().replace(/\s+/g, '_')}>{field}</option>
+                  ))}
                 </select>
-                <span className="dropdown-arrow"></span>
+                <MediumButtons type="new" />
               </div>
-            </div>
+            </fieldset>
 
-            <div className="form-field checkbox-field">
-              <input
-                type="checkbox"
-                name="skipCheckoutConfirmation"
-                id="skipCheckoutConfirmation"
-                checked={formData.skipCheckoutConfirmation}
-                onChange={handleInputChange}
-              />
-              <label htmlFor="skipCheckoutConfirmation">Skip Checkout Confirmation Emails</label>
-            </div>
-
-            <div className="form-field">
-              <label>Icon</label>
-              <div className="attachments-container">
-                <button className="choose-file-btn" onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById("icon").click();
-                }}>
-                  Choose File
-                </button>
+            <fieldset>
+              <label htmlFor="skipCheckoutConfirmation" className="checkbox-label">
                 <input
-                  type="file"
-                  name="icon"
-                  id="icon"
-                  accept="image/*"
-                  onChange={handleFileSelection}
-                  style={{ display: "none" }}
+                  type="checkbox"
+                  {...register("skipCheckoutConfirmation")}
                 />
-                {attachmentFile ? (
-                  <div className="file-selected">
-                    <p>{attachmentFile.name}</p>
-                    <button
-                      className="remove-file-btn"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setAttachmentFile(null);
-                        document.getElementById("icon").value = "";
-                      }}
-                    >
-                      <span>×</span>
-                    </button>
-                  </div>
-                ) : (
-                  <span className="no-file">No file chosen</span>
-                )}
-                <p className="file-size-limit">Maximum file size must be 5MB</p>
-              </div>
-            </div>
+                Skip Checkout Confirmation Emails
+              </label>
+            </fieldset>
 
-            <div className="form-actions">
-              <button type="submit" className="save-btn" >
-                Save
-              </button>
-            </div>
+            <fieldset>
+              <label>Icon</label>
+              {attachmentFile ? (
+                <div className="image-selected">
+                  <img src={URL.createObjectURL(attachmentFile)} alt="Selected icon" />
+                  <button type="button" onClick={() => setAttachmentFile(null)}>
+                    <img src={CloseIcon} alt="Remove" />
+                  </button>
+                </div>
+              ) : (
+                <label className="upload-image-btn">
+                  Choose File
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelection}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              )}
+              <small className="file-size-info">Maximum file size must be 5MB</small>
+            </fieldset>
+
+            <button type="submit" className="save-btn">Save</button>
           </form>
-        </div>
-      </div>
-    </div>
+        </section>
+      </main>
+    </>
   );
 };
 
