@@ -138,6 +138,46 @@ table td:first-child::after {
   outline: none;
 }
 
+/* Ensure Quantity column is left-aligned in all tables */
+/* Components table - Quantity is in column 5 */
+.components-page table.components-table th:nth-child(5),
+.components-page table.components-table td:nth-child(5),
+/* Accessories table - Available/Quantity is in column 4 */
+.accessories-page table th:nth-child(4),
+.accessories-page table td:nth-child(4),
+/* Consumables table - Available/Quantity is in column 4 */
+.consumables-page table.consumables-table th:nth-child(4),
+.consumables-page table.consumables-table td:nth-child(4),
+/* Categories table - Quantity is in column 4 */
+.categories-table th.quantity-col,
+.categories-table td.quantity-col,
+/* Generic tables - Quantity is usually in column 4 or 5 */
+table th:nth-child(4),
+table td:nth-child(4),
+table th:nth-child(5),
+table td:nth-child(5) {
+  text-align: left !important;
+}
+
+/* Specific fix for Categories table Edit and Delete columns */
+.assets-table th:nth-child(5),
+.assets-table td:nth-child(5),
+.assets-table th:nth-child(6),
+.assets-table td:nth-child(6) {
+  width: 60px !important;
+  text-align: center !important;
+  padding: 0 12px !important;
+}
+
+/* Ensure buttons in Categories table are properly centered */
+.assets-table td:nth-child(5) button,
+.assets-table td:nth-child(6) button {
+  display: block !important;
+  margin: 0 auto !important;
+  width: 26px !important;
+  height: 26px !important;
+}
+
 /* Fix for view buttons in Approved Tickets */
 .page table td:nth-child(9) .view-btn {
   display: block !important;

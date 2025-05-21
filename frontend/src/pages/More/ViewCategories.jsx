@@ -135,9 +135,9 @@ export default function ViewCategories() {
                   </th>
                   <th style={{ width: '30%' }}>NAME</th>
                   <th style={{ width: '20%' }}>TYPE</th>
-                  <th style={{ width: '20%', textAlign: 'center' }}>QUANTITY</th>
-                  <th style={{ width: '40px', textAlign: 'center' }}>EDIT</th>
-                  <th style={{ width: '40px', textAlign: 'center' }}>DELETE</th>
+                  <th style={{ width: '20%', textAlign: 'left' }}>QUANTITY</th>
+                  <th style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>EDIT</th>
+                  <th style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>DELETE</th>
                 </tr>
               </thead>
               <tbody>
@@ -155,8 +155,8 @@ export default function ViewCategories() {
                       </div>
                     </td>
                     <td style={{ width: '20%', color: '#545f71' }}>{category.type}</td>
-                    <td style={{ width: '20%', textAlign: 'center' }}>
-                      <div className="quantity-icon" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71', justifyContent: 'center' }}>
+                    <td style={{ width: '20%', textAlign: 'left' }}>
+                      <div className="quantity-icon" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71', justifyContent: 'flex-start' }}>
                         {category.type === "Accessory" ? (
                           <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#007bff', borderRadius: '2px' }}></span>
                         ) : category.type === "License" ? (
@@ -167,18 +167,20 @@ export default function ViewCategories() {
                         {category.quantity}
                       </div>
                     </td>
-                    <td style={{ width: '40px', textAlign: 'center' }}>
+                    <td style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>
                       <button
                         className="edit-button"
                         onClick={() => handleEditCategory(category.id)}
+                        style={{ margin: '0 auto', display: 'block' }}
                       >
                         <TableBtn type="edit" />
                       </button>
                     </td>
-                    <td style={{ width: '40px', textAlign: 'center' }}>
+                    <td style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>
                       <button
                         className="delete-button"
                         onClick={() => handleDeleteClick(category.id)}
+                        style={{ margin: '0 auto', display: 'block' }}
                       >
                         <TableBtn type="delete" />
                       </button>
@@ -208,11 +210,8 @@ export default function ViewCategories() {
           {/* Delete Modal */}
           {showDeleteModal && (
             <DeleteModal
-              isOpen={showDeleteModal}
-              onConfirm={confirmDelete}
-              onCancel={cancelDelete}
-              title="Delete Category"
-              message="Are you sure you want to delete this category? This action cannot be undone."
+              closeModal={cancelDelete}
+              confirmDelete={confirmDelete}
             />
           )}
 

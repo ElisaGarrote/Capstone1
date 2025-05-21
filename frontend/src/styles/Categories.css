@@ -172,9 +172,9 @@
 }
 
 .edit-col, .delete-col {
-  width: 40px !important;
+  width: 60px !important;
   text-align: center;
-  padding: 4px;
+  padding: 4px 12px;
 }
 
 /* Category name cell styling */
