@@ -12,7 +12,7 @@ import Alert from "../../components/Alert";
 import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
-import { formatDate } from "../../utils/dateFormatter";
+import dateRelated from "../../utils/dateRelated";
 
 export default function AssetAudits() {
   let notes = "sdfsdfsdfdfdfdfdfdfdfsdfsdfsdf";
@@ -186,7 +186,7 @@ export default function AssetAudits() {
                           <td>
                             <input type="checkbox" name="" id="" />
                           </td>
-                          <td>{formatDate(data.date)}</td>
+                          <td>{dateRelated.formatDate(data.date)}</td>
                           <td>
                             {data.asset_info.displayed_id} -{" "}
                             {data.asset_info.name}
@@ -194,7 +194,7 @@ export default function AssetAudits() {
                           <td>
                             <Status type="deployable" name="Ready to Deploy" />
                           </td>
-                          <td>December 30, 2025</td>
+                          <td>{dateRelated.formatDate(data.created_at)}</td>
                           <td>
                             <TableBtn
                               type="audit"
