@@ -1,3 +1,5 @@
+import dateRelated from "../utils/dateRelated";
+
 const API_URL = "http://127.0.0.1:8003/";
 
 class AssetsService {
@@ -29,8 +31,15 @@ class AssetsService {
 
   // AUDITS
   // Create Audit
-  async postAudit(location, userId, notes, auditScheduleId, date) {
-    console.log("service received audit schedule id: ", auditScheduleId);
+  async postAudit(
+    location,
+    userId,
+    notes,
+    auditScheduleId,
+    auditDate,
+    nextAuditDate
+  ) {
+    console.log("service received nextAuditDate: ", nextAuditDate);
     try {
       const response = await fetch(API_URL + "audits/create/", {
         method: "POST",
@@ -42,8 +51,9 @@ class AssetsService {
           location: location,
           user_id: userId,
           notes: notes,
-          audit_date: date,
           audit_schedule: auditScheduleId,
+          audit_date: auditDate,
+          next_audit_date: nextAuditDate,
         }),
       });
 
@@ -100,28 +110,67 @@ class AssetsService {
 
   // Create Schedule Audit
   async postScheduleAudit(assetId, date, notes) {
+    console.log("asset id passed", assetId);
+    let isSuccess = false;
+
+    console.log("type of asset id", typeof assetId);
+
     try {
-      const response = await fetch(API_URL + "audits/create-schedule/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          asset: assetId,
-          date,
-          notes,
-        }),
-      });
+      /*
+       - Execute the if statement if the data type of the assetId is an object
+       which indciate this assetId is from the multiple selection asset.
+       - Otherwise, execute the else statement which indicate this assetId is 
+       from the single selection asset.
+       */
+      if (typeof assetId === "object") {
+        for (const item of assetId) {
+          const response = await fetch(API_URL + "audits/create-schedule/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              asset: item.value,
+              date,
+              notes,
+            }),
+          });
 
-      if (response.status !== 201) {
-        console.log("falied creating schedule audit.");
-        return false;
+          if (response.status !== 201) {
+            console.log("failed creating schedule audit.");
+            continue;
+          }
+
+          const data = await response.json();
+          console.log("Successfully added schedule audit", data);
+          isSuccess = true; // Set isSuccess to true if any of the loop successfully created new record.
+        }
+
+        return isSuccess;
+      } else {
+        const response = await fetch(API_URL + "audits/create-schedule/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            asset: assetId,
+            date,
+            notes,
+          }),
+        });
+
+        if (response.status !== 201) {
+          console.log("failed creating schedule audit.");
+          return false;
+        }
+
+        const data = await response.json();
+        console.log("Successfully added schedule audit", data);
+        return data;
       }
-
-      const data = await response.json();
-      console.log("data:", data);
-      return data;
     } catch (error) {
       console.error("Error occur while creating schedule audit!", error);
       throw error;
@@ -172,6 +221,37 @@ class AssetsService {
     } catch (error) {
       console.log("Error occur while fetching all audit schedules!", error);
     }
+  }
+
+  // Retrieve all overdue for audits
+  async fetchAllOverdueAudits() {
+    const fetchAllScheduleAudits = await this.fetchAllAuditSchedules();
+    const currentDate = dateRelated.getCurrentDate();
+
+    // Filter the fetched data to get only the overdue audits.
+    const filteredData = fetchAllScheduleAudits.filter((item) => {
+      return item.date < currentDate;
+    });
+
+    return filteredData;
+  }
+
+  // Count all the overdue for audits
+  async countAllOverdueAudits() {
+    const numOfOverdueAudits = await this.fetchAllOverdueAudits();
+    return numOfOverdueAudits.length;
+  }
+
+  // Count all the schedule audits
+  async countAllScheduleAudits() {
+    const numOfScheduleAudits = await this.fetchAllAuditSchedules();
+    return numOfScheduleAudits.length;
+  }
+
+  // Count all the audits
+  async countAllAudits() {
+    const numOfAudits = await this.fetchAllAudits();
+    return numOfAudits.length;
   }
 }
 
