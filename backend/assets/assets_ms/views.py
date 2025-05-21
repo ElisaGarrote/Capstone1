@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import *
 from .serializer import *
-
+'''
 # PRODUCTS HERE
 @api_view(['GET'])
 def get_products(request):
@@ -70,7 +70,7 @@ def soft_delete_product(request, id):
     except Product.DoesNotExist:
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 # END PRODUCT
-
+'''
 
 # ASSETS HERE
 @api_view(['POST'])

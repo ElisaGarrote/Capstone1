@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import *
-
+'''
 class AllProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -23,6 +23,7 @@ class DepreciationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Depreciation
         fields = '__all__'
+'''
 
 class AssetSerializer(serializers.ModelSerializer):
     class Meta:

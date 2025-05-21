@@ -3,4 +3,4 @@ from .models import *
 
 # Register your models here.
 admin.site.register(Accessory)
-admin.site.register(Category)
+admin.site.register(AccessoryCategory)
