@@ -91,7 +91,7 @@ export default function ViewSupplier() {
   // ----------------- Handlers -----------------
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
 
-  const handleEditSupplier = (id) => navigate(`/More/SupplierEdit/${id}`);
+  const handleEditSupplier = (id) => navigate('/More/SupplierEdit');
 
   const handleDeleteClick = (id) => {
     setSupplierToDelete(id);

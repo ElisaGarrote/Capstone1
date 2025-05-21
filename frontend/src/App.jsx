@@ -58,7 +58,8 @@ import ManufacturerRegistration from "./pages/More/ManufacturerRegistration";
 import ManufacturerEdit from "./pages/More/ManufacturerEdit";
 import ViewSupplier from "./pages/More/ViewSupplier";
 import SupplierTableDetails from "./pages/More/SupplierTableDetails";
-
+import SupplierRegistration from "./pages/More/SupplierRegistration";
+import SupplierEdit from "./pages/More/SupplierEdit";
 
 function Logout() {
   localStorage.clear();
@@ -123,8 +124,8 @@ function App() {
           path="/accessories/registration"
           element={<AccessoriesRegistration />}
         />
-
-
+        <Route path="/More/SupplierEdit" element={<SupplierEdit />} />
+        <Route path="/More/SupplierRegistration" element={<SupplierRegistration />} />
         <Route path="/More/SupplierTableDetails" element={<SupplierTableDetails /> } />
         <Route path="/More/ViewManufacturer" element={<ViewManufacturer/> } />
         <Route path="/More/ManufacturerRegistration" element={<ManufacturerRegistration/> } />
