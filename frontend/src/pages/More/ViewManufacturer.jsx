@@ -5,16 +5,19 @@ import '../../styles/custom-colors.css';
 import '../../styles/PageTable.css';
 import '../../styles/GlobalTableStyles.css';
 import '../../styles/ViewManufacturer.css';
+import '../../styles/TableButtons.css';
+import '../../styles/ManufacturersButtons.css';
 import DeleteModal from '../../components/Modals/DeleteModal';
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
+import CanonLogo from '../../assets/img/Canon.png';
 
 export default function ViewManufacturers() {
   const navigate = useNavigate();
   const [manufacturers, setManufacturers] = useState([
     {
       id: 1,
-      logo: '/logos/adobe-logo.png',
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Adobe_Systems_logo_and_wordmark.svg/1200px-Adobe_Systems_logo_and_wordmark.svg.png',
       name: "Adobe",
       url: "https://adobe.com",
       supportUrl: "https://helpx.adobe.com",
@@ -24,7 +27,7 @@ export default function ViewManufacturers() {
     },
     {
       id: 2,
-      logo: '/logos/apple-logo.png',
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1667px-Apple_logo_black.svg.png',
       name: "Apple",
       url: "https://apple.com",
       supportUrl: "https://support.apple.com",
@@ -34,7 +37,7 @@ export default function ViewManufacturers() {
     },
     {
       id: 3,
-      logo: '/logos/canon-logo.png',
+      logo: CanonLogo,
       name: "Canon",
       url: "https://canon.com",
       supportUrl: "https://canon.com/support",
@@ -44,7 +47,7 @@ export default function ViewManufacturers() {
     },
     {
       id: 4,
-      logo: '/logos/dell-logo.png',
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Dell_logo_2016.svg/1200px-Dell_logo_2016.svg.png',
       name: "Dell",
       url: "https://dell.com",
       supportUrl: "https://dell.com/support",
@@ -54,7 +57,7 @@ export default function ViewManufacturers() {
     },
     {
       id: 5,
-      logo: '/logos/hp-logo.png',
+      logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/HP_logo_2012.svg/1200px-HP_logo_2012.svg.png',
       name: "HP",
       url: "https://hp.com",
       supportUrl: "https://support.hp.com",
@@ -136,7 +139,7 @@ export default function ViewManufacturers() {
             </div>
           </section>
           <section className="middle">
-            <table className="assets-table">
+            <table className="assets-table" style={{ borderRadius: '0', overflow: 'hidden' }}>
               <thead>
                 <tr>
                   <th style={{ width: '40px' }}>
@@ -148,8 +151,8 @@ export default function ViewManufacturers() {
                   <th style={{ width: '10%' }}>PHONE</th>
                   <th style={{ width: '15%' }}>EMAIL</th>
                   <th style={{ width: '15%' }}>NOTES</th>
-                  <th style={{ width: '40px', textAlign: 'center' }}>EDIT</th>
-                  <th style={{ width: '40px', textAlign: 'center' }}>DELETE</th>
+                  <th style={{ width: '40px', textAlign: 'center', paddingLeft: '12px', paddingRight: '12px' }}>EDIT</th>
+                  <th style={{ width: '40px', textAlign: 'center', paddingLeft: '12px', paddingRight: '12px' }}>DELETE</th>
                 </tr>
               </thead>
               <tbody>
@@ -160,8 +163,22 @@ export default function ViewManufacturers() {
                     </td>
                     <td style={{ width: '20%' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '30px', height: '30px', overflow: 'hidden', borderRadius: '4px' }}>
-                          <img src={manufacturer.logo} alt={manufacturer.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        <div style={{ width: '40px', height: '40px', overflow: 'hidden', borderRadius: '0' }}>
+                          <img
+                            src={manufacturer.logo}
+                            alt={manufacturer.name}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = 'https://via.placeholder.com/40x40?text=' + manufacturer.name.charAt(0);
+                            }}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'contain',
+                              display: 'block',
+                              backgroundColor: '#f8f9fa'
+                            }}
+                          />
                         </div>
                         <span style={{ color: '#545f71' }}>{manufacturer.name}</span>
                       </div>
@@ -171,21 +188,17 @@ export default function ViewManufacturers() {
                     <td style={{ width: '10%', color: '#545f71' }}>{manufacturer.phone}</td>
                     <td style={{ width: '15%', color: '#545f71' }}>{manufacturer.email}</td>
                     <td style={{ width: '15%', color: '#545f71' }}>{manufacturer.notes}</td>
-                    <td style={{ width: '40px', textAlign: 'center' }}>
-                      <button
-                        className="edit-button"
-                        onClick={() => handleEditManufacturer(manufacturer.id)}
-                      >
-                        <TableBtn type="edit" />
-                      </button>
+                    <td style={{ width: '40px', textAlign: 'center', paddingLeft: '12px', paddingRight: '12px' }}>
+                      <TableBtn
+                        type="edit"
+                        navigatePage={`/More/ManufacturerEdit/${manufacturer.id}`}
+                      />
                     </td>
-                    <td style={{ width: '40px', textAlign: 'center' }}>
-                      <button
-                        className="delete-button"
-                        onClick={() => handleDeleteClick(manufacturer.id)}
-                      >
-                        <TableBtn type="delete" />
-                      </button>
+                    <td style={{ width: '40px', textAlign: 'center', paddingLeft: '12px', paddingRight: '12px' }}>
+                      <TableBtn
+                        type="delete"
+                        showModal={() => handleDeleteClick(manufacturer.id)}
+                      />
                     </td>
                   </tr>
                 ))}
