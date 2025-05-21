@@ -58,6 +58,10 @@ import CategoryEdit from "./pages/More/CategoryEdit";
 import ViewManufacturer from "./pages/More/ViewManufacturer";
 import ManufacturerRegistration from "./pages/More/ManufacturerRegistration";
 import ManufacturerEdit from "./pages/More/ManufacturerEdit";
+import ViewSupplier from "./pages/More/ViewSupplier";
+import SupplierTableDetails from "./pages/More/SupplierTableDetails";
+import SupplierRegistration from "./pages/More/SupplierRegistration";
+import SupplierEdit from "./pages/More/SupplierEdit";
 
 function Logout() {
   localStorage.clear();
@@ -122,12 +126,19 @@ function App() {
           path="/accessories/registration"
           element={<AccessoriesRegistration />}
         />
-
-        <Route path="/more/ViewManufacturer" element={<ViewManufacturer/> } />
-        <Route path="/more/ManufacturerRegistration" element={<ManufacturerRegistration/> } />
+        <Route path="/More/SupplierEdit" element={<SupplierEdit />} />
+        <Route path="/More/SupplierRegistration" element={<SupplierRegistration />} />
+        <Route path="/More/SupplierTableDetails" element={<SupplierTableDetails /> } />
+        <Route path="/More/ViewManufacturer" element={<ViewManufacturer/> } />
+        <Route path="/More/ManufacturerRegistration" element={<ManufacturerRegistration/> } />
         <Route path="/More/ViewCategories" element={<ViewCategories />} />
+<<<<<<< HEAD
         <Route path="/More/ManufacturerEdit/:id" element={<ManufacturerEdit />} />
 
+=======
+        <Route path="/More/ManufacturerEdit" element={<ManufacturerEdit />} />
+        <Route path="/More/ViewSupplier" element={<ViewSupplier/> } />
+>>>>>>> elisaa/dev
         <Route path="/More/CategoryRegistration" element={<CategoryRegistration />} />
         <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
         <Route path="/accessories/checkin" element={<CheckinAccessory />} />
