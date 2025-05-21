@@ -4,23 +4,26 @@ import "../../styles/AssetRepairsButtons.css";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import { useState, useEffect } from "react";
 
 export default function AssetRepairs() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSuccess] = useState(false);
   const [isUpdated, setUpdated] = useState(false);
+  const [isAddSuccess, setAddSuccess] = useState(false);
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [maintenanceItems, setMaintenanceItems] = useState([]);
 
-  // Maintenance mock data
-  const maintenanceItems = [
+  // Initial maintenance mock data
+  const defaultMaintenanceItems = [
     {
       id: "100011",
       name: "iPad Pro",
@@ -71,9 +74,22 @@ export default function AssetRepairs() {
     }
   ];
 
+  // Load maintenance data from localStorage or use default data
+  useEffect(() => {
+    const storedRecords = JSON.parse(localStorage.getItem('maintenanceRecords')) || [];
+    if (storedRecords.length > 0) {
+      setMaintenanceItems([...defaultMaintenanceItems, ...storedRecords]);
+    } else {
+      // Initialize localStorage with default data if empty
+      localStorage.setItem('maintenanceRecords', JSON.stringify([]));
+      setMaintenanceItems(defaultMaintenanceItems);
+    }
+  }, []);
+
   // Retrieve success states from navigation
   const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
   const isUpdateFromEdit = location.state?.isUpdateFromEdit;
+  const isAddSuccessFromRegistration = location.state?.isAddSuccess;
 
   // Handle delete success message
   useEffect(() => {
@@ -95,16 +111,33 @@ export default function AssetRepairs() {
     }
   }, [isUpdateFromEdit]);
 
+  // Handle add success message
+  useEffect(() => {
+    if (isAddSuccessFromRegistration === true) {
+      setAddSuccess(true);
+      setTimeout(() => {
+        setAddSuccess(false);
+      }, 5000);
+      
+      // Clear location state
+      window.history.replaceState({}, document.title);
+      
+      // Reload maintenance records to include the new one
+      const storedRecords = JSON.parse(localStorage.getItem('maintenanceRecords')) || [];
+      setMaintenanceItems([...defaultMaintenanceItems, ...storedRecords]);
+    }
+  }, [isAddSuccessFromRegistration]);
+
   // Handle search functionality
   const filteredItems = maintenanceItems.filter(item => {
     if (!searchQuery) return true;
     const searchLower = searchQuery.toLowerCase();
     return (
-      item.id.toLowerCase().includes(searchLower) ||
-      item.name.toLowerCase().includes(searchLower) ||
-      item.type.toLowerCase().includes(searchLower) ||
-      item.maintenanceName.toLowerCase().includes(searchLower) ||
-      item.supplier.toLowerCase().includes(searchLower)
+      (item.id && item.id.toLowerCase().includes(searchLower)) ||
+      (item.name && item.name.toLowerCase().includes(searchLower)) ||
+      (item.type && item.type.toLowerCase().includes(searchLower)) ||
+      (item.maintenanceName && item.maintenanceName.toLowerCase().includes(searchLower)) ||
+      (item.supplier && item.supplier.toLowerCase().includes(searchLower))
     );
   });
 
@@ -121,6 +154,17 @@ export default function AssetRepairs() {
 
   // Handle delete confirmation
   const handleDeleteConfirm = () => {
+    if (selectedRowId) {
+      // Remove the selected item from maintenanceItems
+      const updatedItems = maintenanceItems.filter(item => item.id !== selectedRowId);
+      setMaintenanceItems(updatedItems);
+      
+      // Update localStorage - only remove from stored records
+      const storedRecords = JSON.parse(localStorage.getItem('maintenanceRecords')) || [];
+      const updatedRecords = storedRecords.filter(item => item.id !== selectedRowId);
+      localStorage.setItem('maintenanceRecords', JSON.stringify(updatedRecords));
+    }
+    
     setDeleteModalOpen(false);
     setDeleteSuccess(true);
     setTimeout(() => {

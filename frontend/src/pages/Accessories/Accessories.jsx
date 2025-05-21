@@ -99,6 +99,12 @@ export default function Accessories() {
   console.log("delete confirm: ", isDeleteSuccess);
   console.log("delete from edit: ", isDeleteSuccessFromEdit);
 
+
+
+
+
+
+
   return (
     <>
       {isViewModalOpen && (
@@ -107,7 +113,7 @@ export default function Accessories() {
           closeModal={() => setViewModalOpen(false)}
         />
       )}
-
+      
       {isDeleteModalOpen && (
         <DeleteModal
           endPoint={endPoint}
