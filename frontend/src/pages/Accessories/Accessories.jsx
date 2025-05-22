@@ -16,7 +16,7 @@ export default function Accessories() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [isExportModalOpen, setExportModalOpen] = useState(false);
-  const [isNewAccessoryAdded, setNewAccessoryAdde] = useState(false);
+  const [isNewAccessoryAdded, setNewAccessoryAdded] = useState(false);
   const [isEditSuccess, setEditSuccess] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isDeleteFailed, setDeleteFailed] = useState(false);
@@ -34,7 +34,7 @@ export default function Accessories() {
     try {
       const response = await fetch("http://localhost:8004/accessories/");
       const data = await response.json();
-      setAccessories(data);
+      setAccessories(data.data);
       console.log("Accessories:", data);
     } catch (err) {
       console.log(err);
@@ -99,12 +99,6 @@ export default function Accessories() {
   console.log("delete confirm: ", isDeleteSuccess);
   console.log("delete from edit: ", isDeleteSuccessFromEdit);
 
-
-
-
-
-
-
   return (
     <>
       {isViewModalOpen && (
@@ -113,7 +107,7 @@ export default function Accessories() {
           closeModal={() => setViewModalOpen(false)}
         />
       )}
-      
+
       {isDeleteModalOpen && (
         <DeleteModal
           endPoint={endPoint}
@@ -191,7 +185,7 @@ export default function Accessories() {
                     <th>AVAILABLE</th>
                     <th>CHECKOUT</th>
                     <th>CHECKIN</th>
-                    <th>MODEL NUMBER</th>
+                    <th>CATEGORY</th>
                     <th>LOCATION</th>
                     <th>EDIT</th>
                     <th>DELETE</th>
@@ -229,6 +223,7 @@ export default function Accessories() {
                           ></progress>
                         </span>
                       </td>
+
                       <td>
                         <TableBtn
                           type="checkout"
@@ -243,7 +238,11 @@ export default function Accessories() {
                           data={accessory.name}
                         />
                       </td>
-                      <td>{accessory.model_number}</td>
+
+                      <td>
+                        {accessory.category_name}
+                      </td>
+
                       <td>{accessory.location}</td>
 
                       <td>
@@ -264,6 +263,7 @@ export default function Accessories() {
                           }}
                         />
                       </td>
+
                       <td>
                         <TableBtn
                           type="view"
