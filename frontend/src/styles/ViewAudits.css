@@ -49,3 +49,26 @@
   font-size: 0.875rem;
   color: var(--secondary-text-color);
 }
+
+.view-audits-page .view-audits-content .attachments-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.view-audits-page .view-audits-content .attachments-container a {
+  color: var(--primary-color);
+  font-size: 0.875rem;
+  text-decoration: underline !important;
+
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid #d3d3d3;
+
+  width: 100%;
+}
+
+.view-audits-page .view-audits-content .attachments-container a::before {
+  content: "📌 ";
+}

@@ -171,7 +171,7 @@ export default function Accessories() {
             </div>
           </section>
           <section className="middle">
-            {accessories.length === 0 ? (
+            {Array.from(accessories).length === 0 ? (
               <section className="no-products-message">
                 <p>No accessories found. Please add some accessory.</p>
               </section>

@@ -6,6 +6,7 @@ import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import assetsService from "../../services/assets-service";
 import { useForm, Controller } from "react-hook-form";
+import dateRelated from "../../utils/dateRelated";
 
 export default function ScheduleRegistration() {
   const navigate = useNavigate();
@@ -13,18 +14,9 @@ export default function ScheduleRegistration() {
   const [allAssets, setAllAssets] = useState([]);
   const [assetAndName, setAssetAndName] = useState([]);
 
-  // Handle current date
+  // Get the current date and assign it to the currentDate state.
   useEffect(() => {
-    const today = new Date();
-    const options = {
-      timeZone: "Asia/Manila",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    };
-    const formatter = new Intl.DateTimeFormat("en-CA", options); // "en-CA" ensures YYYY-MM-DD format
-    const formattedDate = formatter.format(today); // Format date in Philippines timezone
-    setCurrentDate(formattedDate);
+    setCurrentDate(dateRelated.getCurrentDate());
   }, []);
 
   // Fetch all assets
@@ -73,7 +65,6 @@ export default function ScheduleRegistration() {
         )
     )
     .map((item) => ({
-      id: item.id,
       value: item.id,
       label: item.displayed_id + " - " + item.name,
     }));
@@ -89,9 +80,10 @@ export default function ScheduleRegistration() {
   });
 
   const submission = async (data) => {
-    console.table(data);
+    console.log(data);
+
     const success = await assetsService.postScheduleAudit(
-      data.asset.id,
+      data.asset,
       data.auditDueDate,
       data.notes
     );
@@ -150,9 +142,9 @@ export default function ScheduleRegistration() {
                   <Select
                     options={assetOptions}
                     styles={customStylesDropdown}
-                    placeholder="Select locatioin..."
+                    placeholder="Select location..."
                     {...field}
-                    isMulti={true}
+                    isMulti
                   />
                 )}
               />

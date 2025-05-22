@@ -3,7 +3,7 @@ import "../../styles/ViewAudits.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useLocation } from "react-router-dom";
 import Status from "../../components/Status";
-import { formatDate } from "../../utils/dateFormatter";
+import dateRelated from "../../utils/dateRelated";
 
 export default function ViewAudits() {
   const location = useLocation();
@@ -46,7 +46,7 @@ export default function ViewAudits() {
         <section className="view-audits-content">
           <fieldset>
             <label htmlFor="date-created">Date Created</label>
-            <p>April 10, 2025</p>
+            <p>{dateRelated.formatDateWithTime(data.created_at)}</p>
           </fieldset>
 
           <fieldset>
@@ -74,20 +74,20 @@ export default function ViewAudits() {
           )}
 
           <fieldset>
-            <label htmlFor="audit-date">
+            <label htmlFor="date">
               {previousPage != "/audits/completed" ? "Due Date" : "Audit Date"}
             </label>
             <p>
               {previousPage != "/audits/completed"
-                ? formatDate(data.date)
-                : formatDate(data.audit_info.audit_date)}
+                ? dateRelated.formatDate(data.date)
+                : dateRelated.formatDate(data.audit_date)}
             </p>
           </fieldset>
 
           {previousPage == "/audits/completed" && (
             <fieldset>
               <label htmlFor="next-audit-date">Next Audit Date</label>
-              <p>{formatDate(data.date)}</p>
+              <p>{dateRelated.formatDate(data.audit_schedule_info.date)}</p>
             </fieldset>
           )}
 
@@ -95,6 +95,58 @@ export default function ViewAudits() {
             <label htmlFor="notes">Notes</label>
             <p>{data.notes == "" ? "-" : data.notes}</p>
           </fieldset>
+
+          {data.audit_info != null &&
+            data.audit_info.audit_files.length > 0 && (
+              <fieldset>
+                <label htmlFor="attachments">Attachments</label>
+                <div className="attachments-container">
+                  {data.audit_info.audit_files.map((file, index) => {
+                    return (
+                      <a
+                        href={`http://127.0.0.1:8003${file.file}`}
+                        key={index}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={
+                          file.file.match(/\.(jpg|jpeg|png|gif|pdf)$/i)
+                            ? "Click to view"
+                            : "Click to download"
+                        }
+                      >
+                        {file.file.split("/").pop()}
+                      </a>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )}
+
+          {previousPage == "/audits/completed" &&
+            Array.from(data.audit_files).length > 0 && (
+              <fieldset>
+                <label htmlFor="attachments">Attachments</label>
+                <div className="attachments-container">
+                  {data.audit_files.map((file, index) => {
+                    return (
+                      <a
+                        href={`http://127.0.0.1:8003${file.file}`}
+                        key={index}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={
+                          file.file.match(/\.(jpg|jpeg|png|gif|pdf)$/i)
+                            ? "Click to view"
+                            : "Click to download"
+                        }
+                      >
+                        {file.file.split("/").pop()}
+                      </a>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )}
         </section>
       </main>
     </>
