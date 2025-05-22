@@ -1,5 +1,5 @@
 import "../styles/custom-colors.css";
-import "../styles/login.css";
+import "../styles/Login.css";
 import "../styles/alert.css";
 import loginImage from "../assets/img/login.png";
 
