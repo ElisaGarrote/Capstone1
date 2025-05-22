@@ -128,10 +128,11 @@ WSGI_APPLICATION = 'authentication.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ams_authentication',
+        'NAME': 'railway',
         'USER': 'postgres',
-        'PASSWORD': 'capstone',
-        'HOST': 'localhost',
+        'PASSWORD': 'QdleMpvGHEMlhrrlrinLihmJggQCMXfU',
+        'HOST': 'trolley.proxy.rlwy.net',
+        'PORT': '57512',
     }
 }
 

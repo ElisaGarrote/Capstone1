@@ -81,10 +81,11 @@ WSGI_APPLICATION = 'assets.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ams_assets',
+        'NAME': 'railway',
         'USER': 'postgres',
-        'PASSWORD': 'capstone',
-        'HOST': 'localhost',
+        'PASSWORD': 'qoSFWIdZocmITRXhUflaawOfxIeGgljG',
+        'HOST': 'switchback.proxy.rlwy.net',
+        'PORT': '30647',
     }
 }
 
