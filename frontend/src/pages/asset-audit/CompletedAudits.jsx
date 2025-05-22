@@ -12,7 +12,7 @@ import Alert from "../../components/Alert";
 import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
-import { formatDate } from "../../utils/dateFormatter";
+import dateRelated from "../../utils/dateRelated";
 
 export default function CompletedAudits() {
   const location = useLocation();
@@ -127,7 +127,7 @@ export default function CompletedAudits() {
                           <td>
                             <input type="checkbox" name="" id="" />
                           </td>
-                          <td>{formatDate(data.audit_date)}</td>
+                          <td>{dateRelated.formatDate(data.audit_date)}</td>
                           <td>
                             {data.asset_info.displayed_id} -{" "}
                             {data.asset_info.name}
@@ -150,6 +150,7 @@ export default function CompletedAudits() {
                             <TableBtn
                               type="view"
                               navigatePage="/audits/view"
+                              data={data}
                               previousPage={location.pathname}
                             />
                           </td>

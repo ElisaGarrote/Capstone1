@@ -7,6 +7,7 @@ import Select from "react-select";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import assetsService from "../../services/assets-service";
+import dateRelated from "../../utils/dateRelated";
 
 export default function PerformAudits() {
   const navigate = useNavigate();
@@ -18,16 +19,7 @@ export default function PerformAudits() {
 
   // Handle current date
   useEffect(() => {
-    const today = new Date();
-    const options = {
-      timeZone: "Asia/Manila",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    };
-    const formatter = new Intl.DateTimeFormat("en-CA", options); // "en-CA" ensures YYYY-MM-DD format
-    const formattedDate = formatter.format(today); // Format date in Philippines timezone
-    setCurrentDate(formattedDate);
+    setCurrentDate(dateRelated.getCurrentDate());
   }, []);
 
   const handleImagesSelection = (event) => {
@@ -167,7 +159,7 @@ export default function PerformAudits() {
     const assetId = data.asset.id;
     const location = data.location.value;
     const userId = 1;
-    console.log("asset id: ", assetId);
+    console.log("nextAuditDate: ", nextAuditDate);
 
     // POST schedule audit
     const scheduleAuditResponse = await assetsService.postScheduleAudit(
@@ -177,7 +169,6 @@ export default function PerformAudits() {
     );
 
     const auditScheduleId = scheduleAuditResponse.id;
-    console.log("schedule id: ", auditScheduleId);
 
     if (scheduleAuditResponse) {
       console.log("Successfully created schedule audit!");
@@ -189,7 +180,8 @@ export default function PerformAudits() {
         userId,
         notes,
         auditScheduleId,
-        auditDate
+        auditDate,
+        nextAuditDate
       );
 
       if (auditDataResponse) {
