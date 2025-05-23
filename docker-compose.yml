@@ -24,7 +24,7 @@ services:
   assets:
     build:
       context: ./backend/assets
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.local
     container_name: assets-service
     ports:
       - "8003:8000"  # Map host port 8003 to container port 8000
