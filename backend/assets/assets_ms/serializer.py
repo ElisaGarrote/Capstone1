@@ -69,3 +69,8 @@ class AuditFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditFile
         fields = "__all__"
+
+class ComponentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Component
+        fields = "__all__"

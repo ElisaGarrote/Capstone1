@@ -20,4 +20,7 @@ urlpatterns = [
     path('audits/create-schedule/', create_audit_schedule, name='create_audit_schedule'),
     path('audits/get/edit/schedule/<int:id>/', get_edit_audit_schedule_by_id, name='get_edit_audit_schedule_by_id'),
     path('audits/all/schedules/', get_all_audit_schedules, name='get_all_audit_schedule'),
+
+    # Component
+    path('component/create/', create_component, name='create_component'),
 ]
