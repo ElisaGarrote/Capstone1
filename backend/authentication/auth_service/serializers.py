@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(write_only=True, required=True)
     password2 = serializers.CharField(write_only=True, required=True)
 
     class Meta:
@@ -19,24 +19,22 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        validated_data.pop('password2')
-        is_superuser = validated_data.pop('is_superuser', False)
-        is_staff = validated_data.pop('is_staff', False)
+        # Remove password2 from validated_data
+        validated_data.pop('password2', None)
         
-        # Use create_superuser if is_superuser is True
-        if is_superuser:
-            user = CustomUser.objects.create_superuser(
-                email=validated_data['email'],
-                password=validated_data['password']
-            )
-        else:
-            user = CustomUser.objects.create_user(
-                email=validated_data['email'],
-                password=validated_data['password']
-            )
-            # Set staff status if needed
-            if is_staff:
-                user.is_staff = True
-                user.save()
-                
+        # Get password
+        password = validated_data.pop('password')
+        
+        # Create user with remaining data
+        user = CustomUser(
+            email=validated_data.get('email'),
+            is_superuser=True,
+            is_staff=True,
+            is_active=True
+        )
+        
+        # Set password
+        user.set_password(password)
+        user.save()
+        
         return user

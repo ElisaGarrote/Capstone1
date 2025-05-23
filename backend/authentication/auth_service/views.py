@@ -1,6 +1,7 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework.permissions import AllowAny
 from .models import CustomUser
 from .serializers import RegisterSerializer
 
@@ -11,13 +12,12 @@ def api_test(request):
 class RegisterViewset(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
-    http_method_names = ['post', 'get']  # Allow POST and GET requests
+    permission_classes = [AllowAny]
+    http_method_names = ['post', 'get']
     
     def list(self, request):
-        """Handle GET requests to /register/"""
         return Response({
-            "message": "Superuser registration endpoint. Send a POST request with user data to register a superuser.",
+            "message": "Superuser registration endpoint",
             "required_fields": {
                 "email": "Your email address",
                 "password": "Your password",
@@ -26,11 +26,13 @@ class RegisterViewset(viewsets.ModelViewSet):
         })
     
     def create(self, request, *args, **kwargs):
-        """Handle POST requests to /register/ to create a superuser"""
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save(is_superuser=True, is_staff=True)
-        return Response({
-            "email": user.email,
-            "message": "Superuser created successfully",
-        }, status=status.HTTP_201_CREATED)
+        
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                "email": user.email,
+                "message": "Superuser created successfully"
+            }, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
