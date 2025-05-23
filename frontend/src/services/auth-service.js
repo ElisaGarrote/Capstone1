@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000/auth/";
+const API_URL = "https://capstone1-production-be50.up.railway.app/auth/";
 
 class AuthService {
   // Login user and store tokens
