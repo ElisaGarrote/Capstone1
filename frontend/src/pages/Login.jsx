@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import "../styles/custom-colors.css";
 import "../styles/Login.css";
+import "../styles/LoadingButton.css";
 import loginImage from "../assets/img/login.png";
 import Alert from "../components/Alert";
 import { useForm } from "react-hook-form";
@@ -9,9 +10,9 @@ import authService from "../services/auth-service";
 import { useEffect, useState } from "react";
 
 function Login() {
-  // return <Form route="/api/token/" method="login" />
   const navigate = useNavigate();
   const [isInvalidCredentials, setInvalidCredentials] = useState(null);
+  const [isSubmitting, setSubmitting] = useState(false);
 
   const {
     register,
@@ -22,8 +23,9 @@ function Login() {
   });
 
   const submission = async (data) => {
-    console.log("data: ", data);
     const { email, password } = data;
+    setSubmitting(true);
+
     try {
       const success = await authService.login(email, password);
 
@@ -36,6 +38,8 @@ function Login() {
       }
     } catch (error) {
       console.log("login failed!");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -89,8 +93,13 @@ function Login() {
             />
           </fieldset>
 
-          <button type="submit" disabled={!isValid} className="log-in-button">
-            Log In
+          <button
+            type="submit"
+            disabled={!isValid || isSubmitting}
+            className="log-in-button"
+          >
+            {isSubmitting && <span className="loading-button"></span>}
+            {!isSubmitting && "Log In"}
           </button>
         </form>
         <div className="form-btn">
@@ -105,7 +114,6 @@ function Login() {
         <a onClick={() => navigate("/request/password_reset")}>
           Forgot Password?
         </a>
-        <a onClick={() => navigate("/dashboard")}>Go to dashboard</a>
       </section>
     </main>
   );
