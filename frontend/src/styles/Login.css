@@ -76,6 +76,32 @@
   outline: 2px solid var(--primary-color);
 }
 
+.login-page .password-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  position: relative;
+}
+
+.login-page input[type="password"],
+.login-page input[type="text"]:nth-child(1) {
+  padding-right: 40px;
+}
+
+.show-password {
+  height: 20px;
+  width: 20px;
+
+  position: absolute;
+  right: 16px;
+  cursor: pointer;
+}
+
+input[type="password"]::-ms-reveal {
+  display: none;
+}
+
 .login-page button {
   width: 100%;
   padding: 12px 32px;
@@ -145,7 +171,7 @@
   color: var(--text-color);
 }
 
-.right-panel form span {
+.right-panel form span:not(.show) {
   font-size: 0.875rem;
   color: red;
 }
