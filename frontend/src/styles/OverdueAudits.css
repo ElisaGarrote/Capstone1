@@ -166,6 +166,13 @@
   padding-right: 0;
 }
 
+.overdue-audits-page .no-data-message {
+  font-size: 18px;
+  color: #555;
+  margin: 50px;
+  align-self: start;
+}
+
 /* Center the action buttons */
 /* .overdue-audits-page table td:nth-last-child(1) button,
 .overdue-audits-page table td:nth-last-child(2) button,

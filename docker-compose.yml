@@ -1,51 +1,47 @@
 version: '3.8'
 
 services:
-  accessories:
-    build: ./backend/accessories
-    container_name: accessories_service
-    command: python manage.py runserver 0.0.0.0:8001
-    volumes:
-      - ./backend/accessories:/app
+  authentication:
+    build:
+      context: ./backend/authentication
+      dockerfile: Dockerfile
+    container_name: authentication-service
     ports:
-      - "8001:8001"
-    depends_on:
-      - db
+      - "8000:8000"
     environment:
-      - DJANGO_SETTINGS_MODULE=accessories.settings
+      - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - DB_NAME=railway
+      - DB_USER=postgres
+      - DB_PASSWORD=QdleMpvGHEMlhrrlrinLihmJggQCMXfU
+      - DB_HOST=trolley.proxy.rlwy.net
+      - DB_PORT=57512
+    networks:
+      - app-network
+    restart: always
 
-  accounts:
-    build: ./backend/accounts
-    container_name: accounts_service
-    command: python manage.py runserver 0.0.0.0:8002
-    volumes:
-      - ./backend/accounts:/app
+  assets:
+    build:
+      context: ./backend/assets
+      dockerfile: Dockerfile
+    container_name: assets-service
     ports:
-      - "8002:8002"
-    depends_on:
-      - db
+      - "${PORT:-8003}:8000"
     environment:
-      - DJANGO_SETTINGS_MODULE=accounts.settings
+      - PORT=8000
+      - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - DB_NAME=railway
+      - DB_USER=postgres
+      - DB_PASSWORD=qoSFWIdZocmITRXhUflaawOfxIeGgljG
+      - DB_HOST=switchback.proxy.rlwy.net
+      - DB_PORT=30647
+    networks:
+      - app-network
+    restart: always
 
-  frontend:
-    build: ./frontend
-    container_name: frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev
-
-  db:
-    image: postgres:15
-    container_name: postgres_db
-    environment:
-      POSTGRES_DB: capstone
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
+networks:
+  app-network:
+    driver: bridge

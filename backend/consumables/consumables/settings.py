@@ -81,10 +81,11 @@ WSGI_APPLICATION = 'consumables.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ams_consumables',
+        'NAME': 'railway',
         'USER': 'postgres',
-        'PASSWORD': 'capstone',
-        'HOST': 'localhost',
+        'PASSWORD': 'MIZWsGzljjOVHkIZZzXsOviQWYtNtuIK',
+        'HOST': 'ballast.proxy.rlwy.net',
+        'PORT': '45721',
     }
 }
 

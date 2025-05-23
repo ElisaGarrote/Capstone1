@@ -382,16 +382,6 @@ export default function PerformAudits() {
               Save
             </button>
           </form>
-          {/* Place this button inside the form when working on the backend. */}
-          <button
-            type="submit"
-            className="save-btn"
-            onClick={() =>
-              navigate("/audits", { state: { addedNewAudit: true } })
-            }
-          >
-            Save
-          </button>
         </section>
       </main>
     </>
