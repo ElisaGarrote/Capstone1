@@ -23,10 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-15afsph4_jmx@or6785n#%id06geq8gx+mp#4rk8h+_w#fgtox'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Update DEBUG setting to help troubleshoot
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
+# Make sure ALLOWED_HOSTS includes your Railway domain
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1", "assets-service-production.up.railway.app"]
 
 
 # Application definition
@@ -152,5 +153,11 @@ REST_FRAMEWORK = {
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Ensure CORS is properly configured
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://your-frontend-domain.up.railway.app",
+]
