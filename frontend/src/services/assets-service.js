@@ -1,6 +1,6 @@
 import dateRelated from "../utils/dateRelated";
 
-const API_URL = "http://127.0.0.1:8003/";
+const API_URL = "https://assets-service-production.up.railway.app/";
 
 class AssetsService {
   // ASSETS

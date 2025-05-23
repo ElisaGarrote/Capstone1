@@ -1,4 +1,5 @@
-const API_URL = "https://capstone1-production-be50.up.railway.app/auth/";
+const API_URL =
+  "https://authentication-service-production-d804.up.railway.app/auth/";
 
 class AuthService {
   // Login user and store tokens
