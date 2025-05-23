@@ -192,8 +192,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'amsmapg7@gmail.com'
 EMAIL_HOST_PASSWORD = 'jton xyex bxll tluw'
 
-# WhiteNoise configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Optional: WhiteNoise settings for better performance
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
