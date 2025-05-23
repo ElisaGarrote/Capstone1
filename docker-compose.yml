@@ -1,51 +1,21 @@
 version: '3.8'
 
 services:
-  accessories:
-    build: ./backend/accessories
-    container_name: accessories_service
-    command: python manage.py runserver 0.0.0.0:8001
+  authentication:
+    build:
+      context: ./backend/authentication
+      dockerfile: Dockerfile
+    container_name: authentication-service
     volumes:
-      - ./backend/accessories:/app
+      - ./backend/authentication:/app
     ports:
-      - "8001:8001"
-    depends_on:
-      - db
-    environment:
-      - DJANGO_SETTINGS_MODULE=accessories.settings
+      - "8000:8000"
+    env_file:
+      - ./backend/authentication/.env
+    networks:
+      - app-network
+    command: python manage.py runserver 0.0.0.0:8000
 
-  accounts:
-    build: ./backend/accounts
-    container_name: accounts_service
-    command: python manage.py runserver 0.0.0.0:8002
-    volumes:
-      - ./backend/accounts:/app
-    ports:
-      - "8002:8002"
-    depends_on:
-      - db
-    environment:
-      - DJANGO_SETTINGS_MODULE=accounts.settings
-
-  frontend:
-    build: ./frontend
-    container_name: frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    command: npm run dev
-
-  db:
-    image: postgres:15
-    container_name: postgres_db
-    environment:
-      POSTGRES_DB: capstone
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
+networks:
+  app-network:
+    driver: bridge

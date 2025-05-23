@@ -1,0 +1,11 @@
+auth_venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.log
+.env
+.git
+Dockerfile
+migrations/

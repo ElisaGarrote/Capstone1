@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-3zr80f0u_sb4+0w%fxtag&30v5zdvde0(+hj55%h$wz7c$z7w-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -128,10 +128,11 @@ WSGI_APPLICATION = 'authentication.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ams_authentication',
-        'USER': 'postgres',
-        'PASSWORD': 'capstone',
-        'HOST': 'localhost',
+        'NAME': os.environ.get('DB_NAME', 'railway'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'QdleMpvGHEMlhrrlrinLihmJggQCMXfU'),
+        'HOST': os.environ.get('DB_HOST', 'trolley.proxy.rlwy.net'),
+        'PORT': os.environ.get('DB_PORT', '57512'),
     }
 }
 
@@ -188,5 +189,5 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'edzram7@gmail.com'
-EMAIL_HOST_PASSWORD = 'xxys kxho tkbe rqhm'
+EMAIL_HOST_USER = 'amsmapg7@gmail.com'
+EMAIL_HOST_PASSWORD = 'jton xyex bxll tluw'
