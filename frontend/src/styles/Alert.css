@@ -16,7 +16,7 @@
   right: 50%;
   top: 100px;
   transform: translate(-50%, -50%);
-  animation: fade-in-out 5s ease-in-out;
+  animation: fade-in-out 5s ease-in-out forwards;
 }
 
 .alert img {
