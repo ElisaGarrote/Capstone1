@@ -1,6 +1,6 @@
 import "../styles/custom-colors.css";
-import "../styles/login.css";
-import "../styles/alert.css";
+import "../styles/Login.css";
+import "../styles/Alert.css";
 import loginImage from "../assets/img/login.png";
 
 import Alert from "../components/Alert";
