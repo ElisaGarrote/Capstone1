@@ -81,13 +81,13 @@ WSGI_APPLICATION = 'contexts.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ams_contexts',
+        'NAME': 'railway',
         'USER': 'postgres',
-        'PASSWORD': 'capstone',
-        'HOST': 'localhost',
+        'PASSWORD': 'vzYwYBKnmkTitUnSZgpxFBUicmGIgIcj',
+        'HOST': 'tramway.proxy.rlwy.net',
+        'PORT': '43108',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
