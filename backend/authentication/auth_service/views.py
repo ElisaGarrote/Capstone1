@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, action
-from django.contrib.auth.models import User
+from rest_framework.decorators import api_view
+from .models import CustomUser
 from .serializers import RegisterSerializer
 
 @api_view(['GET'])
@@ -9,7 +9,7 @@ def api_test(request):
     return Response({"message": "API is working!"}, status=status.HTTP_200_OK)
 
 class RegisterViewset(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    queryset = CustomUser.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
     http_method_names = ['post', 'get']  # Allow POST and GET requests
@@ -17,23 +17,20 @@ class RegisterViewset(viewsets.ModelViewSet):
     def list(self, request):
         """Handle GET requests to /register/"""
         return Response({
-            "message": "Registration endpoint. Send a POST request with user data to register.",
+            "message": "Superuser registration endpoint. Send a POST request with user data to register a superuser.",
             "required_fields": {
-                "username": "Your username",
                 "email": "Your email address",
                 "password": "Your password",
-                "password2": "Confirm your password",
-                "first_name": "Your first name",
-                "last_name": "Your last name"
+                "password2": "Confirm your password"
             }
         })
     
     def create(self, request, *args, **kwargs):
-        """Handle POST requests to /register/"""
+        """Handle POST requests to /register/ to create a superuser"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        user = serializer.save(is_superuser=True, is_staff=True)
         return Response({
-            "user": serializer.data,
-            "message": "User created successfully",
+            "email": user.email,
+            "message": "Superuser created successfully",
         }, status=status.HTTP_201_CREATED)
