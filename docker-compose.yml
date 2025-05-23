@@ -12,11 +12,11 @@ services:
       - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
       - DEBUG=${DEBUG:-False}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
+      - DB_NAME=railway
+      - DB_USER=postgres
+      - DB_PASSWORD=QdleMpvGHEMlhrrlrinLihmJggQCMXfU
+      - DB_HOST=trolley.proxy.rlwy.net
+      - DB_PORT=57512
     networks:
       - app-network
     restart: always
@@ -33,11 +33,15 @@ services:
       - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
       - DEBUG=${DEBUG:-False}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
+      - DB_NAME=railway
+      - DB_USER=postgres
+      - DB_PASSWORD=qoSFWIdZocmITRXhUflaawOfxIeGgljG
+      - DB_HOST=switchback.proxy.rlwy.net
+      - DB_PORT=30647
     networks:
       - app-network
     restart: always
+
+networks:
+  app-network:
+    driver: bridge
