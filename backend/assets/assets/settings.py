@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-15afsph4_jmx@or6785n#%id06geq8gx+mp#4rk8h+_w#fgtox
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -81,10 +81,11 @@ WSGI_APPLICATION = 'assets.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ams_assets',
-        'USER': 'postgres',
-        'PASSWORD': 'capstone',
-        'HOST': 'localhost',
+        'NAME': os.environ.get('DB_NAME', 'railway'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'qoSFWIdZocmITRXhUflaawOfxIeGgljG'),
+        'HOST': os.environ.get('DB_HOST', 'switchback.proxy.rlwy.net'),
+        'PORT': os.environ.get('DB_PORT', '30647'),
     }
 }
 
