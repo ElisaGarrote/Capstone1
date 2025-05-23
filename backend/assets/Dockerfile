@@ -2,7 +2,6 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-ENV PORT 8000
 
 WORKDIR /app
 
@@ -30,10 +29,10 @@ RUN mkdir -p media
 RUN python manage.py collectstatic --noinput
 
 # Expose the port
-EXPOSE $PORT
+EXPOSE 8003
 
 # Run gunicorn for production
-CMD gunicorn assets.wsgi:application --bind 0.0.0.0:$PORT
+CMD gunicorn assets.wsgi:application --bind 0.0.0.0:8003
 
 
 

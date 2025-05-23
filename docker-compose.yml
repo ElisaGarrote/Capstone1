@@ -27,9 +27,8 @@ services:
       dockerfile: Dockerfile
     container_name: assets-service
     ports:
-      - "${PORT:-8003}:8000"
+      - "8003:8003"
     environment:
-      - PORT=8000
       - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
       - DEBUG=${DEBUG:-False}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
