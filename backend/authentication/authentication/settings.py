@@ -79,6 +79,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -167,8 +168,14 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files - minimal configuration since we don't serve static files
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Define where Django should look for static files
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]  # Add this line
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
@@ -188,10 +195,5 @@ EMAIL_HOST_PASSWORD = 'jton xyex bxll tluw'
 # WhiteNoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Extra places for collectstatic to find static files
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
-
-# WhiteNoise settings
+# Optional: WhiteNoise settings for better performance
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
