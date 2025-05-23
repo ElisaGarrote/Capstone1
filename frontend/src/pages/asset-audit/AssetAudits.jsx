@@ -146,23 +146,25 @@ export default function AssetAudits() {
           <section>
             <TabNavBar />
           </section>
-          {isLoading ? (
-            "Loading..."
-          ) : scheduleAuditData.length > 0 ? (
-            <section className="container">
-              <section className="top">
-                <h2>Due to be Audited</h2>
-                <div>
-                  <form action="" method="post">
-                    <input type="text" placeholder="Search..." />
-                  </form>
-                  <MediumButtons
-                    type="export"
-                    deleteModalOpen={() => setExportModalOpen(true)}
-                  />
-                </div>
-              </section>
-              <section className="middle">
+          <section className="container">
+            <section className="top">
+              <h2>Due to be Audited</h2>
+              <div>
+                <form action="" method="post">
+                  <input type="text" placeholder="Search..." />
+                </form>
+                <MediumButtons
+                  type="export"
+                  deleteModalOpen={() => setExportModalOpen(true)}
+                />
+              </div>
+            </section>
+            <section className="middle">
+              {isLoading || scheduleAuditData.length == 0 ? (
+                <p className="table-message">
+                  {isLoading ? "Loading..." : "No asset audits found."}
+                </p>
+              ) : (
                 <table>
                   <thead>
                     <tr>
@@ -233,12 +235,10 @@ export default function AssetAudits() {
                     })}
                   </tbody>
                 </table>
-              </section>
-              <section></section>
+              )}
             </section>
-          ) : (
-            "No Asset Audit Found."
-          )}
+            <section></section>
+          </section>
         </section>
       </main>
     </>
