@@ -41,6 +41,26 @@ services:
       - app-network
     restart: always
 
+  contexts:
+    build:
+      context: ./backend/contexts
+      dockerfile: Dockerfile.local
+    container_name: contexts-service
+    ports:
+      - "8002:8000"  # Map host port 8002 to container port 8000
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - DB_NAME=railway
+      - DB_USER=postgres
+      - DB_PASSWORD=vzYwYBKnmkTitUnSZgpxFBUicmGIgIcj
+      - DB_HOST=tramway.proxy.rlwy.net
+      - DB_PORT=43108
+    networks:
+      - app-network
+    restart: always
+
 networks:
   app-network:
     driver: bridge
