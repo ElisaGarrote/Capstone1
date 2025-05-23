@@ -29,10 +29,10 @@ RUN mkdir -p media
 RUN python manage.py collectstatic --noinput
 
 # Expose the port
-EXPOSE 8003
+EXPOSE 8000
 
 # Run gunicorn for production
-CMD gunicorn assets.wsgi:application --bind 0.0.0.0:8003
+CMD gunicorn assets.wsgi:application --bind 0.0.0.0:8000
 
 
 
