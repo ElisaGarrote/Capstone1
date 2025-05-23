@@ -1,15 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.utils.translation import gettext_lazy as _
 
-from django_rest_passwordreset.signals import reset_password_token_created
-from django.dispatch import receiver
-from django.urls import reverse
-from django.template.loader import render_to_string
-from django.core.mail import EmailMultiAlternatives
-from django.utils.html import strip_tags
-
-# Create your models here.
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -24,6 +16,7 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
         
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True.')
@@ -33,37 +26,13 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(max_length=100, unique=True)
-    username = models.CharField(max_length=100, null=True, blank=True)
-
-    objects = CustomUserManager()
-
+    email = models.EmailField(_('email address'), unique=True)
+    username = models.CharField(max_length=150, null=True, blank=True)
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
-
-@receiver(reset_password_token_created)
-def password_reset_token_created(reset_password_token, *args, **kwargs):
-    sitelink = 'http://localhost:5173/'
-    token = "{}".format(reset_password_token.key)
-    full_link = str(sitelink)+str("password-reset/")+str(token)
-
-    print(token)
-    print(full_link)
-
-    context = {
-        'full_link': full_link,
-        'email_address': reset_password_token.user.email,
-    }
-
-    html_message = render_to_string("backend/email.html", context=context)
-    plain_message = strip_tags(html_message)
-
-    msg = EmailMultiAlternatives(
-        subject = "Request for resetting password for {title}".format(title=reset_password_token.user.email),
-        body = plain_message,
-        from_email = "MAP@gmail.com",
-        to=[reset_password_token.user.email]
-    )
-
-    msg.attach_alternative(html_message, "text/html")
-    msg.send()
+    
+    objects = CustomUserManager()
+    
+    def __str__(self):
+        return self.email
