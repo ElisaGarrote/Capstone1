@@ -1,7 +1,7 @@
 //import Form from "../components/Form";
 import { useNavigate } from "react-router-dom";
 import "../styles/custom-colors.css";
-import "../styles/login.css";
+import "../styles/Login.css";
 import loginImage from "../assets/img/login.png";
 import Alert from "../components/Alert";
 import { useForm } from "react-hook-form";
