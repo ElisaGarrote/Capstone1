@@ -177,3 +177,16 @@ def get_edit_audit_schedule_by_id(request, id):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # END AUDITS
+
+
+# COMPONENT
+@api_view(['POST'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def create_component(request):
+    data = request.data
+    serializer = ComponentSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# END COMPONENT
