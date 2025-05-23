@@ -2,6 +2,7 @@ FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV PORT 8000
 
 WORKDIR /app
 
@@ -20,7 +21,20 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Create static directory if it doesn't exist
+# Create static and media directories
 RUN mkdir -p static
+RUN mkdir -p staticfiles
+RUN mkdir -p media
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Collect static files
+RUN python manage.py collectstatic --noinput
+
+# Expose the port
+EXPOSE $PORT
+
+# Run gunicorn for production
+CMD gunicorn assets.wsgi:application --bind 0.0.0.0:$PORT
+
+
+
+
