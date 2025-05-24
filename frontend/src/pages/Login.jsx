@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import "../styles/custom-colors.css";
 import "../styles/Login.css";
 import "../styles/LoadingButton.css";
-import loginImage from "../assets/img/login.png";
 import Alert from "../components/Alert";
 import { useForm } from "react-hook-form";
 import authService from "../services/auth-service";
@@ -10,12 +9,15 @@ import { useEffect, useState } from "react";
 import LoadingButton from "../components/LoadingButton";
 import eyeOpen from "../assets/icons/eye-open.svg";
 import eyeClose from "../assets/icons/eye-close.svg";
+import Logo from "../assets/icons/AMS-Logo.svg";
+import AssetImage from "../assets/img/Asset-Management.svg";
 
 function Login() {
   const navigate = useNavigate();
   const [isInvalidCredentials, setInvalidCredentials] = useState(null);
   const [isSubmitting, setSubmitting] = useState(false);
   const [isShowPassword, setShowPassword] = useState(false);
+  const [hasActiveAdmin, setActiveAdmin] = useState(true);
 
   const {
     register,
@@ -64,6 +66,16 @@ function Login() {
     }
   }, [password]);
 
+  // Determine if there is any active admin
+  useEffect(() => {
+    const hasActiveAdmin = async () => {
+      const fetchedData = await authService.hasActiveAdmin();
+      setActiveAdmin(fetchedData);
+    };
+
+    hasActiveAdmin();
+  }, []);
+
   return (
     <>
       {isInvalidCredentials && (
@@ -72,9 +84,21 @@ function Login() {
 
       <main className="login-page">
         <section className="left-panel">
-          <img src={loginImage} alt="login-illustration" />
+          <img
+            src={AssetImage}
+            alt="login-illustration"
+            className="asset-image"
+          />
         </section>
         <section className="right-panel">
+          <header className="form-header">
+            <section className="logo">
+              <img src={Logo} alt="logo" />
+              <h1 className="logo-text">MAP AMS</h1>
+            </section>
+            <p>Welcome! Please provide your credentials to log in.</p>
+          </header>
+
           <form onSubmit={handleSubmit(submission)}>
             <fieldset>
               <label>Email:</label>
@@ -128,15 +152,19 @@ function Login() {
               {!isSubmitting ? "Log In" : "Verifying..."}
             </button>
           </form>
-          <div className="form-btn">
-            <button
-              type="button"
-              onClick={() => navigate("/register")}
-              className="register-btn"
-            >
-              Register
-            </button>
-          </div>
+
+          {!hasActiveAdmin && (
+            <div className="form-btn">
+              <button
+                type="button"
+                onClick={() => navigate("/register")}
+                className="register-btn"
+              >
+                Register
+              </button>
+            </div>
+          )}
+
           <a onClick={() => navigate("/request/password_reset")}>
             Forgot Password?
           </a>
