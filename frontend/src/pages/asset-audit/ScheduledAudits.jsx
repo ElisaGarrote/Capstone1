@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function ScheduledAudits() {
   const location = useLocation();
@@ -73,6 +74,7 @@ export default function ScheduledAudits() {
       const fetchedData = await assetsService.fetchAllAuditSchedules();
 
       setScheduleAuditData(fetchedData);
+      setLoading(false);
     };
 
     fetchAllScheduleAudits();
@@ -87,13 +89,6 @@ export default function ScheduledAudits() {
     };
 
     fetchAllAssets();
-  }, []);
-
-  // Set the isLoading state to false
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 300);
   }, []);
 
   console.table(scheduleAuditData);
@@ -163,11 +158,16 @@ export default function ScheduledAudits() {
               </div>
             </section>
             <section className="middle">
-              {isLoading || scheduleAuditData.length == 0 ? (
-                <p className="table-message">
-                  {isLoading ? "Loading..." : "No schedule audits found."}
-                </p>
-              ) : (
+              {/* Render loading skeleton while waiting to the response from the API request*/}
+              {isLoading && <SkeletonLoadingTable />}
+
+              {/* Render message if the scheduleAuditData is empty */}
+              {!isLoading && scheduleAuditData.length == 0 && (
+                <p className="table-message">No schedule audits found.</p>
+              )}
+
+              {/* Render table if scheduleAuditData is not empty */}
+              {scheduleAuditData.length > 0 && (
                 <table>
                   <thead>
                     <tr>

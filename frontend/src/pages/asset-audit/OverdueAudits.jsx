@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function OverdueAudits() {
   const location = useLocation();
@@ -60,16 +61,10 @@ export default function OverdueAudits() {
       const fetchedData = await assetsService.fetchAllOverdueAudits();
 
       setOverdueAuditsData(fetchedData);
+      setLoading(false);
     };
 
     fetchListOverdueAudits();
-  }, []);
-
-  // Set the isLoading state to false
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 300);
   }, []);
 
   return (
@@ -132,11 +127,18 @@ export default function OverdueAudits() {
               </div>
             </section>
             <section className="middle">
-              {isLoading || overdueAuditsData.length == 0 ? (
+              {/* Render loading skeleton while waiting to the response from the API request*/}
+              {isLoading && <SkeletonLoadingTable />}
+
+              {/* Render message if the overdueAuditData is empty */}
+              {!isLoading && overdueAuditsData.length == 0 && (
                 <p className="table-message">
                   {isLoading ? "Loading..." : "No overdue audits found."}
                 </p>
-              ) : (
+              )}
+
+              {/* Render table if overdueAuditData is not empty */}
+              {overdueAuditsData.length > 0 && (
                 <table>
                   <thead>
                     <tr>
