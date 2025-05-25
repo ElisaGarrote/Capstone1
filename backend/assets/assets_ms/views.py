@@ -12,7 +12,7 @@ def get_all_products(request):
     serializedProducts = AllProductSerializer(products, many=True).data
 
     data = {
-        'manufacturers': serializedProducts,
+        'products': serializedProducts,
     }
     return Response(data)
 
