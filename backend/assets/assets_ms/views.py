@@ -10,7 +10,11 @@ from .serializer import *
 def get_all_products(request):
     products = Product.objects.filter(is_deleted=False)
     serializedProducts = AllProductSerializer(products, many=True).data
-    return Response(serializedProducts)
+
+    data = {
+        'manufacturers': serializedProducts,
+    }
+    return Response(data)
 
 @api_view(['POST'])
 def create_product(request):

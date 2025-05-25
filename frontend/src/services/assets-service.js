@@ -3,32 +3,6 @@ import dateRelated from "../utils/dateRelated";
 const API_URL = "https://assets-service-production.up.railway.app/";
 
 class AssetsService {
-  //CONTEXTS
-  // Retrieve all manufacturers
-  async fetchAllManufacturers() {
-    try {
-      const response = await fetch(API_URL + "contexts/manufacturers/names", {
-        method: "GET",
-      });
-
-      if (!response.ok) {
-        console.log(
-          "The status of the response for fetching all manufacturers is here.",
-          response.status
-        );
-        return [];  // Return empty array instead of false
-      }
-
-      const data = await response.json();
-      console.log("Data for all manufacturers fetched: ", data);
-      return data;
-    } catch (error) {
-      console.log("Error occur while fetching all manufacturers!", error);
-      return [];  // Return empty array on error
-    }
-  }
-
-
   // ASSETS
   // Retrieve all assets
   async fetchAllAssets() {
@@ -65,14 +39,25 @@ class AssetsService {
           "The status of the response for fetching all products is here.",
           response.status
         );
-        return false;
+        return { products: [] };  // Return consistent structure
       }
 
       const data = await response.json();
       console.log("Data for all products fetched: ", data);
-      return data;
+      
+      // Ensure we always return an object with products property
+      if (data && data.products) {
+        return data; // Already in correct format
+      } else if (Array.isArray(data)) {
+        return { products: data }; // Convert array to object with property
+      } else if (data && typeof data === 'object') {
+        return { products: [data] }; // Single object to array in property
+      } else {
+        return { products: [] }; // Default empty result
+      }
     } catch (error) {
       console.log("Error occur while fetching all products!", error);
+      return { products: [] };  // Return consistent structure
     }
   }
 

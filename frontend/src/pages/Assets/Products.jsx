@@ -8,6 +8,7 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
+import contextsService from "../../services/contexts-service";
 
 export default function Products() {
   const [manufacturers, setManufacturers] = useState([]);
@@ -28,10 +29,12 @@ export default function Products() {
         const fetchedProducts = await assetsService.fetchAllProducts();
         if (fetchedProducts) {
           setProducts(fetchedProducts);
+        } else {
+          setProducts([]);
         }
         
         // Fetch manufacturers
-        const fetchedManufacturers = await assetsService.fetchAllManufacturers();
+        const fetchedManufacturers = await contextsService.fetchAllManufacturers();
         if (fetchedManufacturers) {
           setManufacturers(fetchedManufacturers);
         }
