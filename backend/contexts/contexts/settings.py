@@ -146,11 +146,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Ensure CORS is properly configured
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://capstone1-production-1c05.up.railway.app/login",
+    "https://capstone1-production-1c05.up.railway.app",
+    "https://contexts-service-production.up.railway.app"
 ]
 
 # Add your Railway domain to CSRF_TRUSTED_ORIGINS with the exact format
@@ -160,6 +163,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://contexts.service.production.up.railway.app',
     'https://contexts-service-production-up.railway.app',
     'https://contexts.service.production-up.railway.app',
+    'https://capstone1-production-1c05.up.railway.app',
     # Add the exact URL from the error message
     'https://contexts-service.production.up.railway.app'
 ]
