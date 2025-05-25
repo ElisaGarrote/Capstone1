@@ -111,9 +111,8 @@ export default function Products() {
                         <th>IMAGE</th>
                         <th>NAME</th>
                         <th>CATEGORY</th>
-                        <th>MODEL NUMBER</th>
                         <th>MANUFACTURER</th>
-                        <th>END OF LIFE</th>
+                        <th>Depreciation</th>
                         <th>EDIT</th>
                         <th>DELETE</th>
                         <th>VIEW</th>

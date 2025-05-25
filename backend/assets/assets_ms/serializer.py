@@ -1,23 +1,33 @@
 from rest_framework import serializers
 from .models import *
-'''
+
 class AllProductSerializer(serializers.ModelSerializer):
+    category = serializers.CharField(source='category.name', read_only=True)
+    depreciation = serializers.CharField(source='depreciation.name', read_only=True)
     class Meta:
         model = Product
-        fields = ['id', 'image', 'name', 'model_number', 'category_name', 'manufacturer_name', 'end_of_life']
+        fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'depreciation']
         
+class ProductSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=AssetCategory.objects.all(), required=True, allow_null=False
+    )
+    depreciation = serializers.PrimaryKeyRelatedField(
+        queryset=Depreciation.objects.all(), required=True, allow_null=False
+    )
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+'''
+
+
 class ProductDepreciationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Depreciation
         fields = ['id', 'name']
 
-class ProductSerializer(serializers.ModelSerializer):
-    depreciation = serializers.PrimaryKeyRelatedField(
-        queryset=Depreciation.objects.all(), required=False, allow_null=True
-    )
-    class Meta:
-        model = Product
-        fields = '__all__'
+
 
 class DepreciationSerializer(serializers.ModelSerializer):
     class Meta:

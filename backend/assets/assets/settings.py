@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
+from dotenv import load_dotenv
+import logging
+logger = logging.getLogger(__name__)
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -79,16 +86,11 @@ WSGI_APPLICATION = 'assets.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'railway'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'qoSFWIdZocmITRXhUflaawOfxIeGgljG'),
-        'HOST': os.environ.get('DB_HOST', 'switchback.proxy.rlwy.net'),
-        'PORT': os.environ.get('DB_PORT', '30647'),
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600
+    )
 }
 
 
@@ -160,4 +162,15 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
     "https://your-frontend-domain.up.railway.app",
+]
+
+# Add your Railway domain to CSRF_TRUSTED_ORIGINS with the exact format
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'https://assets-service-production.up.railway.app',
+    'https://assets.service.production.up.railway.app',
+    'https://assets-service-production-up.railway.app',
+    'https://assets.service.production-up.railway.app',
+    # Add the exact URL from the error message
+    'https://assets-service.production.up.railway.app'
 ]
