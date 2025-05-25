@@ -190,3 +190,41 @@ def create_component(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # END COMPONENT
+
+# STATUS
+@api_view(['POST'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def create_status(request):
+    data = request.data
+    serializer = StatusSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def get_edit_status_by_id(request, id):
+    try:
+        queryset = Status.objects.get(pk=id, is_deleted=False)
+    except Status.DoesNotExist:
+        return Response({'detail': 'Status not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = StatusSerializer(queryset)
+        return Response(serializer.data)
+    elif request.method == 'PUT':
+        serializer = StatusSerializer(queryset, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def get_all_status(request):
+    queryset = Status.objects.all().filter(is_deleted=False)
+    serializer = StatusSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+# END STATUS
