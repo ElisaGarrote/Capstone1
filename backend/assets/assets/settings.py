@@ -86,26 +86,27 @@ WSGI_APPLICATION = 'assets.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600
-    )
-}
-
-# Add a fallback configuration if DATABASE_URL is not set or empty
-if not DATABASES['default']:
+if 'DATABASE_URL' in os.environ:
+    logger.info(f"Using DATABASE_URL from environment")
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600
+        )
+    }
+else:
+    logger.info(f"Using hardcoded database settings")
+    # Fallback for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('PGDATABASE', 'railway'),
-            'USER': os.environ.get('PGUSER', 'postgres'),
-            'PASSWORD': os.environ.get('PGPASSWORD', ''),
-            'HOST': os.environ.get('PGHOST', ''),
-            'PORT': os.environ.get('PGPORT', ''),
+            'NAME': 'railway',
+            'USER': 'postgres',
+            'PASSWORD': 'qoSFWIdZocmITRXhUflaawOfxIeGgljG',
+            'HOST': 'switchback.proxy.rlwy.net',
+            'PORT': '30647',
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
