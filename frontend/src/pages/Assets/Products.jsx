@@ -7,8 +7,10 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
+import assetsService from "../../services/assets-service";
 
 export default function Products() {
+  const [manufacturers, setManufacturers] = useState([]);
   const [products, setProducts] = useState([]);
   const [checkedItems, setCheckedItems] = useState([]);
   const allChecked = checkedItems.length === products.length;
@@ -20,19 +22,20 @@ export default function Products() {
 
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const fetchAllManufacturers = async () => {
+      const fetchedManufacturers = await assetsService.fetchAllManufacturers();
+      setManufacturers(fetchAllManufacturers);
+    };
 
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("http://localhost:8003/products/");
-      const data = await response.json();
-      setProducts(data);
-      console.log(data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+    const fetchAllProducts = async () => {
+      const fetchedProducts = await assetsService.fetchAllProducts();
+      setProducts(fetchedProducts);
+    };
+
+    fetchAllManufacturers();
+    fetchAllProducts();
+  }, []);
+  
 
   const toggleSelectAll = () => {
     if (allChecked) {
@@ -93,31 +96,36 @@ export default function Products() {
             </div>
           </section>
           <section className="middle">
-            {products.length === 0 ? (
-                  <section className="no-products-message">
-                    <p>No products found. Please add some products.</p>
-                  </section>
-                ) : (
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>
-                          <input
-                            type="checkbox"
-                            checked={allChecked}
-                            onChange={toggleSelectAll}
-                          />
-                        </th>
-                        <th>IMAGE</th>
-                        <th>NAME</th>
-                        <th>CATEGORY</th>
-                        <th>MANUFACTURER</th>
-                        <th>Depreciation</th>
-                        <th>EDIT</th>
-                        <th>DELETE</th>
-                        <th>VIEW</th>
-                      </tr>
-                    </thead>
+            
+                <table>
+                  <thead>
+                    <tr>
+                      <th>
+                        <input
+                          type="checkbox"
+                          checked={allChecked}
+                          onChange={toggleSelectAll}
+                        />
+                      </th>
+                      <th>IMAGE</th>
+                      <th>NAME</th>
+                      <th>CATEGORY</th>
+                      <th>MANUFACTURER</th>
+                      <th>Depreciation</th>
+                      <th>EDIT</th>
+                      <th>DELETE</th>
+                      <th>VIEW</th>
+                    </tr>
+                  </thead>
+                    {products.length === 0 ? (
+                      <tbody>
+                        <tr>
+                          <td colSpan="9" className="no-products-message">
+                            <p>No products found. Please add some products.</p>
+                          </td>
+                        </tr>
+                      </tbody>
+                    ) : (
                       <tbody>
                         {products.map((product) => (
                           <tr key={product.id}>
@@ -164,8 +172,8 @@ export default function Products() {
                           </tr>
                         ))}
                       </tbody>
-                  </table>
-                )}
+                    )}
+                </table>
           </section>
           <section className="bottom"></section>
         </div>

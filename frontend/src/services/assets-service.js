@@ -3,6 +3,31 @@ import dateRelated from "../utils/dateRelated";
 const API_URL = "https://assets-service-production.up.railway.app/";
 
 class AssetsService {
+  //CONTEXTS
+  // Retrieve all manufacturers
+  async fetchAllManufacturers() {
+    try {
+      const response = await fetch(API_URL + "contexts/manufacturers/", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for fetching all manufacturers is here.",
+          response.status
+        );
+        return false;
+      }
+
+      const data = await response.json();
+      console.log("Data for all manufacturers fetched: ", data);
+      return data;
+    } catch (error) {
+      console.log("Error occur while fetching all manufacturers!", error);
+    }
+  }
+
+
   // ASSETS
   // Retrieve all assets
   async fetchAllAssets() {
@@ -28,6 +53,27 @@ class AssetsService {
   }
 
   // PRODUCTS
+  async fetchAllProducts() {
+    try {
+      const response = await fetch(API_URL + "products/", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for fetching all products is here.",
+          response.status
+        );
+        return false;
+      }
+
+      const data = await response.json();
+      console.log("Data for all products fetched: ", data);
+      return data;
+    } catch (error) {
+      console.log("Error occur while fetching all products!", error);
+    }
+  }
 
   // AUDITS
   // Create Audit
