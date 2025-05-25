@@ -7,7 +7,7 @@ class AssetsService {
   // Retrieve all manufacturers
   async fetchAllManufacturers() {
     try {
-      const response = await fetch(API_URL + "contexts/manufacturers/", {
+      const response = await fetch(API_URL + "contexts/manufacturers/names", {
         method: "GET",
       });
 
