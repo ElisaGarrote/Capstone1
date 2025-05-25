@@ -22,18 +22,25 @@ export default function Products() {
 
 
   useEffect(() => {
-    const fetchAllManufacturers = async () => {
-      const fetchedManufacturers = await assetsService.fetchAllManufacturers();
-      setManufacturers(fetchAllManufacturers);
+    const fetchData = async () => {
+      try {
+        // Fetch products
+        const fetchedProducts = await assetsService.fetchAllProducts();
+        if (fetchedProducts) {
+          setProducts(fetchedProducts);
+        }
+        
+        // Fetch manufacturers
+        const fetchedManufacturers = await assetsService.fetchAllManufacturers();
+        if (fetchedManufacturers) {
+          setManufacturers(fetchedManufacturers);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
 
-    const fetchAllProducts = async () => {
-      const fetchedProducts = await assetsService.fetchAllProducts();
-      setProducts(fetchedProducts);
-    };
-
-    fetchAllManufacturers();
-    fetchAllProducts();
+    fetchData();
   }, []);
   
 

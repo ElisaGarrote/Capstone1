@@ -16,7 +16,7 @@ class AssetsService {
           "The status of the response for fetching all manufacturers is here.",
           response.status
         );
-        return false;
+        return [];  // Return empty array instead of false
       }
 
       const data = await response.json();
@@ -24,6 +24,7 @@ class AssetsService {
       return data;
     } catch (error) {
       console.log("Error occur while fetching all manufacturers!", error);
+      return [];  // Return empty array on error
     }
   }
 
