@@ -23,4 +23,9 @@ urlpatterns = [
 
     # Component
     path('component/create/', create_component, name='create_component'),
+
+    # Status
+    path('status/create/', create_status, name='create_status'),
+    path('status/get/edit/status/<int:id>/', get_edit_status_by_id, name='get_edit_status_by_id'),
+    path('status/all/', get_all_status, name='get_all_status'),
 ]
