@@ -176,6 +176,40 @@ class AssetsService {
     }
   }
 
+  // Get all product names to check for existing product before registration
+  async fetchProductNames() {
+    try {
+      const response = await fetch(API_URL + "products/names/all/", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for fetching product names is here.",
+          response.status
+        );
+        return { products: [] };  // Return consistent structure
+      }
+
+      const data = await response.json();
+      console.log("Product names fetched: ", data);
+      
+      // Ensure we always return an object with products property
+      if (data && data.products) {
+        return data; // Already in correct format
+      } else if (Array.isArray(data)) {
+        return { products: data }; // Convert array to object with property
+      } else if (data && typeof data === 'object') {
+        return { products: [data] }; // Single object to array in property
+      } else {
+        return { products: [] }; // Default empty result
+      }
+    } catch (error) {
+      console.log("Error occurred while fetching product names!", error);
+      return { products: [] };  // Return consistent structure
+    }
+  }
+
 
 
 

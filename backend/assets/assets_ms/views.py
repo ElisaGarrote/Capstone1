@@ -24,7 +24,7 @@ def get_product_contexts(request):
     depreciations = Depreciation.objects.filter(is_deleted=False)
 
     serializedCategories = AssetCategoryNameSerializer(categories, many=True).data
-    serializedDepreciations = ProductDepreciationNameSerializer(depreciations, many=True).data
+    serializedDepreciations = DepreciationNameSerializer(depreciations, many=True).data
 
     data = {
         'categories': serializedCategories,
@@ -77,6 +77,27 @@ def update_product(request, id):
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# Soft delete a product
+@api_view(['PUT'])
+def soft_delete_product(request, id):
+    try:
+        product = Product.objects.get(pk=id)
+        product.is_deleted = True
+        product.save()
+        return Response({'detail': 'Product soft-deleted'})
+    except Product.DoesNotExist:
+        return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
+# Get all product names including soft deleted
+@api_view(['GET'])
+def get_product_names(request):
+    products = Product.objects.filter()
+    serializedProducts = ProductNameSerializer(products, many=True).data
+
+    data = {
+        'products': serializedProducts,
+    }
+    return Response(data)
 '''
 
 @api_view(['GET'])
@@ -96,15 +117,7 @@ def add_product_image(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['PUT'])
-def soft_delete_product(request, id):
-    try:
-        product = Product.objects.get(pk=id)
-        product.is_deleted = True
-        product.save()
-        return Response({'detail': 'Product soft-deleted'})
-    except Product.DoesNotExist:
-        return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
 # END PRODUCT
 '''
 

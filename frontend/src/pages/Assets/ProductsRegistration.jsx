@@ -131,6 +131,25 @@ export default function ProductsRegistration() {
   
   const onSubmit = async (data) => {
     try {
+      // Only check for duplicate names when creating a new product (not when updating)
+      if (!id) {
+        // Fetch all existing product names
+        const existingProducts = await assetsService.fetchProductNames();
+        
+        // Check if a product with the same name already exists
+        const isDuplicate = existingProducts.products.some(
+          product => product.name.toLowerCase() === data.productName.toLowerCase()
+        );
+        
+        if (isDuplicate) {
+          setErrorMessage("A product with this name already exists. Please use a different name.");
+          setTimeout(() => {
+            setErrorMessage("");
+          }, 5000);
+          return; // Stop the submission process
+        }
+      }
+
       const formData = new FormData();
 
       // Append all form data to FormData object

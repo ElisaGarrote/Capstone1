@@ -13,9 +13,14 @@ class AssetCategoryNameSerializer(serializers.ModelSerializer):
         model = AssetCategory
         fields = ['id', 'name']
 
-class ProductDepreciationNameSerializer(serializers.ModelSerializer):
+class DepreciationNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Depreciation
+        fields = ['id', 'name']
+
+class ProductNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
         fields = ['id', 'name']
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -30,11 +35,6 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 '''
-
-
-
-
-
 
 class DepreciationSerializer(serializers.ModelSerializer):
     class Meta:

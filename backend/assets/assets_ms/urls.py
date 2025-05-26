@@ -8,10 +8,11 @@ urlpatterns = [
     path('products/<int:id>/', get_product_by_id, name='product_details_of_product.id'),
     path('products/registration/', create_product, name='add_new_product'),
     path('products/<int:id>/update/', update_product, name='update_product'),
-
+    path('products/<int:id>/delete/', soft_delete_product, name='delete_product'),
+    path('products/names/all/', get_product_names, name='product_names'),
     
     #path('products/<int:id>/', get_product_by_id, name='product_details_of_id'),
-    #path('products/delete/<int:id>', soft_delete_product, name='delete_product'),
+    #
     #path('depreciations/product_registration', get_product_depreciations, name='depreciation_names'),
     # Assets
     path('create-asset/', create_asset, name='create_asset'),
