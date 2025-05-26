@@ -36,7 +36,7 @@ function Register() {
     },
   });
 
-  // Uses watch function to monitor password input
+  // Uses watch function to monitor password input.
   const password = watch("password", "");
   // Password requirements for validation
   const passwordRequirements = [
