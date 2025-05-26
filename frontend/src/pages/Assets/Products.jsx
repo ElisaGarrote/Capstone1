@@ -18,8 +18,8 @@ export default function Products() {
 
   const [endPoint, setEndPoint] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isDeleteSuccess, setDeleteSucess] = useState(false);
-  const [isDeleteFailed, setDeleteFailed] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,28 +84,32 @@ export default function Products() {
 
   return (
     <>
-      {isDeleteSuccess && (
-        <Alert message="Deleted Successfully!" type="success" />
-      )}
-      
-      {isDeleteFailed && (
-        <Alert message="Delete failed. Please try again." type="error" />
-      )}
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
 
       {isDeleteModalOpen && (
         <DeleteModal
-        endPoint={endPoint}
-        closeModal={() => setDeleteModalOpen(false)}
-        confirmDelete={async () => {
-          await fetchProducts();
-          setDeleteSucess(true);
-          setTimeout(() => setDeleteSucess(false), 5000);
-        }}
-        onDeleteFail={() => {
-          setDeleteFailed(true);
-          setTimeout(() => setDeleteFailed(false), 5000);
-        }}
-      />      
+          endPoint={endPoint}
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={async () => {
+            await fetchProducts();
+            setSuccessMessage("Product Deleted Successfully!");
+            setErrorMessage("");
+            
+            setTimeout(() => {
+              setSuccessMessage("");
+            }, 5000);
+          }}
+          onDeleteFail={() => {
+            setErrorMessage("Delete failed. Please try again."); // Show error message immediately
+            setSuccessMessage(""); // Clear any success messages
+            
+            // Auto-hide the error message after 5 seconds
+            setTimeout(() => {
+              setErrorMessage("");
+            }, 5000);
+          }}
+        />
       )}
 
       <nav>
@@ -187,7 +191,7 @@ export default function Products() {
                               <TableBtn
                                 type="delete"
                                 showModal={() => {
-                                  setEndPoint(`http://localhost:8003/products/delete/${product.id}`)
+                                  setEndPoint(`https://assets-service-production.up.railway.app/products/${product.id}/delete/`)
                                   setDeleteModalOpen(true);
                                 }}
                                 data={product.id}

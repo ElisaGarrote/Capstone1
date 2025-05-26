@@ -88,10 +88,10 @@ def soft_delete_product(request, id):
     except Product.DoesNotExist:
         return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
 
-# Get all product names including soft deleted
+# Get all product names
 @api_view(['GET'])
 def get_product_names(request):
-    products = Product.objects.filter()
+    products = Product.objects.filter(is_deleted=False)
     serializedProducts = ProductNameSerializer(products, many=True).data
 
     data = {

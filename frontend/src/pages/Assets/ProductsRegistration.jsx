@@ -44,7 +44,6 @@ export default function ProductsRegistration() {
   const navigate = useNavigate();
 
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -222,7 +221,6 @@ export default function ProductsRegistration() {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      {successMessage && <Alert message={successMessage} type="success" />}
       <nav>
         <NavBar />
       </nav>
