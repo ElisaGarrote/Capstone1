@@ -7,7 +7,7 @@ class AssetsService {
   // Retrieve all assets
   async fetchAllAssets() {
     try {
-      const response = await fetch(API_URL + "all-asset/", {
+      const response = await fetch(API_URL + "assets/", {
         method: "GET",
       });
 
