@@ -114,6 +114,21 @@ def get_all_assets(request):
     }
     return Response(data)
 
+# Get products and statuses for asset registration
+@api_view(['GET'])
+def get_asset_contexts(request):
+    products = Product.objects.filter(is_deleted=False)
+    statuses = Status.objects.filter(is_deleted=False)
+
+    serializedProducts = ProductNameSerializer(products, many=True).data
+    serializedStatuses = StatusNameSerializer(statuses, many=True).data
+
+    data = {
+        'products': serializedProducts,
+        'statuses': serializedStatuses,
+    }
+    return Response(data)
+
 # Soft delete an asset
 @api_view(['DELETE'])
 def soft_delete_asset(request, id):

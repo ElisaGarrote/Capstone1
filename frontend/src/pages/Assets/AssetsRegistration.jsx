@@ -163,7 +163,6 @@ export default function AssetsRegistration() {
                     <option key={idx} value={status}>{status}</option>
                   ))}
                 </select>
-                <MediumButtons type="new" />
               </div>
               {errors.status && <span className='error-message'>{errors.status.message}</span>}
             </fieldset>
@@ -177,7 +176,6 @@ export default function AssetsRegistration() {
                     <option key={idx} value={supplier}>{supplier}</option>
                   ))}
                 </select>
-                <MediumButtons type="new" />
               </div>
             </fieldset>
 
@@ -190,7 +188,6 @@ export default function AssetsRegistration() {
                     <option key={idx} value={location}>{location}</option>
                   ))}
                 </select>
-                <MediumButtons type="new" />
               </div>
             </fieldset>
 
@@ -225,6 +222,11 @@ export default function AssetsRegistration() {
                 <p>PHP</p>
                 <input type="number" step="0.01" min="1" {...register("purchaseCost", {valueAsNumber: true})} />
               </div>
+            </fieldset>
+
+            <fieldset>
+              <label>Schedule Audit</label>
+              <input type="date" {...register("scheduleAudit")} min={!id ? currentDate : undefined} />
             </fieldset>
 
             <fieldset>

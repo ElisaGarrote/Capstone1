@@ -1,7 +1,6 @@
 import NavBar from '../../components/NavBar';
 import '../../styles/Registration.css';
 import { useNavigate, useParams } from 'react-router-dom';
-import MediumButtons from '../../components/buttons/MediumButtons';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';

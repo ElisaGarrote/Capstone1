@@ -199,7 +199,7 @@ export default function Assets() {
                             >
                               Check-Out
                             </button>
-                          ) : null}
+                          ) : '—'}
                         </td>
                         <td>{asset.status}</td>    
                         <td>

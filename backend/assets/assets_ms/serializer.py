@@ -46,6 +46,10 @@ class AllAssetSerializer(serializers.ModelSerializer):
         if obj.product and obj.product.category:
             return obj.product.category.name
         return None
+class StatusNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
+        fields = ['id', 'name']
 
 class AssetSerializer(serializers.ModelSerializer):
     class Meta:
