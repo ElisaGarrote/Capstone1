@@ -108,11 +108,7 @@ def get_product_names(request):
 def get_all_assets(request):
     asset = Asset.objects.filter(is_deleted=False)
     serializer = AllAssetSerializer(asset, many=True).data
-
-    data = {
-        'assets': serializer,
-    }
-    return Response(data)
+    return Response(serializer.data)
 
 # Get products and statuses for asset registration
 @api_view(['GET'])

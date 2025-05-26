@@ -5,7 +5,6 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import "../../styles/Registration.css";
 import CloseIcon from "../../assets/icons/close.svg";
-import SampleImage from "../../assets/images/sample-image.png";
 import assetsService from "../../services/assets-service";
 
 export default function AssetsRegistration() {

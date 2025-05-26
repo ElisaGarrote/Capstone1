@@ -53,13 +53,13 @@ export default function Assets() {
     if (allChecked) {
       setCheckedItems([]);
     } else {
-      setCheckedItems(sampleItems.map((item) => item.id));
+      setCheckedItems(assets.map((asset) => asset.id));
     }
   };
 
   const toggleItem = (id) => {
     setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((assets) => asset.id !== id) : [...prev, id]
     );
   };
 
