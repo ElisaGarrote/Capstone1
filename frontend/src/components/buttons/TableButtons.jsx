@@ -15,11 +15,15 @@ export default function TableButtons({
   previousPage,
   data,
   showModal,
+  onClick,
 }) {
   let icon;
   const navigate = useNavigate();
 
-  console.log("table button id received:", data);
+  // Only log if data exists to avoid console spam
+  if (data !== undefined) {
+    console.log("table button id received:", data);
+  }
 
   // Assign the correct icon based on the type
   switch (type) {
@@ -48,9 +52,11 @@ export default function TableButtons({
       type="button"
       className={`table-buttons-${type}`}
       onClick={
-        navigatePage != null
-          ? () => navigate(navigatePage, { state: { data, previousPage } })
-          : showModal
+        onClick 
+          ? onClick
+          : navigatePage != null
+            ? () => navigate(navigatePage, { state: { data, previousPage } })
+            : showModal
       }
       title={type === "audit" ? "Perform Audit" : null}
     >

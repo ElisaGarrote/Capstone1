@@ -21,31 +21,31 @@ export default function Products() {
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isDeleteFailed, setDeleteFailed] = useState(false);
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Fetch products
-        const fetchedProducts = await assetsService.fetchAllProducts();
-        if (fetchedProducts) {
-          setProducts(fetchedProducts);
-        } else {
-          setProducts([]);
-        }
+        const productsResponse = await assetsService.fetchAllProducts();
+        setProducts(productsResponse.products || []);
         
         // Fetch manufacturers
-        const fetchedManufacturers = await contextsService.fetchAllManufacturers();
-        if (fetchedManufacturers) {
-          setManufacturers(fetchedManufacturers);
-        }
+        const manufacturersResponse = await contextsService.fetchAllManufacturerNames();
+        setManufacturers(manufacturersResponse.manufacturers || []);
       } catch (error) {
         console.error("Error fetching data:", error);
+        setProducts([]);
+        setManufacturers([]);
       }
     };
 
     fetchData();
   }, []);
-  
+
+  // Get manufacturer name by ID
+  const getManufacturerName = (manufacturerId) => {
+    const manufacturer = manufacturers.find(m => m.id === manufacturerId);
+    return manufacturer ? manufacturer.name : '-';
+  };
 
   const toggleSelectAll = () => {
     if (allChecked) {
@@ -61,6 +61,25 @@ export default function Products() {
         ? prev.filter((itemId) => itemId !== id)
         : [...prev, id]
     );
+  };
+
+  // TO BE CONFIGURED
+  const handleView = (productId) => {
+    // Navigate to the product view page
+    window.location.href = `/products/view/${productId}`;
+    // Or if you're using react-router:
+    // navigate(`/products/view/${productId}`);
+  };
+
+  // Add a function to refresh products after deletion
+  const fetchProducts = async () => {
+    try {
+      const productsResponse = await assetsService.fetchAllProducts();
+      setProducts(productsResponse.products || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setProducts([]);
+    }
   };
 
   return (
@@ -154,14 +173,14 @@ export default function Products() {
                               />
                             </td>
                             <td>{product.name}</td>
-                            <td>{product.category_name}</td>
-                            <td>{product.model_number}</td>
-                            <td>{product.manufacturer_name}</td>
-                            <td>{product.end_of_life}</td>
+                            <td>{product.category}</td>
+                            <td>{getManufacturerName(product.manufacturer_id)}</td>
+                            <td>{product.depreciation}</td>
                             <td>
                               <TableBtn
                                 type="edit"
                                 navigatePage={`/products/registration/${product.id}`}
+                                data={product.id}
                               />
                             </td>
                             <td>
@@ -171,12 +190,14 @@ export default function Products() {
                                   setEndPoint(`http://localhost:8003/products/delete/${product.id}`)
                                   setDeleteModalOpen(true);
                                 }}
+                                data={product.id}
                               />
                             </td>
                             <td>
                               <TableBtn
                                 type="view"
-                                onClick={() => handleView(product.id)}
+                                navigatePage={`/products/view/${product.id}`}
+                                data={product.id}
                               />
                             </td>
                           </tr>
