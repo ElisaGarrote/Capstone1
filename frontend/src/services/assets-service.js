@@ -62,6 +62,41 @@ class AssetsService {
     }
   }
 
+  // Fetch product registration contexts
+  async fetchProductContexts() {
+    try {
+      const response = await fetch(API_URL + "products/contexts/", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for fetching product contexts is here.",
+          response.status
+        );
+        return { 
+          categories: [],
+          depreciations: []
+        };
+      }
+
+      const data = await response.json();
+      console.log("Product contexts fetched: ", data);
+      
+      // Return the data with default empty arrays for any missing properties
+      return {
+        categories: data.categories || [],
+        depreciations: data.depreciations || []
+      };
+    } catch (error) {
+      console.log("Error occurred while fetching product contexts!", error);
+      return { 
+        categories: [],
+        depreciations: []
+      };
+    }
+  }
+
   // Create Product
   async createProduct(formData) {
     try {
@@ -85,6 +120,8 @@ class AssetsService {
       console.log("Error occur while creating product!", error);
     }
   }
+
+
 
 
   // AUDITS

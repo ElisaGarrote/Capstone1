@@ -5,6 +5,7 @@ urlpatterns = [
     # Products
     path('products/', get_all_products, name='all_products'),
     path('products/contexts/', get_product_contexts, name='product_registration_contexts'),
+    path('products/<int:id>/', get_product_by_id, name='product_details_of_product.id'),
     path('products/registration/', create_product, name='add_new_product'),
 
 

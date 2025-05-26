@@ -8,6 +8,8 @@ import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import assetsService from "../../services/assets-service";
+import contextsService from "../../services/contexts-service";
 
 export default function ProductsRegistration() {
   const [suppliers, setSuppliers] = useState([]);
@@ -69,40 +71,6 @@ export default function ProductsRegistration() {
 
     initialize();
   }, [id, setValue]);
-
-  const fetchContexts = async () => {
-    try {
-      const response = await fetch("http://localhost:8002/contexts/product/");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch contexts. Status: ${response.status}`);
-      }
-
-      setSuppliers(data.suppliers);
-      setCategories(data.categories);
-      setManufacturers(data.manufacturers);
-      console.log("Contexts:", data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const fetchDepreciations = async () => {
-    try {
-      const response = await fetch("http://localhost:8003/depreciations/product_registration");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch contexts. Status: ${response.status}`);
-      }
-
-      setDepreciations(data)
-      console.log("Depreciations:", data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
