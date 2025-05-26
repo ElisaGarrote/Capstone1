@@ -78,7 +78,7 @@ def update_product(request, id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Soft delete a product
-@api_view(['PUT'])
+@api_view(['DELETE'])
 def soft_delete_product(request, id):
     try:
         product = Product.objects.get(pk=id)
