@@ -226,6 +226,26 @@ class AssetsService {
     }
   }
 
+  // Get next asset ID (for display purposes only)
+  async getNextAssetId() {
+    try {
+      const response = await fetch(API_URL + "assets/next-id/", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log("Error fetching next asset ID:", response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.log("Error fetching next asset ID:", error);
+      return null;
+    }
+  }
+
   // AUDITS
   // Create Audit
   async postAudit(

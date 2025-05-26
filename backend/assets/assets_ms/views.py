@@ -160,6 +160,52 @@ def add_asset_image(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_next_asset_id(request):
+    """
+    Generate the next asset ID without creating an asset.
+    This is for display purposes in the frontend.
+    """
+    # Use the same logic as in the pre_save signal
+    today = datetime.date.today().strftime('%Y%m%d')
+    
+    # Get the highest sequential number for today
+    prefix = f"AST-{today}-"
+    existing_assets = Asset.objects.filter(
+        displayed_id__startswith=prefix
+    ).order_by('-displayed_id')
+    
+    if existing_assets.exists():
+        # Extract the sequential number from the last asset
+        last_asset = existing_assets.first()
+        try:
+            # Format is AST-YYYYMMDD-XXXXX-RRRR
+            parts = last_asset.displayed_id.split('-')
+            if len(parts) >= 3:
+                seq_num = int(parts[2])
+                new_seq_num = seq_num + 1
+            else:
+                new_seq_num = 1
+        except (ValueError, IndexError):
+            new_seq_num = 1
+    else:
+        new_seq_num = 1
+    
+    # Generate random suffix (4 characters)
+    random_suffix = uuid.uuid4().hex[:4].upper()
+    
+    # Combine all parts to create the displayed_id
+    next_id = f"AST-{today}-{new_seq_num:05d}-{random_suffix}"
+    
+    # Ensure it's exactly 20 characters
+    if len(next_id) > 20:
+        next_id = next_id[:20]
+    elif len(next_id) < 20:
+        next_id = next_id.ljust(20, '0')
+    
+    return Response({'next_id': next_id})
 # END ASSETS
 
 

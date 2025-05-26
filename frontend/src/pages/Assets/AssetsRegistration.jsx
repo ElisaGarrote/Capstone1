@@ -1,17 +1,19 @@
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import "../../styles/Registration.css";
-import { useNavigate, useParams } from "react-router-dom";
-import MediumButtons from "../../components/buttons/MediumButtons";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import CloseIcon from "../../assets/icons/close.svg";
-import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import SampleImage from "../../assets/img/dvi.jpeg";
+import "../../styles/Registration.css";
+import CloseIcon from "../../assets/icons/close.svg";
+import SampleImage from "../../assets/images/sample-image.png";
+import assetsService from "../../services/assets-service";
 
 export default function AssetsRegistration() {
   const { id } = useParams();
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
+  const [generatedAssetId, setGeneratedAssetId] = useState('(Loading...)');
+  
   const {
     register,
     handleSubmit,
@@ -20,7 +22,7 @@ export default function AssetsRegistration() {
   } = useForm({
     defaultValues: {
       image: null,
-      assetId: id ? assetsData[id]?.assetId : '(Auto-generated)',
+      assetId: '',
       assetName: '',
       serialNumber: '',
       product: '',
@@ -35,39 +37,6 @@ export default function AssetsRegistration() {
     }
   });
 
-  const assetsData = {
-    "1": {
-      image: SampleImage,
-      assetId: 10001,
-      assetName: null,
-      serialNumber: 'GC1SJL3',
-      product: 'XPS 13',
-      status: 'Ready for Deployment',
-      supplier: 'Amazon',
-      location: 'Makati City',
-      warrantyExpiration: '2027-05-02',
-      orderNumber: 'GJ08CX',
-      purchaseDate: '2025-04-01',
-      purchaseCost: 25000,
-      notes: 'Laptop for software development.',
-    },
-    "2": {
-      image: SampleImage,
-      assetId: 10002,
-      assetName: 'Logitech Mouse',
-      serialNumber: 'LOGI789',
-      product: 'Mouse',
-      status: 'Deployed',
-      supplier: 'GadgetWorld',
-      location: 'Quezon City',
-      warrantyExpiration: '2027-05-02',
-      orderNumber: '67890',
-      purchaseDate: '2025-04-01',
-      purchaseCost: 30000,
-      notes: null,
-    }
-  };
-
   const statusList = ['Ready for Deployment', 'Deployed'];
   const productList = ['XPS 13', 'Mouse', 'Keyboard', 'Monitor', 'Laptop'];
   const supplierList = ['Amazon', 'TechCorp', 'GadgetWorld', 'GizmoHub'];
@@ -77,13 +46,40 @@ export default function AssetsRegistration() {
   const [asset, setAsset] = useState(null);
 
   useEffect(() => {
-    if (id && assetsData[id]) {
-      const asset = assetsData[id];
-      Object.entries(asset).forEach(([key, value]) => {
-        setValue(key, value);
-      });
-      setPreviewImage(asset.image);
-    }
+    const fetchData = async () => {
+      if (id) {
+        // Editing existing asset
+        try {
+          const assetData = await assetsService.fetchAssetById(id);
+          if (assetData) {
+            // Set form values from fetched asset data
+            Object.entries(assetData).forEach(([key, value]) => {
+              setValue(key, value);
+            });
+            setGeneratedAssetId(assetData.displayed_id);
+            setPreviewImage(assetData.image ? 
+              `https://assets-service-production.up.railway.app${assetData.image}` : null);
+          }
+        } catch (error) {
+          console.error("Error fetching asset:", error);
+        }
+      } else {
+        // New asset - generate a temporary ID
+        try {
+          const response = await assetsService.getNextAssetId();
+          if (response && response.next_id) {
+            setGeneratedAssetId(response.next_id);
+          } else {
+            setGeneratedAssetId('(Auto-generated)');
+          }
+        } catch (error) {
+          console.error("Error generating asset ID:", error);
+          setGeneratedAssetId('(Auto-generated)');
+        }
+      }
+    };
+
+    fetchData();
   }, [id, setValue]);
 
   const handleImageSelection = (e) => {
@@ -133,7 +129,7 @@ export default function AssetsRegistration() {
                 type="text" 
                 readOnly
                 className="readonly-field"
-                value={id ? assetsData[id]?.assetId : '(Auto-generated)'}
+                value={generatedAssetId}
               />
             </fieldset>
 
