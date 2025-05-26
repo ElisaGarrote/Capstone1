@@ -157,27 +157,20 @@ export default function ProductsRegistration() {
         formData.append('remove_image', 'true');
       }
       
-      let response;
+      let result;
       
       if (id) {
         // Update existing product
-        response = await fetch(`http://localhost:8003/products/${id}/update`, {
-          method: 'PUT',
-          body: formData,
-        });
+        result = await assetsService.updateProduct(id, formData);
       } else {
         // Create new product
-        response = await fetch("http://localhost:8003/products/registration/", {
-          method: 'POST',
-          body: formData,
-        });
+        result = await assetsService.createProduct(formData);
       }
 
-      if (!response.ok) {
-        throw new Error(`Failed to ${id ? 'update' : 'create'} product. Status: ${response.status}`);
+      if (!result) {
+        throw new Error(`Failed to ${id ? 'update' : 'create'} product.`);
       }
 
-      const result = await response.json();
       console.log(`${id ? 'Updated' : 'Created'} product:`, result);
       setSuccessMessage(`Product has been ${id ? 'updated' : 'created'} successfully!`);
       setErrorMessage("");

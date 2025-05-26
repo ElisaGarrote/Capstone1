@@ -171,7 +171,8 @@ class AssetsService {
       console.log("Data for updating product: ", data);
       return data;
     } catch (error) {
-      console.log("Error occur while updating product!", error);
+      console.log("Error occurred while updating product!", error);
+      return false;
     }
   }
 

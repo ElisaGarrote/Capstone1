@@ -7,8 +7,7 @@ urlpatterns = [
     path('products/contexts/', get_product_contexts, name='product_registration_contexts'),
     path('products/<int:id>/', get_product_by_id, name='product_details_of_product.id'),
     path('products/registration/', create_product, name='add_new_product'),
-    path('products/<int:id>/update', update_product, name='update_product'),
-
+    path('products/<int:id>/update/', update_product, name='update_product'),
 
     
     #path('products/<int:id>/', get_product_by_id, name='product_details_of_id'),
