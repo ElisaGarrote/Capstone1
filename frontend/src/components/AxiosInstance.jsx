@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// Authentication service
 const baseUrl = 'https://authentication-service-production-d804.up.railway.app/'
 
 const axiosInstance = axios.create({
