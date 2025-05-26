@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
 import NavBar from "../../components/NavBar";
@@ -11,6 +12,7 @@ import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
 
 export default function Products() {
+  const location = useLocation();
   const [manufacturers, setManufacturers] = useState([]);
   const [products, setProducts] = useState([]);
   const [checkedItems, setCheckedItems] = useState([]);
@@ -22,6 +24,17 @@ export default function Products() {
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
+    // Check for success messages passed from other components
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      
+      // Clear the success message from location state after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage("");
+        window.history.replaceState({}, document.title);
+      }, 5000);
+    }
+    
     const fetchData = async () => {
       try {
         // Fetch products
@@ -39,7 +52,7 @@ export default function Products() {
     };
 
     fetchData();
-  }, []);
+  }, [location]);
 
   // Get manufacturer name by ID
   const getManufacturerName = (manufacturerId) => {

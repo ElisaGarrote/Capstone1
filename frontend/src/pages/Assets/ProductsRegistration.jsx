@@ -190,23 +190,17 @@ export default function ProductsRegistration() {
       }
 
       console.log(`${id ? 'Updated' : 'Created'} product:`, result);
-      setSuccessMessage(`Product has been ${id ? 'updated' : 'created'} successfully!`);
-      setErrorMessage("");
-
-      setTimeout(() => {
-        setErrorMessage("");
-        setSuccessMessage("");
-        navigate('/products');
-      }, 2000);
+      
+      // Navigate to products page with success message
+      navigate('/products', { 
+        state: { 
+          successMessage: `Product has been ${id ? 'updated' : 'created'} successfully!` 
+        } 
+      });
     } catch (error) {
       console.error(`Error ${id ? 'updating' : 'creating'} product:`, error);
       setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the product`);
       setSuccessMessage("");
-      
-      setTimeout(() => {
-        setErrorMessage("");
-        setSuccessMessage("");
-      }, 5000);
     }
   };
 
