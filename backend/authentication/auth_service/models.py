@@ -40,7 +40,7 @@ class CustomUser(AbstractUser):
 
 @receiver(reset_password_token_created)
 def password_reset_token_created(reset_password_token, *args, **kwargs):
-    sitelink = "https://authentication-service-production-d804.up.railway.app/"
+    sitelink = "https://capstone1-production-1c05.up.railway.app/"
     token = "{}".format(reset_password_token.key)
     full_link = str(sitelink)+str("password-reset/")+str(token)
 
