@@ -258,7 +258,6 @@ export default function ProductsRegistration() {
                     </option>
                   ))}
                 </select>
-                <MediumButtons type='new' />
               </div>
               {errors.category && <span className='error-message'>{errors.category.message}</span>}
             </fieldset>
@@ -278,7 +277,6 @@ export default function ProductsRegistration() {
                     </option>
                   ))}
                 </select>
-                <MediumButtons type='new' />
               </div>
               {errors.manufacturer && <span className='error-message'>{errors.manufacturer.message}</span>}
             </fieldset>
@@ -298,7 +296,6 @@ export default function ProductsRegistration() {
                     </option>
                   ))}
                 </select>
-                <MediumButtons type='new' />
               </div>
               {errors.depreciation && <span className='error-message'>{errors.depreciation.message}</span>}
             </fieldset>
@@ -315,7 +312,6 @@ export default function ProductsRegistration() {
                     </option>
                   ))}
                 </select>
-                <MediumButtons type='new' />
               </div>
             </fieldset>
 
