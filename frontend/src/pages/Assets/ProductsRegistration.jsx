@@ -100,7 +100,7 @@ export default function ProductsRegistration() {
           setValue('notes', productData.notes || '');
           
           if (productData.image) {
-            setPreviewImage(`http://localhost:8003${productData.image}`);
+            setPreviewImage(`https://assets-service-production.up.railway.app${productData.image}`);
           }
         }
       } catch (error) {
@@ -173,6 +173,12 @@ export default function ProductsRegistration() {
       // Handle image removal
       if (removeImage) {
         formData.append('remove_image', 'true');
+        console.log("Removing image: remove_image flag set to true");
+      }
+      
+      console.log("Form data before submission:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
       }
       
       let result;
@@ -200,7 +206,6 @@ export default function ProductsRegistration() {
     } catch (error) {
       console.error(`Error ${id ? 'updating' : 'creating'} product:`, error);
       setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the product`);
-      setSuccessMessage("");
     }
   };
 
@@ -417,23 +422,24 @@ export default function ProductsRegistration() {
                       onClick={(event) => {
                         event.preventDefault();
                         setPreviewImage(null);
+                        setSelectedImage(null);
                         setValue('image', null);
                         document.getElementById('image').value = '';
                         setRemoveImage(true);
+                        console.log("Remove image flag set to:", true);
                       }}
                     >
                       <img src={CloseIcon} alt='Remove' />
                     </button>
                   </div>
-                ) : (
-                  <input
-                    type='file'
-                    id='image'
-                    accept='image/*'
-                    onChange={handleImageSelection}
-                    style={{ display: 'none' }}
-                  />
-                )}
+                ) : null}
+                <input
+                  type='file'
+                  id='image'
+                  accept='image/*'
+                  onChange={handleImageSelection}
+                  style={{ display: 'none' }}
+                />
                 <label htmlFor='image' className='upload-image-btn'>
                   {!previewImage ? 'Choose Image' : 'Change Image'}
                 </label>

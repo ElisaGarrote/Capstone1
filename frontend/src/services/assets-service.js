@@ -154,6 +154,11 @@ class AssetsService {
   // Update Product
   async updateProduct(id, formData) {
     try {
+      // Log the form data for debugging
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+      
       const response = await fetch(API_URL + `products/${id}/update/`, {
         method: "PUT",
         body: formData,

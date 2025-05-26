@@ -76,15 +76,7 @@ export default function Products() {
     );
   };
 
-  // TO BE CONFIGURED
-  const handleView = (productId) => {
-    // Navigate to the product view page
-    window.location.href = `/products/view/${productId}`;
-    // Or if you're using react-router:
-    // navigate(`/products/view/${productId}`);
-  };
-
-  // Add a function to refresh products after deletion
+  // Refresh products after deletion
   const fetchProducts = async () => {
     try {
       const productsResponse = await assetsService.fetchAllProducts();
@@ -93,6 +85,14 @@ export default function Products() {
       console.error("Error fetching products:", error);
       setProducts([]);
     }
+  };
+
+  // TO BE CONFIGURED
+  const handleView = (productId) => {
+    // Navigate to the product view page
+    window.location.href = `/products/view/${productId}`;
+    // Or if you're using react-router:
+    // navigate(`/products/view/${productId}`);
   };
 
   return (
@@ -183,11 +183,25 @@ export default function Products() {
                               />
                             </td>
                             <td>
-                              <img
-                                src={product.image ? `http://127.0.0.1:8003${product.image}` : DefaultImage}
-                                alt="Product-Image"
-                                width="50"
-                              />
+                              {product.image ? (
+                                <img
+                                  src={`https://assets-service-production.up.railway.app${product.image}`}
+                                  alt={`Product-${product.name}`}
+                                  width="50"
+                                  key={`img-${product.id}`}
+                                  onError={(e) => {
+                                    console.log(`Error loading image for product ${product.id}`);
+                                    e.target.src = DefaultImage;
+                                  }}
+                                />
+                              ) : (
+                                <img
+                                  src={DefaultImage}
+                                  alt={`Product-${product.name}`}
+                                  width="50"
+                                  key={`img-${product.id}`}
+                                />
+                              )}
                             </td>
                             <td>{product.name}</td>
                             <td>{product.category}</td>
