@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class AccessoryCategory(models.Model):
     name = models.CharField(max_length=50)
@@ -41,23 +42,27 @@ class AccessoryCheckout(models.Model):
     notes = models.TextField(blank=True, null=True)
     confirmation_notes= models.TextField(blank=True, null=True)
     location = models.CharField(max_length=50)
-    image = models.ImageField(upload_to='asset_checkout_images/')
-    is_deleted = models.BooleanField(default=False)
+    image = models.ImageField(upload_to='accessory_checkout_images/')
 
     def __str__(self):
-        return f"Checkout of {self.asset.displayed_id} by user {self.to_user_id}"
+        return f"Checkout of {self.accessory.name} by user {self.to_user_id}"
 
-class AssetCheckin(models.Model):
-    asset_checkout = models.ForeignKey(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkins')
+class AccessoryCheckin(models.Model):
+    STATUS_CHOICES = [
+        ('deployed', 'Deployed'),
+        ('deployable', 'Deployable'),
+        ('ready to deploy', 'Ready to Deploy'),
+    ]
+     
+    accessory_checkout = models.ForeignKey(AccessoryCheckout, on_delete=models.CASCADE, related_name='accessory_checkins')
     checkin_date = models.DateTimeField(blank=True, null=True)
-    status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='status_assets_checkins')
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, blank=True, null=True)
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     notes = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=50)
-    image = models.ImageField(upload_to='asset_checkin_images/')
-    is_deleted = models.BooleanField(default=False)
+    image = models.ImageField(upload_to='accessory_checkin_images/')
 
     def __str__(self):
-        return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}"
+        return f"Checkin of {self.accessory_checkout.accessory.name} by user {self.accessory_checkout.to_user_id}"

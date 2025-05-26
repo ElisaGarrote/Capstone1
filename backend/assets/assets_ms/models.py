@@ -80,7 +80,6 @@ class Product(models.Model):
     operating_system = models.CharField(max_length=7, choices=OS_CHOICES, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
     
     def __str__(self):
         return self.name
@@ -176,7 +175,6 @@ class AssetCheckout(models.Model):
     confirmation_notes= models.TextField(blank=True, null=True)
     location = models.CharField(max_length=50)
     image = models.ImageField(upload_to='asset_checkout_images/')
-    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Checkout of {self.asset.displayed_id} by user {self.to_user_id}"
@@ -191,7 +189,6 @@ class AssetCheckin(models.Model):
     notes = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=50)
     image = models.ImageField(upload_to='asset_checkin_images/')
-    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}"
@@ -202,7 +199,6 @@ class ComponentCheckout(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     checkout_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Checkout of {self.component.name} to {self.to_asset.displayed_id}"
@@ -211,7 +207,6 @@ class ComponentCheckin(models.Model):
     component_checkout = models.ForeignKey(ComponentCheckout, on_delete=models.CASCADE, related_name='component_checkins')
     checkin_date = models.DateTimeField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.displayed_id}"
