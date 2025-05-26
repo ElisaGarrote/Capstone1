@@ -97,6 +97,36 @@ class AssetsService {
     }
   }
 
+  // Retrieve a product by id
+  async fetchProductById(id) {
+    try {
+      const response = await fetch(API_URL + `products/${id}/`, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for fetching product by ID is here.",
+          response.status
+        );
+        return null;  // Return null for not found
+      }
+
+      const data = await response.json();
+      console.log("Product data fetched: ", data);
+      
+      // Return the product data
+      if (data && data.product) {
+        return data.product; // Return the product object if it's wrapped
+      } else {
+        return data; // Return the data directly if it's not wrapped
+      }
+    } catch (error) {
+      console.log(`Error occurred while fetching product with ID ${id}:`, error);
+      return null;  // Return null on error
+    }
+  }
+
   // Create Product
   async createProduct(formData) {
     try {

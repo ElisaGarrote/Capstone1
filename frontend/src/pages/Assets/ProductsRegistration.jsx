@@ -16,56 +16,99 @@ export default function ProductsRegistration() {
   const [manufacturers, setManufacturers] = useState([]);
   const [categories, setCategories] = useState([]);
   const [depreciations, setDepreciations] = useState([]);
+  const [product, setProduct] = useState(null);
 
   const { id } = useParams();
-  const { setValue, register, handleSubmit, formState: { errors } } = useForm();
+  const { setValue, register, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: {
+      productName: '',
+      category: '',
+      manufacturer: '',
+      depreciation: '',
+      modelNumber: '',
+      endOfLifeDate: '',
+      defaultPurchaseCost: '',
+      supplier: '',
+      minimumQuantity: '',
+      operatingSystem: '',
+      imeiNumber: '',
+      notes: ''
+    }
+  });
 
   const currentDate = new Date().toISOString().split('T')[0];
   const [previewImage, setPreviewImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
 
-
   const navigate = useNavigate();
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initialize = async () => {
-      await fetchContexts();
-      await fetchDepreciations();
+      try {
+        setIsLoading(true);
+        
+        // Fetch all necessary data in parallel
+        const [productContextsData, contextsData] = await Promise.all([
+          assetsService.fetchProductContexts(),
+          contextsService.fetchContextNames()
+        ]);
+        
+        // Set categories and depreciations from product contexts
+        setCategories(productContextsData.categories || []);
+        setDepreciations(productContextsData.depreciations || []);
+        
+        // Set suppliers and manufacturers from contexts
+        setSuppliers(contextsData.suppliers || []);
+        setManufacturers(contextsData.manufacturers || []);
+        
+        console.log("Categories:", productContextsData.categories);
+        console.log("Depreciations:", productContextsData.depreciations);
+        console.log("Suppliers:", contextsData.suppliers);
+        console.log("Manufacturers:", contextsData.manufacturers);
 
-      if (id) {
-        try {
-          const response = await fetch(`http://localhost:8003/products/${id}/`);
-          if (!response.ok) throw new Error("Failed to fetch product details");
-
-          const data = await response.json();
-          setProduct(data);
-          console.log("Product Details:", data);
-
-          // Set form values
-          setValue('productName', data.name);
-          setValue('category', data.category_id);
-          setValue('manufacturer', data.manufacturer_id || '');
-          setValue('depreciation', data.depreciation || '');
-          setValue('modelNumber', data.model_number || '');
-          setValue('endOfLifeDate', data.end_of_life || '');
-          setValue('defaultPurchaseCost', data.purchase_cost || '');
-          setValue('supplier', data.default_supplier_id || '');
-          setValue('minimumQuantity', data.minimum_quantity || '');
-          setValue('operatingSystem', data.operating_system || '');
-          setValue('imeiNumber', data.imei_number || '');
-          setValue('ssdEncryption', data.ssd_encryption || '');
-          setValue('notes', data.notes || '');
-          
-          if (data.image) {
-            setPreviewImage(`http://localhost:8003${data.image}`);
+        // If ID is present, fetch the product details
+        if (id) {
+          const productData = await assetsService.fetchProductById(id);
+          if (!productData) {
+            setErrorMessage("Failed to fetch product details");
+            setIsLoading(false);
+            return;
           }
-        } catch (err) {
-          console.log(err);
+
+          setProduct(productData);
+          console.log("Product Details:", productData);
+
+          // Set form values from retrieved product data
+          setValue('productName', productData.name);
+          
+          // For category and depreciation, use the direct values from fetched product data
+          setValue('category', productData.category);
+          setValue('depreciation', productData.depreciation);
+          
+          setValue('manufacturer', productData.manufacturer_id);
+          setValue('modelNumber', productData.model_number || '');
+          setValue('endOfLifeDate', productData.end_of_life || '');
+          setValue('defaultPurchaseCost', productData.default_purchase_cost || '');
+          setValue('supplier', productData.default_supplier_id || '');
+          setValue('minimumQuantity', productData.minimum_quantity || '');
+          setValue('operatingSystem', productData.operating_system || '');
+          setValue('imeiNumber', productData.imei_number || '');
+          setValue('notes', productData.notes || '');
+          
+          if (productData.image) {
+            setPreviewImage(`http://localhost:8003${productData.image}`);
+          }
         }
+      } catch (error) {
+        console.error("Error initializing:", error);
+        setErrorMessage("Failed to initialize form data");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -80,7 +123,7 @@ export default function ProductsRegistration() {
   
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewImage(reader.result); // this is only for display
+        setPreviewImage(reader.result); // for display only
       };
       reader.readAsDataURL(file);
     }
@@ -99,29 +142,31 @@ export default function ProductsRegistration() {
       const selectedManufacturer = manufacturers.find(manufacturer => manufacturer.id === manufacturerId);
       const selectedSupplier = suppliers.find(supplier => supplier.id === supplierId);
 
-      console.log("category name:" ,selectedCategory.name);
+      console.log("category name:", selectedCategory?.name);
  
       formData.append('name', data.productName);
       formData.append('category_id', data.category);
-      formData.append('category_name', selectedCategory.name);
+      if (selectedCategory) {
+        formData.append('category_name', selectedCategory.name);
+      }
       formData.append('manufacturer_id', data.manufacturer || '');
       if (selectedManufacturer) {
-        console.log("manufacturer name:" ,selectedManufacturer.name);
+        console.log("manufacturer name:", selectedManufacturer.name);
         formData.append('manufacturer_name', selectedManufacturer.name);
       }
-      formData.append('depreciation', data.depreciation || '');
+      formData.append('depreciation_id', data.depreciation || '');
       formData.append('model_number', data.modelNumber || '');
       formData.append('end_of_life', data.endOfLifeDate || '');
       formData.append('purchase_cost', data.defaultPurchaseCost || '');
       formData.append('default_supplier_id', data.supplier || '');
       if (selectedSupplier) {
-        console.log("supplier name:" ,selectedSupplier.name);
+        console.log("supplier name:", selectedSupplier.name);
         formData.append('default_supplier_name', selectedSupplier.name);
       }
-      formData.append('minimum_quantity', data.minimumQuantity);
-      formData.append('operating_system', data.operatingSystem);
-      formData.append('imei_number', data.imeiNumber);
-      formData.append('notes', data.notes);
+      formData.append('minimum_quantity', data.minimumQuantity || '');
+      formData.append('operating_system', data.operatingSystem || '');
+      formData.append('imei_number', data.imeiNumber || '');
+      formData.append('notes', data.notes || '');
       
       if (selectedImage) {
         formData.append('image', selectedImage);
@@ -131,57 +176,68 @@ export default function ProductsRegistration() {
         formData.append('remove_image', 'true');
       }
       
-
       if (id) {
-        try {
-          const response = await fetch(`http://localhost:8003/products/${id}`, {
-            method: 'PUT',
-            body: formData,
-          });
-      
-          if (!response.ok) {
-            throw new Error(`Failed to update product. Status: ${response.status}`);
-          }
-      
-          const result = await response.json();
-          console.log('Updated product:', result);
-          setSuccessMessage("Product has been updated successfully!");
-          setErrorMessage("");
-      
-          setTimeout(() => {
-            setErrorMessage("");
-            setSuccessMessage("");
-          }, 5000);
-      
-          navigate('/products');
-        } catch (error) {
-          console.error('Update error:', error);
-          setSuccessMessage("");
-          setErrorMessage("Updating product failed. Please try again.");
-      
-          setTimeout(() => {
-            setErrorMessage("");
-            setSuccessMessage("");
-          }, 5000);
-        }
-      } else {
-        try {
-          const response = await fetch("http://localhost:8003/products/registration/", {
-            method: 'POST',
-            body: formData,
-          });
+        // Update existing product
+        const response = await fetch(`http://localhost:8003/products/${id}/`, {
+          method: 'PUT',
+          body: formData,
+        });
     
-          const result = await response.json();
-          console.log('Product registered:', result);
-          navigate('/products');        
-        } catch (error) {
+        if (!response.ok) {
+          throw new Error(`Failed to update product. Status: ${response.status}`);
+        }
+    
+        const result = await response.json();
+        console.log('Updated product:', result);
+        setSuccessMessage("Product has been updated successfully!");
+        setErrorMessage("");
+    
+        setTimeout(() => {
+          setErrorMessage("");
+          setSuccessMessage("");
+          navigate('/products');
+        }, 2000);
+      } else {
+        // Create new product
+        const response = await fetch("http://localhost:8003/products/registration/", {
+          method: 'POST',
+          body: formData,
+        });
+  
+        if (!response.ok) {
           throw new Error(`Failed to submit product. Status: ${response.status}`);
         }
+  
+        const result = await response.json();
+        console.log('Product registered:', result);
+        setSuccessMessage("Product has been created successfully!");
+        setErrorMessage("");
+    
+        setTimeout(() => {
+          setErrorMessage("");
+          setSuccessMessage("");
+          navigate('/products');
+        }, 2000);
       }
     } catch (error) {
       console.error('Error submitting/updating product:', error);
+      setErrorMessage(error.message || "An error occurred while saving the product");
+      setSuccessMessage("");
+      
+      setTimeout(() => {
+        setErrorMessage("");
+        setSuccessMessage("");
+      }, 5000);
     }
-  };  
+  };
+
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -196,7 +252,7 @@ export default function ProductsRegistration() {
             root='Products'
             currentPage={id ? 'Edit Product' : 'New Product'}
             rootNavigatePage='/products'
-            title={id ? 'Edit Product' : 'New Product'}
+            title={id ? 'Edit' + ' ' + (product.name) : 'New Product'}
           />
         </section>
         <section className='registration-form'>
@@ -237,9 +293,12 @@ export default function ProductsRegistration() {
 
             {/* Manufacturer */}
             <fieldset>
-              <label htmlFor='manufacturer'>Manufacturer</label>
+              <label htmlFor='manufacturer'>Manufacturer *</label>
               <div>
-                <select {...register('manufacturer')}>
+                <select 
+                  className={errors.manufacturer ? 'input-error' : ''}
+                  {...register('manufacturer', { required: 'Manufacturer is required' })}
+                >
                   <option value=''>Select Manufacturer</option>
                   {manufacturers.map((manufacturer) => (
                     <option key={manufacturer.id} value={manufacturer.id}>
@@ -249,17 +308,38 @@ export default function ProductsRegistration() {
                 </select>
                 <MediumButtons type='new' />
               </div>
+              {errors.manufacturer && <span className='error-message'>{errors.manufacturer.message}</span>}
             </fieldset>
 
             {/* Depreciation */}
             <fieldset>
-              <label htmlFor='depreciation'>Depreciation</label>
+              <label htmlFor='depreciation'>Depreciation *</label>
               <div>
-                <select {...register('depreciation')}>
+                <select 
+                  className={errors.depreciation ? 'input-error' : ''}
+                  {...register('depreciation', { required: 'Depreciation is required' })}
+                >
                   <option value=''>Select Depreciation Method</option>
                   {depreciations.map((depreciation) => (
                     <option key={depreciation.id} value={depreciation.id}>
                       {depreciation.name}
+                    </option>
+                  ))}
+                </select>
+                <MediumButtons type='new' />
+              </div>
+              {errors.depreciation && <span className='error-message'>{errors.depreciation.message}</span>}
+            </fieldset>
+
+            {/* Supplier */}
+            <fieldset>
+              <label htmlFor='supplier'>Default Supplier</label>
+              <div>
+                <select {...register('supplier')}>
+                  <option value=''>Select Supplier</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
                     </option>
                   ))}
                 </select>
@@ -271,9 +351,10 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor='model-number'>Model Number</label>
               <input 
-              type='text'
-              {...register('modelNumber')} maxLength='100'
-              placeholder='Model Number'
+                type='text'
+                {...register('modelNumber')} 
+                maxLength='100'
+                placeholder='Model Number'
               />
             </fieldset>
 
@@ -293,28 +374,12 @@ export default function ProductsRegistration() {
               <div>
                 <p>PHP</p>
                 <input 
-                type="number"
-                step="0.01"
-                min="0"
-                {...register("defaultPurchaseCost", { valueAsNumber: true })}
-                placeholder='Default Purchase Cost'
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register("defaultPurchaseCost", { valueAsNumber: true })}
+                  placeholder='Default Purchase Cost'
                 />
-              </div>
-            </fieldset>
-
-            {/* Default Supplier */}
-            <fieldset>
-              <label htmlFor='supplier'>Default Supplier</label>
-              <div>
-                <select {...register('supplier')}>
-                  <option value=''>Select Supplier</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
-                <MediumButtons type='new' />
               </div>
             </fieldset>
 
@@ -331,8 +396,8 @@ export default function ProductsRegistration() {
               <label htmlFor='operating_system'>Operating System</label>
               <div>
                 <select 
-                {...register('operatingSystem')}
-                defaultValue=""
+                  {...register('operatingSystem')}
+                  defaultValue=""
                 >
                   <option value='' disabled hidden>
                     Select Operating System
@@ -360,8 +425,10 @@ export default function ProductsRegistration() {
 
             <fieldset>
               <label htmlFor='notes'>Notes</label>
-              <textarea {...register('notes')} maxLength='500'
-              placeholder='Notes...'
+              <textarea 
+                {...register('notes')} 
+                maxLength='500'
+                placeholder='Notes...'
               />
             </fieldset>
 
@@ -384,19 +451,18 @@ export default function ProductsRegistration() {
                     </button>
                   </div>
                 ) : (
-                  <img src={DefaultImage} alt='Default Preview' className='image-selected' />
+                  <input
+                    type='file'
+                    id='image'
+                    accept='image/*'
+                    onChange={handleImageSelection}
+                    style={{ display: 'none' }}
+                  />
                 )}
-                <input
-                  type='file'
-                  id='image'
-                  accept='image/*'
-                  onChange={handleImageSelection}
-                  style={{ display: 'none' }}
-                />
+                <label htmlFor='image' className='upload-image-btn'>
+                  {!previewImage ? 'Choose Image' : 'Change Image'}
+                </label>
               </div>
-              <label htmlFor='image' className='upload-image-btn'>
-                {!previewImage ? 'Choose Image' : 'Change Image'}
-              </label>
             </fieldset>
 
             <button type='submit' className='save-btn'>
