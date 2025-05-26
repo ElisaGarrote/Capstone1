@@ -7,7 +7,16 @@ class AllProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'depreciation']
-        
+
+class AssetCategoryNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetCategory
+        fields = ['id', 'name']
+
+class ProductDepreciationNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Depreciation
+        fields = ['id', 'name']
 class ProductSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
         queryset=AssetCategory.objects.all(), required=True, allow_null=False
@@ -22,10 +31,7 @@ class ProductSerializer(serializers.ModelSerializer):
 '''
 
 
-class ProductDepreciationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Depreciation
-        fields = ['id', 'name']
+
 
 
 

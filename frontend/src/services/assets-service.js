@@ -28,6 +28,7 @@ class AssetsService {
   }
 
   // PRODUCTS
+  // Retrieve all products
   async fetchAllProducts() {
     try {
       const response = await fetch(API_URL + "products/", {
@@ -60,6 +61,31 @@ class AssetsService {
       return { products: [] };  // Return consistent structure
     }
   }
+
+  // Create Product
+  async createProduct(formData) {
+    try {
+      const response = await fetch(API_URL + "products/registration/", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for creating product is here.",
+          response.status
+        );
+        return false;
+      }
+
+      const data = await response.json();
+      console.log("Data for creating product: ", data);
+      return data;
+    } catch (error) {
+      console.log("Error occur while creating product!", error);
+    }
+  }
+
 
   // AUDITS
   // Create Audit

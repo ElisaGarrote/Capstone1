@@ -6,6 +6,7 @@ from .models import *
 from .serializer import *
 
 # PRODUCTS HERE
+# Get products for all products table
 @api_view(['GET'])
 def get_all_products(request):
     products = Product.objects.filter(is_deleted=False)
@@ -16,6 +17,22 @@ def get_all_products(request):
     }
     return Response(data)
 
+# Get contexts for product registration
+@api_view(['GET'])
+def get_product_contexts(request):
+    categories = AssetCategory.objects.filter(is_deleted=False)
+    depreciations = Depreciation.objects.filter(is_deleted=False)
+
+    serializedCategories = AssetCategoryNameSerializer(categories, many=True).data
+    serializedDepreciations = ProductDepreciationNameSerializer(depreciations, many=True).data
+
+    data = {
+        'categories': serializedCategories,
+        'depreciations': serializedDepreciations,
+    }
+    return Response(data)
+
+# Register a product
 @api_view(['POST'])
 def create_product(request):
     data = request.data

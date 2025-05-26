@@ -35,6 +35,29 @@ class ContextsService {
       return { manufacturers: [] };  // Return consistent structure
     }
   }
+
+  // Retrieve context names
+  async fetchContextNames() {
+    try {
+      const response = await fetch(API_URL + "contexts/names", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for fetching all contexts is here.",
+          response.status
+        );
+        return { suppliers: [], manufacturers: [] };
+      }
+
+      const data = await response.json();
+      console.log("Data for all contexts fetched: ", data);
+      return data;
+    } catch (error) {
+      console.log("Error occur while fetching all contexts!", error);
+    }
+  }
 }
 
 const contextsService = new ContextsService(); // Create object for Assets Service.

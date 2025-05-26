@@ -11,9 +11,8 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 
 export default function ProductsRegistration() {
   const [suppliers, setSuppliers] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [manufacturers, setManufacturers] = useState([]);
-  const [product, setProduct] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [depreciations, setDepreciations] = useState([]);
 
   const { id } = useParams();
