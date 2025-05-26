@@ -57,6 +57,26 @@ def create_product(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Update a product
+@api_view(['PUT'])
+def update_product(request, id):
+    try:
+        product = Product.objects.get(pk=id, is_deleted=False)
+    except Product.DoesNotExist:
+        return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    remove_image = request.data.get('remove_image')
+    if remove_image == 'true' and product.image:
+        product.image.delete(save=False)
+        product.image = None
+
+    serializer = ProductSerializer(product, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 '''
 
 @api_view(['GET'])
