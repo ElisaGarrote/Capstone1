@@ -98,30 +98,25 @@ def get_product_names(request):
         'products': serializedProducts,
     }
     return Response(data)
-'''
-
-@api_view(['GET'])
-def get_product_depreciations(request):
-    depreciations = Depreciation.objects.filter(is_deleted=False)
-    serializedDepreciations = ProductDepreciationSerializer(depreciations, many=True).data
-    return Response(serializedDepreciations)
-
-
-
-@api_view(['POST'])
-def add_product_image(request):
-    data = request.data
-    serializer = ProductSerializer(data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 # END PRODUCT
-'''
+
 
 # ASSETS HERE
+# Get all assets
+@api_view(['GET'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def get_all_assets(request):
+    asset = Asset.objects.filter(is_deleted=False)
+    serializer = AllAssetSerializer(asset, many=True).data
+
+    data = {
+        'assets': serializer,
+    }
+    return Response(data)
+
+
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
 def create_asset(request):
@@ -141,13 +136,6 @@ def add_asset_image(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET'])
-@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
-def get_all_assets(request):
-    queryset = Asset.objects.all().filter(is_deleted=False)
-    serializer = AssetSerializer(queryset, many=True)
-    return Response(serializer.data)
 # END ASSETS
 
 

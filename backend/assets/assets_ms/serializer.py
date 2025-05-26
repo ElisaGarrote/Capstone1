@@ -34,13 +34,18 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 
-'''
-
-class DepreciationSerializer(serializers.ModelSerializer):
+class AllAssetSerializer(serializers.ModelSerializer):
+    category = serializers.SerializerMethodField()
+    status = serializers.CharField(source='status.name', read_only=True)
+    
     class Meta:
-        model = Depreciation
-        fields = '__all__'
-'''
+        model = Asset
+        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status']
+    
+    def get_category(self, obj):
+        if obj.product and obj.product.category:
+            return obj.product.category.name
+        return None
 
 class AssetSerializer(serializers.ModelSerializer):
     class Meta:

@@ -11,12 +11,8 @@ urlpatterns = [
     path('products/<int:id>/delete/', soft_delete_product, name='delete_product'),
     path('products/names/all/', get_product_names, name='product_names'),
     
-    #path('products/<int:id>/', get_product_by_id, name='product_details_of_id'),
-    #
-    #path('depreciations/product_registration', get_product_depreciations, name='depreciation_names'),
     # Assets
-    path('create-asset/', create_asset, name='create_asset'),
-    path('all-asset/', get_all_assets, name='get_all_assets'),
+    path('assets/', get_all_assets, name='all_assets'),
 
     # Audits
     path('audits/create/', create_audit, name='create_audit'),
