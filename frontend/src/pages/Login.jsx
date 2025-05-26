@@ -164,17 +164,7 @@ function Login() {
               </button>
             </div>
           )}
-
-          <div className="form-btn">
-            <button
-              type="button"
-              onClick={() => navigate("/register")}
-              className="register-btn"
-            >
-              Register
-            </button>
-          </div>
-
+          
           <a onClick={() => navigate("/request/password_reset")}>
             Forgot Password?
           </a>
