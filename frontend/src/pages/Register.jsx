@@ -53,6 +53,10 @@ function Register() {
       message: "Password must contain at least one uppercase letter",
     },
     {
+      test: /[0-9]/.test(password),
+      message: "Password must contain at least one number",
+    },
+    {
       test: /[!@#$%^&*(),.?":{}|<>]/.test(password),
       message: "Password must contain at least one special character",
     },
@@ -60,6 +64,17 @@ function Register() {
 
   // Function to handle form submission
   const onSubmit = async (data) => {
+    // Check if all password requirements are met
+    const allRequirementsMet = passwordRequirements.every(req => req.test);
+    
+    if (!allRequirementsMet) {
+      setErrorMessage("Please meet all password requirements before submitting");
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 3000);
+      return;
+    }
+    
     console.log("Submitting to backend:", {
       email: data.email,
       password: data.password,
