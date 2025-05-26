@@ -114,7 +114,16 @@ def get_all_assets(request):
     }
     return Response(data)
 
-
+# Soft delete an asset
+@api_view(['DELETE'])
+def soft_delete_asset(request, id):
+    try:
+        asset = Asset.objects.get(pk=id)
+        asset.is_deleted = True
+        asset.save()
+        return Response({'detail': 'Asset soft-deleted'})
+    except Asset.DoesNotExist:
+        return Response({'detail': 'Asset not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])

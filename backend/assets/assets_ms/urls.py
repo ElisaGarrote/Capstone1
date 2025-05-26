@@ -13,7 +13,8 @@ urlpatterns = [
     
     # Assets
     path('assets/', get_all_assets, name='all_assets'),
-
+    path('assets/<int:id>/delete/', soft_delete_asset, name='delete_asset'),
+    
     # Audits
     path('audits/create/', create_audit, name='create_audit'),
     path('audits/add/files/', add_audit_file, name='add_audit_file'),

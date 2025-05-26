@@ -191,30 +191,6 @@ class AssetsService {
     }
   }
 
-  // Soft delete product
-  async softDeleteProduct(id) {
-    try {
-      const response = await fetch(API_URL + `products/${id}/delete/`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        console.log(
-          "The status of the response for soft deleting product is here.",
-          response.status
-        );
-        return false;
-      }
-
-      const data = await response.json();
-      console.log("Data for soft deleting product: ", data);
-      return data;
-    } catch (error) {
-      console.log("Error occurred while soft deleting product!", error);
-      return false;
-    }
-  }
-
   // ASSETS
   // Retrieve all assets
   async fetchAllAssets() {

@@ -185,22 +185,39 @@ export default function Assets() {
                         <td>{asset.name}</td>
                         <td>{asset.category}</td>
                         <td>
-                          <button
-                            className={asset.status === 'Deployed' ? "check-in-btn" : "check-out-btn"}
-                            onClick={() => handleCheckInOut(asset)}
-                          >
-                            {asset.status === 'Deployed' ? "Check-In" : "Check-Out"}
-                          </button>
+                          {asset.status === 'Deployed' ? (
+                            <button
+                              className="check-in-btn"
+                              onClick={() => handleCheckInOut(asset)}
+                            >
+                              Check-In
+                            </button>
+                          ) : asset.status === 'Ready to Deploy' ? (
+                            <button
+                              className="check-out-btn"
+                              onClick={() => handleCheckInOut(asset)}
+                            >
+                              Check-Out
+                            </button>
+                          ) : null}
                         </td>
                         <td>{asset.status}</td>    
                         <td>
-                          <TableBtn type="edit" navigatePage={`/assets/registration/${asset.id}`} />
+                          <TableBtn
+                            type="edit"
+                            navigatePage={`/assets/registration/${asset.id}`}
+                            data={asset.id}
+                          />
                         </td>
                         <td>
-                          <TableBtn type="delete" onClick={() => {
-                            setEndPoint(`https://assets-service-production.up.railway.app/assets/${asset.id}/delete/`);
-                            setDeleteModalOpen(true);
-                          }} />
+                          <TableBtn
+                            type="delete"
+                            showModal={() => {
+                              setEndPoint(`https://assets-service-production.up.railway.app/assets/${asset.id}/delete/`)
+                              setDeleteModalOpen(true);
+                            }}
+                            data={asset.id}
+                          />
                         </td>
                         <td>
                           <TableBtn type="view" navigatePage={`/assets/view/${asset.id}`} />

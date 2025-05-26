@@ -12,8 +12,9 @@ export default function DeleteModal({ closeModal, confirmDelete, endPoint, onDel
       if (success) {
         await confirmDelete();
         if (closeModal) closeModal();
-      } else if (onDeleteFail) {
-        onDeleteFail();
+      } else {
+        if (onDeleteFail) onDeleteFail();
+        if (closeModal) closeModal(); // Always close the modal even on failure
       }
     } else if (onConfirm) {
       onConfirm();
