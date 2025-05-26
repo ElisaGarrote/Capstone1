@@ -107,7 +107,7 @@ def get_product_names(request):
 @permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
 def get_all_assets(request):
     asset = Asset.objects.filter(is_deleted=False)
-    serializer = AllAssetSerializer(asset, many=True).data
+    serializer = AllAssetSerializer(asset, many=True)
     return Response(serializer.data)
 
 # Get products and statuses for asset registration
