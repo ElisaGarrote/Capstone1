@@ -151,6 +151,31 @@ class AssetsService {
     }
   }
 
+  // Update Product
+  async updateProduct(id, formData) {
+    try {
+      const response = await fetch(API_URL + `products/${id}/update/`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for updating product is here.",
+          response.status
+        );
+        return false;
+      }
+
+      const data = await response.json();
+      console.log("Data for updating product: ", data);
+      return data;
+    } catch (error) {
+      console.log("Error occur while updating product!", error);
+    }
+  }
+
+
 
 
 

@@ -133,95 +133,63 @@ export default function ProductsRegistration() {
     try {
       const formData = new FormData();
 
-      const categoryId = Number(data.category);
-      const manufacturerId = Number(data.manufacturer);
-      const supplierId = Number(data.supplier);
-
-      // Find the category object using selected category ID
-      const selectedCategory = categories.find(category => category.id === categoryId);
-      const selectedManufacturer = manufacturers.find(manufacturer => manufacturer.id === manufacturerId);
-      const selectedSupplier = suppliers.find(supplier => supplier.id === supplierId);
-
-      console.log("category name:", selectedCategory?.name);
- 
+      // Append all form data to FormData object
       formData.append('name', data.productName);
-      formData.append('category_id', data.category);
-      if (selectedCategory) {
-        formData.append('category_name', selectedCategory.name);
-      }
-      formData.append('manufacturer_id', data.manufacturer || '');
-      if (selectedManufacturer) {
-        console.log("manufacturer name:", selectedManufacturer.name);
-        formData.append('manufacturer_name', selectedManufacturer.name);
-      }
-      formData.append('depreciation_id', data.depreciation || '');
+      formData.append('category', data.category);
+      formData.append('manufacturer_id', data.manufacturer);
+      formData.append('depreciation', data.depreciation);
       formData.append('model_number', data.modelNumber || '');
       formData.append('end_of_life', data.endOfLifeDate || '');
-      formData.append('purchase_cost', data.defaultPurchaseCost || '');
+      formData.append('default_purchase_cost', data.defaultPurchaseCost || '');
       formData.append('default_supplier_id', data.supplier || '');
-      if (selectedSupplier) {
-        console.log("supplier name:", selectedSupplier.name);
-        formData.append('default_supplier_name', selectedSupplier.name);
-      }
-      formData.append('minimum_quantity', data.minimumQuantity || '');
+      formData.append('minimum_quantity', data.minimumQuantity);
       formData.append('operating_system', data.operatingSystem || '');
       formData.append('imei_number', data.imeiNumber || '');
       formData.append('notes', data.notes || '');
       
+      // Handle image upload
       if (selectedImage) {
         formData.append('image', selectedImage);
       }
 
+      // Handle image removal
       if (removeImage) {
         formData.append('remove_image', 'true');
       }
       
+      let response;
+      
       if (id) {
         // Update existing product
-        const response = await fetch(`http://localhost:8003/products/${id}/`, {
+        response = await fetch(`http://localhost:8003/products/${id}/update`, {
           method: 'PUT',
           body: formData,
         });
-    
-        if (!response.ok) {
-          throw new Error(`Failed to update product. Status: ${response.status}`);
-        }
-    
-        const result = await response.json();
-        console.log('Updated product:', result);
-        setSuccessMessage("Product has been updated successfully!");
-        setErrorMessage("");
-    
-        setTimeout(() => {
-          setErrorMessage("");
-          setSuccessMessage("");
-          navigate('/products');
-        }, 2000);
       } else {
         // Create new product
-        const response = await fetch("http://localhost:8003/products/registration/", {
+        response = await fetch("http://localhost:8003/products/registration/", {
           method: 'POST',
           body: formData,
         });
-  
-        if (!response.ok) {
-          throw new Error(`Failed to submit product. Status: ${response.status}`);
-        }
-  
-        const result = await response.json();
-        console.log('Product registered:', result);
-        setSuccessMessage("Product has been created successfully!");
-        setErrorMessage("");
-    
-        setTimeout(() => {
-          setErrorMessage("");
-          setSuccessMessage("");
-          navigate('/products');
-        }, 2000);
       }
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${id ? 'update' : 'create'} product. Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log(`${id ? 'Updated' : 'Created'} product:`, result);
+      setSuccessMessage(`Product has been ${id ? 'updated' : 'created'} successfully!`);
+      setErrorMessage("");
+
+      setTimeout(() => {
+        setErrorMessage("");
+        setSuccessMessage("");
+        navigate('/products');
+      }, 2000);
     } catch (error) {
-      console.error('Error submitting/updating product:', error);
-      setErrorMessage(error.message || "An error occurred while saving the product");
+      console.error(`Error ${id ? 'updating' : 'creating'} product:`, error);
+      setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the product`);
       setSuccessMessage("");
       
       setTimeout(() => {
@@ -384,12 +352,19 @@ export default function ProductsRegistration() {
             </fieldset>
 
             <fieldset>
-              <label htmlFor='minimum-quantity'>Minimum Quantity</label>
+              <label htmlFor='minimum-quantity'>Minimum Quantity *</label>
               <input
                 type='number'
-                {...register('minimumQuantity')}
+                className={errors.minimumQuantity ? 'input-error' : ''}
+                {...register('minimumQuantity', { 
+                  required: 'Minimum Quantity is required',
+                  min: { value: 0, message: 'Minimum Quantity must be at least 0' },
+                  valueAsNumber: true
+                })}
                 placeholder='Minimum Quantity'
+                min="0"
               />
+              {errors.minimumQuantity && <span className='error-message'>{errors.minimumQuantity.message}</span>}
             </fieldset>
 
             <fieldset>
