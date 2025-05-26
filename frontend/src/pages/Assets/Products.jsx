@@ -37,7 +37,7 @@ export default function Products() {
     
     const fetchData = async () => {
       try {
-        // Fetch products
+        // Fetch all products
         const productsResponse = await assetsService.fetchAllProducts();
         setProducts(productsResponse.products || []);
         
