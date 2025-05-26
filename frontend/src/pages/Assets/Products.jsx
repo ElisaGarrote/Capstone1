@@ -142,100 +142,99 @@ export default function Products() {
             </div>
           </section>
           <section className="middle">
-            
-                <table>
-                  <thead>
-                    <tr>
-                      <th>
-                        <input
-                          type="checkbox"
-                          checked={allChecked}
-                          onChange={toggleSelectAll}
-                        />
-                      </th>
-                      <th>IMAGE</th>
-                      <th>NAME</th>
-                      <th>CATEGORY</th>
-                      <th>MANUFACTURER</th>
-                      <th>Depreciation</th>
-                      <th>EDIT</th>
-                      <th>DELETE</th>
-                      <th>VIEW</th>
-                    </tr>
-                  </thead>
-                    {products.length === 0 ? (
-                      <tbody>
-                        <tr>
-                          <td colSpan="9" className="no-products-message">
-                            <p>No products found. Please add some products.</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={allChecked}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th>IMAGE</th>
+                    <th>NAME</th>
+                    <th>CATEGORY</th>
+                    <th>MANUFACTURER</th>
+                    <th>Depreciation</th>
+                    <th>EDIT</th>
+                    <th>DELETE</th>
+                    <th>VIEW</th>
+                  </tr>
+                </thead>
+                  {products.length === 0 ? (
+                    <tbody>
+                      <tr>
+                        <td colSpan="9" className="no-products-message">
+                          <p>No products found. Please add some products.</p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  ) : (
+                    <tbody>
+                      {products.map((product) => (
+                        <tr key={product.id}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={checkedItems.includes(product.id)}
+                              onChange={() => toggleItem(product.id)}
+                            />
+                          </td>
+                          <td>
+                            {product.image ? (
+                              <img
+                                src={`https://assets-service-production.up.railway.app${product.image}`}
+                                alt={`Product-${product.name}`}
+                                width="50"
+                                key={`img-${product.id}`}
+                                onError={(e) => {
+                                  console.log(`Error loading image for product ${product.id}`);
+                                  e.target.src = DefaultImage;
+                                }}
+                              />
+                            ) : (
+                              <img
+                                src={DefaultImage}
+                                alt={`Product-${product.name}`}
+                                width="50"
+                                key={`img-${product.id}`}
+                              />
+                            )}
+                          </td>
+                          <td>{product.name}</td>
+                          <td>{product.category}</td>
+                          <td>{getManufacturerName(product.manufacturer_id)}</td>
+                          <td>{product.depreciation}</td>
+                          <td>
+                            <TableBtn
+                              type="edit"
+                              navigatePage={`/products/registration/${product.id}`}
+                              data={product.id}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="delete"
+                              showModal={() => {
+                                setEndPoint(`https://assets-service-production.up.railway.app/products/${product.id}/delete/`)
+                                setDeleteModalOpen(true);
+                              }}
+                              data={product.id}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="view"
+                              navigatePage={`/products/view/${product.id}`}
+                              data={product.id}
+                            />
                           </td>
                         </tr>
-                      </tbody>
-                    ) : (
-                      <tbody>
-                        {products.map((product) => (
-                          <tr key={product.id}>
-                            <td>
-                              <input
-                                type="checkbox"
-                                checked={checkedItems.includes(product.id)}
-                                onChange={() => toggleItem(product.id)}
-                              />
-                            </td>
-                            <td>
-                              {product.image ? (
-                                <img
-                                  src={`https://assets-service-production.up.railway.app${product.image}`}
-                                  alt={`Product-${product.name}`}
-                                  width="50"
-                                  key={`img-${product.id}`}
-                                  onError={(e) => {
-                                    console.log(`Error loading image for product ${product.id}`);
-                                    e.target.src = DefaultImage;
-                                  }}
-                                />
-                              ) : (
-                                <img
-                                  src={DefaultImage}
-                                  alt={`Product-${product.name}`}
-                                  width="50"
-                                  key={`img-${product.id}`}
-                                />
-                              )}
-                            </td>
-                            <td>{product.name}</td>
-                            <td>{product.category}</td>
-                            <td>{getManufacturerName(product.manufacturer_id)}</td>
-                            <td>{product.depreciation}</td>
-                            <td>
-                              <TableBtn
-                                type="edit"
-                                navigatePage={`/products/registration/${product.id}`}
-                                data={product.id}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="delete"
-                                showModal={() => {
-                                  setEndPoint(`https://assets-service-production.up.railway.app/products/${product.id}/delete/`)
-                                  setDeleteModalOpen(true);
-                                }}
-                                data={product.id}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="view"
-                                navigatePage={`/products/view/${product.id}`}
-                                data={product.id}
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    )}
-                </table>
+                      ))}
+                    </tbody>
+                  )}
+              </table>
           </section>
           <section className="bottom"></section>
         </div>

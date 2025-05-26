@@ -19,8 +19,8 @@ export default function AssetsRegistration() {
     formState: { errors }
   } = useForm({
     defaultValues: {
-      image: SampleImage,
-      assetId: '',
+      image: null,
+      assetId: id ? assetsData[id]?.assetId : '(Auto-generated)',
       assetName: '',
       serialNumber: '',
       product: '',
@@ -99,8 +99,17 @@ export default function AssetsRegistration() {
   };
 
   const onSubmit = (data) => {
+    // Remove assetId from data if it's the placeholder text
+    if (data.assetId === '(Auto-generated)') {
+      delete data.assetId;
+    }
+    
     console.log(errors); // Log errors for debugging
     console.log("Form submitted:", data);
+    
+    // Here you would typically make an API call to save the asset
+    // The backend will generate the displayed_id
+    
     navigate("/assets");
   };
 
@@ -119,11 +128,13 @@ export default function AssetsRegistration() {
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             <fieldset>
-              <label>Asset ID *</label>
-              <input type="text" 
-              className={errors.assetId ? 'input-error' : ''}
-              {...register("assetId", {required: 'Asset ID is required.'})} placeholder="Asset ID" />
-              {errors.assetId && <span className='error-message'>{errors.assetId.message}</span>}
+              <label>Asset ID</label>
+              <input 
+                type="text" 
+                readOnly
+                className="readonly-field"
+                value={id ? assetsData[id]?.assetId : '(Auto-generated)'}
+              />
             </fieldset>
 
             <fieldset>

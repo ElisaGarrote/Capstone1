@@ -3,30 +3,6 @@ import dateRelated from "../utils/dateRelated";
 const API_URL = "https://assets-service-production.up.railway.app/";
 
 class AssetsService {
-  // ASSETS
-  // Retrieve all assets
-  async fetchAllAssets() {
-    try {
-      const response = await fetch(API_URL + "all-asset/", {
-        method: "GET",
-      });
-
-      if (!response.ok) {
-        console.log(
-          "The status of the response for fetching all assets is here.",
-          response.status
-        );
-        return false;
-      }
-
-      const data = await response.json();
-      console.log("Data for all assets fetched: ", data);
-      return data;
-    } catch (error) {
-      console.log("Error occur while fetching all assets!", error);
-    }
-  }
-
   // PRODUCTS
   // Retrieve all products
   async fetchAllProducts() {
@@ -239,9 +215,40 @@ class AssetsService {
     }
   }
 
+  // ASSETS
+  // Retrieve all assets
+  async fetchAllAssets() {
+    try {
+      const response = await fetch(API_URL + "assets/", {
+        method: "GET",
+      });
 
+      if (!response.ok) {
+        console.log(
+          "The status of the response for fetching all assets is here.",
+          response.status
+        );
+        return { assets: [] };
+      }
 
-
+      const data = await response.json();
+      console.log("Data for all assets fetched: ", data);
+      
+      // Ensure we always return an object with assets property
+      if (data && data.assets) {
+        return data; // Already in correct format
+      } else if (Array.isArray(data)) {
+        return { assets: data }; // Convert array to object with property
+      } else if (data && typeof data === 'object') {
+        return { assets: [data] }; // Single object to array in property
+      } else {
+        return { assets: [] }; // Default empty result
+      }
+    } catch (error) {
+      console.log("Error occur while fetching all assets!", error);
+      return { assets: [] };  // Return consistent structure
+    }
+  }
 
   // AUDITS
   // Create Audit
