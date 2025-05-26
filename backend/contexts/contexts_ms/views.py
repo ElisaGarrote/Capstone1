@@ -15,9 +15,7 @@ def get_manaufacturers_names(request):
     }
     return Response(data)
 
-
-
-
+# Get context names
 @api_view(['GET'])
 def get_contexts_names(request):
     suppliers = Supplier.objects.filter(is_deleted=False)
@@ -30,7 +28,6 @@ def get_contexts_names(request):
         'suppliers': serializedSupplier,
         'manufacturers': serializedManufacturer,
     }
-
     return Response(data)
 
 # Get all suppliers
