@@ -64,7 +64,7 @@ function Register() {
 
   // Function to handle form submission
   const onSubmit = async (data) => {
-    // Check if all password requirements are met
+    // Check if all password requirements are met before submission
     const allRequirementsMet = passwordRequirements.every(req => req.test);
     
     if (!allRequirementsMet) {
