@@ -1,41 +1,31 @@
-from rest_framework import viewsets, status
+from django.shortcuts import render
+from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, action
 from rest_framework.permissions import AllowAny
-from .models import CustomUser
+from .models import *
 from .serializers import *
+from rest_framework.response import Response
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 @api_view(['GET'])
 def api_test(request):
     return Response({"message": "API is working!"}, status=status.HTTP_200_OK)
 
 class RegisterViewset(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
+    permission_classes = [permissions.AllowAny]
+    queryset = User.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [AllowAny]
-    http_method_names = ['post', 'get']
     
-    def list(self, request):
-        return Response({
-            "message": "Superuser registration endpoint",
-            "required_fields": {
-                "email": "Your email address",
-                "password": "Your password",
-                "password2": "Confirm your password"
-            }
-        })
-    
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    def create(self, request):
+        serializer = self.serializer_class(data=request.data)
         
         if serializer.is_valid():
-            user = serializer.save()
-            return Response({
-                "email": user.email,
-                "message": "Superuser created successfully"
-            }, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(serializer.data, status=201)
+        else:
+            return Response(serializer.errors, status=400)
 
 class UsersViewset(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
