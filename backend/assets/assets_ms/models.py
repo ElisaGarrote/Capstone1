@@ -102,7 +102,7 @@ class Asset(models.Model):
     displayed_id = models.CharField(max_length=20, unique=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets')
     status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='status_assets')
-    supplier_id = models.PositiveIntegerField(blank=True, null=True)
+    supplier_id = models.PositiveIntegerField()
     location = models.CharField(max_length=50)
     name = models.CharField(max_length=100)
     serial_number = models.CharField(max_length=50, blank=True, null=True)
