@@ -59,6 +59,29 @@ export default function AssetsRegistration() {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
+    // Only fetch the next asset ID if we're creating a new asset (no ID provided)
+    if (!id) {
+      const fetchNextAssetId = async () => {
+        try {
+          const response = await assetsService.getNextAssetId();
+          if (response && response.next_id) {
+            setValue('assetId', response.next_id);
+            setGeneratedAssetId(response.next_id);
+          } else {
+            console.error("Failed to get next asset ID");
+            setErrorMessage("Failed to generate asset ID. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error fetching next asset ID:", error);
+          setErrorMessage("Error generating asset ID. Please try again.");
+        }
+      };
+
+      fetchNextAssetId();
+    }
+  }, [id, setValue]);
+
+  useEffect(() => {
     const initialize = async () => {
       try {
         setIsLoading(true);

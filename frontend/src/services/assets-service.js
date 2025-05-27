@@ -324,7 +324,7 @@ class AssetsService {
     }
   }
 
-  // Get next asset ID (for display purposes only) (not yet working)
+  // Get next asset ID
   async getNextAssetId() {
     try {
       const response = await fetch(API_URL + "assets/next-id/", {
@@ -332,14 +332,18 @@ class AssetsService {
       });
 
       if (!response.ok) {
-        console.log("Error fetching next asset ID:", response.status);
+        console.log(
+          "The status of the response for getting next asset ID is here.",
+          response.status
+        );
         return null;
       }
 
       const data = await response.json();
+      console.log("Next asset ID data: ", data);
       return data;
     } catch (error) {
-      console.log("Error fetching next asset ID:", error);
+      console.log("Error occurred while getting next asset ID!", error);
       return null;
     }
   }
