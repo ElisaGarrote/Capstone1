@@ -1,6 +1,7 @@
 import dateRelated from "../utils/dateRelated";
 
 const API_URL = "https://assets-service-production.up.railway.app/";
+// const API_URL = "http://127.0.0.1:8003/";
 
 class AssetsService {
   // PRODUCTS
@@ -379,7 +380,7 @@ class AssetsService {
     auditDate,
     nextAuditDate
   ) {
-    console.log("service received nextAuditDate: ", nextAuditDate);
+    // console.log("service received nextAuditDate: ", nextAuditDate);
     try {
       const response = await fetch(API_URL + "audits/create/", {
         method: "POST",
@@ -406,7 +407,7 @@ class AssetsService {
       }
 
       const data = await response.json();
-      console.log("data:", data);
+      // console.log("data:", data);
       return data;
     } catch (error) {
       console.error("Error occur while creating audit!", error);
@@ -435,13 +436,13 @@ class AssetsService {
           }
 
           const data = await response.json();
-          console.log("File uploaded successfully:", data);
+          // console.log("File uploaded successfully:", data);
         } catch (error) {
           console.error("Error occur while creating audit files!", error);
         }
       });
 
-      console.log("All files uploaded successfully.");
+      // console.log("All files uploaded successfully.");
       return true;
     } catch (error) {
       console.error("Error occur while creating audit file!", error);
@@ -450,10 +451,10 @@ class AssetsService {
 
   // Create Schedule Audit
   async postScheduleAudit(assetId, date, notes) {
-    console.log("asset id passed", assetId);
+    // console.log("asset id passed", assetId);
     let isSuccess = false;
 
-    console.log("type of asset id", typeof assetId);
+    // console.log("type of asset id", typeof assetId);
 
     try {
       /*
@@ -483,7 +484,7 @@ class AssetsService {
           }
 
           const data = await response.json();
-          console.log("Successfully added schedule audit", data);
+          // console.log("Successfully added schedule audit", data);
           isSuccess = true; // Set isSuccess to true if any of the loop successfully created new record.
         }
 
@@ -508,7 +509,7 @@ class AssetsService {
         }
 
         const data = await response.json();
-        console.log("Successfully added schedule audit", data);
+        // console.log("Successfully added schedule audit", data);
         return data;
       }
     } catch (error) {
@@ -533,8 +534,14 @@ class AssetsService {
       }
 
       const data = await response.json();
-      console.log("Data for all audit fetched: ", data);
-      return data;
+      // console.log("Data for all audit fetched: ", data);
+
+      // Sort data in ascending order based on the audit_date.
+      const sortedData = data.sort(
+        (a, b) => new Date(a.audit_date) - new Date(b.audit_date)
+      );
+
+      return sortedData;
     } catch (error) {
       console.log("Error occur while fetching all audit schedules!", error);
     }
@@ -557,7 +564,13 @@ class AssetsService {
 
       const data = await response.json();
       // console.log("Data for all audit schedules fetched: ", data);
-      return data;
+
+      // Sort data in ascending order based on the date.
+      const sortedData = data.sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+
+      return sortedData;
     } catch (error) {
       console.log("Error occur while fetching all audit schedules!", error);
     }
