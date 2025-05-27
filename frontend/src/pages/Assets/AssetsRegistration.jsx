@@ -69,7 +69,9 @@ export default function AssetsRegistration() {
           contextsService.fetchAllSupplierNames()
         ]);
         
-        // Set products and supplier from asset contexts
+        console.log("Asset contexts data:", assetContextsData);
+        
+        // Set products and statuses from asset contexts
         setProducts(assetContextsData.products || []);
         setStatuses(assetContextsData.statuses || []);
         

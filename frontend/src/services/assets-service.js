@@ -250,7 +250,7 @@ class AssetsService {
       // Return the data with default empty arrays for any missing properties
       return {
         products: data.products || [],
-        statuses: data.statues || []
+        statuses: data.statuses || [] // Fix the typo here - it was "statues" instead of "statuses"
       };
     } catch (error) {
       console.log("Error occurred while fetching asset contexts!", error);
