@@ -4,6 +4,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useLocation } from "react-router-dom";
 import Status from "../../components/Status";
 import dateRelated from "../../utils/dateRelated";
+import assetsService from "../../services/assets-service";
 
 export default function ViewAudits() {
   const location = useLocation();
@@ -104,7 +105,10 @@ export default function ViewAudits() {
                   {data.audit_info.audit_files.map((file, index) => {
                     return (
                       <a
-                        href={`http://127.0.0.1:8003${file.file}`}
+                        href={`https://assets-service-production.up.railway.app/${file.file}`}
+                        // href={assetsService.auditFileUrl(
+                        //   String(file.file).slice(1)
+                        // )}
                         key={index}
                         target="_blank"
                         rel="noopener noreferrer"

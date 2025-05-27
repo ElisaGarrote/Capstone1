@@ -217,6 +217,26 @@ def create_audit(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def get_all_audit(request):
+    queryset = Audit.objects.all().filter(is_deleted=False)
+    serializer = AuditSerializer(queryset, many=True)
+
+    return Response(serializer.data)
+
+@api_view(['PUT'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def soft_delete_audit(request, id):
+    try:
+        audit = Audit.objects.get(pk=id, is_deleted=False)
+        audit.is_deleted = True
+        audit.save()
+        return True
+    except Audit.DoesNotExist:
+        return Response({'detail': 'Audit not found'}, status=status.HTTP_404_NOT_FOUND)
+
+# Audit Files
 @api_view(['POST'])
 @permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
 def add_audit_file(request):
@@ -229,19 +249,21 @@ def add_audit_file(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
-def get_all_audit(request):
-    queryset = Audit.objects.all().filter(is_deleted=False)
-    serializer = AuditSerializer(queryset, many=True)
-
-    return Response(serializer.data)
-
-@api_view(['GET'])
-@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
 def get_all_audit_files(request):
     queryset = AuditFile.objects.all().filter(is_deleted=False)
     serializer = AuditFileSerializer(queryset, many=True)
 
     return Response(serializer.data)
+
+@api_view(['PUT'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def soft_delete_audit_files(request, id):
+    try:
+        audit_files = AuditFile.objects.filter(audit=id, is_deleted=False)
+        audit_files.is_deleted = True
+        return True
+    except AuditFile.DoesNotExist:
+        return Response({'detail': 'Audit file not found'}, status=status.HTTP_404_NOT_FOUND)
 
 # Schedule Audit
 @api_view(['POST'])
@@ -279,6 +301,16 @@ def get_edit_audit_schedule_by_id(request, id):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['PUT'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def soft_delete_schedule_audit(request, id):
+    try:
+        schedule_audit = AuditSchedule.objects.get(pk=id, is_deleted=False)
+        schedule_audit.is_deleted = True
+        schedule_audit.save()
+        return True
+    except AuditSchedule.DoesNotExist:
+        return Response({'detail': 'Audit schedule not found'}, status=status.HTTP_404_NOT_FOUND)
 # END AUDITS
 
 

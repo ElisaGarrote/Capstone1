@@ -7,12 +7,14 @@ import { useNavigate } from "react-router-dom";
 import assetsService from "../../services/assets-service";
 import { useForm, Controller } from "react-hook-form";
 import dateRelated from "../../utils/dateRelated";
+import Skeleton from "react-loading-skeleton";
 
 export default function ScheduleRegistration() {
   const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState("");
   const [allAssets, setAllAssets] = useState([]);
   const [assetAndName, setAssetAndName] = useState([]);
+  const [isLoading, setLoading] = useState(true);
 
   // Get the current date and assign it to the currentDate state.
   useEffect(() => {
@@ -28,6 +30,7 @@ export default function ScheduleRegistration() {
         if (dataFetched) {
           console.log("Schedule Audits fetch all assets: ", dataFetched);
           setAllAssets(dataFetched);
+          setLoading(false);
         }
       } catch (error) {
         console.log("Error whilte fetching all assets!", error);
@@ -50,6 +53,9 @@ export default function ScheduleRegistration() {
           displayedId: item.asset_info.displayed_id,
           name: item.asset_info.name,
         }));
+
+        // Filter asset to get only all assets that is not yet scheduled and audited
+
         setAssetAndName(asset);
       }
     };

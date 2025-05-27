@@ -18,13 +18,20 @@ urlpatterns = [
 
     # Audits
     path('audits/create/', create_audit, name='create_audit'),
-    path('audits/add/files/', add_audit_file, name='add_audit_file'),
     path('audits/all/', get_all_audit, name='get_all_audit'),
+    path('audits/<int:id>/delete/', soft_delete_audit, name='soft_delete_audit'),
+
+    # Audits Files
+    path('audits/add/files/', add_audit_file, name='add_audit_file'),
     path('audits/all/files', get_all_audit_files, name='get_all_audit_files'),
+    path('audits/file/<int:id>/delete/', soft_delete_audit_files, name='soft_delete_audit_files'),
+
+    # Audits Schedule
     path('audits/create-schedule/', create_audit_schedule, name='create_audit_schedule'),
     path('audits/get/edit/schedule/<int:id>/', get_edit_audit_schedule_by_id, name='get_edit_audit_schedule_by_id'),
     path('audits/all/schedules/', get_all_audit_schedules, name='get_all_audit_schedule'),
-
+    path('audits/schedule/<int:id>/delete/', soft_delete_schedule_audit, name='soft_delete_schedule_audit'),
+    
     # Component
     path('component/create/', create_component, name='create_component'),
 

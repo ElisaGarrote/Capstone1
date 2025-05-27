@@ -45,16 +45,8 @@ export default function PerformAudits() {
   // Fetch all assets
   useEffect(() => {
     const asset = async () => {
-      try {
-        const dataFetched = await assetsService.fetchAllAssets();
-
-        if (dataFetched) {
-          console.log("Schedule Audits fetch all assets: ", dataFetched);
-          setAllAssets(dataFetched);
-        }
-      } catch (error) {
-        console.log("Error whilte fetching all assets!", error);
-      }
+      const dataFetched = await assetsService.fetchAllAssets();
+      setAllAssets(dataFetched);
     };
 
     asset();
@@ -80,7 +72,7 @@ export default function PerformAudits() {
     fetchAllScheduleAudits();
   }, []);
 
-  const assetOptions = allAssets
+  const assetOptions = Array.from(allAssets)
     .filter(
       (item) =>
         !assetAndName.some(
