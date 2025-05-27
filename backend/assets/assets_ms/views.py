@@ -170,6 +170,21 @@ def get_asset_by_id(request, id):
 
     return Response(data)
 
+#Get product defaults to be loaded to asset details
+@api_view(['GET'])
+def get_product_defaults(request, id):
+    try:
+        product = Product.objects.get(pk=id)
+    except Product.DoesNotExist:
+        return Response({'detail': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializedProduct = ProductDefaultsSerializer(product)
+
+    data = {
+        'product': serializedProduct.data,
+    }
+
+    return Response(data)
 
 # Soft delete an asset
 @api_view(['DELETE'])
