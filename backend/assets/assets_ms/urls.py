@@ -18,7 +18,7 @@ urlpatterns = [
     path('assets/registration/', create_asset, name='add_new_asset'),
     path('assets/<int:id>/update/', update_asset, name='update_asset'),
     path('assets/<int:id>/delete/', soft_delete_asset, name='delete_asset'),
-    path('assets/next-id/', get_next_asset_id, name='get_next_asset_id'),
+    path('assets/<int:id>/defaults/', get_product_defaults, name='product_defaults'),
 
     # Audits
     path('audits/create/', create_audit, name='create_audit'),
