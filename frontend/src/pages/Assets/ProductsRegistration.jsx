@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 import Alert from "../../components/Alert";
-import DefaultImage from "../../assets/img/default-image.jpg";
 import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
 
@@ -249,13 +248,19 @@ export default function ProductsRegistration() {
 
             {/* Category */}
             <fieldset>
-              <label htmlFor='category'>Category *</label>
-              <div>
+              <label htmlFor="category">Category *</label>
+              <div className="dropdown-container">
                 <select
-                  className={errors.category ? 'input-error' : ''}
-                  {...register('category', { required: 'Category is required' })}
+                  className={errors.category ? "input-error" : ""}
+                  {...register("category", {
+                    required: "Category is required",
+                    valueAsNumber: true,
+                  })}
+                  defaultValue=""
                 >
-                  <option value=''>Select Category</option>
+                  <option value="" disabled hidden>
+                    Select Category
+                  </option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -263,7 +268,9 @@ export default function ProductsRegistration() {
                   ))}
                 </select>
               </div>
-              {errors.category && <span className='error-message'>{errors.category.message}</span>}
+              {errors.category && (
+                <span className="error-message">{errors.category.message}</span>
+              )}
             </fieldset>
 
             {/* Manufacturer */}
