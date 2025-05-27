@@ -22,12 +22,12 @@ class AuthService {
       }
 
       const data = await response.json();
-      console.log("data:", data);
+      // console.log("data:", data);
 
       if (data.access) {
         localStorage.setItem("access", data.access);
         localStorage.setItem("refresh", data.refresh);
-        console.log("Token successfully stored in the local storage!");
+        // console.log("Token successfully stored in the local storage!");
       } else {
         console.log("No access token in response!");
       }
@@ -51,7 +51,7 @@ class AuthService {
 
       const data = await response.json();
 
-      console.log("Fetched data:", data);
+      // console.log("Fetched data:", data);
       return data;
     } catch (error) {
       console.log("Failed to determine if there is any active admin");

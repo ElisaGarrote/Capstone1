@@ -178,9 +178,8 @@ export default function OverdueAudits() {
                           </td>
                           <td>
                             <Status
-                              type="deployed"
-                              name="Deployed"
-                              personName="Mary Grace Piattos"
+                              type={data.asset_info.status_info.type}
+                              name={data.asset_info.status_info.name}
                             />
                           </td>
                           <td>

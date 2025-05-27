@@ -132,7 +132,10 @@ export default function CompletedAudits() {
                             {data.asset_info.name}
                           </td>
                           <td>
-                            <Status type="undeployable" name="Being Repaired" />
+                            <Status
+                              type={data.asset_info.status_info.type}
+                              name={data.asset_info.status_info.name}
+                            />
                           </td>
                           <td>{data.location}</td>
                           <td>Pia Piatos-Lim</td>
