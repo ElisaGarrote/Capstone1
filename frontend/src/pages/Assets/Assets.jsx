@@ -22,6 +22,8 @@ export default function Assets() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   
+  const navigate = useNavigate();
+
   useEffect(() => {
     // Check for success messages passed from other components
     if (location.state?.successMessage) {
@@ -71,6 +73,34 @@ export default function Assets() {
     } catch (error) {
       console.error("Error fetching assets:", error);
       setAssets([]);
+    }
+  };
+
+  const handleCheckInOut = (asset) => {
+    if (asset.status === 'Deployed') {
+      // Navigate to check-in page
+      navigate(`/assets/check-in/${asset.id}`, {
+        state: {
+          id: asset.id,
+          assetId: asset.displayed_id,
+          product: asset.name,
+          image: asset.image ? `https://assets-service-production.up.railway.app${asset.image}` : DefaultImage,
+          employee: asset.assigned_to || 'Not assigned',
+          checkOutDate: asset.checkout_date || 'Unknown',
+          returnDate: asset.expected_return_date || 'Unknown',
+          condition: asset.condition || 'Unknown'
+        }
+      });
+    } else if (asset.status === 'Ready to Deploy') {
+      // Navigate to check-out page
+      navigate(`/assets/check-out/${asset.id}`, {
+        state: {
+          id: asset.id,
+          assetId: asset.displayed_id,
+          product: asset.name,
+          image: asset.image ? `https://assets-service-production.up.railway.app${asset.image}` : DefaultImage
+        }
+      });
     }
   };
 
@@ -199,7 +229,7 @@ export default function Assets() {
                             >
                               Check-Out
                             </button>
-                          ) : '—'}
+                          ) : null}
                         </td>
                         <td>{asset.status}</td>    
                         <td>
