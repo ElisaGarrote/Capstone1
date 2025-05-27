@@ -36,7 +36,6 @@ export default function AssetsRegistration() {
       purchaseCost: '',
       auditSchedule: '',
       notes: '',
-      image: null
     }
   });
 
@@ -56,27 +55,25 @@ export default function AssetsRegistration() {
         setIsLoading(true);
         
         // Fetch all necessary data in parallel
-        const [productContextsData, contextsData] = await Promise.all([
-          assetsService.fetchProductContexts(),
-          contextsService.fetchContextNames()
+        const [assetContextsData, contextsData] = await Promise.all([
+          assetsService.fetchAssetContexts(),
+          contextsService.fetchAllSupplierNames()
         ]);
         
-        // Set categories and depreciations from product contexts
-        setCategories(productContextsData.categories || []);
-        setDepreciations(productContextsData.depreciations || []);
+        // Set products and supplier from asset contexts
+        setProducts(assetContextsData.products || []);
+        setStatuses(assetContextsData.statuses || []);
         
-        // Set suppliers and manufacturers from contexts
+        // Set suppliers from contexts
         setSuppliers(contextsData.suppliers || []);
-        setManufacturers(contextsData.manufacturers || []);
-        
-        console.log("Categories:", productContextsData.categories);
-        console.log("Depreciations:", productContextsData.depreciations);
-        console.log("Suppliers:", contextsData.suppliers);
-        console.log("Manufacturers:", contextsData.manufacturers);
 
-        // If ID is present, fetch the product details
+        console.log("products:", assetContextsData.products);
+        console.log("statuses:", assetContextsData.statuses);
+        console.log("Suppliers:", contextsData.suppliers);
+
+        // If ID is present, fetch the asset details
         if (id) {
-          const productData = await assetsService.fetchProductById(id);
+          const assetData = await assetsService.fetchAsset(id);
           if (!productData) {
             setErrorMessage("Failed to fetch product details");
             setIsLoading(false);
@@ -322,100 +319,150 @@ export default function AssetsRegistration() {
               <label htmlFor='supplier'>Supplier *</label>
               <div>
                 <select
-                  className={errors.category ? 'input-error' : ''}
-                  {...register('category', { required: 'Category is required' })}
+                  className={errors.supplier ? 'input-error' : ''}
+                  {...register('supplier', { required: 'Supplier is required' })}
                 >
-                  <option value=''>Select Category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
+                  <option value=''>Select Supplier</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
                     </option>
                   ))}
                 </select>
               </div>
-              {errors.category && <span className='error-message'>{errors.category.message}</span>}
+              {errors.supplier && <span className='error-message'>{errors.supplier.message}</span>}
             </fieldset>
 
             {/* Location selection */}
             <fieldset>
-              <label htmlFor='category'>Category *</label>
+              <label htmlFor='location'>location *</label>
               <div>
                 <select
-                  className={errors.category ? 'input-error' : ''}
-                  {...register('category', { required: 'Category is required' })}
+                  className={errors.location ? 'input-error' : ''}
+                  {...register('location', { required: 'Location is required' })}
                 >
-                  <option value=''>Select Category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
+                  <option value=''>Select Location</option>
+                  {locations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.name}
                     </option>
                   ))}
                 </select>
               </div>
-              {errors.category && <span className='error-message'>{errors.category.message}</span>}
+              {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
 
+            {/* Asset Name */}
             <fieldset>
-              <label>Asset Name</label>
-              <input type="text" {...register("assetName")} placeholder="Asset Name" />
+              <label htmlFor='asset-name'>Asset Name *</label>
+              <input
+                type='text'
+                className={errors.assetName ? 'input-error' : ''}
+                {...register('assetName', { required: 'Asset Name is required' })}
+                maxLength='100'
+                placeholder='Asset Name'
+              />
+              {errors.assetName && <span className='error-message'>{errors.assetName.message}</span>}
             </fieldset>
 
+            {/* Serial Number */}
             <fieldset>
-              <label>Serial Number</label>
-              <input type="text" {...register("serialNumber")} placeholder="Serial Number" />
+              <label htmlFor='serial-number'>Serial Number</label>
+              <input 
+                type='text'
+                {...register('serialNumber')} 
+                maxLength='50'
+                placeholder='Serial Number'
+              />
             </fieldset>
 
+            {/* Warranty Expiration */}
             <fieldset>
-              <label>Warranty Expiration</label>
-              <input type="date" {...register("warrantyExpiration")} min={!id ? currentDate : undefined} />
+              <label htmlFor='warranty-expiration'>Warranty Expiration Date</label>
+              <input
+                type='date'
+                {...register('warrantyExpiration')}
+                min={!id ? currentDate : undefined}
+              />
             </fieldset>
 
+            {/* Order Number */}
             <fieldset>
-              <label>Order Number</label>
-              <input type="text" {...register("orderNumber")} placeholder="Order Number" />
+              <label htmlFor='order-number'>Order Number</label>
+              <input 
+                type='text'
+                {...register('orderNumber')} 
+                maxLength='50'
+                placeholder='Order Number'
+              />
             </fieldset>
 
+            {/* Purchase Date */}
             <fieldset>
-              <label>Purchase Date</label>
-              <input type="date" {...register("purchaseDate")} max={!id ? currentDate : undefined} />
+              <label htmlFor='purchase-date'>Purchase Date</label>
+              <input
+                type='date'
+                {...register('purchaseDate')}
+                min={!id ? currentDate : undefined}
+              />
             </fieldset>
 
+            {/* Purchase Cost */}
             <fieldset>
               <label>Purchase Cost</label>
               <div>
                 <p>PHP</p>
-                <input type="number" step="0.01" min="1" {...register("purchaseCost", {valueAsNumber: true})} />
+                <input 
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register("purchaseCost", { valueAsNumber: true })}
+                  placeholder='Purchase Cost'
+                />
               </div>
             </fieldset>
 
+            {/* Schedule an Audit Date */}
             <fieldset>
-              <label>Schedule Audit</label>
-              <input type="date" {...register("scheduleAudit")} min={!id ? currentDate : undefined} />
+              <label htmlFor='schedule-audit-date'>Schedule for Audit</label>
+              <input
+                type='date'
+                {...register('scheduleAuditDate')}
+                min={!id ? currentDate : undefined}
+              />
             </fieldset>
 
+            {/* Notes */}
             <fieldset>
-              <label>Notes</label>
-              <textarea {...register("notes")} maxLength="500" />
+              <label htmlFor='notes'>Notes</label>
+              <textarea 
+                {...register('notes')} 
+                maxLength='500'
+                placeholder='Notes...'
+              />
             </fieldset>
 
             <fieldset>
               <label htmlFor='upload-image'>Image</label>
               <div>
-                {previewImage && (
+                {previewImage ? (
                   <div className='image-selected'>
                     <img src={previewImage} alt='Preview' />
                     <button
                       onClick={(event) => {
                         event.preventDefault();
                         setPreviewImage(null);
+                        setSelectedImage(null);
                         setValue('image', null);
                         document.getElementById('image').value = '';
+                        setRemoveImage(true);
+                        console.log("Remove image flag set to:", true);
                       }}
                     >
                       <img src={CloseIcon} alt='Remove' />
                     </button>
                   </div>
-                )}
+                ) : null}
                 <input
                   type='file'
                   id='image'
@@ -423,10 +470,10 @@ export default function AssetsRegistration() {
                   onChange={handleImageSelection}
                   style={{ display: 'none' }}
                 />
+                <label htmlFor='image' className='upload-image-btn'>
+                  {!previewImage ? 'Choose Image' : 'Change Image'}
+                </label>
               </div>
-              <label htmlFor='image' className='upload-image-btn'>
-                {!previewImage ? 'Choose Image' : 'Change Image'}
-              </label>
             </fieldset>
 
             <button type="submit" className="save-btn">Save</button>

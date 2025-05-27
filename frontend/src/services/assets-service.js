@@ -261,7 +261,37 @@ class AssetsService {
     }
   }
 
-  // Get next asset ID (for display purposes only)
+  // Retrieve an asset by id
+  async fetchAssetById(id) {
+    try {
+      const response = await fetch(API_URL + `assets/${id}/`, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for fetching asset by ID is here.",
+          response.status
+        );
+        return null;  // Return null for not found
+      }
+
+      const data = await response.json();
+      console.log("Asset data fetched: ", data);
+      
+      // Return the asset data
+      if (data && data.asset) {
+        return data.asset; // Return the asset object if it's wrapped
+      } else {
+        return data; // Return the data directly if it's not wrapped
+      }
+    } catch (error) {
+      console.log(`Error occurred while fetching asset with ID ${id}:`, error);
+      return null;  // Return null on error
+    }
+  }
+
+  // Get next asset ID (for display purposes only) (not yet working)
   async getNextAssetId() {
     try {
       const response = await fetch(API_URL + "assets/next-id/", {

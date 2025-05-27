@@ -104,7 +104,7 @@ class Asset(models.Model):
     status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='status_assets')
     supplier_id = models.PositiveIntegerField(blank=True, null=True)
     location = models.CharField(max_length=50)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=100)
     serial_number = models.CharField(max_length=50, blank=True, null=True)
     warranty_expiration = models.DateField(blank=True, null=True)
     order_number = models.CharField(max_length=50, blank=True, null=True)

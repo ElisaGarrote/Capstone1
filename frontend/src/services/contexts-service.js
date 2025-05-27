@@ -59,38 +59,35 @@ class ContextsService {
     }
   }
 
-  // Fetch context names
-  async fetchContextNames() {
+  // Fetch supplier names
+  async fetchAllSupplierNames() {
     try {
-      const response = await fetch(API_URL + "contexts/names", {
+      const response = await fetch(API_URL + "contexts/suppliers/names", {
         method: "GET",
       });
 
       if (!response.ok) {
         console.log(
-          "The status of the response for fetching context names is here.",
+          "The status of the response for fetching all suppliers is here.",
           response.status
         );
-        return { 
-          suppliers: [],
-          manufacturers: []
-        };
+        return { suppliers: [] };
       }
 
       const data = await response.json();
-      console.log("Context names fetched: ", data);
+      console.log("Data for all suppliers fetched: ", data);
       
-      // Return the data with default empty arrays for any missing properties
-      return {
-        suppliers: data.suppliers || [],
-        manufacturers: data.manufacturers || []
-      };
+      // Ensure we always return an object with suppliers property
+      if (data && data.suppliers) {
+        return data; // Already in correct format
+      } else if (Array.isArray(data)) {
+        return { suppliers: data }; // Convert array to object with property
+      } else {
+        return { suppliers: [] }; // Default empty result
+      }
     } catch (error) {
-      console.log("Error occurred while fetching context names!", error);
-      return { 
-        suppliers: [],
-        manufacturers: []
-      };
+      console.log("Error occur while fetching all suppliers!", error);
+      return { suppliers: [] };  // Return consistent structure
     }
   }
 }
