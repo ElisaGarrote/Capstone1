@@ -100,7 +100,7 @@ class Status(models.Model):
     
 class Asset(models.Model):
     displayed_id = models.CharField(max_length=20, unique=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets', limit_choices_to={'is_deleted': False})
     status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='status_assets')
     supplier_id = models.PositiveIntegerField()
     location = models.CharField(max_length=50)
