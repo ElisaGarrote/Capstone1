@@ -26,7 +26,7 @@ class ProductNameSerializer(serializers.ModelSerializer):
 class ProductDefaultsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'default_purchase_cost', 'default_supplier_id']
+        fields = ['id', 'default_purchase_cost', 'default_supplier_id']
 
 class ProductSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(

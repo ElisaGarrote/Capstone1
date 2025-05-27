@@ -206,21 +206,24 @@ export default function AssetsRegistration() {
     const productId = e.target.value;
     if (productId) {
       try {
-        // Fetch the product details
-        const productData = await assetsService.fetchProductById(productId);
-        setSelectedProduct(productData);
+        // Fetch the product defaults
+        const productDefaults = await assetsService.fetchProductDefaults(productId);
         
-        // Set default values from the product
-        setValue('assetName', productData.name || '');
-        setValue('purchaseCost', productData.default_purchase_cost || '');
-        
-        // Set supplier if default_supplier_id exists
-        if (productData.default_supplier_id) {
-          setValue('supplier', productData.default_supplier_id);
+        if (productDefaults) {
+          console.log("Product defaults:", productDefaults);
+          
+          // Set purchase cost if available
+          if (productDefaults.default_purchase_cost) {
+            setValue('purchaseCost', productDefaults.default_purchase_cost);
+          }
+          
+          // Set supplier if available
+          if (productDefaults.default_supplier_id) {
+            setValue('supplier', productDefaults.default_supplier_id);
+          }
         }
-        
       } catch (error) {
-        console.error("Error fetching product details:", error);
+        console.error("Error fetching product defaults:", error);
       }
     }
   };
