@@ -3,6 +3,7 @@ import "../../styles/ScheduleRegistration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useState, useEffect } from "react";
 import Select from "react-select";
+import makeAnimated from "react-select/animated";
 import { useNavigate } from "react-router-dom";
 import assetsService from "../../services/assets-service";
 import { useForm, Controller } from "react-hook-form";
@@ -11,69 +12,28 @@ import Skeleton from "react-loading-skeleton";
 
 export default function ScheduleRegistration() {
   const navigate = useNavigate();
+  const animatedComponents = makeAnimated();
   const [currentDate, setCurrentDate] = useState("");
-  const [allAssets, setAllAssets] = useState([]);
-  const [assetAndName, setAssetAndName] = useState([]);
   const [isLoading, setLoading] = useState(true);
+  const [filteredAssets, setFilteredAssets] = useState([]);
+
+  // Get all the assets that have not yet been scheduled or audited.
+  useEffect(() => {
+    const filteredAssets = async () => {
+      const fetchedData = await assetsService.filterAssetsForAudit();
+      setFilteredAssets(fetchedData);
+      setLoading(false);
+    };
+
+    filteredAssets();
+  }, []);
 
   // Get the current date and assign it to the currentDate state.
   useEffect(() => {
     setCurrentDate(dateRelated.getCurrentDate());
   }, []);
 
-  // Fetch all assets
-  useEffect(() => {
-    const asset = async () => {
-      try {
-        const dataFetched = await assetsService.fetchAllAssets();
-
-        if (dataFetched) {
-          console.log("Schedule Audits fetch all assets: ", dataFetched);
-          setAllAssets(dataFetched);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.log("Error whilte fetching all assets!", error);
-      }
-    };
-
-    asset();
-  }, []);
-
-  // Retrieve all the schedule audits records and get only the displayed_id and asset name.
-  useEffect(() => {
-    const fetchAllScheduleAudits = async () => {
-      const allAuditSchedule = await assetsService.fetchAllAuditSchedules();
-
-      // Get only the displayed_id of the asset and asset name.
-      if (allAuditSchedule) {
-        console.log(allAuditSchedule);
-
-        const asset = allAuditSchedule.map((item) => ({
-          displayedId: item.asset_info.displayed_id,
-          name: item.asset_info.name,
-        }));
-
-        // Filter asset to get only all assets that is not yet scheduled and audited
-
-        setAssetAndName(asset);
-      }
-    };
-
-    fetchAllScheduleAudits();
-  }, []);
-
-  const assetOptions = Array.from(allAssets)
-    .filter(
-      (item) =>
-        !assetAndName.some(
-          (existing) => existing.displayedId === item.displayed_id
-        )
-    )
-    .map((item) => ({
-      value: item.id,
-      label: item.displayed_id + " - " + item.name,
-    }));
+  const assetOptions = filteredAssets;
 
   // Handle form
   const {
@@ -86,8 +46,6 @@ export default function ScheduleRegistration() {
   });
 
   const submission = async (data) => {
-    console.log(data);
-
     const success = await assetsService.postScheduleAudit(
       data.asset,
       data.auditDueDate,
@@ -95,7 +53,6 @@ export default function ScheduleRegistration() {
     );
 
     if (success) {
-      console.log("Schedule audit successfully created!");
       navigate("/audits/scheduled", { state: { addedScheduleAudit: true } });
     } else {
       console.log("Failed to create schedule audit!");
@@ -140,20 +97,25 @@ export default function ScheduleRegistration() {
             <fieldset>
               <label htmlFor="asset">Select Asset *</label>
 
-              <Controller
-                name="asset"
-                control={control}
-                rules={{ required: "Asset is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={assetOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select location..."
-                    {...field}
-                    isMulti
-                  />
-                )}
-              />
+              {isLoading ? (
+                <Skeleton height={40} borderRadius={10} />
+              ) : (
+                <Controller
+                  name="asset"
+                  control={control}
+                  rules={{ required: "Asset is required" }}
+                  render={({ field }) => (
+                    <Select
+                      components={animatedComponents}
+                      options={assetOptions}
+                      styles={customStylesDropdown}
+                      placeholder="Select location..."
+                      {...field}
+                      isMulti
+                    />
+                  )}
+                />
+              )}
 
               {errors.asset && <span>{errors.asset.message}</span>}
             </fieldset>
