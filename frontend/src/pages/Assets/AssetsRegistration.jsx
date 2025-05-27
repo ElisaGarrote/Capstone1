@@ -13,7 +13,16 @@ export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const [locations, setLocations] = useState([
+    { id: 1, name: "Makati Office" },
+    { id: 2, name: "Pasig Office" },
+    { id: 3, name: "Marikina Office" },
+    { id: 4, name: "Quezon City Office" },
+    { id: 5, name: "Manila Office" },
+    { id: 6, name: "Taguig Office" },
+    { id: 7, name: "Remote" }
+  ]);
+  
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
 
