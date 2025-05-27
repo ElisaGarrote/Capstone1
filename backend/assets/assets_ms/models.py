@@ -80,6 +80,7 @@ class Product(models.Model):
     operating_system = models.CharField(max_length=7, choices=OS_CHOICES, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
     
     def __str__(self):
         return self.name
