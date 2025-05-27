@@ -21,7 +21,7 @@ class DepreciationNameSerializer(serializers.ModelSerializer):
 class ProductNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'default_supplier_id', 'default_purchase_cost']
+        fields = ['id', 'name']
 
 class ProductSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(

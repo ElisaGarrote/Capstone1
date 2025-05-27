@@ -226,6 +226,41 @@ class AssetsService {
     }
   }
 
+  // Fetch asset registration contexts, products and statuses
+  async fetchAssetContexts() {
+    try {
+      const response = await fetch(API_URL + "assets/contexts/", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for fetching asset contexts is here.",
+          response.status
+        );
+        return { 
+          products: [],
+          statuses: []
+        };
+      }
+
+      const data = await response.json();
+      console.log("Asset contexts fetched: ", data);
+      
+      // Return the data with default empty arrays for any missing properties
+      return {
+        products: data.products || [],
+        statuses: data.statues || []
+      };
+    } catch (error) {
+      console.log("Error occurred while fetching asset contexts!", error);
+      return { 
+        products: [],
+        statuses: []
+      };
+    }
+  }
+
   // Get next asset ID (for display purposes only)
   async getNextAssetId() {
     try {
