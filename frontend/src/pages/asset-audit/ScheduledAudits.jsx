@@ -35,7 +35,7 @@ export default function ScheduledAudits() {
   const isUpdateFromEdit = location.state?.isUpdateFromEdit;
   // const addedScheduleAudit = location.state?.addedScheduleAudit;
 
-  console.log("is update from audit: ", isUpdateFromEdit);
+  // console.log("is update from audit: ", isUpdateFromEdit);
 
   // Set the setDeleteSuccess state to true when the isDeleteSuccessFromEdit is true.
   // And reset the setDeleteSucces state to false after 5 seconds.
@@ -91,8 +91,8 @@ export default function ScheduledAudits() {
     fetchAllAssets();
   }, []);
 
-  console.table(scheduleAuditData);
-  console.table(assetsData);
+  // console.table(scheduleAuditData);
+  // console.table(assetsData);
 
   return (
     <>
@@ -198,9 +198,8 @@ export default function ScheduledAudits() {
                           </td>
                           <td>
                             <Status
-                              type="deployed"
-                              name="Deployed"
-                              location="Makati"
+                              type={data.asset_info.status_info.type}
+                              name={data.asset_info.status_info.name}
                             />
                           </td>
                           <td>{dateRelated.formatDate(data.created_at)}</td>

@@ -14,8 +14,9 @@ export default function ViewAudits() {
   const data = location.state?.data;
   const previousPage = location.state?.previousPage;
 
-  console.log("root: ", previousPage);
-  console.log("data:", data);
+  // For debugging only.
+  // console.log("root: ", previousPage);
+  // console.log("data:", data);
 
   // Function to assign the appropriate value for the root props in TopSecFormPage component
   const assignRoot = () => {
@@ -53,7 +54,10 @@ export default function ViewAudits() {
           <fieldset>
             <label htmlFor="status">Status</label>
             <p>
-              <Status type="deployable" name="Ready to Deploy" />
+              <Status
+                type={data.asset_info.status_info.type}
+                name={data.asset_info.status_info.name}
+              />
             </p>
           </fieldset>
 
@@ -105,10 +109,10 @@ export default function ViewAudits() {
                   {data.audit_info.audit_files.map((file, index) => {
                     return (
                       <a
-                        href={`https://assets-service-production.up.railway.app/${file.file}`}
-                        // href={assetsService.auditFileUrl(
-                        //   String(file.file).slice(1)
-                        // )}
+                        // href={`https://assets-service-production.up.railway.app${file.file}`}
+                        href={assetsService.auditFileUrl(
+                          String(file.file).slice(1)
+                        )}
                         key={index}
                         target="_blank"
                         rel="noopener noreferrer"
