@@ -14,6 +14,8 @@ import os
 import dj_database_url
 from pathlib import Path
 from datetime import timedelta  # Add this import
+import logging
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -118,6 +120,7 @@ WSGI_APPLICATION = 'authentication.wsgi.application'
 # Database configuration
 # Use DATABASE_URL if available (Railway provides this)
 if 'DATABASE_URL' in os.environ:
+    logger.info(f"Using DATABASE_URL from environment")
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
@@ -125,14 +128,16 @@ if 'DATABASE_URL' in os.environ:
         )
     }
 else:
+    logger.info(f"Using hardcoded database settings")
+    # Fallback for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'railway'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'password'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+            'NAME': 'railway',
+            'USER': 'postgres',
+            'PASSWORD': 'QdleMpvGHEMlhrrlrinLihmJggQCMXfU',
+            'HOST': 'trolley.proxy.rlwy.net',
+            'PORT': '57512',
         }
     }
 
@@ -189,8 +194,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'amsmapg7@gmail.com'
-EMAIL_HOST_PASSWORD = 'jton xyex bxll tluw'
+EMAIL_HOST_USER = 'amsmapg7@gmail.com'  # Make sure this email exists and is active
+EMAIL_HOST_PASSWORD = 'jton xyex bxll tluw'  # This app password might be expired or invalid
+
+# Add these settings for better debugging
+EMAIL_TIMEOUT = 30  # seconds
+DEFAULT_FROM_EMAIL = 'amsmapg7@gmail.com'
 
 # WhiteNoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

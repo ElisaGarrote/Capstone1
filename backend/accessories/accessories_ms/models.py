@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class AccessoryCategory(models.Model):
     name = models.CharField(max_length=50)
@@ -28,4 +29,40 @@ class Accessory(models.Model):
     
     def __str__(self):
         return self.name
-    
+
+class AccessoryCheckout(models.Model):
+    accessory = models.ForeignKey(Accessory, on_delete=models.CASCADE, related_name='accessory_checkouts')
+    to_user_id = models.PositiveIntegerField(blank=True, null=True)
+    to_location = models.CharField(max_length=50, blank=True, null=True)
+    checkout_date = models.DateTimeField(auto_now_add=True)
+    return_date = models.DateTimeField(blank=True, null=True)
+    condition = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+    notes = models.TextField(blank=True, null=True)
+    confirmation_notes= models.TextField(blank=True, null=True)
+    location = models.CharField(max_length=50)
+    image = models.ImageField(upload_to='accessory_checkout_images/')
+
+    def __str__(self):
+        return f"Checkout of {self.accessory.name} by user {self.to_user_id}"
+
+class AccessoryCheckin(models.Model):
+    STATUS_CHOICES = [
+        ('deployed', 'Deployed'),
+        ('deployable', 'Deployable'),
+        ('ready to deploy', 'Ready to Deploy'),
+    ]
+     
+    accessory_checkout = models.ForeignKey(AccessoryCheckout, on_delete=models.CASCADE, related_name='accessory_checkins')
+    checkin_date = models.DateTimeField(blank=True, null=True)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, blank=True, null=True)
+    condition = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
+    notes = models.TextField(blank=True, null=True)
+    location = models.CharField(max_length=50)
+    image = models.ImageField(upload_to='accessory_checkin_images/')
+
+    def __str__(self):
+        return f"Checkin of {self.accessory_checkout.accessory.name} by user {self.accessory_checkout.to_user_id}"

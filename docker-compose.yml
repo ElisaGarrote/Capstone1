@@ -24,12 +24,11 @@ services:
   assets:
     build:
       context: ./backend/assets
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.local
     container_name: assets-service
     ports:
-      - "${PORT:-8003}:8000"
+      - "8003:8000"  # Map host port 8003 to container port 8000
     environment:
-      - PORT=8000
       - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
       - DEBUG=${DEBUG:-False}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
@@ -38,6 +37,26 @@ services:
       - DB_PASSWORD=qoSFWIdZocmITRXhUflaawOfxIeGgljG
       - DB_HOST=switchback.proxy.rlwy.net
       - DB_PORT=30647
+    networks:
+      - app-network
+    restart: always
+
+  contexts:
+    build:
+      context: ./backend/contexts
+      dockerfile: Dockerfile.local
+    container_name: contexts-service
+    ports:
+      - "8002:8000"  # Map host port 8002 to container port 8000
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - DB_NAME=railway
+      - DB_USER=postgres
+      - DB_PASSWORD=vzYwYBKnmkTitUnSZgpxFBUicmGIgIcj
+      - DB_HOST=tramway.proxy.rlwy.net
+      - DB_PORT=43108
     networks:
       - app-network
     restart: always

@@ -1,6 +1,10 @@
 from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+import uuid
+import datetime
 
 # Create your models here.
 class ComponentCategory(models.Model):
@@ -96,11 +100,11 @@ class Status(models.Model):
     
 class Asset(models.Model):
     displayed_id = models.CharField(max_length=20, unique=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets', limit_choices_to={'is_deleted': False})
     status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='status_assets')
-    supplier_id = models.PositiveIntegerField(blank=True, null=True)
+    supplier_id = models.PositiveIntegerField()
     location = models.CharField(max_length=50)
-    name = models.CharField(max_length=50, blank=True, null=True)
+    name = models.CharField(max_length=100)
     serial_number = models.CharField(max_length=50, blank=True, null=True)
     warranty_expiration = models.DateField(blank=True, null=True)
     order_number = models.CharField(max_length=50, blank=True, null=True)
@@ -112,6 +116,53 @@ class Asset(models.Model):
 
     def __str__(self):
         return self.displayed_id
+
+@receiver(pre_save, sender=Asset)
+def generate_displayed_id(sender, instance, **kwargs):
+    # Only generate displayed_id if it's not already set
+    if not instance.displayed_id:
+        # Format: AST-YYYYMMDD-XXXXX-RRRR
+        # AST: Prefix for Asset
+        # YYYYMMDD: Current date
+        # XXXXX: Sequential number (padded to 5 digits)
+        # RRRR: Random suffix for additional uniqueness
+        
+        today = datetime.date.today().strftime('%Y%m%d')
+        
+        # Get the highest sequential number for today
+        prefix = f"AST-{today}-"
+        existing_assets = Asset.objects.filter(
+            displayed_id__startswith=prefix
+        ).order_by('-displayed_id')
+        
+        if existing_assets.exists():
+            # Extract the sequential number from the last asset
+            last_asset = existing_assets.first()
+            try:
+                # Format is AST-YYYYMMDD-XXXXX-RRRR
+                parts = last_asset.displayed_id.split('-')
+                if len(parts) >= 3:
+                    seq_num = int(parts[2])
+                    new_seq_num = seq_num + 1
+                else:
+                    new_seq_num = 1
+            except (ValueError, IndexError):
+                new_seq_num = 1
+        else:
+            new_seq_num = 1
+        
+        # Generate random suffix (4 characters)
+        random_suffix = uuid.uuid4().hex[:4].upper()
+        
+        # Combine all parts to create the displayed_id
+        instance.displayed_id = f"AST-{today}-{new_seq_num:05d}-{random_suffix}"
+        
+        # Ensure it's exactly 20 characters by truncating or padding if necessary
+        if len(instance.displayed_id) > 20:
+            instance.displayed_id = instance.displayed_id[:20]
+        elif len(instance.displayed_id) < 20:
+            instance.displayed_id = instance.displayed_id.ljust(20, '0')
+
 class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts')
     to_user_id = models.PositiveIntegerField(blank=True, null=True)
@@ -125,7 +176,6 @@ class AssetCheckout(models.Model):
     confirmation_notes= models.TextField(blank=True, null=True)
     location = models.CharField(max_length=50)
     image = models.ImageField(upload_to='asset_checkout_images/')
-    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Checkout of {self.asset.displayed_id} by user {self.to_user_id}"
@@ -140,7 +190,6 @@ class AssetCheckin(models.Model):
     notes = models.TextField(blank=True, null=True)
     location = models.CharField(max_length=50)
     image = models.ImageField(upload_to='asset_checkin_images/')
-    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}"
@@ -151,7 +200,6 @@ class ComponentCheckout(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     checkout_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Checkout of {self.component.name} to {self.to_asset.displayed_id}"
@@ -160,7 +208,6 @@ class ComponentCheckin(models.Model):
     component_checkout = models.ForeignKey(ComponentCheckout, on_delete=models.CASCADE, related_name='component_checkins')
     checkin_date = models.DateTimeField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.displayed_id}"

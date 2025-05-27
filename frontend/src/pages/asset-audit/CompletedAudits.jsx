@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function CompletedAudits() {
   const location = useLocation();
@@ -28,20 +29,11 @@ export default function CompletedAudits() {
   useEffect(() => {
     const fetchAllAudit = async () => {
       const dataResponse = await assetsService.fetchAllAudits();
-
-      if (dataResponse) {
-        setAuditData(dataResponse);
-      }
+      setAuditData(dataResponse);
+      setLoading(false);
     };
 
     fetchAllAudit();
-  }, []);
-
-  // Set the isLoading state to true
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 300);
   }, []);
 
   return (
@@ -88,23 +80,30 @@ export default function CompletedAudits() {
           <section>
             <TabNavBar />
           </section>
-          {isLoading ? (
-            "Loading..."
-          ) : auditData.length > 0 ? (
-            <section className="container">
-              <section className="top">
-                <h2>Completed Audits</h2>
-                <div>
-                  <form action="" method="post">
-                    <input type="text" placeholder="Search..." />
-                  </form>
-                  <MediumButtons
-                    type="export"
-                    deleteModalOpen={() => setExportModalOpen(true)}
-                  />
-                </div>
-              </section>
-              <section className="middle">
+          <section className="container">
+            <section className="top">
+              <h2>Completed Audits</h2>
+              <div>
+                <form action="" method="post">
+                  <input type="text" placeholder="Search..." />
+                </form>
+                <MediumButtons
+                  type="export"
+                  deleteModalOpen={() => setExportModalOpen(true)}
+                />
+              </div>
+            </section>
+            <section className="middle">
+              {/* Render loading skeleton while waiting to the response from the API request*/}
+              {isLoading && <SkeletonLoadingTable />}
+
+              {/* Render message if the auditData is empty */}
+              {!isLoading && auditData.length == 0 && (
+                <p className="table-message">No completed audit found.</p>
+              )}
+
+              {/* Render table if auditData is not empty */}
+              {auditData.length > 0 && (
                 <table>
                   <thead>
                     <tr>
@@ -133,7 +132,10 @@ export default function CompletedAudits() {
                             {data.asset_info.name}
                           </td>
                           <td>
-                            <Status type="undeployable" name="Being Repaired" />
+                            <Status
+                              type={data.asset_info.status_info.type}
+                              name={data.asset_info.status_info.name}
+                            />
                           </td>
                           <td>{data.location}</td>
                           <td>Pia Piatos-Lim</td>
@@ -159,12 +161,10 @@ export default function CompletedAudits() {
                     })}
                   </tbody>
                 </table>
-              </section>
-              <section></section>
+              )}
             </section>
-          ) : (
-            "No Completed Audit Found."
-          )}
+            <section></section>
+          </section>
         </section>
       </main>
     </>

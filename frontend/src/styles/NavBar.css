@@ -12,8 +12,29 @@
 }
 
 /* Set the left padding of the logo */
-.main-nav-bar section:nth-child(1) {
+.main-nav-bar .logo {
+  display: flex;
+  align-items: center;
+
   padding-left: 38px;
+
+  gap: 5px;
+}
+
+.main-nav-bar img {
+  display: flex;
+  height: 1.5rem;
+  width: 1.5rem;
+
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.main-nav-bar .logo h1 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #3b82f6;
+  margin: 0;
 }
 
 /* Set the style of the last section (Inside this section, there are profile and notification icons.) */
@@ -28,7 +49,7 @@
 .main-nav-bar ul {
   display: flex;
   flex-direction: row;
-  gap: 30px; /* Increased gap between navbar items */
+  gap: 20px; /* Increased gap between navbar items */
 }
 
 .main-nav-bar li {
@@ -78,28 +99,22 @@
 }
 
 /* Specific widths for each dropdown to accommodate longest option */
+/* Fixed width for Assets dropdown */
 .assets-dropdown-container .dropdown-trigger {
-  width: 140px; /* Fixed width for Assets dropdown */
+  width: fit-content;
+  gap: 5px;
 }
 
-.assets-dropdown-container .dropdown-text {
-  min-width: 100px; /* Fixed width for text in Assets dropdown */
-}
-
+/* Fixed width for Reports dropdown */
 .reports-dropdown-container .dropdown-trigger {
-  width: 220px; /* Fixed width for Reports dropdown */
+  width: fit-content;
+  gap: 5px;
 }
 
-.reports-dropdown-container .dropdown-text {
-  min-width: 190px; /* Fixed width for text in Reports dropdown */
-}
-
+/* Fixed width for More dropdown */
 .more-dropdown-container .dropdown-trigger {
-  width: 150px; /* Fixed width for More dropdown */
-}
-
-.more-dropdown-container .dropdown-text {
-  min-width: 120px; /* Fixed width for text in More dropdown */
+  width: fit-content;
+  gap: 5px;
 }
 
 /* Change arrow color on hover */
@@ -167,7 +182,7 @@
   position: absolute;
   top: -5px;
   right: -5px;
-  background-color: #EF4444;
+  background-color: #ef4444;
   color: white;
   font-size: 10px;
   font-weight: bold;
@@ -392,4 +407,3 @@
   font-weight: 500;
   border-radius: 8px; /* Ensure hover state maintains border radius */
 }
-

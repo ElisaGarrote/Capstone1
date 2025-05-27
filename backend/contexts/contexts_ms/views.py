@@ -4,21 +4,18 @@ from rest_framework import status
 from .models import *
 from .serializer import *
 
+# Get all manufacturer's names
 @api_view(['GET'])
-def get_context_names(request):
-    suppliers = Supplier.objects.filter(is_deleted=False)
+def get_manaufacturers_names(request):
     manufacturers = Manufacturer.objects.filter(is_deleted=False)
-
-    serializedSupplier = SupplierNameSerializer(suppliers, many=True).data
     serializedManufacturer = ManufacturerNameSerializer(manufacturers, many=True).data
 
     data = {
-        'suppliers': serializedSupplier,
         'manufacturers': serializedManufacturer,
     }
-
     return Response(data)
 
+# Get context names
 @api_view(['GET'])
 def get_contexts_names(request):
     suppliers = Supplier.objects.filter(is_deleted=False)
@@ -31,8 +28,29 @@ def get_contexts_names(request):
         'suppliers': serializedSupplier,
         'manufacturers': serializedManufacturer,
     }
-
     return Response(data)
+
+# Get all supplier's names
+@api_view(['GET'])
+def get_suppliers_names(request):
+    supplier = Supplier.objects.filter(is_deleted=False)
+    serializedSupplier = SupplierNameSerializer(supplier, many=True).data
+
+    data = {
+        'suppliers': serializedSupplier,
+    }
+    return Response(data)
+
+
+
+
+
+
+
+
+
+
+
 
 # Get all suppliers
 @api_view(['GET'])

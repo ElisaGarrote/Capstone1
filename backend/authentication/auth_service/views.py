@@ -1,36 +1,61 @@
-from rest_framework import viewsets, permissions, status
+from django.shortcuts import render
+from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from .models import CustomUser
-from .serializers import RegisterSerializer
+from rest_framework.decorators import api_view, action
+from rest_framework.permissions import AllowAny
+from .models import *
+from .serializers import *
+from rest_framework.response import Response
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 @api_view(['GET'])
 def api_test(request):
     return Response({"message": "API is working!"}, status=status.HTTP_200_OK)
 
 class RegisterViewset(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
-    serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
-    http_method_names = ['post', 'get']  # Allow POST and GET requests
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
     
+    def create(self, request):
+        serializer = self.serializer_class(data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        else:
+            return Response(serializer.errors, status=400)
+
+class UsersViewset(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+    # List of all urls for users viewset.
     def list(self, request):
-        """Handle GET requests to /register/"""
+        base_url = request.build_absolute_uri().rstrip('/')
+
+        # Generate URL for actions
+        has_active_url = self.reverse_action(self.has_active_admin.url_name)
+
         return Response({
-            "message": "Superuser registration endpoint. Send a POST request with user data to register a superuser.",
-            "required_fields": {
-                "email": "Your email address",
-                "password": "Your password",
-                "password2": "Confirm your password"
-            }
+            "has_active_admin": has_active_url,
+            "update_user": f'{base_url}/pk',
         })
+
+    # Update auth account by pk
+    def update(self, request, pk=None):
+        queryset = self.queryset.filter(pk=pk, is_active=True).first()
+        if queryset:
+            serializer = self.get_serializer(queryset)
+            return Response(serializer.data)
+        return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
     
-    def create(self, request, *args, **kwargs):
-        """Handle POST requests to /register/ to create a superuser"""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save(is_superuser=True, is_staff=True)
-        return Response({
-            "email": user.email,
-            "message": "Superuser created successfully",
-        }, status=status.HTTP_201_CREATED)
+    # Determine if there is any active admin.
+    @action(detail=False, methods=['get'])
+    def has_active_admin(self, request):
+        has_active_admin = self.queryset.filter(is_active=True, is_superuser=True).exists()
+
+        return Response(has_active_admin)
+    

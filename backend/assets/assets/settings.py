@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
+from dotenv import load_dotenv
+import logging
+logger = logging.getLogger(__name__)
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,10 +30,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-15afsph4_jmx@or6785n#%id06geq8gx+mp#4rk8h+_w#fgtox'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Update DEBUG setting to help troubleshoot
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
+# Make sure ALLOWED_HOSTS includes your Railway domain
+ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1", "assets-service-production.up.railway.app"]
 
 
 # Application definition
@@ -78,18 +86,27 @@ WSGI_APPLICATION = 'assets.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'railway'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'qoSFWIdZocmITRXhUflaawOfxIeGgljG'),
-        'HOST': os.environ.get('DB_HOST', 'switchback.proxy.rlwy.net'),
-        'PORT': os.environ.get('DB_PORT', '30647'),
+if 'DATABASE_URL' in os.environ:
+    logger.info(f"Using DATABASE_URL from environment")
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600
+        )
     }
-}
-
+else:
+    logger.info(f"Using hardcoded database settings")
+    # Fallback for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'railway',
+            'USER': 'postgres',
+            'PASSWORD': 'qoSFWIdZocmITRXhUflaawOfxIeGgljG',
+            'HOST': 'switchback.proxy.rlwy.net',
+            'PORT': '30647',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -123,10 +140,8 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Ensure this directory exists
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # WhiteNoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -139,20 +154,37 @@ STATICFILES_DIRS = [
 # WhiteNoise settings
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny'
     ],
 }
 
-MEDIA_URL = '/media/'
-
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Ensure CORS is properly configured
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://capstone1-production-1c05.up.railway.app/login",
+]
+
+# Add your Railway domain to CSRF_TRUSTED_ORIGINS with the exact format
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'https://assets-service-production.up.railway.app',
+    'https://assets.service.production.up.railway.app',
+    'https://assets-service-production-up.railway.app',
+    'https://assets.service.production-up.railway.app',
+    # Add the exact URL from the error message
+    'https://assets-service.production.up.railway.app'
+]

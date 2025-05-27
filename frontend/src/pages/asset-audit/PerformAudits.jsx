@@ -4,18 +4,32 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useState, useEffect, use } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
 import Select from "react-select";
+import makeAnimated from "react-select/animated";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
+import Skeleton from "react-loading-skeleton";
 
 export default function PerformAudits() {
   const navigate = useNavigate();
+  const animatedComponents = makeAnimated();
   const [currentDate, setCurrentDate] = useState("");
   const [previewImages, setPreviewImages] = useState([]);
   const [fileList, setFileList] = useState([]);
-  const [allAssets, setAllAssets] = useState([]);
-  const [assetAndName, setAssetAndName] = useState([]);
+  const [filteredAssets, setFilteredAssets] = useState([]);
+  const [isLoading, setLoading] = useState(true);
+
+  // Get all the assets that have not yet been scheduled or audited.
+  useEffect(() => {
+    const filteredAssets = async () => {
+      const fetchedData = await assetsService.filterAssetsForAudit();
+      setFilteredAssets(fetchedData);
+      setLoading(false);
+    };
+
+    filteredAssets();
+  }, []);
 
   // Handle current date
   useEffect(() => {
@@ -33,65 +47,16 @@ export default function PerformAudits() {
         return URL.createObjectURL(file);
       });
 
-      console.log("Selected Images:", imagesArray);
+      // console.log("Selected Images:", imagesArray);
       setPreviewImages(imagesArray);
     } else {
       setPreviewImages([]);
     }
   };
 
-  console.log("File list:", fileList);
+  // console.log("File list:", fileList);
 
-  // Fetch all assets
-  useEffect(() => {
-    const asset = async () => {
-      try {
-        const dataFetched = await assetsService.fetchAllAssets();
-
-        if (dataFetched) {
-          console.log("Schedule Audits fetch all assets: ", dataFetched);
-          setAllAssets(dataFetched);
-        }
-      } catch (error) {
-        console.log("Error whilte fetching all assets!", error);
-      }
-    };
-
-    asset();
-  }, []);
-
-  // Retrieve all the schedule audits records and get only the displayed_id and asset name.
-  useEffect(() => {
-    const fetchAllScheduleAudits = async () => {
-      const allAuditSchedule = await assetsService.fetchAllAuditSchedules();
-
-      // Get only the displayed_id of the asset and asset name.
-      if (allAuditSchedule) {
-        console.log(allAuditSchedule);
-
-        const asset = allAuditSchedule.map((item) => ({
-          displayedId: item.asset_info.displayed_id,
-          name: item.asset_info.name,
-        }));
-        setAssetAndName(asset);
-      }
-    };
-
-    fetchAllScheduleAudits();
-  }, []);
-
-  const assetOptions = allAssets
-    .filter(
-      (item) =>
-        !assetAndName.some(
-          (existing) => existing.displayedId === item.displayed_id
-        )
-    )
-    .map((item) => ({
-      id: item.id,
-      value: item.id,
-      label: item.displayed_id + " - " + item.name,
-    }));
+  const assetOptions = filteredAssets;
 
   const locationOptions = [
     { value: "Makati", label: "Makati" },
@@ -151,15 +116,15 @@ export default function PerformAudits() {
 
   // Handle form submission
   const submission = async (data) => {
-    console.table(data);
-    console.table(fileList);
+    // console.table(data);
+    // console.table(fileList);
 
     // Extract neccessary data.
     const { nextAuditDate, notes, auditDate } = data;
     const assetId = data.asset.id;
     const location = data.location.value;
     const userId = 1;
-    console.log("nextAuditDate: ", nextAuditDate);
+    // console.log("nextAuditDate: ", nextAuditDate);
 
     // POST schedule audit
     const scheduleAuditResponse = await assetsService.postScheduleAudit(
@@ -171,8 +136,8 @@ export default function PerformAudits() {
     const auditScheduleId = scheduleAuditResponse.id;
 
     if (scheduleAuditResponse) {
-      console.log("Successfully created schedule audit!");
-      console.table(scheduleAuditResponse);
+      // console.log("Successfully created schedule audit!");
+      // console.table(scheduleAuditResponse);
 
       // POST audit
       const auditDataResponse = await assetsService.postAudit(
@@ -185,7 +150,7 @@ export default function PerformAudits() {
       );
 
       if (auditDataResponse) {
-        console.log("Successfully created audit!");
+        // console.log("Successfully created audit!");
 
         if (fileList) {
           // POST file for the created audit
@@ -195,7 +160,7 @@ export default function PerformAudits() {
           );
 
           if (success) {
-            console.log("Successfully created files for audit!");
+            // console.log("Successfully created files for audit!");
 
             // Navigate to the audit page.
             navigate("/audits", { state: { addedNewAudit: true } });
@@ -228,20 +193,24 @@ export default function PerformAudits() {
             <fieldset>
               <label htmlFor="asset">Select Asset *</label>
 
-              <Controller
-                name="asset"
-                control={control}
-                rules={{ required: "Asset is required" }}
-                render={({ field }) => (
-                  <Select
-                    // options={assetOptions}
-                    options={assetOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select asset..."
-                    {...field}
-                  />
-                )}
-              />
+              {isLoading ? (
+                <Skeleton height={40} borderRadius={10} />
+              ) : (
+                <Controller
+                  name="asset"
+                  control={control}
+                  rules={{ required: "Asset is required" }}
+                  render={({ field }) => (
+                    <Select
+                      components={animatedComponents}
+                      options={assetOptions}
+                      styles={customStylesDropdown}
+                      placeholder="Select asset..."
+                      {...field}
+                    />
+                  )}
+                />
+              )}
 
               {errors.asset && <span>{errors.asset.message}</span>}
             </fieldset>

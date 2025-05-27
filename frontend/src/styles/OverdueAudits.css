@@ -166,7 +166,7 @@
   padding-right: 0;
 }
 
-.overdue-audits-page .no-data-message {
+.table-message {
   font-size: 18px;
   color: #555;
   margin: 50px;

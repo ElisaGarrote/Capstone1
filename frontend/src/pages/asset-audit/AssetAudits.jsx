@@ -13,11 +13,9 @@ import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function AssetAudits() {
-  let notes = "sdfsdfsdfdfdfdfdfdfdfsdfsdfsdf";
-  let assetId = 100019;
-  let assetName = 'Macbook Pro 16"';
   const location = useLocation();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
@@ -79,20 +77,15 @@ export default function AssetAudits() {
     const fetchAllScheduleAudits = async () => {
       const fetchedData = await assetsService.fetchAllAuditSchedules();
       setScheduleAuditData(fetchedData);
+      setLoading(false);
     };
 
     fetchAllScheduleAudits();
   }, []);
 
-  // Set the isLoading state to false
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 300);
-  }, []);
-
   // For debugging only.
-  console.table(scheduleAuditData);
+  // console.table(scheduleAuditData);
+  // console.log("schedule audits:", scheduleAuditData);
 
   return (
     <>
@@ -146,23 +139,30 @@ export default function AssetAudits() {
           <section>
             <TabNavBar />
           </section>
-          {isLoading ? (
-            "Loading..."
-          ) : scheduleAuditData.length > 0 ? (
-            <section className="container">
-              <section className="top">
-                <h2>Due to be Audited</h2>
-                <div>
-                  <form action="" method="post">
-                    <input type="text" placeholder="Search..." />
-                  </form>
-                  <MediumButtons
-                    type="export"
-                    deleteModalOpen={() => setExportModalOpen(true)}
-                  />
-                </div>
-              </section>
-              <section className="middle">
+          <section className="container">
+            <section className="top">
+              <h2>Due to be Audited</h2>
+              <div>
+                <form action="" method="post">
+                  <input type="text" placeholder="Search..." />
+                </form>
+                <MediumButtons
+                  type="export"
+                  deleteModalOpen={() => setExportModalOpen(true)}
+                />
+              </div>
+            </section>
+            <section className="middle">
+              {/* Render loading skeleton while waiting to the response from the API request*/}
+              {isLoading && <SkeletonLoadingTable />}
+
+              {/* Render message if the scheduleAuditData is empty */}
+              {!isLoading && scheduleAuditData.length == 0 && (
+                <p className="table-message">No asset audits found.</p>
+              )}
+
+              {/* Render table if scheduleAuditData is not empty */}
+              {scheduleAuditData.length > 0 && (
                 <table>
                   <thead>
                     <tr>
@@ -192,7 +192,10 @@ export default function AssetAudits() {
                             {data.asset_info.name}
                           </td>
                           <td>
-                            <Status type="deployable" name="Ready to Deploy" />
+                            <Status
+                              type={data.asset_info.status_info.type}
+                              name={data.asset_info.status_info.name}
+                            />
                           </td>
                           <td>{dateRelated.formatDate(data.created_at)}</td>
                           <td>
@@ -233,12 +236,10 @@ export default function AssetAudits() {
                     })}
                   </tbody>
                 </table>
-              </section>
-              <section></section>
+              )}
             </section>
-          ) : (
-            "No Asset Audit Found."
-          )}
+            <section></section>
+          </section>
         </section>
       </main>
     </>

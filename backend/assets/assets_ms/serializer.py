@@ -1,31 +1,70 @@
 from rest_framework import serializers
 from .models import *
-'''
+
 class AllProductSerializer(serializers.ModelSerializer):
+    category = serializers.CharField(source='category.name', read_only=True)
+    depreciation = serializers.CharField(source='depreciation.name', read_only=True)
     class Meta:
         model = Product
-        fields = ['id', 'image', 'name', 'model_number', 'category_name', 'manufacturer_name', 'end_of_life']
-        
-class ProductDepreciationSerializer(serializers.ModelSerializer):
+        fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'depreciation']
+
+class AssetCategoryNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetCategory
+        fields = ['id', 'name']
+
+class DepreciationNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Depreciation
         fields = ['id', 'name']
 
+class ProductNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name']
+    
+class ProductDefaultsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'default_purchase_cost', 'default_supplier_id']
+
 class ProductSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=AssetCategory.objects.all(), required=True, allow_null=False
+    )
     depreciation = serializers.PrimaryKeyRelatedField(
-        queryset=Depreciation.objects.all(), required=False, allow_null=True
+        queryset=Depreciation.objects.all(), required=True, allow_null=False
     )
     class Meta:
         model = Product
         fields = '__all__'
 
-class DepreciationSerializer(serializers.ModelSerializer):
+class AllAssetSerializer(serializers.ModelSerializer):
+    category = serializers.SerializerMethodField()
+    product = serializers.SerializerMethodField()
+    status = serializers.CharField(source='status.name', read_only=True)
+    
     class Meta:
-        model = Depreciation
-        fields = '__all__'
-'''
+        model = Asset
+        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status', 'product']
+    
+    def get_category(self, obj):
+        if obj.product and obj.product.category:
+            return obj.product.category.name
+        return None
+    def get_product(self, obj):
+        if obj.product:
+            return obj.product.name
+        return None
+    
+class StatusNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
+        fields = ['id', 'name', 'type']
 
 class AssetSerializer(serializers.ModelSerializer):
+    status_info = StatusNameSerializer(source='status', read_only=True)
+
     class Meta:
         model = Asset
         fields = '__all__'
@@ -68,4 +107,14 @@ class AuditSerializer(serializers.ModelSerializer):
 class AuditFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditFile
+        fields = "__all__"
+
+class ComponentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Component
+        fields = "__all__"
+
+class StatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
         fields = "__all__"

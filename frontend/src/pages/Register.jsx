@@ -22,7 +22,13 @@ function Register() {
   }, [navigate]);
 
   // Form handling initializations
-  const {control, handleSubmit, formState: { errors }, watch, getValues} = useForm({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    getValues,
+  } = useForm({
     defaultValues: {
       email: "",
       password: "",
@@ -30,7 +36,7 @@ function Register() {
     },
   });
 
-  // Uses watch function to monitor password input
+  // Uses watch function to monitor password input.
   const password = watch("password", "");
   // Password requirements for validation
   const passwordRequirements = [
@@ -47,6 +53,10 @@ function Register() {
       message: "Password must contain at least one uppercase letter",
     },
     {
+      test: /[0-9]/.test(password),
+      message: "Password must contain at least one number",
+    },
+    {
       test: /[!@#$%^&*(),.?":{}|<>]/.test(password),
       message: "Password must contain at least one special character",
     },
@@ -54,6 +64,17 @@ function Register() {
 
   // Function to handle form submission
   const onSubmit = async (data) => {
+    // Check if all password requirements are met before submission
+    const allRequirementsMet = passwordRequirements.every(req => req.test);
+    
+    if (!allRequirementsMet) {
+      setErrorMessage("Please meet all password requirements before submitting");
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 3000);
+      return;
+    }
+    
     console.log("Submitting to backend:", {
       email: data.email,
       password: data.password,
@@ -62,12 +83,14 @@ function Register() {
       await AxiosInstance.post("register/", {
         email: data.email,
         password: data.password,
+        password2: data.confirmPassword,
       });
       setSuccessMessage("Registration successful! You can now log in.");
       setErrorMessage("");
 
       setTimeout(() => {
-        navigate("/login")}, 3000);
+        navigate("/login");
+      }, 3000);
     } catch (error) {
       console.error("Error response:", error.response?.data || error);
       setErrorMessage("Registration failed. Please try again.");
@@ -78,7 +101,7 @@ function Register() {
         setSuccessMessage("");
       }, 3000);
     }
-  };  
+  };
 
   return (
     <main className="login-page">
@@ -89,7 +112,7 @@ function Register() {
       <section className="right-panel">
         {errorMessage && <Alert message={errorMessage} type="danger" />}
         {successMessage && <Alert message={successMessage} type="success" />}
-        
+
         <div className="form-header">
           <h1>Admin Registration</h1>
           <p>Welcome! Please register to create an admin account.</p>
@@ -109,14 +132,12 @@ function Register() {
                 },
               }}
               render={({ field }) => (
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  {...field}
-                />
+                <input type="email" placeholder="Enter your email" {...field} />
               )}
             />
-            {errors.email && <span className="error-msg">{errors.email.message}</span>}
+            {errors.email && (
+              <span className="error-msg">{errors.email.message}</span>
+            )}
           </fieldset>
 
           {/* Password field with validation */}
@@ -134,7 +155,9 @@ function Register() {
                 />
               )}
             />
-            {errors.password && <span className="error-msg">{errors.password.message}</span>}
+            {errors.password && (
+              <span className="error-msg">{errors.password.message}</span>
+            )}
             {password && (
               <div className="password-requirements">
                 {passwordRequirements.map((requirement, index) =>
@@ -168,7 +191,9 @@ function Register() {
               )}
             />
             {errors.confirmPassword && (
-              <span className="error-msg">{errors.confirmPassword.message}</span>
+              <span className="error-msg">
+                {errors.confirmPassword.message}
+              </span>
             )}
           </fieldset>
 

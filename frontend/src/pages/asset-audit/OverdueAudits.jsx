@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function OverdueAudits() {
   const location = useLocation();
@@ -60,16 +61,10 @@ export default function OverdueAudits() {
       const fetchedData = await assetsService.fetchAllOverdueAudits();
 
       setOverdueAuditsData(fetchedData);
+      setLoading(false);
     };
 
     fetchListOverdueAudits();
-  }, []);
-
-  // Set the isLoading state to false
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 300);
   }, []);
 
   return (
@@ -118,119 +113,120 @@ export default function OverdueAudits() {
           <section>
             <TabNavBar />
           </section>
-          {isLoading ? (
+          <section className="container">
+            <section className="top">
+              <h2>Overdue for an Audits</h2>
+              <div>
+                <form action="" method="post">
+                  <input type="text" placeholder="Search..." />
+                </form>
+                <MediumButtons
+                  type="export"
+                  deleteModalOpen={() => setExportModalOpen(true)}
+                />
+              </div>
+            </section>
+            <section className="middle">
+              {/* Render loading skeleton while waiting to the response from the API request*/}
+              {isLoading && <SkeletonLoadingTable />}
+
+              {/* Render message if the overdueAuditData is empty */}
+              {!isLoading && overdueAuditsData.length == 0 && (
+                <p className="table-message">
+                  {isLoading ? "Loading..." : "No overdue audits found."}
+                </p>
+              )}
+
+              {/* Render table if overdueAuditData is not empty */}
+              {overdueAuditsData.length > 0 && (
+                <table>
+                  <thead>
+                    <tr>
+                      <th>
+                        <input type="checkbox" name="" id="" />
+                      </th>
+                      <th>DUE DATE</th>
+                      <th>OVERDUE BY</th>
+                      <th>ASSET</th>
+                      <th>STATUS</th>
+                      <th>AUDIT</th>
+                      <th>EDIT</th>
+                      <th>DELETE</th>
+                      <th>VIEW</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {overdueAuditsData.map((data, index) => {
+                      // Calculate the day difference
+                      const date1 = new Date(data.date).setHours(0, 0, 0, 0); // Normalize to midnight
+                      const date2 = new Date(currentDate).setHours(0, 0, 0, 0); // Normalize to midnight
+                      const dayDifference =
+                        (date2 - date1) / (1000 * 60 * 60 * 24); // Difference in days
+
+                      return (
+                        <tr key={index}>
+                          <td>
+                            <input type="checkbox" name="" id="" />
+                          </td>
+                          <td>{dateRelated.formatDate(data.date)}</td>
+                          <td>
+                            {dayDifference} {dayDifference > 1 ? "days" : "day"}
+                          </td>
+                          <td>
+                            {data.asset_info.displayed_id} -{" "}
+                            {data.asset_info.name}
+                          </td>
+                          <td>
+                            <Status
+                              type={data.asset_info.status_info.type}
+                              name={data.asset_info.status_info.name}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="audit"
+                              navigatePage="/audits/new"
+                              previousPage={location.pathname}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="edit"
+                              navigatePage={"/audits/edit"}
+                              previousPage={location.pathname}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="delete"
+                              showModal={() => {
+                                setDeleteModalOpen(true);
+                                setSelectedRowId(assetId);
+                              }}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="view"
+                              navigatePage="/audits/view"
+                              data={data}
+                              previousPage={location.pathname}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </section>
+            <section></section>
+          </section>
+          {/* {isLoading ? (
             "Loading..."
           ) : (
-            <section className="container">
-              <section className="top">
-                <h2>Overdue for an Audits</h2>
-                <div>
-                  <form action="" method="post">
-                    <input type="text" placeholder="Search..." />
-                  </form>
-                  <MediumButtons
-                    type="export"
-                    deleteModalOpen={() => setExportModalOpen(true)}
-                  />
-                </div>
-              </section>
-              <section className="middle">
-                {overdueAuditsData.length > 0 ? (
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>
-                          <input type="checkbox" name="" id="" />
-                        </th>
-                        <th>DUE DATE</th>
-                        <th>OVERDUE BY</th>
-                        <th>ASSET</th>
-                        <th>STATUS</th>
-                        <th>AUDIT</th>
-                        <th>EDIT</th>
-                        <th>DELETE</th>
-                        <th>VIEW</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {overdueAuditsData.map((data, index) => {
-                        // Calculate the day difference
-                        const date1 = new Date(data.date).setHours(0, 0, 0, 0); // Normalize to midnight
-                        const date2 = new Date(currentDate).setHours(
-                          0,
-                          0,
-                          0,
-                          0
-                        ); // Normalize to midnight
-                        const dayDifference =
-                          (date2 - date1) / (1000 * 60 * 60 * 24); // Difference in days
-
-                        return (
-                          <tr key={index}>
-                            <td>
-                              <input type="checkbox" name="" id="" />
-                            </td>
-                            <td>{dateRelated.formatDate(data.date)}</td>
-                            <td>
-                              {dayDifference}{" "}
-                              {dayDifference > 1 ? "days" : "day"}
-                            </td>
-                            <td>
-                              {data.asset_info.displayed_id} -{" "}
-                              {data.asset_info.name}
-                            </td>
-                            <td>
-                              <Status
-                                type="deployed"
-                                name="Deployed"
-                                personName="Mary Grace Piattos"
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="audit"
-                                navigatePage="/audits/new"
-                                previousPage={location.pathname}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="edit"
-                                navigatePage={"/audits/edit"}
-                                previousPage={location.pathname}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="delete"
-                                showModal={() => {
-                                  setDeleteModalOpen(true);
-                                  setSelectedRowId(assetId);
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="view"
-                                navigatePage="/audits/view"
-                                data={data}
-                                previousPage={location.pathname}
-                              />
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                ) : (
-                  <p className="no-data-message">
-                    No Overdue for an Audit Found.
-                  </p>
-                )}
-              </section>
-              <section></section>
-            </section>
-          )}
+            
+          )} */}
         </section>
       </main>
     </>

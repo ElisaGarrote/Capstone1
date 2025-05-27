@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function ScheduledAudits() {
   const location = useLocation();
@@ -34,7 +35,7 @@ export default function ScheduledAudits() {
   const isUpdateFromEdit = location.state?.isUpdateFromEdit;
   // const addedScheduleAudit = location.state?.addedScheduleAudit;
 
-  console.log("is update from audit: ", isUpdateFromEdit);
+  // console.log("is update from audit: ", isUpdateFromEdit);
 
   // Set the setDeleteSuccess state to true when the isDeleteSuccessFromEdit is true.
   // And reset the setDeleteSucces state to false after 5 seconds.
@@ -73,6 +74,7 @@ export default function ScheduledAudits() {
       const fetchedData = await assetsService.fetchAllAuditSchedules();
 
       setScheduleAuditData(fetchedData);
+      setLoading(false);
     };
 
     fetchAllScheduleAudits();
@@ -89,15 +91,8 @@ export default function ScheduledAudits() {
     fetchAllAssets();
   }, []);
 
-  // Set the isLoading state to false
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 300);
-  }, []);
-
-  console.table(scheduleAuditData);
-  console.table(assetsData);
+  // console.table(scheduleAuditData);
+  // console.table(assetsData);
 
   return (
     <>
@@ -149,23 +144,30 @@ export default function ScheduledAudits() {
           <section>
             <TabNavBar />
           </section>
-          {isLoading ? (
-            "Loading..."
-          ) : scheduleAuditData.length > 0 ? (
-            <section className="container">
-              <section className="top">
-                <h2>Scheduled Audits</h2>
-                <div>
-                  <form action="" method="post">
-                    <input type="text" placeholder="Search..." />
-                  </form>
-                  <MediumButtons
-                    type="export"
-                    deleteModalOpen={() => setExportModalOpen(true)}
-                  />
-                </div>
-              </section>
-              <section className="middle">
+          <section className="container">
+            <section className="top">
+              <h2>Scheduled Audits</h2>
+              <div>
+                <form action="" method="post">
+                  <input type="text" placeholder="Search..." />
+                </form>
+                <MediumButtons
+                  type="export"
+                  deleteModalOpen={() => setExportModalOpen(true)}
+                />
+              </div>
+            </section>
+            <section className="middle">
+              {/* Render loading skeleton while waiting to the response from the API request*/}
+              {isLoading && <SkeletonLoadingTable />}
+
+              {/* Render message if the scheduleAuditData is empty */}
+              {!isLoading && scheduleAuditData.length == 0 && (
+                <p className="table-message">No schedule audits found.</p>
+              )}
+
+              {/* Render table if scheduleAuditData is not empty */}
+              {scheduleAuditData.length > 0 && (
                 <table>
                   <thead>
                     <tr>
@@ -183,71 +185,64 @@ export default function ScheduledAudits() {
                     </tr>
                   </thead>
                   <tbody>
-                    {scheduleAuditData.length > 0 ? (
-                      scheduleAuditData.map((data, index) => {
-                        return (
-                          <tr key={index}>
-                            <td>
-                              <input type="checkbox" name="" id="" />
-                            </td>
-                            <td>{dateRelated.formatDate(data.date)}</td>
-                            <td>
-                              {data.asset_info.displayed_id} -{" "}
-                              {data.asset_info.name}
-                            </td>
-                            <td>
-                              <Status
-                                type="deployed"
-                                name="Deployed"
-                                location="Makati"
-                              />
-                            </td>
-                            <td>{dateRelated.formatDate(data.created_at)}</td>
-                            <td>
-                              <TableBtn
-                                type="audit"
-                                navigatePage="/audits/new"
-                                previousPage={location.pathname}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="edit"
-                                navigatePage={"/audits/edit"}
-                                previousPage={location.pathname}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="delete"
-                                showModal={() => {
-                                  setDeleteModalOpen(true);
-                                  setSelectedRowId(assetId);
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="view"
-                                navigatePage="/audits/view"
-                                data={data}
-                                previousPage={location.pathname}
-                              />
-                            </td>
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <p>No records found!</p>
-                    )}
+                    {scheduleAuditData.map((data, index) => {
+                      return (
+                        <tr key={index}>
+                          <td>
+                            <input type="checkbox" name="" id="" />
+                          </td>
+                          <td>{dateRelated.formatDate(data.date)}</td>
+                          <td>
+                            {data.asset_info.displayed_id} -{" "}
+                            {data.asset_info.name}
+                          </td>
+                          <td>
+                            <Status
+                              type={data.asset_info.status_info.type}
+                              name={data.asset_info.status_info.name}
+                            />
+                          </td>
+                          <td>{dateRelated.formatDate(data.created_at)}</td>
+                          <td>
+                            <TableBtn
+                              type="audit"
+                              navigatePage="/audits/new"
+                              previousPage={location.pathname}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="edit"
+                              navigatePage={"/audits/edit"}
+                              previousPage={location.pathname}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="delete"
+                              showModal={() => {
+                                setDeleteModalOpen(true);
+                                setSelectedRowId(assetId);
+                              }}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="view"
+                              navigatePage="/audits/view"
+                              data={data}
+                              previousPage={location.pathname}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
-              </section>
-              <section></section>
+              )}
             </section>
-          ) : (
-            "No Schedule Audit Found."
-          )}
+            <section></section>
+          </section>
         </section>
       </main>
     </>

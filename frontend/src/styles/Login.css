@@ -17,7 +17,7 @@
   background-color: var(--bg-color);
 }
 
-.login-page section {
+.login-page section:not(.logo) {
   display: flex;
   height: 100vh;
   width: 50vw;
@@ -31,7 +31,7 @@
 
 .login-page .left-panel img {
   width: 100%;
-  height: 50%;
+  height: auto;
   object-fit: cover;
 }
 
@@ -74,6 +74,32 @@
 
 .login-page input:focus {
   outline: 2px solid var(--primary-color);
+}
+
+.login-page .password-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  position: relative;
+}
+
+.login-page input[type="password"],
+.login-page input[type="text"]:nth-child(1) {
+  padding-right: 40px;
+}
+
+.show-password {
+  height: 20px;
+  width: 20px;
+
+  position: absolute;
+  right: 16px;
+  cursor: pointer;
+}
+
+input[type="password"]::-ms-reveal {
+  display: none;
 }
 
 .login-page button {
@@ -129,15 +155,42 @@
   align-items: center;
 }
 
+.form-header .logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+
+  margin-bottom: 1rem;
+
+  gap: 10px;
+}
+
+.form-header .logo img {
+  height: 1.8rem;
+  width: 1.8rem;
+
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.form-header .logo-text {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #3b82f6;
+  margin: 0;
+}
+
 .form-header {
   width: 70%;
   text-align: center;
   margin-bottom: 2rem;
+
+  /* background-color: red; */
 }
 
 .form-header h1 {
   font-size: 1.5rem;
-  margin-bottom: 0.5rem;
 }
 
 .form-header p {
@@ -145,7 +198,7 @@
   color: var(--text-color);
 }
 
-.right-panel form span {
+.right-panel form span:not(.show) {
   font-size: 0.875rem;
   color: red;
 }
