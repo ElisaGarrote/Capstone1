@@ -158,7 +158,6 @@ def add_asset_image(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
 def get_next_asset_id(request):
     """
     Generate the next asset ID without creating an asset.
