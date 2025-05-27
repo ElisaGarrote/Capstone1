@@ -311,6 +311,61 @@ class AssetsService {
     }
   }
 
+  // Create Asset
+  async createAsset(formData) {
+    try {
+      const response = await fetch(API_URL + "assets/registration/", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for creating asset is here.",
+          response.status
+        );
+        return false;
+      }
+
+      const data = await response.json();
+      console.log("Data for creating asset: ", data);
+      return data;
+    } catch (error) {
+      console.log("Error occurred while creating asset!", error);
+      return false;
+    }
+  }
+
+  // Update Asset
+  async updateAsset(id, formData) {
+    try {
+      // Log the form data for debugging
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+      
+      const response = await fetch(API_URL + `assets/${id}/update/`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for updating asset is here.",
+          response.status
+        );
+        return false;
+      }
+
+      const data = await response.json();
+      console.log("Data for updating asset: ", data);
+      return data;
+    } catch (error) {
+      console.log("Error occurred while updating asset!", error);
+      return false;
+    }
+  }
+
   // AUDITS
   // Create Audit
   async postAudit(

@@ -125,6 +125,35 @@ def get_asset_contexts(request):
     }
     return Response(data)
 
+# Register an asset
+@api_view(['POST'])
+def create_asset(request):
+    data = request.data
+    serializer = AssetSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Update a product
+@api_view(['PUT'])
+def update_asset(request, id):
+    try:
+        asset = Asset.objects.get(pk=id, is_deleted=False)
+    except Asset.DoesNotExist:
+        return Response({'detail': 'Asset not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    remove_image = request.data.get('remove_image')
+    if remove_image == 'true' and asset.image:
+        asset.image.delete(save=False)
+        asset.image = None
+
+    serializer = AssetSerializer(asset, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 # Get asset by id
 @api_view(['GET'])
 def get_asset_by_id(request, id):

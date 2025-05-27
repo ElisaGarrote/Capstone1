@@ -15,6 +15,8 @@ urlpatterns = [
     path('assets/', get_all_assets, name='all_assets'),
     path('assets/contexts/', get_asset_contexts, name='asset_registration_contexts'),
     path('assets/<int:id>/', get_asset_by_id, name='asset_details_of_asset.id'),
+    path('assets/registration/', create_asset, name='add_new_asset'),
+    path('assets/<int:id>/update/', update_asset, name='update_asset'),
     path('assets/<int:id>/delete/', soft_delete_asset, name='delete_asset'),
     path('assets/next-id/', get_next_asset_id, name='get_next_asset_id'),
 
