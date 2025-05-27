@@ -206,12 +206,13 @@ export default function CheckOutAsset() {
                 />
               </fieldset>
 
+
               <fieldset>
                 <label>Expected Return Date *</label>
                 <input
                   type="date"
                   className={errors.expectedReturnDate ? 'input-error' : ''}
-                  min={checkoutDate}
+                  min={currentDate}
                   {...register("expectedReturnDate", { required: 'Expected return date is required' })}
                 />
                 {errors.expectedReturnDate && <span className='error-message'>{errors.expectedReturnDate.message}</span>}

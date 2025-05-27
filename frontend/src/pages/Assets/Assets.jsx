@@ -97,7 +97,7 @@ export default function Assets() {
         state: {
           id: asset.id,
           assetId: asset.displayed_id,
-          product: asset.name,
+          product: asset.product,
           image: asset.image ? `https://assets-service-production.up.railway.app${asset.image}` : DefaultImage
         }
       });
