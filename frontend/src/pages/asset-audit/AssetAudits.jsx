@@ -16,9 +16,6 @@ import dateRelated from "../../utils/dateRelated";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function AssetAudits() {
-  let notes = "sdfsdfsdfdfdfdfdfdfdfsdfsdfsdf";
-  let assetId = 100019;
-  let assetName = 'Macbook Pro 16"';
   const location = useLocation();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
@@ -87,7 +84,8 @@ export default function AssetAudits() {
   }, []);
 
   // For debugging only.
-  console.table(scheduleAuditData);
+  // console.table(scheduleAuditData);
+  // console.log("schedule audits:", scheduleAuditData);
 
   return (
     <>
@@ -194,7 +192,10 @@ export default function AssetAudits() {
                             {data.asset_info.name}
                           </td>
                           <td>
-                            <Status type="deployable" name="Ready to Deploy" />
+                            <Status
+                              type={data.asset_info.status_info.type}
+                              name={data.asset_info.status_info.name}
+                            />
                           </td>
                           <td>{dateRelated.formatDate(data.created_at)}</td>
                           <td>
