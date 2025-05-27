@@ -101,15 +101,15 @@ export default function AssetsRegistration() {
           setValue('product', assetData.product);
           setValue('status', assetData.status);
           
-          setValue('supplier', productData.manufacturer_id);
-          setValue('location', productData.model_number || '');
-          setValue('assetName', productData.end_of_life || '');
-          setValue('serialNumber', productData.default_purchase_cost || '');
-          setValue('warrantyExpiration', productData.default_supplier_id || '');
-          setValue('orderNumber', productData.minimum_quantity || '');
-          setValue('purchaseDate', productData.operating_system || '');
-          setValue('scheduleAuditDate', productData.imei_number || '');
-          setValue('notes', productData.notes || '');
+          setValue('supplier', assetData.supplier_id);
+          setValue('location', assetData.location || '');
+          setValue('assetName', assetData.name || '');
+          setValue('serialNumber', assetData.serial_number || '');
+          setValue('warrantyExpiration', assetData.warranty_expiration || '');
+          setValue('orderNumber', assetData.order_number || '');
+          setValue('purchaseDate', assetData.purchase_date || '');
+          setValue('purchaseCost', assetData.purchase_cost || '');
+          setValue('notes', assetData.notes || '');
           
           if (assetData.image) {
             setPreviewImage(`https://assets-service-production.up.railway.app${assetData.image}`);
@@ -142,39 +142,20 @@ export default function AssetsRegistration() {
   
   const onSubmit = async (data) => {
     try {
-      // Only check for duplicate names when creating a new product (not when updating)
-      if (!id) {
-        // Fetch all existing product names
-        const existingProducts = await assetsService.fetchProductNames();
-        
-        // Check if a product with the same name already exists
-        const isDuplicate = existingProducts.products.some(
-          product => product.name.toLowerCase() === data.productName.toLowerCase()
-        );
-        
-        if (isDuplicate) {
-          setErrorMessage("A product with this name already exists. Please use a different name.");
-          setTimeout(() => {
-            setErrorMessage("");
-          }, 5000);
-          return; // Stop the submission process
-        }
-      }
-
       const formData = new FormData();
 
-      // Append all form data to FormData object
-      formData.append('name', data.productName);
-      formData.append('category', data.category);
-      formData.append('manufacturer_id', data.manufacturer);
-      formData.append('depreciation', data.depreciation);
-      formData.append('model_number', data.modelNumber || '');
-      formData.append('end_of_life', data.endOfLifeDate || '');
-      formData.append('default_purchase_cost', data.defaultPurchaseCost || '');
-      formData.append('default_supplier_id', data.supplier || '');
-      formData.append('minimum_quantity', data.minimumQuantity);
-      formData.append('operating_system', data.operatingSystem || '');
-      formData.append('imei_number', data.imeiNumber || '');
+      // Append asset data to FormData object
+      formData.append('displayed_id', data.assetId);
+      formData.append('product', data.product);
+      formData.append('status', data.status);
+      formData.append('supplier_id', data.supplier || '');
+      formData.append('location', data.location || '');
+      formData.append('name', data.assetName);
+      formData.append('serial_number', data.serialNumber || '');
+      formData.append('warranty_expiration', data.warrantyExpiration || '');
+      formData.append('order_number', data.orderNumber || '');
+      formData.append('purchase_date', data.purchaseDate || '');
+      formData.append('purchase_cost', data.purchaseCost || '');
       formData.append('notes', data.notes || '');
       
       // Handle image upload
@@ -185,7 +166,6 @@ export default function AssetsRegistration() {
       // Handle image removal
       if (removeImage) {
         formData.append('remove_image', 'true');
-        console.log("Removing image: remove_image flag set to true");
       }
       
       console.log("Form data before submission:");
@@ -196,28 +176,28 @@ export default function AssetsRegistration() {
       let result;
       
       if (id) {
-        // Update existing product
-        result = await assetsService.updateProduct(id, formData);
+        // Update existing asset
+        result = await assetsService.updateAsset(id, formData);
       } else {
-        // Create new product
-        result = await assetsService.createProduct(formData);
+        // Create new asset
+        result = await assetsService.createAsset(formData);
       }
 
       if (!result) {
-        throw new Error(`Failed to ${id ? 'update' : 'create'} product.`);
+        throw new Error(`Failed to ${id ? 'update' : 'create'} asset.`);
       }
 
-      console.log(`${id ? 'Updated' : 'Created'} product:`, result);
+      console.log(`${id ? 'Updated' : 'Created'} asset:`, result);
       
-      // Navigate to products page with success message
-      navigate('/products', { 
+      // Navigate to assets page with success message
+      navigate('/assets', { 
         state: { 
-          successMessage: `Product has been ${id ? 'updated' : 'created'} successfully!` 
+          successMessage: `Asset has been ${id ? 'updated' : 'created'} successfully!` 
         } 
       });
     } catch (error) {
-      console.error(`Error ${id ? 'updating' : 'creating'} product:`, error);
-      setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the product`);
+      console.error(`Error ${id ? 'updating' : 'creating'} asset:`, error);
+      setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the asset`);
     }
   };
 
