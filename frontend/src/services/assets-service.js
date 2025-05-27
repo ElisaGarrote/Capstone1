@@ -16,25 +16,25 @@ class AssetsService {
           "The status of the response for fetching all products is here.",
           response.status
         );
-        return { products: [] };  // Return consistent structure
+        return { products: [] }; // Return consistent structure
       }
 
       const data = await response.json();
       console.log("Data for all products fetched: ", data);
-      
+
       // Ensure we always return an object with products property
       if (data && data.products) {
         return data; // Already in correct format
       } else if (Array.isArray(data)) {
         return { products: data }; // Convert array to object with property
-      } else if (data && typeof data === 'object') {
+      } else if (data && typeof data === "object") {
         return { products: [data] }; // Single object to array in property
       } else {
         return { products: [] }; // Default empty result
       }
     } catch (error) {
       console.log("Error occur while fetching all products!", error);
-      return { products: [] };  // Return consistent structure
+      return { products: [] }; // Return consistent structure
     }
   }
 
@@ -50,25 +50,25 @@ class AssetsService {
           "The status of the response for fetching product contexts is here.",
           response.status
         );
-        return { 
+        return {
           categories: [],
-          depreciations: []
+          depreciations: [],
         };
       }
 
       const data = await response.json();
       console.log("Product contexts fetched: ", data);
-      
+
       // Return the data with default empty arrays for any missing properties
       return {
         categories: data.categories || [],
-        depreciations: data.depreciations || []
+        depreciations: data.depreciations || [],
       };
     } catch (error) {
       console.log("Error occurred while fetching product contexts!", error);
-      return { 
+      return {
         categories: [],
-        depreciations: []
+        depreciations: [],
       };
     }
   }
@@ -85,12 +85,12 @@ class AssetsService {
           "The status of the response for fetching product by ID is here.",
           response.status
         );
-        return null;  // Return null for not found
+        return null; // Return null for not found
       }
 
       const data = await response.json();
       console.log("Product data fetched: ", data);
-      
+
       // Return the product data
       if (data && data.product) {
         return data.product; // Return the product object if it's wrapped
@@ -98,8 +98,11 @@ class AssetsService {
         return data; // Return the data directly if it's not wrapped
       }
     } catch (error) {
-      console.log(`Error occurred while fetching product with ID ${id}:`, error);
-      return null;  // Return null on error
+      console.log(
+        `Error occurred while fetching product with ID ${id}:`,
+        error
+      );
+      return null; // Return null on error
     }
   }
 
@@ -132,9 +135,9 @@ class AssetsService {
     try {
       // Log the form data for debugging
       for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
+        console.log(pair[0] + ": " + pair[1]);
       }
-      
+
       const response = await fetch(API_URL + `products/${id}/update/`, {
         method: "PUT",
         body: formData,
@@ -169,25 +172,25 @@ class AssetsService {
           "The status of the response for fetching product names is here.",
           response.status
         );
-        return { products: [] };  // Return consistent structure
+        return { products: [] }; // Return consistent structure
       }
 
       const data = await response.json();
       console.log("Product names fetched: ", data);
-      
+
       // Ensure we always return an object with products property
       if (data && data.products) {
         return data; // Already in correct format
       } else if (Array.isArray(data)) {
         return { products: data }; // Convert array to object with property
-      } else if (data && typeof data === 'object') {
+      } else if (data && typeof data === "object") {
         return { products: [data] }; // Single object to array in property
       } else {
         return { products: [] }; // Default empty result
       }
     } catch (error) {
       console.log("Error occurred while fetching product names!", error);
-      return { products: [] };  // Return consistent structure
+      return { products: [] }; // Return consistent structure
     }
   }
 
@@ -208,21 +211,21 @@ class AssetsService {
       }
 
       const data = await response.json();
-      console.log("Data for all assets fetched: ", data);
-      
+      // console.log("Data for all assets fetched: ", data);
+
       // Ensure we always return an object with assets property
       if (data && data.assets) {
         return data; // Already in correct format
       } else if (Array.isArray(data)) {
         return { assets: data }; // Convert array to object with property
-      } else if (data && typeof data === 'object') {
+      } else if (data && typeof data === "object") {
         return { assets: [data] }; // Single object to array in property
       } else {
         return { assets: [] }; // Default empty result
       }
     } catch (error) {
       console.log("Error occur while fetching all assets!", error);
-      return { assets: [] };  // Return consistent structure
+      return { assets: [] }; // Return consistent structure
     }
   }
 
@@ -238,25 +241,25 @@ class AssetsService {
           "The status of the response for fetching asset contexts is here.",
           response.status
         );
-        return { 
+        return {
           products: [],
-          statuses: []
+          statuses: [],
         };
       }
 
       const data = await response.json();
       console.log("Asset contexts fetched: ", data);
-      
+
       // Return the data with default empty arrays for any missing properties
       return {
         products: data.products || [],
-        statuses: data.statues || []
+        statuses: data.statues || [],
       };
     } catch (error) {
       console.log("Error occurred while fetching asset contexts!", error);
-      return { 
+      return {
         products: [],
-        statuses: []
+        statuses: [],
       };
     }
   }
@@ -273,12 +276,12 @@ class AssetsService {
           "The status of the response for fetching asset by ID is here.",
           response.status
         );
-        return null;  // Return null for not found
+        return null; // Return null for not found
       }
 
       const data = await response.json();
       console.log("Asset data fetched: ", data);
-      
+
       // Return the asset data
       if (data && data.asset) {
         return data.asset; // Return the asset object if it's wrapped
@@ -287,7 +290,7 @@ class AssetsService {
       }
     } catch (error) {
       console.log(`Error occurred while fetching asset with ID ${id}:`, error);
-      return null;  // Return null on error
+      return null; // Return null on error
     }
   }
 
@@ -498,7 +501,7 @@ class AssetsService {
       }
 
       const data = await response.json();
-      console.log("Data for all audit schedules fetched: ", data);
+      // console.log("Data for all audit schedules fetched: ", data);
       return data;
     } catch (error) {
       console.log("Error occur while fetching all audit schedules!", error);
@@ -541,13 +544,50 @@ class AssetsService {
     return API_URL + file;
   }
 
-  // Filtered Assets for schedule and perform audit
+  // Filter Assets for schedule and perform audit asset dropdown
   async filterAssetsForAudit() {
     const allAssets = await this.fetchAllAssets();
     const allAuditSchedule = await this.fetchAllAuditSchedules();
 
-    console.log("all assets:", allAssets);
-    console.log("all audit schedules:", allAuditSchedule);
+    // console.log("all assets service:", allAssets);
+    // console.log("all audit schedules service:", allAuditSchedule);
+
+    // Initialize filteredAssets
+    let filteredAssets = [];
+
+    // Filter Assets: Get all the assets that have not yet been scheduled or audited.
+    if (allAuditSchedule.length > 0) {
+      // Get only the fields of displayedId and asset name
+      const assetAndName = allAuditSchedule.map((item) => ({
+        displayedId: item.asset_info.displayed_id,
+        name: item.asset_info.name,
+      }));
+
+      // console.log("asset and name service:", assetAndName);
+
+      // Filter assets: Access the assets array from the response object
+      filteredAssets = allAssets.assets
+        .filter(
+          (item) =>
+            !assetAndName.some(
+              (existing) => existing.displayedId === item.displayed_id
+            )
+        )
+        .map((item) => ({
+          value: item.id,
+          label: item.displayed_id + " - " + item.name,
+        }));
+
+      // console.log("filtered asset:", filteredAssets);
+    } else {
+      // If no audit schedules exist, return all assets
+      filteredAssets = allAssets.assets.map((item) => ({
+        value: item.id,
+        label: item.displayed_id + " - " + item.name,
+      }));
+    }
+
+    return filteredAssets;
   }
 }
 
