@@ -96,7 +96,7 @@ class AssetsService {
 
           const data = await response.json();
           console.log("File uploaded successfully:", data);
-        } catch {
+        } catch (error) {
           console.error("Error occur while creating audit files!", error);
         }
       });
@@ -252,6 +252,20 @@ class AssetsService {
   async countAllAudits() {
     const numOfAudits = await this.fetchAllAudits();
     return numOfAudits.length;
+  }
+
+  // Generate url for audit files.
+  auditFileUrl(file) {
+    return API_URL + file;
+  }
+
+  // Filtered Assets for schedule and perform audit
+  async filterAssetsForAudit() {
+    const allAssets = await this.fetchAllAssets();
+    const allAuditSchedule = await this.fetchAllAuditSchedules();
+
+    console.log("all assets:", allAssets);
+    console.log("all audit schedules:", allAuditSchedule);
   }
 }
 
