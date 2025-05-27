@@ -21,7 +21,7 @@ class DepreciationNameSerializer(serializers.ModelSerializer):
 class ProductNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'default_supplier_id', 'default_purchase_cost']
 
 class ProductSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
@@ -46,6 +46,7 @@ class AllAssetSerializer(serializers.ModelSerializer):
         if obj.product and obj.product.category:
             return obj.product.category.name
         return None
+    
 class StatusNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Status

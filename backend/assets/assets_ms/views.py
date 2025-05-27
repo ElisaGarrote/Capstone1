@@ -125,6 +125,23 @@ def get_asset_contexts(request):
     }
     return Response(data)
 
+# Get asset by id
+@api_view(['GET'])
+def get_asset_by_id(request, id):
+    try:
+        asset = Asset.objects.get(pk=id, is_deleted=False)
+    except Asset.DoesNotExist:
+        return Response({'detail': 'Asset not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializedAsset = AssetSerializer(asset)
+
+    data = {
+        'asset': serializedAsset.data,
+    }
+
+    return Response(data)
+
+
 # Soft delete an asset
 @api_view(['DELETE'])
 def soft_delete_asset(request, id):

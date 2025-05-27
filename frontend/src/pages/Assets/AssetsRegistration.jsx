@@ -47,6 +47,9 @@ export default function AssetsRegistration() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
+  // Add this state to track the selected product
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -210,6 +213,30 @@ export default function AssetsRegistration() {
     }
   };
 
+  // Add this function to handle product selection
+  const handleProductChange = async (e) => {
+    const productId = e.target.value;
+    if (productId) {
+      try {
+        // Fetch the product details
+        const productData = await assetsService.fetchProductById(productId);
+        setSelectedProduct(productData);
+        
+        // Set default values from the product
+        setValue('assetName', productData.name || '');
+        setValue('purchaseCost', productData.default_purchase_cost || '');
+        
+        // Set supplier if default_supplier_id exists
+        if (productData.default_supplier_id) {
+          setValue('supplier', productData.default_supplier_id);
+        }
+        
+      } catch (error) {
+        console.error("Error fetching product details:", error);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="loading-container">
@@ -248,19 +275,19 @@ export default function AssetsRegistration() {
 
             {/* Products selection */}
             <fieldset>
-              <label htmlFor="product">Product *</label>
-              <div className="dropdown-container">
+              <label htmlFor='product'>Product *</label>
+              <div>
                 <select
-                  className={errors.product ? "input-error" : ""}
-                  {...register("product", {
-                    required: "product is required",
-                    valueAsNumber: true,
-                  })}
-                  defaultValue=""
+                  className={errors.product ? 'input-error' : ''}
+                  {...register('product', { required: 'Product is required' })}
+                  onChange={(e) => {
+                    // This ensures react-hook-form also gets the value
+                    register('product').onChange(e);
+                    // Then call our custom handler
+                    handleProductChange(e);
+                  }}
                 >
-                  <option value="" disabled hidden>
-                    Select Product
-                  </option>
+                  <option value=''>Select Product</option>
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
                       {product.name}
@@ -268,25 +295,18 @@ export default function AssetsRegistration() {
                   ))}
                 </select>
               </div>
-              {errors.product && (
-                <span className="error-message">{errors.product.message}</span>
-              )}
+              {errors.product && <span className='error-message'>{errors.product.message}</span>}
             </fieldset>
 
             {/* Status selection, Default deployable */}
             <fieldset>
-              <label htmlFor="status">Status *</label>
-              <div className="dropdown-container">
+              <label htmlFor='status'>Status *</label>
+              <div>
                 <select
-                  className={errors.status ? "input-error" : ""}
-                  {...register("status", {
-                    required: "Status is required",
-                  })}
-                  defaultValue="Deployable"
+                  className={errors.status ? 'input-error' : ''}
+                  {...register('status', { required: 'Status is required' })}
                 >
-                  <option value="" disabled hidden>
-                    Select Status
-                  </option>
+                  <option value=''>Select Status</option>
                   {statuses.map((status) => (
                     <option key={status.id} value={status.id}>
                       {status.name}
@@ -294,57 +314,45 @@ export default function AssetsRegistration() {
                   ))}
                 </select>
               </div>
-              {errors.status && (
-                <span className="error-message">{errors.status.message}</span>
-              )}
+              {errors.status && <span className='error-message'>{errors.status.message}</span>}
             </fieldset>
 
             {/* Supplier selection */}
             <fieldset>
-              <label htmlFor="supplier">Supplier *</label>
-              <div className="dropdown-container">
+              <label htmlFor='supplier'>Supplier *</label>
+              <div>
                 <select
-                  className={errors.supplier ? "input-error" : ""}
-                  {...register("supplier")}
-                  defaultValue=""
+                  className={errors.category ? 'input-error' : ''}
+                  {...register('category', { required: 'Category is required' })}
                 >
-                  <option value="" disabled hidden>
-                    Select Supplier
-                  </option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
+                  <option value=''>Select Category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
                     </option>
                   ))}
                 </select>
               </div>
-              {errors.supplier && (
-                <span className="error-message">{errors.supplier.message}</span>
-              )}
+              {errors.category && <span className='error-message'>{errors.category.message}</span>}
             </fieldset>
 
             {/* Location selection */}
             <fieldset>
-              <label htmlFor="location">Location *</label>
-              <div className="dropdown-container">
+              <label htmlFor='category'>Category *</label>
+              <div>
                 <select
-                  className={errors.location ? "input-error" : ""}
-                  {...register("location")}
-                  defaultValue=""
+                  className={errors.category ? 'input-error' : ''}
+                  {...register('category', { required: 'Category is required' })}
                 >
-                  <option value="" disabled hidden>
-                    Select Location
-                  </option>
-                  {locations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.name}
+                  <option value=''>Select Category</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
                     </option>
                   ))}
                 </select>
               </div>
-              {errors.location && (
-                <span className="error-message">{errors.location.message}</span>
-              )}
+              {errors.category && <span className='error-message'>{errors.category.message}</span>}
             </fieldset>
 
             <fieldset>
