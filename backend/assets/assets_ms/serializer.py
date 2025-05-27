@@ -50,9 +50,11 @@ class AllAssetSerializer(serializers.ModelSerializer):
 class StatusNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Status
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'type']
 
 class AssetSerializer(serializers.ModelSerializer):
+    status_info = StatusNameSerializer(source='status', read_only=True)
+
     class Meta:
         model = Asset
         fields = '__all__'
