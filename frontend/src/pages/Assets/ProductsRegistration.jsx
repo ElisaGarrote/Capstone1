@@ -248,19 +248,13 @@ export default function ProductsRegistration() {
 
             {/* Category */}
             <fieldset>
-              <label htmlFor="category">Category *</label>
-              <div className="dropdown-container">
+              <label htmlFor='category'>Category *</label>
+              <div>
                 <select
-                  className={errors.category ? "input-error" : ""}
-                  {...register("category", {
-                    required: "Category is required",
-                    valueAsNumber: true,
-                  })}
-                  defaultValue=""
+                  className={errors.category ? 'input-error' : ''}
+                  {...register('category', { required: 'Category is required' })}
                 >
-                  <option value="" disabled hidden>
-                    Select Category
-                  </option>
+                  <option value=''>Select Category</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -268,9 +262,7 @@ export default function ProductsRegistration() {
                   ))}
                 </select>
               </div>
-              {errors.category && (
-                <span className="error-message">{errors.category.message}</span>
-              )}
+              {errors.category && <span className='error-message'>{errors.category.message}</span>}
             </fieldset>
 
             {/* Manufacturer */}
