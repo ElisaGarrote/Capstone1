@@ -73,35 +73,35 @@ export default function AssetsRegistration() {
 
         // If ID is present, fetch the asset details
         if (id) {
-          const assetData = await assetsService.fetchAsset(id);
-          if (!productData) {
-            setErrorMessage("Failed to fetch product details");
+          const assetData = await assetsService.fetchAssetById(id);
+          if (!assetData) {
+            setErrorMessage("Failed to fetch asset details");
             setIsLoading(false);
             return;
           }
 
-          setProduct(productData);
-          console.log("Product Details:", productData);
+          setAsset(assetData);
+          console.log("Asset Details:", assetData);
 
-          // Set form values from retrieved product data
-          setValue('productName', productData.name);
+          // Set form values from retrieved asset data
+          setValue('assetId', assetData.displayed_id);
           
-          // For category and depreciation, use the direct values from fetched product data
-          setValue('category', productData.category);
-          setValue('depreciation', productData.depreciation);
+          // For product and status, use the direct values from fetched product data
+          setValue('product', assetData.product);
+          setValue('status', assetData.status);
           
-          setValue('manufacturer', productData.manufacturer_id);
-          setValue('modelNumber', productData.model_number || '');
-          setValue('endOfLifeDate', productData.end_of_life || '');
-          setValue('defaultPurchaseCost', productData.default_purchase_cost || '');
-          setValue('supplier', productData.default_supplier_id || '');
-          setValue('minimumQuantity', productData.minimum_quantity || '');
-          setValue('operatingSystem', productData.operating_system || '');
-          setValue('imeiNumber', productData.imei_number || '');
+          setValue('supplier', productData.manufacturer_id);
+          setValue('location', productData.model_number || '');
+          setValue('assetName', productData.end_of_life || '');
+          setValue('serialNumber', productData.default_purchase_cost || '');
+          setValue('warrantyExpiration', productData.default_supplier_id || '');
+          setValue('orderNumber', productData.minimum_quantity || '');
+          setValue('purchaseDate', productData.operating_system || '');
+          setValue('scheduleAuditDate', productData.imei_number || '');
           setValue('notes', productData.notes || '');
           
-          if (productData.image) {
-            setPreviewImage(`https://assets-service-production.up.railway.app${productData.image}`);
+          if (assetData.image) {
+            setPreviewImage(`https://assets-service-production.up.railway.app${assetData.image}`);
           }
         }
       } catch (error) {
