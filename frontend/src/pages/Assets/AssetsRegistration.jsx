@@ -279,6 +279,7 @@ export default function AssetsRegistration() {
               <label htmlFor='asset-id'>Asset ID *</label>
               <input
                 type='text'
+                readOnly
                 className={errors.assetId ? 'input-error' : ''}
                 {...register('assetId', { required: 'Asset ID is required' })}
                 maxLength='20'
