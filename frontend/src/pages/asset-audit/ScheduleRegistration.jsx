@@ -63,7 +63,7 @@ export default function ScheduleRegistration() {
     fetchAllScheduleAudits();
   }, []);
 
-  const assetOptions = allAssets
+  const assetOptions = Array.from(allAssets)
     .filter(
       (item) =>
         !assetAndName.some(
