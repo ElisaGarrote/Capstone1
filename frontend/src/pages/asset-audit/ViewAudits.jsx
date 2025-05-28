@@ -98,7 +98,7 @@ export default function ViewAudits() {
 
           <fieldset>
             <label htmlFor="notes">Notes</label>
-            <p>{data.notes == "" ? "-" : data.notes}</p>
+            <p>{data.notes == "" || data.notes == null ? "-" : data.notes}</p>
           </fieldset>
 
           {data.audit_info != null &&
