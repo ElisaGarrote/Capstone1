@@ -8,6 +8,12 @@ class AllAccessorySerializer(serializers.ModelSerializer):
         model = Accessory
         fields = ['id', 'image', 'name', 'quantity', 'category_name','location']
 
+#Serializer for Accessory Category Name
+class AccessoryCategoryNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AccessoryCategory
+        fields = ['id', 'name']
+
 # Serializer for Category of Accessory
 class AccessoryCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,3 +27,8 @@ class AccessorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Accessory
         fields = '__all__'
+
+class AccessoryNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Accessory
+        fields = ['id', 'name']
