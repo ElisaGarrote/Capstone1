@@ -128,7 +128,8 @@ const ChatBot = () => {
 
   if (
     location.pathname != "/login" &&
-    location.pathname != "/request/password_reset"
+    location.pathname != "/request/password_reset" &&
+    location.pathname !== "/"
   ) {
     return (
       <div className="chatbot-container">

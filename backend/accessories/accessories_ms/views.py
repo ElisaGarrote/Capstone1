@@ -14,34 +14,45 @@ def get_accessories(request):
         'data': serializer.data
     }, status=200)
 
+# Get accessory category names
+@api_view(['GET'])
+def get_accessory_contexts(request):
+    categories = AccessoryCategory.objects.filter(is_deleted=False)
+    serializedCategories = AccessoryCategoryNameSerializer(categories, many=True).data
+
+    data = {
+        'categories': serializedCategories,
+    }
+    return Response(data)
+
+# Gets an accessory by id
 @api_view(['GET'])
 def get_accessory_by_id(request, id):
     try:
-        accessory = Accessory.objects.get(id=id, is_deleted=False)
+        accessory = Accessory.objects.get(pk=id, is_deleted=False)
     except Accessory.DoesNotExist:
         return Response({'error': 'Accessory not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = AccessorySerializer(accessory)
-    return Response(serializer.data)
+    serializedAccessory = AccessorySerializer(accessory)
 
-@api_view(['PUT'])
-def update_accessory(request, id):
-    try:
-        accessory = Accessory.objects.get(pk=id, is_deleted=False)
-    except Accessory.DoesNotExist:
-        return Response({'detail': 'Accessory not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    remove_image = request.data.get('remove_image')
-    if remove_image == 'true' and accessory.image:
-        accessory.image.delete(save=False)
-        accessory.image = None
+    data = {
+        'accessory': serializedAccessory.data,
+    }
 
-    serializer = AccessorySerializer(accessory, data=request.data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response(data)
 
+# Gets all accessory names
+@api_view(['GET'])
+def get_accessory_names(request):
+    accessories = Accessory.objects.filter(is_deleted=False)
+    serializedAccessories = AccessoryNameSerializer(accessories, many=True).data
+
+    data = {
+        'accessories': serializedAccessories,
+    }
+    return Response(data)
+
+# Creates an accessory
 @api_view(['POST'])
 def create_accessory(request):
     name = request.data.get('name')
@@ -60,6 +71,26 @@ def create_accessory(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# Updates an accessory
+@api_view(['PUT'])
+def update_accessory(request, id):
+    try:
+        accessory = Accessory.objects.get(pk=id, is_deleted=False)
+    except Accessory.DoesNotExist:
+        return Response({'detail': 'Accessory not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    remove_image = request.data.get('remove_image')
+    if remove_image == 'true' and accessory.image:
+        accessory.image.delete(save=False)
+        accessory.image = None
+
+    serializer = AccessorySerializer(accessory, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Soft deletes an accessory
 @api_view(['DELETE'])
 def soft_delete_accessory(request, id):
     try:
@@ -70,8 +101,6 @@ def soft_delete_accessory(request, id):
     accessory.is_deleted = True
     accessory.save()
     return Response({'message': 'Accessory soft-deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
-
-
 
 # Gets all categories of accessories
 @api_view(['GET'])

@@ -183,6 +183,7 @@ function App() {
           <Route path="/reports/activity" element={<ActivityReport />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/user-management" element={<UserManagement />} />
+          <Route path="*" element={<NotFound />}></Route>
         </Route>
 
         {/* Place here all the routes that do not required authetication to access */}
@@ -203,8 +204,6 @@ function App() {
           path="/products/registration/:id"
           element={<ProductsRegistration />}
         />
-
-        <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
   );
