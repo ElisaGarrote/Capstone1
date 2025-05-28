@@ -24,7 +24,6 @@ urlpatterns = [
     # Audits
     path('audits/create/', create_audit, name='create_audit'),
     path('audits/all/', get_all_audit, name='get_all_audit'),
-    path('audits/<int:id>/delete/', soft_delete_audit, name='soft_delete_audit'),
 
     # Audits Files
     path('audits/add/files/', add_audit_file, name='add_audit_file'),
