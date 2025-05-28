@@ -9,10 +9,10 @@ class AllAccessorySerializer(serializers.ModelSerializer):
         fields = ['id', 'image', 'name', 'quantity', 'category_name','location']
 
 # Serializer for Category of Accessory
-class AccessoryCategorySerializer(serializers.ModelSerializer):
+class AccessoryCategoryNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccessoryCategory
-        fields = '__all__'
+        fields = ['id', 'name']
 
 class AccessorySerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(
