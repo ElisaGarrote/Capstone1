@@ -6,7 +6,7 @@ export default function SystemLoading() {
     <main className="system-loading">
       <img src={SystemLogo} alt="system-logo" />
       <h1>MAP AMS</h1>
-      <section class="loading">
+      <section className="loading">
         <div></div>
         <div></div>
         <div></div>
