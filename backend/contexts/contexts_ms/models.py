@@ -5,7 +5,7 @@ class Supplier(models.Model):
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
-    zip = models.PositiveSmallIntegerField(max_length=4, blank=True, null=True)
+    zip = models.CharField(max_length=4, blank=True, null=True)
 
     contact_name = models.CharField(max_length=100, blank=True, null=True)
     phone_number = models.CharField(max_length=13, blank=True, null=True)

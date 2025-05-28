@@ -12,74 +12,14 @@ import DeleteModal from '../../components/Modals/DeleteModal';
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
 import SupplierTableDetails from './SupplierTableDetails';
+import assetsService from "../../services/assets-service";
+import contextsService from "../../services/contexts-service";
 
 export default function ViewSupplier() {
   const navigate = useNavigate();
 
   // ----------------- State -----------------
-  const [suppliers, setSuppliers] = useState([
-    {
-      id: 1,
-      logo: '',
-      name: "Amazon",
-      address: "410 Terry Ave N",
-      city: "Seattle",
-      state: "Washington",
-      zip: "98109",
-      country: "United States",
-      contact: "James Peterson",
-      phone: "1-800-383-2839",
-      email: "contact@amazon.com",
-      url: "https://amazon.com",
-      notes: "Always use the corporate account"
-    },
-    {
-      id: 2,
-      logo: '',
-      name: "Newegg",
-      address: "17560 Rowland St",
-      city: "City of Industry",
-      state: "California",
-      zip: "91745",
-      country: "United States",
-      contact: "Bob Anderson",
-      phone: "1-800-930-1119",
-      email: "contact@newegg.com",
-      url: "https://newegg.com",
-      notes: "-"
-    },
-    {
-      id: 3,
-      logo: '',
-      name: "Staples",
-      address: "500 8th Ave",
-      city: "New York",
-      state: "New York",
-      zip: "10018",
-      country: "United States",
-      contact: "Julie Henderson",
-      phone: "1-800-413-8571",
-      email: "contact@staples.com",
-      url: "https://staples.com",
-      notes: "Shop from the store in Manhattan"
-    },
-    {
-      id: 4,
-      logo: '',
-      name: "WHSmith",
-      address: "115 Buckingham Palace Rd",
-      city: "London",
-      state: "-",
-      zip: "SW1V 1JT",
-      country: "United Kingdom",
-      contact: "Vicky Butlerson",
-      phone: "+442079320805",
-      email: "contact@whsmith.com",
-      url: "https://www.whsmith.co.uk/",
-      notes: "-"
-    }
-  ]);
-
+  const [suppliers, setSuppliers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
@@ -92,8 +32,18 @@ export default function ViewSupplier() {
 
   // ----------------- Effects -----------------
   useEffect(() => {
-    console.log("ViewSupplier mounted.");
-  }, []);
+    const fetchSuppliers = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/suppliers/');
+        const data = await response.json();
+        setSuppliers(data.suppliers);
+      } catch (error) {
+        console.error("Error fetching suppliers:", error);
+      }
+    };
+
+  fetchSuppliers();
+}, []);
 
   // ----------------- Handlers -----------------
   const handleSearchChange = (e) => setSearchQuery(e.target.value);
@@ -126,6 +76,7 @@ export default function ViewSupplier() {
     setSelectedSupplier(null);
   };
 
+
   // ----------------- Computed -----------------
   const filteredSuppliers = suppliers.filter((supplier) =>
     supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -134,8 +85,10 @@ export default function ViewSupplier() {
     supplier.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
     supplier.contact.toLowerCase().includes(searchQuery.toLowerCase()) ||
     supplier.email.toLowerCase().includes(searchQuery.toLowerCase())
+    
   );
 
+  
   // ----------------- Render -----------------
   return (
     <>

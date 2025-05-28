@@ -70,6 +70,8 @@ function App() {
     <BrowserRouter>
       <ChatBot />
       <Routes>
+        {/* This will Serve as Default Path*/}
+        <Route path="/" element={<Navigate to="/login" />} />
         {/* Place here all the routes that require authetication to access */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
