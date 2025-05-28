@@ -41,7 +41,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class AllAssetSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
-    product = serializers.SerializerMethodField()
+    product = serializers.SerializerMethodField(source='product.name', read_only=True)
     status = serializers.CharField(source='status.name', read_only=True)
     
     class Meta:
@@ -51,10 +51,6 @@ class AllAssetSerializer(serializers.ModelSerializer):
     def get_category(self, obj):
         if obj.product and obj.product.category:
             return obj.product.category.name
-        return None
-    def get_product(self, obj):
-        if obj.product:
-            return obj.product.name
         return None
     
 class StatusNameSerializer(serializers.ModelSerializer):
