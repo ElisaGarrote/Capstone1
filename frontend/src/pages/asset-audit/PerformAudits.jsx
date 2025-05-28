@@ -116,12 +116,12 @@ export default function PerformAudits() {
 
   // Handle form submission
   const submission = async (data) => {
-    // console.table(data);
+    // console.log(data);
     // console.table(fileList);
 
     // Extract neccessary data.
     const { nextAuditDate, notes, auditDate } = data;
-    const assetId = data.asset.id;
+    const assetId = data.asset.value;
     const location = data.location.value;
     const userId = 1;
     // console.log("nextAuditDate: ", nextAuditDate);

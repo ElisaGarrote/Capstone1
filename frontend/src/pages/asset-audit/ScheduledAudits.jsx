@@ -19,15 +19,16 @@ export default function ScheduledAudits() {
   const location = useLocation();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [deleteFailed, setDeleteFailed] = useState(false);
   const [isUpdated, setUpdated] = useState(false);
   const [isScheduleAuditAdded, setScheduleAuditAdded] = useState(false);
   const [isExportModalOpen, setExportModalOpen] = useState(false);
   const [scheduleAuditData, setScheduleAuditData] = useState([]);
-  const [assetsData, setAssetsData] = useState([]);
   const [addedScheduleAudit, setAddedScheduleAudit] = useState(
     location.state?.addedScheduleAudit
   );
   const [isLoading, setLoading] = useState(true);
+  const [endPoint, setEndPoint] = useState(null);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
@@ -80,17 +81,6 @@ export default function ScheduledAudits() {
     fetchAllScheduleAudits();
   }, []);
 
-  // Retrieve all the assets records.
-  useEffect(() => {
-    const fetchAllAssets = async () => {
-      const fetchedData = await assetsService.fetchAllAssets();
-
-      setAssetsData(fetchedData);
-    };
-
-    fetchAllAssets();
-  }, []);
-
   // console.table(scheduleAuditData);
   // console.table(assetsData);
 
@@ -100,11 +90,24 @@ export default function ScheduledAudits() {
       Open this model if the isDeleteModalOpen state is true */}
       {isDeleteModalOpen && (
         <DeleteModal
+          endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
+          confirmDelete={async () => {
+            // Refresh the data
+            const refreshData = await assetsService.fetchAllAuditSchedules();
+            setScheduleAuditData(Array.from(refreshData));
+
             setDeleteSucess(true);
+
             setTimeout(() => {
               setDeleteSucess(false);
+            }, 5000);
+          }}
+          onDeleteFail={() => {
+            setDeleteFailed(true);
+
+            setTimeout(() => {
+              setDeleteFailed(false);
             }, 5000);
           }}
         />
@@ -115,6 +118,8 @@ export default function ScheduledAudits() {
       {isDeleteSuccess && (
         <Alert message="Deleted Successfully!" type="success" />
       )}
+
+      {deleteFailed && <Alert message="Deletion failed!" type="danger" />}
 
       {isUpdated && <Alert message="Update Successfully!" type="success" />}
 
@@ -220,9 +225,16 @@ export default function ScheduledAudits() {
                           <td>
                             <TableBtn
                               type="delete"
+                              isDisabled={
+                                data.audit_info == null ? false : true
+                              }
                               showModal={() => {
+                                setEndPoint(
+                                  assetsService.softDeleteAuditSchedEndpoint(
+                                    data.id
+                                  )
+                                );
                                 setDeleteModalOpen(true);
-                                setSelectedRowId(assetId);
                               }}
                             />
                           </td>

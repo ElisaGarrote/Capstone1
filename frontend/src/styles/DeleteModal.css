@@ -135,6 +135,10 @@
   box-shadow: 0 2px 4px rgba(255, 59, 48, 0.2);
 }
 
+.delete-modal .confirm-button:disabled {
+  cursor: default;
+}
+
 .delete-modal .cancel-button {
   background-color: #f5f5f5;
   color: #333;

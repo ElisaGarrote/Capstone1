@@ -19,11 +19,13 @@ export default function OverdueAudits() {
   const location = useLocation();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
+  const [deleteFailed, setDeleteFailed] = useState(false);
   const [isUpdated, setUpdated] = useState(false);
   const [isExportModalOpen, setExportModalOpen] = useState(false);
   const [isLoading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState("");
   const [overdueAuditsData, setOverdueAuditsData] = useState([]);
+  const [endPoint, setEndPoint] = useState(null);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
@@ -67,17 +69,34 @@ export default function OverdueAudits() {
     fetchListOverdueAudits();
   }, []);
 
+  // For debugging only.
+  // console.log("overdue data:", overdueAuditsData);
+  // console.log("endpoint:", endPoint);
+
   return (
     <>
       {/* Handle the delete modal.
       Open this model if the isDeleteModalOpen state is true */}
       {isDeleteModalOpen && (
         <DeleteModal
+          endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
+          confirmDelete={async () => {
+            // Refresh the data
+            const refreshData = await assetsService.fetchAllOverdueAudits();
+            setOverdueAuditsData(Array.from(refreshData));
+
             setDeleteSucess(true);
+
             setTimeout(() => {
               setDeleteSucess(false);
+            }, 5000);
+          }}
+          onDeleteFail={() => {
+            setDeleteFailed(true);
+
+            setTimeout(() => {
+              setDeleteFailed(false);
             }, 5000);
           }}
         />
@@ -88,6 +107,8 @@ export default function OverdueAudits() {
       {isDeleteSuccess && (
         <Alert message="Deleted Successfully!" type="success" />
       )}
+
+      {deleteFailed && <Alert message="Deletion failed!" type="danger" />}
 
       {isUpdated && <Alert message="Update Successfully!" type="success" />}
 
@@ -199,9 +220,16 @@ export default function OverdueAudits() {
                           <td>
                             <TableBtn
                               type="delete"
+                              isDisabled={
+                                data.audit_info == null ? false : true
+                              }
                               showModal={() => {
+                                setEndPoint(
+                                  assetsService.softDeleteAuditSchedEndpoint(
+                                    data.id
+                                  )
+                                );
                                 setDeleteModalOpen(true);
-                                setSelectedRowId(assetId);
                               }}
                             />
                           </td>
@@ -222,11 +250,6 @@ export default function OverdueAudits() {
             </section>
             <section></section>
           </section>
-          {/* {isLoading ? (
-            "Loading..."
-          ) : (
-            
-          )} */}
         </section>
       </main>
     </>

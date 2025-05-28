@@ -307,12 +307,12 @@ class AssetsService {
           "The status of the response for fetching product defaults is here.",
           response.status
         );
-        return null;  // Return null for not found
+        return null; // Return null for not found
       }
 
       const data = await response.json();
       console.log("Product defaults fetched: ", data);
-      
+
       // Return the product defaults data
       if (data && data.product) {
         return data.product; // Return the product defaults object if it's wrapped
@@ -320,8 +320,11 @@ class AssetsService {
         return data; // Return the data directly if it's not wrapped
       }
     } catch (error) {
-      console.log(`Error occurred while fetching product defaults with ID ${id}:`, error);
-      return null;  // Return null on error
+      console.log(
+        `Error occurred while fetching product defaults with ID ${id}:`,
+        error
+      );
+      return null; // Return null on error
     }
   }
 
@@ -644,6 +647,11 @@ class AssetsService {
   // Generate url for audit files.
   auditFileUrl(file) {
     return API_URL + file;
+  }
+
+  // Generate url for soft delete audit schedule.
+  softDeleteAuditSchedEndpoint(id) {
+    return API_URL + `audits/schedule/${id}/delete/`;
   }
 
   // Filter Assets for schedule and perform audit asset dropdown
