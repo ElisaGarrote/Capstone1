@@ -1,13 +1,25 @@
 import "../../styles/DeleteModal.css";
 import DeleteIcon from "../../assets/icons/delete-red.svg";
 import CloseIcon from "../../assets/icons/close-icon.svg";
+import { useState } from "react";
+import LoadingButton from "../LoadingButton";
 
+export default function DeleteModal({
+  closeModal,
+  confirmDelete,
+  endPoint,
+  onDeleteFail,
+  isOpen,
+  onConfirm,
+  onCancel,
+}) {
+  const [isDeleting, setDeleting] = useState(false);
 
-export default function DeleteModal({ closeModal, confirmDelete, endPoint, onDeleteFail, isOpen, onConfirm, onCancel }) {
   // Handle compatibility with different prop patterns
   const handleClose = closeModal || onCancel;
   const handleConfirm = async () => {
     if (confirmDelete) {
+      setDeleting(true);
       const success = await handleDelete(endPoint);
       if (success) {
         await confirmDelete();
@@ -23,9 +35,9 @@ export default function DeleteModal({ closeModal, confirmDelete, endPoint, onDel
   const handleDelete = async (endPoint) => {
     try {
       const response = await fetch(endPoint, {
-        method: 'DELETE',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
       if (!response.ok) throw new Error("Delete failed");
@@ -53,8 +65,10 @@ export default function DeleteModal({ closeModal, confirmDelete, endPoint, onDel
           <button
             className="confirm-button"
             onClick={handleConfirm}
+            disabled={isDeleting}
           >
-            Confirm
+            {isDeleting && <LoadingButton />}
+            {!isDeleting ? "Confirm" : "Deleting..."}
           </button>
         </div>
       </div>
