@@ -3,12 +3,15 @@
 .table-buttons-edit img,
 .table-buttons-delete img,
 .table-buttons-view img,
-.table-buttons-audit img {
+.table-buttons-audit img,
+.table-buttons-delete-disabled img {
   display: flex;
+  justify-self: center;
   height: 16px;
   width: 16px;
   object-fit: contain;
 }
+
 .table-buttons-audit img {
   width: 24px;
   height: 24px;
@@ -17,7 +20,8 @@
 .table-buttons-edit,
 .table-buttons-delete,
 .table-buttons-view,
-.table-buttons-audit {
+.table-buttons-audit,
+.table-buttons-delete-disabled {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -28,10 +32,21 @@
   height: 34px;
   margin: 0 auto;
   box-sizing: border-box;
+
+  background-color: var(--bg-color);
+  border: 1px solid #d3d3d3;
+
+  transition: 0.5s ease;
+}
+
+.table-buttons-delete-disabled {
+  background-color: #a9a9a9;
+  cursor: default;
 }
 
 .table-buttons-checkin,
-.table-buttons-checkout {
+.table-buttons-checkout,
+.table-buttons-checkin-disabled {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -41,6 +56,11 @@
   font-size: 12px;
   min-width: 70px;
   height: 28px;
+}
+
+.table-buttons-checkin-disabled {
+  background-color: #a9a9a9;
+  cursor: default;
 }
 
 .table-buttons-checkout {
@@ -61,15 +81,6 @@
 
 .table-buttons-checkin:hover {
   background-color: rgba(0, 123, 255, 0.8);
-}
-
-.table-buttons-edit,
-.table-buttons-delete,
-.table-buttons-view,
-.table-buttons-audit {
-  background-color: var(--bg-color);
-  border: 1px solid #d3d3d3;
-  transition: 0.5s ease;
 }
 
 .table-buttons-edit:hover,
