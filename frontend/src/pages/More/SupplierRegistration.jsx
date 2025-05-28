@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import '../../styles/Registration.css';
 import '../../styles/SupplierRegistration.css';
 import TopSecFormPage from '../../components/TopSecFormPage';
+import assetsService from "../../services/assets-service";
+import contextsService from "../../services/contexts-service";
 
 const SupplierRegistration = () => {
   const navigate = useNavigate();
@@ -38,9 +41,7 @@ const SupplierRegistration = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (validateField(name, value) || value === '') {
-      setFormData({ ...formData, [name]: value });
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleFileSelection = (e) => {
@@ -63,18 +64,53 @@ const SupplierRegistration = () => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    for (const [key, value] of Object.entries(formData)) {
-      if ((key !== 'notes' && key !== 'url') && !validateField(key, value)) {
-        alert(`Please correct the field: ${key}`);
-        return;
-      }
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Validate fields again before sending (optional)
+  for (const [key, value] of Object.entries(formData)) {
+    if ((key !== 'notes' && key !== 'url') && !validateField(key, value)) {
+      alert(`Please correct the field: ${key}`);
+      return;
+    }
+  }
+
+  // Prepare form data for backend (Django expects these keys)
+  const dataToSend = new FormData();
+  dataToSend.append('name', formData.name);
+  dataToSend.append('address', formData.address);
+  dataToSend.append('city', formData.city);
+  dataToSend.append('zip', formData.zip);
+  dataToSend.append('contact_name', formData.contact);
+  dataToSend.append('phone_number', formData.phone);
+  dataToSend.append('email', formData.email);
+  dataToSend.append('URL', formData.url);
+  dataToSend.append('notes', formData.notes);
+  if (logoFile) dataToSend.append('logo', logoFile);
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/contexts/supplier/registration/', {
+      method: 'POST',
+      body: dataToSend,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Server error:', errorData);
+      alert('Failed to submit. Please check input fields.');
+      return;
     }
 
-    console.log('Form submitted:', formData, logoFile);
+    const result = await response.json();
+    console.log('Success:', result);
+    alert('Supplier added successfully!');
     navigate('/More/ViewSupplier');
-  };
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Failed to connect to the server.');
+  }
+};
+
 
   return (
     <>
@@ -98,7 +134,7 @@ const SupplierRegistration = () => {
                 type="text"
                 id="name"
                 name="name"
-                placeholder="Amazon"
+                placeholder="Supplier Name"
                 value={formData.name}
                 onChange={handleInputChange}
                 maxLength="100"
@@ -112,7 +148,7 @@ const SupplierRegistration = () => {
                 type="text"
                 id="address"
                 name="address"
-                placeholder="123 Main St"
+                placeholder="Supplier Address"
                 value={formData.address}
                 onChange={handleInputChange}
                 maxLength="200"
@@ -126,7 +162,7 @@ const SupplierRegistration = () => {
                 type="text"
                 id="city"
                 name="city"
-                placeholder="Seattle"
+                placeholder="Enter City"
                 value={formData.city}
                 onChange={handleInputChange}
                 maxLength="50"
@@ -135,15 +171,15 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="zip">Zip *</label>
+              <label htmlFor="zip">Zip Code*</label>
               <input
                 type="text"
                 id="zip"
                 name="zip"
-                placeholder="98109"
+                placeholder="Enter Zip Code"
                 value={formData.zip}
                 onChange={handleInputChange}
-                maxLength="10"
+                maxLength="5"
                 required
               />
             </fieldset>
@@ -154,7 +190,7 @@ const SupplierRegistration = () => {
                 type="text"
                 id="contact"
                 name="contact"
-                placeholder="James Peterson"
+                placeholder="Enter Contact Name"
                 value={formData.contact}
                 onChange={handleInputChange}
                 maxLength="100"
@@ -168,10 +204,10 @@ const SupplierRegistration = () => {
                 type="text"
                 id="phone"
                 name="phone"
-                placeholder="123-456-7890"
+                placeholder="XXXX-XXX-XXXX"
                 value={formData.phone}
                 onChange={handleInputChange}
-                maxLength="20"
+                maxLength="13"
                 required
               />
             </fieldset>

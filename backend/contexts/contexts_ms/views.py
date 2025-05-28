@@ -30,6 +30,7 @@ def get_contexts_names(request):
     }
     return Response(data)
 
+#SUPPLIERS DATA
 # Get all supplier's names
 @api_view(['GET'])
 def get_suppliers_names(request):
@@ -41,6 +42,32 @@ def get_suppliers_names(request):
     }
     return Response(data)
 
+@api_view(['GET'])
+def get_supplier(request):
+    suppliers = Supplier.objects.filter(is_deleted=False)
+    serialized_suppliers = SupplierSerializer(suppliers, many=True)
+    return Response({'suppliers': serialized_suppliers.data})
+
+# Register supplier 
+@api_view(['POST'])
+def create_supplier(request):
+    serializedSupplier = SupplierSerializer()
+    data = request.data
+    serializer = SupplierSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def soft_delete_supplier(request, id):
+    try:
+        supplier = Supplier.objects.get(pk=id)
+        supplier.is_deleted = True
+        supplier.save()
+        return Response({'detail': 'Supplier soft-deleted'})
+    except Supplier.DoesNotExist:
+        return Response({'detail': 'Supplier not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 
