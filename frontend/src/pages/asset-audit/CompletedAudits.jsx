@@ -115,7 +115,6 @@ export default function CompletedAudits() {
                       <th>STATUS</th>
                       <th>LOCATION</th>
                       <th>PERFORM BY</th>
-                      <th>DELETE</th>
                       <th>VIEW</th>
                     </tr>
                   </thead>
@@ -139,15 +138,6 @@ export default function CompletedAudits() {
                           </td>
                           <td>{data.location}</td>
                           <td>Pia Piatos-Lim</td>
-                          <td>
-                            <TableBtn
-                              type="delete"
-                              showModal={() => {
-                                setDeleteModalOpen(true);
-                                setSelectedRowId(assetId);
-                              }}
-                            />
-                          </td>
                           <td>
                             <TableBtn
                               type="view"

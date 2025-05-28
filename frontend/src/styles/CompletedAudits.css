@@ -191,9 +191,7 @@
 
 /* Set the width of the delete and view header and its data*/
 .completed-audits-page table th:nth-last-child(1),
-.completed-audits-page table td:nth-last-child(1),
-.completed-audits-page table th:nth-last-child(2),
-.completed-audits-page table td:nth-last-child(2) {
+.completed-audits-page table td:nth-last-child(1) {
   /* width: 5vw; */
   width: 50px;
   text-align: center;
