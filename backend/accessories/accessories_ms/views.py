@@ -91,16 +91,33 @@ def update_accessory(request, id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Soft deletes an accessory
-@api_view(['DELETE'])
+@api_view(['PATCH'])
 def soft_delete_accessory(request, id):
     try:
-        accessory = Accessory.objects.get(id=id)
+        accessory = Accessory.objects.get(pk=id, is_deleted=False)
     except Accessory.DoesNotExist:
         return Response({'error': 'Accessory not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     accessory.is_deleted = True
     accessory.save()
     return Response({'message': 'Accessory soft-deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+# Create accessory checkout
+@api_view(['POST'])
+def create_accessory_checkout(request):
+    data = request.data
+    serializer = AccessoryCheckoutSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def get_all_accessory_checkout(request):
+    queryset = AccessoryCheckout.objects.all()
+    serializer = AccessoryCheckoutSerializer(queryset, many=True)
+
+    return Response(serializer.data)
 
 # Gets all categories of accessories
 @api_view(['GET'])
@@ -148,10 +165,10 @@ def update_accessory_category(request, id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Soft deletes a category of accessory
-@api_view(['DELETE'])
+@api_view(['PATCH'])
 def soft_delete_accessory_category(request, id):
     try:
-        category = AccessoryCategory.objects.get(pk=id)
+        category = AccessoryCategory.objects.get(pk=id, is_deleted=False)
     except AccessoryCategory.DoesNotExist:
         return Response({'error': 'Category not found.'}, status=status.HTTP_404_NOT_FOUND)
 
