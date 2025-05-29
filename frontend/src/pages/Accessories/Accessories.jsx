@@ -10,6 +10,7 @@ import Alert from "../../components/Alert";
 import ExportModal from "../../components/Modals/ExportModal";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function Accessories() {
   const [selectedRowId, setSelectedRowId] = useState(null);
@@ -23,6 +24,7 @@ export default function Accessories() {
   const [accessories, setAccessories] = useState([]);
   const [endPoint, setEndPoint] = useState(null);
   const [checkedItems, setCheckedItems] = useState([]);
+  const [isLoading, setLoading] = useState(true);
   const allChecked = checkedItems.length === accessories.length;
   const location = useLocation();
 
@@ -35,6 +37,7 @@ export default function Accessories() {
       const response = await fetch("http://localhost:8004/accessories/");
       const data = await response.json();
       setAccessories(data.data);
+      setLoading(false);
       console.log("Accessories:", data);
     } catch (err) {
       console.log(err);
@@ -77,9 +80,9 @@ export default function Accessories() {
 
   useEffect(() => {
     if (newAccessoryAdded) {
-      setNewAccessoryAdde(true);
+      setNewAccessoryAdded(true);
       setTimeout(() => {
-        setNewAccessoryAdde(false);
+        setNewAccessoryAdded(false);
       }, 5000);
     }
   }, [newAccessoryAdded]);
@@ -129,7 +132,7 @@ export default function Accessories() {
       )}
 
       {isDeleteFailed && (
-        <Alert message="Delete failed. Please try again." type="error" />
+        <Alert message="Delete failed. Please try again." type="danger" />
       )}
 
       {isNewAccessoryAdded && (
@@ -165,11 +168,17 @@ export default function Accessories() {
             </div>
           </section>
           <section className="middle">
-            {Array.from(accessories).length === 0 ? (
-              <section className="no-products-message">
-                <p>No accessories found. Please add some accessory.</p>
-              </section>
-            ) : (
+            {/* Render loading skeleton while waiting to the response from the API request*/}
+            {isLoading && <SkeletonLoadingTable />}
+
+            {/* Render message if the scheduleAuditData is empty */}
+            {!isLoading && Array.from(accessories).length === 0 && (
+              <p className="table-message">
+                No accessories found. Please add some accessory.
+              </p>
+            )}
+
+            {Array.from(accessories).length > 0 && (
               <table>
                 <thead>
                   <tr>
@@ -228,7 +237,10 @@ export default function Accessories() {
                         <TableBtn
                           type="checkout"
                           navigatePage={"/accessories/checkout"}
-                          data={accessory.name}
+                          data={{
+                            accessory_name: accessory.name,
+                            accessory_id: accessory.id,
+                          }}
                         />
                       </td>
                       <td>
@@ -239,9 +251,7 @@ export default function Accessories() {
                         />
                       </td>
 
-                      <td>
-                        {accessory.category_name}
-                      </td>
+                      <td>{accessory.category_name}</td>
 
                       <td>{accessory.location}</td>
 
@@ -257,7 +267,7 @@ export default function Accessories() {
                           type="delete"
                           showModal={() => {
                             setEndPoint(
-                              `http://localhost:8004/accessories/delete/${accessory.id}`
+                              `http://localhost:8004/accessories/${accessory.id}/delete`
                             );
                             setDeleteModalOpen(true);
                           }}
