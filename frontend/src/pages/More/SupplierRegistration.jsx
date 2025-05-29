@@ -89,7 +89,7 @@ const handleSubmit = async (e) => {
   if (logoFile) dataToSend.append('logo', logoFile);
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/contexts/supplier/registration/', {
+    const response = await fetch('contexts-service-production.up.railway.app', {
       method: 'POST',
       body: dataToSend,
     });
