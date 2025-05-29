@@ -88,7 +88,9 @@ export default function CheckoutAccessory() {
     }),
   };
 
+  // For debugging only.
   console.log("location:", dropdownLocation);
+  console.log("data received:", data);
 
   return (
     <>
@@ -101,7 +103,7 @@ export default function CheckoutAccessory() {
             root="Accessory"
             currentPage="Checkout Accessory"
             rootNavigatePage="/accessories"
-            title={data}
+            title={data.accessory_name}
           />
         </section>
         <section className="checkout-form">
