@@ -25,30 +25,6 @@ export default function AssetRepairs() {
   // Initial maintenance mock data
   const defaultMaintenanceItems = [
     {
-      id: "100011",
-      name: "iPad Pro",
-      type: "Software",
-      maintenanceName: "Fixed keyboard",
-      startDate: "May 2, 2025",
-      endDate: "-",
-      cost: "USD 355.0",
-      supplier: "Amazon",
-      notes: "-",
-      attachments: "-"
-    },
-    {
-      id: "100013",
-      name: "Galaxy S24 Ultra",
-      type: "Maintenance",
-      maintenanceName: "Changed screen",
-      startDate: "May 2, 2025",
-      endDate: "-",
-      cost: "USD 23.0",
-      supplier: "WHSmith",
-      notes: "-",
-      attachments: "-"
-    },
-    {
       id: "100020",
       name: "Surface Laptop 5",
       type: "Upgrade",
