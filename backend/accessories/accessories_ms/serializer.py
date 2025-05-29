@@ -32,3 +32,8 @@ class AccessoryNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Accessory
         fields = ['id', 'name']
+
+class AccessoryCheckoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AccessoryCheckout
+        fields = '__all__'
