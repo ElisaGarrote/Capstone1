@@ -89,13 +89,16 @@ const handleSubmit = async (e) => {
   if (logoFile) dataToSend.append('logo', logoFile);
 
   try {
-    const response = await fetch('contexts-service-production.up.railway.app', {
+    const response = await fetch('https://contexts-service-production.up.railway.app/api/suppliers', {
       method: 'POST',
-      body: dataToSend,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataToSend),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({})); // Prevent JSON parse crash
       console.error('Server error:', errorData);
       alert('Failed to submit. Please check input fields.');
       return;
@@ -109,7 +112,7 @@ const handleSubmit = async (e) => {
     console.error('Error:', err);
     alert('Failed to connect to the server.');
   }
-};
+
 
 
   return (
