@@ -41,7 +41,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class AllAssetSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
-    product = serializers.SerializerMethodField(source='product.name', read_only=True)
+    product = serializers.CharField(source='product.name', read_only=True)
     status = serializers.CharField(source='status.name', read_only=True)
     
     class Meta:
