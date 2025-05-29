@@ -14,4 +14,9 @@ urlpatterns = [
     path('accessories/category/registration', create_accessory_category, name='add_new_accessory_category'),
     path('accessories/category/<int:id>/update', update_accessory_category, name='update_accessory_category'),
     path('accessories/category/<int:id>/delete', soft_delete_accessory_category, name='delete_accessory_category'),
+
+    # Accessory Checkin and Checkout
+    path('accessories/checkout/all/', get_all_accessory_checkout, name='get_all_accessory_checkout'),
+    path('accessories/checkout/registration/', create_accessory_checkout, name='create_accessory_checkout'),
+
 ]
