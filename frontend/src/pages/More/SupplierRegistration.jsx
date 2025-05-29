@@ -88,31 +88,29 @@ const handleSubmit = async (e) => {
   dataToSend.append('notes', formData.notes);
   if (logoFile) dataToSend.append('logo', logoFile);
 
-  try {
-    const response = await fetch('https://contexts-service-production.up.railway.app/api/suppliers', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(dataToSend),
-    });
+    try {
+      const response = await fetch('https://contexts-service-production.up.railway.app/api/suppliers'
+  , {
+        method: 'POST',
+        body: dataToSend,
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({})); // Prevent JSON parse crash
-      console.error('Server error:', errorData);
-      alert('Failed to submit. Please check input fields.');
-      return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Server error:', errorData);
+        alert('Failed to submit. Please check input fields.');
+        return;
+      }
+
+      const result = await response.json();
+      console.log('Success:', result);
+      alert('Supplier added successfully!');
+      navigate('/More/ViewSupplier');
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Failed to connect to the server.');
     }
-
-    const result = await response.json();
-    console.log('Success:', result);
-    alert('Supplier added successfully!');
-    navigate('/More/ViewSupplier');
-  } catch (err) {
-    console.error('Error:', err);
-    alert('Failed to connect to the server.');
-  }
-
+  };
 
 
   return (
