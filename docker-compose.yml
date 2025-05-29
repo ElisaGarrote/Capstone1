@@ -61,6 +61,26 @@ services:
       - app-network
     restart: always
 
+  accessories:
+    build:
+      context: ./backend/accessories
+      dockerfile: Dockerfile.local
+    container_name: accessories-service
+    ports:
+      - "8004:8000"  # Map host port 8004 to container port 8000
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
+      - DEBUG=${DEBUG:-True}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - DB_NAME=railway
+      - DB_USER=postgres
+      - DB_PASSWORD=ZzFiWKvFfapCGIkMvWUhzFgyQssaDuzx
+      - DB_HOST=ballast.proxy.rlwy.net
+      - DB_PORT=22274
+    networks:
+      - app-network
+    restart: always
+
 networks:
   app-network:
     driver: bridge
