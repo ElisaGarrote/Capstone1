@@ -37,3 +37,8 @@ class AccessoryCheckoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccessoryCheckout
         fields = '__all__'
+
+class AccessoryCheckinSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AccessoryCheckin
+        fields = '__all__'
