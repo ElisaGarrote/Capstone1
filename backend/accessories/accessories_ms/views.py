@@ -119,6 +119,23 @@ def get_all_accessory_checkout(request):
 
     return Response(serializer.data)
 
+# Create accessory checkin
+@api_view(['POST'])
+def create_accessory_checkin(request):
+    data = request.data
+    serializer = AccessoryCheckinSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def get_all_accessory_checkin(request):
+    queryset = AccessoryCheckin.objects.all()
+    serializer = AccessoryCheckinSerializer(queryset, many=True)
+
+    return Response(serializer.data)
+
 # Gets all categories of accessories
 @api_view(['GET'])
 def get_accessory_categories(request):
