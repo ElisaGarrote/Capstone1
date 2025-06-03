@@ -451,6 +451,47 @@ class AssetsService {
     }
   }
 
+  // Update audit
+  async updateAudit(
+    auditId,
+    location,
+    userId,
+    notes,
+    auditScheduleId,
+    auditDate,
+    nextAuditDate
+  ) {
+    try {
+      const response = await fetch(API_URL + `audits/get/edit/${auditId}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          location: location,
+          user_id: userId,
+          notes: notes,
+          audit_schedule: auditScheduleId,
+          audit_date: auditDate,
+          next_audit_date: nextAuditDate,
+        }),
+      });
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for updating audit is here.",
+          response.status
+        );
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error occur while creating audit!", error);
+    }
+  }
+
   // Create Audit Files
   async postAuditFiles(auditId, files) {
     try {
@@ -484,6 +525,27 @@ class AssetsService {
     } catch (error) {
       console.error("Error occur while creating audit file!", error);
     }
+  }
+
+  // Soft delete Audit files
+  async softDeleteAuditFiles(auditId) {
+    const response = await fetch(API_URL + `audits/file/${auditId}/delete/`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.log(
+        "The status of the response for soft deleting audit files is here.",
+        response.status
+      );
+      return false;
+    }
+
+    return true;
   }
 
   // Create Schedule Audit
@@ -555,6 +617,39 @@ class AssetsService {
     }
   }
 
+  // Update Audit Schedule
+  async updateAuditSchedule(id, assetId, date, notes) {
+    try {
+      const response = await fetch(
+        API_URL + `audits/get/edit/schedule/${id}/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            asset: assetId,
+            date,
+            notes,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.log(
+          "The status of the response for updating audit schedule is here.",
+          response.status
+        );
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.log("Error occur while updating audit schedules!", error);
+    }
+  }
+
   // Retrieve all audit records
   async fetchAllAudits() {
     try {
@@ -573,9 +668,9 @@ class AssetsService {
       const data = await response.json();
       // console.log("Data for all audit fetched: ", data);
 
-      // Sort data in ascending order based on the audit_date.
+      // Sort data in descending order based on the audit_date.
       const sortedData = data.sort(
-        (a, b) => new Date(a.audit_date) - new Date(b.audit_date)
+        (a, b) => new Date(b.audit_date) - new Date(a.audit_date)
       );
 
       return sortedData;
