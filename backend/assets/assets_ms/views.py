@@ -285,6 +285,24 @@ def get_all_audit(request):
 
     return Response(serializer.data)
 
+@api_view(['GET', 'PUT'])
+@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
+def get_edit_audit_by_id(request, id):
+    try:
+        queryset = Audit.objects.get(pk=id, is_deleted=False)
+    except Audit.DoesNotExist:
+        return Response({'detail': 'Audit not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = AuditSerializer(queryset)
+        return Response(serializer.data)
+    elif request.method == 'PUT':
+        serializer = AuditSerializer(queryset, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 # Audit Files
 @api_view(['POST'])
 @permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
