@@ -47,6 +47,15 @@
   gap: 5px;
 }
 
+.perform-audit-page fieldset .asset {
+  border-radius: 10px;
+  background-color: rgba(211, 211, 211, 0.5);
+}
+
+.perform-audit-form fieldset .asset input {
+  color: var(--secondary-text-color);
+}
+
 .perform-audit-page fieldset label:not(.upload-image-btn) {
   color: var(--secondary-text-color);
   font-weight: 600;
