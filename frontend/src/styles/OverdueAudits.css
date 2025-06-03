@@ -20,8 +20,26 @@
   align-items: center;
 }
 
-.overdue-audits-page .main-top div,
-.overdue-audits-page .container div {
+.overdue-audits-page
+  .main-top
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ),
+.overdue-audits-page
+  .container
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ) {
   display: flex;
   align-items: center;
   gap: 10px;

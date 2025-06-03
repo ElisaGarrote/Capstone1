@@ -21,8 +21,26 @@
   align-items: center;
 }
 
-.asset-audits-page .main-top div,
-.asset-audits-page .container div {
+.asset-audits-page
+  .main-top
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ),
+.asset-audits-page
+  .container
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ) {
   display: flex;
   align-items: center;
   gap: 10px;
