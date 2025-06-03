@@ -17,7 +17,7 @@ export default function Status({
   */
 
   return (
-    <main className={`status-${type.split(" ").join("-")}`}>
+    <div className={`status-${type.split(" ").join("-")}`}>
       <div className="circle"></div>
       {name}
       {/* Below will be rendered when any of these (i.e personName or location)
@@ -28,9 +28,11 @@ export default function Status({
           <div className="icon">
             <img src={personName != null ? personIcon : locationIcon} alt="" />
           </div>
-          <span className="status-target">{personName != null ? personName : location}</span>
+          <span className="status-target">
+            {personName != null ? personName : location}
+          </span>
         </span>
       )}
-    </main>
+    </div>
   );
 }

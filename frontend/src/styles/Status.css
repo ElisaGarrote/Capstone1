@@ -7,7 +7,7 @@
   display: inline-flex;
   height: auto;
   min-height: 4vh;
-  width: auto;
+  width: fit-content;
   flex-direction: row;
   align-items: center;
   padding: 4px 12px;
@@ -91,7 +91,8 @@
 
 /* Ensure person icon in deployed status is blue */
 .status-deployed .icon img {
-  filter: invert(40%) sepia(85%) saturate(1500%) hue-rotate(199deg) brightness(100%) contrast(101%);
+  filter: invert(40%) sepia(85%) saturate(1500%) hue-rotate(199deg)
+    brightness(100%) contrast(101%);
 }
 
 .status-archived {
@@ -146,10 +147,10 @@
 
 .status-lost {
   background-color: rgba(255, 59, 48, 0.1);
-  color: #FF3B30;
+  color: #ff3b30;
 }
 
 .status-lost .circle {
-  background-color: #FF3B30;
+  background-color: #ff3b30;
   --pulse-color: 255, 59, 48;
 }
