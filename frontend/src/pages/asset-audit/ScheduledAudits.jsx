@@ -83,6 +83,7 @@ export default function ScheduledAudits() {
 
   // console.table(scheduleAuditData);
   // console.table(assetsData);
+  // console.log("current location:", location.pathname);
 
   return (
     <>
@@ -141,8 +142,13 @@ export default function ScheduledAudits() {
             <MediumButtons
               type="schedule-audits"
               navigatePage="/audits/schedule"
+              previousPage={location.pathname}
             />
-            <MediumButtons type="perform-audits" navigatePage="/audits/new" />
+            <MediumButtons
+              type="perform-audits"
+              navigatePage="/audits/new"
+              previousPage={location.pathname}
+            />
           </div>
         </section>
         <section className="main-middle">
@@ -212,6 +218,7 @@ export default function ScheduledAudits() {
                             <TableBtn
                               type="audit"
                               navigatePage="/audits/new"
+                              data={data}
                               previousPage={location.pathname}
                             />
                           </td>

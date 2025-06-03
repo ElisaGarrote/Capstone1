@@ -126,8 +126,13 @@ export default function OverdueAudits() {
             <MediumButtons
               type="schedule-audits"
               navigatePage="/audits/schedule"
+              previousPage={location.pathname}
             />
-            <MediumButtons type="perform-audits" navigatePage="/audits/new" />
+            <MediumButtons
+              type="perform-audits"
+              navigatePage="/audits/new"
+              previousPage={location.pathname}
+            />
           </div>
         </section>
         <section className="main-middle">
@@ -136,7 +141,7 @@ export default function OverdueAudits() {
           </section>
           <section className="container">
             <section className="top">
-              <h2>Overdue for an Audits</h2>
+              <h2>Overdue for Audits</h2>
               <div>
                 <form action="" method="post">
                   <input type="text" placeholder="Search..." />
@@ -207,6 +212,7 @@ export default function OverdueAudits() {
                             <TableBtn
                               type="audit"
                               navigatePage="/audits/new"
+                              data={data}
                               previousPage={location.pathname}
                             />
                           </td>
