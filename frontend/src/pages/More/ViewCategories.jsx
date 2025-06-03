@@ -158,17 +158,8 @@ export default function ViewCategories() {
                       </div>
                     </td>
                     <td style={{ width: '20%', color: '#545f71' }}>{category.type}</td>
-                    <td style={{ width: '20%', textAlign: 'left', paddingLeft: '12px' }}>
-                      <div className="quantity-icon" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71', justifyContent: 'flex-start', marginLeft: '0' }}>
-                        {category.type === "Accessory" ? (
-                          <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#007bff', borderRadius: '2px' }}></span>
-                        ) : category.type === "License" ? (
-                          <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#6f42c1', borderRadius: '2px' }}></span>
-                        ) : (
-                          <span style={{ display: 'inline-block', width: '12px', height: '12px', backgroundColor: '#20c997', borderRadius: '2px' }}></span>
-                        )}
-                        <span style={{ textAlign: 'left', color: '#545f71' }}>{category.quantity}</span>
-                      </div>
+                    <td style={{ width: '20%', textAlign: 'left', paddingLeft: '12px', color: '#545f71' }}>
+                      {category.quantity}
                     </td>
                     <td style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>
                       <button

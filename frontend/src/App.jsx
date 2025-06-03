@@ -36,6 +36,7 @@ import AssetRepairs from "./pages/Repair/Maintenance";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
 import Consumables from "./pages/Consumables/Consumables";
+import ConsumablesRegistration from "./pages/Consumables/ConsumablesRegistration";
 import PasswordResetRequest from "./pages/PasswordResetRequest";
 import PasswordReset from "./pages/PasswordReset";
 import UpcomingEndOfLife from "./pages/UpcomingEndOfLife";
@@ -59,6 +60,14 @@ import ViewSupplier from "./pages/More/ViewSupplier";
 import SupplierTableDetails from "./pages/More/SupplierTableDetails";
 import SupplierRegistration from "./pages/More/SupplierRegistration";
 import SupplierEdit from "./pages/More/SupplierEdit";
+import ViewStatus from "./pages/More/ViewStatus";
+import StatusRegistration from "./pages/More/StatusRegistration";
+import StatusEdit from "./pages/More/StatusEdit";
+import StatusDetails from "./pages/More/StatusDetails";
+import ViewDepreciations from "./pages/More/ViewDepreciations";
+import DepreciationRegistration from "./pages/More/DepreciationRegistration";
+import DepreciationEdit from "./pages/More/DepreciationEdit";
+import RecycleBin from "./pages/More/RecycleBin";
 
 function Logout() {
   localStorage.clear();
@@ -114,6 +123,14 @@ function App() {
             element={<CategoryRegistration />}
           />
           <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
+          <Route path="/More/ViewStatus" element={<ViewStatus />} />
+          <Route path="/More/StatusRegistration" element={<StatusRegistration />} />
+          <Route path="/More/StatusEdit/:id" element={<StatusEdit />} />
+          <Route path="/More/StatusDetails/:id" element={<StatusDetails />} />
+          <Route path="/More/ViewDepreciations" element={<ViewDepreciations />} />
+          <Route path="/More/DepreciationRegistration" element={<DepreciationRegistration />} />
+          <Route path="/More/DepreciationEdit/:id" element={<DepreciationEdit />} />
+          <Route path="/More/RecycleBin" element={<RecycleBin />} />
           <Route path="/accessories/checkin" element={<CheckinAccessory />} />
           <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
           <Route
@@ -166,6 +183,9 @@ function App() {
             element={<EditMaintenance />}
           />
           <Route path="/consumables" element={<Consumables />} />
+          <Route path="/consumables/registration" element={<ConsumablesRegistration />} />
+          <Route path="/consumables/registration/:id" element={<ConsumablesRegistration />} />
+          <Route path="/consumables/edit/:id" element={<ConsumablesRegistration />} />
           <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
           <Route path="/warranties" element={<ExpiringWarranties />} />
           <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />

@@ -6,6 +6,7 @@ import '../../styles/ConsumablesButtons.css';
 import TableBtn from "../../components/buttons/TableButtons";
 import ConsumablesTableBtn from "../../components/buttons/ConsumablesTableButtons";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import ConsumablesViewModal from "../../components/modals/ConsumablesViewModal";
 import SampleImage from "../../assets/img/dvi.jpeg";
 
 export default function Consumables() {
@@ -85,6 +86,8 @@ export default function Consumables() {
   ]);
 
   const [checkedItems, setCheckedItems] = useState([]);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedConsumableId, setSelectedConsumableId] = useState(null);
   const allChecked = checkedItems.length === consumables.length;
 
   const toggleSelectAll = () => {
@@ -106,7 +109,13 @@ export default function Consumables() {
   };
 
   const handleView = (id) => {
-    console.log(`View item with id: ${id}`);
+    setSelectedConsumableId(id);
+    setShowViewModal(true);
+  };
+
+  const closeViewModal = () => {
+    setShowViewModal(false);
+    setSelectedConsumableId(null);
   };
 
   return (
@@ -181,6 +190,12 @@ export default function Consumables() {
           <section className="bottom"></section>
         </div>
       </main>
+
+      <ConsumablesViewModal
+        isOpen={showViewModal}
+        onClose={closeViewModal}
+        consumableId={selectedConsumableId}
+      />
     </>
   );
 }
