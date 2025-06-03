@@ -17,8 +17,6 @@ import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function CompletedAudits() {
   const location = useLocation();
-  let assetId = 123880;
-  let assetName = "Microsoft Surface Pro 11";
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isExportModalOpen, setExportModalOpen] = useState(false);
@@ -72,8 +70,13 @@ export default function CompletedAudits() {
             <MediumButtons
               type="schedule-audits"
               navigatePage="/audits/schedule"
+              previousPage={location.pathname}
             />
-            <MediumButtons type="perform-audits" navigatePage="/audits/new" />
+            <MediumButtons
+              type="perform-audits"
+              navigatePage="/audits/new"
+              previousPage={location.pathname}
+            />
           </div>
         </section>
         <section className="main-middle">

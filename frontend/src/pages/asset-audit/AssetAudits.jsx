@@ -148,8 +148,13 @@ export default function AssetAudits() {
             <MediumButtons
               type="schedule-audits"
               navigatePage="/audits/schedule"
+              previousPage={location.pathname}
             />
-            <MediumButtons type="perform-audits" navigatePage="/audits/new" />
+            <MediumButtons
+              type="perform-audits"
+              navigatePage="/audits/new"
+              previousPage={location.pathname}
+            />
           </div>
         </section>
         <section className="main-middle">
