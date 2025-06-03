@@ -4,18 +4,25 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useState, useEffect } from "react";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import assetsService from "../../services/assets-service";
 import { useForm, Controller } from "react-hook-form";
 import dateRelated from "../../utils/dateRelated";
 import Skeleton from "react-loading-skeleton";
+import LoadingButton from "../../components/LoadingButton";
 
 export default function ScheduleRegistration() {
   const navigate = useNavigate();
+  const location = useLocation();
   const animatedComponents = makeAnimated();
   const [currentDate, setCurrentDate] = useState("");
   const [isLoading, setLoading] = useState(true);
   const [filteredAssets, setFilteredAssets] = useState([]);
+  const [isSubmitting, setSubmitting] = useState(false);
+
+  // Retrieve the "previousPage" value passed from the navigation state.
+  // If the "previousPage" is not exist, the value for this is "null".
+  const previousPage = location.state?.previousPage || null;
 
   // Get all the assets that have not yet been scheduled or audited.
   useEffect(() => {
@@ -46,6 +53,7 @@ export default function ScheduleRegistration() {
   });
 
   const submission = async (data) => {
+    setSubmitting(true);
     const success = await assetsService.postScheduleAudit(
       data.asset,
       data.auditDueDate,
@@ -54,6 +62,7 @@ export default function ScheduleRegistration() {
 
     if (success) {
       navigate("/audits/scheduled", { state: { addedScheduleAudit: true } });
+      setSubmitting(false);
     } else {
       console.log("Failed to create schedule audit!");
     }
@@ -78,6 +87,20 @@ export default function ScheduleRegistration() {
     }),
   };
 
+  // Set the root of the page.
+  const getRootPage = () => {
+    switch (previousPage) {
+      case "/audits":
+        return "Audits";
+      case "/audits/overdue":
+        return "Overdue for Audits";
+      case "/audits/scheduled":
+        return "Schedule Audits";
+      case "/audits/completed":
+        return "Completed Audits";
+    }
+  };
+
   return (
     <>
       <nav>
@@ -86,9 +109,9 @@ export default function ScheduleRegistration() {
       <main className="schedule-registration-page">
         <section className="top">
           <TopSecFormPage
-            root="Audits"
+            root={getRootPage()}
             currentPage="Schedule Audits"
-            rootNavigatePage="/audits"
+            rootNavigatePage={previousPage}
             title="Schedule Audits"
           />
         </section>
@@ -144,8 +167,13 @@ export default function ScheduleRegistration() {
                 {...register("notes")}
               ></textarea>
             </fieldset>
-            <button type="submit" className="save-btn" disabled={!isValid}>
-              Save
+            <button
+              type="submit"
+              className="save-btn"
+              disabled={!isValid || isSubmitting}
+            >
+              {isSubmitting && <LoadingButton />}
+              {!isSubmitting ? "Save" : "Saving..."}
             </button>
           </form>
         </section>
