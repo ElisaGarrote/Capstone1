@@ -5,20 +5,28 @@ import { useState, useEffect, use } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
 import Skeleton from "react-loading-skeleton";
+import LoadingButton from "../../components/LoadingButton";
 
 export default function PerformAudits() {
   const navigate = useNavigate();
   const animatedComponents = makeAnimated();
+  const location = useLocation();
   const [currentDate, setCurrentDate] = useState("");
   const [previewImages, setPreviewImages] = useState([]);
   const [fileList, setFileList] = useState([]);
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [isLoading, setLoading] = useState(true);
+  const [isSubmitting, setSubmitting] = useState(false);
+
+  // Retrieve the "data" value passed from the navigation state.
+  // If the "data" is not exist, the value for this is "null".
+  const dataReceive = location.state?.data || null;
+  const previousPage = location.state?.previousPage || null;
 
   // Get all the assets that have not yet been scheduled or audited.
   useEffect(() => {
@@ -116,7 +124,8 @@ export default function PerformAudits() {
 
   // Handle form submission
   const submission = async (data) => {
-    // console.log(data);
+    setSubmitting(true);
+    // console.log("submission", data);
     // console.table(fileList);
 
     // Extract neccessary data.
@@ -152,27 +161,121 @@ export default function PerformAudits() {
       if (auditDataResponse) {
         // console.log("Successfully created audit!");
 
-        if (fileList) {
+        // POST file fro the created audit if length of fileList is more than 0
+        if (fileList.length > 0) {
           // POST file for the created audit
           const success = await assetsService.postAuditFiles(
             auditDataResponse.id,
             fileList
           );
-
-          if (success) {
-            // console.log("Successfully created files for audit!");
-
-            // Navigate to the audit page.
-            navigate("/audits", { state: { addedNewAudit: true } });
-          } else {
-            console.log("Failed to create files for created audit!");
-          }
         }
+
+        // Navigate to the audit page.
+        navigate("/audits", { state: { addedNewAudit: true } });
+        setSubmitting(false);
       } else {
         console.log("Failed to create audit!");
       }
     }
   };
+
+  // Update audit
+  const update = async (data) => {
+    setSubmitting(true);
+    // console.log("Data for update:", data);
+
+    // Update schedule audit by id
+    const updateScheduleAuditResponse = await assetsService.updateAuditSchedule(
+      dataReceive.id,
+      Number(data.asset),
+      data.nextAuditDate,
+      data.notes
+    );
+
+    // Post audit if audit_info is null from the dataReceive and update schedule audit is successful.
+    if (dataReceive.audit_info == null && updateScheduleAuditResponse) {
+      // Post audit
+      const postAuditResponse = await assetsService.postAudit(
+        data.location.value,
+        1,
+        data.notes,
+        dataReceive.id,
+        data.auditDate,
+        data.nextAuditDate
+      );
+      // const postAuditResponse = await postAudit(data);
+
+      // Check if post audit is successfully created then navigate to audit page.
+      if (postAuditResponse) {
+        // POST audit file if the length of the fileList is more than 0.
+        if (fileList.length > 0) {
+          const success = await assetsService.postAuditFiles(
+            postAuditResponse.id,
+            fileList
+          );
+
+          // console.log("successfully created audit files?:", success);
+        }
+
+        // Navigate to the audit page.
+        navigate("/audits", { state: { addedNewAudit: true } });
+        setSubmitting(false);
+      }
+    }
+
+    // Update audit if audit_info from dataReceive is not null
+    if (dataReceive.audit_info != null) {
+      // Soft delete audit files if audit_files from dataReceive is not null
+      if (dataReceive.audit_info.audit_files.length > 0) {
+        await assetsService.softDeleteAuditFiles(dataReceive.audit_info.id);
+      }
+
+      // Update audit
+      const updateAuditResponse = await assetsService.updateAudit(
+        dataReceive.audit_info.id,
+        data.location.value,
+        1,
+        data.notes,
+        dataReceive.id,
+        data.auditDate,
+        data.nextAuditDate
+      );
+
+      // Check if audit successfully updated then navigate to audit page.
+      if (updateAuditResponse) {
+        // POST audit file if the length of the fileList is more than 0.
+        if (fileList.length > 0) {
+          const success = await assetsService.postAuditFiles(
+            dataReceive.audit_info.id,
+            fileList
+          );
+
+          // console.log("successfully created audit files?:", success);
+        }
+
+        // Navigate to the audit page.
+        navigate("/audits", { state: { addedNewAudit: true } });
+        setSubmitting(false);
+      }
+    }
+  };
+
+  // Set the root of the page.
+  const getRootPage = () => {
+    switch (previousPage) {
+      case "/audits":
+        return "Audits";
+      case "/audits/overdue":
+        return "Overdue for Audits";
+      case "/audits/scheduled":
+        return "Schedule Audits";
+      case "/audits/completed":
+        return "Completed Audits";
+    }
+  };
+
+  // For debugging only.
+  // console.log("data received:", dataReceive);
 
   return (
     <>
@@ -182,34 +285,59 @@ export default function PerformAudits() {
       <main className="perform-audit-page">
         <section className="top">
           <TopSecFormPage
-            root="Audits"
+            root={getRootPage()}
             currentPage="Perform Audits"
-            rootNavigatePage="/audits"
-            title="Perform Audits"
+            rootNavigatePage={previousPage}
+            title={
+              dataReceive != null
+                ? `${dataReceive.asset_info.displayed_id} - ${dataReceive.asset_info.name}`
+                : "Perform Audits"
+            }
           />
         </section>
         <section className="perform-audit-form">
-          <form onSubmit={handleSubmit(submission)}>
+          <form
+            onSubmit={handleSubmit(dataReceive == null ? submission : update)}
+          >
             <fieldset>
               <label htmlFor="asset">Select Asset *</label>
 
-              {isLoading ? (
+              {isLoading && dataReceive === null ? (
                 <Skeleton height={40} borderRadius={10} />
               ) : (
-                <Controller
-                  name="asset"
-                  control={control}
-                  rules={{ required: "Asset is required" }}
-                  render={({ field }) => (
-                    <Select
-                      components={animatedComponents}
-                      options={assetOptions}
-                      styles={customStylesDropdown}
-                      placeholder="Select asset..."
-                      {...field}
-                    />
-                  )}
-                />
+                dataReceive === null && (
+                  <Controller
+                    name="asset"
+                    control={control}
+                    rules={{ required: "Asset is required" }}
+                    render={({ field }) => (
+                      <Select
+                        components={animatedComponents}
+                        options={assetOptions}
+                        styles={customStylesDropdown}
+                        placeholder="Select asset..."
+                        {...field}
+                      />
+                    )}
+                  />
+                )
+              )}
+
+              {dataReceive != null && (
+                <div className="asset">
+                  <input
+                    type="text"
+                    value={`${dataReceive.asset_info.displayed_id} - ${dataReceive.asset_info.name}`}
+                    disabled
+                  />
+
+                  {/* Hide input for the value of asset id */}
+                  <input
+                    type="hidden"
+                    value={dataReceive.asset_info.id}
+                    {...register("asset")}
+                  />
+                </div>
               )}
 
               {errors.asset && <span>{errors.asset.message}</span>}
@@ -323,15 +451,6 @@ export default function PerformAudits() {
                   multiple
                   onChange={handleImagesSelection}
                   style={{ display: "none" }}
-                  // onChange={(event) => {
-                  //   handleImagesSelection(event); // Call your custom function
-                  //   setValue("files", event.target.files); // Update react-hook-form state
-                  // }}
-                  // ref={(e) => {
-                  //   register("files").ref(e); // Attach react-hook-form's ref
-                  // }}
-                  // style={{ display: "none" }}
-                  // {...register("files")}
                 />
               </div>
               <label htmlFor="attachments" className="upload-image-btn">
@@ -343,12 +462,10 @@ export default function PerformAudits() {
             <button
               type="submit"
               className="save-btn"
-              disabled={!isValid}
-              // onClick={() =>
-              //   navigate("/audits", { state: { addedNewAudit: true } })
-              // }
+              disabled={!isValid || isSubmitting}
             >
-              Save
+              {isSubmitting && <LoadingButton />}
+              {!isSubmitting ? "Save" : "Saving..."}
             </button>
           </form>
         </section>
