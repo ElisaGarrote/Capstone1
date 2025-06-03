@@ -23,6 +23,7 @@ urlpatterns = [
 
     # Audits
     path('audits/create/', create_audit, name='create_audit'),
+    path('audits/get/edit/<int:id>/', get_edit_audit_by_id, name='get_edit_audit_by_id'),
     path('audits/all/', get_all_audit, name='get_all_audit'),
 
     # Audits Files
