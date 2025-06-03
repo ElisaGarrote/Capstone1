@@ -40,7 +40,7 @@ export default function TabNavBar() {
             className={location.pathname === "/audits/overdue" ? "active" : ""}
             onClick={() => navigate("/audits/overdue")}
           >
-            Overdue for an Audits ({countOverdueAudits})
+            Overdue for Audits ({countOverdueAudits})
           </a>
         </li>
         <li
