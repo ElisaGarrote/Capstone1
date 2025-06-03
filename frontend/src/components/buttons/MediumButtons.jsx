@@ -8,6 +8,7 @@ import deleteIcon from "../../assets/icons/delete-white.svg";
 export default function MediumButtons({
   type,
   navigatePage = null,
+  previousPage,
   deleteModalOpen,
 }) {
   /* List of Button Type:
@@ -39,7 +40,9 @@ export default function MediumButtons({
       type="button"
       className={`medium-button-${type}`}
       onClick={
-        navigatePage == null ? deleteModalOpen : () => navigate(navigatePage)
+        navigatePage == null
+          ? deleteModalOpen
+          : () => navigate(navigatePage, { state: { previousPage } })
       }
     >
       {/* The img tag will be rendered when the icon is not null*/}
