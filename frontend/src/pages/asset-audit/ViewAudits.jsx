@@ -109,7 +109,6 @@ export default function ViewAudits() {
                   {data.audit_info.audit_files.map((file, index) => {
                     return (
                       <a
-                        // href={`https://assets-service-production.up.railway.app${file.file}`}
                         href={assetsService.auditFileUrl(
                           String(file.file).slice(1)
                         )}
@@ -138,7 +137,9 @@ export default function ViewAudits() {
                   {data.audit_files.map((file, index) => {
                     return (
                       <a
-                        href={`http://127.0.0.1:8003${file.file}`}
+                        href={assetsService.auditFileUrl(
+                          String(file.file).slice(1)
+                        )}
                         key={index}
                         target="_blank"
                         rel="noopener noreferrer"
