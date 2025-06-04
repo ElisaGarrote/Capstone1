@@ -7,4 +7,5 @@ def api_root(request):
     return Response({
         "message": "Consumables API is running",
         "status": "OK"
+    })
 # Create your views here.
