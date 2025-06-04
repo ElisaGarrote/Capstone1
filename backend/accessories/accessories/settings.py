@@ -147,3 +147,25 @@ CORS_ALLOWED_ORIGINS = [
     "https://capstone1-production-1c05.up.railway.app",
     "https://accessories-service-production.up.railway.app"
 ]
+
+# CSRF settings
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = False
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'https://accessories-service-production.up.railway.app',
+    'https://capstone1-production-1c05.up.railway.app'
+]
+
+# Security settings for HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny'
+    ],
+}
