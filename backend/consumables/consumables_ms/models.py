@@ -18,7 +18,7 @@ class Consumable(models.Model):
     location = models.CharField(max_length=50)
     model_number = models.CharField(max_length=50, blank=True, null=True)
     order_number = models.CharField(max_length=30, blank=True, null=True)
-    purchase_date = models.DateField(timezone.now())
+    purchase_date = models.DateField(default=timezone.now)
     purchase_cost = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
     minimum_quantity = models.PositiveIntegerField(default=0)

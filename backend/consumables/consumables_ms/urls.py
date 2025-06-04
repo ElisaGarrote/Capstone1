@@ -5,3 +5,4 @@ urlpatterns = [
     path('', views.api_root, name='api_root'),
     # Add your other URL patterns here
 ]
+
