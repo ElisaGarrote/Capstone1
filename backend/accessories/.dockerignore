@@ -1,0 +1,61 @@
+# Python virtual environments
+accessories_venv/
+venv/
+env/
+.env/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Django stuff
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Development and IDE files
+.git
+.github
+.gitignore
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker files
+Dockerfile
+Dockerfile.local
+docker-compose.yml
+.dockerignore
+
+# Documentation
+README.md
+LICENSE
+docs/
+
+# Media and static files (these will be created in the container)
+# Uncomment if you want to exclude these from the build
+# media/
+# static/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Temporary files
+tmp/
+temp/
+
+# System files
+.DS_Store
+Thumbs.db
