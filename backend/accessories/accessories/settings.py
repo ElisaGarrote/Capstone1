@@ -114,8 +114,6 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -130,18 +128,16 @@ STATICFILES_DIRS = [
 # WhiteNoise settings
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 
-# Fix typo in STATICFILES_DIRS (was STATICFIILES_DIRS)
-# STATICFIILES_DIRS = [
-#     os.path.join(BASE_DIR, 'static')
-# ]
-
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://capstone1-production-1c05.up.railway.app",
+    "https://accessories-service-production.up.railway.app"
+]
