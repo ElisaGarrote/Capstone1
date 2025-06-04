@@ -24,7 +24,7 @@ RUN mkdir -p staticfiles
 RUN python manage.py collectstatic --noinput
 
 # Expose the port
-EXPOSE 8000
+EXPOSE 8001
 
 # Run gunicorn for production
-CMD gunicorn authentication.wsgi:application --bind 0.0.0.0:8000
+CMD gunicorn authentication.wsgi:application --bind 0.0.0.0:8001
