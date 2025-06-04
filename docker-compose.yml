@@ -81,6 +81,26 @@ services:
       - app-network
     restart: always
 
+  consumables:
+    build:
+      context: ./backend/consumables
+      dockerfile: Dockerfile
+    container_name: consumables-service
+    ports:
+      - "8005:8005"  # Map host port 8005 to container port 8005
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-default_secret_key_for_dev}
+      - DEBUG=${DEBUG:-False}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-*}
+      - DB_NAME=railway
+      - DB_USER=postgres
+      - DB_PASSWORD=MIZWsGzljjOVHkIZZzXsOviQWYtNtuIK
+      - DB_HOST=ballast.proxy.rlwy.net
+      - DB_PORT=45721
+    networks:
+      - app-network
+    restart: always
+
 networks:
   app-network:
     driver: bridge
