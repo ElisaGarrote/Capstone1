@@ -13,7 +13,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('The Email field must be set')
         
         email = self.normalize_email(email)
-        extra_fields.setdefault('role', 'Operator')
+        extra_fields.setdefault('role', 'operator')
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -22,7 +22,7 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields['role'] = 'Admin'
+        extra_fields['role'] = 'admin'
 
         return self.create_user(email, password, **extra_fields)
 
