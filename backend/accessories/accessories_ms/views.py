@@ -9,10 +9,11 @@ from .serializer import *
 def get_accessories(request):
     accessories = Accessory.objects.filter(is_deleted=False)
     serializer = AllAccessorySerializer(accessories, many=True)
-    return Response({
-        'message': 'All accessories table content:',
-        'data': serializer.data
-    }, status=200)
+
+    data = {
+        'accessories': serializer.data
+    }
+    return Response(data)
 
 # Get accessory category names
 @api_view(['GET'])
