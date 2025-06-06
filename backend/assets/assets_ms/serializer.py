@@ -46,7 +46,7 @@ class AllAssetSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Asset
-        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status', 'product']
+        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status', 'product', 'end_of_life']
     
     def get_category(self, obj):
         if obj.product and obj.product.category:
