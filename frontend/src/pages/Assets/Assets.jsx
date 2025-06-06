@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Import useNavigate from react-router-dom
+import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
-import "../../styles/Assets.css"; // Import Assets-specific styles
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -15,35 +14,30 @@ export default function Assets() {
   const location = useLocation();
   const [assets, setAssets] = useState([]);
   const [checkedItems, setCheckedItems] = useState([]);
-  const allChecked = checkedItems.length === assets.length;
+  const allChecked = checkedItems.length === assets.length && assets.length > 0;
 
   const [endPoint, setEndPoint] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check for success messages passed from other components
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
-      
-      // Clear the success message from location state after 5 seconds
       setTimeout(() => {
         setSuccessMessage("");
         window.history.replaceState({}, document.title);
       }, 5000);
     }
-    
+
     const fetchData = async () => {
       try {
-        // Fetch all assets
-        const assetsResponse = await assetsService.fetchAllAssets();
-        console.log("Assets response:", assetsResponse);
-        setAssets(assetsResponse.assets || []);
+        const response = await assetsService.fetchAllAssets();
+        setAssets(response.assets || []);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching assets:", error);
         setAssets([]);
       }
     };
@@ -61,15 +55,14 @@ export default function Assets() {
 
   const toggleItem = (id) => {
     setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((assets) => asset.id !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
     );
   };
 
-  // Refresh assets after deletion
   const fetchAssets = async () => {
     try {
-      const assetsResponse = await assetsService.fetchAllAssets();
-      setAssets(assetsResponse.assets || []);
+      const response = await assetsService.fetchAllAssets();
+      setAssets(response.assets || []);
     } catch (error) {
       console.error("Error fetching assets:", error);
       setAssets([]);
@@ -77,29 +70,31 @@ export default function Assets() {
   };
 
   const handleCheckInOut = (asset) => {
-    if (asset.status === 'Deployed') {
-      // Navigate to check-in page
+    const baseImage = asset.image
+      ? `https://assets-service-production.up.railway.app${asset.image}`
+      : DefaultImage;
+
+    if (asset.status === "Deployed") {
       navigate(`/assets/check-in/${asset.id}`, {
         state: {
           id: asset.id,
           assetId: asset.displayed_id,
           product: asset.name,
-          image: asset.image ? `https://assets-service-production.up.railway.app${asset.image}` : DefaultImage,
-          employee: asset.assigned_to || 'Not assigned',
-          checkOutDate: asset.checkout_date || 'Unknown',
-          returnDate: asset.expected_return_date || 'Unknown',
-          condition: asset.condition || 'Unknown'
-        }
+          image: baseImage,
+          employee: asset.assigned_to || "Not assigned",
+          checkOutDate: asset.checkout_date || "Unknown",
+          returnDate: asset.expected_return_date || "Unknown",
+          condition: asset.condition || "Unknown",
+        },
       });
-    } else if (asset.status === 'Ready to Deploy') {
-      // Navigate to check-out page
+    } else if (asset.status === "Ready to Deploy") {
       navigate(`/assets/check-out/${asset.id}`, {
         state: {
           id: asset.id,
           assetId: asset.displayed_id,
           product: asset.product,
-          image: asset.image ? `https://assets-service-production.up.railway.app${asset.image}` : DefaultImage
-        }
+          image: baseImage,
+        },
       });
     }
   };
@@ -116,20 +111,11 @@ export default function Assets() {
           confirmDelete={async () => {
             await fetchAssets();
             setSuccessMessage("Asset Deleted Successfully!");
-            setErrorMessage("");
-            
-            setTimeout(() => {
-              setSuccessMessage("");
-            }, 5000);
+            setTimeout(() => setSuccessMessage(""), 5000);
           }}
           onDeleteFail={() => {
-            setErrorMessage("Delete failed. Please try again."); // Show error message immediately
-            setSuccessMessage(""); // Clear any success messages
-            
-            // Auto-hide the error message after 5 seconds
-            setTimeout(() => {
-              setErrorMessage("");
-            }, 5000);
+            setErrorMessage("Delete failed. Please try again.");
+            setTimeout(() => setErrorMessage(""), 5000);
           }}
         />
       )}
@@ -142,13 +128,14 @@ export default function Assets() {
           <section className="top">
             <h1>Assets</h1>
             <div>
-              <form action="" method="post">
+              <form>
                 <input type="text" placeholder="Search..." />
               </form>
               <MediumButtons type="export" />
               <MediumButtons type="new" navigatePage="/assets/registration" />
             </div>
           </section>
+
           <section className="middle">
             <table className="assets-table">
               <thead>
@@ -171,91 +158,86 @@ export default function Assets() {
                   <th>VIEW</th>
                 </tr>
               </thead>
+              <tbody>
                 {assets.length === 0 ? (
-                  <tbody>
-                    <tr>
-                      <td colSpan="9" className="no-products-message">
-                        <p>No assets found. Please add some assets.</p>
+                  <tr>
+                    <td colSpan="10" className="no-products-message">
+                      <p>No assets found. Please add some assets.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  assets.map((asset) => (
+                    <tr key={asset.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={checkedItems.includes(asset.id)}
+                          onChange={() => toggleItem(asset.id)}
+                        />
+                      </td>
+                      <td>
+                        <img
+                          src={
+                            asset.image
+                              ? `https://assets-service-production.up.railway.app${asset.image}`
+                              : DefaultImage
+                          }
+                          alt={`Asset-${asset.name}`}
+                          onError={(e) => {
+                            e.target.src = DefaultImage;
+                          }}
+                        />
+                      </td>
+                      <td>{asset.displayed_id}</td>
+                      <td>{asset.name}</td>
+                      <td>{asset.category}</td>
+                      <td>
+                        {asset.status === "Deployed" ? (
+                          <button
+                            className="check-in-btn"
+                            onClick={() => handleCheckInOut(asset)}
+                          >
+                            Check-In
+                          </button>
+                        ) : asset.status === "Ready to Deploy" ? (
+                          <button
+                            className="check-out-btn"
+                            onClick={() => handleCheckInOut(asset)}
+                          >
+                            Check-Out
+                          </button>
+                        ) : null}
+                      </td>
+                      <td>{asset.status}</td>
+                      <td>
+                        <TableBtn
+                          type="edit"
+                          navigatePage={`/assets/registration/${asset.id}`}
+                          data={asset.id}
+                        />
+                      </td>
+                      <td>
+                        <TableBtn
+                          type="delete"
+                          showModal={() => {
+                            setEndPoint(
+                              `https://assets-service-production.up.railway.app/assets/${asset.id}/delete/`
+                            );
+                            setDeleteModalOpen(true);
+                          }}
+                          data={asset.id}
+                        />
+                      </td>
+                      <td>
+                        <TableBtn
+                          type="view"
+                          navigatePage={`/assets/view/${asset.id}`}
+                        />
                       </td>
                     </tr>
-                  </tbody>
-                ) : (
-                  <tbody>
-                    {assets.map((asset) => (
-                      <tr key={asset.id}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={checkedItems.includes(asset.id)}
-                            onChange={() => toggleItem(asset.id)}
-                          />
-                        </td>
-                        <td>
-                          {asset.image ? (
-                            <img
-                              src={`https://assets-service-production.up.railway.app${asset.image}`}
-                              alt={`Asset-${asset.name}`}
-                              width="50"
-                              key={`img-${asset.id}`}
-                              onError={(e) => {
-                                console.log(`Error loading image for asset ${asset.id}`);
-                                e.target.src = DefaultImage;
-                              }}
-                            />
-                          ) : (
-                            <img
-                              src={DefaultImage}
-                              alt={`Asset-${asset.name}`}
-                              width="50"
-                              key={`img-${asset.id}`}
-                            />
-                          )}
-                        </td>
-                        <td>{asset.displayed_id}</td>
-                        <td>{asset.name}</td>
-                        <td>{asset.category}</td>
-                        <td>
-                          {asset.status === 'Deployed' ? (
-                            <button
-                              className="check-in-btn"
-                              onClick={() => handleCheckInOut(asset)}
-                            >
-                              Check-In
-                            </button>
-                          ) : asset.status === 'Ready to Deploy' ? (
-                            <button
-                              className="check-out-btn"
-                              onClick={() => handleCheckInOut(asset)}
-                            >
-                              Check-Out
-                            </button>
-                          ) : null}
-                        </td>
-                        <td>{asset.status}</td>    
-                        <td>
-                          <TableBtn
-                            type="edit"
-                            navigatePage={`/assets/registration/${asset.id}`}
-                            data={asset.id}
-                          />
-                        </td>
-                        <td>
-                          <TableBtn
-                            type="delete"
-                            showModal={() => {
-                              setEndPoint(`https://assets-service-production.up.railway.app/assets/${asset.id}/delete/`)
-                              setDeleteModalOpen(true);
-                            }}
-                            data={asset.id}
-                          />
-                        </td>
-                        <td>
-                          <TableBtn type="view" navigatePage={`/assets/view/${asset.id}`} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                  ))
                 )}
+              </tbody>
             </table>
           </section>
           <section className="bottom"></section>

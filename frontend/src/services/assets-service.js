@@ -4,106 +4,80 @@ const API_URL = "https://assets-service-production.up.railway.app/";
 // const API_URL = "http://127.0.0.1:8003/";
 
 class AssetsService {
+  // Helper to normalize array responses
+  normalizeResponseArray(data, key) {
+    if (data && data[key]) return data;
+    if (Array.isArray(data)) return { [key]: data };
+    if (data && typeof data === "object") return { [key]: [data] };
+    return { [key]: [] };
+  }
+
   // PRODUCTS
   // Retrieve all products
   async fetchAllProducts() {
     try {
-      const response = await fetch(API_URL + "products/", {
-        method: "GET",
-      });
+      const response = await fetch(API_URL + "products/");
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for fetching all products is here.",
+        console.warn(
+          "Failed to fetch products, status:",
           response.status
         );
-        return { products: [] }; // Return consistent structure
+        return { products: [] };
       }
 
       const data = await response.json();
-      console.log("Data for all products fetched: ", data);
+      console.log("Data for all products fetched:", data);
 
-      // Ensure we always return an object with products property
-      if (data && data.products) {
-        return data; // Already in correct format
-      } else if (Array.isArray(data)) {
-        return { products: data }; // Convert array to object with property
-      } else if (data && typeof data === "object") {
-        return { products: [data] }; // Single object to array in property
-      } else {
-        return { products: [] }; // Default empty result
-      }
+      return this.normalizeResponseArray(data, "products");
     } catch (error) {
-      console.log("Error occur while fetching all products!", error);
-      return { products: [] }; // Return consistent structure
+      console.error("Error occurred while fetching all products:", error);
+      return { products: [] };
     }
   }
 
   // Fetch product registration contexts
   async fetchProductContexts() {
     try {
-      const response = await fetch(API_URL + "products/contexts/", {
-        method: "GET",
-      });
+      const response = await fetch(API_URL + "products/contexts/");
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for fetching product contexts is here.",
-          response.status
-        );
-        return {
-          categories: [],
-          depreciations: [],
-        };
+        console.warn("Failed to fetch product contexts, status:", response.status);
+        return { categories: [], depreciations: [] };
       }
 
       const data = await response.json();
-      console.log("Product contexts fetched: ", data);
+      console.log("Data for contexts fetched:", data);
 
-      // Return the data with default empty arrays for any missing properties
+      // Return with defaults for missing properties
       return {
         categories: data.categories || [],
         depreciations: data.depreciations || [],
       };
     } catch (error) {
-      console.log("Error occurred while fetching product contexts!", error);
-      return {
-        categories: [],
-        depreciations: [],
-      };
+      console.error("Error occurred while fetching product contexts!", error);
+      return { categories: [], depreciations: [] };
     }
   }
 
   // Retrieve a product by id
   async fetchProductById(id) {
     try {
-      const response = await fetch(API_URL + `products/${id}/`, {
-        method: "GET",
-      });
+      const response = await fetch(API_URL + `products/${id}/`);
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for fetching product by ID is here.",
-          response.status
-        );
-        return null; // Return null for not found
+        console.warn("Failed to fetch product by ID, status:", response.status);
+        return null;
       }
 
       const data = await response.json();
-      console.log("Product data fetched: ", data);
+      console.log("Product data fetched:", data);
 
-      // Return the product data
-      if (data && data.product) {
-        return data.product; // Return the product object if it's wrapped
-      } else {
-        return data; // Return the data directly if it's not wrapped
-      }
+      // Return product object if wrapped, else data directly
+      return data && data.product ? data.product : data;
     } catch (error) {
-      console.log(
-        `Error occurred while fetching product with ID ${id}:`,
-        error
-      );
-      return null; // Return null on error
+      console.error(`Error occurred while fetching product with ID ${id}:`, error);
+      return null;
     }
   }
 
@@ -116,27 +90,25 @@ class AssetsService {
       });
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for creating product is here.",
-          response.status
-        );
+        console.warn("Failed to create product, status:", response.status);
         return false;
       }
 
       const data = await response.json();
-      console.log("Data for creating product: ", data);
+      console.log("Data for creating product:", data);
       return data;
     } catch (error) {
-      console.log("Error occur while creating product!", error);
+      console.error("Error occurred while creating product!", error);
+      return false;
     }
   }
 
   // Update Product
   async updateProduct(id, formData) {
     try {
-      // Log the form data for debugging
+      // Log formData entries for debugging
       for (let pair of formData.entries()) {
-        console.log(pair[0] + ": " + pair[1]);
+        console.log(`${pair[0]}: ${pair[1]}`);
       }
 
       const response = await fetch(API_URL + `products/${id}/update/`, {
@@ -145,18 +117,15 @@ class AssetsService {
       });
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for updating product is here.",
-          response.status
-        );
+        console.warn("Failed to update product, status:", response.status);
         return false;
       }
 
       const data = await response.json();
-      console.log("Data for updating product: ", data);
+      console.log("Data for updating product:", data);
       return data;
     } catch (error) {
-      console.log("Error occurred while updating product!", error);
+      console.error("Error occurred while updating product!", error);
       return false;
     }
   }
@@ -164,190 +133,121 @@ class AssetsService {
   // Get all product names to check for existing product before registration
   async fetchProductNames() {
     try {
-      const response = await fetch(API_URL + "products/names/all/", {
-        method: "GET",
-      });
+      const response = await fetch(API_URL + "products/names/all/");
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for fetching product names is here.",
-          response.status
-        );
-        return { products: [] }; // Return consistent structure
+        console.warn("Failed to fetch product names, status:", response.status);
+        return { products: [] };
       }
 
       const data = await response.json();
-      console.log("Product names fetched: ", data);
+      console.log("Product names fetched:", data);
 
-      // Ensure we always return an object with products property
-      if (data && data.products) {
-        return data; // Already in correct format
-      } else if (Array.isArray(data)) {
-        return { products: data }; // Convert array to object with property
-      } else if (data && typeof data === "object") {
-        return { products: [data] }; // Single object to array in property
-      } else {
-        return { products: [] }; // Default empty result
-      }
+      return this.normalizeResponseArray(data, "products");
     } catch (error) {
-      console.log("Error occurred while fetching product names!", error);
-      return { products: [] }; // Return consistent structure
+      console.error("Error occurred while fetching product names!", error);
+      return { products: [] };
     }
   }
 
   // ASSETS
-  // Retrieve all assets
+  // Fetch all assets
   async fetchAllAssets() {
     try {
-      const response = await fetch(API_URL + "assets/", {
-        method: "GET",
-      });
+      const response = await fetch(API_URL + "assets/");
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for fetching all assets is here.",
-          response.status
-        );
+        console.warn("Failed to fetch all assets, status:", response.status);
         return { assets: [] };
       }
 
       const data = await response.json();
-      // console.log("Data for all assets fetched: ", data);
-
-      // Ensure we always return an object with assets property
-      if (data && data.assets) {
-        return data; // Already in correct format
-      } else if (Array.isArray(data)) {
-        return { assets: data }; // Convert array to object with property
-      } else if (data && typeof data === "object") {
-        return { assets: [data] }; // Single object to array in property
-      } else {
-        return { assets: [] }; // Default empty result
-      }
+      // Normalize to always return { assets: [...] }
+      return this.normalizeResponseArray(data, "assets");
     } catch (error) {
-      console.log("Error occur while fetching all assets!", error);
-      return { assets: [] }; // Return consistent structure
+      console.error("Error occurred while fetching all assets!", error);
+      return { assets: [] };
     }
   }
 
   // Fetch asset registration contexts, products and statuses
   async fetchAssetContexts() {
     try {
-      const response = await fetch(API_URL + "assets/contexts/", {
-        method: "GET",
-      });
+      const response = await fetch(API_URL + "assets/contexts/");
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for fetching asset contexts is here.",
-          response.status
-        );
-        return {
-          products: [],
-          statuses: [],
-        };
+        console.warn("Failed to fetch asset contexts, status:", response.status);
+        return { products: [], statuses: [] };
       }
 
       const data = await response.json();
-      console.log("Asset contexts fetched: ", data);
+      console.log("Asset contexts fetched:", data);
 
-      // Return the data with default empty arrays for any missing properties
       return {
         products: data.products || [],
-        statuses: data.statuses || [], // Fix the typo here - it was "statues" instead of "statuses"
+        statuses: data.statuses || [],
       };
     } catch (error) {
-      console.log("Error occurred while fetching asset contexts!", error);
-      return {
-        products: [],
-        statuses: [],
-      };
+      console.error("Error occurred while fetching asset contexts!", error);
+      return { products: [], statuses: [] };
     }
   }
 
   // Retrieve an asset by id
   async fetchAssetById(id) {
     try {
-      const response = await fetch(API_URL + `assets/${id}/`, {
-        method: "GET",
-      });
+      const response = await fetch(API_URL + `assets/${id}/`);
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for fetching asset by ID is here.",
-          response.status
-        );
-        return null; // Return null for not found
+        console.warn("Failed to fetch asset by ID, status:", response.status);
+        return null;
       }
 
       const data = await response.json();
-      console.log("Asset data fetched: ", data);
+      console.log("Asset data fetched:", data);
 
-      // Return the asset data
-      if (data && data.asset) {
-        return data.asset; // Return the asset object if it's wrapped
-      } else {
-        return data; // Return the data directly if it's not wrapped
-      }
+      return data && data.asset ? data.asset : data;
     } catch (error) {
-      console.log(`Error occurred while fetching asset with ID ${id}:`, error);
-      return null; // Return null on error
+      console.error(`Error occurred while fetching asset with ID ${id}:`, error);
+      return null;
     }
   }
 
   // Fetch product defaults by id
   async fetchProductDefaults(id) {
     try {
-      const response = await fetch(API_URL + `assets/${id}/defaults/`, {
-        method: "GET",
-      });
+      const response = await fetch(API_URL + `assets/${id}/defaults/`);
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for fetching product defaults is here.",
-          response.status
-        );
-        return null; // Return null for not found
+        console.warn("Failed to fetch product defaults, status:", response.status);
+        return null;
       }
 
       const data = await response.json();
-      console.log("Product defaults fetched: ", data);
+      console.log("Product defaults fetched:", data);
 
-      // Return the product defaults data
-      if (data && data.product) {
-        return data.product; // Return the product defaults object if it's wrapped
-      } else {
-        return data; // Return the data directly if it's not wrapped
-      }
+      return data && data.product ? data.product : data;
     } catch (error) {
-      console.log(
-        `Error occurred while fetching product defaults with ID ${id}:`,
-        error
-      );
-      return null; // Return null on error
+      console.error(`Error occurred while fetching product defaults with ID ${id}:`, error);
+      return null;
     }
   }
 
   // Get next asset ID
   async getNextAssetId() {
     try {
-      const response = await fetch(API_URL + "assets/next-id/", {
-        method: "GET",
-      });
+      const response = await fetch(API_URL + "assets/next-id/");
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for getting next asset ID is here.",
-          response.status
-        );
+        console.warn("Failed to get next asset ID, status:", response.status);
         return null;
       }
 
       const data = await response.json();
-      console.log("Next asset ID data: ", data);
+      console.log("Next asset ID data:", data);
       return data;
     } catch (error) {
-      console.log("Error occurred while getting next asset ID!", error);
+      console.error("Error occurred while getting next asset ID!", error);
       return null;
     }
   }
@@ -361,18 +261,15 @@ class AssetsService {
       });
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for creating asset is here.",
-          response.status
-        );
+        console.warn("Failed to create asset, status:", response.status);
         return false;
       }
 
       const data = await response.json();
-      console.log("Data for creating asset: ", data);
+      console.log("Data for creating asset:", data);
       return data;
     } catch (error) {
-      console.log("Error occurred while creating asset!", error);
+      console.error("Error occurred while creating asset!", error);
       return false;
     }
   }
@@ -380,9 +277,8 @@ class AssetsService {
   // Update Asset
   async updateAsset(id, formData) {
     try {
-      // Log the form data for debugging
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ": " + pair[1]);
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
       }
 
       const response = await fetch(API_URL + `assets/${id}/update/`, {
@@ -391,18 +287,15 @@ class AssetsService {
       });
 
       if (!response.ok) {
-        console.log(
-          "The status of the response for updating asset is here.",
-          response.status
-        );
+        console.warn("Failed to update asset, status:", response.status);
         return false;
       }
 
       const data = await response.json();
-      console.log("Data for updating asset: ", data);
+      console.log("Data for updating asset:", data);
       return data;
     } catch (error) {
-      console.log("Error occurred while updating asset!", error);
+      console.error("Error occurred while updating asset!", error);
       return false;
     }
   }

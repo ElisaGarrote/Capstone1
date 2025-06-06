@@ -11,8 +11,12 @@ import ExportModal from "../../components/Modals/ExportModal";
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import accessoriesService from "../../services/accessories-service";
 
 export default function Accessories() {
+  const location = useLocation();
+  const [accessories, setAccessories] = useState([]);
+
   const [selectedRowId, setSelectedRowId] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
@@ -21,28 +25,37 @@ export default function Accessories() {
   const [isEditSuccess, setEditSuccess] = useState(false);
   const [isDeleteSuccess, setDeleteSucess] = useState(false);
   const [isDeleteFailed, setDeleteFailed] = useState(false);
-  const [accessories, setAccessories] = useState([]);
+  
   const [endPoint, setEndPoint] = useState(null);
   const [checkedItems, setCheckedItems] = useState([]);
   const [isLoading, setLoading] = useState(true);
   const allChecked = checkedItems.length === accessories.length;
-  const location = useLocation();
 
   useEffect(() => {
-    fetchAccessories();
-  }, []);
-
-  const fetchAccessories = async () => {
-    try {
-      const response = await fetch("http://localhost:8004/accessories/");
-      const data = await response.json();
-      setAccessories(data.data);
-      setLoading(false);
-      console.log("Accessories:", data);
-    } catch (err) {
-      console.log(err);
+    // Check for success messages passed from other components
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      
+      // Clear the success message from location state after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage("");
+        window.history.replaceState({}, document.title);
+      }, 5000);
     }
-  };
+    
+    const fetchData = async () => {
+      try {
+        // Fetch all accessories
+        const accessoriesResponse = await accessoriesService.fetchAllAccessories();
+        setAccessories(accessoriesResponse.accessories || []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setAccessories([]);
+      }
+    };
+
+    fetchData();
+  }, [location]);
 
   const toggleSelectAll = () => {
     if (allChecked) {
@@ -54,56 +67,36 @@ export default function Accessories() {
 
   const toggleItem = (id) => {
     setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((itemId) => itemId !== id)
+        : [...prev, id]
     );
   };
 
-  // should fetch how many of that specific accesory is checked out and then minus to quantity
-  let availValue = 7;
-
-  // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
-  // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
-  const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
-  const newAccessoryAdded = location.state?.newAccessoryAdded;
-  const editSuccess = location.state?.editSuccess;
-
-  // Set the setDeleteSuccess to true when the isDeleteSuccessFromEdit is true.
-  // And reset the setDeleteSucces to false after 5 seconds.
-  useEffect(() => {
-    if (isDeleteSuccessFromEdit) {
-      setDeleteSucess(true);
-      setTimeout(() => {
-        setDeleteSucess(false);
-      }, 5000);
+  // Refresh accessories after deletion
+  const fetchAccessories = async () => {
+    try {
+      const accessoriesResponse = await accessoriesService.fetchAllAccessories();
+      setAccessories(accessoriesResponse.accessories || []);
+    } catch (error) {
+      console.error("Error fetching accessories:", error);
+      setAccessories([]);
     }
-  }, [isDeleteSuccessFromEdit]); // This will be executed every time the isDeleteSucessFromEdit changes.
+  };
 
-  useEffect(() => {
-    if (newAccessoryAdded) {
-      setNewAccessoryAdded(true);
-      setTimeout(() => {
-        setNewAccessoryAdded(false);
-      }, 5000);
-    }
-  }, [newAccessoryAdded]);
-
-  useEffect(() => {
-    if (editSuccess) {
-      setEditSuccess(true);
-      setTimeout(() => {
-        setEditSuccess(false);
-      }, 5000);
-    }
-  }, [editSuccess]);
-
-  // For debugging only.
-  console.log("modal delete: ", isDeleteModalOpen);
-  console.log("modal view: ", isViewModalOpen);
-  console.log("delete confirm: ", isDeleteSuccess);
-  console.log("delete from edit: ", isDeleteSuccessFromEdit);
+  // TO BE CONFIGURED
+  const handleView = (accessoryId) => {
+    // Navigate to the product view page
+    window.location.href = `/accessories/view/${accessoryId}`;
+    // Or if you're using react-router:
+    // navigate(`/products/view/${productId}`);
+  };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isViewModalOpen && (
         <AccessoriesViewModal
           id={selectedRowId}
@@ -117,32 +110,23 @@ export default function Accessories() {
           closeModal={() => setDeleteModalOpen(false)}
           confirmDelete={async () => {
             await fetchAccessories();
-            setDeleteSucess(true);
-            setTimeout(() => setDeleteSucess(false), 5000);
+            setSuccessMessage("Accessory Deleted Successfully!");
+            setErrorMessage("");
+            
+            setTimeout(() => {
+              setSuccessMessage("");
+            }, 5000);
           }}
           onDeleteFail={() => {
-            setDeleteFailed(true);
-            setTimeout(() => setDeleteFailed(false), 5000);
+            setErrorMessage("Delete failed. Please try again."); // Show error message immediately
+            setSuccessMessage(""); // Clear any success messages
+            
+            // Auto-hide the error message after 5 seconds
+            setTimeout(() => {
+              setErrorMessage("");
+            }, 5000);
           }}
         />
-      )}
-
-      {isDeleteSuccess && (
-        <Alert message="Deleted Successfully!" type="success" />
-      )}
-
-      {isDeleteFailed && (
-        <Alert message="Delete failed. Please try again." type="danger" />
-      )}
-
-      {isNewAccessoryAdded && (
-        <Alert message="New accessory added!" type="success" />
-      )}
-
-      {isEditSuccess && <Alert message="Accessory updated!" type="success" />}
-
-      {isExportModalOpen && (
-        <ExportModal closeModal={() => setExportModalOpen(false)} />
       )}
 
       <nav>
@@ -168,17 +152,17 @@ export default function Accessories() {
             </div>
           </section>
           <section className="middle">
-            {/* Render loading skeleton while waiting to the response from the API request*/}
+            {/* Render loading skeleton while waiting for the API response */}
             {isLoading && <SkeletonLoadingTable />}
 
-            {/* Render message if the scheduleAuditData is empty */}
-            {!isLoading && Array.from(accessories).length === 0 && (
+            {/* Render message if accessories array is empty */}
+            {!isLoading && accessories.length === 0 && (
               <p className="table-message">
                 No accessories found. Please add some accessory.
               </p>
             )}
 
-            {Array.from(accessories).length > 0 && (
+            {accessories.length > 0 && (
               <table>
                 <thead>
                   <tr>

@@ -440,16 +440,6 @@ export default function AssetsRegistration() {
               </div>
             </fieldset>
 
-            {/* Schedule an Audit Date */}
-            <fieldset>
-              <label htmlFor='schedule-audit-date'>Schedule for Audit</label>
-              <input
-                type='date'
-                {...register('scheduleAuditDate')}
-                min={!id ? currentDate : undefined}
-              />
-            </fieldset>
-
             {/* Notes */}
             <fieldset>
               <label htmlFor='notes'>Notes</label>

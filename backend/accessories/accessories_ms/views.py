@@ -13,7 +13,7 @@ def get_accessories(request):
     data = {
         'accessories': serializer.data
     }
-    return Response(data)
+    return Response(data, status=status.HTTP_200_OK)
 
 # Get accessory category names
 @api_view(['GET'])
