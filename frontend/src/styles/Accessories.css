@@ -1,112 +1,123 @@
-/* Fix for all tables */
-.page table,
-.accessories-page table {
-  border-collapse: collapse !important;
-  border-spacing: 0 !important;
-  border-radius: 0 !important;
-  overflow: hidden !important;
+.page table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
 }
 
-/* Fix for specific table classes */
-.page table.products-table,
-.page table.assets-table,
-.accessories-page table.accessories-table {
-  border-collapse: collapse !important;
-  border-spacing: 0 !important;
-  border-radius: 0 !important;
-  overflow: hidden !important;
-}
-
-/* Fix for all table cells */
 .page table th,
-.page table td,
-.accessories-page table th,
-.accessories-page table td {
-  border-radius: 0 !important;
+.page table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #d3d3d3;
+  font-size: 0.7rem;
+  color: var(--secondary-text-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  height: 50px;
 }
 
-/* Fix for specific table cells */
-.page table.products-table th,
-.page table.products-table td,
-.page table.assets-table th,
-.page table.assets-table td,
-.accessories-page table.accessories-table th,
-.accessories-page table.accessories-table td {
-  border-radius: 0 !important;
+/* Checkbox Column */
+.page table th.col-checkbox,
+.page table td.col-checkbox {
+  width: 60px;
+  text-align: left;
+  padding-left: 12px;
+  font-size: 0.8rem;
 }
 
-/* Fix for first and last rows */
-.page table tr:first-child th,
-.page table tr:first-child td,
-.accessories-page table tr:first-child th,
-.accessories-page table tr:first-child td {
-  border-top-left-radius: 0 !important;
-  border-top-right-radius: 0 !important;
+/* Image Column */
+.page table th.col-image,
+.page table td.col-image {
+  width: 60px;
+  text-align: left;
+  padding-left: 12px;
+  font-size: 0.88rem;
 }
 
-.page table tr:last-child th,
-.page table tr:last-child td,
-.accessories-page table tr:last-child th,
-.accessories-page table tr:last-child td {
-  border-bottom-left-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
+/* Middle Columns */
+.page table th.col-middle {
+  text-align: left;
+  font-size: 0.8rem;
+  padding-left: 12px;
 }
 
-/* Fix for first and last cells in each row */
-.page table tr th:first-child,
-.page table tr td:first-child,
-.accessories-page table tr th:first-child,
-.accessories-page table tr td:first-child {
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
+.page table td.col-middle {
+  text-align: left;
+  padding-left: 12px;
+  font-size: 0.88rem;
 }
 
-.page table tr th:last-child,
-.page table tr td:last-child,
-.accessories-page table tr th:last-child,
-.accessories-page table tr td:last-child {
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
+/* Last Three Columns */
+.page table th.col-last {
+  width: 60px;
+  text-align: center;
+  padding-left: 8px;
+  padding-right: 8px;
+  font-size: 0.8rem;
 }
 
-<<<<<<< HEAD
-.accessories-page .accessories-image {
+.page table td.col-last {
+  width: 60px;
+  text-align: center;
+  padding-left: 8px;
+  padding-right: 8px;
+  font-size: 0.88rem;
+}
+
+/* Other styles remain the same */
+.page img {
   height: 5vh;
   width: 5vw;
   object-fit: cover;
-=======
-/* Fix for corner cells */
-.page table tr:first-child th:first-child,
-.page table tr:first-child td:first-child,
-.accessories-page table tr:first-child th:first-child,
-.accessories-page table tr:first-child td:first-child {
-  border-top-left-radius: 0 !important;
->>>>>>> origin/UI-Capstone
 }
 
-.page table tr:first-child th:last-child,
-.page table tr:first-child td:last-child,
-.accessories-page table tr:first-child th:last-child,
-.accessories-page table tr:first-child td:last-child {
-  border-top-right-radius: 0 !important;
+.no-products-message {
+  text-align: center;
 }
 
-.page table tr:last-child th:first-child,
-.page table tr:last-child td:first-child,
-.accessories-page table tr:last-child th:first-child,
-.accessories-page table tr:last-child td:first-child {
-  border-bottom-left-radius: 0 !important;
+.no-products-message p {
+  font-family: 'Poppins';
+  font-size: 20px;
+  color: var(--text-color);
+  margin: 50px;
 }
 
-.page table tr:last-child th:last-child,
-.page table tr:last-child td:last-child,
-.accessories-page table tr:last-child th:last-child,
-.accessories-page table tr:last-child td:last-child {
-  border-bottom-right-radius: 0 !important;
+/* Container for the progress bar and text */
+.progress-container {
+  display: flex;
+  align-items: center; /* Vertically center the text and progress bar */
+  gap: 8px; /* Space between the text and progress bar */
 }
 
-/* Fix for the container to not affect the table corners */
-.accessories-page .middle {
-  border-radius: 0 !important;
-  overflow: visible !important;
+/* Style the text */
+.progress-text {
+  font-size: 0.88rem; /* Match the font size of other table cells */
+  color: #34c759; /* Keep the green color */
+}
+
+/* Style for the progress bar */
+.progress-container progress {
+  width: 100px; /* Adjust the width as needed */
+  height: 10px; /* Height of the progress bar */
+  border-radius: 5px; /* Rounded edges */
+  overflow: hidden; /* Ensure rounded edges are visible */
+}
+
+/* Background of the progress bar */
+.progress-container progress::-webkit-progress-bar {
+  background-color: #e0e0e0; /* Light gray background */
+  border-radius: 5px;
+}
+
+/* Filled portion of the progress bar */
+.progress-container progress::-webkit-progress-value {
+  background-color: #34c759; /* Green fill color */
+  border-radius: 5px;
+}
+
+/* For Firefox */
+.progress-container progress::-moz-progress-bar {
+  background-color: #34c759; /* Green fill color */
+  border-radius: 5px;
 }

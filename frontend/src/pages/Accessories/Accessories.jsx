@@ -188,8 +188,10 @@ export default function Accessories() {
                         </td>
                         <td>{accessory.name}</td>
                         <td>
-                          <span style={{ color: "#34c759" }}>
-                            {available}/{quantity}
+                          <span className="progress-container">
+                            <span className="progress-text" style={{ color: "#34c759" }}>
+                              {available}/{quantity}
+                            </span>
                             <progress value={available} max={quantity}></progress>
                           </span>
                         </td>
