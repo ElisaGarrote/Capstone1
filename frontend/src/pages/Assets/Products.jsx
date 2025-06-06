@@ -10,20 +10,39 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 export default function Products() {
   const location = useLocation();
-  const [manufacturers, setManufacturers] = useState([]);
+  const [isLoading, setLoading] = useState(true);
   const [products, setProducts] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
   const [checkedItems, setCheckedItems] = useState([]);
-  const allChecked = checkedItems.length === products.length;
-
   const [endPoint, setEndPoint] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  const allChecked = checkedItems.length === products.length;
+
   useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [productRes, manufacturerRes] = await Promise.all([
+          assetsService.fetchAllProducts(),
+          contextsService.fetchAllManufacturerNames()
+        ]);
+        setProducts(productRes.products || []);
+        setManufacturers(manufacturerRes.manufacturers || []);
+      } catch (error) {
+        console.error("Fetch error:", error);
+        setErrorMessage("Failed to load data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
       setTimeout(() => {
@@ -32,182 +51,170 @@ export default function Products() {
       }, 5000);
     }
 
-    const fetchData = async () => {
-      try {
-        const productsResponse = await assetsService.fetchAllProducts();
-        setProducts(productsResponse.products || []);
-
-        const manufacturersResponse = await contextsService.fetchAllManufacturerNames();
-        setManufacturers(manufacturersResponse.manufacturers || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setProducts([]);
-        setManufacturers([]);
-      }
-    };
-
     fetchData();
   }, [location]);
 
-  const getManufacturerName = (manufacturerId) => {
-    const manufacturer = manufacturers.find((m) => m.id === manufacturerId);
-    return manufacturer ? manufacturer.name : "-";
+  const getManufacturerName = (id) => {
+    const found = manufacturers.find((m) => m.id === id);
+    return found ? found.name : "-";
   };
 
   const toggleSelectAll = () => {
-    if (allChecked) {
-      setCheckedItems([]);
-    } else {
-      setCheckedItems(products.map((item) => item.id));
-    }
+    setCheckedItems(allChecked ? [] : products.map((item) => item.id));
   };
 
   const toggleItem = (id) => {
     setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
   };
 
   const fetchProducts = async () => {
+    setLoading(true);
     try {
-      const productsResponse = await assetsService.fetchAllProducts();
-      setProducts(productsResponse.products || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setProducts([]);
+      const res = await assetsService.fetchAllProducts();
+      setProducts(res.products || []);
+    } catch (e) {
+      console.error("Error refreshing products:", e);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <>
-      {errorMessage && <Alert message={errorMessage} type="danger" />}
-      {successMessage && <Alert message={successMessage} type="success" />}
-
-      {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={async () => {
-            await fetchProducts();
-            setSuccessMessage("Product Deleted Successfully!");
-            setTimeout(() => setSuccessMessage(""), 5000);
-          }}
-          onDeleteFail={() => {
-            setErrorMessage("Delete failed. Please try again.");
-            setTimeout(() => setErrorMessage(""), 5000);
-          }}
-        />
-      )}
-
       <nav>
         <NavBar />
       </nav>
 
       <main className="page">
         <div className="container">
-          <section className="top">
-            <h1>Products</h1>
-            <div>
-              <form>
-                <input type="text" placeholder="Search..." />
-              </form>
-              <MediumButtons type="export" />
-              <MediumButtons type="new" navigatePage="/products/registration" />
-            </div>
-          </section>
+          {isLoading ? (
+            <SkeletonLoadingTable />
+          ) : (
+            <>
+              {errorMessage && <Alert message={errorMessage} type="danger" />}
+              {successMessage && <Alert message={successMessage} type="success" />}
 
-          <section className="middle">
-            <table className="assets-table">
-              <thead>
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={allChecked}
-                      onChange={toggleSelectAll}
-                    />
-                  </th>
-                  <th>IMAGE</th>
-                  <th>NAME</th>
-                  <th>CATEGORY</th>
-                  <th>MANUFACTURER</th>
-                  <th>DEPRECIATION</th>
-                  <th>END OF LIFE</th>
-                  <th>EDIT</th>
-                  <th>DELETE</th>
-                  <th>VIEW</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.length === 0 ? (
-                  <tr>
-                    <td colSpan="11" className="no-products-message">
-                      <p>No products found. Please add some products.</p>
-                    </td>
-                  </tr>
-                ) : (
-                  products.map((product) => (
-                    <tr key={product.id}>
-                      <td>
+              {isDeleteModalOpen && (
+                <DeleteModal
+                  endPoint={endPoint}
+                  closeModal={() => setDeleteModalOpen(false)}
+                  confirmDelete={async () => {
+                    await fetchProducts();
+                    setSuccessMessage("Product Deleted Successfully!");
+                    setTimeout(() => setSuccessMessage(""), 5000);
+                  }}
+                  onDeleteFail={() => {
+                    setErrorMessage("Delete failed. Please try again.");
+                    setTimeout(() => setErrorMessage(""), 5000);
+                  }}
+                />
+              )}
+
+              <section className="top">
+                <h1>Products</h1>
+                <div>
+                  <form>
+                    <input type="text" placeholder="Search..." />
+                  </form>
+                  <MediumButtons type="export" />
+                  <MediumButtons type="new" navigatePage="/products/registration" />
+                </div>
+              </section>
+
+              <section className="middle">
+                <table className="assets-table">
+                  <thead>
+                    <tr>
+                      <th>
                         <input
                           type="checkbox"
-                          checked={checkedItems.includes(product.id)}
-                          onChange={() => toggleItem(product.id)}
+                          checked={allChecked}
+                          onChange={toggleSelectAll}
                         />
-                      </td>
-                      <td>
-                        <img
-                          src={
-                            product.image
-                              ? `https://assets-service-production.up.railway.app${product.image}`
-                              : DefaultImage
-                          }
-                          alt={`Product-${product.name}`}
-                          className="table-img"
-                          onError={(e) => {
-                            e.target.src = DefaultImage;
-                          }}
-                        />
-                      </td>
-                      <td>{product.name}</td>
-                      <td>{product.category}</td>
-                      <td>{getManufacturerName(product.manufacturer_id)}</td>
-                      <td>{product.depreciation}</td>
-                      <td>{product.end_of_life}</td>
-                      <td>
-                        <TableBtn
-                          type="edit"
-                          navigatePage={`/products/registration/${product.id}`}
-                          data={product.id}
-                        />
-                      </td>
-                      <td>
-                        <TableBtn
-                          type="delete"
-                          showModal={() => {
-                            setEndPoint(
-                              `https://assets-service-production.up.railway.app/products/${product.id}/delete/`
-                            );
-                            setDeleteModalOpen(true);
-                          }}
-                          data={product.id}
-                        />
-                      </td>
-                      <td>
-                        <TableBtn
-                          type="view"
-                          navigatePage={`/products/view/${product.id}`}
-                          data={product.id}
-                        />
-                      </td>
+                      </th>
+                      <th>IMAGE</th>
+                      <th>NAME</th>
+                      <th>CATEGORY</th>
+                      <th>MANUFACTURER</th>
+                      <th>DEPRECIATION</th>
+                      <th>END OF LIFE</th>
+                      <th>EDIT</th>
+                      <th>DELETE</th>
+                      <th>VIEW</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </section>
-
-          <section className="bottom"></section>
+                  </thead>
+                  <tbody>
+                    {products.length === 0 ? (
+                      <tr>
+                        <td colSpan="11" className="no-products-message">
+                          <p>No products found. Please add some products.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      products.map((product) => (
+                        <tr key={product.id}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={checkedItems.includes(product.id)}
+                              onChange={() => toggleItem(product.id)}
+                            />
+                          </td>
+                          <td>
+                            <img
+                              src={
+                                product.image
+                                  ? `https://assets-service-production.up.railway.app${product.image}`
+                                  : DefaultImage
+                              }
+                              alt={`Product-${product.name}`}
+                              className="table-img"
+                              onError={(e) => {
+                                e.target.src = DefaultImage;
+                              }}
+                            />
+                          </td>
+                          <td>{product.name}</td>
+                          <td>{product.category}</td>
+                          <td>{getManufacturerName(product.manufacturer_id)}</td>
+                          <td>{product.depreciation}</td>
+                          <td>{product.end_of_life}</td>
+                          <td>
+                            <TableBtn
+                              type="edit"
+                              navigatePage={`/products/registration/${product.id}`}
+                              data={product.id}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="delete"
+                              showModal={() => {
+                                setEndPoint(
+                                  `https://assets-service-production.up.railway.app/products/${product.id}/delete/`
+                                );
+                                setDeleteModalOpen(true);
+                              }}
+                              data={product.id}
+                            />
+                          </td>
+                          <td>
+                            <TableBtn
+                              type="view"
+                              navigatePage={`/products/view/${product.id}`}
+                              data={product.id}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </section>
+            </>
+          )}
         </div>
       </main>
     </>
