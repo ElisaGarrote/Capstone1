@@ -1,4 +1,4 @@
-const API_URL_AUTH ="https://accessories-service-production.up.railway.app";
+const API_URL_AUTH ="https://accessories-service-production.up.railway.app/";
 
 class AccessoriesService {
   // Helper to normalize array responses
