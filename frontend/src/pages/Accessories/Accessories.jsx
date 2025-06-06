@@ -226,7 +226,7 @@ export default function Accessories() {
                                 type="delete"
                                 showModal={() => {
                                   setEndPoint(
-                                    `https://accessories-service-production.up.railway.app/accessories/${accessory.id}/delete`
+                                    `https://accessories-service-production.up.railway.app/accessories/${accessory.id}/delete/`
                                   );
                                   setDeleteModalOpen(true);
                                 }}
