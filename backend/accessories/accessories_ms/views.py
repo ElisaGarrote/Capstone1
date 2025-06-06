@@ -4,7 +4,7 @@ from rest_framework import status
 from .models import *
 from .serializer import *
 
-# Gets all accessories
+# Gets all accessories data
 @api_view(['GET'])
 def get_accessories(request):
     accessories = Accessory.objects.filter(is_deleted=False)
