@@ -176,7 +176,7 @@ export default function Accessories() {
                           <img
                             src={
                               accessory.image
-                                ? `http://127.0.0.1:8004${accessory.image}`
+                                ? `https://accessories-service-production.up.railway.app${accessory.image}`
                                 : DefaultImage
                             }
                             alt={`Accessory-${accessory.name}`}
