@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import "../../styles/custom-colors.css";
-import "../../styles/PageTable.css";  // Your CSS with alignment styles
+import "../../styles/PageTable.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import DefaultImage from "../../assets/img/default-image.jpg";
@@ -90,17 +90,11 @@ export default function Products() {
           confirmDelete={async () => {
             await fetchProducts();
             setSuccessMessage("Product Deleted Successfully!");
-            setErrorMessage("");
-            setTimeout(() => {
-              setSuccessMessage("");
-            }, 5000);
+            setTimeout(() => setSuccessMessage(""), 5000);
           }}
           onDeleteFail={() => {
             setErrorMessage("Delete failed. Please try again.");
-            setSuccessMessage("");
-            setTimeout(() => {
-              setErrorMessage("");
-            }, 5000);
+            setTimeout(() => setErrorMessage(""), 5000);
           }}
         />
       )}
@@ -114,7 +108,7 @@ export default function Products() {
           <section className="top">
             <h1>Products</h1>
             <div>
-              <form action="" method="post">
+              <form>
                 <input type="text" placeholder="Search..." />
               </form>
               <MediumButtons type="export" />
@@ -123,7 +117,7 @@ export default function Products() {
           </section>
 
           <section className="middle">
-            <table>
+            <table className="assets-table">
               <thead>
                 <tr>
                   <th>
@@ -137,24 +131,22 @@ export default function Products() {
                   <th>NAME</th>
                   <th>CATEGORY</th>
                   <th>MANUFACTURER</th>
-                  <th>Depreciation</th>
-                  <th>End of Life</th>
+                  <th>DEPRECIATION</th>
+                  <th>END OF LIFE</th>
                   <th>EDIT</th>
                   <th>DELETE</th>
                   <th>VIEW</th>
                 </tr>
               </thead>
-              {products.length === 0 ? (
-                <tbody>
+              <tbody>
+                {products.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="no-products-message">
+                    <td colSpan="11" className="no-products-message">
                       <p>No products found. Please add some products.</p>
                     </td>
                   </tr>
-                </tbody>
-              ) : (
-                <tbody>
-                  {products.map((product) => (
+                ) : (
+                  products.map((product) => (
                     <tr key={product.id}>
                       <td>
                         <input
@@ -164,24 +156,18 @@ export default function Products() {
                         />
                       </td>
                       <td>
-                        {product.image ? (
-                          <img
-                            src={`https://assets-service-production.up.railway.app${product.image}`}
-                            alt={`Product-${product.name}`}
-                            width="50"
-                            key={`img-${product.id}`}
-                            onError={(e) => {
-                              e.target.src = DefaultImage;
-                            }}
-                          />
-                        ) : (
-                          <img
-                            src={DefaultImage}
-                            alt={`Product-${product.name}`}
-                            width="50"
-                            key={`img-${product.id}`}
-                          />
-                        )}
+                        <img
+                          src={
+                            product.image
+                              ? `https://assets-service-production.up.railway.app${product.image}`
+                              : DefaultImage
+                          }
+                          alt={`Product-${product.name}`}
+                          className="table-img"
+                          onError={(e) => {
+                            e.target.src = DefaultImage;
+                          }}
+                        />
                       </td>
                       <td>{product.name}</td>
                       <td>{product.category}</td>
@@ -215,9 +201,9 @@ export default function Products() {
                         />
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              )}
+                  ))
+                )}
+              </tbody>
             </table>
           </section>
 
