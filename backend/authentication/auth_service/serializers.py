@@ -18,8 +18,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         }
     
     def create(self, validated_data):
-        user = User.objects.create_superuser(**validated_data)
-        return user
+        role = validated_data.get('role', 'operator')
+        if role == 'admin':
+            return User.objects.create_superuser(**validated_data)
+        return User.objects.create_user(**validated_data)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
