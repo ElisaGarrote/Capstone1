@@ -37,10 +37,12 @@ class CustomUser(AbstractBaseUser):
     first_name = models.CharField(max_length=50)
     middle_name = models.CharField(max_length=50, blank=True, null=True)
     last_name = models.CharField(max_length=50)
-    role = models.CharField(max_length=8, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=8, choices=ROLE_CHOICES, default='operator')
     contact_number = models.CharField(max_length=13)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'role', 'contact_number']
