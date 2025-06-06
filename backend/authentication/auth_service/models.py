@@ -1,7 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
-from django.core.validators import MinValueValidator, MaxValueValidator
 from django_rest_passwordreset.signals import reset_password_token_created
 from django.dispatch import receiver
 from django.urls import reverse
@@ -27,7 +26,7 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(email, password, **extra_fields)
 
-class CustomUser(AbstractUser):
+class CustomUser(AbstractBaseUser):
     ROLE_CHOICES = [
         ('admin', 'Admin'), ('operator', 'Operator'),
     ]
