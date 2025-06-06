@@ -29,6 +29,7 @@ export default function Accessories() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+
   const allChecked = checkedItems.length === accessories.length && accessories.length > 0;
 
   useEffect(() => {
