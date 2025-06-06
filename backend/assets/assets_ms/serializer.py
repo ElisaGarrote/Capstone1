@@ -6,7 +6,7 @@ class AllProductSerializer(serializers.ModelSerializer):
     depreciation = serializers.CharField(source='depreciation.name', read_only=True)
     class Meta:
         model = Product
-        fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'depreciation']
+        fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'depreciation', 'end_of_life']
 
 class AssetCategoryNameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,7 +46,7 @@ class AllAssetSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Asset
-        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status', 'product', 'end_of_life']
+        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status', 'product']
     
     def get_category(self, obj):
         if obj.product and obj.product.category:
