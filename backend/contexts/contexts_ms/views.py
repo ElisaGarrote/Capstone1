@@ -46,7 +46,7 @@ def get_manu_name_by_id(request, id):
 
     return Response(data)
 
-#Get supplier name by id
+#Get supplier name by id.
 @api_view(['GET'])
 def get_supp_name_by_id(request, id):
     try:
