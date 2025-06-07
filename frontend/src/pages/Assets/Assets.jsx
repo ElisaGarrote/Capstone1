@@ -112,10 +112,12 @@ export default function Assets() {
 
    const handleView = async (assetId) => {
     setLoading(true);
+    console.log("asset id:", assetId)
     try {
-      // Fetch the full asset details by id
       const assetResponse = await assetsService.fetchAssetById(assetId);
-      const assetData = assetResponse.asset;
+      console.log("Full assetResponse:", assetResponse);
+      const assetData = assetResponse;
+      console.log("assetData:", assetData, typeof assetData);
 
       if (!assetData) {
         setErrorMessage("Asset details not found.");
@@ -123,17 +125,17 @@ export default function Assets() {
         return;
       }
 
-      // Fetch supplier info if supplier id exists
       let supplierName = "Unknown Supplier";
       if (assetData.supplier_id) {
         const supplierResponse = await contextsService.fetchSuppNameById(assetData.supplier_id);
         supplierName = supplierResponse.supplier?.name || supplierName;
       }
 
-      // Combine supplier name into asset data for modal
       const assetWithSupplier = {
         ...assetData,
-        supplierName,
+        supplier: supplierName,
+        product: assetData.product_info?.name || "-",
+        status: assetData.status_info?.name || "-",
       };
 
       setSelectedAsset(assetWithSupplier);
