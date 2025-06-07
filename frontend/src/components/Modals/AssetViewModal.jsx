@@ -6,7 +6,9 @@ import { useNavigate } from "react-router-dom";
 export default function AssetViewModal({ asset, closeModal }) {
   const navigate = useNavigate();
 
-  const imageSrc = asset.image || DefaultImage;
+  const imageSrc = asset.image
+  ? `https://assets-service-production.up.railway.app${asset.image}`
+  : DefaultImage;
   const assetId = asset.displayed_id;
   const productName = asset.name || asset.product || "Unnamed Asset";
   const serialNumber = asset.serialNumber || asset.serial_number || "-";
@@ -58,7 +60,7 @@ export default function AssetViewModal({ asset, closeModal }) {
         </button>
 
         <fieldset className="header-fieldset">
-          <img src={imageSrc} alt="Asset" />
+          <img src={imageSrc} alt="Asset" onError={(e) => { e.target.src = DefaultImage; }} />
           <h2>{productName}</h2>
         </fieldset>
 
