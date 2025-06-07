@@ -15,7 +15,7 @@ class ContextsService {
   // Retrieve all manufacturer's names
   async fetchAllManufacturerNames() {
     try {
-      const response = await fetch(API_URL + "contexts/manufacturers/names", {
+      const response = await fetch(API_URL + "contexts/manufacturers/names/", {
         method: "GET",
       });
 
@@ -41,7 +41,7 @@ class ContextsService {
   // Retrieve context names
   async fetchContextNames() {
     try {
-      const response = await fetch(API_URL + "contexts/names", {
+      const response = await fetch(API_URL + "contexts/names/", {
         method: "GET",
       });
 
@@ -66,7 +66,7 @@ class ContextsService {
   // Fetch supplier names
   async fetchAllSupplierNames() {
     try {
-      const response = await fetch(API_URL + "contexts/suppliers/names", {
+      const response = await fetch(API_URL + "contexts/suppliers/names/", {
         method: "GET",
       });
 
@@ -93,7 +93,7 @@ class ContextsService {
   // Retrieve a product by id
   async fetchSuppNameById(id) {
     try {
-      const response = await fetch(API_URL + `suppliers/${id}/`);
+      const response = await fetch(API_URL + `contexts/suppliers/${id}/`);
 
       if (!response.ok) {
         console.warn("Failed to fetch supplier's name by ID, status:", response.status);
