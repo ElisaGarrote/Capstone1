@@ -21,6 +21,7 @@ export default function AssetViewModal({ asset, closeModal }) {
   const status = asset.status || "-";
   const supplier = asset.supplier || "-";
 
+  // To be configured
   const handleCheckInOut = () => {
     closeModal();
 
