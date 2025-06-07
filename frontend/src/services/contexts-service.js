@@ -3,6 +3,14 @@ import dateRelated from "../utils/dateRelated";
 const API_URL = "https://contexts-service-production.up.railway.app/";
 
 class ContextsService {
+  // Helper to normalize array responses
+  normalizeResponseArray(data, key) {
+    if (data && data[key]) return data;
+    if (Array.isArray(data)) return { [key]: data };
+    if (data && typeof data === "object") return { [key]: [data] };
+    return { [key]: [] };
+  }
+
   // MANUFACTURERS
   // Retrieve all manufacturer's names
   async fetchAllManufacturerNames() {
@@ -21,18 +29,12 @@ class ContextsService {
 
       const data = await response.json();
       console.log("Data for all manufacturers fetched: ", data);
-      
-      // Ensure we always return an object with manufacturers property
-      if (data && data.manufacturers) {
-        return data; // Already in correct format
-      } else if (Array.isArray(data)) {
-        return { manufacturers: data }; // Convert array to object with property
-      } else {
-        return { manufacturers: [] }; // Default empty result
-      }
+
+      // Use helper to normalize response
+      return this.normalizeResponseArray(data, "manufacturers");
     } catch (error) {
       console.log("Error occur while fetching all manufacturers!", error);
-      return { manufacturers: [] };  // Return consistent structure
+      return { manufacturers: [] };
     }
   }
 
@@ -56,6 +58,8 @@ class ContextsService {
       return data;
     } catch (error) {
       console.log("Error occur while fetching all contexts!", error);
+      // Returning default consistent empty arrays
+      return { suppliers: [], manufacturers: [] };
     }
   }
 
@@ -76,22 +80,38 @@ class ContextsService {
 
       const data = await response.json();
       console.log("Data for all suppliers fetched: ", data);
-      
-      // Ensure we always return an object with suppliers property
-      if (data && data.suppliers) {
-        return data; // Already in correct format
-      } else if (Array.isArray(data)) {
-        return { suppliers: data }; // Convert array to object with property
-      } else {
-        return { suppliers: [] }; // Default empty result
-      }
+
+      // Use helper to normalize response
+      return this.normalizeResponseArray(data, "suppliers");
     } catch (error) {
       console.log("Error occur while fetching all suppliers!", error);
-      return { suppliers: [] };  // Return consistent structure
+      return { suppliers: [] };
+    }
+  }
+
+  // Fetch supplier name by id
+  // Retrieve a product by id
+  async fetchSuppNameById(id) {
+    try {
+      const response = await fetch(API_URL + `suppliers/${id}/`);
+
+      if (!response.ok) {
+        console.warn("Failed to fetch supplier's name by ID, status:", response.status);
+        return null;
+      }
+
+      const data = await response.json();
+      console.log("Supplier name fetched:", data);
+
+      // Return supplier object if wrapped, else data directly
+      return data && data.supplier ? data.supplier : data;
+    } catch (error) {
+      console.error(`Error occurred while fetching supplier with ID ${id}:`, error);
+      return null;
     }
   }
 }
 
-const contextsService = new ContextsService(); // Create object for Assets Service.
+const contextsService = new ContextsService();
 
 export default contextsService;

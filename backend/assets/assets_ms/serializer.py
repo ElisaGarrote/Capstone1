@@ -60,7 +60,7 @@ class StatusNameSerializer(serializers.ModelSerializer):
 
 class AssetSerializer(serializers.ModelSerializer):
     status_info = StatusNameSerializer(source='status', read_only=True)
-
+    product_info = ProductNameSerializer(source='product', read_only=True)
     class Meta:
         model = Asset
         fields = '__all__'

@@ -9,6 +9,7 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
+import contextsService from "../../services/contexts-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import AssetViewModal from "../../components/Modals/AssetViewModal";
 
@@ -22,6 +23,8 @@ export default function Assets() {
   const [endPoint, setEndPoint] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -104,6 +107,42 @@ export default function Assets() {
           image: baseImage,
         },
       });
+    }
+  };
+
+   const handleView = async (assetId) => {
+    setLoading(true);
+    try {
+      // Fetch the full asset details by id
+      const assetResponse = await assetsService.fetchAssetById(assetId);
+      const assetData = assetResponse.asset;
+
+      if (!assetData) {
+        setErrorMessage("Asset details not found.");
+        setLoading(false);
+        return;
+      }
+
+      // Fetch supplier info if supplier id exists
+      let supplierName = "Unknown Supplier";
+      if (assetData.supplier_id) {
+        const supplierResponse = await contextsService.fetchSuppNameById(assetData.supplier_id);
+        supplierName = supplierResponse.supplier?.name || supplierName;
+      }
+
+      // Combine supplier name into asset data for modal
+      const assetWithSupplier = {
+        ...assetData,
+        supplierName,
+      };
+
+      setSelectedAsset(assetWithSupplier);
+      setViewModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching asset or supplier details:", error);
+      setErrorMessage("Failed to load asset details.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -250,7 +289,7 @@ export default function Assets() {
                         <td>
                           <TableBtn
                             type="view"
-                            onClick={() => handleView(asset)}
+                            onClick={() => handleView(asset.id)}
                           />
                         </td>
                       </tr>
