@@ -10,6 +10,7 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import AssetViewModal from "../../components/Modals/AssetViewModal";
 
 export default function Assets() {
   const location = useLocation();
@@ -20,6 +21,7 @@ export default function Assets() {
   const [isLoading, setLoading] = useState(true);
   const [endPoint, setEndPoint] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -73,7 +75,8 @@ export default function Assets() {
       setLoading(false);
     }
   };
-
+  
+  // To be configured
   const handleCheckInOut = (asset) => {
     const baseImage = asset.image
       ? `https://assets-service-production.up.railway.app${asset.image}`
@@ -122,6 +125,13 @@ export default function Assets() {
             setErrorMessage("Delete failed. Please try again.");
             setTimeout(() => setErrorMessage(""), 5000);
           }}
+        />
+      )}
+
+      {isViewModalOpen && selectedAsset && (
+        <AssetViewModal
+          asset={selectedAsset}
+          closeModal={() => setViewModalOpen(false)}
         />
       )}
 
@@ -240,7 +250,7 @@ export default function Assets() {
                         <td>
                           <TableBtn
                             type="view"
-                            navigatePage={`/assets/view/${asset.id}`}
+                            onClick={() => handleView(asset)}
                           />
                         </td>
                       </tr>

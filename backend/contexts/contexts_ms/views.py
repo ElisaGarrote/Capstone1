@@ -30,6 +30,38 @@ def get_contexts_names(request):
     }
     return Response(data)
 
+#Get manufacturer name by id
+@api_view(['GET'])
+def get_manu_name_by_id(request, id):
+    try:
+        manufacturer = Manufacturer.objects.get(pk=id, is_deleted=False)
+    except Manufacturer.DoesNotExist:
+        return Response({'detail': 'Manufacturer not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializedData = ManufacturerNameSerializer(manufacturer)
+
+    data = {
+        'manufacturer': serializedData.data,
+    }
+
+    return Response(data)
+
+#Get supplier name by id
+@api_view(['GET'])
+def get_supp_name_by_id(request, id):
+    try:
+        supplier = Supplier.objects.get(pk=id, is_deleted=False)
+    except Supplier.DoesNotExist:
+        return Response({'detail': 'Supplier not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializedData = SupplierNameSerializer(supplier)
+
+    data = {
+        'supplier': serializedData.data,
+    }
+
+    return Response(data)
+
 #SUPPLIERS DATA
 # Get all supplier's names
 @api_view(['GET'])
