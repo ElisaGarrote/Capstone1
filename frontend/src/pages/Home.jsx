@@ -1,5 +1,11 @@
+import SystemLoading from "../components/Loading/SystemLoading";
+
 function Home() {
-    return <div>Home</div>
+  return (
+    <div>
+      <SystemLoading />
+    </div>
+  );
 }
 
-export default Home
+export default Home;

@@ -8,6 +8,8 @@ import CloseIcon from '../../assets/icons/close.svg';
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
+import SystemLoading from "../../components/Loading/SystemLoading";
+
 
 export default function ProductsRegistration() {
   const [suppliers, setSuppliers] = useState([]);
@@ -208,12 +210,10 @@ export default function ProductsRegistration() {
   };
 
   if (isLoading) {
-    return (
-      <div className="loading-container">
-        <p>Loading...</p>
-      </div>
-    );
+    console.log("isLoading triggered — showing loading screen");
+    return <SystemLoading />;
   }
+
 
   return (
     <>

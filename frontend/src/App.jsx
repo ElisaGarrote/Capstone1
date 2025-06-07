@@ -1,4 +1,5 @@
 import React from "react";
+import Home from "./pages/Home";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/GlobalTableStyles.css";
 import ChatBot from "./components/ChatBot";
@@ -70,6 +71,7 @@ function App() {
     <BrowserRouter>
       <ChatBot />
       <Routes>
+        <Route path="/home" element={<Home />} />
         {/* This will Serve as Default Path*/}
         <Route path="/" element={<Navigate to="/login" />} />
         {/* Place here all the routes that require authetication to access */}

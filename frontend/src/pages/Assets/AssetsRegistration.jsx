@@ -8,6 +8,7 @@ import CloseIcon from "../../assets/icons/close.svg";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
+import SystemLoading from "../../components/Loading/SystemLoading";
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
@@ -63,6 +64,7 @@ export default function AssetsRegistration() {
     if (!id) {
       const fetchNextAssetId = async () => {
         try {
+          setIsLoading(true);
           const response = await assetsService.getNextAssetId();
           if (response && response.next_id) {
             setValue('assetId', response.next_id);
@@ -252,11 +254,8 @@ export default function AssetsRegistration() {
   };
 
   if (isLoading) {
-    return (
-      <div className="loading-container">
-        <p>Loading...</p>
-      </div>
-    );
+    console.log("isLoading triggered — showing loading screen");
+    return <SystemLoading />;
   }
 
   return (
