@@ -445,3 +445,75 @@ def get_all_status(request):
     return Response(serializer.data)
 
 # END STATUS
+
+# CATEGORY
+@api_view(['GET'])
+def get_all_category(request):
+    category = AssetCategory.objects.filter(is_deleted=False)
+    serializer = AssetCategorySerializer(category, many=True).data
+
+    data = {
+        'category': serializer,
+    }
+    return Response(data)
+
+@api_view(['GET'])
+def get_category_by_id(request, id):
+    try:
+        category = AssetCategory.objects.get(pk=id, is_deleted=False)
+    except AssetCategory.DoesNotExist:
+        return Response({'detail': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AssetCategorySerializer(category)
+
+    data = {
+        'category': serializer.data,
+    }
+
+    return Response(data)
+
+@api_view(['POST'])
+def create_category(request):
+    name = request.data.get('name')
+
+    if not name:
+        return Response({'error': 'Category name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check for duplicate name in non-deleted categories
+    if AssetCategory.objects.filter(name=name, is_deleted=False).exists():
+        return Response({'error': 'A Category with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    serializer = AssetCategorySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def update_category(request, id):
+    try:
+        category = AssetCategory.objects.get(pk=id, is_deleted=False)
+    except AssetCategory.DoesNotExist:
+        return Response({'detail': 'Categoroy not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    remove_image = request.data.get('remove_image')
+    if remove_image == 'true' and category.logo:
+        category.logo.delete(save=False)
+        category.logo = None
+
+    serializer = AssetCategorySerializer(category, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+def soft_delete_category(request, id):
+    try:
+        category = AssetCategory.objects.get(pk=id)
+        category.is_deleted = True
+        category.save()
+        return Response({'detail': 'Category soft-deleted'})
+    except AssetCategory.DoesNotExist:
+        return Response({'detail': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+# END CATEGORY
