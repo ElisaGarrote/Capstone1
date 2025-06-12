@@ -133,3 +133,8 @@ class AssetCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCategory
         fields = "__all__"
+
+class DepreciationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Depreciation
+        fields = "__all__"

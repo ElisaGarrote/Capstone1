@@ -51,4 +51,11 @@ urlpatterns = [
     path('status/create/', create_status, name='create_status'),
     path('status/get/edit/status/<int:id>/', get_edit_status_by_id, name='get_edit_status_by_id'),
     path('status/all/', get_all_status, name='get_all_status'),
+
+    # Depreciation
+    path('depreciations/', get_all_depreciation, name='get_all_depreciations'),
+    path('depreciations/<int:id>/', get_depreciation_by_id, name='get_depreciation_by_id'),
+    path('depreciations/registration/', create_depreciation, name='depreciation_registration'),
+    path('depreciations/<int:id>/update/', update_depreciation, name='update_depreciation_by_id'),
+    path('depreciations/<int:id>/delete/', soft_delete_depreciation, name='soft_delete_depreciation_by_id'),
 ]

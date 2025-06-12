@@ -506,3 +506,70 @@ def soft_delete_category(request, id):
     except AssetCategory.DoesNotExist:
         return Response({'detail': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
 # END CATEGORY
+
+# DEPRECIATION
+@api_view(['GET'])
+def get_all_depreciation(request):
+    depreciation = Depreciation.objects.filter(is_deleted=False)
+    serializer = DepreciationSerializer(depreciation, many=True).data
+
+    data = {
+        'depreciation': serializer,
+    }
+    return Response(data)
+
+@api_view(['GET'])
+def get_depreciation_by_id(request, id):
+    try:
+        depreciation = Depreciation.objects.get(pk=id, is_deleted=False)
+    except Depreciation.DoesNotExist:
+        return Response({'detail': 'Depreciation not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = DepreciationSerializer(depreciation)
+
+    data = {
+        'depreciation': serializer.data,
+    }
+
+    return Response(data)
+
+@api_view(['POST'])
+def create_depreciation(request):
+    name = request.data.get('name')
+
+    if not name:
+        return Response({'error': 'Depreciation name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check for duplicate name in non-deleted categories
+    if Depreciation.objects.filter(name=name, is_deleted=False).exists():
+        return Response({'error': 'A Depreciation with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    serializer = DepreciationSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def update_depreciation(request, id):
+    try:
+        depreciation = Depreciation.objects.get(pk=id, is_deleted=False)
+    except Depreciation.DoesNotExist:
+        return Response({'detail': 'Depreciation not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = DepreciationSerializer(depreciation, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+def soft_delete_depreciation(request, id):
+    try:
+        depreciation = Depreciation.objects.get(pk=id)
+        depreciation.is_deleted = True
+        depreciation.save()
+        return Response({'detail': 'Depreciation soft-deleted'})
+    except Depreciation.DoesNotExist:
+        return Response({'detail': 'Depreciation not found'}, status=status.HTTP_404_NOT_FOUND)
+# END DEPRECIATION
