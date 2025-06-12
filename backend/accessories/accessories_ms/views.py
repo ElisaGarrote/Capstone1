@@ -137,44 +137,60 @@ def get_all_accessory_checkin(request):
 
     return Response(serializer.data)
 
-# Gets all categories of accessories
+# CATEGORY
 @api_view(['GET'])
-def get_accessory_categories(request):
-    categories = AccessoryCategory.objects.filter(is_deleted=False)
-    serializer = AccessoryCategorySerializer(categories, many=True)
-    return Response({
-        'message': 'All accessory categories:',
-        'data': serializer.data
-    }, status=200)
+def get_all_category(request):
+    category = AccessoryCategory.objects.filter(is_deleted=False)
+    serializer = AccessoryCategorySerializer(category, many=True).data
 
-# Filters not deleted accessories
-# If AccessoryCategory.name is not equal to any of the filtered categories, it will create a new AccessoryCategory
+    data = {
+        'category': serializer,
+    }
+    return Response(data)
+
+@api_view(['GET'])
+def get_category_by_id(request, id):
+    try:
+        category = AccessoryCategory.objects.get(pk=id, is_deleted=False)
+    except AccessoryCategory.DoesNotExist:
+        return Response({'detail': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AccessoryCategorySerializer(category)
+
+    data = {
+        'category': serializer.data,
+    }
+
+    return Response(data)
+
 @api_view(['POST'])
-def create_accessory_category(request):
+def create_category(request):
     name = request.data.get('name')
 
     if not name:
         return Response({'error': 'Category name is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    exists = AccessoryCategory.objects.filter(name=name, is_deleted=False).exists()
+    # Check for duplicate name in non-deleted categories
+    if AccessoryCategory.objects.filter(name=name, is_deleted=False).exists():
+        return Response({'error': 'A Category with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    serializer = AccessoryCategorySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    if not exists:
-        serializer = AccessoryCategorySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        return Response({'message': 'Category already exists and is not deleted.'}, status=status.HTTP_200_OK)
-
-# Edits a category of accessory
 @api_view(['PUT'])
-def update_accessory_category(request, id):
+def update_category(request, id):
     try:
-        category = AccessoryCategory.objects.get(pk=id)
+        category = AccessoryCategory.objects.get(pk=id, is_deleted=False)
     except AccessoryCategory.DoesNotExist:
-        return Response({'detail': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'detail': 'Categoroy not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    remove_image = request.data.get('remove_image')
+    if remove_image == 'true' and category.logo:
+        category.logo.delete(save=False)
+        category.logo = None
 
     serializer = AccessoryCategorySerializer(category, data=request.data, partial=True)
     if serializer.is_valid():
@@ -182,14 +198,13 @@ def update_accessory_category(request, id):
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Soft deletes a category of accessory
 @api_view(['PATCH'])
-def soft_delete_accessory_category(request, id):
+def soft_delete_category(request, id):
     try:
-        category = AccessoryCategory.objects.get(pk=id, is_deleted=False)
+        category = AccessoryCategory.objects.get(pk=id)
+        category.is_deleted = True
+        category.save()
+        return Response({'detail': 'Category soft-deleted'})
     except AccessoryCategory.DoesNotExist:
-        return Response({'error': 'Category not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-    category.is_deleted = True
-    category.save()
-    return Response({'message': 'Category soft-deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+        return Response({'detail': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+# END CATEGORY

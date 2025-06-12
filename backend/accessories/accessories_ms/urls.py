@@ -10,10 +10,12 @@ urlpatterns = [
     path('accessories/<int:id>/update/', update_accessory, name='update_accessory'),
     path('accessories/<int:id>/delete/', soft_delete_accessory, name='delete_accessory'),
     
-    path('accessories/category/', get_accessory_categories, name='all_accessory_categories'),
-    path('accessories/category/registration/', create_accessory_category, name='add_new_accessory_category'),
-    path('accessories/category/<int:id>/update/', update_accessory_category, name='update_accessory_category'),
-    path('accessories/category/<int:id>/delete/', soft_delete_accessory_category, name='delete_accessory_category'),
+    # Accessory Category
+    path('accessories/categories/', get_all_category, name='get_all_accessory_category'),
+    path('accessories/categories/<int:id>/', get_category_by_id, name='get_accessory_category_by_id'),
+    path('accessories/categories/registration/', create_category, name='accessory_category_registration'),
+    path('accessories/categories/<int:id>/update/', update_category, name='update_accessory_category_by_id'),
+    path('accessories/categories/<int:id>/delete/', soft_delete_category, name='soft_delete_accessory_category_by_id'),
 
     # Accessory Checkout
     path('accessories/checkout/all/', get_all_accessory_checkout, name='get_all_accessory_checkout'),

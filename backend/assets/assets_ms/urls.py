@@ -23,10 +23,10 @@ urlpatterns = [
 
     # Asset Category
     path('assets/categories/', get_all_category, name='get_all_asset_category'),
-    path('assets/categories/<int:id>', get_category_by_id, name='get_asset_category_by_id'),
-    path('assets/categories/registration', create_category, name='asset_category_registration'),
-    path('assets/categories/<int:id>/update', update_category, name='update_asset_category_by_id'),
-    path('assets/categories/<int:id>/delete', soft_delete_category, name='soft_delete_asset_category_by_id'),
+    path('assets/categories/<int:id>/', get_category_by_id, name='get_asset_category_by_id'),
+    path('assets/categories/registration/', create_category, name='asset_category_registration'),
+    path('assets/categories/<int:id>/update/', update_category, name='update_asset_category_by_id'),
+    path('assets/categories/<int:id>/delete/', soft_delete_category, name='soft_delete_asset_category_by_id'),
 
     # Audits
     path('audits/create/', create_audit, name='create_audit'),
