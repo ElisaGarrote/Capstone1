@@ -29,12 +29,9 @@ class ProductDefaultsSerializer(serializers.ModelSerializer):
         fields = ['id', 'default_purchase_cost', 'default_supplier_id']
 
 class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(
-        queryset=AssetCategory.objects.all(), required=True, allow_null=False
-    )
-    depreciation = serializers.PrimaryKeyRelatedField(
-        queryset=Depreciation.objects.all(), required=True, allow_null=False
-    )
+    category = serializers.CharField(source='category.name', read_only=True)
+    depreciation = serializers.CharField(source='depreciation.name', read_only=True)
+    
     class Meta:
         model = Product
         fields = '__all__'

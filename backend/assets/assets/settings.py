@@ -175,7 +175,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://capstone1-production-1c05.up.railway.app/login",
+    "https://capstone1-production-1c05.up.railway.app",
 ]
 
 # Add your Railway domain to CSRF_TRUSTED_ORIGINS with the exact format
