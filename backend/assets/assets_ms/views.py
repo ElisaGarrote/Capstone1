@@ -269,6 +269,55 @@ def get_next_asset_id(request):
     return Response({'next_id': next_id})
 # END ASSETS
 
+# ASSET CHECKOUT
+# Get all asset checkout
+@api_view(['GET'])
+def get_all_asset_checkouts(request):
+    assetCheckouts = AssetCheckout.objects.all()
+    
+    serializer = AssetCheckoutSerializer(assetCheckouts, many=True).data
+
+    data = {
+        'asset checkouts': serializer,
+    }
+    return Response(data)
+
+@api_view(['GET'])
+def get_asset_checkout_by_id(request, id):
+    try:
+        assetCheckout = AssetCheckout.objects.get(pk=id)
+    except AssetCheckout.DoesNotExist:
+        return Response({'detail': 'Asset Checkout not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = AssetCheckoutSerializer(assetCheckout)
+    data = {
+        'asset checkout': serializer.data,
+    }
+
+    return Response(data)
+
+@api_view(['POST'])
+def create_asset_checkout(request):
+    serializer = AssetCheckoutSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def update_asset_checkout(request, id):
+    try:
+        assetCheckout = AssetCheckout.objects.get(pk=id)
+    except AssetCheckout.DoesNotExist:
+        return Response({'detail': 'Asset Checkout not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = AssetCheckoutUpdateSerializer(assetCheckout, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# END ASSET CHECKOUT
+
 
 # AUDITS HERE
 # Audit
@@ -573,3 +622,4 @@ def soft_delete_depreciation(request, id):
     except Depreciation.DoesNotExist:
         return Response({'detail': 'Depreciation not found'}, status=status.HTTP_404_NOT_FOUND)
 # END DEPRECIATION
+

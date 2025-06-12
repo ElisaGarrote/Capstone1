@@ -21,6 +21,12 @@ urlpatterns = [
     path('assets/<int:id>/defaults/', get_product_defaults, name='product_defaults'),
     path('assets/next-id/', get_next_asset_id, name='get_next_asset_id'),
 
+    # Asset Checkouts
+    path('assets/check-out/', get_all_asset_checkouts, name='all_asset_checkouts'),
+    path('assets/check-out/<int:id>/', get_asset_checkout_by_id, name='asset_checkout_details_by_id'),
+    path('assets/check-out/registration/', create_asset_checkout, name='asset_checkout_registration'),
+    path('assets/check-out/<int:id>/update/', update_asset_checkout, name='update_asset_checkout'),
+
     # Asset Category
     path('assets/categories/', get_all_category, name='get_all_asset_category'),
     path('assets/categories/<int:id>/', get_category_by_id, name='get_asset_category_by_id'),
