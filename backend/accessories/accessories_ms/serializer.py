@@ -20,10 +20,13 @@ class AccessoryCategorySerializer(serializers.ModelSerializer):
         model = AccessoryCategory
         fields = '__all__'
 
+class AccessoryRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Accessory
+        fields = '__all__'
+        
 class AccessorySerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(
-        queryset=AccessoryCategory.objects.all(), required=False, allow_null=True
-    )
+    category = serializers.CharField(source='category.name', read_only=True)
     class Meta:
         model = Accessory
         fields = '__all__'

@@ -66,7 +66,7 @@ def create_accessory(request):
         return Response({'error': 'An accessory with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
     # Proceed with creation
-    serializer = AccessorySerializer(data=request.data)
+    serializer = AccessoryRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -85,7 +85,7 @@ def update_accessory(request, id):
         accessory.image.delete(save=False)
         accessory.image = None
 
-    serializer = AccessorySerializer(accessory, data=request.data, partial=True)
+    serializer = AccessoryRegistrationSerializer(accessory, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
