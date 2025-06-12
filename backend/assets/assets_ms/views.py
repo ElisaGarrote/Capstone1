@@ -51,8 +51,16 @@ def get_product_by_id(request, id):
 # Register a product
 @api_view(['POST'])
 def create_product(request):
-    data = request.data
-    serializer = ProductSerializer(data=data)
+    name = request.data.get('name')
+
+    if not name:
+        return Response({'error': 'Product name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check for duplicate name in non-deleted products
+    if Product.objects.filter(name=name, is_deleted=False).exists():
+        return Response({'error': 'A Product with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    serializer = ProductSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -128,8 +136,16 @@ def get_asset_contexts(request):
 # Register an asset
 @api_view(['POST'])
 def create_asset(request):
-    data = request.data
-    serializer = AssetSerializer(data=data)
+    name = request.data.get('name')
+
+    if not name:
+        return Response({'error': 'Asset name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check for duplicate name in non-deleted products
+    if Asset.objects.filter(name=name, is_deleted=False).exists():
+        return Response({'error': 'A Product with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    serializer = AssetSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
