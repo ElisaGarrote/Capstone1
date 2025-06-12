@@ -36,6 +36,11 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = '__all__'
 
+class ProductRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
 class AllAssetSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     product = serializers.CharField(source='product.name', read_only=True)
@@ -56,8 +61,20 @@ class StatusNameSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'type']
 
 class AssetSerializer(serializers.ModelSerializer):
+    category = serializers.SerializerMethodField()
     status_info = StatusNameSerializer(source='status', read_only=True)
     product_info = ProductNameSerializer(source='product', read_only=True)
+
+    class Meta:
+        model = Asset
+        fields = '__all__'
+    
+    def get_category(self, obj):
+        if obj.product and obj.product.category:
+            return obj.product.category.name
+        return None
+
+class AssetRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = '__all__'

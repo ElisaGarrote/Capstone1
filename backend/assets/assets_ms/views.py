@@ -60,7 +60,7 @@ def create_product(request):
     if Product.objects.filter(name=name, is_deleted=False).exists():
         return Response({'error': 'A Product with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
     
-    serializer = ProductSerializer(data=request.data)
+    serializer = ProductRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -79,7 +79,7 @@ def update_product(request, id):
         product.image.delete(save=False)
         product.image = None
 
-    serializer = ProductSerializer(product, data=request.data, partial=True)
+    serializer = ProductRegistrationSerializer(product, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
@@ -145,7 +145,7 @@ def create_asset(request):
     if Asset.objects.filter(name=name, is_deleted=False).exists():
         return Response({'error': 'A Product with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
     
-    serializer = AssetSerializer(data=request.data)
+    serializer = AssetRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -164,7 +164,7 @@ def update_asset(request, id):
         asset.image.delete(save=False)
         asset.image = None
 
-    serializer = AssetSerializer(asset, data=request.data, partial=True)
+    serializer = AssetRegistrationSerializer(asset, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
@@ -212,17 +212,6 @@ def soft_delete_asset(request, id):
         return Response({'detail': 'Asset soft-deleted'})
     except Asset.DoesNotExist:
         return Response({'detail': 'Asset not found'}, status=status.HTTP_404_NOT_FOUND)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
-def create_asset(request):
-    data = request.data
-    serializer = AssetSerializer(data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
