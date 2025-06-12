@@ -142,12 +142,6 @@ WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny'
-    ],
-}
-
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -169,3 +163,10 @@ CSRF_TRUSTED_ORIGINS = [
     'https://consumables.service.production-up.railway.app',
     'https://capstone1-production-1c05.up.railway.app',
 ]
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny'
+    ],
+}
