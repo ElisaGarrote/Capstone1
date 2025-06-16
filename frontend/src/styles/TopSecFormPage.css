@@ -18,7 +18,6 @@
     list-style: none;
 }
 
-/* Add a slash symbol (/) before/behind each list item */
 .breadcrumb-navigation li+li::before {
     padding: 0px 6px 0px 8px;
     color: var(--secondary-text-color);

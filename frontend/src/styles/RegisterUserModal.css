@@ -72,7 +72,6 @@
   color: #dc3545;
 }
 
-/* Remove asterisk from optional fields */
 .modal-content .form-group:has(input:not([required])) label::after {
   content: '';
 }

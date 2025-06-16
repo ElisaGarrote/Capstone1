@@ -1,6 +1,4 @@
 /* ViewDepreciations Component Styles */
-
-/* Modern Card-like Container for Depreciation Table */
 .depreciation-table-wrapper {
   background-color: white;
   border-radius: 8px;
@@ -10,7 +8,6 @@
   margin-bottom: 0;
 }
 
-/* Depreciation Table Specific Styles */
 .depreciation-table {
   width: 100%;
   border-collapse: collapse;
@@ -47,7 +44,6 @@
   border-bottom: 1px solid #e9ecef;
 }
 
-/* Depreciation Page Header */
 .depreciation-page-header {
   font-size: 1.5rem;
   font-weight: 600;
@@ -55,28 +51,21 @@
   color: #545f71;
 }
 
-/* Depreciation Top Section */
-
 .depreciation-top-section-actions {
   display: flex;
   gap: 10px;
   align-items: center;
 }
 
-/* Depreciation Search Form */
 .depreciation-search-form {
   margin-right: 10px;
 }
 
-
-
-/* Depreciation Table Container */
 .depreciation-table-container {
   border-radius: 0;
   overflow: hidden;
 }
 
-/* Depreciation Table Headers */
 .depreciation-table-header-checkbox {
   width: 40px;
 }
@@ -100,7 +89,6 @@
   padding-right: 12px;
 }
 
-/* Depreciation Table Cells */
 .depreciation-table-cell-checkbox {
   width: 40px;
   text-align: center;
@@ -129,7 +117,6 @@
   padding: 12px 8px;
 }
 
-/* Depreciation Pagination */
 .depreciation-pagination-container {
   display: flex;
   justify-content: space-between;

@@ -1,6 +1,4 @@
 /* Global table styles */
-
-/* Fix for action column headers alignment */
 table th:nth-last-child(1),
 table th:nth-last-child(2),
 table th:nth-last-child(3) {
@@ -11,7 +9,6 @@ table th:nth-last-child(3) {
   letter-spacing: -0.5px !important;
 }
 
-/* Fix for action column cells alignment */
 table td:nth-last-child(1),
 table td:nth-last-child(2),
 table td:nth-last-child(3) {
@@ -20,7 +17,6 @@ table td:nth-last-child(3) {
   padding: 8px !important;
 }
 
-/* Specific spacing for Depreciation Report table last three columns */
 .depreciation-table th:nth-last-child(1),
 .depreciation-table th:nth-last-child(2),
 .depreciation-table th:nth-last-child(3) {
@@ -37,13 +33,11 @@ table td:nth-last-child(3) {
   min-width: 80px !important;
 }
 
-/* Global fix for Notes column spacing in all tables */
 table th:last-child,
 table td:last-child {
   padding-right: 25px !important;
 }
 
-/* Global styles for email and URL columns to prevent overlapping */
 .email-cell,
 td[style*="email"],
 th:contains("EMAIL") {
@@ -52,7 +46,7 @@ th:contains("EMAIL") {
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
   padding-right: 15px !important;
-  padding-left: 0 !important; /* Move closer to Phone column */
+  padding-left: 0 !important;
 }
 
 .url-cell,
@@ -65,12 +59,10 @@ th:contains("URL") {
   padding-right: 15px !important;
 }
 
-/* Add tooltips for truncated content */
 .email-cell, .url-cell {
   position: relative !important;
 }
 
-/* Fix for action buttons alignment */
 table td:nth-last-child(1) button,
 table td:nth-last-child(2) button,
 table td:nth-last-child(3) button {
@@ -78,7 +70,6 @@ table td:nth-last-child(3) button {
   display: block !important;
 }
 
-/* Remove three dots from checkboxes in all tables */
 table input[type="checkbox"] {
   appearance: auto !important;
   -webkit-appearance: checkbox !important;
@@ -93,14 +84,12 @@ table input[type="checkbox"] {
   content: none !important;
 }
 
-/* Remove any pseudo-elements that might be causing the dots */
 table input[type="checkbox"]::before,
 table input[type="checkbox"]::after {
   display: none !important;
   content: none !important;
 }
 
-/* Specific styles for EOL tables */
 .eol-table input[type="checkbox"] {
   appearance: auto !important;
   -webkit-appearance: checkbox !important;
@@ -108,7 +97,6 @@ table input[type="checkbox"]::after {
   content: none !important;
 }
 
-/* Ensure checkbox container doesn't have extra content */
 table td:first-child {
   position: relative;
 }
@@ -119,29 +107,27 @@ table td:first-child::after {
   content: none !important;
 }
 
-/* Target specific tables that have the issue */
 .eol-container .eol-table input[type="checkbox"],
 .eol-container table input[type="checkbox"] {
   appearance: auto !important;
   -webkit-appearance: checkbox !important;
   -moz-appearance: checkbox !important;
   content: none !important;
-  font-size: 0 !important; /* Remove any text */
+  font-size: 0 !important;
 }
 
-/* Remove any text content from the checkbox cell */
 .eol-container .eol-table td:first-child,
 .eol-container table td:first-child {
-  font-size: 0 !important; /* Hide any text in the cell */
+  font-size: 0 !important;
 }
 
-/* Ensure the checkbox itself is visible */
+
 .eol-container .eol-table td:first-child input[type="checkbox"],
 .eol-container table td:first-child input[type="checkbox"] {
-  font-size: initial !important; /* Restore font size for the checkbox */
+  font-size: initial !important;
 }
 
-/* Additional specific selectors for the problematic tables */
+
 .eol-container input[type="checkbox"],
 [class*="warranties"] input[type="checkbox"] {
   appearance: auto !important;
@@ -151,7 +137,6 @@ table td:first-child::after {
   font-size: 0 !important;
 }
 
-/* Fix for view buttons in Approved Tickets */
 .page table td:nth-child(9) .view-btn {
   display: block !important;
   visibility: visible !important;

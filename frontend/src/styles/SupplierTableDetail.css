@@ -1,9 +1,9 @@
 .modal-overlay {
   position: fixed;
-  top: 60px; /* Adjust based on your navbar height */
+  top: 60px;
   left: 0;
   width: 100%;
-  height: calc(100vh - 60px); /* Leave space for navbar */
+  height: calc(100vh - 60px);
   background-color: rgba(0, 0, 0, 0.3);
   display: flex;
   justify-content: center;

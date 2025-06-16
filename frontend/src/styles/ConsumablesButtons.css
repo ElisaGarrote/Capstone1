@@ -1,6 +1,5 @@
 /* ConsumablesButtons.css - Specific styles for buttons in the Consumables table */
 
-/* Fix for edit, delete, and view buttons in Consumables table */
 .consumables-page .table-buttons-edit,
 .consumables-page .table-buttons-delete,
 .consumables-page .table-buttons-view,
@@ -20,7 +19,6 @@
   box-sizing: content-box !important;
 }
 
-/* Fix for button images in Consumables table */
 .consumables-page .table-buttons-edit img,
 .consumables-page .table-buttons-delete img,
 .consumables-page .table-buttons-view img,
@@ -66,25 +64,21 @@
   text-align: center !important;
 }
 
-/* Remove border radius from consumables table */
 .consumables-page .consumables-table {
   border-radius: 0 !important;
   overflow: hidden !important;
 }
 
-/* Ensure the container has proper styling */
 .consumables-page .container {
   border-radius: 40px !important;
   overflow: hidden !important;
 }
 
-/* Ensure the table header has no border radius */
 .consumables-page .consumables-table thead tr th:first-child,
 .consumables-page .consumables-table thead tr th:last-child {
   border-radius: 0 !important;
 }
 
-/* Remove border radius from all table cells */
 .consumables-page .consumables-table th,
 .consumables-page .consumables-table td {
   border-radius: 0 !important;
