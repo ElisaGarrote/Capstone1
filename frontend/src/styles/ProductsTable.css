@@ -1,6 +1,5 @@
 /* Products table specific styles for action buttons */
 
-/* Action columns width and alignment */
 .products-table th:nth-child(8),
 .products-table th:nth-child(9),
 .products-table th:nth-child(10),
@@ -12,29 +11,26 @@
   padding: 0 !important;
 }
 
-/* Create a container for action buttons */
 .products-action-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0; /* Remove gap between buttons */
+  gap: 0;
 }
 
-/* Action buttons styling */
 .products-edit-btn,
 .products-delete-btn,
 .products-view-btn {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px; /* Reduce padding */
+  padding: 4px;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 0 -2px; /* Negative margin to bring buttons closer */
+  margin: 0 -2px;
 }
 
-/* SVG icons styling */
 .products-edit-btn svg,
 .products-delete-btn svg,
 .products-view-btn svg {
@@ -42,7 +38,6 @@
   height: 16px;
 }
 
-/* Hover effects */
 .products-edit-btn:hover,
 .products-view-btn:hover {
   color: var(--primary-color);
@@ -52,7 +47,6 @@
   color: #ff0000;
 }
 
-/* Group the action buttons together */
 .products-action-group {
   display: flex;
   justify-content: center;

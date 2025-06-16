@@ -1,4 +1,3 @@
-/* Add these CSS rules for the navbar */
 .navbar {
   position: fixed;
   top: 0;
@@ -13,13 +12,11 @@
   padding: 0 20px;
 }
 
-/* Adjust settings page to account for fixed navbar */
 .settings-page {
-  padding-top: 60px; /* Height of the navbar */
-  overflow-x: hidden; /* Prevent horizontal scrolling */
+  padding-top: 60px;
+  overflow-x: hidden;
 }
 
-/* Prevent layout shift when tabs are switched */
 body.settings-page-open {
   overflow-x: hidden;
   width: 100%;
@@ -28,11 +25,10 @@ body.settings-page-open {
 .settings-container {
   padding: 20px;
   max-width: 1200px;
-  margin: 0 auto; /* Removed top margin since we're using padding-top on the parent */
-  position: relative; /* For proper positioning of content */
+  margin: 0 auto;
+  position: relative;
 }
 
-/* Rest of your CSS remains the same */
 .settings-container h1 {
   font-size: 24px;
   margin-bottom: 20px;
@@ -78,12 +74,12 @@ body.settings-page-open {
 
 .settings-content {
   background: white;
-  border-radius: 40px; /* Match other UI elements */
+  border-radius: 40px;
   padding: 24px;
-  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8); /* Match other UI elements */
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   position: relative;
   width: 100%;
-  overflow: hidden; /* Prevent content from causing layout shifts */
+  overflow: hidden;
 }
 
 .settings-content h2 {
@@ -99,7 +95,7 @@ body.settings-page-open {
   margin-bottom: 24px;
   width: 100%;
   position: relative;
-  overflow: hidden; /* Prevent content from causing layout shifts */
+  overflow: hidden;
 }
 
 .form-section h3 {
@@ -119,13 +115,11 @@ body.settings-page-open {
   margin-bottom: 8px;
 }
 
-/* Add asterisk to required fields */
 .form-group label::after {
   content: ' *';
   color: #dc3545;
 }
 
-/* Remove asterisk from optional fields */
 .form-group:has(input[placeholder*="middle name"]) label::after {
   content: '';
 }
@@ -134,7 +128,7 @@ body.settings-page-open {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #e0e0e0;
-  border-radius: 40px; /* Match other UI elements */
+  border-radius: 40px;
   font-size: 13px;
   color: #333;
   background-color: #fff;
@@ -152,7 +146,6 @@ body.settings-page-open {
   color: #666;
 }
 
-/* Make Created At field span both columns */
 .created-at {
   grid-column: 1 / span 2;
 }
@@ -163,7 +156,7 @@ body.settings-page-open {
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 40px; /* Match other UI elements */
+  border-radius: 40px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;

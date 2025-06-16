@@ -57,7 +57,6 @@
   white-space: nowrap;
 }
 
-/* Ensure the "to" text in deployed status is blue */
 .status-deployed .status-to {
   color: var(--deployed-text);
 }
@@ -68,7 +67,6 @@
   max-width: 100%;
 }
 
-/* Ensure the person name in deployed status is blue */
 .status-deployed .status-target {
   color: var(--deployed-text);
 }
@@ -89,7 +87,6 @@
   flex-shrink: 0;
 }
 
-/* Ensure person icon in deployed status is blue */
 .status-deployed .icon img {
   filter: invert(40%) sepia(85%) saturate(1500%) hue-rotate(199deg)
     brightness(100%) contrast(101%);

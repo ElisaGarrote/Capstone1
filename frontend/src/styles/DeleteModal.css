@@ -16,9 +16,9 @@
   bottom: 0;
   height: 100vh;
   width: 100vw;
-  background-color: rgba(0, 0, 0, 0.15); /* Reduced opacity from 0.3 to 0.15 */
-  z-index: 999; /* Just below the modal content */
-  backdrop-filter: blur(1px); /* Slight blur effect */
+  background-color: rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  backdrop-filter: blur(1px);
 }
 
 .delete-modal .content {
@@ -33,14 +33,14 @@
   padding: 40px 20px;
   border-radius: 20px;
   border: 1px solid #d3d3d3;
-  position: fixed; /* Changed from absolute to fixed */
+  position: fixed;
   gap: 15px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); /* Enhanced shadow */
-  z-index: 1001; /* Ensure it's above the overlay */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  margin: 0; /* Ensure no margin affects positioning */
+  margin: 0;
 }
 
 .delete-modal .close-button {
@@ -64,7 +64,7 @@
 .delete-modal .close-button img {
   width: 18px;
   height: 18px;
-  filter: invert(1); /* This will make the SVG icon black */
+  filter: invert(1);
 }
 
 .delete-modal .close-button:hover {

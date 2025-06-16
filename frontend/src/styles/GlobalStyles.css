@@ -1,6 +1,4 @@
 /* Global styles for the application */
-
-/* Remove text decoration from all elements */
 a, a:hover, a:focus, a:active,
 .user-management-page *,
 .user-management-page *:hover,
@@ -9,7 +7,6 @@ a, a:hover, a:focus, a:active,
   text-decoration: none !important;
 }
 
-/* Ensure user cards don't have text decoration */
 .user-card,
 .user-card:hover,
 .user-card:focus,
@@ -21,7 +18,6 @@ a, a:hover, a:focus, a:active,
   text-decoration: none !important;
 }
 
-/* Ensure user details don't have text decoration */
 .user-details,
 .user-details *,
 .user-details *:hover,
@@ -30,7 +26,6 @@ a, a:hover, a:focus, a:active,
   text-decoration: none !important;
 }
 
-/* Ensure user names don't have text decoration */
 .user-details h3,
 .user-details h3:hover,
 .user-details h3:focus,
