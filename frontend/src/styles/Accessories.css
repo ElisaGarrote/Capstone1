@@ -2,7 +2,6 @@
   outline: none;
 }
 
-<<<<<<< HEAD
 .page {
   display: flex;
   flex-direction: column;
@@ -70,15 +69,6 @@
   border-collapse: collapse;
   width: 100%;
   table-layout: fixed;
-=======
-.page table.products-table,
-.page table.assets-table,
-.accessories-page table.accessories-table {
-  border-collapse: collapse !important;
-  border-spacing: 0 !important;
-  border-radius: 0 !important;
-  overflow: hidden !important;
->>>>>>> SillanoJ
 }
 
 .page table th,
@@ -94,7 +84,6 @@
   height: 50px;
 }
 
-<<<<<<< HEAD
 /* ALL HEADERS LEFT ALIGNED except last 3 columns */
 /* So columns 1 to (total-3) headers are left aligned */
 .page table th {
@@ -108,23 +97,6 @@
   text-align: center;
   padding-left: 8px;
   padding-right: 8px;
-=======
-.page table.products-table th,
-.page table.products-table td,
-.page table.assets-table th,
-.page table.assets-table td,
-.accessories-page table.accessories-table th,
-.accessories-page table.accessories-table td {
-  border-radius: 0 !important;
-}
-
-.page table tr:first-child th,
-.page table tr:first-child td,
-.accessories-page table tr:first-child th,
-.accessories-page table tr:first-child td {
-  border-top-left-radius: 0 !important;
-  border-top-right-radius: 0 !important;
->>>>>>> SillanoJ
 }
 
 /* ALL DATA CELLS LEFT ALIGNED except last 3 columns */
@@ -134,21 +106,12 @@
   font-size: 0.88rem;
 }
 
-<<<<<<< HEAD
 /* LAST 3 DATA CELLS CENTERED */
 .page table td:nth-last-child(-n+3) {
   text-align: center;
   padding-left: 8px;
   padding-right: 8px;
   font-size: 0.88rem;
-=======
-.page table tr th:first-child,
-.page table tr td:first-child,
-.accessories-page table tr th:first-child,
-.accessories-page table tr td:first-child {
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
->>>>>>> SillanoJ
 }
 
 /* Set widths for checkbox + image columns (first two) */
@@ -159,7 +122,6 @@
   width: 60px;
 }
 
-<<<<<<< HEAD
 /* Override width for the LOCATION column (8th column) */
 .page table th:nth-child(8),
 .page table td:nth-child(8) {
@@ -175,14 +137,6 @@
   height: 5vh;
   width: 5vw;
   object-fit: cover;
-=======
-
-.page table tr:first-child th:first-child,
-.page table tr:first-child td:first-child,
-.accessories-page table tr:first-child th:first-child,
-.accessories-page table tr:first-child td:first-child {
-  border-top-left-radius: 0 !important;
->>>>>>> SillanoJ
 }
 
 .check-in-btn,
@@ -206,7 +160,6 @@
   background-color: var(--primary-color-hover);
 }
 
-<<<<<<< HEAD
 .check-out-btn {
   background-color: var(--deployable-text);
 }
@@ -294,9 +247,4 @@ progress::-moz-progress-bar {
 .progress-container progress::-moz-progress-bar {
   background-color: #34c759; /* Green fill color */
   border-radius: 5px;
-=======
-.accessories-page .middle {
-  border-radius: 0 !important;
-  overflow: visible !important;
->>>>>>> SillanoJ
 }
