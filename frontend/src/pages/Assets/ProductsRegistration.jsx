@@ -117,6 +117,12 @@ export default function ProductsRegistration() {
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage("Image size exceeds 5MB. Please choose a smaller file.");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+      
       setSelectedImage(file); // store the actual file
       setValue('image', file); // optional: sync with react-hook-form
   

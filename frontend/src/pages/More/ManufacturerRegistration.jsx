@@ -1,53 +1,171 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import '../../styles/Registration.css';
 import '../../styles/ManufacturerRegistration.css';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
+import contextsService from '../../services/contexts-service'; // Import service for manufacturers
+import Alert from '../../components/Alert';
+import SystemLoading from '../../components/Loading/SystemLoading';
 
 const ManufacturerRegistration = () => {
-  const navigate = useNavigate();
-  const [logoFile, setLogoFile] = useState(null);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors }
-  } = useForm({
+  const { id } = useParams();
+  const { setValue, register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       manufacturerName: '',
       url: '',
       supportUrl: '',
       supportPhone: '',
       supportEmail: '',
-      notes: ''
-    }
+      notes: '',
+      logo: null,
+    },
   });
 
-  const handleFileSelection = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      // Check file size (max 5MB)
-      if (e.target.files[0].size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
+  const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const navigate = useNavigate();
+
+  const contextServiceUrl = "https://contexts-service-production.up.railway.app";
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        setIsLoading(true);
+
+        if (id) {
+          // Fetch manufacturer details for editing
+          const manufacturerData = await contextsService.fetchManufacturerById(id);
+          if (!manufacturerData) {
+            setErrorMessage('Failed to fetch manufacturer details');
+            setIsLoading(false);
+            return;
+          }
+
+          console.log('Manufacturer Details:', manufacturerData);
+
+          // Set form values from retrieved manufacturer data
+          setValue('manufacturerName', manufacturerData.name || '');
+          setValue('url', manufacturerData.url || '');
+          setValue('supportUrl', manufacturerData.support_url || '');
+          setValue('supportPhone', manufacturerData.support_phone || '');
+          setValue('supportEmail', manufacturerData.support_email || '');
+          setValue('notes', manufacturerData.notes || '');
+
+          if (manufacturerData.logo) {
+            setPreviewImage(`${contextServiceUrl}${manufacturerData.logo}`);
+            setSelectedImage(null); // No file selected yet for editing
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing:', error);
+        setErrorMessage('Failed to initialize form data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+  }, [id, setValue]);
+
+  const handleImageSelection = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage('Image size exceeds 5MB. Please choose a smaller file.');
+        setTimeout(() => setErrorMessage(''), 5000);
         e.target.value = '';
         return;
       }
-      setLogoFile(e.target.files[0]);
+
+      setSelectedImage(file);
+      setValue('logo', file);
+      setRemoveImage(false); // Reset remove flag when new image is selected
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log('Form submitted:', data, logoFile);
+  const onSubmit = async (data) => {
+    try {
+      // Check for duplicate names when creating a new manufacturer
+      if (!id) {
+        const existingManufacturers = await contextsService.fetchManufacturerNames();
+        const isDuplicate = existingManufacturers.manufacturers.some(
+          (manufacturer) => manufacturer.name.toLowerCase() === data.manufacturerName.toLowerCase(),
+        );
+        if (isDuplicate) {
+          setErrorMessage('A manufacturer with this name already exists. Please use a different name.');
+          setTimeout(() => setErrorMessage(''), 5000);
+          return;
+        }
+      }
 
-    // Optional: navigate back to manufacturers view after successful submission
-    navigate('/More/ViewManufacturer');
+      const formData = new FormData();
+      formData.append('name', data.manufacturerName);
+      formData.append('url', data.url || '');
+      formData.append('support_url', data.supportUrl || '');
+      formData.append('support_phone', data.supportPhone || '');
+      formData.append('support_email', data.supportEmail || '');
+      formData.append('notes', data.notes || '');
+
+      if (selectedImage) {
+        formData.append('logo', selectedImage);
+      }
+
+      if (removeImage) {
+        formData.append('remove_logo', 'true');
+        console.log('Removing logo: remove_logo flag set to true');
+      }
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Form data before submission:');
+        for (let pair of formData.entries()) {
+          console.log(`${pair[0]}: ${pair[1]}`);
+        }
+      }
+
+      let result;
+      if (id) {
+        result = await contextsService.updateManufacturer(id, formData);
+      } else {
+        result = await contextsService.createManufacturer(formData);
+      }
+
+      if (!result) {
+        throw new Error(`Failed to ${id ? 'update' : 'create'} manufacturer.`);
+      }
+
+      console.log(`${id ? 'Updated' : 'Created'} manufacturer:`, result);
+
+      navigate('/More/ViewManufacturer', {
+        state: {
+          successMessage: `Manufacturer has been ${id ? 'updated' : 'created'} successfully!`,
+        },
+      });
+    } catch (error) {
+      console.error(`Error ${id ? 'updating' : 'creating'} manufacturer:`, error);
+      setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the manufacturer`);
+    }
   };
+
+  if (isLoading) {
+    return <SystemLoading />;
+  }
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav>
         <NavBar />
       </nav>
@@ -55,9 +173,9 @@ const ManufacturerRegistration = () => {
         <section className="top">
           <TopSecFormPage
             root="Manufacturers"
-            currentPage="New Manufacturer"
+            currentPage={id ? 'Edit Manufacturer' : 'New Manufacturer'}
             rootNavigatePage="/More/ViewManufacturer"
-            title="New Manufacturer"
+            title={id ? 'Edit Manufacturer' : 'New Manufacturer'}
           />
         </section>
         <section className="registration-form">
@@ -68,77 +186,69 @@ const ManufacturerRegistration = () => {
                 type="text"
                 placeholder="Manufacturer Name"
                 className={errors.manufacturerName ? 'input-error' : ''}
-                {...register("manufacturerName", { required: 'Manufacturer Name is required' })}
+                {...register('manufacturerName', { required: 'Manufacturer Name is required' })}
               />
-              {errors.manufacturerName && <span className='error-message'>{errors.manufacturerName.message}</span>}
+              {errors.manufacturerName && <span className="error-message">{errors.manufacturerName.message}</span>}
             </fieldset>
 
             <fieldset>
               <label htmlFor="url">URL</label>
-              <input
-                type="url"
-                placeholder="URL"
-                {...register("url")}
-              />
+              <input type="url" placeholder="URL" {...register('url')} />
             </fieldset>
 
             <fieldset>
               <label htmlFor="supportUrl">Support URL</label>
-              <input
-                type="url"
-                placeholder="Support URL"
-                {...register("supportUrl")}
-              />
+              <input type="url" placeholder="Support URL" {...register('supportUrl')} />
             </fieldset>
 
             <fieldset>
               <label htmlFor="supportPhone">Support Phone</label>
-              <input
-                type="tel"
-                placeholder="Support Phone"
-                {...register("supportPhone")}
-              />
+              <input type="tel" placeholder="Support Phone" {...register('supportPhone')} />
             </fieldset>
 
             <fieldset>
               <label htmlFor="supportEmail">Support Email</label>
-              <input
-                type="email"
-                placeholder="Support Email"
-                {...register("supportEmail")}
-              />
+              <input type="email" placeholder="Support Email" {...register('supportEmail')} />
             </fieldset>
 
             <fieldset>
               <label htmlFor="notes">Notes</label>
-              <textarea
-                placeholder="Notes"
-                rows="4"
-                {...register("notes")}
-              />
+              <textarea placeholder="Notes" rows="4" {...register('notes')} />
             </fieldset>
 
             <fieldset>
-              <label>Logo</label>
-              {logoFile ? (
-                <div className="image-selected">
-                  <img src={URL.createObjectURL(logoFile)} alt="Selected logo" />
-                  <button type="button" onClick={() => setLogoFile(null)}>
-                    <img src={CloseIcon} alt="Remove" />
-                  </button>
-                </div>
-              ) : (
-                <label className="upload-image-btn">
-                  Choose File
+              <label htmlFor="logo">Logo</label>
+              <div>
+                {previewImage && (
+                  <div className="image-selected">
+                    <img src={previewImage} alt="Selected logo" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewImage(null);
+                        setSelectedImage(null);
+                        setValue('logo', null);
+                        document.getElementById('logo').value = '';
+                        setRemoveImage(true);
+                        console.log('Remove logo flag set to:', true);
+                      }}
+                    >
+                      <img src={CloseIcon} alt="Remove" />
+                    </button>
+                  </div>
+                )}
+                <label htmlFor="logo" className="upload-image-btn">
+                  {previewImage ? 'Change Logo' : 'Choose Logo'}
                   <input
                     type="file"
+                    id="logo"
                     accept="image/*"
-                    onChange={handleFileSelection}
+                    onChange={handleImageSelection}
                     style={{ display: 'none' }}
                   />
                 </label>
-              )}
-              <small className="file-size-info">Maximum file size must be 5MB</small>
+                <small className="file-size-info">Maximum file size must be 5MB</small>
+              </div>
             </fieldset>
 
             <button type="submit" className="save-btn">Save</button>
@@ -148,4 +258,5 @@ const ManufacturerRegistration = () => {
     </>
   );
 };
+
 export default ManufacturerRegistration;

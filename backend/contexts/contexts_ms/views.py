@@ -124,6 +124,16 @@ def get_all_manufacturers(request):
     serializer = ManufacturerSerializer(manufacturers, many=True).data
     return Response(serializer)
 
+@api_view(['GET'])
+def get_manufacturer_by_id(request, id):
+    try:
+        manufacturer = Manufacturer.objects.get(pk=id, is_deleted=False)
+    except Manufacturer.DoesNotExist:
+        return Response({'detail': 'Manufacturer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ManufacturerSerializer(manufacturer).data
+    return Response(serializer)
+
 @api_view(['POST'])
 def create_manufacturer(request):
     name = request.data.get('name')
