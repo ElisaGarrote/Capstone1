@@ -152,7 +152,7 @@ class ContextsService {
 
   async createManufacturer(formData) {
     try {
-      const response = await fetch(`${API_URL}contexts/manufacturers/`, {
+      const response = await fetch(`${API_URL}contexts/manufacturer/registration`, {
         method: 'POST',
         body: formData, // FormData includes name, url, support_url, support_phone, support_email, notes, logo
       });
