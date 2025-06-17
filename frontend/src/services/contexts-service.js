@@ -110,6 +110,30 @@ class ContextsService {
       return null;
     }
   }
+
+  // Manufacturers
+  async fetchAllManufacturers() {
+    try {
+      const response = await fetch(API_URL + "contexts/manufacturers/");
+
+      if (!response.ok) {
+        console.warn("Failed to fetch manufacturers, status:", response.status);
+        return null;
+      }
+
+      const data = await response.json();
+
+      // Sort by name (A-Z), case-insensitive
+      const sortedData = data.sort((a, b) => 
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      );
+
+      return sortedData;
+
+    } catch (error) {
+      console.log("An error occurred while fetching all manufacturers!", error);
+    }
+  }
 }
 
 const contextsService = new ContextsService();
