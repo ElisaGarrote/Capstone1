@@ -101,16 +101,6 @@ def soft_delete_supplier(request, id):
     except Supplier.DoesNotExist:
         return Response({'detail': 'Supplier not found'}, status=status.HTTP_404_NOT_FOUND)
 
-
-
-
-
-
-
-
-
-
-
 # Get all suppliers
 @api_view(['GET'])
 def get_suppliers(request):
@@ -127,17 +117,53 @@ def create_supplier(request):
         return Response(serializedSupplier.data, status=status.HTTP_201_CREATED)
     return Response(serializedSupplier.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# MANUFACTURERS
 @api_view(['GET'])
-def get_manufacturers(request):
+def get_all_manufacturers(request):
     manufacturers = Manufacturer.objects.filter(is_deleted=False)
-    serializedManufacturers = ManufacturerSerializer(manufacturers, many=True).data
-    return Response(serializedManufacturers)
+    serializer = ManufacturerSerializer(manufacturers, many=True).data
+    return Response(serializer)
 
 @api_view(['POST'])
 def create_manufacturer(request):
-    manufacturer = request.data
-    serializedManufacturer = ManufacturerSerializer(data=manufacturer)
-    if serializedManufacturer.is_valid():
-        serializedManufacturer.save()
-        return Response(serializedManufacturer.data, status=status.HTTP_201_CREATED)
-    return Response(serializedManufacturer.errors, status=status.HTTP_400_BAD_REQUEST)
+    name = request.data.get('name')
+
+    if not name:
+        return Response({'error': 'Manufacturer name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if Manufacturer.objects.filter(name=name, is_deleted=False).exists():
+        return Response({'error': 'A Manufacturer with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    serializer = ManufacturerSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def update_manufacturer(request, id):
+    name = request.data.get('name')
+
+    if Manufacturer.objects.filter(name=name, is_deleted=False).exists():
+        return Response({'error': 'A Manufacturer with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        manufacturer = Manufacturer.objects.get(pk=id, is_deleted=False)
+    except Manufacturer.DoesNotExist:
+        return Response({'detail': 'Manufacturer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ManufacturerSerializer(manufacturer, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+def soft_delete_manufacturer(request, id):
+    try:
+        manufacturer = Manufacturer.objects.get(pk=id)
+        manufacturer.is_deleted = True
+        manufacturer.save()
+        return Response({'detail': 'Manufacturer soft-deleted'})
+    except Manufacturer.DoesNotExist:
+        return Response({'detail': 'Manufacturer not found'}, status=status.HTTP_404_NOT_FOUND)
