@@ -152,22 +152,22 @@ class ContextsService {
 
   async createManufacturer(formData) {
     try {
-      const response = await fetch(`${API_URL}contexts/manufacturer/registration`, {
+      const response = await fetch(`${API_URL}contexts/manufacturer/registration/`, {
         method: 'POST',
-        body: formData, // FormData includes name, url, support_url, support_phone, support_email, notes, logo
+        body: formData,
       });
-
       if (!response.ok) {
-        const errorData = await response.json();
-        console.warn('Failed to create manufacturer, status:', response.status, errorData);
-        throw new Error(errorData.error || 'Failed to create manufacturer');
+        const text = await response.text();
+        console.warn('Failed to create manufacturer, status:', response.status, 'Response:', text);
+        throw new Error(
+          `Failed to create manufacturer: ${response.status} ${text.substring(0, 100)}...`
+        );
       }
-
       const data = await response.json();
-      return data; // Returns the created manufacturer object
+      return data;
     } catch (error) {
       console.error('Error creating manufacturer:', error);
-      throw error; // Rethrow for onSubmit to handle
+      throw error;
     }
   }
 
@@ -175,23 +175,22 @@ class ContextsService {
     try {
       const response = await fetch(`${API_URL}contexts/manufacturers/${id}/update/`, {
         method: 'PUT',
-        body: formData, // FormData includes name, url, support_url, support_phone, support_email, notes, logo, remove_logo
+        body: formData,
       });
-
       if (!response.ok) {
-        const errorData = await response.json();
-        console.warn(`Failed to update manufacturer with ID ${id}, status:`, response.status, errorData);
-        throw new Error(errorData.error || errorData.detail || 'Failed to update manufacturer');
+        const text = await response.text();
+        console.warn(`Failed to update manufacturer with ID ${id}, status:`, response.status, 'Response:', text);
+        throw new Error(
+          `Failed to update manufacturer: ${response.status} ${text.substring(0, 100)}...`
+        );
       }
-
       const data = await response.json();
-      return data; // Returns the updated manufacturer object
+      return data;
     } catch (error) {
       console.error(`Error updating manufacturer with ID ${id}:`, error);
-      throw error; // Rethrow for onSubmit to handle
+      throw error;
     }
   }
-
 }
 
 const contextsService = new ContextsService();

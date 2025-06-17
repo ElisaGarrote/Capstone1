@@ -38,7 +38,6 @@ const ManufacturerRegistration = () => {
       try {
         setIsLoading(true);
         if (id) {
-          // Fetch manufacturer details for editing
           const manufacturerData = await contextsService.fetchManufacturerById(id);
           if (!manufacturerData) {
             setErrorMessage('Failed to fetch manufacturer details');
@@ -97,9 +96,12 @@ const ManufacturerRegistration = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Duplicate name check for creation (POST)
+      // Duplicate name check for creation
       if (!id) {
         const existingManufacturers = await contextsService.fetchAllManufacturerNames();
+        if (!existingManufacturers) {
+          throw new Error('Failed to fetch manufacturer names for duplicate check');
+        }
         const isDuplicate = existingManufacturers.manufacturers.some(
           (manufacturer) => manufacturer.name.toLowerCase() === data.manufacturerName.toLowerCase(),
         );
@@ -136,10 +138,8 @@ const ManufacturerRegistration = () => {
 
       let result;
       if (id) {
-        // Update manufacturer (PUT)
         result = await contextsService.updateManufacturer(id, formData);
       } else {
-        // Create manufacturer (POST)
         result = await contextsService.createManufacturer(formData);
       }
 
@@ -155,7 +155,12 @@ const ManufacturerRegistration = () => {
       });
     } catch (error) {
       console.error(`Error ${id ? 'updating' : 'creating'} manufacturer:`, error);
-      setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the manufacturer`);
+      setErrorMessage(
+        error.message.includes('Failed to create manufacturer')
+          ? 'Failed to create manufacturer. Please check the server configuration or endpoint.'
+          : error.message || `An error occurred while ${id ? 'updating' : 'creating'} the manufacturer`
+      );
+      setTimeout(() => setErrorMessage(''), 5000);
     }
   };
 

@@ -220,7 +220,11 @@ export default function ViewManufacturers() {
                         <td style={{ color: '#545f71' }}>{manufacturer.email}</td>
                         <td style={{ color: '#545f71', textAlign: 'left', paddingLeft: '12px' }}>{manufacturer.notes}</td>
                         <td style={{ textAlign: 'center' }}>
-                          <TableBtn type="edit" navigatePage={`/More/ManufacturerEdit/${manufacturer.id}`} />
+                          <TableBtn
+                            type="edit"
+                            navigatePage={`/More/ManufacturerRegistration/${manufacturer.id}`}
+                            data={manufacturer.id}
+                          />
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <TableBtn

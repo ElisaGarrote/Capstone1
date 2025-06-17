@@ -153,14 +153,21 @@ def create_manufacturer(request):
 @api_view(['PUT'])
 def update_manufacturer(request, id):
     name = request.data.get('name')
+    remove_logo = request.data.get('remove_logo') == 'true'
 
-    if Manufacturer.objects.filter(name=name, is_deleted=False).exists():
+    # Check for duplicate name, excluding the current manufacturer
+    if name and Manufacturer.objects.filter(name=name, is_deleted=False).exclude(pk=id).exists():
         return Response({'error': 'A Manufacturer with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
         manufacturer = Manufacturer.objects.get(pk=id, is_deleted=False)
     except Manufacturer.DoesNotExist:
         return Response({'detail': 'Manufacturer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Handle logo removal
+    if remove_logo and manufacturer.logo:
+        manufacturer.logo.delete()
+        manufacturer.logo = None
 
     serializer = ManufacturerSerializer(manufacturer, data=request.data, partial=True)
     if serializer.is_valid():

@@ -114,6 +114,10 @@ function App() {
             path="/More/ManufacturerRegistration"
             element={<ManufacturerRegistration />}
           />
+          <Route
+          path="/More/ManufacturerRegistration/:id"
+          element={<ManufacturerRegistration />}
+        />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
           <Route
             path="/More/ManufacturerEdit/:id"
