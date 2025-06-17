@@ -1,6 +1,4 @@
 /* AccessoriesButtons.css - Specific styles for buttons in the Accessories table */
-
-/* Fix for edit, delete, and view buttons in Accessories table */
 .accessories-page .table-buttons-edit,
 .accessories-page .table-buttons-delete,
 .accessories-page .table-buttons-view,
@@ -21,7 +19,6 @@
   cursor: pointer !important;
 }
 
-/* Fix for button images in Accessories table */
 .accessories-page .table-buttons-edit img,
 .accessories-page .table-buttons-delete img,
 .accessories-page .table-buttons-view img,
@@ -35,7 +32,6 @@
   margin: 0 auto !important;
 }
 
-/* Hover effects */
 .accessories-page .table-buttons-edit:hover,
 .accessories-page .table-buttons-view:hover,
 .accessories-table-buttons-edit:hover,
@@ -48,7 +44,6 @@
   background-color: rgba(255, 0, 0, 0.2) !important;
 }
 
-/* Additional fixes for Accessories table cell alignment */
 .accessories-page table th:nth-last-child(1),
 .accessories-page table th:nth-last-child(2),
 .accessories-page table th:nth-last-child(3),
@@ -61,7 +56,6 @@
   padding: 8px !important;
 }
 
-/* Fix for header text alignment */
 .accessories-page table th:nth-last-child(1),
 .accessories-page table th:nth-last-child(2),
 .accessories-page table th:nth-last-child(3) {
@@ -69,7 +63,6 @@
   padding-right: 0 !important;
 }
 
-/* Ensure buttons are centered in their cells */
 .accessories-page table td:nth-last-child(1) button,
 .accessories-page table td:nth-last-child(2) button,
 .accessories-page table td:nth-last-child(3) button {
@@ -79,7 +72,6 @@
   height: 34px !important;
 }
 
-/* Fix for the button images */
 .accessories-page table td:nth-last-child(1) button img,
 .accessories-page table td:nth-last-child(2) button img,
 .accessories-page table td:nth-last-child(3) button img {
@@ -90,19 +82,16 @@
   margin: 0 auto !important;
 }
 
-/* Remove border radius from accessories table */
 .accessories-page .accessories-table {
   border-radius: 0 !important;
   overflow: hidden !important;
 }
 
-/* Ensure the table header has no border radius */
 .accessories-page .accessories-table thead tr th:first-child,
 .accessories-page .accessories-table thead tr th:last-child {
   border-radius: 0 !important;
 }
 
-/* Ensure the container has proper styling */
 .accessories-page .container {
   border-radius: 40px !important;
   overflow: hidden !important;

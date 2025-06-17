@@ -1,17 +1,14 @@
-/* Ensure the table has proper spacing */
 .page table.assets-table {
   border-collapse: collapse;
   border-spacing: 0;
   border-radius: 0;
 }
 
-/* Remove any potential border-radius from table cells */
 .page table.assets-table th,
 .page table.assets-table td {
   border-radius: 0;
 }
 
-/* Specific styles for Assets table action columns */
 .page table.assets-table td:nth-child(8),
 .page table.assets-table td:nth-child(9),
 .page table.assets-table td:nth-child(10) {
@@ -28,7 +25,6 @@
   text-align: center;
 }
 
-/* Ensure buttons are properly centered in their cells */
 .page table.assets-table td:nth-child(8) button,
 .page table.assets-table td:nth-child(9) button,
 .page table.assets-table td:nth-child(10) button {
@@ -39,7 +35,6 @@
   height: 26px;
 }
 
-/* Add specific spacing for the action columns */
 .page table.assets-table th:nth-child(8),
 .page table.assets-table th:nth-child(9),
 .page table.assets-table th:nth-child(10) {
@@ -55,7 +50,6 @@
   padding-right: 8px;
 }
 
-/* Ensure the check-in/check-out button has proper styling */
 .check-in-btn,
 .check-out-btn {
   padding: 6px 12px;

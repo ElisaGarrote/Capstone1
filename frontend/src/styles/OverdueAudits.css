@@ -6,7 +6,7 @@
   width: 100vw;
   padding: 100px 38px 38px 38px;
   position: relative;
-  z-index: 1; /* Lower z-index to ensure it doesn't appear in front of overlays */
+  z-index: 1;
 }
 
 .overdue-audits-page section {

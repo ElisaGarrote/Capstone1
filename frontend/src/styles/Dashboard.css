@@ -32,14 +32,13 @@
   width: 100%;
 }
 
-/* Fixed positions for each card */
-.card-position-0, 
-.card-position-1, 
-.card-position-2, 
-.card-position-3, 
-.card-position-4, 
-.card-position-5, 
-.card-position-6, 
+.card-position-0,
+.card-position-1,
+.card-position-2,
+.card-position-3,
+.card-position-4,
+.card-position-5,
+.card-position-6,
 .card-position-7,
 .card-position-8 {
   position: relative;
