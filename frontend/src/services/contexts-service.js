@@ -134,6 +134,64 @@ class ContextsService {
       console.log("An error occurred while fetching all manufacturers!", error);
     }
   }
+
+  async fetchManufacturerById(id) {
+    try {
+      const response = await fetch(`${API_URL}contexts/manufacturers/${id}/`);
+      if (!response.ok) {
+        console.warn(`Failed to fetch manufacturer with ID ${id}, status:`, response.status);
+        return null;
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`An error occurred while fetching manufacturer with ID ${id}:`, error);
+      return null;
+    }
+  }
+
+  async createManufacturer(formData) {
+    try {
+      const response = await fetch(`${API_URL}contexts/manufacturers/`, {
+        method: 'POST',
+        body: formData, // FormData includes name, url, support_url, support_phone, support_email, notes, logo
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn('Failed to create manufacturer, status:', response.status, errorData);
+        throw new Error(errorData.error || 'Failed to create manufacturer');
+      }
+
+      const data = await response.json();
+      return data; // Returns the created manufacturer object
+    } catch (error) {
+      console.error('Error creating manufacturer:', error);
+      throw error; // Rethrow for onSubmit to handle
+    }
+  }
+
+  async updateManufacturer(id, formData) {
+    try {
+      const response = await fetch(`${API_URL}contexts/manufacturers/${id}/update/`, {
+        method: 'PUT',
+        body: formData, // FormData includes name, url, support_url, support_phone, support_email, notes, logo, remove_logo
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn(`Failed to update manufacturer with ID ${id}, status:`, response.status, errorData);
+        throw new Error(errorData.error || errorData.detail || 'Failed to update manufacturer');
+      }
+
+      const data = await response.json();
+      return data; // Returns the updated manufacturer object
+    } catch (error) {
+      console.error(`Error updating manufacturer with ID ${id}:`, error);
+      throw error; // Rethrow for onSubmit to handle
+    }
+  }
+
 }
 
 const contextsService = new ContextsService();

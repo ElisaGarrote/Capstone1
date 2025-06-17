@@ -6,7 +6,7 @@ import '../../styles/ManufacturerRegistration.css';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
-import contextsService from '../../services/contexts-service'; // Import service for manufacturers
+import contextsService from '../../services/contexts-service';
 import Alert from '../../components/Alert';
 import SystemLoading from '../../components/Loading/SystemLoading';
 
@@ -31,14 +31,12 @@ const ManufacturerRegistration = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
-
-  const contextServiceUrl = "https://contexts-service-production.up.railway.app";
+  const contextServiceUrl = 'https://contexts-service-production.up.railway.app';
 
   useEffect(() => {
     const initialize = async () => {
       try {
         setIsLoading(true);
-
         if (id) {
           // Fetch manufacturer details for editing
           const manufacturerData = await contextsService.fetchManufacturerById(id);
@@ -47,20 +45,16 @@ const ManufacturerRegistration = () => {
             setIsLoading(false);
             return;
           }
-
           console.log('Manufacturer Details:', manufacturerData);
-
-          // Set form values from retrieved manufacturer data
           setValue('manufacturerName', manufacturerData.name || '');
           setValue('url', manufacturerData.url || '');
           setValue('supportUrl', manufacturerData.support_url || '');
           setValue('supportPhone', manufacturerData.support_phone || '');
           setValue('supportEmail', manufacturerData.support_email || '');
           setValue('notes', manufacturerData.notes || '');
-
           if (manufacturerData.logo) {
             setPreviewImage(`${contextServiceUrl}${manufacturerData.logo}`);
-            setSelectedImage(null); // No file selected yet for editing
+            setSelectedImage(null);
           }
         }
       } catch (error) {
@@ -70,7 +64,6 @@ const ManufacturerRegistration = () => {
         setIsLoading(false);
       }
     };
-
     initialize();
   }, [id, setValue]);
 
@@ -83,10 +76,16 @@ const ManufacturerRegistration = () => {
         e.target.value = '';
         return;
       }
+      if (!file.type.startsWith('image/')) {
+        setErrorMessage('Please select a valid image file (e.g., PNG, JPEG).');
+        setTimeout(() => setErrorMessage(''), 5000);
+        e.target.value = '';
+        return;
+      }
 
       setSelectedImage(file);
       setValue('logo', file);
-      setRemoveImage(false); // Reset remove flag when new image is selected
+      setRemoveImage(false);
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -98,9 +97,9 @@ const ManufacturerRegistration = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Check for duplicate names when creating a new manufacturer
+      // Duplicate name check for creation (POST)
       if (!id) {
-        const existingManufacturers = await contextsService.fetchManufacturerNames();
+        const existingManufacturers = await contextsService.fetchAllManufacturerNames();
         const isDuplicate = existingManufacturers.manufacturers.some(
           (manufacturer) => manufacturer.name.toLowerCase() === data.manufacturerName.toLowerCase(),
         );
@@ -137,8 +136,10 @@ const ManufacturerRegistration = () => {
 
       let result;
       if (id) {
+        // Update manufacturer (PUT)
         result = await contextsService.updateManufacturer(id, formData);
       } else {
+        // Create manufacturer (POST)
         result = await contextsService.createManufacturer(formData);
       }
 
@@ -147,7 +148,6 @@ const ManufacturerRegistration = () => {
       }
 
       console.log(`${id ? 'Updated' : 'Created'} manufacturer:`, result);
-
       navigate('/More/ViewManufacturer', {
         state: {
           successMessage: `Manufacturer has been ${id ? 'updated' : 'created'} successfully!`,
