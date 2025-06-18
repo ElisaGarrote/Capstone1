@@ -154,13 +154,13 @@ class ContextsService {
         method: 'POST',
         body: formData,
       });
+
       if (!response.ok) {
-        const text = await response.text();
-        console.warn('Failed to create supplier, status:', response.status, 'Response:', text);
-        throw new Error(
-          `Failed to create supplier: ${response.status} ${text.substring(0, 100)}...`
-        );
+        const errorData = await response.json();
+        console.warn('Create Supplier Error:', errorData);
+        throw errorData;
       }
+
       const data = await response.json();
       return data;
     } catch (error) {
@@ -175,13 +175,13 @@ class ContextsService {
         method: 'PUT',
         body: formData,
       });
+
       if (!response.ok) {
-        const text = await response.text();
-        console.warn(`Failed to update supplier with ID ${id}, status:`, response.status, 'Response:', text);
-        throw new Error(
-          `Failed to update supplier: ${response.status} ${text.substring(0, 100)}...`
-        );
+        const errorData = await response.json();
+        console.warn('Update Supplier Error:', errorData);
+        throw errorData;
       }
+
       const data = await response.json();
       return data;
     } catch (error) {
@@ -235,13 +235,13 @@ class ContextsService {
         method: 'POST',
         body: formData,
       });
+
       if (!response.ok) {
-        const text = await response.text();
-        console.warn('Failed to create manufacturer, status:', response.status, 'Response:', text);
-        throw new Error(
-          `Failed to create manufacturer: ${response.status} ${text.substring(0, 100)}...`
-        );
+        const errorData = await response.json();
+        console.warn('Create Manufacturer Error:', errorData);
+        throw errorData;
       }
+
       const data = await response.json();
       return data;
     } catch (error) {
@@ -256,13 +256,13 @@ class ContextsService {
         method: 'PUT',
         body: formData,
       });
+      
       if (!response.ok) {
-        const text = await response.text();
-        console.warn(`Failed to update manufacturer with ID ${id}, status:`, response.status, 'Response:', text);
-        throw new Error(
-          `Failed to update manufacturer: ${response.status} ${text.substring(0, 100)}...`
-        );
+        const errorData = await response.json();
+        console.warn('Update Manufacturer Error:', errorData);
+        throw errorData;
       }
+
       const data = await response.json();
       return data;
     } catch (error) {

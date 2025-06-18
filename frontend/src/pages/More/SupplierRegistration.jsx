@@ -94,6 +94,20 @@ const SupplierRegistration = () => {
 
   const onSubmit = async (data) => {
     try {
+      if (!id) {
+      const existingSuppliers = await contextsService.fetchAllSupplierNames();
+      if (!existingSuppliers) throw new Error('Failed to fetch supplier names for duplicate check');
+
+      const isDuplicate = existingSuppliers.suppliers.some(
+        (supplier) => supplier.name.toLowerCase() === data.name.toLowerCase()
+      );
+      if (isDuplicate) {
+        setErrorMessage('A supplier with this name already exists. Please use a different name.');
+        setTimeout(() => setErrorMessage(''), 5000);
+        return;
+        }
+      }
+
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('address', data.address);
@@ -121,9 +135,14 @@ const SupplierRegistration = () => {
         state: { successMessage: `Supplier successfully ${id ? 'updated' : 'created'}` },
       });
     } catch (error) {
-      setErrorMessage(error.message);
+      const message = typeof error === 'string'
+        ? error
+        : error?.error || error?.message || 'An unexpected error occurred';
+      
+      setErrorMessage(message);
       setTimeout(() => setErrorMessage(''), 5000);
     }
+
   };
 
   if (isLoading) return <SystemLoading />;
