@@ -11,8 +11,7 @@ class ContextsService {
     return { [key]: [] };
   }
 
-  // MANUFACTURERS
-  // Retrieve all manufacturer's names
+  // cONTEXTS
   async fetchAllManufacturerNames() {
     try {
       const response = await fetch(API_URL + "contexts/manufacturers/names/", {
@@ -90,7 +89,6 @@ class ContextsService {
   }
 
   // Fetch supplier name by id
-  // Retrieve a product by id
   async fetchSuppNameById(id) {
     try {
       const response = await fetch(API_URL + `contexts/suppliers/${id}/`);
@@ -111,7 +109,88 @@ class ContextsService {
     }
   }
 
-  // Manufacturers
+  // SUPPLIERS
+  async fetchAllSuppliers() {
+    try {
+      const response = await fetch(API_URL + "contexts/suppliers/");
+
+      if (!response.ok) {
+        console.warn("Failed to fetch suppliers, status:", response.status);
+        return null;
+      }
+
+      const data = await response.json();
+
+      // Sort by name (A-Z), case-insensitive
+      const sortedData = data.sort((a, b) => 
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      );
+
+      return sortedData;
+
+    } catch (error) {
+      console.log("An error occurred while fetching all suppliers!", error);
+    }
+  }
+
+  async fetchSupplierById(id) {
+    try {
+      const response = await fetch(`${API_URL}contexts/suppliers/${id}/`);
+      if (!response.ok) {
+        console.warn(`Failed to fetch suppliers with ID ${id}, status:`, response.status);
+        return null;
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`An error occurred while fetching suppliers with ID ${id}:`, error);
+      return null;
+    }
+  }
+
+  async createSupplier(formData) {
+    try {
+      const response = await fetch(`${API_URL}contexts/suppliers/registration/`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        console.warn('Failed to create supplier, status:', response.status, 'Response:', text);
+        throw new Error(
+          `Failed to create supplier: ${response.status} ${text.substring(0, 100)}...`
+        );
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating supplier:', error);
+      throw error;
+    }
+  }
+
+  async updateSupplier(id, formData) {
+    try {
+      const response = await fetch(`${API_URL}contexts/suppliers/${id}/update/`, {
+        method: 'PUT',
+        body: formData,
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        console.warn(`Failed to update supplier with ID ${id}, status:`, response.status, 'Response:', text);
+        throw new Error(
+          `Failed to update supplier: ${response.status} ${text.substring(0, 100)}...`
+        );
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`Error updating supplier with ID ${id}:`, error);
+      throw error;
+    }
+  }
+
+  // MANUFACTURERS
   async fetchAllManufacturers() {
     try {
       const response = await fetch(API_URL + "contexts/manufacturers/");
