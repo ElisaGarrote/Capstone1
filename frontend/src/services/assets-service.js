@@ -687,6 +687,87 @@ class AssetsService {
 
     return filteredAssets;
   }
+
+  // COMPONENTS
+  async fetchAllComponents() {
+    try {
+      const response = await fetch(API_URL + "components/");
+
+      if (!response.ok) {
+        console.warn("Failed to fetch components, status:", response.status);
+        return null;
+      }
+
+      const data = await response.json();
+
+      // Sort by name (A-Z), case-insensitive
+      const sortedData = data.sort((a, b) => 
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      );
+
+      return sortedData;
+
+    } catch (error) {
+      console.log("An error occurred while fetching all components!", error);
+    }
+  }
+
+  async fetchComponentById(id) {
+    try {
+      const response = await fetch(`${API_URL}components/${id}/`);
+      if (!response.ok) {
+        console.warn(`Failed to fetch component with ID ${id}, status:`, response.status);
+        return null;
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`An error occurred while fetching component with ID ${id}:`, error);
+      return null;
+    }
+  }
+
+  async createComponent(formData) {
+    try {
+      const response = await fetch(`${API_URL}components/registration/`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn('Create Component Error:', errorData);
+        throw errorData;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating component:', error);
+      throw error;
+    }
+  }
+
+  async updateComponent(id, formData) {
+    try {
+      const response = await fetch(`${API_URL}components/${id}/update/`, {
+        method: 'PUT',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn('Update Component Error:', errorData);
+        throw errorData;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`Error updating component with ID ${id}:`, error);
+      throw error;
+    }
+  }
 }
 
 const assetsService = new AssetsService(); // Create object for Assets Service.
