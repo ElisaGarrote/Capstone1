@@ -12,6 +12,7 @@ import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import AssetViewModal from "../../components/Modals/AssetViewModal";
+import dtsService from "../../services/dts-integration-service";
 
 export default function Assets() {
   const location = useLocation();
@@ -42,8 +43,34 @@ export default function Assets() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await assetsService.fetchAllAssets();
-        setAssets(response.assets || []);
+        const [assetsResponse, checkoutsResponse] = await Promise.all([
+          assetsService.fetchAllAssets(),
+          dtsService.fetchAssetCheckouts()
+        ]);
+        const assetData = assetsResponse.assets || [];
+        const checkouts = checkoutsResponse || [];
+
+        // map asset id to checkout info
+        const checkoutMap = {};
+        checkouts.forEach((record) => {
+          if (record.asset_id !== null && record.asset_id !== undefined) {
+            checkoutMap[record.asset_id] = record;
+          }
+        });
+
+        console.log("CheckoutMap keys:", Object.keys(checkoutMap)); // should only contain 25
+        console.log("checkoutMap[27]:", checkoutMap[27]); // should be undefined
+
+        const enrichedAssets = assetData.map((asset) => {
+          const checkout = checkoutMap[asset.id];
+          return {
+            ...asset,
+            hasCheckoutRecord: !!checkout,
+            isCheckedOut: checkout && checkout.checkout_ref_id,
+            checkoutRecord: checkout || null,
+          };
+        });
+        setAssets(enrichedAssets);
       } catch (error) {
         console.error("Error fetching assets:", error);
         setAssets([]);
@@ -84,26 +111,35 @@ export default function Assets() {
       ? `https://assets-service-production.up.railway.app${asset.image}`
       : DefaultImage;
 
-    if (asset.status === "Deployed") {
+    if (asset.isCheckedOut) {
+      const checkout = asset.checkoutRecord;
+
       navigate(`/assets/check-in/${asset.id}`, {
         state: {
           id: asset.id,
           assetId: asset.displayed_id,
-          product: asset.name,
+          product: asset.product,
           image: baseImage,
-          employee: asset.assigned_to || "Not assigned",
-          checkOutDate: asset.checkout_date || "Unknown",
-          returnDate: asset.expected_return_date || "Unknown",
-          condition: asset.condition || "Unknown",
+          employee: checkout.requestor || "Not assigned",
+          location: checkout.requestor_location || "Unknown",
+          checkOutDate: checkout.checkout_date || "Unknown",
+          returnDate: checkout.return_date || "Unknown",
+          checkoutId: checkout.id || "Unknown",
+          checkinDate: checkout.checkin_date || "Unknown",
+          condition: checkout.condition || "Unknown",
         },
       });
-    } else if (asset.status === "Ready to Deploy") {
+    } else {
       navigate(`/assets/check-out/${asset.id}`, {
         state: {
           id: asset.id,
           assetId: asset.displayed_id,
           product: asset.product,
           image: baseImage,
+          employee: checkout.requestor || "Not assigned",
+          location: checkout.requestor_location || "Unknown",
+          checkOutDate: checkout.checkout_date || "Unknown",
+          returnDate: checkout.return_date || "Unknown",
         },
       });
     }
@@ -246,20 +282,16 @@ export default function Assets() {
                         <td>{asset.name}</td>
                         <td>{asset.category}</td>
                         <td>
-                          {asset.status === "Deployed" ? (
-                            <button
-                              className="check-in-btn"
-                              onClick={() => handleCheckInOut(asset)}
-                            >
-                              Check-In
-                            </button>
-                          ) : asset.status === "Ready to Deploy" ? (
-                            <button
-                              className="check-out-btn"
-                              onClick={() => handleCheckInOut(asset)}
-                            >
-                              Check-Out
-                            </button>
+                          {asset.hasCheckoutRecord ? (
+                            asset.isCheckedOut ? (
+                              <button className="check-in-btn" onClick={() => handleCheckInOut(asset)}>
+                                Check-In
+                              </button>
+                            ) : (
+                              <button className="check-out-btn" onClick={() => handleCheckInOut(asset)}>
+                                Check-Out
+                              </button>
+                            )
                           ) : null}
                         </td>
                         <td>{asset.status}</td>
