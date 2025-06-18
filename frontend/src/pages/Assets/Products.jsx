@@ -11,6 +11,7 @@ import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import ProductViewModal from "../../components/Modals/ProductViewModal";
 
 export default function Products() {
   const location = useLocation();
@@ -22,6 +23,8 @@ export default function Products() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
 
   const allChecked = checkedItems.length === products.length;
 
@@ -84,7 +87,7 @@ export default function Products() {
   const handleView = async (productId) => {
     console.log("product id:", productId)
     try {
-      const productResponse = await assetsService.fetchProductById(assetId);
+      const productResponse = await assetsService.fetchProductById(productId);
       console.log("Full product response:", productResponse);
       const productData = productResponse;
       console.log("productData:", productData, typeof productData);
@@ -95,29 +98,61 @@ export default function Products() {
         return;
       }
 
-      let supplierName = "-";
-      if (assetData.supplier_id) {
-        const supplierResponse = await contextsService.fetchSuppNameById(assetData.supplier_id);
+      let manufacturerName = "-";
+      let supplierName ="-";
+
+      if (productData.manufacturer_id) {
+        const manufacturerResponse = await contextsService.fetchManufacturerById(productData.manufacturer_id);
+        manufacturerName = manufacturerResponse.manufacturer?.name || manufacturerName;
+      }
+
+      if (productData.default_supplier_id) {
+        const supplierResponse = await contextsService.fetchSuppNameById(productData.default_supplier_id);
         supplierName = supplierResponse.supplier?.name || supplierName;
       }
 
-      const assetWithSupplier = {
-        ...assetData,
+      const manuFullView = {
+        ...productData,
+        manufacturer: manufacturerName,
         supplier: supplierName,
-        product: assetData.product_info?.name || "-",
-        status: assetData.status_info?.name || "-",
       };
 
-      setSelectedAsset(assetWithSupplier);
+      setSelectedProduct(manuFullView);
       setViewModalOpen(true);
     } catch (error) {
-      console.error("Error fetching asset or supplier details:", error);
-      setErrorMessage("Failed to load asset details.");
+      console.error("Error fetching product or manufacturer and supplier details:", error);
+      setErrorMessage("Failed to load product details.");
     }
   };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
+      {isDeleteModalOpen && (
+        <DeleteModal
+          endPoint={endPoint}
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={async () => {
+            await fetchProducts();
+            setSuccessMessage("Product Deleted Successfully!");
+            setTimeout(() => setSuccessMessage(""), 5000);
+          }}
+          onDeleteFail={() => {
+            setErrorMessage("Delete failed. Please try again.");
+            setTimeout(() => setErrorMessage(""), 5000);
+          }}
+        />
+      )}
+
+      {isViewModalOpen && selectedProduct && (
+        <ProductViewModal
+          product={selectedProduct}
+          closeModal={() => setViewModalOpen(false)}
+        />
+      )}
+
       <nav>
         <NavBar />
       </nav>
@@ -238,7 +273,7 @@ export default function Products() {
                           <td>
                             <TableBtn
                               type="view"
-                              onClick={() => handleView(asset.id)}
+                              onClick={() => handleView(product.id)}
                             />
                           </td>
                         </tr>

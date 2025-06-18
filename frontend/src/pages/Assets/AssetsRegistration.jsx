@@ -360,7 +360,7 @@ export default function AssetsRegistration() {
                 >
                   <option value=''>Select Location</option>
                   {locations.map((location) => (
-                    <option key={location.id} value={location.id}>
+                    <option key={location.id} value={location.name}>
                       {location.name}
                     </option>
                   ))}

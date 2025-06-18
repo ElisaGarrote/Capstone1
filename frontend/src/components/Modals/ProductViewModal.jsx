@@ -1,90 +1,25 @@
 import "../../styles/AssetViewModal.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import { useNavigate } from "react-router-dom";
 
-export default function AssetViewModal({ asset, closeModal }) {
-  const navigate = useNavigate();
+export default function ProductViewModal({ product, closeModal }) {
+  const imageSrc = product.image
+    ? `https://assets-service-production.up.railway.app${product.image}`
+    : DefaultImage;
 
-  const imageSrc = asset.image
-  ? `https://assets-service-production.up.railway.app${asset.image}`
-  : DefaultImage;
-  const assetId = asset.displayed_id;
-  const productName = asset.name || asset.product || "Unnamed Asset";
-  const serialNumber = asset.serialNumber || asset.serial_number || "-";
-  const purchaseDate = asset.purchaseDate || asset.purchase_date || "-";
-  const warrantyExpiration = asset.warrantyExpiration || asset.warranty_expiration || "-";
-  const orderNumber = asset.orderNumber || asset.order_number || "-";
-  const purchaseCost = asset.purchaseCost || asset.purchase_cost
-    ? `PHP ${asset.purchaseCost || asset.purchase_cost}`
+  const name = product.name || "-";
+  const modelNumber = product.model_number || "-";
+  const category = product.category || "-";
+  const depreciation = product.depreciation || "-";
+  const endOfLife = product.end_of_life || "-";
+  const manufacturer = product.manufacturer || "-";
+  const supplier = product.supplier || "-";
+  const purchaseCost = product.default_purchase_cost
+    ? `PHP ${product.default_purchase_cost}`
     : "-";
-  const location = asset.location || "-";
-  const notes = asset.notes || "-";
-  const status = asset.status || "-";
-  const supplier = asset.supplier || "-";
-
-  // To be configured
-  const handleCheckInOut = () => {
-    closeModal();
-
-    const stateData = {
-      id: asset.id,
-      image: imageSrc,
-      assetId,
-      product: productName,
-    };
-
-    if (asset.status === "Deployed") {
-      navigate(`/assets/check-in/${asset.id}`, {
-        state: {
-          ...stateData,
-          employee: "Elphaba Thropp", // Replace with dynamic data when available
-          checkOutDate: "2023-10-01", // Replace with real dates if available
-          returnDate: "2023-10-15",
-          condition: "Good",
-        },
-      });
-    } else {
-      navigate(`/assets/check-out/${asset.id}`, {
-        state: stateData,
-      });
-    }
-  };
-
-     const handleView = async (productId) => {
-    console.log("product id:", productId)
-    try {
-      const assetResponse = await assetsService.fe(assetId);
-      console.log("Full assetResponse:", assetResponse);
-      const assetData = assetResponse;
-      console.log("assetData:", assetData, typeof assetData);
-
-      if (!assetData) {
-        setErrorMessage("Asset details not found.");
-        setLoading(false);
-        return;
-      }
-
-      let supplierName = "Unknown Supplier";
-      if (assetData.supplier_id) {
-        const supplierResponse = await contextsService.fetchSuppNameById(assetData.supplier_id);
-        supplierName = supplierResponse.supplier?.name || supplierName;
-      }
-
-      const assetWithSupplier = {
-        ...assetData,
-        supplier: supplierName,
-        product: assetData.product_info?.name || "-",
-        status: assetData.status_info?.name || "-",
-      };
-
-      setSelectedAsset(assetWithSupplier);
-      setViewModalOpen(true);
-    } catch (error) {
-      console.error("Error fetching asset or supplier details:", error);
-      setErrorMessage("Failed to load asset details.");
-    }
-  };
+  const minQty = product.minimum_quantity || "-";
+  const os = product.operating_system || "-";
+  const notes = product.notes || "-";
 
   return (
     <main className="asset-view-modal">
@@ -95,57 +30,53 @@ export default function AssetViewModal({ asset, closeModal }) {
         </button>
 
         <fieldset className="header-fieldset">
-          <img src={imageSrc} alt="Asset" onError={(e) => { e.target.src = DefaultImage; }} />
-          <h2>{productName}</h2>
+          <img
+            src={imageSrc}
+            alt="Product"
+            onError={(e) => {
+              e.target.src = DefaultImage;
+            }}
+          />
+          <h2>{name}</h2>
         </fieldset>
 
         <div className="details-container">
           <section className="left-content">
             <fieldset className="detail-item">
-              <label>Asset ID</label>
-              <p>{assetId}</p>
+              <label>Model Number</label>
+              <p>{modelNumber}</p>
             </fieldset>
 
             <fieldset className="detail-item">
-              <label>Product</label>
-              <p>{productName}</p>
+              <label>Category</label>
+              <p>{category}</p>
             </fieldset>
 
             <fieldset className="detail-item">
-              <label>Serial Number</label>
-              <p>{serialNumber}</p>
+              <label>Depreciation</label>
+              <p>{depreciation}</p>
             </fieldset>
 
             <fieldset className="detail-item">
-              <label>Status</label>
-              <p>{status}</p>
+              <label>End of Life</label>
+              <p>{endOfLife}</p>
             </fieldset>
 
             <fieldset className="detail-item">
-              <label>Location</label>
-              <p>{location}</p>
-            </fieldset>
-
-            <fieldset className="detail-item">
-              <label>Purchase Date</label>
-              <p>{purchaseDate}</p>
+              <label>Minimum Quantity</label>
+              <p>{minQty}</p>
             </fieldset>
           </section>
 
           <section className="right-content">
             <fieldset className="detail-item">
+              <label>Manufacturer</label>
+              <p>{manufacturer}</p>
+            </fieldset>
+
+            <fieldset className="detail-item">
               <label>Supplier</label>
               <p>{supplier}</p>
-            </fieldset>
-
-            <fieldset className="detail-item">
-              <label>Warranty Expiration</label>
-              <p>{warrantyExpiration}</p>
-            </fieldset>
-
-            <fieldset className="detail-item">
-              <label>Order Number</label>
-              <p>{orderNumber}</p>
             </fieldset>
 
             <fieldset className="detail-item">
@@ -154,20 +85,14 @@ export default function AssetViewModal({ asset, closeModal }) {
             </fieldset>
 
             <fieldset className="detail-item">
+              <label>Operating System</label>
+              <p>{os}</p>
+            </fieldset>
+
+            <fieldset className="detail-item">
               <label>Notes</label>
               <p>{notes}</p>
             </fieldset>
-
-            <button
-              className={
-                asset.status === "Deployed"
-                  ? "checkin-btn detail-button"
-                  : "checkout-btn detail-button"
-              }
-              onClick={handleCheckInOut}
-            >
-              {asset.status === "Deployed" ? "Check-In" : "Check-Out"}
-            </button>
           </section>
         </div>
       </div>
