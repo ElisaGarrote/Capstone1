@@ -103,10 +103,20 @@ def soft_delete_supplier(request, id):
 
 # Get all suppliers
 @api_view(['GET'])
-def get_suppliers(request):
+def get_all_suppliers(request):
     suppliers = Supplier.objects.filter(is_deleted=False) # Filters not deleted instances
-    serializedSuppliers = SupplierSerializer(suppliers, many=True).data # Serializes data
-    return Response(serializedSuppliers) # Returns serialized data
+    serializer = SupplierSerializer(suppliers, many=True).data # Serializes data
+    return Response(serializer) # Returns serialized data
+
+@api_view(['GET'])
+def get_supplier_by_id(request, id):
+    try:
+        supplier = Supplier.objects.get(pk=id, is_deleted=False)
+    except Supplier.DoesNotExist:
+        return Response({'detail': 'Supplier not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = SupplierSerializer(supplier).data
+    return Response(serializer)
 
 @api_view(['POST'])
 def create_supplier(request):
@@ -116,6 +126,41 @@ def create_supplier(request):
         serializedSupplier.save()
         return Response(serializedSupplier.data, status=status.HTTP_201_CREATED)
     return Response(serializedSupplier.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def update_supplier(request, id):
+    name = request.data.get('name')
+    remove_logo = request.data.get('remove_logo') == 'true'
+
+    # Check for duplicate name, excluding the current supplier
+    if name and Supplier.objects.filter(name=name, is_deleted=False).exclude(pk=id).exists():
+        return Response({'error': 'A Supplier with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        supplier = Supplier.objects.get(pk=id, is_deleted=False)
+    except Supplier.DoesNotExist:
+        return Response({'detail': 'Supplier not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Handle logo removal
+    if remove_logo and supplier.logo:
+        supplier.logo.delete()
+        supplier.logo = None
+
+    serializer = SupplierSerializer(supplier, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+def soft_delete_supplier(request, id):
+    try:
+        supplier = Supplier.objects.get(pk=id)
+        supplier.is_deleted = True
+        supplier.save()
+        return Response({'detail': 'Supplier soft-deleted'})
+    except Supplier.DoesNotExist:
+        return Response({'detail': 'Supplier not found'}, status=status.HTTP_404_NOT_FOUND)
 
 # MANUFACTURERS
 @api_view(['GET'])
