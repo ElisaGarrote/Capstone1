@@ -101,8 +101,13 @@ function App() {
             element={<AccessoriesRegistration />}
           />
           <Route path="/More/SupplierEdit" element={<SupplierEdit />} />
+          <Route path="/More/ViewSupplier" element={<ViewSupplier />} />
           <Route
             path="/More/SupplierRegistration"
+            element={<SupplierRegistration />}
+          />
+          <Route
+            path="/More/SupplierRegistration/:id"
             element={<SupplierRegistration />}
           />
           <Route
@@ -123,7 +128,6 @@ function App() {
             path="/More/ManufacturerEdit/:id"
             element={<ManufacturerEdit />}
           />
-          <Route path="/More/ViewSupplier" element={<ViewSupplier />} />
           <Route
             path="/More/CategoryRegistration"
             element={<CategoryRegistration />}
