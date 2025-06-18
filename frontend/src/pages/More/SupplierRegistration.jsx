@@ -1,289 +1,210 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import NavBar from '../../components/NavBar';
 import '../../styles/Registration.css';
 import '../../styles/SupplierRegistration.css';
 import TopSecFormPage from '../../components/TopSecFormPage';
-import assetsService from "../../services/assets-service";
-import contextsService from "../../services/contexts-service";
+import Alert from '../../components/Alert';
+import SystemLoading from '../../components/Loading/SystemLoading';
+import contextsService from '../../services/contexts-service';
 
 const SupplierRegistration = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [logoFile, setLogoFile] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    city: '',
-    zip: '',
-    contact: '',
-    phone: '',
-    email: '',
-    url: '',
-    notes: '',
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      name: '',
+      address: '',
+      city: '',
+      zip: '',
+      contact_name: '',
+      phone_number: '',
+      email: '',
+      URL: '',
+      notes: '',
+    },
   });
 
-  const validateField = (name, value) => {
-    const regexMap = {
-      name: /^[A-Za-z0-9\s\-']{1,100}$/,
-      address: /^[A-Za-z0-9\s.,'-]{1,200}$/,
-      city: /^[A-Za-z\s]{1,50}$/,
-      zip: /^[0-9]{4,10}$/,
-      contact: /^[A-Za-z\s]{1,100}$/,
-      phone: /^[0-9()+\-\s]{7,20}$/,
-      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-      url: /^(https?:\/\/[^\s]+)$/,
-      notes: /^.{0,500}$/,
+  const contextServiceUrl = 'https://contexts-service-production.up.railway.app';
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        if (id) {
+          const supplierData = await contextsService.fetchSupplierById(id);
+          if (!supplierData) throw new Error('Failed to fetch supplier details');
+
+          setValue('name', supplierData.name || '');
+          setValue('address', supplierData.address || '');
+          setValue('city', supplierData.city || '');
+          setValue('zip', supplierData.zip || '');
+          setValue('contact_name', supplierData.contact_name || '');
+          setValue('phone_number', supplierData.phone_number || '');
+          setValue('email', supplierData.email || '');
+          setValue('URL', supplierData.URL || '');
+          setValue('notes', supplierData.notes || '');
+
+          if (supplierData.logo) {
+            setPreviewImage(`${contextServiceUrl}${supplierData.logo}`);
+          }
+        }
+      } catch (error) {
+        setErrorMessage(error.message || 'Failed to initialize form');
+      } finally {
+        setIsLoading(false);
+      }
     };
+    initialize();
+  }, [id, setValue]);
 
-    return regexMap[name] ? regexMap[name].test(value) : true;
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleFileSelection = (e) => {
-    const file = e.target.files?.[0];
+  const handleImageSelection = (e) => {
+    const file = e.target.files[0];
     if (file) {
-      const isValidType = ['image/png', 'image/jpeg', 'image/jpg'].includes(file.type);
-      const isValidSize = file.size <= 5 * 1024 * 1024;
-
-      if (!isValidType) {
-        alert('Only PNG, JPG, or JPEG files are allowed.');
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage('Image exceeds 5MB.');
+        setTimeout(() => setErrorMessage(''), 5000);
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        setErrorMessage('Only image files are allowed.');
+        setTimeout(() => setErrorMessage(''), 5000);
         return;
       }
 
-      if (!isValidSize) {
-        alert('File size must be less than 5MB.');
-        return;
-      }
+      setSelectedImage(file);
+      setRemoveImage(false);
 
-      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewImage(reader.result);
+      reader.readAsDataURL(file);
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  // Validate fields again before sending (optional)
-  for (const [key, value] of Object.entries(formData)) {
-    if ((key !== 'notes' && key !== 'url') && !validateField(key, value)) {
-      alert(`Please correct the field: ${key}`);
-      return;
-    }
-  }
-
-  // Prepare form data for backend (Django expects these keys)
-  const dataToSend = new FormData();
-  dataToSend.append('name', formData.name);
-  dataToSend.append('address', formData.address);
-  dataToSend.append('city', formData.city);
-  dataToSend.append('zip', formData.zip);
-  dataToSend.append('contact_name', formData.contact);
-  dataToSend.append('phone_number', formData.phone);
-  dataToSend.append('email', formData.email);
-  dataToSend.append('URL', formData.url);
-  dataToSend.append('notes', formData.notes);
-  if (logoFile) dataToSend.append('logo', logoFile);
-
+  const onSubmit = async (data) => {
     try {
-      const response = await fetch('https://contexts-service-production.up.railway.app/api/suppliers'
-  , {
-        method: 'POST',
-        body: dataToSend,
-      });
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('address', data.address);
+      formData.append('city', data.city);
+      formData.append('zip', data.zip);
+      formData.append('contact_name', data.contact_name);
+      formData.append('phone_number', data.phone_number);
+      formData.append('email', data.email);
+      formData.append('URL', data.URL || '');
+      formData.append('notes', data.notes || '');
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Server error:', errorData);
-        alert('Failed to submit. Please check input fields.');
-        return;
+      if (selectedImage) formData.append('logo', selectedImage);
+      if (removeImage) formData.append('remove_logo', 'true');
+
+      let result;
+      if (id) {
+        result = await contextsService.updateSupplier(id, formData);
+      } else {
+        result = await contextsService.createSupplier(formData);
       }
 
-      const result = await response.json();
-      console.log('Success:', result);
-      alert('Supplier added successfully!');
-      navigate('/More/ViewSupplier');
-    } catch (err) {
-      console.error('Error:', err);
-      alert('Failed to connect to the server.');
+      if (!result) throw new Error('Failed to save supplier');
+
+      navigate('/More/ViewSupplier', {
+        state: { successMessage: `Supplier successfully ${id ? 'updated' : 'created'}` },
+      });
+    } catch (error) {
+      setErrorMessage(error.message);
+      setTimeout(() => setErrorMessage(''), 5000);
     }
   };
 
+  if (isLoading) return <SystemLoading />;
 
   return (
     <>
-      <nav>
-        <NavBar />
-      </nav>
+      <NavBar />
       <main className="registration">
-        <section className="top">
-          <TopSecFormPage
-            root="Suppliers"
-            currentPage="New Supplier"
-            rootNavigatePage="/More/ViewSupplier"
-            title="New Supplier"
-          />
-        </section>
-        <section className="registration-form">
-          <form onSubmit={handleSubmit}>
-            <fieldset>
-              <label htmlFor="name">Supplier Name *</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="Supplier Name"
-                value={formData.name}
-                onChange={handleInputChange}
-                maxLength="100"
-                required
-              />
-            </fieldset>
+        <TopSecFormPage
+          root="Suppliers"
+          currentPage={id ? 'Edit Supplier' : 'New Supplier'}
+          rootNavigatePage="/More/ViewSupplier"
+          title={id ? 'Edit Supplier' : 'New Supplier'}
+        />
+        {errorMessage && <Alert type="danger" message={errorMessage} />}
+        <form onSubmit={handleSubmit(onSubmit)} className="registration-form">
+          <fieldset>
+            <label>Supplier Name *</label>
+            <input placeholder="Supplier Name" {...register('name', { required: true })} maxLength={100} />
+          </fieldset>
 
-            <fieldset>
-              <label htmlFor="address">Address *</label>
-              <input
-                type="text"
-                id="address"
-                name="address"
-                placeholder="Supplier Address"
-                value={formData.address}
-                onChange={handleInputChange}
-                maxLength="200"
-                required
-              />
-            </fieldset>
+          <fieldset>
+            <label>Address</label>
+            <input placeholder="Address" {...register('address')} maxLength={200} />
+          </fieldset>
 
-            <fieldset>
-              <label htmlFor="city">City *</label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                placeholder="Enter City"
-                value={formData.city}
-                onChange={handleInputChange}
-                maxLength="50"
-                required
-              />
-            </fieldset>
+          <fieldset>
+            <label>City</label>
+            <input placeholder="City" {...register('city')} maxLength={50} />
+          </fieldset>
 
-            <fieldset>
-              <label htmlFor="zip">Zip Code*</label>
-              <input
-                type="text"
-                id="zip"
-                name="zip"
-                placeholder="Enter Zip Code"
-                value={formData.zip}
-                onChange={handleInputChange}
-                maxLength="5"
-                required
-              />
-            </fieldset>
+          <fieldset>
+            <label>Zip Code</label>
+            <input placeholder="ZIP" {...register('zip')} maxLength={5} />
+          </fieldset>
 
-            <fieldset>
-              <label htmlFor="contact">Contact Name *</label>
-              <input
-                type="text"
-                id="contact"
-                name="contact"
-                placeholder="Enter Contact Name"
-                value={formData.contact}
-                onChange={handleInputChange}
-                maxLength="100"
-                required
-              />
-            </fieldset>
+          <fieldset>
+            <label>Contact Name</label>
+            <input placeholder="Supplier's Contact Name" {...register('contact_name')} maxLength={100} />
+          </fieldset>
 
-            <fieldset>
-              <label htmlFor="phone">Phone Number *</label>
-              <input
-                type="text"
-                id="phone"
-                name="phone"
-                placeholder="XXXX-XXX-XXXX"
-                value={formData.phone}
-                onChange={handleInputChange}
-                maxLength="13"
-                required
-              />
-            </fieldset>
+          <fieldset>
+            <label>Phone Number</label>
+            <input placeholder="Contact's Phone Number" {...register('phone_number')} maxLength={13} />
+          </fieldset>
 
-            <fieldset>
-              <label htmlFor="email">Email *</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="example@email.com"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-              />
-            </fieldset>
+          <fieldset>
+            <label>Email</label>
+            <input type="email" placeholder="Contact's Email" {...register('email')} />
+          </fieldset>
 
-            <fieldset>
-              <label htmlFor="url">URL</label>
-              <input
-                type="text"
-                id="url"
-                name="url"
-                placeholder="https://example.com"
-                value={formData.url}
-                onChange={handleInputChange}
-              />
-            </fieldset>
+          <fieldset>
+            <label>URL</label>
+            <input placeholder="URL" {...register('URL')} />
+          </fieldset>
 
-            <fieldset>
-              <label htmlFor="notes">Notes</label>
-              <textarea
-                id="notes"
-                name="notes"
-                placeholder="Optional notes..."
-                value={formData.notes}
-                onChange={handleInputChange}
-                maxLength="500"
-              ></textarea>
-            </fieldset>
+          <fieldset>
+            <label>Notes</label>
+            <textarea placeholder="Notes..." {...register('notes')} maxLength={500} />
+          </fieldset>
 
-            <fieldset>
-              <label>Logo</label>
-              {logoFile ? (
-                <div className="image-selected">
-                  <img src={URL.createObjectURL(logoFile)} alt="Selected logo" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLogoFile(null);
-                      document.getElementById('logo').value = '';
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-              ) : (
-                <label className="upload-image-btn">
-                  Choose File
-                  <input
-                    type="file"
-                    id="logo"
-                    name="logo"
-                    accept="image/png, image/jpeg"
-                    onChange={handleFileSelection}
-                    style={{ display: 'none' }}
-                  />
-                </label>
-              )}
-              <small className="file-size-info">Maximum file size must be 5MB</small>
-            </fieldset>
+          <fieldset>
+            <label>Logo</label>
+            {previewImage ? (
+              <div className="image-selected">
+                <img src={previewImage} alt="Logo preview" />
+                <button type="button" onClick={() => { setPreviewImage(null); setSelectedImage(null); setRemoveImage(true); }}>
+                  ×
+                </button>
+              </div>
+            ) : (
+              <label className="upload-image-btn">
+                Choose File
+                <input type="file" accept="image/*" onChange={handleImageSelection} hidden />
+              </label>
+            )}
+            <small className="file-size-info">Max file size: 5MB</small>
+          </fieldset>
 
-            <button type="submit" className="save-btn">Save</button>
-          </form>
-        </section>
+          <button type="submit" className="save-btn">Save</button>
+        </form>
       </main>
     </>
   );

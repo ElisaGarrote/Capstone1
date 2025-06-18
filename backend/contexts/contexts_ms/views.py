@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import *
 from .serializer import *
+from django.db.models import Q
 
 # Get all manufacturer's names
 @api_view(['GET'])
@@ -127,13 +128,29 @@ def create_supplier(request):
         return Response(serializedSupplier.data, status=status.HTTP_201_CREATED)
     return Response(serializedSupplier.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+def create_supplier(request):
+    name = request.data.get('name')
+
+    if not name:
+        return Response({'error': 'Supplier name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if Supplier.objects.filter(name__iexact=name, is_deleted=False).exists():
+        return Response({'error': 'A Supplier with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = SupplierSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['PUT'])
 def update_supplier(request, id):
     name = request.data.get('name')
     remove_logo = request.data.get('remove_logo') == 'true'
 
     # Check for duplicate name, excluding the current supplier
-    if name and Supplier.objects.filter(name=name, is_deleted=False).exclude(pk=id).exists():
+    if name and Supplier.objects.filter(Q(name__iexact=name), Q(is_deleted=False)).exclude(pk=id).exists():
         return Response({'error': 'A Supplier with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
@@ -186,9 +203,10 @@ def create_manufacturer(request):
     if not name:
         return Response({'error': 'Manufacturer name is required.'}, status=status.HTTP_400_BAD_REQUEST)
     
-    if Manufacturer.objects.filter(name=name, is_deleted=False).exists():
+    if Manufacturer.objects.filter(name__iexact=name, is_deleted=False).exists():
         return Response({'error': 'A Manufacturer with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
+
     serializer = ManufacturerSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -201,7 +219,7 @@ def update_manufacturer(request, id):
     remove_logo = request.data.get('remove_logo') == 'true'
 
     # Check for duplicate name, excluding the current manufacturer
-    if name and Manufacturer.objects.filter(name=name, is_deleted=False).exclude(pk=id).exists():
+    if name and Manufacturer.objects.filter(Q(name__iexact=name), Q(is_deleted=False)).exclude(pk=id).exists():
         return Response({'error': 'A Manufacturer with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
     
     try:

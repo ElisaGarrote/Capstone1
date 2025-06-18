@@ -72,6 +72,8 @@
   border-bottom: 1px solid #dee2e6;
   color: #545f71 !important; /* Force consistent text color */
   vertical-align: middle;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* Row Hover Effect */

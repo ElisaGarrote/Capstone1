@@ -52,6 +52,7 @@ export default function ViewSupplier() {
           email: supp.email,
           url: supp.URL,
           notes: supp.notes,
+          logo: supp.logo,
         }));
         const sorted = mapped.sort((a, b) => a.name.localeCompare(b.name));
         setSuppliers(sorted);
@@ -200,11 +201,11 @@ export default function ViewSupplier() {
                             onChange={() => toggleItem(supplier.id)}
                           />
                         </td>
-                        <td className="name-cell" onClick={() => handleSupplierClick(supplier)}>
+                        <td className="name-cell">
                           <div className="supplier-name-container">
                             {supplier.logo && (
                               <div className="supplier-logo">
-                                <img src={supplier.logo} alt={supplier.name} />
+                                <img src={`${contextServiceUrl}${supplier.logo}`} alt={supplier.name} />
                               </div>
                             )}
                             <span className="supplier-name" style={{ color: '#545f71' }}>{supplier.name}</span>
@@ -212,9 +213,9 @@ export default function ViewSupplier() {
                         </td>
                         <td className="address-cell" style={{ color: '#545f71' }}>{supplier.address}</td>
                         <td className="city-cell" style={{ color: '#545f71' }}>{supplier.city}</td>
-                        <td className="country-cell" style={{ color: '#545f71' }}>{supplier.country}</td>
-                        <td className="contact-cell" style={{ color: '#545f71' }}>{supplier.contact}</td>
-                        <td className="phone-cell" style={{ color: '#545f71' }}>{supplier.phone}</td>
+                        <td className="country-cell" style={{ color: '#545f71' }}>{supplier.zip}</td>
+                        <td className="contact-cell" style={{ color: '#545f71' }}>{supplier.contactName}</td>
+                        <td className="phone-cell" style={{ color: '#545f71' }}>{supplier.phoneNumber}</td>
                         <td className="email-cell" style={{ color: '#545f71' }} title={supplier.email}>{supplier.email}</td>
                         <td className="url-cell" style={{ color: '#545f71', textAlign: 'left', paddingLeft: '12px', paddingRight: '20px' }} title={supplier.url}>{supplier.url}</td>
                         <td className="action-cell" style={{ textAlign: 'center' }}>

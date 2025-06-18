@@ -120,7 +120,7 @@ class ContextsService {
       }
 
       const data = await response.json();
-
+      console.log("Suppliers Parsed JSON data:", data); 
       // Sort by name (A-Z), case-insensitive
       const sortedData = data.sort((a, b) => 
         a.name.toLowerCase().localeCompare(b.name.toLowerCase())
