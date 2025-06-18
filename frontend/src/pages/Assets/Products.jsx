@@ -81,6 +81,41 @@ export default function Products() {
     }
   };
 
+  const handleView = async (productId) => {
+    console.log("product id:", productId)
+    try {
+      const productResponse = await assetsService.fetchProductById(assetId);
+      console.log("Full product response:", productResponse);
+      const productData = productResponse;
+      console.log("productData:", productData, typeof productData);
+
+      if (!productData) {
+        setErrorMessage("Product details not found.");
+        setLoading(false);
+        return;
+      }
+
+      let supplierName = "-";
+      if (assetData.supplier_id) {
+        const supplierResponse = await contextsService.fetchSuppNameById(assetData.supplier_id);
+        supplierName = supplierResponse.supplier?.name || supplierName;
+      }
+
+      const assetWithSupplier = {
+        ...assetData,
+        supplier: supplierName,
+        product: assetData.product_info?.name || "-",
+        status: assetData.status_info?.name || "-",
+      };
+
+      setSelectedAsset(assetWithSupplier);
+      setViewModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching asset or supplier details:", error);
+      setErrorMessage("Failed to load asset details.");
+    }
+  };
+
   return (
     <>
       <nav>
@@ -203,8 +238,7 @@ export default function Products() {
                           <td>
                             <TableBtn
                               type="view"
-                              navigatePage={`/products/view/${product.id}`}
-                              data={product.id}
+                              onClick={() => handleView(asset.id)}
                             />
                           </td>
                         </tr>

@@ -78,8 +78,7 @@ export default function Assets() {
       setLoading(false);
     }
   };
-  
-  // To be configured
+
   const handleCheckInOut = (asset) => {
     const baseImage = asset.image
       ? `https://assets-service-production.up.railway.app${asset.image}`
@@ -110,8 +109,7 @@ export default function Assets() {
     }
   };
 
-   const handleView = async (assetId) => {
-    setLoading(true);
+  const handleView = async (assetId) => {
     console.log("asset id:", assetId)
     try {
       const assetResponse = await assetsService.fetchAssetById(assetId);
@@ -125,7 +123,7 @@ export default function Assets() {
         return;
       }
 
-      let supplierName = "Unknown Supplier";
+      let supplierName = "-";
       if (assetData.supplier_id) {
         const supplierResponse = await contextsService.fetchSuppNameById(assetData.supplier_id);
         supplierName = supplierResponse.supplier?.name || supplierName;
@@ -134,8 +132,6 @@ export default function Assets() {
       const assetWithSupplier = {
         ...assetData,
         supplier: supplierName,
-        product: assetData.product_info?.name || "-",
-        status: assetData.status_info?.name || "-",
       };
 
       setSelectedAsset(assetWithSupplier);
@@ -143,8 +139,6 @@ export default function Assets() {
     } catch (error) {
       console.error("Error fetching asset or supplier details:", error);
       setErrorMessage("Failed to load asset details.");
-    } finally {
-      setLoading(false);
     }
   };
 

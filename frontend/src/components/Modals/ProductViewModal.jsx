@@ -10,7 +10,7 @@ export default function AssetViewModal({ asset, closeModal }) {
   ? `https://assets-service-production.up.railway.app${asset.image}`
   : DefaultImage;
   const assetId = asset.displayed_id;
-  const productName = asset.product_info?.name || "-";
+  const productName = asset.name || asset.product || "Unnamed Asset";
   const serialNumber = asset.serialNumber || asset.serial_number || "-";
   const purchaseDate = asset.purchaseDate || asset.purchase_date || "-";
   const warrantyExpiration = asset.warrantyExpiration || asset.warranty_expiration || "-";
@@ -20,9 +20,72 @@ export default function AssetViewModal({ asset, closeModal }) {
     : "-";
   const location = asset.location || "-";
   const notes = asset.notes || "-";
-  const status = asset.status_info?.name || "-";
+  const status = asset.status || "-";
   const supplier = asset.supplier || "-";
-  
+
+  // To be configured
+  const handleCheckInOut = () => {
+    closeModal();
+
+    const stateData = {
+      id: asset.id,
+      image: imageSrc,
+      assetId,
+      product: productName,
+    };
+
+    if (asset.status === "Deployed") {
+      navigate(`/assets/check-in/${asset.id}`, {
+        state: {
+          ...stateData,
+          employee: "Elphaba Thropp", // Replace with dynamic data when available
+          checkOutDate: "2023-10-01", // Replace with real dates if available
+          returnDate: "2023-10-15",
+          condition: "Good",
+        },
+      });
+    } else {
+      navigate(`/assets/check-out/${asset.id}`, {
+        state: stateData,
+      });
+    }
+  };
+
+     const handleView = async (productId) => {
+    console.log("product id:", productId)
+    try {
+      const assetResponse = await assetsService.fe(assetId);
+      console.log("Full assetResponse:", assetResponse);
+      const assetData = assetResponse;
+      console.log("assetData:", assetData, typeof assetData);
+
+      if (!assetData) {
+        setErrorMessage("Asset details not found.");
+        setLoading(false);
+        return;
+      }
+
+      let supplierName = "Unknown Supplier";
+      if (assetData.supplier_id) {
+        const supplierResponse = await contextsService.fetchSuppNameById(assetData.supplier_id);
+        supplierName = supplierResponse.supplier?.name || supplierName;
+      }
+
+      const assetWithSupplier = {
+        ...assetData,
+        supplier: supplierName,
+        product: assetData.product_info?.name || "-",
+        status: assetData.status_info?.name || "-",
+      };
+
+      setSelectedAsset(assetWithSupplier);
+      setViewModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching asset or supplier details:", error);
+      setErrorMessage("Failed to load asset details.");
+    }
+  };
+
   return (
     <main className="asset-view-modal">
       <div className="overlay" onClick={closeModal}></div>
@@ -94,6 +157,17 @@ export default function AssetViewModal({ asset, closeModal }) {
               <label>Notes</label>
               <p>{notes}</p>
             </fieldset>
+
+            <button
+              className={
+                asset.status === "Deployed"
+                  ? "checkin-btn detail-button"
+                  : "checkout-btn detail-button"
+              }
+              onClick={handleCheckInOut}
+            >
+              {asset.status === "Deployed" ? "Check-In" : "Check-Out"}
+            </button>
           </section>
         </div>
       </div>
