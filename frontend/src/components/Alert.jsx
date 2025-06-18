@@ -8,7 +8,7 @@ function Alert({ message, type }) {
 
   return (
     <div className={`alert alert-${type}`}>
-      <img src={icon} alt="close-icon" />
+      <img className="alert-image" src={icon} alt="close-icon" />
       <p>{message}</p>
     </div>
   );
