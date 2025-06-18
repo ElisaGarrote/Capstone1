@@ -28,10 +28,7 @@ class ProductDefaultsSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'default_purchase_cost', 'default_supplier_id']
 
-class ProductSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(source='category.name', read_only=True)
-    depreciation = serializers.CharField(source='depreciation.name', read_only=True)
-    
+class ProductSerializer(serializers.ModelSerializer):    
     class Meta:
         model = Product
         fields = '__all__'

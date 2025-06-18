@@ -31,7 +31,6 @@ export default function ProductsRegistration() {
       supplier: '',
       minimumQuantity: '',
       operatingSystem: '',
-      imeiNumber: '',
       notes: ''
     }
   });
@@ -85,7 +84,6 @@ export default function ProductsRegistration() {
           // Set form values from retrieved product data
           setValue('productName', productData.name);
           
-          // For category and depreciation, use the direct values from fetched product data
           setValue('category', productData.category);
           setValue('depreciation', productData.depreciation);
           
@@ -96,7 +94,6 @@ export default function ProductsRegistration() {
           setValue('supplier', productData.default_supplier_id || '');
           setValue('minimumQuantity', productData.minimum_quantity || '');
           setValue('operatingSystem', productData.operating_system || '');
-          setValue('imeiNumber', productData.imei_number || '');
           setValue('notes', productData.notes || '');
           
           if (productData.image) {
@@ -168,7 +165,6 @@ export default function ProductsRegistration() {
       formData.append('default_supplier_id', data.supplier || '');
       formData.append('minimum_quantity', data.minimumQuantity);
       formData.append('operating_system', data.operatingSystem || '');
-      formData.append('imei_number', data.imeiNumber || '');
       formData.append('notes', data.notes || '');
       
       // Handle image upload
@@ -396,15 +392,6 @@ export default function ProductsRegistration() {
                   <option value='other'>Other</option>
                 </select>
               </div>
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='imei-number'>IMEI Number</label>
-              <input
-                type='text'
-                {...register('imeiNumber', { maxLength: 15 })}
-                placeholder='IMEI Number'
-              />
             </fieldset>
 
             <fieldset>
