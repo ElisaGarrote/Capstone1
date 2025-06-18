@@ -49,9 +49,6 @@ urlpatterns = [
     path('audits/get/edit/schedule/<int:id>/', get_edit_audit_schedule_by_id, name='get_edit_audit_schedule_by_id'),
     path('audits/all/schedules/', get_all_audit_schedules, name='get_all_audit_schedule'),
     path('audits/schedule/<int:id>/delete/', soft_delete_schedule_audit, name='soft_delete_schedule_audit'),
-    
-    # Component
-    path('component/create/', create_component, name='create_component'),
 
     # Status
     path('status/create/', create_status, name='create_status'),
@@ -64,4 +61,11 @@ urlpatterns = [
     path('depreciations/registration/', create_depreciation, name='depreciation_registration'),
     path('depreciations/<int:id>/update/', update_depreciation, name='update_depreciation_by_id'),
     path('depreciations/<int:id>/delete/', soft_delete_depreciation, name='soft_delete_depreciation_by_id'),
+
+    # Component
+    path('components/', get_all_components, name='all_components'),
+    path('components/<int:id>/', get_component_by_id, name='get_component_by_id'),
+    path('components/registration/', create_component, name='add_new_component'),
+    path('components/<int:id>/update/', update_component, name='update_component_by_id'),
+    path('components/<int:id>/delete/', soft_delete_component, name='soft_delete_component_by_id'),
 ]

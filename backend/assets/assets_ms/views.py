@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import *
 from .serializer import *
+from django.db.models import Q
 
 # PRODUCTS HERE
 # Get products for all products table
@@ -433,19 +434,6 @@ def soft_delete_schedule_audit(request, id):
         return Response({'detail': 'Audit schedule not found'}, status=status.HTTP_404_NOT_FOUND)
 # END AUDITS
 
-
-# COMPONENT
-@api_view(['POST'])
-@permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
-def create_component(request):
-    data = request.data
-    serializer = ComponentSerializer(data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-# END COMPONENT
-
 # STATUS
 @api_view(['POST'])
 @permission_classes([AllowAny]) # Set this to 'IsAuthenticated' if you want to restrict this to authenticated users.
@@ -623,3 +611,71 @@ def soft_delete_depreciation(request, id):
         return Response({'detail': 'Depreciation not found'}, status=status.HTTP_404_NOT_FOUND)
 # END DEPRECIATION
 
+# COMPONENT
+@api_view(['GET'])
+def get_all_components(request):
+    components = Component.objects.filter(is_deleted=False)
+    serializer = AllComponentSerializer(components, many=True).data
+    return Response(serializer)
+
+@api_view(['GET'])
+def get_component_by_id(request, id):
+    try:
+        component = Component.objects.get(pk=id, is_deleted=False)
+    except Component.DoesNotExist:
+        return Response({'detail': 'Component not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ComponentSerializer(component).data
+    return Response(serializer)
+
+@api_view(['POST'])
+def create_component(request):
+    name = request.data.get('name')
+
+    if not name:
+        return Response({'error': 'Component name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if Component.objects.filter(name__iexact=name, is_deleted=False).exists():
+        return Response({'error': 'A Component with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    serializer = ComponentSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def update_component(request, id):
+    name = request.data.get('name')
+    remove_logo = request.data.get('remove_logo') == 'true'
+
+    # Check for duplicate name, excluding the current component
+    if name and Component.objects.filter(Q(name__iexact=name), Q(is_deleted=False)).exclude(pk=id).exists():
+        return Response({'error': 'A Component with this name already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        component = Component.objects.get(pk=id, is_deleted=False)
+    except Component.DoesNotExist:
+        return Response({'detail': 'Component not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    # Handle logo removal
+    if remove_logo and component.logo:
+        component.logo.delete()
+        component.logo = None
+
+    serializer = ComponentSerializer(component, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+def soft_delete_component(request, id):
+    try:
+        component = Component.objects.get(pk=id)
+        component.is_deleted = True
+        component.save()
+        return Response({'detail': 'Component soft-deleted'})
+    except Component.DoesNotExist:
+        return Response({'detail': 'Component not found'}, status=status.HTTP_404_NOT_FOUND)
