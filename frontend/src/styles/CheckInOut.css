@@ -89,12 +89,6 @@
   justify-content: flex-start;
 }
 
-.check-in-out-page .employee-radio-container img,
-.check-in-out-page .location-radio-container img {
-  height: 20px;
-  left: 20px;
-}
-
 .check-in-out-page input,
 .check-in-out-page select,
 .check-in-out-page textarea {
@@ -170,11 +164,6 @@
   background-color: darkred;
 }
 
-.check-in-out-page .image-selected button img {
-  height: 12px;
-  width: 12px;
-}
-
 .check-in-out-page .upload-image-btn {
   display: flex;
   width: fit-content;
@@ -226,4 +215,14 @@
 .location-radio-container input[type="radio"] {
   margin: 0;
   width: auto;
+}
+
+.item-info-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 250px;
+  width: 250px;
+  border-radius: 10px;
+  position: relative;
 }

@@ -114,6 +114,7 @@ export default function CheckOutAsset() {
       }
 
       const checkout = await assetsService.createAssetCheckout(formData);
+      const updateTckt = await dtsService.resolveCheckoutTicket(ticketId);
 
       if (fromAsset) {
         console.log("Ticket Information:", { ticketId });
@@ -156,7 +157,7 @@ export default function CheckOutAsset() {
           <section className="recent-checkout-info">
             <h2>Asset Information</h2>
             <fieldset>
-              <img src={image} alt="asset" />
+              <img className="item-info-image" src={image} alt="asset" />
             </fieldset>
             <fieldset>
               <label>Asset ID:</label>
@@ -166,25 +167,6 @@ export default function CheckOutAsset() {
               <label>Product:</label>
               <p>{product}</p>
             </fieldset>
-
-            {/* Display ticket information if available */}
-            {ticketId && (
-              <>
-                <h2 style={{ marginTop: '20px' }}>Ticket Information</h2>
-                <fieldset>
-                  <label>Ticket ID:</label>
-                  <p>{ticketId}</p>
-                </fieldset>
-                <fieldset>
-                  <label>Subject:</label>
-                  <p>{ticketSubject}</p>
-                </fieldset>
-                <fieldset>
-                  <label>Requestor:</label>
-                  <p>{ticketRequestor}</p>
-                </fieldset>
-              </>
-            )}
           </section>
 
           <section className="checkin-form">
@@ -232,14 +214,14 @@ export default function CheckOutAsset() {
                 <label>Condition *</label>
                 <select 
                   {...register("condition", {required: "Condition is required"})}
-                  className={errors.condition ? "input-error" : ""}
+                  className={errors.condition ? 'input-error' : ''}
                   >
                   <option value="">Select Condition</option>
                   {conditionList.map((condition, idx) => (
                     <option key={idx} value={condition}>{condition}</option>
                   ))}
                 </select>
-                {errors.condition && <p className="input-error">{errors.condition.message}</p>}
+                {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
               </fieldset>
 
               <fieldset>

@@ -139,6 +139,7 @@ export default function Assets() {
           assetId: asset.displayed_id,
           product: asset.product,
           image: baseImage,
+          ticketId: checkout.ticket_id,
           empId: checkout.requestor_id,
           employee: checkout.requestor || "Not assigned",
           empLocation: checkout.requestor_location || "Unknown",
