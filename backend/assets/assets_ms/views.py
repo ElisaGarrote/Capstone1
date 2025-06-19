@@ -297,17 +297,38 @@ def get_asset_checkout_by_id(request, id):
 
     return Response(data)
 
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view
+import traceback
+
 @api_view(['POST'])
 def create_asset_checkout(request):
-    print("Received checkout data:", request.data)  # 🪵 log the incoming data
+    try:
+        serializer = AssetCheckoutSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({
+                    'error': 'Save failed',
+                    'exception': str(e),
+                    'stack': traceback.format_exc()
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response({
+                'error': 'Validation failed',
+                'details': serializer.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-    serializer = AssetCheckoutSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({
+            'error': 'Unexpected server error',
+            'exception': str(e),
+            'stack': traceback.format_exc()
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    print("Checkout validation errors:", serializer.errors)  # 🪵 log validation errors
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # END ASSET CHECKOUT
 
