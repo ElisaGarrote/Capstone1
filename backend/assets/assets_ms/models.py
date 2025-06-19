@@ -166,7 +166,7 @@ def generate_displayed_id(sender, instance, **kwargs):
 class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts', limit_choices_to={'is_deleted': False})
     to_user_id = models.PositiveIntegerField()
-    
+    test = models.CharField()
     checkout_date = models.DateTimeField(auto_now_add=True)
     return_date = models.DateTimeField()
     condition = models.PositiveSmallIntegerField(
