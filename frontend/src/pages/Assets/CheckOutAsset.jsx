@@ -22,6 +22,7 @@ export default function CheckOutAsset() {
 
   const navigate = useNavigate();
 
+  const [selectedImage, setSelectedImage] = useState(null);
   const [previewImages, setPreviewImages] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -34,9 +35,11 @@ export default function CheckOutAsset() {
   }, [passedState]);
 
   const {
+    id,
     image,
     assetId,
     product,
+    empId,
     employee,
     empLocation,
     checkoutDate,
@@ -86,10 +89,32 @@ export default function CheckOutAsset() {
 
   const onSubmit = async (data) => {
     try {
-      console.log("Form submitted:", data);
-      console.log("Asset ID:", passedState?.id);
+      const formData = new FormData();
 
-      // Simulate or call your API here
+      formData.append('asset', id);
+      formData.append('to_user_id', empId);
+      formData.append('to_location', data.empLocation);
+      formData.append('checkout_date', data.checkoutDate);
+      formData.append('return_date', data.returnDate);
+
+      const conditionValue = parseInt(data.condition, 10);
+        if (!isNaN(conditionValue)) {
+          formData.append('condition', conditionValue);
+        }
+
+      formData.append('notes', data.notes || '');
+      formData.append('confirmation_notes', data.confirmationNotes || '');
+      
+      if (selectedImage) {
+        formData.append('image', selectedImage);
+      }
+
+      for (let pair of formData.entries()) {
+        console.log(pair[0]+ ': ' + pair[1]);
+      }
+
+      const checkout = await assetsService.createAssetCheckout(formData);
+
       if (fromAsset) {
         console.log("Ticket Information:", { ticketId });
 
@@ -204,13 +229,17 @@ export default function CheckOutAsset() {
               </fieldset>
 
               <fieldset>
-                <label>Condition</label>
-                <select {...register("condition")}>
+                <label>Condition *</label>
+                <select 
+                  {...register("condition", {required: "Condition is required"})}
+                  className={errors.condition ? "input-error" : ""}
+                  >
                   <option value="">Select Condition</option>
                   {conditionList.map((condition, idx) => (
                     <option key={idx} value={condition}>{condition}</option>
                   ))}
                 </select>
+                {errors.condition && <p className="input-error">{errors.condition.message}</p>}
               </fieldset>
 
               <fieldset>
