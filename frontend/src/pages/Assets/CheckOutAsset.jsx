@@ -3,53 +3,74 @@ import "../../styles/CheckInOut.css";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
 import PersonIcon from "../../assets/icons/person.svg";
 import LocationIcon from "../../assets/icons/location.svg";
 import { useForm } from "react-hook-form";
+import Alert from "../../components/Alert";
+import assetsService from "../../services/assets-service";
+import dtsService from "../../services/dts-integration-service";
+import SystemLoading from "../../components/Loading/SystemLoading";
 
 export default function CheckOutAsset() {
   const location = useLocation();
+  const passedState = location.state;
+  const currentDate = new Date().toISOString().split("T")[0];
+  const conditionList = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
+
+
   const navigate = useNavigate();
+
+  const [previewImages, setPreviewImages] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (passedState) {
+      console.log("Received state:", passedState);
+    } else {
+      console.warn("No state was passed!");
+    }
+  }, [passedState]);
+
   const {
-    id,
+    image,
     assetId,
     product,
-    image,
+    employee,
+    empLocation,
+    checkoutDate,
+    returnDate,
     ticketId,
-    ticketSubject,
-    ticketRequestor
-  } = location.state || {};
-
-  // Dropdown lists for easier maintenance
-  const employeeList = ['Employee 1', 'Employee 2', 'Employee 3'];
-  const locationList = ['Location 1', 'Location 2', 'Location 3'];
-  const conditionList = ['Excellent', 'Good', 'Fair', 'Poor'];
-  const currentDate = new Date().toISOString().split("T")[0];
+    fromAsset,
+  } = passedState || {};
 
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
-    formState: { errors }
+    formState: { errors },
   } = useForm({
     defaultValues: {
-      checkoutTo: "employee",
-      employee: '',
-      location: '',
-      checkoutDate: {currentDate},
-      expectedReturnDate: '',
-      condition: '',
-      notes: '',
+      employee: employee || "",
+      empLocation: empLocation || "",
+      checkoutDate: checkoutDate || "",
+      expectedReturnDate: returnDate || "",
+      condition: "",
+      notes: "",
       photos: []
-    }
+    },
   });
 
-  const checkoutTo = watch("checkoutTo");
-  const checkoutDate = watch("checkoutDate");
-  const [previewImages, setPreviewImages] = useState([]);
+  useEffect(() => {
+    if (passedState) {
+      setValue("employee", passedState.employee || "");
+      setValue("empLocation", passedState.empLocation || "");
+      setValue("checkoutDate", passedState.checkoutDate || "");
+      setValue("expectedReturnDate", passedState.returnDate || "");
+    }
+  }, [passedState, setValue]);
+
 
   const handleImagesSelection = (event) => {
     const selectedFiles = Array.from(event.target.files);
@@ -63,39 +84,46 @@ export default function CheckOutAsset() {
     }
   };
 
-  const onSubmit = (data) => {
-    console.log("Form submitted:", data);
-    console.log("Asset ID:", id);
+  const onSubmit = async (data) => {
+    try {
+      console.log("Form submitted:", data);
+      console.log("Asset ID:", passedState?.id);
 
-    // Include ticket information in the submission if available
-    if (ticketId) {
-      console.log("Ticket Information:", {
-        ticketId,
-        ticketSubject,
-        ticketRequestor
-      });
+      // Simulate or call your API here
+      if (fromAsset) {
+        console.log("Ticket Information:", { ticketId });
 
-      // You would typically send this data to your backend API
-      // For now, we'll just show a success message
-      alert(`Asset ${assetId} has been checked out successfully for ticket ${ticketId}`);
+        navigate('/assets', { 
+          state: { 
+            successMessage: "Asset has been checked out successfully!"
+          } 
+        });
+      } else {
+        navigate('/approved-tickets', {
+          state: {
+            successMessage: "Asset has been checked out successfully!"
+          }
+        });
+      }
 
-      // Navigate back to the approved tickets page
-      navigate("/approved-tickets");
-    } else {
-      // If not from a ticket, navigate back to assets page
-      navigate("/assets");
+    } catch (error) {
+      console.error("Error occured while checking out the asset:", error);
+      setErrorMessage(
+        error.message || "An error occurred while checking out the asset"
+      );
     }
   };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav><NavBar /></nav>
       <main className="check-in-out-page">
         <section className="top">
           <TopSecFormPage
-            root={ticketId ? "Approved Tickets" : "Assets"}
+            root={passedState?.fromAsset ? "Assets" : "Approved Tickets"}
             currentPage="Check-Out Asset"
-            rootNavigatePage={ticketId ? "/approved-tickets" : "/assets"}
+            rootNavigatePage={passedState?.fromAsset ? "/assets" : "/approved-tickets"}
             title={assetId}
           />
         </section>
@@ -138,84 +166,41 @@ export default function CheckOutAsset() {
             <h2>Check-Out Form</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label>Check-Out To *</label>
-                <div className="checkout-to-container">
-                  <section className="employee-radio-container">
-                    <label>
-                      <input
-                        type="radio"
-                        {...register("checkoutTo")}
-                        value="employee"
-                      />
-                      <img src={PersonIcon} alt="person-icon" />
-                      <span>Employee</span>
-                    </label>
-                  </section>
-                  <section className="location-radio-container">
-                    <label>
-                      <input
-                        type="radio"
-                        {...register("checkoutTo")}
-                        value="location"
-                      />
-                      <img src={LocationIcon} alt="location-icon" />
-                      <span>Location</span>
-                    </label>
-                  </section>
-                </div>
+                <label>Employee *</label>
+                <input
+                  type="text"
+                  readOnly
+                  {...register("employee")}
+                />
               </fieldset>
 
-              {checkoutTo === "employee" ? (
-                <fieldset>
-                  <label>Employee *</label>
-                  <select
-                    className={errors.employee ? 'input-error' : ''}
-                    {...register("employee", { required: 'Employee is required' })}
-                  >
-                    <option value="">Select Employee</option>
-                    {employeeList.map((employee, idx) => (
-                      <option key={idx} value={employee}>{employee}</option>
-                    ))}
-                  </select>
-                  {errors.employee && <span className='error-message'>{errors.employee.message}</span>}
-                </fieldset>
-              ) : (
-                <fieldset>
-                  <label>Location *</label>
-                  <select
-                    className={errors.location ? 'input-error' : ''}
-                    {...register("location", { required: 'Location is required' })}
-                  >
-                    <option value="">Select Location</option>
-                    {locationList.map((location, idx) => (
-                      <option key={idx} value={location}>{location}</option>
-                    ))}
-                  </select>
-                  {errors.location && <span className='error-message'>{errors.location.message}</span>}
-                </fieldset>
-              )}
+              <fieldset>
+                <label>Location *</label>
+                <input
+                  type="text"
+                  readOnly
+                  {...register("empLocation")}
+                />
+              </fieldset>
 
               <fieldset>
                 <label>Check-Out Date *</label>
                 <input
-                  type="text"  // Use "text" instead of "date" to prevent date picker
+                  type="text"
                   readOnly
-                  value={currentDate}  // Format: YYYY-MM-DD
-                  className={errors.checkoutDate ? 'input-error' : ''}
                   {...register("checkoutDate")}
                 />
               </fieldset>
-
 
               <fieldset>
                 <label>Expected Return Date *</label>
                 <input
                   type="date"
-                  className={errors.expectedReturnDate ? 'input-error' : ''}
-                  min={currentDate}
-                  {...register("expectedReturnDate", { required: 'Expected return date is required' })}
+                  className={errors.returnDate ? 'input-error' : ''}
+                  {...register("returnDate", { required: "Expected return date is required" })}
+                  defaultValue={passedState?.returnDate || ""}
+                  {...(returnDate ? {} : { min: currentDate })}
                 />
-                {errors.expectedReturnDate && <span className='error-message'>{errors.expectedReturnDate.message}</span>}
               </fieldset>
 
               <fieldset>
@@ -226,6 +211,11 @@ export default function CheckOutAsset() {
                     <option key={idx} value={condition}>{condition}</option>
                   ))}
                 </select>
+              </fieldset>
+
+              <fieldset>
+                <label>Notes</label>
+                <textarea {...register("notes")} maxLength="500" />
               </fieldset>
 
               <fieldset>
@@ -257,11 +247,6 @@ export default function CheckOutAsset() {
                 <label htmlFor="images" className="upload-image-btn">
                   {previewImages.length === 0 ? "Choose Image" : "Change Image"}
                 </label>
-              </fieldset>
-
-              <fieldset>
-                <label>Notes</label>
-                <textarea {...register("notes")} maxLength="500" />
               </fieldset>
 
               <button type="submit" className="save-btn">Save</button>

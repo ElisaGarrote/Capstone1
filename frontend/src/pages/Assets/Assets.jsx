@@ -110,9 +110,10 @@ export default function Assets() {
     const baseImage = asset.image
       ? `https://assets-service-production.up.railway.app${asset.image}`
       : DefaultImage;
+    
+    const checkout = asset.checkoutRecord;
 
     if (asset.isCheckedOut) {
-      const checkout = asset.checkoutRecord;
 
       navigate(`/assets/check-in/${asset.id}`, {
         state: {
@@ -127,6 +128,7 @@ export default function Assets() {
           checkoutId: checkout.id || "Unknown",
           checkinDate: checkout.checkin_date || "Unknown",
           condition: checkout.condition || "Unknown",
+          fromAsset: true,
         },
       });
     } else {
@@ -137,9 +139,10 @@ export default function Assets() {
           product: asset.product,
           image: baseImage,
           employee: checkout.requestor || "Not assigned",
-          location: checkout.requestor_location || "Unknown",
-          checkOutDate: checkout.checkout_date || "Unknown",
+          empLocation: checkout.requestor_location || "Unknown",
+          checkoutDate: checkout.checkout_date || "Unknown",
           returnDate: checkout.return_date || "Unknown",
+          fromAsset: true,
         },
       });
     }
