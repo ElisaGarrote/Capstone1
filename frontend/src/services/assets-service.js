@@ -300,6 +300,29 @@ class AssetsService {
     }
   }
 
+  //ASSET CHECKOUTS
+  // Create asset checkout record
+  async createAssetCheckout(formData) {
+    try {
+      const response = await fetch(`${API_URL}assets/check-out/registration/`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn('Create Asset Checkout Error:', errorData);
+        throw errorData;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating asset checkout:', error);
+      throw error;
+    }
+  }
+
   // AUDITS
   // Create Audit
   async postAudit(

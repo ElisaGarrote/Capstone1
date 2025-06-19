@@ -304,19 +304,6 @@ def create_asset_checkout(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['PUT'])
-def update_asset_checkout(request, id):
-    try:
-        assetCheckout = AssetCheckout.objects.get(pk=id)
-    except AssetCheckout.DoesNotExist:
-        return Response({'detail': 'Asset Checkout not found'}, status=status.HTTP_404_NOT_FOUND)
-
-    serializer = AssetCheckoutUpdateSerializer(assetCheckout, data=request.data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # END ASSET CHECKOUT
 
 
