@@ -11,16 +11,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
+        migrations.RemoveField(
             model_name='assetcheckout',
             name='is_deleted',
             field=models.BooleanField(default=False),
         ),
-        migrations.AddField(
+        migrations.RemoveField(
             model_name='assetcheckout',
             name='location',
             field=models.CharField(default='a'),
-            preserve_default=False,
         ),
         migrations.AlterField(
             model_name='audit',
