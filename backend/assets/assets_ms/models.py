@@ -165,16 +165,7 @@ def generate_displayed_id(sender, instance, **kwargs):
 
 class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts', limit_choices_to={'is_deleted': False})
-    to_user_id = models.PositiveIntegerField()
-    to_location = models.CharField()
-    checkout_date = models.DateTimeField(auto_now_add=True)
-    return_date = models.DateTimeField()
-    condition = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
-    )
-    notes = models.TextField(blank=True, null=True)
-    confirmation_notes= models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='asset_checkout_images/', blank=True, null=True)
+    
 
     def __str__(self):
         return f"Checkout of {self.asset.displayed_id} by user {self.to_user_id}"
