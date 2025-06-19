@@ -299,11 +299,16 @@ def get_asset_checkout_by_id(request, id):
 
 @api_view(['POST'])
 def create_asset_checkout(request):
+    print("Received checkout data:", request.data)  # 🪵 log the incoming data
+
     serializer = AssetCheckoutSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    print("Checkout validation errors:", serializer.errors)  # 🪵 log validation errors
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 # END ASSET CHECKOUT
 
 

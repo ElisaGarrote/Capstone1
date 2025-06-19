@@ -22,7 +22,7 @@ class DtsService {
   // post to update ticket status
   async resolveCheckoutTicket(ticketId) {
     try {
-      const response = await fetch(`${API_URL}api/ams/checkout-resolve/${ticketId}`, {
+      const response = await fetch(`${API_URL}/checkout-resolve/${ticketId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
