@@ -146,7 +146,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         model = AssetCheckout
         fields = "__all__"
 
-class AssetCheckoutUpdateSerializer(serializers.ModelSerializer):
+class AssetCheckinSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AssetCheckout
-        fields = ['checkout_date', 'condition', 'notes', 'confirmation_notes', 'image']
+        model = AssetCheckin
+        fields = "__all__"

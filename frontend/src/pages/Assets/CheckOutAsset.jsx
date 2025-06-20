@@ -12,6 +12,8 @@ import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import dtsService from "../../services/dts-integration-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import DefaultImage from "../../assets/img/default-image.jpg";
+
 
 export default function CheckOutAsset() {
   const location = useLocation();
@@ -21,10 +23,12 @@ export default function CheckOutAsset() {
 
 
   const navigate = useNavigate();
-
-  const [selectedImage, setSelectedImage] = useState(null);
+  
+  const [previewImage, setPreviewImage] = useState(null);
   const [previewImages, setPreviewImages] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (passedState) {
@@ -66,26 +70,38 @@ export default function CheckOutAsset() {
   });
 
   useEffect(() => {
-    if (passedState) {
-      setValue("employee", passedState.employee || "");
-      setValue("empLocation", passedState.empLocation || "");
-      setValue("checkoutDate", passedState.checkoutDate || "");
-      setValue("expectedReturnDate", passedState.returnDate || "");
-    }
+    const initialize = async () => {
+      setIsLoading(true);
+      try {
+        setValue("employee", passedState.employee || "");
+        setValue("empLocation", passedState.empLocation || "");
+        setValue("checkoutDate", passedState.checkoutDate || "");
+        setValue("expectedReturnDate", passedState.returnDate || "");
+      } catch (error) {
+        console.error("Error initializing:", error);
+        setErrorMessage("Failed to initialize data");
+      } finally {
+        setIsLoading(false);
+      } 
+    };
+
+    initialize();
   }, [passedState, setValue]);
 
 
-  const handleImagesSelection = (event) => {
-    const selectedFiles = Array.from(event.target.files);
-    if (selectedFiles.length > 0) {
-      const imagesArray = selectedFiles.map((file) => URL.createObjectURL(file));
-      setPreviewImages(imagesArray);
-      setValue("photos", selectedFiles);
-    } else {
-      setPreviewImages([]);
-      setValue("photos", []);
+  const handleImageSelection = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file); // store the actual file
+      setValue('image', file); // optional: sync with react-hook-form
+  
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result); // for display only
+      };
+      reader.readAsDataURL(file);
     }
-  };
+  };  
 
   const onSubmit = async (data) => {
     try {
@@ -140,6 +156,11 @@ export default function CheckOutAsset() {
     }
   };
 
+  if (isLoading) {
+    console.log("isLoading triggered — showing loading screen");
+    return <SystemLoading />;
+  }
+
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -157,7 +178,14 @@ export default function CheckOutAsset() {
           <section className="recent-checkout-info">
             <h2>Asset Information</h2>
             <fieldset>
-              <img className="item-info-image" src={image} alt="asset" />
+              <img
+                className="item-info-image"
+                src={image} alt="asset"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = DefaultImage;
+                }}
+              />
             </fieldset>
             <fieldset>
               <label>Asset ID:</label>
@@ -234,7 +262,8 @@ export default function CheckOutAsset() {
                 <div className="images-container">
                   {previewImages.map((img, index) => (
                     <div key={index} className="image-selected">
-                      <img src={img} alt={`Preview ${index}`} />
+                      <img
+                        src={img} alt={`Preview ${index}`} />
                       <button
                         type="button"
                         onClick={() => {
@@ -251,7 +280,7 @@ export default function CheckOutAsset() {
                     id="images"
                     accept="image/*"
                     multiple
-                    onChange={handleImagesSelection}
+                    onChange={handleImageSelection}
                     style={{ display: "none" }}
                   />
                 </div>
