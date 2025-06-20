@@ -326,7 +326,7 @@ class AssetsService {
   // Create asset check-in record
   async createAssetCheckin(formData) {
     try {
-      const response = await fetch(`${API_URL}assets/check-in/`, {
+      const response = await fetch(`${API_URL}assets/check-in/registration/`, {
         method: 'POST',
         body: formData,
       });

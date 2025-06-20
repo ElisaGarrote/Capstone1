@@ -21,6 +21,7 @@ export default function CheckInAsset() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
 
 
   const {
@@ -29,6 +30,7 @@ export default function CheckInAsset() {
     product,
     image,
     employee,
+    empLocation,
     checkOutDate,
     returnDate,
     condition,
@@ -44,9 +46,9 @@ export default function CheckInAsset() {
     formState: { errors }
   } = useForm({
     defaultValues: {
+      checkinDate: checkinDate || currentDate,
       condition: '',
-      notes: '',
-      image: []
+      notes: ''
     }
   });
 
@@ -70,30 +72,42 @@ export default function CheckInAsset() {
   initialize();
 }, [setValue]);
 
-  const handleImagesSelection = (event) => {
-    const selectedFiles = Array.from(event.target.files);
-    if (selectedFiles.length > 0) {
-      const imagesArray = selectedFiles.map((file) => URL.createObjectURL(file));
-      setPreviewImages(imagesArray);
-      setValue("image", selectedFiles);
-    } else {
-      setPreviewImages([]);
-      setValue("image", []);
+  const handleImageSelection = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file); // store the actual file
+      setValue('image', file); // optional: sync with react-hook-form
+  
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result); // for display only
+      };
+      reader.readAsDataURL(file);
     }
-  };
+  }; 
 
-  const onSubmit = (data) => {
-    const formData = new FormData();
-    formData.append("checkout_id", checkoutId);
-    formData.append("checkin_date", currentDate);
-    formData.append("condition", data.condition);
-    formData.append("notes", data.notes || "");
-    data.image.forEach((img) => formData.append("image", img));
+  const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
+      formData.append("checkout_id", checkoutId);
+      formData.append("checkin_date", checkinDate);
+      formData.append("condition", data.condition);
+      formData.append("notes", data.notes || "");
+      
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
 
-    // Submit via service
-    console.log("Submitting check-in:", formData);
-    // assetsService.checkInAsset(formData); // optional API call
-    navigate("/assets");
+      await assetsService.createAssetCheckin(formData);
+      await dtsService.resolveCheckoutTicket(ticketId);
+
+      navigate("/assets", {
+        state: { successMessage: "Asset has been checked in successfully!" }
+      });
+    } catch (error) {
+      console.error("Error checking in asset:", error);
+      setErrorMessage("An error occurred while checking in the asset.");
+    }
   };
 
   if (isLoading) {
@@ -136,7 +150,14 @@ export default function CheckInAsset() {
 
             <h2>Asset Information</h2>
             <fieldset>
-              <img className="item-info-image" src={image} alt="asset" />
+              <img
+                className="item-info-image"
+                src={image} alt="asset"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = DefaultImage;
+                }}
+              />
             </fieldset>
             <fieldset>
               <label>Asset ID:</label>
@@ -156,7 +177,7 @@ export default function CheckInAsset() {
                 <input
                   type="text"  // Use "text" instead of "date" to prevent date picker
                   readOnly
-                  value={currentDate}  // Format: YYYY-MM-DD
+                  value={checkinDate}  // Format: YYYY-MM-DD
                   className={errors.checkInDate ? 'input-error' : ''}
                   {...register("checkInDate")}
                 />
@@ -198,7 +219,7 @@ export default function CheckInAsset() {
                     id="images"
                     accept="image/*"
                     multiple
-                    onChange={handleImagesSelection}
+                    onChange={handleImageSelection}
                     style={{ display: "none" }}
                   />
                 </div>
