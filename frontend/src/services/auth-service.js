@@ -29,6 +29,10 @@ class AuthService {
         localStorage.setItem("refresh", data.refresh);
         // console.log("Token successfully stored in the local storage!");
 
+        // Store the user info in local storage
+        const user = await this.getCurrrentUser();
+        localStorage.setItem("user", JSON.stringify(user));
+
         // Store the user info in session storage
         const currentUser = await this.getCurrrentUser();
         sessionStorage.setItem("user", JSON.stringify(currentUser));
@@ -104,6 +108,7 @@ class AuthService {
   logout() {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
+    localStorage.removeItem("user");
     sessionStorage.removeItem("user");
   }
 }
