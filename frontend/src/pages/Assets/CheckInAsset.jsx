@@ -3,32 +3,47 @@ import "../../styles/CheckInOut.css";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
 import { useForm } from "react-hook-form";
+import Alert from "../../components/Alert";
+import assetsService from "../../services/assets-service";
+import dtsService from "../../services/dts-integration-service";
+import SystemLoading from "../../components/Loading/SystemLoading";
+import DefaultImage from "../../assets/img/default-image.jpg";
+
 
 export default function CheckInAsset() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { id, assetId, product, image, employee, checkOutDate, returnDate, condition } = location.state || {};
   const currentDate = new Date().toISOString().split("T")[0];
-  
-  // Dropdown lists for easier maintenance
-  const conditionList = ['Excellent', 'Good', 'Fair', 'Poor'];
+  const conditionList = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+
+  const {
+    id,
+    assetId,
+    product,
+    image,
+    employee,
+    checkOutDate,
+    returnDate,
+    condition,
+    checkoutId,
+    checkinDate,
+    fromAsset
+  } = location.state || {};
 
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors }
   } = useForm({
     defaultValues: {
-      checkoutTo: "employee",
-      employee: '',
-      location: '',
-      checkoutDate: {currentDate},
-      expectedReturnDate: '',
       condition: '',
       notes: '',
       image: []
@@ -36,6 +51,24 @@ export default function CheckInAsset() {
   });
 
   const [previewImages, setPreviewImages] = useState([]);
+
+  useEffect(() => {
+  const initialize = async () => {
+    setIsLoading(true);
+    try {
+      setValue("condition", "");
+      setValue("notes", "");
+      setValue("image", []);
+    } catch (error) {
+      console.error("Error initializing Check-In form:", error);
+      setErrorMessage("Failed to initialize data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  initialize();
+}, [setValue]);
 
   const handleImagesSelection = (event) => {
     const selectedFiles = Array.from(event.target.files);
@@ -50,12 +83,27 @@ export default function CheckInAsset() {
   };
 
   const onSubmit = (data) => {
-    console.log("Form submitted:", data);
+    const formData = new FormData();
+    formData.append("checkout_id", checkoutId);
+    formData.append("checkin_date", currentDate);
+    formData.append("condition", data.condition);
+    formData.append("notes", data.notes || "");
+    data.image.forEach((img) => formData.append("image", img));
+
+    // Submit via service
+    console.log("Submitting check-in:", formData);
+    // assetsService.checkInAsset(formData); // optional API call
     navigate("/assets");
   };
 
+  if (isLoading) {
+    console.log("isLoading triggered — showing loading screen");
+    return <SystemLoading />;
+  }
+
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav><NavBar /></nav>
       <main className="check-in-out-page">
         <section className="top">
@@ -88,7 +136,7 @@ export default function CheckInAsset() {
 
             <h2>Asset Information</h2>
             <fieldset>
-              <img src={image} alt="asset" />
+              <img className="item-info-image" src={image} alt="asset" />
             </fieldset>
             <fieldset>
               <label>Asset ID:</label>
@@ -115,13 +163,17 @@ export default function CheckInAsset() {
               </fieldset>
 
               <fieldset>
-                <label>Condition</label>
-                <select {...register("condition")}>
+                <label>Condition *</label>
+                <select 
+                  {...register("condition", {required: "Condition is required"})}
+                  className={errors.condition ? 'input-error' : ''}
+                  >
                   <option value="">Select Condition</option>
                   {conditionList.map((condition, idx) => (
                     <option key={idx} value={condition}>{condition}</option>
                   ))}
                 </select>
+                {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
               </fieldset>
 
               <fieldset>

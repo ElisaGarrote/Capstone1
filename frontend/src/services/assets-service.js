@@ -323,6 +323,28 @@ class AssetsService {
     }
   }
 
+  // Create asset check-in record
+  async createAssetCheckin(formData) {
+    try {
+      const response = await fetch(`${API_URL}assets/check-in/`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn('Create Asset Check-In Error:', errorData);
+        throw errorData;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating asset check-in:', error);
+      throw error;
+    }
+  } 
+
   // AUDITS
   // Create Audit
   async postAudit(

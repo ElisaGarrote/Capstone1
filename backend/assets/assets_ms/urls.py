@@ -26,6 +26,11 @@ urlpatterns = [
     path('assets/check-out/<int:id>/', get_asset_checkout_by_id, name='asset_checkout_details_by_id'),
     path('assets/check-out/registration/', create_asset_checkout, name='asset_checkout_registration'),
 
+    # Asset Checkins
+    #path('assets/check-in/', get_all_asset_checkouts, name='all_asset_checkouts'),
+    #path('assets/check-in/<int:id>/', get_asset_checkout_by_id, name='asset_checkout_details_by_id'),
+    path('assets/check-in/registration/', create_asset_checkin, name='asset_checkin_registration'),
+
     # Asset Category
     path('assets/categories/', get_all_category, name='get_all_asset_category'),
     path('assets/categories/<int:id>/', get_category_by_id, name='get_asset_category_by_id'),

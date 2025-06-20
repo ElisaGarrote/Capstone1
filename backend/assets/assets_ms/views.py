@@ -299,17 +299,30 @@ def get_asset_checkout_by_id(request, id):
 
 @api_view(['POST'])
 def create_asset_checkout(request):
-    print("Received checkout data:", request.data)  # 🪵 log the incoming data
+    print("Received checkout data:", request.data)
 
     serializer = AssetCheckoutSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    print("Checkout validation errors:", serializer.errors)  # 🪵 log validation errors
+    print("Checkout validation errors:", serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 # END ASSET CHECKOUT
+
+# ASSET CHECKIN
+@api_view(['POST'])
+def create_asset_checkin(request):
+    print("Received check-in data:", request.data)
+
+    serializer = AssetCheckinSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    print("Check-in validation errors:", serializer.errors)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# END ASSET CHECKIN
 
 
 # AUDITS HERE

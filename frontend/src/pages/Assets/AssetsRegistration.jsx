@@ -85,9 +85,8 @@ export default function AssetsRegistration() {
 
   useEffect(() => {
     const initialize = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        
         // Fetch all necessary data in parallel
         const [assetContextsData, contextsData] = await Promise.all([
           assetsService.fetchAssetContexts(),
