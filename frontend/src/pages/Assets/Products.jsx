@@ -12,6 +12,7 @@ import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import ProductViewModal from "../../components/Modals/ProductViewModal";
+import authService from "../../services/auth-service";
 
 export default function Products() {
   const location = useLocation();
@@ -34,7 +35,7 @@ export default function Products() {
       try {
         const [productRes, manufacturerRes] = await Promise.all([
           assetsService.fetchAllProducts(),
-          contextsService.fetchAllManufacturerNames()
+          contextsService.fetchAllManufacturerNames(),
         ]);
         setProducts(productRes.products || []);
         setManufacturers(manufacturerRes.manufacturers || []);
@@ -85,7 +86,7 @@ export default function Products() {
   };
 
   const handleView = async (productId) => {
-    console.log("product id:", productId)
+    console.log("product id:", productId);
     try {
       const productResponse = await assetsService.fetchProductById(productId);
       console.log("Full product response:", productResponse);
@@ -99,15 +100,21 @@ export default function Products() {
       }
 
       let manufacturerName = "-";
-      let supplierName ="-";
+      let supplierName = "-";
 
       if (productData.manufacturer_id) {
-        const manufacturerResponse = await contextsService.fetchManufacturerById(productData.manufacturer_id);
-        manufacturerName = manufacturerResponse.manufacturer?.name || manufacturerName;
+        const manufacturerResponse =
+          await contextsService.fetchManufacturerById(
+            productData.manufacturer_id
+          );
+        manufacturerName =
+          manufacturerResponse.manufacturer?.name || manufacturerName;
       }
 
       if (productData.default_supplier_id) {
-        const supplierResponse = await contextsService.fetchSuppNameById(productData.default_supplier_id);
+        const supplierResponse = await contextsService.fetchSuppNameById(
+          productData.default_supplier_id
+        );
         supplierName = supplierResponse.supplier?.name || supplierName;
       }
 
@@ -120,7 +127,10 @@ export default function Products() {
       setSelectedProduct(manuFullView);
       setViewModalOpen(true);
     } catch (error) {
-      console.error("Error fetching product or manufacturer and supplier details:", error);
+      console.error(
+        "Error fetching product or manufacturer and supplier details:",
+        error
+      );
       setErrorMessage("Failed to load product details.");
     }
   };
@@ -164,7 +174,9 @@ export default function Products() {
           ) : (
             <>
               {errorMessage && <Alert message={errorMessage} type="danger" />}
-              {successMessage && <Alert message={successMessage} type="success" />}
+              {successMessage && (
+                <Alert message={successMessage} type="success" />
+              )}
 
               {isDeleteModalOpen && (
                 <DeleteModal
@@ -189,7 +201,13 @@ export default function Products() {
                     <input type="text" placeholder="Search..." />
                   </form>
                   <MediumButtons type="export" />
-                  <MediumButtons type="new" navigatePage="/products/registration" />
+
+                  {authService.getUserInfo().role === "admin" && (
+                    <MediumButtons
+                      type="new"
+                      navigatePage="/products/registration"
+                    />
+                  )}
                 </div>
               </section>
 
@@ -210,7 +228,9 @@ export default function Products() {
                       <th>MANUFACTURER</th>
                       <th>DEPRECIATION</th>
                       <th>END OF LIFE</th>
-                      <th>EDIT</th>
+                      {authService.getUserInfo().role === "admin" && (
+                        <th>EDIT</th>
+                      )}
                       <th>DELETE</th>
                       <th>VIEW</th>
                     </tr>
@@ -248,16 +268,20 @@ export default function Products() {
                           </td>
                           <td>{product.name}</td>
                           <td>{product.category}</td>
-                          <td>{getManufacturerName(product.manufacturer_id)}</td>
+                          <td>
+                            {getManufacturerName(product.manufacturer_id)}
+                          </td>
                           <td>{product.depreciation}</td>
                           <td>{product.end_of_life}</td>
-                          <td>
-                            <TableBtn
-                              type="edit"
-                              navigatePage={`/products/registration/${product.id}`}
-                              data={product.id}
-                            />
-                          </td>
+                          {authService.getUserInfo().role === "admin" && (
+                            <td>
+                              <TableBtn
+                                type="edit"
+                                navigatePage={`/products/registration/${product.id}`}
+                                data={product.id}
+                              />
+                            </td>
+                          )}
                           <td>
                             <TableBtn
                               type="delete"

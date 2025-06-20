@@ -13,6 +13,7 @@ import contextsService from "../../services/contexts-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import AssetViewModal from "../../components/Modals/AssetViewModal";
 import dtsService from "../../services/dts-integration-service";
+import authService from "../../services/auth-service";
 
 export default function Assets() {
   const location = useLocation();
@@ -45,7 +46,7 @@ export default function Assets() {
       try {
         const [assetsResponse, checkoutsResponse] = await Promise.all([
           assetsService.fetchAllAssets(),
-          dtsService.fetchAssetCheckouts()
+          dtsService.fetchAssetCheckouts(),
         ]);
         const assetData = assetsResponse.assets || [];
         const checkouts = checkoutsResponse || [];
@@ -110,11 +111,10 @@ export default function Assets() {
     const baseImage = asset.image
       ? `https://assets-service-production.up.railway.app${asset.image}`
       : DefaultImage;
-    
+
     const checkout = asset.checkoutRecord;
 
     if (asset.isCheckedOut) {
-
       navigate(`/assets/check-in/${asset.id}`, {
         state: {
           id: asset.id,
@@ -151,7 +151,7 @@ export default function Assets() {
   };
 
   const handleView = async (assetId) => {
-    console.log("asset id:", assetId)
+    console.log("asset id:", assetId);
     try {
       const assetResponse = await assetsService.fetchAssetById(assetId);
       console.log("Full assetResponse:", assetResponse);
@@ -166,7 +166,9 @@ export default function Assets() {
 
       let supplierName = "-";
       if (assetData.supplier_id) {
-        const supplierResponse = await contextsService.fetchSuppNameById(assetData.supplier_id);
+        const supplierResponse = await contextsService.fetchSuppNameById(
+          assetData.supplier_id
+        );
         supplierName = supplierResponse.supplier?.name || supplierName;
       }
 
@@ -224,7 +226,10 @@ export default function Assets() {
                 <input type="text" placeholder="Search..." />
               </form>
               <MediumButtons type="export" />
-              <MediumButtons type="new" navigatePage="/assets/registration" />
+
+              {authService.getUserInfo().role === "admin" && (
+                <MediumButtons type="new" navigatePage="/assets/registration" />
+              )}
             </div>
           </section>
 
@@ -248,7 +253,9 @@ export default function Assets() {
                     <th>CATEGORY</th>
                     <th>CHECKIN/CHECKOUT</th>
                     <th>STATUS</th>
-                    <th>EDIT</th>
+                    {authService.getUserInfo().role === "admin" && (
+                      <th>EDIT</th>
+                    )}
                     <th>DELETE</th>
                     <th>VIEW</th>
                   </tr>
@@ -289,24 +296,32 @@ export default function Assets() {
                         <td>
                           {asset.hasCheckoutRecord ? (
                             asset.isCheckedOut ? (
-                              <button className="check-in-btn" onClick={() => handleCheckInOut(asset)}>
+                              <button
+                                className="check-in-btn"
+                                onClick={() => handleCheckInOut(asset)}
+                              >
                                 Check-In
                               </button>
                             ) : (
-                              <button className="check-out-btn" onClick={() => handleCheckInOut(asset)}>
+                              <button
+                                className="check-out-btn"
+                                onClick={() => handleCheckInOut(asset)}
+                              >
                                 Check-Out
                               </button>
                             )
                           ) : null}
                         </td>
                         <td>{asset.status}</td>
-                        <td>
-                          <TableBtn
-                            type="edit"
-                            navigatePage={`/assets/registration/${asset.id}`}
-                            data={asset.id}
-                          />
-                        </td>
+                        {authService.getUserInfo().role === "admin" && (
+                          <td>
+                            <TableBtn
+                              type="edit"
+                              navigatePage={`/assets/registration/${asset.id}`}
+                              data={asset.id}
+                            />
+                          </td>
+                        )}
                         <td>
                           <TableBtn
                             type="delete"
