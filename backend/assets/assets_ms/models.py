@@ -181,14 +181,6 @@ class AssetCheckout(models.Model):
 
 class AssetCheckin(models.Model):
     asset_checkout = models.ForeignKey(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkins')
-    checkin_date = models.DateTimeField(blank=True, null=True)
-    status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='status_assets_checkins')
-    condition = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
-    )
-    notes = models.TextField(blank=True, null=True)
-    location = models.CharField(max_length=50)
-    image = models.ImageField(upload_to='asset_checkin_images/')
 
     def __str__(self):
         return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}"
