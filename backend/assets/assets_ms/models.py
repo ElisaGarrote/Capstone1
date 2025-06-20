@@ -181,7 +181,7 @@ class AssetCheckout(models.Model):
 
 class AssetCheckin(models.Model):
     asset_checkout = models.ForeignKey(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkins')
-    checkin_date = models.DateTimeField(blank=True, null=True)
+    checkin_date = models.DateTimeField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
