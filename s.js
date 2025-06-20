@@ -55,7 +55,7 @@
         "checkout_date": "2025-06-10",
         "return_date": "2025-06-16",
         "checkin_date": "2025-06-18",
-        "checkout_ref_id": "1",
+        "checkout_ref_id": "2",
         "condition": 6,
         "is_resolved": false
     }

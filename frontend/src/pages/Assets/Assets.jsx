@@ -125,7 +125,7 @@ export default function Assets() {
           empLocation: checkout.requestor_location || "Unknown",
           checkOutDate: checkout.checkout_date || "Unknown",
           returnDate: checkout.return_date || "Unknown",
-          checkoutId: checkout.id || "Unknown",
+          checkoutId: checkout.checkout_ref_id || "Unknown",
           checkinDate: checkout.checkin_date || "Unknown",
           condition: checkout.condition || "Unknown",
           fromAsset: true,

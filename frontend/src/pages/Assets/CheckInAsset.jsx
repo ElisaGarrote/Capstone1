@@ -89,7 +89,7 @@ export default function CheckInAsset() {
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      formData.append("checkout_id", checkoutId);
+      formData.append("asset_checkout", checkoutId);
       formData.append("checkin_date", checkinDate);
       formData.append("condition", data.condition);
       formData.append("notes", data.notes || "");
@@ -140,7 +140,7 @@ export default function CheckInAsset() {
               <p>{checkOutDate}</p>
             </fieldset>
             <fieldset>
-              <label>Expected Return Date:</label>
+              <label>Date Returned:</label>
               <p>{returnDate}</p>
             </fieldset>
             <fieldset>
@@ -173,13 +173,13 @@ export default function CheckInAsset() {
             <h2>Check-In Form</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label>Check-In Date *</label>
+                <label>Checkin Date *</label>
                 <input
-                  type="text"  // Use "text" instead of "date" to prevent date picker
-                  readOnly
-                  value={checkinDate}  // Format: YYYY-MM-DD
-                  className={errors.checkInDate ? 'input-error' : ''}
-                  {...register("checkInDate")}
+                  type="date"
+                  className={errors.checkinDate ? 'input-error' : ''}
+                  {...register("checkinDate", { required: "Checkin date is required" })}
+                  defaultValue={checkinDate || ""}
+                  {...(checkinDate ? {} : { min: currentDate })}
                 />
               </fieldset>
 
