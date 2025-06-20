@@ -104,6 +104,10 @@ class AuthService {
     };
   }
 
+  getUserInfo() {
+    return JSON.parse(localStorage.getItem("user"));
+  }
+
   // Logout and clear the tokens
   logout() {
     localStorage.removeItem("access");
