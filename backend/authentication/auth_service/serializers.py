@@ -14,7 +14,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'password': {'write_only': True},
             'middle_name': {'required': False, 'allow_blank': True},
-            'image': {'required': False, 'allow_null': True},
+            # 'image': {'required': False, 'allow_null': True},
         }
     
     def create(self, validated_data):
