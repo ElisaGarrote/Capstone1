@@ -28,6 +28,11 @@ class AuthService {
         localStorage.setItem("access", data.access);
         localStorage.setItem("refresh", data.refresh);
         // console.log("Token successfully stored in the local storage!");
+
+        // Store the user info in session storage
+        const currentUser = await this.getCurrrentUser();
+        sessionStorage.setItem("user", JSON.stringify(currentUser));
+        console.log("User info stored in session storage!");
       } else {
         console.log("No access token in response!");
       }
@@ -72,7 +77,8 @@ class AuthService {
 
       const data = await response.json();
 
-      console.log("here's the fetched: ", data);
+      // console.log("here's the fetched: ", data);
+      return data;
     } catch (error) {
       console.log("Failed to get the current user!", error);
     }
@@ -98,6 +104,7 @@ class AuthService {
   logout() {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
+    sessionStorage.removeItem("user");
   }
 }
 
