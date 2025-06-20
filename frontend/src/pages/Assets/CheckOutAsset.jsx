@@ -129,8 +129,8 @@ export default function CheckOutAsset() {
         console.log(pair[0]+ ': ' + pair[1]);
       }
 
-      const checkout = await assetsService.createAssetCheckout(formData);
-      const updateTckt = await dtsService.resolveCheckoutTicket(ticketId);
+      await assetsService.createAssetCheckout(formData);
+      await dtsService.resolveCheckoutTicket(ticketId);
 
       if (fromAsset) {
         console.log("Ticket Information:", { ticketId });
