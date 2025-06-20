@@ -202,7 +202,7 @@ export default function Products() {
                   </form>
                   <MediumButtons type="export" />
 
-                  {authService.getUserInfo().role === "admin" && (
+                  {authService.getUserInfo().role === "Admin" && (
                     <MediumButtons
                       type="new"
                       navigatePage="/products/registration"
@@ -228,7 +228,7 @@ export default function Products() {
                       <th>MANUFACTURER</th>
                       <th>DEPRECIATION</th>
                       <th>END OF LIFE</th>
-                      {authService.getUserInfo().role === "admin" && (
+                      {authService.getUserInfo().role === "Admin" && (
                         <th>EDIT</th>
                       )}
                       <th>DELETE</th>
@@ -273,7 +273,7 @@ export default function Products() {
                           </td>
                           <td>{product.depreciation}</td>
                           <td>{product.end_of_life}</td>
-                          {authService.getUserInfo().role === "admin" && (
+                          {authService.getUserInfo().role === "Admin" && (
                             <td>
                               <TableBtn
                                 type="edit"

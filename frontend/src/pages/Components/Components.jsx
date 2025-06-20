@@ -108,7 +108,7 @@ export default function Components() {
               </form>
               <MediumButtons type="export" />
 
-              {authService.getUserInfo().role === "admin" && (
+              {authService.getUserInfo().role === "Admin" && (
                 <MediumButtons
                   type="new"
                   navigatePage="/components/registration"
@@ -133,7 +133,7 @@ export default function Components() {
                   <th>AVAILABLE</th>
                   <th>CATEGORY</th>
                   <th>MODEL NUMBER</th>
-                  {authService.getUserInfo().role === "admin" && <th>EDIT</th>}
+                  {authService.getUserInfo().role === "Admin" && <th>EDIT</th>}
                   <th>DELETE</th>
                   <th>VIEW</th>
                 </tr>
@@ -167,7 +167,7 @@ export default function Components() {
                     <td>{item.quantity}</td>
                     <td>{item.category}</td>
                     <td>{item.modelNumber}</td>
-                    {authService.getUserInfo().role === "admin" && (
+                    {authService.getUserInfo().role === "Admin" && (
                       <td>
                         <ComponentsTableBtn
                           type="edit"

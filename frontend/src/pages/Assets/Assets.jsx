@@ -227,7 +227,7 @@ export default function Assets() {
               </form>
               <MediumButtons type="export" />
 
-              {authService.getUserInfo().role === "admin" && (
+              {authService.getUserInfo().role === "Admin" && (
                 <MediumButtons type="new" navigatePage="/assets/registration" />
               )}
             </div>
@@ -253,7 +253,7 @@ export default function Assets() {
                     <th>CATEGORY</th>
                     <th>CHECKIN/CHECKOUT</th>
                     <th>STATUS</th>
-                    {authService.getUserInfo().role === "admin" && (
+                    {authService.getUserInfo().role === "Admin" && (
                       <th>EDIT</th>
                     )}
                     <th>DELETE</th>
@@ -313,7 +313,7 @@ export default function Assets() {
                           ) : null}
                         </td>
                         <td>{asset.status}</td>
-                        {authService.getUserInfo().role === "admin" && (
+                        {authService.getUserInfo().role === "Admin" && (
                           <td>
                             <TableBtn
                               type="edit"

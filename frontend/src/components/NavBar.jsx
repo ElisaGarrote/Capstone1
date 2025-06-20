@@ -347,7 +347,7 @@ export default function NavBar() {
             )}
           </li>
 
-          {authService.getUserInfo().role === "admin" && (
+          {authService.getUserInfo().role === "Admin" && (
             <li
               className={`dropdown-container more-dropdown-container ${
                 showMoreMenu ? "open" : ""
@@ -481,7 +481,7 @@ export default function NavBar() {
               </div>
               <div className="profile-menu">
                 <button onClick={() => navigate("/settings")}>Settings</button>
-                {authService.getUserInfo().role === "admin" && (
+                {authService.getUserInfo().role === "Admin" && (
                   <button onClick={() => navigate("/user-management")}>
                     User Management
                   </button>
