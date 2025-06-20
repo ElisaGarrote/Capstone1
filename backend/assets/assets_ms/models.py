@@ -186,7 +186,7 @@ class AssetCheckin(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     notes = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='asset_checkin_images/')
+    image = models.ImageField(upload_to='asset_checkin_images/', blank=True, null=True)
 
     def __str__(self):
         return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}"
