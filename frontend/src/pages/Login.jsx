@@ -9,8 +9,8 @@ import { useEffect, useState } from "react";
 import LoadingButton from "../components/LoadingButton";
 import eyeOpen from "../assets/icons/eye-open.svg";
 import eyeClose from "../assets/icons/eye-close.svg";
-import Logo from "../assets/icons/AMS-Logo.svg";
-import AssetImage from "../assets/img/Asset-Management.svg";
+import Logo from "../assets/icons/MAp-LogoNew.svg";
+import AssetImage from "../assets/img/pageimg6.png";
 
 function Login() {
   const navigate = useNavigate();
@@ -94,7 +94,7 @@ function Login() {
           <header className="form-header">
             <section className="logo">
               <img src={Logo} alt="logo" />
-              <h1 className="logo-text">MAP AMS</h1>
+              <h1 className="logo-text">MapAMS</h1>
             </section>
             <p>Welcome! Please provide your credentials to log in.</p>
           </header>

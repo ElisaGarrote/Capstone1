@@ -1,7 +1,7 @@
 import "../styles/custom-colors.css";
 import "../styles/Login.css";
 import "../styles/Alert.css";
-import loginImage from "../assets/img/login.png";
+import loginImage from "../assets/img/pageimg6.png";
 
 import Alert from "../components/Alert";
 import AxiosInstance from "../components/AxiosInstance.jsx";

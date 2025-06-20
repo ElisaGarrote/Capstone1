@@ -5,7 +5,7 @@ import "../styles/NavBar.css";
 import SampleProfile from "../assets/img/do.png";
 import { IoIosArrowDown } from "react-icons/io";
 import NotificationOverlay from "./NotificationOverlay";
-import SystemLogo from "../assets/icons/AMS-Logo.svg";
+import SystemLogo from "../assets/icons/Map-LogoNew.svg";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -142,7 +142,7 @@ export default function NavBar() {
     <nav className="main-nav-bar">
       <section className="logo">
         <img src={SystemLogo} alt="Logo" />
-        <h1>MAP - AMS</h1>
+        <h1>MapAMS</h1>
       </section>
       <section>
         <ul>
