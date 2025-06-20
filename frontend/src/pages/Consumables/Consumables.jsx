@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import NavBar from '../../components/NavBar';
-import '../../styles/PageTable.css';
-import '../../styles/Consumables.css';
-import '../../styles/ConsumablesButtons.css';
+import React, { useState } from "react";
+import NavBar from "../../components/NavBar";
+import "../../styles/PageTable.css";
+import "../../styles/Consumables.css";
+import "../../styles/ConsumablesButtons.css";
 import TableBtn from "../../components/buttons/TableButtons";
 import ConsumablesTableBtn from "../../components/buttons/ConsumablesTableButtons";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import ConsumablesViewModal from "../../components/modals/ConsumablesViewModal";
+import ConsumablesViewModal from "../../components/Modals/ConsumablesViewModal";
 import SampleImage from "../../assets/img/dvi.jpeg";
 
 export default function Consumables() {
@@ -21,7 +21,7 @@ export default function Consumables() {
       manufacturer: "Canon",
       supplier: "WalMart",
       color: "White",
-      paperSize: "A3"
+      paperSize: "A3",
     },
     {
       id: 2,
@@ -33,7 +33,7 @@ export default function Consumables() {
       manufacturer: "Canon",
       supplier: "WalMart",
       color: "White",
-      paperSize: "A4"
+      paperSize: "A4",
     },
     {
       id: 3,
@@ -45,7 +45,7 @@ export default function Consumables() {
       manufacturer: "Canon",
       supplier: "Staples",
       color: "Multicolor",
-      model: "580 PGBK"
+      model: "580 PGBK",
     },
     {
       id: 4,
@@ -57,7 +57,7 @@ export default function Consumables() {
       manufacturer: "Canon",
       supplier: "Staples",
       color: "Black",
-      model: "581 CLI"
+      model: "581 CLI",
     },
     {
       id: 5,
@@ -69,7 +69,7 @@ export default function Consumables() {
       manufacturer: "Canon",
       supplier: "Staples",
       color: "Yellow",
-      model: "581 XL"
+      model: "581 XL",
     },
     {
       id: 6,
@@ -81,8 +81,8 @@ export default function Consumables() {
       manufacturer: "Lexmark",
       supplier: "Staples",
       color: "Cyan",
-      model: "CX 317"
-    }
+      model: "CX 317",
+    },
   ]);
 
   const [checkedItems, setCheckedItems] = useState([]);
@@ -132,7 +132,10 @@ export default function Consumables() {
                 <input type="text" placeholder="Search..." />
               </form>
               <MediumButtons type="export" />
-              <MediumButtons type="new" navigatePage="/consumables/registration" />
+              <MediumButtons
+                type="new"
+                navigatePage="/consumables/registration"
+              />
             </div>
           </section>
           <section className="middle">
@@ -174,13 +177,22 @@ export default function Consumables() {
                     <td>{item.category}</td>
                     <td>{item.location}</td>
                     <td>
-                      <ConsumablesTableBtn type="edit" navigatePage={`/consumables/edit/${item.id}`} />
+                      <ConsumablesTableBtn
+                        type="edit"
+                        navigatePage={`/consumables/edit/${item.id}`}
+                      />
                     </td>
                     <td>
-                      <ConsumablesTableBtn type="delete" showModal={() => handleDelete(item.id)} />
+                      <ConsumablesTableBtn
+                        type="delete"
+                        showModal={() => handleDelete(item.id)}
+                      />
                     </td>
                     <td>
-                      <ConsumablesTableBtn type="view" showModal={() => handleView(item.id)} />
+                      <ConsumablesTableBtn
+                        type="view"
+                        showModal={() => handleView(item.id)}
+                      />
                     </td>
                   </tr>
                 ))}
