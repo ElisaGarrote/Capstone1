@@ -36,6 +36,7 @@ export default function CheckInAsset() {
     condition,
     checkoutId,
     checkinDate,
+    ticketId,
     fromAsset
   } = location.state || {};
 
