@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import LoadingButton from "../components/LoadingButton";
 import eyeOpen from "../assets/icons/eye-open.svg";
 import eyeClose from "../assets/icons/eye-close.svg";
-import Logo from "../assets/icons/MAp-LogoNew.svg";
+import Logo from "../assets/icons/Map-LogoNew.svg";
 import AssetImage from "../assets/img/pageimg6.png";
 
 function Login() {
@@ -164,7 +164,7 @@ function Login() {
               </button>
             </div>
           )}
-          
+
           <a onClick={() => navigate("/request/password_reset")}>
             Forgot Password?
           </a>
