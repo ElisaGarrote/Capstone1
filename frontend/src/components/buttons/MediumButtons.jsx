@@ -35,6 +35,18 @@ export default function MediumButtons({
       icon = null;
   }
 
+  // Function to get the correct button text
+  const getButtonText = (buttonType) => {
+    switch (buttonType) {
+      case "schedule-audits":
+        return "Schedule Audit";
+      case "perform-audits":
+        return "Perform Audit";
+      default:
+        return buttonType.replace("-", " ");
+    }
+  };
+
   return (
     <button
       type="button"
@@ -47,7 +59,7 @@ export default function MediumButtons({
     >
       {/* The img tag will be rendered when the icon is not null*/}
       {icon && <img src={icon} alt="" />}
-      {type.replace("-", " ")}
+      {getButtonText(type)}
     </button>
   );
 }

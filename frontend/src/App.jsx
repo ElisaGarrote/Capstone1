@@ -49,7 +49,7 @@ import DepreciationReport from "./pages/reports/DepreciationReport";
 import DueBackReport from "./pages/reports/DueBackReport";
 import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
 import ActivityReport from "./pages/reports/ActivityReport";
-import Settings from "./pages/Settings";
+import ManageProfile from "./pages/ManageProfile";
 import UserManagement from "./pages/UserManagement";
 import ViewCategories from "./pages/More/ViewCategories";
 import CategoryRegistration from "./pages/More/CategoryRegistration";
@@ -101,13 +101,8 @@ function App() {
             element={<AccessoriesRegistration />}
           />
           <Route path="/More/SupplierEdit" element={<SupplierEdit />} />
-          <Route path="/More/ViewSupplier" element={<ViewSupplier />} />
           <Route
             path="/More/SupplierRegistration"
-            element={<SupplierRegistration />}
-          />
-          <Route
-            path="/More/SupplierRegistration/:id"
             element={<SupplierRegistration />}
           />
           <Route
@@ -128,6 +123,7 @@ function App() {
             path="/More/ManufacturerEdit/:id"
             element={<ManufacturerEdit />}
           />
+          <Route path="/More/ViewSupplier" element={<ViewSupplier />} />
           <Route
             path="/More/CategoryRegistration"
             element={<CategoryRegistration />}
@@ -211,7 +207,7 @@ function App() {
             element={<EndOfLifeWarrantyReport />}
           />
           <Route path="/reports/activity" element={<ActivityReport />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/manage-profile" element={<ManageProfile />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="*" element={<NotFound />}></Route>
         </Route>

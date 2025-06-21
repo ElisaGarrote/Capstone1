@@ -40,7 +40,7 @@ export default function TabNavBar() {
             className={location.pathname === "/audits/overdue" ? "active" : ""}
             onClick={() => navigate("/audits/overdue")}
           >
-            Overdue for Audits ({countOverdueAudits})
+            Overdue for Audit ({countOverdueAudits})
           </a>
         </li>
         <li
@@ -52,7 +52,7 @@ export default function TabNavBar() {
             }
             onClick={() => navigate("/audits/scheduled")}
           >
-            Scheduled Audits ({countScheduleAudits})
+            Scheduled Audit ({countScheduleAudits})
           </a>
         </li>
         <li
@@ -64,7 +64,7 @@ export default function TabNavBar() {
             }
             onClick={() => navigate("/audits/completed")}
           >
-            Completed Audits ({countAudits})
+            Completed Audit ({countAudits})
           </a>
         </li>
       </ul>

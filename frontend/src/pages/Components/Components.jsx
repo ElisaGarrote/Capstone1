@@ -8,42 +8,43 @@ import TableBtn from "../../components/buttons/TableButtons";
 import ComponentsTableBtn from "../../components/buttons/ComponentsTableButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import authService from "../../services/auth-service";
 
 // Sample asset data
 const sampleItems = [
   {
     id: 1,
     image: SampleImage,
-    componentName: 'Corsair Vengeance RAM',
-    category: 'RAM',
-    manufacturer: 'Corsair',
-    supplier: 'TechStore',
-    location: 'Main Warehouse',
-    modelNumber: 'CMK16GX4M2B3200C16',
-    status: 'Ready for Deployment',
-    orderNumber: 'ORD-2048',
-    purchaseDate: '2024-06-15',
+    componentName: "Corsair Vengeance RAM",
+    category: "RAM",
+    manufacturer: "Corsair",
+    supplier: "TechStore",
+    location: "Main Warehouse",
+    modelNumber: "CMK16GX4M2B3200C16",
+    status: "Ready for Deployment",
+    orderNumber: "ORD-2048",
+    purchaseDate: "2024-06-15",
     purchaseCost: 120.99,
     quantity: 20,
     minimumQuantity: 5,
-    notes: 'High performance RAM module for gaming PCs',
+    notes: "High performance RAM module for gaming PCs",
   },
   {
     id: 2,
     image: SampleImage,
-    componentName: 'Intel Network Card',
-    category: 'Networking',
-    manufacturer: 'Intel',
-    supplier: 'NetSupplies',
-    location: 'Storage Room B',
-    modelNumber: 'I350-T4V2',
-    status: 'Deployed',
-    orderNumber: 'ORD-3090',
-    purchaseDate: '2023-10-10',
+    componentName: "Intel Network Card",
+    category: "Networking",
+    manufacturer: "Intel",
+    supplier: "NetSupplies",
+    location: "Storage Room B",
+    modelNumber: "I350-T4V2",
+    status: "Deployed",
+    orderNumber: "ORD-3090",
+    purchaseDate: "2023-10-10",
     purchaseCost: 89.5,
     quantity: 15,
     minimumQuantity: 3,
-    notes: '',
+    notes: "",
   },
 ];
 
@@ -72,7 +73,7 @@ export default function Components() {
   };
 
   const handleCheckInOut = (item) => {
-    if (item.status === 'Deployed') {
+    if (item.status === "Deployed") {
       navigate(`/components/checked-out-list/${item.id}`, {
         state: {
           id: item.id,
@@ -106,7 +107,13 @@ export default function Components() {
                 <input type="text" placeholder="Search..." />
               </form>
               <MediumButtons type="export" />
-              <MediumButtons type="new" navigatePage="/components/registration" />
+
+              {authService.getUserInfo().role === "Admin" && (
+                <MediumButtons
+                  type="new"
+                  navigatePage="/components/registration"
+                />
+              )}
             </div>
           </section>
           <section className="middle">
@@ -126,7 +133,7 @@ export default function Components() {
                   <th>AVAILABLE</th>
                   <th>CATEGORY</th>
                   <th>MODEL NUMBER</th>
-                  <th>EDIT</th>
+                  {authService.getUserInfo().role === "Admin" && <th>EDIT</th>}
                   <th>DELETE</th>
                   <th>VIEW</th>
                 </tr>
@@ -147,23 +154,38 @@ export default function Components() {
                     <td>{item.componentName}</td>
                     <td>
                       <button
-                        className={item.status === 'Deployed' ? "check-in-btn" : "check-out-btn"}
+                        className={
+                          item.status === "Deployed"
+                            ? "check-in-btn"
+                            : "check-out-btn"
+                        }
                         onClick={() => handleCheckInOut(item)}
                       >
-                        {item.status === 'Deployed' ? "Check-In" : "Check-Out"}
+                        {item.status === "Deployed" ? "Check-In" : "Check-Out"}
                       </button>
                     </td>
                     <td>{item.quantity}</td>
                     <td>{item.category}</td>
                     <td>{item.modelNumber}</td>
+                    {authService.getUserInfo().role === "Admin" && (
+                      <td>
+                        <ComponentsTableBtn
+                          type="edit"
+                          navigatePage={`/components/registration/${item.id}`}
+                        />
+                      </td>
+                    )}
                     <td>
-                      <ComponentsTableBtn type="edit" navigatePage={`/components/registration/${item.id}`} />
+                      <ComponentsTableBtn
+                        type="delete"
+                        onClick={() => handleDelete(item.id)}
+                      />
                     </td>
                     <td>
-                      <ComponentsTableBtn type="delete" onClick={() => handleDelete(item.id)} />
-                    </td>
-                    <td>
-                      <ComponentsTableBtn type="view" navigatePage={`/assets/view/${item.id}`} />
+                      <ComponentsTableBtn
+                        type="view"
+                        navigatePage={`/assets/view/${item.id}`}
+                      />
                     </td>
                   </tr>
                 ))}
