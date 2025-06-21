@@ -266,7 +266,7 @@ export default function NavBar() {
                 setActiveMenu("audits");
               }}
             >
-              Audits
+              Audit
             </a>
           </li>
           <li>
@@ -480,8 +480,8 @@ export default function NavBar() {
                 </div>
               </div>
               <div className="profile-menu">
-                <button onClick={() => navigate("/settings")}>Settings</button>
-                {authService.getUserInfo().role === "Admin" && (
+                <button onClick={() => navigate("/manage-profile")}>Manage Profile</button>
+                {authService.getUserInfo().role === "admin" && (
                   <button onClick={() => navigate("/user-management")}>
                     User Management
                   </button>

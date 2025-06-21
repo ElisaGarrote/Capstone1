@@ -137,7 +137,7 @@ export default function ScheduledAudits() {
       </nav>
       <main className="asset-audits-page">
         <section className="main-top">
-          <h1>Asset Audits</h1>
+          <h1>Asset Audit</h1>
           <div>
             <MediumButtons
               type="schedule-audits"
@@ -157,7 +157,7 @@ export default function ScheduledAudits() {
           </section>
           <section className="container">
             <section className="top">
-              <h2>Scheduled Audits</h2>
+              <h2>Scheduled Audit</h2>
               <div>
                 <form action="" method="post">
                   <input type="text" placeholder="Search..." />
