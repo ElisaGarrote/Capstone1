@@ -164,12 +164,9 @@ export default function NavBar() {
 
   return (
     <nav className="main-nav-bar">
+      <img src={SystemLogo} alt="Logo" />
+      <h1>MapAMS</h1>
       <section className="logo">
-        <img src={SystemLogo} alt="Logo" />
-        <h1>MapAMS</h1>
-        <section>
-          <img src={Logo} alt="Logo" />
-        </section>
         <section>
           <ul>
             <li>
