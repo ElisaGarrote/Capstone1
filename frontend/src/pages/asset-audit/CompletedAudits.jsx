@@ -65,7 +65,7 @@ export default function CompletedAudits() {
       </nav>
       <main className="completed-audits-page">
         <section className="main-top">
-          <h1>Asset Audits</h1>
+          <h1>Asset Audit</h1>
           <div>
             <MediumButtons
               type="schedule-audits"
@@ -85,7 +85,7 @@ export default function CompletedAudits() {
           </section>
           <section className="container">
             <section className="top">
-              <h2>Completed Audits</h2>
+              <h2>Completed Audit</h2>
               <div>
                 <form action="" method="post">
                   <input type="text" placeholder="Search..." />

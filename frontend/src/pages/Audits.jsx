@@ -33,7 +33,7 @@ const Audits = () => {
       <NavBar />
       <main className="audits-content">
         <div className="audits-header">
-          <h1>Asset Audits</h1>
+          <h1>Asset Audit</h1>
           <div className="header-buttons">
             <button className="primary-button">Schedule Audits</button>
             <button className="primary-button">Perform Audits</button>

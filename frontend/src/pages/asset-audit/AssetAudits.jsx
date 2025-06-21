@@ -143,7 +143,7 @@ export default function AssetAudits() {
       </nav>
       <main className="asset-audits-page">
         <section className="main-top">
-          <h1>Asset Audits</h1>
+          <h1>Asset Audit</h1>
           <div>
             <MediumButtons
               type="schedule-audits"
