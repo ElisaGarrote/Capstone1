@@ -167,8 +167,8 @@ input[type="password"]::-ms-reveal {
 }
 
 .form-header .logo img {
-  height: 1.8rem;
-  width: 1.8rem;
+  height: 5.8rem;
+  width: 5.8rem;
 
   object-fit: contain;
   mix-blend-mode: multiply;

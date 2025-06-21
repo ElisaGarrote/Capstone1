@@ -1,6 +1,6 @@
 import "../styles/custom-colors.css";
 import "../styles/Login.css";
-import loginImage from "../assets/img/login.png";
+import loginImage from "../assets/img/pageimg6.png";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";

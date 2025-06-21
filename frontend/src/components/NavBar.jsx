@@ -6,6 +6,7 @@ import Logo from "../assets/img/Logo.png";
 import SampleProfile from "../assets/img/do.png";
 import { IoIosArrowDown } from "react-icons/io";
 import NotificationOverlay from "./NotificationOverlay";
+import SystemLogo from "../assets/icons/Map-LogoNew.svg";
 import authService from "../services/auth-service";
 import DefaultProfile from "../assets/img/default-profile.svg";
 
@@ -163,6 +164,9 @@ export default function NavBar() {
 
   return (
     <nav className="main-nav-bar">
+      <section className="logo">
+        <img src={SystemLogo} alt="Logo" />
+        <h1>MapAMS</h1>
       <section>
         <img src={Logo} alt="Logo" />
       </section>
