@@ -8,7 +8,15 @@
   background-color: var(--bg-color);
   box-shadow: 0 0 10px #d3d3d3;
   position: fixed;
+  padding: 0px 38px 0px 38px;
   z-index: 100;
+}
+
+.main-nav-bar h1 {
+  position: absolute;
+  left: 110px;
+
+  color: var(--primary-color);
 }
 
 .main-nav-bar .logo {
@@ -36,12 +44,11 @@
   margin: 0;
 }
 
-.main-nav-bar section:nth-last-child(1) {
+.main-nav-bar section:nth-last-child(1):not(.logo section) {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 14px;
-  padding-right: 38px;
 }
 
 .main-nav-bar ul {
@@ -92,7 +99,6 @@
   flex-shrink: 0;
   position: relative;
 }
-
 
 .assets-dropdown-container .dropdown-trigger {
   width: fit-content;
@@ -290,7 +296,7 @@
   background-color: rgba(0, 123, 255, 0.1);
   color: var(--primary-color);
   font-weight: 500;
-  border-radius: 8px
+  border-radius: 8px;
 }
 
 .main-nav-bar section:nth-child(2) {
