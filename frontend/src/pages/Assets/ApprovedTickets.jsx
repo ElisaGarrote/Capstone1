@@ -169,12 +169,12 @@ const ApprovedTickets = () => {
                     />
                   </th>
                   <th style={{ textAlign: 'left', paddingRight: '0', width: '120px' }}>TICKET NUMBER</th>
-                  <th style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0', width: '90px' }}>CHECKOUT</th>
+                  <th style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0', width: '90px' }}>CHECKIN/OUT</th>
+                  <th style={{ textAlign: 'left' }}>CATEGORY</th>
                   <th style={{ textAlign: 'left' }}>SUBJECT</th>
                   <th style={{ textAlign: 'left' }}>REQUESTOR</th>
-                  <th style={{ textAlign: 'left' }}>CATEGORY</th>
-                  <th style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>LAST UPDATED</th>
-                  <th style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>CREATION DATE</th>
+                  <th style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>LOCATION</th>
+                  <th style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>ASSET</th>
                   <th style={{ textAlign: 'center', width: '80px' }}>ACTION</th>
                 </tr>
               </thead>

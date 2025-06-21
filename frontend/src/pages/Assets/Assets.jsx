@@ -128,6 +128,7 @@ export default function Assets() {
           checkoutId: checkout.checkout_ref_id || "Unknown",
           checkinDate: checkout.checkin_date || "Unknown",
           condition: checkout.condition || "Unknown",
+          ticketId: checkout.ticket_id,
           fromAsset: true,
         },
       });
