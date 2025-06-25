@@ -95,11 +95,15 @@ function App() {
           <Route path="/assets/check-in/:id" element={<CheckInAsset />} />
           <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
           <Route path="/approved-tickets" element={<ApprovedTickets />} />
+
+          {/*
           <Route path="/accessories" element={<Accessories />} />
           <Route
             path="/accessories/registration"
             element={<AccessoriesRegistration />}
           />
+          */}
+
           <Route path="/More/SupplierEdit" element={<SupplierEdit />} />
           <Route
             path="/More/SupplierRegistration"
@@ -115,9 +119,9 @@ function App() {
             element={<ManufacturerRegistration />}
           />
           <Route
-          path="/More/ManufacturerRegistration/:id"
-          element={<ManufacturerRegistration />}
-        />
+            path="/More/ManufacturerRegistration/:id"
+            element={<ManufacturerRegistration />}
+          />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
           <Route
             path="/More/ManufacturerEdit/:id"
@@ -130,13 +134,27 @@ function App() {
           />
           <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
           <Route path="/More/ViewStatus" element={<ViewStatus />} />
-          <Route path="/More/StatusRegistration" element={<StatusRegistration />} />
+          <Route
+            path="/More/StatusRegistration"
+            element={<StatusRegistration />}
+          />
           <Route path="/More/StatusEdit/:id" element={<StatusEdit />} />
           <Route path="/More/StatusDetails/:id" element={<StatusDetails />} />
-          <Route path="/More/ViewDepreciations" element={<ViewDepreciations />} />
-          <Route path="/More/DepreciationRegistration" element={<DepreciationRegistration />} />
-          <Route path="/More/DepreciationEdit/:id" element={<DepreciationEdit />} />
+          <Route
+            path="/More/ViewDepreciations"
+            element={<ViewDepreciations />}
+          />
+          <Route
+            path="/More/DepreciationRegistration"
+            element={<DepreciationRegistration />}
+          />
+          <Route
+            path="/More/DepreciationEdit/:id"
+            element={<DepreciationEdit />}
+          />
           <Route path="/More/RecycleBin" element={<RecycleBin />} />
+
+          {/*
           <Route path="/accessories/checkin" element={<CheckinAccessory />} />
           <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
           <Route
@@ -147,6 +165,8 @@ function App() {
             path="/accessories/checkout-list"
             element={<AccessoriesCheckoutList />}
           />
+          */}
+
           <Route path="/components" element={<Components />} />
           <Route
             path="/components/check-out/:id"
@@ -188,10 +208,23 @@ function App() {
             path="/dashboard/Repair/EditMaintenance"
             element={<EditMaintenance />}
           />
+
+          {/*
           <Route path="/consumables" element={<Consumables />} />
-          <Route path="/consumables/registration" element={<ConsumablesRegistration />} />
-          <Route path="/consumables/registration/:id" element={<ConsumablesRegistration />} />
-          <Route path="/consumables/edit/:id" element={<ConsumablesRegistration />} />
+          <Route
+            path="/consumables/registration"
+            element={<ConsumablesRegistration />}
+          />
+          <Route
+            path="/consumables/registration/:id"
+            element={<ConsumablesRegistration />}
+          />
+          <Route
+            path="/consumables/edit/:id"
+            element={<ConsumablesRegistration />}
+          />
+          */}
+
           <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
           <Route path="/warranties" element={<ExpiringWarranties />} />
           <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />
