@@ -21,7 +21,8 @@
 .table-buttons-delete,
 .table-buttons-view,
 .table-buttons-audit,
-.table-buttons-delete-disabled {
+.table-buttons-delete-disabled,
+.table-buttons-deactivate {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -37,6 +38,21 @@
   border: 1px solid #d3d3d3;
 
   transition: 0.5s ease;
+}
+
+.table-buttons-deactivate {
+  width: auto;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #dc3545;
+  border-color: #dc3545;
+  background-color: white;
+}
+
+.table-buttons-deactivate:hover {
+  background-color: #dc3545;
+  color: white;
 }
 
 .table-buttons-delete-disabled {
