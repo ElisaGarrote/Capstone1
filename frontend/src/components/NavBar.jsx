@@ -162,6 +162,11 @@ export default function NavBar() {
     }
   }, [location.pathname]);
 
+  const logout = () => {
+    authService.logout();
+    navigate("/login");
+  };
+
   return (
     <nav className="main-nav-bar">
       <img src={SystemLogo} alt="Logo" />
@@ -490,10 +495,7 @@ export default function NavBar() {
                     User Management
                   </button>
                 )}
-                <button
-                  onClick={() => navigate("/logout")}
-                  className="logout-btn"
-                >
+                <button onClick={logout} className="logout-btn">
                   Log Out
                 </button>
               </div>
