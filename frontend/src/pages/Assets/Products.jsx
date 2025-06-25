@@ -229,9 +229,11 @@ export default function Products() {
                       <th>DEPRECIATION</th>
                       <th>END OF LIFE</th>
                       {authService.getUserInfo().role === "Admin" && (
-                        <th>EDIT</th>
+                        <>
+                          <th>EDIT</th>
+                          <th>DELETE</th>
+                        </>
                       )}
-                      <th>DELETE</th>
                       <th>VIEW</th>
                     </tr>
                   </thead>
@@ -274,26 +276,28 @@ export default function Products() {
                           <td>{product.depreciation}</td>
                           <td>{product.end_of_life}</td>
                           {authService.getUserInfo().role === "Admin" && (
-                            <td>
-                              <TableBtn
-                                type="edit"
-                                navigatePage={`/products/registration/${product.id}`}
-                                data={product.id}
-                              />
-                            </td>
+                            <>
+                              <td>
+                                <TableBtn
+                                  type="edit"
+                                  navigatePage={`/products/registration/${product.id}`}
+                                  data={product.id}
+                                />
+                              </td>
+                              <td>
+                                <TableBtn
+                                  type="delete"
+                                  showModal={() => {
+                                    setEndPoint(
+                                      `https://assets-service-production.up.railway.app/products/${product.id}/delete/`
+                                    );
+                                    setDeleteModalOpen(true);
+                                  }}
+                                  data={product.id}
+                                />
+                              </td>
+                            </>
                           )}
-                          <td>
-                            <TableBtn
-                              type="delete"
-                              showModal={() => {
-                                setEndPoint(
-                                  `https://assets-service-production.up.railway.app/products/${product.id}/delete/`
-                                );
-                                setDeleteModalOpen(true);
-                              }}
-                              data={product.id}
-                            />
-                          </td>
                           <td>
                             <TableBtn
                               type="view"
