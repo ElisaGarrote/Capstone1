@@ -25,13 +25,9 @@ class AuthService {
       // console.log("data:", data);
 
       if (data.access) {
-        localStorage.setItem("access", data.access);
-        localStorage.setItem("refresh", data.refresh);
+        sessionStorage.setItem("access", data.access);
+        sessionStorage.setItem("refresh", data.refresh);
         // console.log("Token successfully stored in the local storage!");
-
-        // Store the user info in local storage
-        const user = await this.getCurrrentUser();
-        localStorage.setItem("user", JSON.stringify(user));
 
         // Store the user info in session storage
         const currentUser = await this.getCurrrentUser();
@@ -90,7 +86,7 @@ class AuthService {
 
   // Get the access token
   getAccessToken() {
-    return localStorage.getItem("access");
+    return sessionStorage.getItem("access");
   }
 
   // Get the Autorization headers
@@ -105,14 +101,14 @@ class AuthService {
   }
 
   getUserInfo() {
-    return JSON.parse(localStorage.getItem("user"));
+    return JSON.parse(sessionStorage.getItem("user"));
   }
 
   // Logout and clear the tokens
   logout() {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("access");
+    sessionStorage.removeItem("refresh");
+    // localStorage.removeItem("user");
     sessionStorage.removeItem("user");
   }
 }

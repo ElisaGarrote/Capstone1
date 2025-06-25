@@ -10,7 +10,7 @@ function ProtectedRoute() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem(ACCESS_TOKEN);
+      const token = sessionStorage.getItem(ACCESS_TOKEN);
 
       if (!token) {
         setIsAuthorized(false);
@@ -24,7 +24,7 @@ function ProtectedRoute() {
 
         if (tokenExpiration < now) {
           // Try to refresh the token
-          const refreshToken = localStorage.getItem(REFRESH_TOKEN);
+          const refreshToken = sessionStorage.getItem(REFRESH_TOKEN);
 
           if (!refreshToken) {
             setIsAuthorized(false);
@@ -36,7 +36,7 @@ function ProtectedRoute() {
           });
 
           if (res.status === 200) {
-            localStorage.setItem(ACCESS_TOKEN, res.data.access);
+            sessionStorage.setItem(ACCESS_TOKEN, res.data.access);
             setIsAuthorized(true);
           } else {
             setIsAuthorized(false);
