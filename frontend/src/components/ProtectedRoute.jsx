@@ -1,62 +1,35 @@
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import api from "../api";
 import { REFRESH_TOKEN, ACCESS_TOKEN } from "../constants";
 import { useState, useEffect } from "react";
 import SystemLoading from "./Loading/SystemLoading";
 
-function ProtectedRoute() {
-  const [isAuthorized, setIsAuthorized] = useState(null);
+function ProtectedRoute({ roles }) {
+  const navigate = useNavigate();
+  const token = sessionStorage.getItem(ACCESS_TOKEN);
+  const currentUser = JSON.parse(sessionStorage.getItem("user"));
 
+  const role = currentUser?.role?.toLowerCase() || "";
+  const isAuthenticated = token ? true : false;
+
+  // Redirect the user back to the previous page.
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = sessionStorage.getItem(ACCESS_TOKEN);
+    // Redirect user back to the previous page if authenticated and not authorized.
+    if (isAuthenticated && !roles.includes(role)) {
+      navigate(-1);
+    }
+  }, [isAuthenticated, roles, role]);
 
-      if (!token) {
-        setIsAuthorized(false);
-        return;
-      }
-
-      try {
-        const decoded = jwtDecode(token);
-        const tokenExpiration = decoded.exp;
-        const now = Date.now() / 1000;
-
-        if (tokenExpiration < now) {
-          // Try to refresh the token
-          const refreshToken = sessionStorage.getItem(REFRESH_TOKEN);
-
-          if (!refreshToken) {
-            setIsAuthorized(false);
-            return;
-          }
-
-          const res = await api.post("/api/token/refresh/", {
-            refresh: refreshToken,
-          });
-
-          if (res.status === 200) {
-            sessionStorage.setItem(ACCESS_TOKEN, res.data.access);
-            setIsAuthorized(true);
-          } else {
-            setIsAuthorized(false);
-          }
-        } else {
-          setIsAuthorized(true);
-        }
-      } catch (error) {
-        setIsAuthorized(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  if (isAuthorized === null) {
-    return <SystemLoading />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
   }
 
-  return isAuthorized ? <Outlet /> : <Navigate to="/login" replace />;
+  if (!roles.includes(role)) {
+    return null;
+  }
+
+  return <Outlet />;
 }
 
 export default ProtectedRoute;
