@@ -80,26 +80,53 @@ function App() {
     <BrowserRouter>
       <ChatBot />
       <Routes>
-        <Route path="/home" element={<Home />} />
         {/* This will Serve as Default Path*/}
         <Route path="/" element={<Navigate to="/login" />} />
-        {/* Place here all the routes that require authetication to access */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/assets" element={<Assets />} />
+
+        {/* Place here all the routes accessible only for admin */}
+        <Route element={<ProtectedRoute roles={["admin"]} />}>
+          <Route
+            path="/products/registration"
+            element={<ProductsRegistration />}
+          />
+          <Route
+            path="/products/registration/:id"
+            element={<ProductsRegistration />}
+          />
           <Route path="/assets/registration" element={<AssetsRegistration />} />
           <Route
             path="/assets/registration/:id"
             element={<AssetsRegistration />}
           />
-          <Route path="/assets/check-in/:id" element={<CheckInAsset />} />
-          <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
-          <Route path="/approved-tickets" element={<ApprovedTickets />} />
-          <Route path="/accessories" element={<Accessories />} />
           <Route
-            path="/accessories/registration"
-            element={<AccessoriesRegistration />}
+            path="/components/registration"
+            element={<ComponentsRegistration />}
           />
+          <Route
+            path="/components/registration/:id"
+            element={<ComponentsRegistration />}
+          />
+          <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/More/ViewCategories" element={<ViewCategories />} />
+          <Route
+            path="/More/CategoryRegistration"
+            element={<CategoryRegistration />}
+          />
+          <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
+          <Route path="/More/ViewManufacturer" element={<ViewManufacturer />} />
+          <Route
+            path="/More/ManufacturerRegistration"
+            element={<ManufacturerRegistration />}
+          />
+          <Route
+            path="/More/ManufacturerRegistration/:id"
+            element={<ManufacturerRegistration />}
+          />
+          <Route
+            path="/More/ManufacturerEdit/:id"
+            element={<ManufacturerEdit />}
+          />
+          <Route path="/More/ViewSupplier" element={<ViewSupplier />} />
           <Route path="/More/SupplierEdit" element={<SupplierEdit />} />
           <Route
             path="/More/SupplierRegistration"
@@ -109,44 +136,35 @@ function App() {
             path="/More/SupplierTableDetails"
             element={<SupplierTableDetails />}
           />
-          <Route path="/More/ViewManufacturer" element={<ViewManufacturer />} />
-          <Route
-            path="/More/ManufacturerRegistration"
-            element={<ManufacturerRegistration />}
-          />
-          <Route
-          path="/More/ManufacturerRegistration/:id"
-          element={<ManufacturerRegistration />}
-        />
-          <Route path="/More/ViewCategories" element={<ViewCategories />} />
-          <Route
-            path="/More/ManufacturerEdit/:id"
-            element={<ManufacturerEdit />}
-          />
-          <Route path="/More/ViewSupplier" element={<ViewSupplier />} />
-          <Route
-            path="/More/CategoryRegistration"
-            element={<CategoryRegistration />}
-          />
-          <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
           <Route path="/More/ViewStatus" element={<ViewStatus />} />
-          <Route path="/More/StatusRegistration" element={<StatusRegistration />} />
+          <Route
+            path="/More/StatusRegistration"
+            element={<StatusRegistration />}
+          />
           <Route path="/More/StatusEdit/:id" element={<StatusEdit />} />
           <Route path="/More/StatusDetails/:id" element={<StatusDetails />} />
-          <Route path="/More/ViewDepreciations" element={<ViewDepreciations />} />
-          <Route path="/More/DepreciationRegistration" element={<DepreciationRegistration />} />
-          <Route path="/More/DepreciationEdit/:id" element={<DepreciationEdit />} />
+          <Route
+            path="/More/ViewDepreciations"
+            element={<ViewDepreciations />}
+          />
+          <Route
+            path="/More/DepreciationRegistration"
+            element={<DepreciationRegistration />}
+          />
+          <Route
+            path="/More/DepreciationEdit/:id"
+            element={<DepreciationEdit />}
+          />
           <Route path="/More/RecycleBin" element={<RecycleBin />} />
-          <Route path="/accessories/checkin" element={<CheckinAccessory />} />
-          <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
-          <Route
-            path="/accessories/:id"
-            element={<AccessoriesRegistration />}
-          />
-          <Route
-            path="/accessories/checkout-list"
-            element={<AccessoriesCheckoutList />}
-          />
+        </Route>
+
+        {/* Place here all the routes that accessible only for admin and operator */}
+        <Route element={<ProtectedRoute roles={["admin", "operator"]} />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/assets" element={<Assets />} />
+          <Route path="/assets/check-in/:id" element={<CheckInAsset />} />
+          <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
           <Route path="/components" element={<Components />} />
           <Route
             path="/components/check-out/:id"
@@ -161,22 +179,6 @@ function App() {
             element={<CheckInComponent />}
           />
           <Route
-            path="/components/registration"
-            element={<ComponentsRegistration />}
-          />
-          <Route
-            path="/components/registration/:id"
-            element={<ComponentsRegistration />}
-          />
-          <Route path="/audits/" element={<AssetAudits />} />
-          <Route path="/audits/overdue" element={<OverdueAudits />} />
-          <Route path="/audits/scheduled" element={<ScheduledAudits />} />
-          <Route path="/audits/completed" element={<CompletedAudits />} />
-          <Route path="/audits/new" element={<PerformAudits />} />
-          <Route path="/audits/schedule" element={<ScheduleRegistration />} />
-          <Route path="/audits/edit" element={<EditAudits />} />
-          <Route path="/audits/view" element={<ViewAudits />} />
-          <Route
             path="/dashboard/Repair/Maintenance"
             element={<AssetRepairs />}
           />
@@ -188,10 +190,15 @@ function App() {
             path="/dashboard/Repair/EditMaintenance"
             element={<EditMaintenance />}
           />
-          <Route path="/consumables" element={<Consumables />} />
-          <Route path="/consumables/registration" element={<ConsumablesRegistration />} />
-          <Route path="/consumables/registration/:id" element={<ConsumablesRegistration />} />
-          <Route path="/consumables/edit/:id" element={<ConsumablesRegistration />} />
+          <Route path="/audits/" element={<AssetAudits />} />
+          <Route path="/audits/overdue" element={<OverdueAudits />} />
+          <Route path="/audits/scheduled" element={<ScheduledAudits />} />
+          <Route path="/audits/completed" element={<CompletedAudits />} />
+          <Route path="/audits/new" element={<PerformAudits />} />
+          <Route path="/audits/schedule" element={<ScheduleRegistration />} />
+          <Route path="/audits/edit" element={<EditAudits />} />
+          <Route path="/audits/view" element={<ViewAudits />} />
+          <Route path="/approved-tickets" element={<ApprovedTickets />} />
           <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
           <Route path="/warranties" element={<ExpiringWarranties />} />
           <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />
@@ -208,8 +215,39 @@ function App() {
           />
           <Route path="/reports/activity" element={<ActivityReport />} />
           <Route path="/manage-profile" element={<ManageProfile />} />
-          <Route path="/user-management" element={<UserManagement />} />
+
           <Route path="*" element={<NotFound />}></Route>
+
+          {/*
+          <Route path="/accessories" element={<Accessories />} />
+          <Route
+            path="/accessories/registration"
+            element={<AccessoriesRegistration />}
+          />
+          <Route path="/accessories/checkin" element={<CheckinAccessory />} />
+          <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
+          <Route
+            path="/accessories/:id"
+            element={<AccessoriesRegistration />}
+          />
+          <Route
+            path="/accessories/checkout-list"
+            element={<AccessoriesCheckoutList />}
+          />
+          <Route path="/consumables" element={<Consumables />} />
+          <Route
+            path="/consumables/registration"
+            element={<ConsumablesRegistration />}
+          />
+          <Route
+            path="/consumables/registration/:id"
+            element={<ConsumablesRegistration />}
+          />
+          <Route
+            path="/consumables/edit/:id"
+            element={<ConsumablesRegistration />}
+          />
+          */}
         </Route>
 
         {/* Place here all the routes that do not required authetication to access */}
@@ -221,15 +259,6 @@ function App() {
           element={<PasswordResetRequest />}
         />
         <Route path="/password-reset/:token" element={<PasswordReset />} />
-        <Route path="/products" element={<Products />} />
-        <Route
-          path="/products/registration"
-          element={<ProductsRegistration />}
-        />
-        <Route
-          path="/products/registration/:id"
-          element={<ProductsRegistration />}
-        />
       </Routes>
     </BrowserRouter>
   );

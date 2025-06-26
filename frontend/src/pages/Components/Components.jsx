@@ -133,8 +133,12 @@ export default function Components() {
                   <th>AVAILABLE</th>
                   <th>CATEGORY</th>
                   <th>MODEL NUMBER</th>
-                  {authService.getUserInfo().role === "Admin" && <th>EDIT</th>}
-                  <th>DELETE</th>
+                  {authService.getUserInfo().role === "Admin" && (
+                    <>
+                      <th>EDIT</th>
+                      <th>DELETE</th>
+                    </>
+                  )}
                   <th>VIEW</th>
                 </tr>
               </thead>
@@ -168,19 +172,21 @@ export default function Components() {
                     <td>{item.category}</td>
                     <td>{item.modelNumber}</td>
                     {authService.getUserInfo().role === "Admin" && (
-                      <td>
-                        <ComponentsTableBtn
-                          type="edit"
-                          navigatePage={`/components/registration/${item.id}`}
-                        />
-                      </td>
+                      <>
+                        <td>
+                          <ComponentsTableBtn
+                            type="edit"
+                            navigatePage={`/components/registration/${item.id}`}
+                          />
+                        </td>
+                        <td>
+                          <ComponentsTableBtn
+                            type="delete"
+                            onClick={() => handleDelete(item.id)}
+                          />
+                        </td>
+                      </>
                     )}
-                    <td>
-                      <ComponentsTableBtn
-                        type="delete"
-                        onClick={() => handleDelete(item.id)}
-                      />
-                    </td>
                     <td>
                       <ComponentsTableBtn
                         type="view"
