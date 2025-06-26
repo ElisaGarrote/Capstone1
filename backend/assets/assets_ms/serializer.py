@@ -150,3 +150,20 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckin
         fields = "__all__"
+
+class RepairSerializer(serializers.ModelSerializer):
+    repair_files = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Repair
+        fields = "__all__"
+    
+    def get_repair_files(self, obj):
+        # Retrieve all files that are not deleted and the repair matches the current repair instance.
+        files = obj.files.filter(is_deleted=False, repair=obj.id)
+        return RepairFileSerializer(files, many=True).data
+
+class RepairFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RepairFile
+        fields = "__all__"

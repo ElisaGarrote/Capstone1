@@ -689,3 +689,32 @@ def soft_delete_component(request, id):
         return Response({'detail': 'Component soft-deleted'})
     except Component.DoesNotExist:
         return Response({'detail': 'Component not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+
+# REPAIR
+@api_view(['POST'])
+def create_repair(request):
+    data = request.data
+    serializers = RepairSerializer(data=data)
+    if serializers.is_valid():
+        serializers.save()
+        return Response(serializers.data, status=status.HTTP_201_CREATED)
+    return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def get_all_repair(request):
+    queryset = Repair.objects.all().filter(is_deleted=False)
+    serializer = RepairSerializer(queryset, many=True)
+
+    return Response(serializer.data)
+
+# Repair file
+@api_view(['POST'])
+def create_repair_file(request):
+    data = request.data
+    serializers = RepairFileSerializer(data=data)
+    if serializers.is_valid():
+        serializers.save()
+        return Response(serializers.data, status=status.HTTP_201_CREATED)
+    return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+# END REPAIR
