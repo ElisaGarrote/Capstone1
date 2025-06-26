@@ -1,10 +1,10 @@
-const API_URL ="https://mockapi-production-b1cb.up.railway.app/api/ams/";
+const API_URL ="https://ticket-tracking-system-production.up.railway.app/api/ams/";
 
 class DtsService {
   // fetch asset checkout and checkin tickets
   async fetchAssetCheckouts() {
     try {
-      const response = await fetch(API_URL + "checkout-tickets?is_resolved=false");
+      const response = await fetch(API_URL + "checkout-tickets");
 
       if (!response.ok) {
         console.warn("Failed to fetch asset checkouts, status:", response.status);
