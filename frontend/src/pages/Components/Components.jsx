@@ -14,7 +14,6 @@ import assetsService from "../../services/assets-service";
 
 export default function Components() {
   const [components, setComponents] = useState([]);
-
   const [checkedItems, setCheckedItems] = useState([]);
   const allChecked = checkedItems.length === components.length && components.length > 0;
 
@@ -24,12 +23,12 @@ export default function Components() {
 
   const [endPoint, setEndPoint] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  
   const [isViewModalOpen, setViewModalOpen] = useState(false);
-  
+
+  const navigate = useNavigate();
+
   // Page initialization
   useEffect(() => {
-    // Check for passed states (success component CRUD)
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
       setTimeout(() => {
@@ -38,7 +37,6 @@ export default function Components() {
       }, 5000);
     }
 
-    // Initialize page data
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -48,11 +46,11 @@ export default function Components() {
         console.error("Error fetching components:", error);
         setComponents([]);
         setErrorMessage("Failed to load components.");
-        setError
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [location]);
 
@@ -67,20 +65,8 @@ export default function Components() {
     );
   };
 
-  const fetchComponents = async () => {
-    setLoading(true);
-    try {
-      const res = await assetsService.fetchAllComponents();
-      setComponents(res.components || []);
-    } catch (error) {
-      console.error("Error refreshing components:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleView = async (componentId) => {
-    // handle view
+    // handle view logic
   };
 
   return (
@@ -88,50 +74,24 @@ export default function Components() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={async () => {
-            await fetchProducts();
-            setSuccessMessage("Product Deleted Successfully!");
-            setTimeout(() => setSuccessMessage(""), 5000);
-          }}
-          onDeleteFail={() => {
-            setErrorMessage("Delete failed. Please try again.");
-            setTimeout(() => setErrorMessage(""), 5000);
-          }}
-        />
-      )}
-
-      {isViewModalOpen && selectedProduct && (
-        <ProductViewModal
-          product={selectedProduct}
-          closeModal={() => setViewModalOpen(false)}
-        />
-      )}
       <nav>
         <NavBar />
       </nav>
       <main className="page components-page">
         <div className="container">
-          {isLoading? (
+          {isLoading ? (
             <SkeletonLoadingTable />
           ) : (
             <>
               <section className="top">
                 <h1>Components</h1>
                 <div>
-                  <form action="" method="post">
+                  <form>
                     <input type="text" placeholder="Search..." />
                   </form>
                   <MediumButtons type="export" />
-
                   {authService.getUserInfo().role === "Admin" && (
-                    <MediumButtons
-                      type="new"
-                      navigatePage="/components/registration"
-                    />
+                    <MediumButtons type="new" navigatePage="/components/registration" />
                   )}
                 </div>
               </section>
@@ -149,9 +109,9 @@ export default function Components() {
                       <th>IMAGE</th>
                       <th>NAME</th>
                       <th>CATEGORY</th>
-                      <th>MODEL NUMBER</th>
                       <th>AVAILABLE</th>
-                      <th>CHECKIN/CHECKOUT</th>
+                      <th>CHECKIN</th>
+                      <th>CHECKOUT</th>
                       {authService.getUserInfo().role === "Admin" && (
                         <>
                           <th>EDIT</th>
@@ -162,7 +122,7 @@ export default function Components() {
                     </tr>
                   </thead>
                   <tbody>
-                    {sampleItems.map((item) => (
+                    {components.map((item) => (
                       <tr key={item.id}>
                         <td>
                           <input
@@ -172,24 +132,43 @@ export default function Components() {
                           />
                         </td>
                         <td>
-                          <img src={item.image} alt={item.product} width="50" />
+                          <img
+                            src={item.image || DefaultImage}
+                            alt={item.name}
+                            width="50"
+                          />
                         </td>
-                        <td>{item.componentName}</td>
+                        <td>{item.name}</td>
+                        <td>{item.category?.name || "N/A"}</td>
+                        <td>
+                          <span className="progress-container">
+                            <span className="progress-text" style={{ color: "#34c759" }}>
+                              {item.quantity - item.checked_out}/{item.quantity}
+                            </span>
+                            <progress value={item.available_quantity} max={item.quantity}></progress>
+                          </span>
+                        </td>
                         <td>
                           <button
-                            className={
-                              item.status === "Deployed"
-                                ? "check-in-btn"
-                                : "check-out-btn"
-                            }
-                            onClick={() => handleCheckInOut(item)}
+                            className="check-in-btn"
+                            onClick={() => handleCheckIn(item)}
+                            disabled={item.checked_out === 0}
+                            title={item.checked_out === 0 ? "No items to check in" : "Check in component"}
                           >
-                            {item.status === "Deployed" ? "Check-In" : "Check-Out"}
+                            Check-In
                           </button>
                         </td>
-                        <td>{item.quantity}</td>
-                        <td>{item.category}</td>
-                        <td>{item.modelNumber}</td>
+
+                        <td>
+                          <button
+                            className="check-out-btn"
+                            onClick={() => handleCheckOut(item)}
+                            disabled={item.quantity - item.checked_out === 0}
+                            title={item.quantity - item.checked_out === 0 ? "No available components" : "Check out component"}
+                          >
+                            Check-Out
+                          </button>
+                        </td>
                         {authService.getUserInfo().role === "Admin" && (
                           <>
                             <td>
@@ -201,7 +180,7 @@ export default function Components() {
                             <td>
                               <ComponentsTableBtn
                                 type="delete"
-                                onClick={() => handleDelete(item.id)}
+                                onClick={() => console.log("Handle delete")}
                               />
                             </td>
                           </>
@@ -209,7 +188,7 @@ export default function Components() {
                         <td>
                           <ComponentsTableBtn
                             type="view"
-                            navigatePage={`/assets/view/${item.id}`}
+                            navigatePage={`/components/view/${item.id}`}
                           />
                         </td>
                       </tr>
@@ -218,7 +197,7 @@ export default function Components() {
                 </table>
               </section>
             </>
-          )}   
+          )}
           <section className="bottom"></section>
         </div>
       </main>

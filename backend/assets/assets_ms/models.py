@@ -5,6 +5,7 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 import uuid
 import datetime
+from django.db.models import Sum
 
 # Create your models here.
 class ComponentCategory(models.Model):
@@ -15,25 +16,6 @@ class ComponentCategory(models.Model):
 
     def __str__(self):
         return self.name
-    
-class Component(models.Model):
-    name = models.CharField(max_length=100)
-    category = models.ForeignKey(ComponentCategory, on_delete=models.CASCADE)
-    manufacturer_id = models.PositiveIntegerField()
-    location = models.CharField(max_length=50)
-    model_number = models.CharField(max_length=50, blank=True, null=True)
-    order_number = models.CharField(max_length=30, blank=True, null=True)
-    purchase_date = models.DateField(auto_now_add=True)
-    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity = models.PositiveIntegerField(default=1)
-    minimum_quantity = models.PositiveIntegerField(default=0)
-    notes = models.TextField(blank=True, null=True)  
-    image = models.ImageField(upload_to='component_images/', blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-    
-    def __str__(self):
-        return self.name
-    
 class Depreciation(models.Model):
     name = models.CharField(max_length=500)
     duration = models.PositiveIntegerField(help_text="Duration in months")
@@ -189,7 +171,25 @@ class AssetCheckin(models.Model):
     image = models.ImageField(upload_to='asset_checkin_images/', blank=True, null=True)
 
     def __str__(self):
-        return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}"
+        return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}" 
+
+class Component(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(ComponentCategory, on_delete=models.CASCADE)
+    manufacturer_id = models.PositiveIntegerField()
+    location = models.CharField(max_length=50)
+    model_number = models.CharField(max_length=50, blank=True, null=True)
+    order_number = models.CharField(max_length=30, blank=True, null=True)
+    purchase_date = models.DateField(auto_now_add=True)
+    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=1)
+    minimum_quantity = models.PositiveIntegerField(default=0)
+    notes = models.TextField(blank=True, null=True)  
+    image = models.ImageField(upload_to='component_images/', blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return self.name
     
 class ComponentCheckout(models.Model):
     component = models.ForeignKey(Component, on_delete=models.CASCADE, related_name='components_checkouts')
@@ -207,7 +207,7 @@ class ComponentCheckin(models.Model):
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.displayed_id}"
+        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.displayed_id}"  
     
 class Repair(models.Model):
     REPAIR_CHOICES = [

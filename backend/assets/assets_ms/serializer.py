@@ -118,9 +118,16 @@ class AuditFileSerializer(serializers.ModelSerializer):
 
 class AllComponentSerializer(serializers.ModelSerializer):
     category = serializers.CharField(source='category.name', read_only=True)
+    checked_out = serializers.SerializerMethodField()
     class Meta:
         model = Component
-        fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'quantity']
+        fields = ['id', 'image', 'name', 'category', 'quantity', 'checked_out']
+
+    def get_checked_out(self, obj):
+        total_checked_out = obj.components_checkouts.filter(
+            component_checkins__isnull=True
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+        return total_checked_out
 
 class ComponentSerializer(serializers.ModelSerializer):
     class Meta:
