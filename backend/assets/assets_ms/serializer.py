@@ -119,7 +119,7 @@ class AuditFileSerializer(serializers.ModelSerializer):
 class AllComponentSerializer(serializers.ModelSerializer):
     category = serializers.CharField(source='category.name', read_only=True)
     class Meta:
-        model = Product
+        model = Component
         fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'quantity']
 
 class ComponentSerializer(serializers.ModelSerializer):

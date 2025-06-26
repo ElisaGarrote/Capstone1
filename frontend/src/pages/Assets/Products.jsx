@@ -173,27 +173,6 @@ export default function Products() {
             <SkeletonLoadingTable />
           ) : (
             <>
-              {errorMessage && <Alert message={errorMessage} type="danger" />}
-              {successMessage && (
-                <Alert message={successMessage} type="success" />
-              )}
-
-              {isDeleteModalOpen && (
-                <DeleteModal
-                  endPoint={endPoint}
-                  closeModal={() => setDeleteModalOpen(false)}
-                  confirmDelete={async () => {
-                    await fetchProducts();
-                    setSuccessMessage("Product Deleted Successfully!");
-                    setTimeout(() => setSuccessMessage(""), 5000);
-                  }}
-                  onDeleteFail={() => {
-                    setErrorMessage("Delete failed. Please try again.");
-                    setTimeout(() => setErrorMessage(""), 5000);
-                  }}
-                />
-              )}
-
               <section className="top">
                 <h1>Products</h1>
                 <div>
