@@ -154,10 +154,11 @@ export default function Assets() {
   const handleView = async (assetId) => {
     console.log("asset id:", assetId);
     try {
-      const assetResponse = await assetsService.fetchAssetById(assetId);
-      console.log("Full assetResponse:", assetResponse);
-      const assetData = assetResponse;
-      console.log("assetData:", assetData, typeof assetData);
+      setLoading(true);
+      setErrorMessage("");
+
+      const assetData = await assetsService.fetchAssetById(assetId);
+      console.log("Full assetResponse:", assetData);
 
       if (!assetData) {
         setErrorMessage("Asset details not found.");
@@ -166,11 +167,17 @@ export default function Assets() {
       }
 
       let supplierName = "-";
+
       if (assetData.supplier_id) {
-        const supplierResponse = await contextsService.fetchSuppNameById(
-          assetData.supplier_id
-        );
-        supplierName = supplierResponse.supplier?.name || supplierName;
+        try {
+          const supplierResponse = await contextsService.fetchSuppNameById(
+            assetData.supplier_id
+          );
+          console.log("Supplier response:", supplierResponse);
+          supplierName = supplierResponse?.name || supplierName;
+        } catch (err) {
+          console.warn("Supplier fetch failed:", err);
+        }
       }
 
       const assetWithSupplier = {
@@ -178,11 +185,14 @@ export default function Assets() {
         supplier: supplierName,
       };
 
+      console.log("Prepared asset view:", assetWithSupplier);
       setSelectedAsset(assetWithSupplier);
       setViewModalOpen(true);
     } catch (error) {
       console.error("Error fetching asset or supplier details:", error);
       setErrorMessage("Failed to load asset details.");
+    } finally {
+      setLoading(false);
     }
   };
 

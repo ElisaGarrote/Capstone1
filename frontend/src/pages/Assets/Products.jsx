@@ -88,10 +88,12 @@ export default function Products() {
   const handleView = async (productId) => {
     console.log("product id:", productId);
     try {
-      const productResponse = await assetsService.fetchProductById(productId);
-      console.log("Full product response:", productResponse);
-      const productData = productResponse;
-      console.log("productData:", productData, typeof productData);
+      setLoading(true);
+      setErrorMessage("");
+
+      // Fetch the main product
+      const productData = await assetsService.fetchProductById(productId);
+      console.log("Product data:", productData);
 
       if (!productData) {
         setErrorMessage("Product details not found.");
@@ -99,39 +101,45 @@ export default function Products() {
         return;
       }
 
-      let manufacturerName = "-";
-      let supplierName = "-";
+      let manufacturerName = productData.manufacturer || "-";
+      let supplierName = productData.supplier || "-";
 
+      // Only try fetch if we have IDs
       if (productData.manufacturer_id) {
-        const manufacturerResponse =
-          await contextsService.fetchManufacturerById(
-            productData.manufacturer_id
-          );
-        manufacturerName =
-          manufacturerResponse.manufacturer?.name || manufacturerName;
+        try {
+          const manufacturerResponse = await contextsService.fetchManufacturerById(productData.manufacturer_id);
+          console.log("Manufacturer response:", manufacturerResponse);
+          manufacturerName = manufacturerResponse?.name || manufacturerName;
+        } catch (err) {
+          console.warn("Manufacturer fetch failed:", err);
+        }
       }
 
       if (productData.default_supplier_id) {
-        const supplierResponse = await contextsService.fetchSuppNameById(
-          productData.default_supplier_id
-        );
-        supplierName = supplierResponse.supplier?.name || supplierName;
+        try {
+          const supplierResponse = await contextsService.fetchSuppNameById(productData.default_supplier_id);
+          console.log("Supplier response:", supplierResponse);
+          supplierName = supplierResponse?.name || supplierName;
+        } catch (err) {
+          console.warn("Supplier fetch failed:", err);
+        }
       }
 
+      // Compose full view
       const manuFullView = {
         ...productData,
         manufacturer: manufacturerName,
         supplier: supplierName,
       };
-      console.log("product view:" ,manuFullView)
+
+      console.log("Prepared product view:", manuFullView);
       setSelectedProduct(manuFullView);
       setViewModalOpen(true);
     } catch (error) {
-      console.error(
-        "Error fetching product or manufacturer and supplier details:",
-        error
-      );
+      console.error("Error fetching product details:", error);
       setErrorMessage("Failed to load product details.");
+    } finally {
+      setLoading(false);
     }
   };
 

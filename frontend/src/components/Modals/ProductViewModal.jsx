@@ -75,7 +75,7 @@ export default function ProductViewModal({ product, closeModal }) {
             </fieldset>
 
             <fieldset className="detail-item">
-              <label>Supplier</label>
+              <label>Default Supplier</label>
               <p>{supplier}</p>
             </fieldset>
 
