@@ -109,20 +109,29 @@ export default function CheckOutComponent() {
               <fieldset>
                 <label>Check-Out To *</label>
                 {loadingAssets ? (
-                  <p>Loading assets...</p>
-                ) : assetError ? (
-                  <p className="error-message">{assetError}</p>
+                  <input
+                    type="text"
+                    value="Loading assets..."
+                    readOnly
+                    className="readonly-loading-input"
+                  />
                 ) : (
                   <select
                     className={errors.asset ? 'input-error' : ''}
                     {...register("asset", { required: 'Asset is required' })}
                   >
-                    <option value="">Select an Asset</option>
-                    {assetList.map((asset) => (
-                      <option key={asset.id} value={asset.id}>
-                        {asset.displayed_id} - {asset.name}
-                      </option>
-                    ))}
+                    {assetError || assetList.length === 0 ? (
+                      <option value="" disabled>No assets available</option>
+                    ) : (
+                      <>
+                        <option value="">Select an Asset</option>
+                        {assetList.map((asset) => (
+                          <option key={asset.id} value={asset.id}>
+                            {asset.displayed_id} - {asset.name}
+                          </option>
+                        ))}
+                      </>
+                    )}
                   </select>
                 )}
                 {errors.asset && <span className="error-message">{errors.asset.message}</span>}

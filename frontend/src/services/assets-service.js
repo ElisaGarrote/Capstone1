@@ -837,7 +837,7 @@ class AssetsService {
   }
   async fetchAssetNames() {
     try {
-      const response = await fetch(API_URL + "assets/names");
+      const response = await fetch(API_URL + "assets/names/");
 
       if (!response.ok) {
         console.warn("Failed to fetch assets, status:", response.status);
