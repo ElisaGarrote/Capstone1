@@ -209,7 +209,7 @@ class AssetCheckin(models.Model):
 class Component(models.Model):
     name = models.CharField(max_length=100)
     category = models.ForeignKey(ComponentCategory, on_delete=models.CASCADE)
-    manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE)
+    manufacturer = models.IntegerField()
     location = models.CharField(max_length=50)
     model_number = models.CharField(max_length=50, blank=True, null=True)
     order_number = models.CharField(max_length=30, blank=True, null=True)

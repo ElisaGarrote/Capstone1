@@ -123,7 +123,7 @@ export default function Products() {
         manufacturer: manufacturerName,
         supplier: supplierName,
       };
-
+      console.log("product view:" ,manuFullView)
       setSelectedProduct(manuFullView);
       setViewModalOpen(true);
     } catch (error) {
