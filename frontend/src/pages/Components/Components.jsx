@@ -67,12 +67,7 @@ export default function Components() {
   };
 
   const handleCheckIn = (item) => {
-    navigate(`/components/checked-out-list/${item.id}`, {
-      state: {
-        id: item.id,
-        name: item.name,
-      },
-    });
+    navigate(`/components/checked-out-list/${item.id}`);
   };
 
   const handleCheckOut = (item) => {

@@ -2,7 +2,7 @@ import "../../styles/custom-colors.css";
 import "../../styles/CheckedOutList.css";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "../../styles/PageTable.css";
 import React, { useEffect, useState } from "react";
 import assetsService from "../../services/assets-service";
@@ -11,11 +11,13 @@ import Alert from "../../components/Alert";
 
 export default function CheckOutList() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { id, name } = location.state || {};
+  const { id } = useParams();
 
-  const [checkedItems, setCheckedItems] = useState([]);
+  // Store both the component metadata and the pending checkouts
+  const [componentInfo, setComponentInfo] = useState({});
   const [pendingCheckouts, setPendingCheckouts] = useState([]);
+  const [checkedItems, setCheckedItems] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -26,8 +28,20 @@ export default function CheckOutList() {
       try {
         setIsLoading(true);
         const data = await assetsService.fetchPendingComponentCheckouts(id);
-        console.log("Pending Checkouts Fetched:", data);
-        setPendingCheckouts(data || []);
+        console.log("Fetched component and pending checkouts:", data);
+
+        // Defensive fallback
+        if (data) {
+          setComponentInfo({
+            id: data.id,
+            name: data.name,
+            image: data.image
+          });
+          setPendingCheckouts(data.pending_checkouts || []);
+        } else {
+          setComponentInfo({});
+          setPendingCheckouts([]);
+        }
       } catch (error) {
         console.error("Error fetching pending checkouts:", error);
         setErrorMessage("Failed to load pending checkouts.");
@@ -53,16 +67,25 @@ export default function CheckOutList() {
     );
   };
 
-  const handleCheckIn = (itemId) => {
-    navigate(`/components/check-in/${itemId}`, {
-      state: { id: itemId },
+  const handleCheckIn = (item) => {
+    navigate(`/components/check-in/${item.id}`, {
+      state: {
+        ...item,
+        componentName: componentInfo.name,
+        componentImage: componentInfo.image
+      }
     });
   };
 
   const handleBulkCheckIn = () => {
     if (checkedItems.length === 0) return;
     navigate("/components/check-in/0", {
-      state: { ids: checkedItems },
+      state: {
+        ids: checkedItems,
+        component: componentInfo.id,
+        componentName: componentInfo.name,
+        componentImage: componentInfo.image
+      }
     });
   };
 
@@ -75,17 +98,19 @@ export default function CheckOutList() {
             root="Components"
             currentPage="Check-In Components"
             rootNavigatePage="/components"
-            title={name}
+            title={componentInfo.name || "Component"}
           />
         </section>
         <div className="container">
           {errorMessage && <Alert message={errorMessage} type="danger" />}
+
           <section className="top">
             <p>Please select which component checkouts you want to check-in.</p>
             <button onClick={handleBulkCheckIn} disabled={checkedItems.length === 0}>
               Bulk Check-In
             </button>
           </section>
+
           <section className="middle">
             {isLoading ? (
               <SkeletonLoadingTable />
@@ -126,7 +151,7 @@ export default function CheckOutList() {
                       <td>
                         <button
                           className="cmp-check-in-btn"
-                          onClick={() => handleCheckIn(item.id)}
+                          onClick={() => handleCheckIn(item)}
                         >
                           Check-In
                         </button>

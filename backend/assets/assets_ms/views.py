@@ -712,12 +712,27 @@ def get_asset_names(request):
 
 @api_view(['GET'])
 def pending_component_checkouts(request, component_id):
-    checkouts = ComponentCheckout.objects.filter(
-        component_id=component_id,
+    try:
+        component = Component.objects.get(id=component_id)
+    except Component.DoesNotExist:
+        return Response({"detail": "Component not found."}, status=404)
+
+    # Get all pending checkouts for this component
+    pending_checkouts = ComponentCheckout.objects.filter(
+        component=component,
         component_checkins__isnull=True
     )
-    serializer = ComponentCheckoutSerializer(checkouts, many=True)
-    return Response(serializer.data)
+
+    checkout_serializer = ComponentCheckoutSerializer(pending_checkouts, many=True)
+
+    data = {
+        "id": component.id,
+        "name": component.name,
+        "image": request.build_absolute_uri(component.image.url) if component.image else None,
+        "pending_checkouts": checkout_serializer.data
+    }
+
+    return Response(data)
 
 @api_view(['POST'])
 def create_component_checkout(request):

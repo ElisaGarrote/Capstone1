@@ -2,50 +2,46 @@ import "../../styles/custom-colors.css";
 import "../../styles/CheckInOut.css";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
-import CloseIcon from "../../assets/icons/close.svg";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-
-const sampleItems = [
-  {
-    id: 1,
-    checkOutDate: '2023-10-01',
-    returnDate: '2023-10-10',
-    user: 'John Doe',
-    asset: 'Dell XPS 13',
-    notes: 'For software development',
-    checkInDate: '',
-  },
-  {
-    id: 2,
-    checkOutDate: '2023-10-02',
-    returnDate: '2023-10-05',
-    user: 'Jane Smith',
-    asset: 'Logitech Mouse',
-    notes: 'For testing purposes',
-    checkInDate: '',
-  },
-];
+import assetsService from "../../services/assets-service";
 
 export default function CheckInComponent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { ids } = location.state || {};  // Expecting an array of IDs
+  const item = location.state || {};
+  const params = useParams();
+  const id = params.id;
+
   const currentDate = new Date().toISOString().split("T")[0];
-  
-  // Find the item with the matching id
-  const selectedItems = ids ? sampleItems.filter(item => ids.includes(item.id)) : [sampleItems[0]];
-    
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log("Form submitted:", data);
-    navigate("/components");
+  console.log("item:", item);
+  const onSubmit = async (data) => {
+    try {
+      console.log("Submitting checkout data:", data);
+      const formData = new FormData();
+
+      formData.append("component_checkout", id);
+      formData.append("checkin_date", data.asset);
+      formData.append("notes", data.quantity);
+
+      await assetsService.createComponentCheckout(formData);
+
+      navigate("/components", {
+        state: { successMessage: `Component "${name}" checked out successfully!` },
+      });
+    } catch (error) {
+      console.error("Error submitting checkout:", error);
+      alert(
+        error?.detail || error?.message || "Failed to submit checkout. Please try again."
+      );
+    }
   };
 
   return (
@@ -54,39 +50,34 @@ export default function CheckInComponent() {
       <main className="check-in-out-page">
         <section className="top">
           <TopSecFormPage
-            root="Components"
+            root="Checkin List"
             currentPage="Check-In Component"
-            rootNavigatePage="/components"
-            title="Check-In Components"
+            rootNavigatePage={`/components/checked-out-list/${item.component}`}
+            title="Check-In Component"
           />
         </section>
+
         <section className="middle">
           <section className="recent-checkout-info">
-            <h2>Check-out Info</h2>
-            {selectedItems.map((item) => (
-              <div key={item.id}>
-                <fieldset>
-                  <label>Checked-Out To:</label>
-                  <p>{item.user}</p>
-                </fieldset>
-                <fieldset>
-                  <label>Asset:</label>
-                  <p>{item.asset}</p>
-                </fieldset>
-                <fieldset>
-                  <label>Check-Out Date:</label>
-                  <p>{item.checkOutDate}</p>
-                </fieldset>
-                <fieldset>
-                  <label>Expected Return Date:</label>
-                  <p>{item.returnDate}</p>
-                </fieldset>
-                <fieldset>
-                  <label>Notes:</label>
-                  <p>{item.notes}</p>
-                </fieldset>
-              </div>
-            ))}
+            <h2>Check-Out Info</h2>
+            <div>
+              <fieldset>
+                <label>Check-Out Date:</label>
+                <p>{item.checkout_date ? new Date(item.checkout_date).toLocaleString() : "-"}</p>
+              </fieldset>
+              <fieldset>
+                <label>Checked-Out To:</label>
+                <p>{item.asset_displayed_id} - {item.asset_name}</p>
+              </fieldset>
+              <fieldset>
+                <label>Quantity:</label>
+                <p>{item.quantity || "-"}</p>
+              </fieldset>
+              <fieldset>
+                <label>Notes:</label>
+                <p>{item.notes || "-"}</p>
+              </fieldset>
+            </div>
           </section>
 
           <section className="checkin-form">
@@ -95,12 +86,13 @@ export default function CheckInComponent() {
               <fieldset>
                 <label>Check-In Date *</label>
                 <input
-                  type="text"  // Use "text" instead of "date" to prevent date picker
+                  type="text"
                   readOnly
-                  value={currentDate}  // Format: YYYY-MM-DD
+                  value={currentDate}
                   className={errors.checkInDate ? 'input-error' : ''}
-                  {...register("checkInDate")}
+                  {...register("checkInDate", { required: true })}
                 />
+                {errors.checkInDate && <span className="error">Check-In Date is required</span>}
               </fieldset>
 
               <fieldset>
