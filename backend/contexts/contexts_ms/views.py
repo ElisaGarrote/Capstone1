@@ -4,7 +4,6 @@ from rest_framework import status
 from .models import *
 from .serializer import *
 from django.db.models import Q
-from django_filters.rest_framework import DjangoFilterBackend
 
 # Get all manufacturer's names
 @api_view(['GET'])
