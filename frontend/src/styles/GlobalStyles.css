@@ -1,5 +1,8 @@
 /* Global styles for the application */
-a, a:hover, a:focus, a:active,
+a,
+a:hover,
+a:focus,
+a:active,
 .user-management-page *,
 .user-management-page *:hover,
 .user-management-page *:focus,
@@ -31,4 +34,45 @@ a, a:hover, a:focus, a:active,
 .user-details h3:focus,
 .user-details h3:active {
   text-decoration: none !important;
+}
+
+.disabled-dropdown {
+  display: flex;
+
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #d3d3d3;
+  background-color: rgb(211, 211, 211, 0.5);
+
+  font-size: 0.875rem;
+  color: #808080;
+
+  cursor: default;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.875rem;
+}
+
+.save-btn {
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  height: 48px;
+  padding: 12px 16px;
+  border-radius: 40px;
+  background-color: var(--primary-color);
+  color: var(--bg-color);
+  transition: 0.5s ease;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  background-color: #d3d3d3;
+}
+
+.save-btn:hover:not(button:disabled) {
+  background-color: var(--primary-color-hover);
 }
