@@ -103,6 +103,13 @@
   background-color: rgba(255, 59, 48, 0.2) !important;
 }
 
+/* Global audits table header color override */
+.audits-table th {
+  color: #374151 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+}
+
 input[type="checkbox"] {
   appearance: auto;
   -webkit-appearance: checkbox;

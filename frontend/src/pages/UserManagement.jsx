@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/custom-colors.css";
-import "../styles/AssetAudits.css";
-import "../styles/AuditTablesGlobal.css";
 import "../styles/UserManagement.css";
 import NavBar from "../components/NavBar";
 import MediumButtons from "../components/buttons/MediumButtons";
@@ -12,6 +10,8 @@ import DeleteModal from "../components/Modals/DeleteModal";
 import DefaultProfile from "../assets/img/profile.jpg";
 import Alert from "../components/Alert";
 import { SkeletonLoadingTable } from "../components/Loading/LoadingSkeleton";
+import Pagination from "../components/Pagination";
+import usePagination from "../hooks/usePagination";
 import authService from "../services/auth-service";
 
 export default function UserManagement() {
@@ -21,11 +21,14 @@ export default function UserManagement() {
   const [isLoading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeactivateModalOpen, setDeactivateModalOpen] = useState(false);
+  const [isActivateModalOpen, setActivateModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+
 
   // Mock data for users - replace with actual data later
   const mockUsers = [
@@ -122,23 +125,45 @@ export default function UserManagement() {
            user.role.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  // Pagination logic
+  const {
+    currentPage,
+    itemsPerPage,
+    paginatedData,
+    totalItems,
+    handlePageChange,
+    handleItemsPerPageChange
+  } = usePagination(filteredUsers, 20);
+
   const handleDeactivate = (user) => {
     setSelectedUser(user);
     setDeactivateModalOpen(true);
   };
 
   const handleActivate = (user) => {
-    // Handle user activation
-    setUsers(prevUsers =>
-      prevUsers.map(u =>
-        u.id === user.id
-          ? { ...u, status: { type: "deployable", name: "Active" } }
-          : u
-      )
-    );
+    setSelectedUser(user);
+    setActivateModalOpen(true);
+  };
 
-    setSuccessMessage(`${user.name} has been activated successfully!`);
-    setTimeout(() => setSuccessMessage(""), 5000);
+  const confirmActivate = async (user) => {
+    try {
+      console.log("Activating user:", user.id);
+
+      // Update the user's status in the local state
+      setUsers(prevUsers =>
+        prevUsers.map(u =>
+          u.id === user.id
+            ? { ...u, status: { type: "deployable", name: "Active" } }
+            : u
+        )
+      );
+
+      setSuccessMessage(`${user.name} has been activated successfully!`);
+      setTimeout(() => setSuccessMessage(""), 5000);
+    } catch (error) {
+      console.error("Activation failed:", error);
+      throw error;
+    }
   };
 
   const confirmDeactivate = async (user) => {
@@ -193,6 +218,25 @@ export default function UserManagement() {
         />
       )}
 
+      {isActivateModalOpen && selectedUser && (
+        <DeleteModal
+          isOpen={isActivateModalOpen}
+          onConfirm={async () => {
+            try {
+              await confirmActivate(selectedUser);
+              setActivateModalOpen(false);
+            } catch (error) {
+              setErrorMessage("Activation failed. Please try again.");
+              setTimeout(() => setErrorMessage(""), 5000);
+              setActivateModalOpen(false);
+            }
+          }}
+          onCancel={() => setActivateModalOpen(false)}
+          title="Activate User"
+          message={`Are you sure you want to activate ${selectedUser?.name}? This user will be able to access the system again.`}
+        />
+      )}
+
       <nav>
         <NavBar />
       </nav>
@@ -206,7 +250,7 @@ export default function UserManagement() {
         <section className="main-middle">
           <section className="container">
             <section className="top">
-              <h2>All Agents ({filteredUsers.length})</h2>
+              <h2>All Agents ({totalItems})</h2>
               <div>
                 <form>
                   <input
@@ -262,7 +306,7 @@ export default function UserManagement() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user) => (
+                    {paginatedData.map((user) => (
                       <tr key={user.id}>
                         <td>
                           <img
@@ -306,6 +350,18 @@ export default function UserManagement() {
                 </table>
               )}
             </section>
+
+            {/* Pagination */}
+            {filteredUsers.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
+                itemsPerPageOptions={[10, 20, 50, 100]}
+              />
+            )}
 
             <section></section>
           </section>

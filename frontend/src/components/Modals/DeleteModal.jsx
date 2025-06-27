@@ -57,7 +57,7 @@ export default function DeleteModal({
         <button className="close-button" onClick={handleClose}>
           <img src={CloseIcon} alt="Close" />
         </button>
-        {title !== "Deactivate User" && (
+        {title !== "Deactivate User" && title !== "Activate User" && (
           <img src={DeleteIcon} alt="Delete" />
         )}
         <h3>{title}</h3>
@@ -67,12 +67,18 @@ export default function DeleteModal({
             Cancel
           </button>
           <button
-            className="confirm-button"
+            className={`confirm-button ${title === "Activate User" ? "activate-confirm" : ""}`}
             onClick={handleConfirm}
             disabled={isDeleting}
           >
             {isDeleting && <LoadingButton />}
-            {!isDeleting ? (title === "Deactivate User" ? "Deactivate" : "Confirm") : (title === "Deactivate User" ? "Deactivating..." : "Deleting...")}
+            {!isDeleting ? (
+              title === "Deactivate User" ? "Deactivate" :
+              title === "Activate User" ? "Activate" : "Confirm"
+            ) : (
+              title === "Deactivate User" ? "Deactivating..." :
+              title === "Activate User" ? "Activating..." : "Deleting..."
+            )}
           </button>
         </div>
       </div>

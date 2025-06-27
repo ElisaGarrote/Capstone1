@@ -188,7 +188,13 @@
   border-color: #d39e00;
 }
 
-.delete-modal .warning-icon {
-  font-size: 48px;
-  margin-bottom: 10px;
+/* Activate Confirm Button */
+.delete-modal .activate-confirm {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.delete-modal .activate-confirm:hover {
+  background-color: var(--primary-color-hover) !important;
+  border-color: var(--primary-color-hover) !important;
 }

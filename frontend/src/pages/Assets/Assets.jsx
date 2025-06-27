@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/custom-colors.css";
-import "../../styles/PageTable.css";
+import "../../styles/Assets.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -14,6 +14,8 @@ import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import AssetViewModal from "../../components/Modals/AssetViewModal";
 import dtsService from "../../services/dts-integration-service";
 import authService from "../../services/auth-service";
+import Pagination from "../../components/Pagination";
+import usePagination from "../../hooks/usePagination";
 
 export default function Assets() {
   const location = useLocation();
@@ -26,11 +28,30 @@ export default function Assets() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
   const allChecked = checkedItems.length === assets.length && assets.length > 0;
+
+  // Filter assets based on search query
+  const filteredAssets = assets.filter(asset => {
+    return asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           asset.displayed_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           asset.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           asset.status.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  // Pagination logic
+  const {
+    currentPage,
+    itemsPerPage,
+    paginatedData,
+    totalItems,
+    handlePageChange,
+    handleItemsPerPageChange
+  } = usePagination(filteredAssets, 20);
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -218,13 +239,18 @@ export default function Assets() {
         <NavBar />
       </nav>
 
-      <main className="page">
+      <main className="assets-page">
         <div className="container">
           <section className="top">
             <h1>Assets</h1>
             <div>
               <form>
-                <input type="text" placeholder="Search..." />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </form>
               <MediumButtons type="export" />
 
@@ -237,8 +263,10 @@ export default function Assets() {
           {isLoading ? (
             <SkeletonLoadingTable />
           ) : (
-            <section className="middle">
-              <table className="assets-table">
+            <>
+              <section className="middle">
+                <div className="table-wrapper">
+                  <table>
                 <thead>
                   <tr>
                     <th>
@@ -262,14 +290,14 @@ export default function Assets() {
                   </tr>
                 </thead>
                 <tbody>
-                  {assets.length === 0 ? (
+                  {filteredAssets.length === 0 ? (
                     <tr>
-                      <td colSpan="10" className="no-products-message">
+                      <td colSpan="10" className="no-assets-message">
                         <p>No assets found. Please add some assets.</p>
                       </td>
                     </tr>
                   ) : (
-                    assets.map((asset) => (
+                    paginatedData.map((asset) => (
                       <tr key={asset.id}>
                         <td>
                           <input
@@ -280,6 +308,7 @@ export default function Assets() {
                         </td>
                         <td>
                           <img
+                            className="table-img"
                             src={
                               asset.image
                                 ? `https://assets-service-production.up.railway.app${asset.image}`
@@ -346,7 +375,21 @@ export default function Assets() {
                   )}
                 </tbody>
               </table>
+              </div>
             </section>
+
+              {/* Pagination */}
+              {filteredAssets.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                  itemsPerPageOptions={[10, 20, 50, 100]}
+                />
+              )}
+            </>
           )}
         </div>
       </main>

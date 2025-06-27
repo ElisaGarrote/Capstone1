@@ -14,6 +14,8 @@ import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import Pagination from "../../components/Pagination";
+import usePagination from "../../hooks/usePagination";
 
 export default function ScheduledAudits() {
   const location = useLocation();
@@ -29,6 +31,16 @@ export default function ScheduledAudits() {
   );
   const [isLoading, setLoading] = useState(true);
   const [endPoint, setEndPoint] = useState(null);
+
+  // Pagination logic
+  const {
+    currentPage,
+    itemsPerPage,
+    paginatedData,
+    totalItems,
+    handlePageChange,
+    handleItemsPerPageChange
+  } = usePagination(scheduleAuditData, 20);
 
   // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
   // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
@@ -196,7 +208,7 @@ export default function ScheduledAudits() {
                     </tr>
                   </thead>
                   <tbody>
-                    {scheduleAuditData.map((data, index) => {
+                    {paginatedData.map((data, index) => {
                       return (
                         <tr key={index}>
                           <td>
@@ -258,6 +270,18 @@ export default function ScheduledAudits() {
                     })}
                   </tbody>
                 </table>
+              )}
+
+              {/* Pagination */}
+              {scheduleAuditData.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                  itemsPerPageOptions={[10, 20, 50, 100]}
+                />
               )}
             </section>
             <section></section>

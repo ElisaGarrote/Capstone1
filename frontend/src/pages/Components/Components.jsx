@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
 import "../../styles/custom-colors.css";
-import "../../styles/PageTable.css";
-import "../../styles/ComponentsButtons.css";
+import "../../styles/Components.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import ComponentsTableBtn from "../../components/buttons/ComponentsTableButtons";
 import SampleImage from "../../assets/img/dvi.jpeg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import authService from "../../services/auth-service";
+import Pagination from "../../components/Pagination";
+import usePagination from "../../hooks/usePagination";
 
 // Sample asset data
 const sampleItems = [
@@ -50,8 +51,27 @@ const sampleItems = [
 
 export default function Components() {
   const [checkedItems, setCheckedItems] = useState([]);
-  const allChecked = checkedItems.length === sampleItems.length;
+  const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate(); // Use useNavigate hook
+
+  const allChecked = checkedItems.length === sampleItems.length;
+
+  // Filter components based on search query
+  const filteredComponents = sampleItems.filter(component => {
+    return component.componentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           component.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           component.modelNumber.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  // Pagination logic
+  const {
+    currentPage,
+    itemsPerPage,
+    paginatedData,
+    totalItems,
+    handlePageChange,
+    handleItemsPerPageChange
+  } = usePagination(filteredComponents, 20);
 
   const toggleSelectAll = () => {
     if (allChecked) {
@@ -98,13 +118,18 @@ export default function Components() {
       <nav>
         <NavBar />
       </nav>
-      <main className="page components-page">
+      <main className="components-page">
         <div className="container">
           <section className="top">
             <h1>Components</h1>
             <div>
               <form action="" method="post">
-                <input type="text" placeholder="Search..." />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </form>
               <MediumButtons type="export" />
 
@@ -117,7 +142,8 @@ export default function Components() {
             </div>
           </section>
           <section className="middle">
-            <table className="components-table">
+            <div className="table-wrapper">
+              <table>
               <thead>
                 <tr>
                   <th>
@@ -139,7 +165,14 @@ export default function Components() {
                 </tr>
               </thead>
               <tbody>
-                {sampleItems.map((item) => (
+                {filteredComponents.length === 0 ? (
+                  <tr>
+                    <td colSpan="10" className="no-components-message">
+                      <p>No components found. Please add some components.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedData.map((item) => (
                   <tr key={item.id}>
                     <td>
                       <input
@@ -149,7 +182,11 @@ export default function Components() {
                       />
                     </td>
                     <td>
-                      <img src={item.image} alt={item.product} width="50" />
+                      <img
+                        className="table-img"
+                        src={item.image}
+                        alt={item.product}
+                      />
                     </td>
                     <td>{item.componentName}</td>
                     <td>
@@ -188,11 +225,24 @@ export default function Components() {
                       />
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
+            </div>
           </section>
-          <section className="bottom"></section>
+
+          {/* Pagination */}
+          {filteredComponents.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+              itemsPerPageOptions={[10, 20, 50, 100]}
+            />
+          )}
         </div>
       </main>
     </>
