@@ -88,7 +88,8 @@ urlpatterns = [
 
     # Repair file
     path('repairs/add/files/', create_repair_file, name='create_repair_file'),
-    path('repairs/file/<int:id>/delete/', soft_delete_repair_file, name='soft_delete_repair_file'),
+    path('repairs/file/<int:id>/delete/', soft_delete_repair_file_by_id, name='soft_delete_repair_file_by_id'),
+    path('repairs/<int:id>/delete/files/', soft_delete_repair_file_by_repair_id, name='soft_delete_repair_file_by_repair_id'),
     
     #Dahsboard
     path('dashboard/', get_dashboard_stats, name='dashboard-stats'),

@@ -31,6 +31,7 @@ class UsersViewset(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+    register_serializer = RegisterSerializer
 
     # List of all urls for users viewset.
     def list(self, request):
@@ -58,4 +59,11 @@ class UsersViewset(viewsets.ModelViewSet):
         has_active_admin = self.queryset.filter(is_active=True, is_superuser=True).exists()
 
         return Response(has_active_admin)
+    
+    # Get current user
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def get_current_user(self, request):
+        user = request.user
+        serializer = self.register_serializer(user)
+        return Response(serializer.data)
     

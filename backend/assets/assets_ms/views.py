@@ -813,7 +813,8 @@ def create_repair_file(request):
     return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PATCH'])
-def soft_delete_repair_file(request, id):
+def soft_delete_repair_file_by_id(request, id):
+    "Delete repair file by id."
     try:
         repair_file = RepairFile.objects.get(pk=id, is_deleted=False)
         repair_file.is_deleted = True
@@ -821,6 +822,16 @@ def soft_delete_repair_file(request, id):
         return Response({'detail': 'Repair file soft-deleted'})
     except RepairFile.DoesNotExist:
         return Response({'detail': 'Repair file not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['PATCH'])
+def soft_delete_repair_file_by_repair_id(request, id):
+    "Delete all repair files by repair id."
+    try:
+        repair_files = RepairFile.objects.filter(repair=id, is_deleted=False)
+        repair_files.update(is_deleted=True)
+        return Response({'detail': 'Repair files soft-deleted'})
+    except RepairFile.DoesNotExist:
+        return Response({'detail': 'Repair files not found'}, status=status.HTTP_404_NOT_FOUND)
 # END REPAIR
 
 @api_view(['GET'])

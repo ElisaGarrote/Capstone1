@@ -51,7 +51,7 @@ class AllAssetSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Asset
-        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status', 'product']
+        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status', 'product', 'supplier_id']
     
     def get_category(self, obj):
         if obj.product and obj.product.category:
@@ -190,6 +190,7 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class RepairSerializer(serializers.ModelSerializer):
+    asset_info = AllAssetSerializer(source='asset', read_only=True)
     repair_files = serializers.SerializerMethodField()
 
     class Meta:
