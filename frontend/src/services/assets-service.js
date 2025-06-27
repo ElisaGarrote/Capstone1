@@ -862,15 +862,15 @@ class AssetsService {
     try {
       const response = await fetch(`${API_URL}components/checkouts/${componentId}/pending/`);
 
-      const text = await response.text();
-      console.log('Raw response:', text);
-
       if (!response.ok) {
-        console.warn('Fetch Pending Component Checkouts Error:', text);
-        throw new Error(`HTTP ${response.status}: ${text}`);
+        const errorText = await response.text();
+        console.warn('Fetch Pending Component Checkouts Error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      return JSON.parse(text);
+      const data = await response.json();
+      console.log('Pending checkouts:', data);
+      return data;
     } catch (error) {
       console.error('Error fetching pending component checkouts:', error);
       throw error;

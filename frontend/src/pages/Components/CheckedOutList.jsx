@@ -26,6 +26,7 @@ export default function CheckOutList() {
       try {
         setIsLoading(true);
         const data = await assetsService.fetchPendingComponentCheckouts(id);
+        console.log("Pending Checkouts Fetched:", data);
         setPendingCheckouts(data || []);
       } catch (error) {
         console.error("Error fetching pending checkouts:", error);
@@ -80,9 +81,7 @@ export default function CheckOutList() {
         <div className="container">
           {errorMessage && <Alert message={errorMessage} type="danger" />}
           <section className="top">
-            <p>
-              Please select which component checkouts you want to check-in.
-            </p>
+            <p>Please select which component checkouts you want to check-in.</p>
             <button onClick={handleBulkCheckIn} disabled={checkedItems.length === 0}>
               Bulk Check-In
             </button>
