@@ -4,12 +4,13 @@ import "../../styles/ComponentsButtons.css";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import ComponentsTableBtn from "../../components/buttons/ComponentsTableButtons";
+import TableBtn from "../../components/buttons/TableButtons";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import authService from "../../services/auth-service";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import Alert from "../../components/Alert";
+import DeleteModal from "../../components/Modals/DeleteModal";
 import assetsService from "../../services/assets-service";
 
 export default function Components() {
@@ -65,6 +66,19 @@ export default function Components() {
     );
   };
 
+  const fetchComponents = async () => {
+    setLoading(true);
+    try {
+      const response = await assetsService.fetchAllComponents();
+      setComponents(response.components || []);
+    } catch (error) {
+      console.error("Error fetching components:", error);
+      setComponents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleView = async (componentId) => {
     // handle view logic
   };
@@ -74,6 +88,21 @@ export default function Components() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
+      {isDeleteModalOpen && (
+        <DeleteModal
+          endPoint={endPoint}
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={async () => {
+            await fetchComponents();
+            setSuccessMessage("Asset Deleted Successfully!");
+            setTimeout(() => setSuccessMessage(""), 5000);
+          }}
+          onDeleteFail={() => {
+            setErrorMessage("Delete failed. Please try again.");
+            setTimeout(() => setErrorMessage(""), 5000);
+          }}
+        />
+      )}
       <nav>
         <NavBar />
       </nav>
@@ -172,23 +201,30 @@ export default function Components() {
                         {authService.getUserInfo().role === "Admin" && (
                           <>
                             <td>
-                              <ComponentsTableBtn
+                              <TableBtn
                                 type="edit"
                                 navigatePage={`/components/registration/${item.id}`}
+                                data={item.id}
                               />
                             </td>
                             <td>
-                              <ComponentsTableBtn
+                              <TableBtn
                                 type="delete"
-                                onClick={() => console.log("Handle delete")}
+                                showModal={() => {
+                                  setEndPoint(
+                                    `https://assets-service-production.up.railway.app/components/${item.id}/delete/`
+                                  );
+                                  setDeleteModalOpen(true);
+                                }}
+                                data={item.id}
                               />
                             </td>
                           </>
                         )}
                         <td>
-                          <ComponentsTableBtn
+                          <TableBtn
                             type="view"
-                            navigatePage={`/components/view/${item.id}`}
+                            onClick={() => handleView(item.id)}
                           />
                         </td>
                       </tr>

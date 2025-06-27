@@ -1,266 +1,225 @@
-import NavBar from '../../components/NavBar';
-import '../../styles/Registration.css';
-import { useNavigate, useParams } from 'react-router-dom';
-import MediumButtons from '../../components/buttons/MediumButtons';
-import TopSecFormPage from '../../components/TopSecFormPage';
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import SampleImage from '../../assets/img/dvi.jpeg';
-import CloseIcon from '../../assets/icons/close.svg';
+import "../../styles/custom-colors.css";
+import "../../styles/Registration.css";
+import NavBar from "../../components/NavBar";
+import TopSecFormPage from "../../components/TopSecFormPage";
+import CloseIcon from "../../assets/icons/close.svg";
+import { useNavigate, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import Alert from "../../components/Alert";
+import assetsService from "../../services/assets-service";
 
 export default function ComponentsRegistration() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const currentDate = new Date().toISOString().split('T')[0];
+  const currentDate = new Date().toISOString().split("T")[0];
+
+  const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const categoryList = ["RAM", "Storage", "Motherboard", "Networking"];
+  const manufacturerList = ["Corsair", "Intel", "Samsung", "Kingston"];
+  const supplierList = ["TechStore", "NetSupplies", "HardwareHub"];
+  const locationList = ["Main Warehouse", "Storage Room A", "Storage Room B"];
 
   const {
     register,
     handleSubmit,
     setValue,
-    formState: { errors }
-  } = useForm({
-    defaultValues: {
-      image: SampleImage,
-      componentName: '',
-      category: '',
-      modelNumber: '',
-      manufacturer: '',
-      supplier: '',
-      location: '',
-      orderNumber: '',
-      purchaseDate: '',
-      purchaseCost: '',
-      quantity: '',
-      minimumQuantity: '',
-      notes: ''
-    }
-  });
-
-  const componentData = {
-    '1': {
-      image: SampleImage,
-      componentName: 'Corsair Vengeance RAM',
-      category: 'RAM',
-      manufacturer: 'Corsair',
-      supplier: 'TechStore',
-      location: 'Main Warehouse',
-      modelNumber: 'CMK16GX4M2B3200C16',
-      orderNumber: 'ORD-2048',
-      purchaseDate: '2024-06-15',
-      purchaseCost: 120.99,
-      quantity: 20,
-      minimumQuantity: 5,
-      notes: 'High performance RAM module for gaming PCs',
-    },
-    '2': {
-      image: SampleImage,
-      componentName: 'Intel Network Card',
-      category: 'Networking',
-      manufacturer: 'Intel',
-      supplier: 'NetSupplies',
-      location: 'Storage Room B',
-      modelNumber: 'I350-T4V2',
-      orderNumber: 'ORD-3090',
-      purchaseDate: '2023-10-10',
-      purchaseCost: 89.5,
-      quantity: 15,
-      minimumQuantity: 3,
-      notes: '',
-    }
-  };
-
-  const categoryList = ['RAM', 'Storage', 'Motherboard', 'Networking'];
-  const manufacturerList = ['Corsair', 'Intel', 'Samsung', 'Kingston'];
-  const supplierList = ['TechStore', 'NetSupplies', 'HardwareHub'];
-  const locationList = ['Main Warehouse', 'Storage Room A', 'Storage Room B'];
-
-  const [previewImage, setPreviewImage] = useState(null);
+    formState: { errors },
+  } = useForm();
 
   useEffect(() => {
-    if (id && componentData[id]) {
-      const component = componentData[id];
-      Object.entries(component).forEach(([key, value]) => {
-        setValue(key, value);
-      });
-      setPreviewImage(component.image);
-    }
+    const fetchComponent = async () => {
+      if (!id) return;
+      try {
+        const data = await assetsService.fetchComponentById(id);
+        Object.entries(data).forEach(([key, value]) => setValue(key, value));
+        if (data.image) setPreviewImage(data.image);
+      } catch (error) {
+        setErrorMessage("Failed to fetch component details.");
+      }
+    };
+    fetchComponent();
   }, [id, setValue]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setValue('image', file);
+      setSelectedImage(file);
+      setValue("image", file);
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-      };
+      reader.onloadend = () => setPreviewImage(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  const onSubmit = (data) => {
-    console.log('Form submitted:', data);
-    navigate('/components');
+  const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => formData.append(key, value));
+      if (selectedImage) formData.append("image", selectedImage);
+      if (id) {
+        await assetsService.updateComponent(id, formData);
+      } else {
+        await assetsService.createComponent(formData);
+      }
+      navigate("/components", {
+        state: {
+          successMessage: `Component ${id ? "updated" : "created"} successfully!`,
+        },
+      });
+    } catch (error) {
+      setErrorMessage("Failed to submit the form. Please try again.");
+    }
   };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav>
         <NavBar />
       </nav>
-      <main className='registration'>
-        <section className='top'>
+      <main className="registration">
+        <section className="top">
           <TopSecFormPage
-            root='Components'
-            currentPage={id ? 'Edit Component' : 'New Component'}
-            rootNavigatePage='/components'
-            title={id ? 'Edit Component' : 'New Component'}
+            root="Components"
+            currentPage={id ? "Edit Component" : "New Component"}
+            rootNavigatePage="/components"
+            title={id ? "Edit Component" : "New Component"}
           />
         </section>
-        <section className='registration-form'>
+        <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             <fieldset>
-              <label htmlFor='component-name'>Component Name *</label>
+              <label>Component Name *</label>
               <input
-                type='text'
-                className={errors.componentName ? 'input-error' : ''}
-                {...register('componentName', { required: 'Component Name is required' })}
-                maxLength='100'
+                type="text"
+                className={errors.name ? "input-error" : ""}
+                {...register("name", { required: "Component Name is required" })}
+                maxLength="100"
+                placeholder='Component Name'
               />
-              {errors.componentName && <span className='error-message'>{errors.componentName.message}</span>}
+              {errors.name && <span className="error-message">{errors.name.message}</span>}
             </fieldset>
 
             <fieldset>
-              <label htmlFor='category'>Category *</label>
+              <label>Category *</label>
+              <select {...register("category", { required: "Category is required" })}>
+                <option value="">Select Category</option>
+                {categoryList.map((cat, i) => (
+                  <option key={i} value={cat}>{cat}</option>
+                ))}
+              </select>
+              {errors.category && <span className="error-message">{errors.category.message}</span>}
+            </fieldset>
+
+            <fieldset>
+              <label>Manufacturer</label>
+              <select {...register("manufacturer_id")}> {/* assuming manufacturer ID */}
+                <option value="">Select Manufacturer</option>
+                {manufacturerList.map((m, i) => (
+                  <option key={i} value={m}>{m}</option>
+                ))}
+              </select>
+            </fieldset>
+
+            <fieldset>
+              <label>Supplier</label>
+              <select {...register("supplier")}> {/* optional */}
+                <option value="">Select Supplier</option>
+                {supplierList.map((s, i) => (
+                  <option key={i} value={s}>{s}</option>
+                ))}
+              </select>
+            </fieldset>
+
+            <fieldset>
+              <label>Location</label>
+              <select {...register("location")}> {/* optional */}
+                <option value="">Select Location</option>
+                {locationList.map((loc, i) => (
+                  <option key={i} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </fieldset>
+
+            <fieldset>
+              <label>Model Number</label>
+              <input type="text" {...register("model_number")} maxLength="50" placeholder='Model Number' />
+            </fieldset>
+
+            <fieldset>
+              <label>Order Number</label>
+              <input type="text" {...register("order_number")} maxLength="30" placeholder='Order Number' />
+            </fieldset>
+
+            <fieldset>
+              <label>Purchase Date</label>
+              <input type="date" {...register("purchase_date")} max={currentDate} />
+            </fieldset>
+
+            <fieldset>
+              <label> Default Purchase Cost</label>
               <div>
-                <select
-                  className={errors.category ? 'input-error' : ''}
-                  {...register('category', { required: 'Category is required' })}
-                >
-                  <option value=''>Select Category</option>
-                  {categoryList.map((cat, idx) => (
-                    <option key={idx} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <MediumButtons type='new' />
-              </div>
-              {errors.category && <span className='error-message'>{errors.category.message}</span>}
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='manufacturer'>Manufacturer</label>
-              <select {...register('manufacturer')}>
-                <option value=''>Select Manufacturer</option>
-                {manufacturerList.map((mfg, idx) => (
-                  <option key={idx} value={mfg}>{mfg}</option>
-                ))}
-              </select>
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='supplier'>Supplier</label>
-              <select {...register('supplier')}>
-                <option value=''>Select Supplier</option>
-                {supplierList.map((sup, idx) => (
-                  <option key={idx} value={sup}>{sup}</option>
-                ))}
-              </select>
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='location'>Location</label>
-              <select {...register('location')}>
-                <option value=''>Select Location</option>
-                {locationList.map((loc, idx) => (
-                  <option key={idx} value={loc}>{loc}</option>
-                ))}
-              </select>
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='model-number'>Model Number</label>
-              <input type='text' {...register('modelNumber')} maxLength='100' />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='order-number'>Order Number</label>
-              <input type='text' {...register('orderNumber')} maxLength='100' />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='purchase-date'>Purchase Date</label>
-              <input
-                type='date'
-                {...register('purchaseDate')}
-                max={currentDate}
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='purchase-cost'>Purchase Cost</label>
-              <input
-                type='number'
-                {...register('purchaseCost')}
-                step='0.01'
-                min='0'
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='quantity'>Quantity</label>
-              <input
-                type='number'
-                {...register('quantity')}
-                min='1'
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='minimum-quantity'>Minimum Quantity</label>
-              <input
-                type='number'
-                {...register('minimumQuantity')}
-                min='1'
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='notes'>Notes</label>
-              <textarea {...register('notes')} maxLength='500' />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor='upload-image'>Image</label>
-              <div>
-                {previewImage && (
-                  <div className='image-selected'>
-                    <img src={previewImage} alt='Preview' />
-                    <button
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPreviewImage(null);
-                        setValue('image', null);
-                        document.getElementById('image').value = '';
-                      }}
-                    >
-                      <img src={CloseIcon} alt='Remove' />
-                    </button>
-                  </div>
-                )}
-                <input
-                  type='file'
-                  id='image'
-                  accept='image/*'
-                  onChange={handleImageSelection}
-                  style={{ display: 'none' }}
+                <p>PHP</p>
+                <input 
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register("purchase_cost", { valueAsNumber: true })}
+                  placeholder='Purchase Cost'
                 />
               </div>
-              <label htmlFor='image' className='upload-image-btn'>
-                {!previewImage ? 'Choose Image' : 'Change Image'}
+            </fieldset>
+
+            <fieldset>
+              <label>Quantity</label>
+              <input type="number" min="1" {...register("quantity")} placeholder='Quantity' />
+            </fieldset>
+
+            <fieldset>
+              <label>Minimum Quantity</label>
+              <input type="number" min="0" {...register("minimum_quantity")} placeholder='Minimum Quantity' />
+            </fieldset>
+
+            <fieldset>
+              <label>Notes</label>
+              <textarea {...register("notes")} maxLength="500" placeholder='Notes...'/>
+            </fieldset>
+
+            <fieldset>
+              <label>Image</label>
+              {previewImage && (
+                <div className="image-selected">
+                  <img src={previewImage} alt="Preview" />
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPreviewImage(null);
+                      setSelectedImage(null);
+                      setValue("image", null);
+                      document.getElementById("image").value = "";
+                    }}
+                  >
+                    <img src={CloseIcon} alt="Remove" />
+                  </button>
+                </div>
+              )}
+              <input
+                type="file"
+                id="image"
+                accept="image/*"
+                onChange={handleImageSelection}
+                style={{ display: "none" }}
+              />
+              <label htmlFor="image" className="upload-image-btn">
+                {!previewImage ? "Choose Image" : "Change Image"}
               </label>
             </fieldset>
 
-            <button type='submit' className='save-btn'>
+            <button type="submit" className="save-btn">
               Save
             </button>
           </form>

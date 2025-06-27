@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from django.db.models import Sum
 
 class AllProductSerializer(serializers.ModelSerializer):
     category = serializers.CharField(source='category.name', read_only=True)
