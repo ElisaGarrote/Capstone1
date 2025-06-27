@@ -72,7 +72,6 @@ export default function CheckOutList() {
       state: {
         ...item,
         componentName: componentInfo.name,
-        componentImage: componentInfo.image
       }
     });
   };

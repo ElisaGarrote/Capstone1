@@ -53,7 +53,7 @@ export default function CheckInComponent() {
             root="Checkin List"
             currentPage="Check-In Component"
             rootNavigatePage={`/components/checked-out-list/${item.component}`}
-            title="Check-In Component"
+            title={item.componentName}
           />
         </section>
 
