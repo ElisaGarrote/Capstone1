@@ -919,6 +919,29 @@ class AssetsService {
     }
   }
 
+  async softDeleteRepairFileByRepairId(repairId) {
+    const response = await fetch(
+      API_URL + `repairs/${repairId}/delete/files/`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.log(
+        "The status of the response for soft deleting repair file is here.",
+        response.status
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   async fetchAllRepairs() {
     try {
       const response = await fetch(API_URL + "repairs/all/");
@@ -935,6 +958,13 @@ class AssetsService {
       throw error;
     }
   }
+
+  // Generate url for soft delete repair.
+  softDeleteRepairEndpoint(id) {
+    return API_URL + `repairs/${id}/delete/`;
+  }
+
+  // END REPAIR
 
   async fetchAssetNames() {
     try {
