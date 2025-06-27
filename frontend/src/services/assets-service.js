@@ -813,6 +813,28 @@ class AssetsService {
       throw error;
     }
   }
+
+  async fetchAllComponentContexts() {
+    try {
+      const response = await fetch(API_URL + "components/contexts/");
+
+      if (!response.ok) {
+        console.warn("Failed to fetch component contexts, status:", response.status);
+        return [];
+      }
+
+      const data = await response.json();
+
+      // Extract just the array
+      return data.category || [];
+      
+      console.log("categories:", data.category);
+
+    } catch (error) {
+      console.error("An error occurred while fetching all components!", error);
+      return [];
+    }
+  }
 }
 
 const assetsService = new AssetsService(); // Create object for Assets Service.

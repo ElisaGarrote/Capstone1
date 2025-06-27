@@ -73,6 +73,8 @@ urlpatterns = [
     path('components/<int:id>/update/', update_component, name='update_component_by_id'),
     path('components/<int:id>/delete/', soft_delete_component, name='soft_delete_component_by_id'),
 
+    path('components/contexts/', get_component_registration_contexts, name='component_categories'),
+
     # Repair
     path('repairs/create/', create_repair, name='create_repair'),
     path('repairs/all/', get_all_repair, name='get_all_repair'),

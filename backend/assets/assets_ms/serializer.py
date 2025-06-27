@@ -1,6 +1,12 @@
 from rest_framework import serializers
 from .models import *
+from django.db.models import Sum
 
+class ManufacturerNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Manufacturer
+        fields = ['id', 'name']
+        
 class AllProductSerializer(serializers.ModelSerializer):
     category = serializers.CharField(source='category.name', read_only=True)
     depreciation = serializers.CharField(source='depreciation.name', read_only=True)
@@ -118,14 +124,26 @@ class AuditFileSerializer(serializers.ModelSerializer):
 
 class AllComponentSerializer(serializers.ModelSerializer):
     category = serializers.CharField(source='category.name', read_only=True)
+    checked_out = serializers.SerializerMethodField()
     class Meta:
-        model = Product
-        fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'quantity']
+        model = Component
+        fields = ['id', 'image', 'name', 'category', 'quantity', 'checked_out']
+
+    def get_checked_out(self, obj):
+        total_checked_out = obj.components_checkouts.filter(
+            component_checkins__isnull=True
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+        return total_checked_out
 
 class ComponentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Component
         fields = "__all__"
+
+class ComponentCategoryNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComponentCategory
+        fields = ['id', 'name']
 
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:

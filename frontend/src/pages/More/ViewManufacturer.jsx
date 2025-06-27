@@ -200,7 +200,7 @@ export default function ViewManufacturers() {
                                 alt={manufacturer.name}
                                 onError={(e) => {
                                   e.target.onerror = null;
-                                  e.target.src = 'https://via.placeholder.com/40x40?text=' + manufacturer.name.charAt(0);
+                                  e.target.src = DefaultImage;
                                 }}
                                 style={{
                                   width: '100%',

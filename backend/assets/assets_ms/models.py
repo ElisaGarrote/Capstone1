@@ -7,6 +7,40 @@ import uuid
 import datetime
 
 # Create your models here.
+class Supplier(models.Model):
+    name = models.CharField(max_length=50)
+    address = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=50, blank=True, null=True)
+    zip = models.CharField(max_length=4, blank=True, null=True)
+
+    contact_name = models.CharField(max_length=100, blank=True, null=True)
+    phone_number = models.CharField(max_length=13, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    URL = models.URLField(blank=True, null=True)
+
+    notes = models.TextField(blank=True, null=True)
+    logo = models.ImageField(upload_to='supplier_logos/', blank=True, null=True)
+
+    is_deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+class Manufacturer(models.Model):
+    name = models.CharField(max_length=50)
+    manu_url = models.URLField(blank=True, null=True)
+
+    support_url = models.URLField(blank=True, null=True)
+    support_phone = models.CharField(max_length=13, blank=True, null=True)
+    support_email = models.EmailField(blank=True, null=True)
+    
+    notes = models.TextField(blank=True, null=True)
+    logo = models.ImageField(upload_to='manufacturer_logos/', blank=True, null=True)
+    
+    is_deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
 class ComponentCategory(models.Model):
     name = models.CharField(max_length=50)
     type = models.CharField(max_length=9, default="Component")
@@ -15,25 +49,6 @@ class ComponentCategory(models.Model):
 
     def __str__(self):
         return self.name
-    
-class Component(models.Model):
-    name = models.CharField(max_length=100)
-    category = models.ForeignKey(ComponentCategory, on_delete=models.CASCADE)
-    manufacturer_id = models.PositiveIntegerField()
-    location = models.CharField(max_length=50)
-    model_number = models.CharField(max_length=50, blank=True, null=True)
-    order_number = models.CharField(max_length=30, blank=True, null=True)
-    purchase_date = models.DateField(auto_now_add=True)
-    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity = models.PositiveIntegerField(default=1)
-    minimum_quantity = models.PositiveIntegerField(default=0)
-    notes = models.TextField(blank=True, null=True)  
-    image = models.ImageField(upload_to='component_images/', blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-    
-    def __str__(self):
-        return self.name
-    
 class Depreciation(models.Model):
     name = models.CharField(max_length=500)
     duration = models.PositiveIntegerField(help_text="Duration in months")
@@ -189,7 +204,25 @@ class AssetCheckin(models.Model):
     image = models.ImageField(upload_to='asset_checkin_images/', blank=True, null=True)
 
     def __str__(self):
-        return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}"
+        return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}" 
+
+class Component(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(ComponentCategory, on_delete=models.CASCADE)
+    manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE)
+    location = models.CharField(max_length=50)
+    model_number = models.CharField(max_length=50, blank=True, null=True)
+    order_number = models.CharField(max_length=30, blank=True, null=True)
+    purchase_date = models.DateField(auto_now_add=True)
+    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField(default=1)
+    minimum_quantity = models.PositiveIntegerField(default=0)
+    notes = models.TextField(blank=True, null=True)  
+    image = models.ImageField(upload_to='component_images/', blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return self.name
     
 class ComponentCheckout(models.Model):
     component = models.ForeignKey(Component, on_delete=models.CASCADE, related_name='components_checkouts')
@@ -207,7 +240,7 @@ class ComponentCheckin(models.Model):
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.displayed_id}"
+        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.displayed_id}"  
     
 class Repair(models.Model):
     REPAIR_CHOICES = [

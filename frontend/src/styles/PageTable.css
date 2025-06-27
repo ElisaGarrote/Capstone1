@@ -204,12 +204,20 @@
   background-color: var(--primary-color-hover);
 }
 
+.check-in-btn:disabled {
+  background-color: var(--secondary-text-color);
+}
+
 .check-out-btn {
   background-color: var(--deployable-text);
 }
 
 .check-out-btn:hover {
   background-color: rgba(52, 199, 89, 0.8);
+}
+
+.check-out-btn:disabled {
+  background-color: var(--secondary-text-color);
 }
 
 /* Container for the progress bar and text */

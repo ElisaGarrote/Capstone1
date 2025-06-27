@@ -1,64 +1,63 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
 import "../../styles/ComponentsButtons.css";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
-import ComponentsTableBtn from "../../components/buttons/ComponentsTableButtons";
-import SampleImage from "../../assets/img/dvi.jpeg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import authService from "../../services/auth-service";
-
-// Sample asset data
-const sampleItems = [
-  {
-    id: 1,
-    image: SampleImage,
-    componentName: "Corsair Vengeance RAM",
-    category: "RAM",
-    manufacturer: "Corsair",
-    supplier: "TechStore",
-    location: "Main Warehouse",
-    modelNumber: "CMK16GX4M2B3200C16",
-    status: "Ready for Deployment",
-    orderNumber: "ORD-2048",
-    purchaseDate: "2024-06-15",
-    purchaseCost: 120.99,
-    quantity: 20,
-    minimumQuantity: 5,
-    notes: "High performance RAM module for gaming PCs",
-  },
-  {
-    id: 2,
-    image: SampleImage,
-    componentName: "Intel Network Card",
-    category: "Networking",
-    manufacturer: "Intel",
-    supplier: "NetSupplies",
-    location: "Storage Room B",
-    modelNumber: "I350-T4V2",
-    status: "Deployed",
-    orderNumber: "ORD-3090",
-    purchaseDate: "2023-10-10",
-    purchaseCost: 89.5,
-    quantity: 15,
-    minimumQuantity: 3,
-    notes: "",
-  },
-];
+import DefaultImage from "../../assets/img/default-image.jpg";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import Alert from "../../components/Alert";
+import DeleteModal from "../../components/Modals/DeleteModal";
+import assetsService from "../../services/assets-service";
 
 export default function Components() {
+  const [components, setComponents] = useState([]);
   const [checkedItems, setCheckedItems] = useState([]);
-  const allChecked = checkedItems.length === sampleItems.length;
-  const navigate = useNavigate(); // Use useNavigate hook
+  const allChecked = checkedItems.length === components.length && components.length > 0;
 
-  const toggleSelectAll = () => {
-    if (allChecked) {
-      setCheckedItems([]);
-    } else {
-      setCheckedItems(sampleItems.map((item) => item.id));
+  const [isLoading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const [endPoint, setEndPoint] = useState(null);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  // Page initialization
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      setTimeout(() => {
+        setSuccessMessage("");
+        window.history.replaceState({}, document.title);
+      }, 5000);
     }
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const compRes = await assetsService.fetchAllComponents();
+        setComponents(compRes);
+      } catch (error) {
+        console.error("Error fetching components:", error);
+        setComponents([]);
+        setErrorMessage("Failed to load components.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [location]);
+
+  // Checkbox toggling
+  const toggleSelectAll = () => {
+    setCheckedItems(allChecked ? [] : components.map((component) => component.id));
   };
 
   const toggleItem = (id) => {
@@ -67,137 +66,184 @@ export default function Components() {
     );
   };
 
-  const handleDelete = (id) => {
-    console.log(`Delete component with id: ${id}`);
-    // Add delete logic here
+  const handleCheckOut = (item) => {
+    navigate(`/components/check-out/${item.id}`, {
+      state: {
+        image: item.image,
+        name: item.name,
+        category: item.category?.name || "N/A",
+      },
+    });
   };
 
-  const handleCheckInOut = (item) => {
-    if (item.status === "Deployed") {
-      navigate(`/components/checked-out-list/${item.id}`, {
-        state: {
-          id: item.id,
-          name: item.componentName,
-          category: item.category,
-        },
-      });
-    } else {
-      navigate(`/components/check-out/${item.id}`, {
-        state: {
-          id: item.id,
-          image: item.image,
-          name: item.componentName,
-          category: item.category,
-        },
-      });
+  const fetchComponents = async () => {
+    setLoading(true);
+    try {
+      const response = await assetsService.fetchAllComponents();
+      setComponents(response.components || []);
+    } catch (error) {
+      console.error("Error fetching components:", error);
+      setComponents([]);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleView = async (componentId) => {
+    // handle view logic
   };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
+      {isDeleteModalOpen && (
+        <DeleteModal
+          endPoint={endPoint}
+          closeModal={() => setDeleteModalOpen(false)}
+          confirmDelete={async () => {
+            await fetchComponents();
+            setSuccessMessage("Asset Deleted Successfully!");
+            setTimeout(() => setSuccessMessage(""), 5000);
+          }}
+          onDeleteFail={() => {
+            setErrorMessage("Delete failed. Please try again.");
+            setTimeout(() => setErrorMessage(""), 5000);
+          }}
+        />
+      )}
       <nav>
         <NavBar />
       </nav>
       <main className="page components-page">
         <div className="container">
-          <section className="top">
-            <h1>Components</h1>
-            <div>
-              <form action="" method="post">
-                <input type="text" placeholder="Search..." />
-              </form>
-              <MediumButtons type="export" />
-
-              {authService.getUserInfo().role === "Admin" && (
-                <MediumButtons
-                  type="new"
-                  navigatePage="/components/registration"
-                />
-              )}
-            </div>
-          </section>
-          <section className="middle">
-            <table className="components-table">
-              <thead>
-                <tr>
-                  <th>
-                    <input
-                      type="checkbox"
-                      checked={allChecked}
-                      onChange={toggleSelectAll}
-                    />
-                  </th>
-                  <th>IMAGE</th>
-                  <th>NAME</th>
-                  <th>CHECKIN/CHECKOUT</th>
-                  <th>AVAILABLE</th>
-                  <th>CATEGORY</th>
-                  <th>MODEL NUMBER</th>
+          {isLoading ? (
+            <SkeletonLoadingTable />
+          ) : (
+            <>
+              <section className="top">
+                <h1>Components</h1>
+                <div>
+                  <form>
+                    <input type="text" placeholder="Search..." />
+                  </form>
+                  <MediumButtons type="export" />
                   {authService.getUserInfo().role === "Admin" && (
-                    <>
-                      <th>EDIT</th>
-                      <th>DELETE</th>
-                    </>
+                    <MediumButtons type="new" navigatePage="/components/registration" />
                   )}
-                  <th>VIEW</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sampleItems.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={checkedItems.includes(item.id)}
-                        onChange={() => toggleItem(item.id)}
-                      />
-                    </td>
-                    <td>
-                      <img src={item.image} alt={item.product} width="50" />
-                    </td>
-                    <td>{item.componentName}</td>
-                    <td>
-                      <button
-                        className={
-                          item.status === "Deployed"
-                            ? "check-in-btn"
-                            : "check-out-btn"
-                        }
-                        onClick={() => handleCheckInOut(item)}
-                      >
-                        {item.status === "Deployed" ? "Check-In" : "Check-Out"}
-                      </button>
-                    </td>
-                    <td>{item.quantity}</td>
-                    <td>{item.category}</td>
-                    <td>{item.modelNumber}</td>
-                    {authService.getUserInfo().role === "Admin" && (
-                      <>
+                </div>
+              </section>
+              <section className="middle">
+                <table className="components-table">
+                  <thead>
+                    <tr>
+                      <th>
+                        <input
+                          type="checkbox"
+                          checked={allChecked}
+                          onChange={toggleSelectAll}
+                        />
+                      </th>
+                      <th>IMAGE</th>
+                      <th>NAME</th>
+                      <th>CATEGORY</th>
+                      <th>AVAILABLE</th>
+                      <th>CHECKIN</th>
+                      <th>CHECKOUT</th>
+                      {authService.getUserInfo().role === "Admin" && (
+                        <>
+                          <th>EDIT</th>
+                          <th>DELETE</th>
+                        </>
+                      )}
+                      <th>VIEW</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {components.map((item) => (
+                      <tr key={item.id}>
                         <td>
-                          <ComponentsTableBtn
-                            type="edit"
-                            navigatePage={`/components/registration/${item.id}`}
+                          <input
+                            type="checkbox"
+                            checked={checkedItems.includes(item.id)}
+                            onChange={() => toggleItem(item.id)}
                           />
                         </td>
                         <td>
-                          <ComponentsTableBtn
-                            type="delete"
-                            onClick={() => handleDelete(item.id)}
+                          <img
+                            src={item.image || DefaultImage}
+                            alt={item.name}
+                            width="50"
                           />
                         </td>
-                      </>
-                    )}
-                    <td>
-                      <ComponentsTableBtn
-                        type="view"
-                        navigatePage={`/assets/view/${item.id}`}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
+                        <td>{item.name}</td>
+                        <td>{item.category?.name || "N/A"}</td>
+                        <td>
+                          <span className="progress-container">
+                            <span className="progress-text" style={{ color: "#34c759" }}>
+                              {item.quantity - item.checked_out}/{item.quantity}
+                            </span>
+                            <progress value={item.available_quantity} max={item.quantity}></progress>
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className="check-in-btn"
+                            onClick={() => handleCheckIn(item)}
+                            disabled={item.checked_out === 0}
+                            title={item.checked_out === 0 ? "No items to check in" : "Check in component"}
+                          >
+                            Check-In
+                          </button>
+                        </td>
+
+                        <td>
+                          <button
+                            className="check-out-btn"
+                            onClick={() => handleCheckOut(item)}
+                            disabled={item.quantity - item.checked_out === 0}
+                            title={item.quantity - item.checked_out === 0 ? "No available components" : "Check out component"}
+                          >
+                            Check-Out
+                          </button>
+                        </td>
+                        {authService.getUserInfo().role === "Admin" && (
+                          <>
+                            <td>
+                              <TableBtn
+                                type="edit"
+                                navigatePage={`/components/registration/${item.id}`}
+                                data={item.id}
+                              />
+                            </td>
+                            <td>
+                              <TableBtn
+                                type="delete"
+                                showModal={() => {
+                                  setEndPoint(
+                                    `https://assets-service-production.up.railway.app/components/${item.id}/delete/`
+                                  );
+                                  setDeleteModalOpen(true);
+                                }}
+                                data={item.id}
+                              />
+                            </td>
+                          </>
+                        )}
+                        <td>
+                          <TableBtn
+                            type="view"
+                            onClick={() => handleView(item.id)}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
+            </>
+          )}
           <section className="bottom"></section>
         </div>
       </main>

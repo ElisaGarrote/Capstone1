@@ -35,3 +35,10 @@ class Manufacturer(models.Model):
 
     def __str__(self):
         return self.name
+
+class Location(models.Model):
+    city = models.CharField(max_length=50, blank=True, null=True)
+    zip = models.CharField(max_length=4, blank=True, null=True)
+
+    def __str__(self):
+        return self.city

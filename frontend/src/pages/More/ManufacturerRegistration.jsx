@@ -46,7 +46,7 @@ const ManufacturerRegistration = () => {
           }
           console.log('Manufacturer Details:', manufacturerData);
           setValue('manufacturerName', manufacturerData.name || '');
-          setValue('url', manufacturerData.url || '');
+          setValue('url', manufacturerData.manu_url || '');
           setValue('supportUrl', manufacturerData.support_url || '');
           setValue('supportPhone', manufacturerData.support_phone || '');
           setValue('supportEmail', manufacturerData.support_email || '');
@@ -114,7 +114,7 @@ const ManufacturerRegistration = () => {
 
       const formData = new FormData();
       formData.append('name', data.manufacturerName);
-      formData.append('url', data.url || '');
+      formData.append('manu_url', data.url || '');
       formData.append('support_url', data.supportUrl || '');
       formData.append('support_phone', data.supportPhone || '');
       formData.append('support_email', data.supportEmail || '');

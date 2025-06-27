@@ -270,6 +270,37 @@ class ContextsService {
       throw error;
     }
   }
+
+  // LOCATION
+  async fetchAllLocations() {
+    try {
+      const response = await fetch(API_URL + "contexts/locations/");
+
+      if (!response.ok) {
+        console.warn("Failed to fetch locations, status:", response.status);
+        return [];
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        console.error("Unexpected locations data format:", data);
+        return [];
+      }
+
+      // Sort by city name, handling missing cities safely
+      const filteredData = data.filter(item => item && item.city);
+      const sortedData = filteredData.sort((a, b) =>
+        a.city.toLowerCase().localeCompare(b.city.toLowerCase())
+      );
+      console.log("locations:", sortedData);
+      return sortedData;
+
+    } catch (error) {
+      console.log("An error occurred while fetching all locations!", error);
+      return [];
+    }
+  }
 }
 
 const contextsService = new ContextsService();
