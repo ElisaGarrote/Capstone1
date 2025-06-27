@@ -81,7 +81,10 @@ urlpatterns = [
     # Repair
     path('repairs/create/', create_repair, name='create_repair'),
     path('repairs/all/', get_all_repair, name='get_all_repair'),
+    path('repairs/<int:id>/update/', update_repair, name='update_repair_by_id'),
+    path('repairs/<int:id>/delete/', soft_delete_repair, name='soft_delete_repair_by_id'),
 
     # Repair file
     path('repairs/add/files/', create_repair_file, name='create_repair_file'),
+    path('repairs/file/<int:id>/delete/', soft_delete_repair_file, name='soft_delete_repair_file'),
 ]
