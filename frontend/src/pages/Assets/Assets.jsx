@@ -51,26 +51,26 @@ export default function Assets() {
         const assetData = assetsResponse.assets || [];
         const checkouts = checkoutsResponse || [];
 
-        // map asset id to checkout info
         const checkoutMap = {};
         checkouts.forEach((record) => {
-          if (record.asset_id !== null && record.asset_id !== undefined) {
+          if (record.asset_id != null) {
             checkoutMap[record.asset_id] = record;
           }
         });
-
-        console.log("CheckoutMap keys:", Object.keys(checkoutMap)); // should only contain 25
-        console.log("checkoutMap[27]:", checkoutMap[27]); // should be undefined
 
         const enrichedAssets = assetData.map((asset) => {
           const checkout = checkoutMap[asset.id];
           return {
             ...asset,
             hasCheckoutRecord: !!checkout,
-            isCheckedOut: checkout && checkout.checkout_ref_id,
             checkoutRecord: checkout || null,
+            isCheckInOrOut: checkout
+              ? (checkout.checkin_date ? "Check-In" : "Check-Out")
+              : null,
           };
         });
+
+        console.log("data:", enrichedAssets);
         setAssets(enrichedAssets);
       } catch (error) {
         console.error("Error fetching assets:", error);
@@ -113,8 +113,9 @@ export default function Assets() {
       : DefaultImage;
 
     const checkout = asset.checkoutRecord;
+    console.log("checkout:", checkout);
 
-    if (asset.isCheckedOut) {
+    if (asset.isCheckInOrOut === "Check-In") {
       navigate(`/assets/check-in/${asset.id}`, {
         state: {
           id: asset.id,
@@ -128,7 +129,7 @@ export default function Assets() {
           checkoutId: checkout.checkout_ref_id || "Unknown",
           checkinDate: checkout.checkin_date || "Unknown",
           condition: checkout.condition || "Unknown",
-          ticketId: checkout.ticket_id,
+          ticketId: checkout.id,
           fromAsset: true,
         },
       });
@@ -139,7 +140,7 @@ export default function Assets() {
           assetId: asset.displayed_id,
           product: asset.product,
           image: baseImage,
-          ticketId: checkout.ticket_id,
+          ticketId: checkout.id,
           empId: checkout.requestor_id,
           employee: checkout.requestor || "Not assigned",
           empLocation: checkout.requestor_location || "Unknown",
@@ -152,14 +153,11 @@ export default function Assets() {
   };
 
   const handleView = async (assetId) => {
-    console.log("asset id:", assetId);
     try {
       setLoading(true);
       setErrorMessage("");
 
       const assetData = await assetsService.fetchAssetById(assetId);
-      console.log("Full assetResponse:", assetData);
-
       if (!assetData) {
         setErrorMessage("Asset details not found.");
         setLoading(false);
@@ -167,13 +165,11 @@ export default function Assets() {
       }
 
       let supplierName = "-";
-
       if (assetData.supplier_id) {
         try {
           const supplierResponse = await contextsService.fetchSuppNameById(
             assetData.supplier_id
           );
-          console.log("Supplier response:", supplierResponse);
           supplierName = supplierResponse?.name || supplierName;
         } catch (err) {
           console.warn("Supplier fetch failed:", err);
@@ -185,7 +181,6 @@ export default function Assets() {
         supplier: supplierName,
       };
 
-      console.log("Prepared asset view:", assetWithSupplier);
       setSelectedAsset(assetWithSupplier);
       setViewModalOpen(true);
     } catch (error) {
@@ -237,7 +232,6 @@ export default function Assets() {
                 <input type="text" placeholder="Search..." />
               </form>
               <MediumButtons type="export" />
-
               {authService.getUserInfo().role === "Admin" && (
                 <MediumButtons type="new" navigatePage="/assets/registration" />
               )}
@@ -270,7 +264,6 @@ export default function Assets() {
                         <th>DELETE</th>
                       </>
                     )}
-
                     <th>VIEW</th>
                   </tr>
                 </thead>
@@ -308,23 +301,14 @@ export default function Assets() {
                         <td>{asset.name}</td>
                         <td>{asset.category}</td>
                         <td>
-                          {asset.hasCheckoutRecord ? (
-                            asset.isCheckedOut ? (
-                              <button
-                                className="check-in-btn"
-                                onClick={() => handleCheckInOut(asset)}
-                              >
-                                Check-In
-                              </button>
-                            ) : (
-                              <button
-                                className="check-out-btn"
-                                onClick={() => handleCheckInOut(asset)}
-                              >
-                                Check-Out
-                              </button>
-                            )
-                          ) : null}
+                          {asset.hasCheckoutRecord && asset.isCheckInOrOut && (
+                            <button
+                              className={asset.isCheckInOrOut === "Check-In" ? "check-in-btn" : "check-out-btn"}
+                              onClick={() => handleCheckInOut(asset)}
+                            >
+                              {asset.isCheckInOrOut}
+                            </button>
+                          )}
                         </td>
                         <td>{asset.status}</td>
                         {authService.getUserInfo().role === "Admin" && (
