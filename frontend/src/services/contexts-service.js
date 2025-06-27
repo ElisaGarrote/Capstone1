@@ -270,6 +270,30 @@ class ContextsService {
       throw error;
     }
   }
+
+  // LOCATION
+  async fetchAllLocations() {
+    try {
+      const response = await fetch(API_URL + "contexts/locations/");
+
+      if (!response.ok) {
+        console.warn("Failed to fetch locations, status:", response.status);
+        return null;
+      }
+
+      const data = await response.json();
+
+      // Sort by name (A-Z), case-insensitive
+      const sortedData = data.sort((a, b) => 
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      );
+
+      return sortedData;
+
+    } catch (error) {
+      console.log("An error occurred while fetching all locations!", error);
+    }
+  }
 }
 
 const contextsService = new ContextsService();

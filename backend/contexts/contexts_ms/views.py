@@ -252,4 +252,4 @@ def soft_delete_manufacturer(request, id):
 def get_all_location(request):
     locations = Location.objects.all()
     serializer = LocationSerializer(locations, many=True)
-    return Response({'locations': serializer.data})
+    return Response(serializer.data)
