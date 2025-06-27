@@ -4,6 +4,7 @@ from rest_framework import status
 from .models import *
 from .serializer import *
 from django.db.models import Q
+from django_filters.rest_framework import DjangoFilterBackend
 
 # Get all manufacturer's names
 @api_view(['GET'])
@@ -252,4 +253,13 @@ def soft_delete_manufacturer(request, id):
 def get_all_location(request):
     locations = Location.objects.all()
     serializer = LocationSerializer(locations, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def get_all_tickets(request):
+    tickets = Checkout.objects.all()
+    serializer = AssetCheckinOutTicketsSerializer(tickets, many=True)
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_resolved']
+
     return Response(serializer.data)

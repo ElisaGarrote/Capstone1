@@ -5,3 +5,4 @@ from .models import *
 admin.site.register(Supplier)
 admin.site.register(Manufacturer)
 admin.site.register(Location)
+admin.site.register(Checkout)

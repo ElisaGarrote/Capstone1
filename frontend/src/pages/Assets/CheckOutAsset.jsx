@@ -19,8 +19,18 @@ export default function CheckOutAsset() {
   const location = useLocation();
   const passedState = location.state;
   const currentDate = new Date().toISOString().split("T")[0];
-  const conditionList = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
-
+  const conditionOptions = [
+    { value: "1", label: "1 - Unserviceable" },
+    { value: "2", label: "2 - Poor" },
+    { value: "3", label: "3 - Needs Maintenance" },
+    { value: "4", label: "4 - Functional" },
+    { value: "5", label: "5 - Fair" },
+    { value: "6", label: "6 - Good" },
+    { value: "7", label: "7 - Very Good" },
+    { value: "8", label: "8 - Excellent" },
+    { value: "9", label: "9 - Like New" },
+    { value: "10", label: "10 - Brand New" }
+  ];
 
   const navigate = useNavigate();
   
@@ -245,8 +255,10 @@ export default function CheckOutAsset() {
                   className={errors.condition ? 'input-error' : ''}
                   >
                   <option value="">Select Condition</option>
-                  {conditionList.map((condition, idx) => (
-                    <option key={idx} value={condition}>{condition}</option>
+                  {conditionOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
                   ))}
                 </select>
                 {errors.condition && <span className='error-message'>{errors.condition.message}</span>}

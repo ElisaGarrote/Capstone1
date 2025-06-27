@@ -23,4 +23,5 @@ urlpatterns = [
     path('manufacturers/<int:id>/delete/', soft_delete_manufacturer, name='soft_delete_manufacturer_by_id'),
 
     path('locations/', get_all_location, name='all_locations'),
+    path('tickets/', get_all_tickets, name='all_locations'),
 ]
