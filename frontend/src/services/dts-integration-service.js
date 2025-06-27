@@ -1,4 +1,4 @@
-const API_URL = "https://contexts-service-production.up.railway.app/";
+const API_URL = "https://contexts-service-production.up.railway.app/contexts/";
 
 class DtsService {
   // fetch asset checkout and checkin tickets
