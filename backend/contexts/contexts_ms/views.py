@@ -247,3 +247,9 @@ def soft_delete_manufacturer(request, id):
         return Response({'detail': 'Manufacturer soft-deleted'})
     except Manufacturer.DoesNotExist:
         return Response({'detail': 'Manufacturer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def get_all_location(request):
+    locations = Location.objects.all()
+    serializer = LocationSerializer(locations, many=True)
+    return Response({'locations': serializer.data})
