@@ -205,3 +205,18 @@ class RepairFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = RepairFile
         fields = "__all__"
+
+class DashboardStatsSerializer(serializers.Serializer):
+    due_for_return = serializers.IntegerField()
+    overdue_for_return = serializers.IntegerField()
+    upcoming_audits = serializers.IntegerField()
+    overdue_audits = serializers.IntegerField()
+    reached_end_of_life = serializers.IntegerField()
+    upcoming_end_of_life = serializers.IntegerField()
+    expired_warranties = serializers.IntegerField()
+    expiring_warranties = serializers.IntegerField()
+    low_stock = serializers.IntegerField()
+    total_asset_costs = serializers.DecimalField(max_digits=12, decimal_places=2)
+    asset_utilization = serializers.IntegerField()
+    asset_categories = serializers.ListField(child=serializers.DictField())
+    asset_statuses = serializers.ListField(child=serializers.DictField())

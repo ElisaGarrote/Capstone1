@@ -898,6 +898,7 @@ class AssetsService {
       throw error;
     }
   }
+
   async createComponentCheckin(formData) {
     const response = await fetch(`${API_URL}components/checkin/registration/`, {
       method: 'POST',
@@ -913,6 +914,21 @@ class AssetsService {
     }
 
     return await response.json();
+  }
+
+  async fetchDashboardStats() {
+    try {
+      const response = await fetch(`${API_URL}dashboard/`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      throw error;
+    }
   }
 }
 

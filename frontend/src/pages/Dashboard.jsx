@@ -1,22 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import NavBar from "../components/NavBar";
 import StatusCard from '../components/dashboard/StatusCard';
 import AssetMetrics from '../components/dashboard/AssetMetrics';
 import "../styles/Dashboard.css";
-
-const statusCards = [
-  { number: '1', title: 'Due for Return' },
-  { number: '2', title: 'Upcoming Audits' },
-  { number: '14', title: 'Upcoming End of Life' },
-  { number: '1', title: 'Expiring Warranties' },
-  { number: '1', title: 'Overdue for Return' },
-  { number: '3', title: 'Overdue Audits' },
-  { number: '21', title: 'Reached End of Life' },
-  { number: '20', title: 'Expired Warranties', isRed: true },
-  { number: '20', title: 'Low Stock', isRed: true }
-];
+import assetsService from '../services/assets-service';
 
 function Dashboard() {
+  const [statusCards, setStatusCards] = useState([]);
+
+  useEffect(() => {
+    async function loadDashboardStats() {
+      try {
+        const stats = await assetsService.fetchDashboardStats();
+
+
+        const cards = [
+          { number: stats.due_for_return, title: 'Due for Return' },
+          { number: stats.upcoming_audits, title: 'Upcoming Audits' },
+          { number: stats.upcoming_end_of_life, title: 'Upcoming End of Life' },
+          { number: stats.expiring_warranties, title: 'Expiring Warranties' },
+          { number: stats.overdue_for_return, title: 'Overdue for Return' },
+          { number: stats.overdue_audits, title: 'Overdue Audits' },
+          { number: stats.reached_end_of_life, title: 'Reached End of Life' },
+          { number: stats.expired_warranties, title: 'Expired Warranties', isRed: true },
+          { number: stats.low_stock, title: 'Low Stock', isRed: true },
+        ];
+
+        setStatusCards(cards);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      }
+    }
+
+    loadDashboardStats();
+  }, []);
+
   return (
     <div className="dashboard-container">
       <NavBar />

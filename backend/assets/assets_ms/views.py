@@ -5,6 +5,9 @@ from rest_framework import status
 from .models import *
 from .serializer import *
 from django.db.models import Q
+from django.db.models import Count, Sum, F
+from datetime import timedelta
+from django.utils.timezone import now
 
 # PRODUCTS HERE
 # Get products for all products table
@@ -819,3 +822,85 @@ def soft_delete_repair_file(request, id):
     except RepairFile.DoesNotExist:
         return Response({'detail': 'Repair file not found'}, status=status.HTTP_404_NOT_FOUND)
 # END REPAIR
+
+@api_view(['GET'])
+def get_dashboard_stats(request):
+    today = now().date()
+
+    due_returns = AssetCheckout.objects.filter(
+        return_date__gte=today,
+        asset_checkins__isnull=True
+    ).count()
+
+    overdue_returns = AssetCheckout.objects.filter(
+        return_date__lt=today,
+        asset_checkins__isnull=True
+    ).count()
+
+    upcoming_audits = AuditSchedule.objects.filter(
+        date__range=(today, today + timedelta(days=7)),
+        is_deleted=False
+    ).count()
+
+    overdue_audits = AuditSchedule.objects.filter(
+        date__lt=today,
+        is_deleted=False
+    ).exclude(asset_audits__isnull=False).count()
+
+    reached_eol = Asset.objects.filter(
+        product__end_of_life__lt=today,
+        is_deleted=False
+    ).count()
+
+    upcoming_eol = Asset.objects.filter(
+        product__end_of_life__range=(today, today + timedelta(days=30)),
+        is_deleted=False
+    ).count()
+
+    expired_warranties = Asset.objects.filter(
+        warranty_expiration__lt=today,
+        is_deleted=False
+    ).count()
+
+    expiring_warranties = Asset.objects.filter(
+        warranty_expiration__range=(today, today + timedelta(days=30)),
+        is_deleted=False
+    ).count()
+
+    low_stock = Component.objects.filter(
+        quantity__lte=F('minimum_quantity'),
+        is_deleted=False
+    ).count()
+
+    total_cost = Asset.objects.filter(
+        purchase_date__month=today.month,
+        purchase_date__year=today.year,
+        is_deleted=False
+    ).aggregate(total=Sum('purchase_cost'))['total'] or 0
+
+    total_assets = Asset.objects.filter(is_deleted=False).count()
+    deployed_assets = Asset.objects.filter(status__type='deployed', is_deleted=False).count()
+    utilization = round((deployed_assets / total_assets) * 100) if total_assets > 0 else 0
+
+    # Pie chart data
+    category_counts = Asset.objects.filter(is_deleted=False).values('product__category__name').annotate(count=Count('id'))
+    status_counts = Asset.objects.filter(is_deleted=False).values('status__name').annotate(count=Count('id'))
+
+    data = {
+        "due_for_return": due_returns,
+        "overdue_for_return": overdue_returns,
+        "upcoming_audits": upcoming_audits,
+        "overdue_audits": overdue_audits,
+        "reached_end_of_life": reached_eol,
+        "upcoming_end_of_life": upcoming_eol,
+        "expired_warranties": expired_warranties,
+        "expiring_warranties": expiring_warranties,
+        "low_stock": low_stock,
+        "total_asset_costs": total_cost,
+        "asset_utilization": utilization,
+        "asset_categories": list(category_counts),
+        "asset_statuses": list(status_counts),
+    }
+
+    serializer = DashboardStatsSerializer(data)
+    return Response(serializer.data)
