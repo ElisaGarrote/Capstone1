@@ -3,27 +3,27 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/dashboard/AssetMetrics.css';
 
-const AssetMetrics = () => {
+const AssetMetrics = ({ stats }) => {
   const navigate = useNavigate();
   const [selectedPeriod1, setSelectedPeriod1] = useState('This month');
   const [selectedPeriod2, setSelectedPeriod2] = useState('This month');
-  const [assetCost, setAssetCost] = useState('₱24,000');
-  const [assetUtilization, setAssetUtilization] = useState('60%');
 
-  const assetCategoriesData = [
-    { name: 'Mobile Phone', value: 10, color: '#0D6EFD' },
-    { name: 'Laptops', value: 20, color: '#FFB800' },
-    { name: 'Tables', value: 14, color: '#82ca9d' }
-  ];
+  const assetCost = `₱${stats?.total_asset_costs || '0.00'}`;
+  const assetUtilization = `${stats?.asset_utilization || 0}%`;
 
-  const assetStatusData = [
-    { name: 'Ready to Deploy', value: 25, color: '#0D6EFD' },
-    { name: 'Lost or Stolen', value: 5, color: '#FF6B6B' },
-    { name: 'Being Repaired', value: 10, color: '#82ca9d' },
-    { name: 'Deployed', value: 15, color: '#FFB800' }
-  ];
+  const assetCategoriesData = stats?.asset_categories?.map((item, index) => ({
+    name: item['product__category__name'],
+    value: item.count,
+    color: ['#0D6EFD', '#FFB800', '#82ca9d', '#FF6B6B', '#FF8C00', '#9C27B0'][index % 6]
+  })) || [];
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, value }) => {
+  const assetStatusData = stats?.asset_statuses?.map((item, index) => ({
+    name: item['status__name'],
+    value: item.count,
+    color: ['#0D6EFD', '#FF6B6B', '#82ca9d', '#FFB800', '#9C27B0', '#00C49F'][index % 6]
+  })) || [];
+
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
     const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
@@ -47,7 +47,6 @@ const AssetMetrics = () => {
                 className={`time-button ${selectedPeriod1 === 'This month' ? 'active pulse' : ''}`}
                 onClick={() => {
                   setSelectedPeriod1('This month');
-                  setAssetCost('₱24,000');
                 }}
               >
                 This month
@@ -56,7 +55,6 @@ const AssetMetrics = () => {
                 className={`time-button ${selectedPeriod1 === 'Last month' ? 'active pulse' : ''}`}
                 onClick={() => {
                   setSelectedPeriod1('Last month');
-                  setAssetCost('₱25,000');
                 }}
               >
                 Last month
@@ -74,7 +72,6 @@ const AssetMetrics = () => {
                 className={`time-button ${selectedPeriod2 === 'This month' ? 'active pulse' : ''}`}
                 onClick={() => {
                   setSelectedPeriod2('This month');
-                  setAssetUtilization('60%');
                 }}
               >
                 This month
@@ -83,7 +80,6 @@ const AssetMetrics = () => {
                 className={`time-button ${selectedPeriod2 === 'Last month' ? 'active pulse' : ''}`}
                 onClick={() => {
                   setSelectedPeriod2('Last month');
-                  setAssetUtilization('70%');
                 }}
               >
                 Last month
@@ -111,7 +107,7 @@ const AssetMetrics = () => {
                 dataKey="value"
               >
                 {assetCategoriesData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell key={`cell-cat-${index}`} fill={entry.color} />
                 ))}
               </Pie>
               <Legend
@@ -123,7 +119,9 @@ const AssetMetrics = () => {
               />
             </PieChart>
           </ResponsiveContainer>
-          <button className="browse-all" onClick={() => navigate('/assets')}>Browse All</button>
+          <button className="browse-all" onClick={() => navigate('/assets')}>
+            Browse All
+          </button>
         </div>
 
         <div className="metric-card">
@@ -143,7 +141,7 @@ const AssetMetrics = () => {
                 dataKey="value"
               >
                 {assetStatusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell key={`cell-stat-${index}`} fill={entry.color} />
                 ))}
               </Pie>
               <Legend
@@ -155,7 +153,9 @@ const AssetMetrics = () => {
               />
             </PieChart>
           </ResponsiveContainer>
-          <button className="browse-all" onClick={() => navigate('/reports/activity')}>Browse All</button>
+          <button className="browse-all" onClick={() => navigate('/reports/activity')}>
+            Browse All
+          </button>
         </div>
       </div>
     </div>

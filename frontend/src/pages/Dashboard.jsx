@@ -7,12 +7,12 @@ import assetsService from '../services/assets-service';
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
 
   useEffect(() => {
     async function loadDashboardStats() {
       try {
         const stats = await assetsService.fetchDashboardStats();
-
 
         const cards = [
           { number: stats.due_for_return, title: 'Due for Return' },
@@ -27,6 +27,7 @@ function Dashboard() {
         ];
 
         setStatusCards(cards);
+        setDashboardStats(stats);
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
       }
@@ -50,7 +51,7 @@ function Dashboard() {
           ))}
         </div>
 
-        <AssetMetrics />
+        <AssetMetrics stats={dashboardStats} />
       </main>
     </div>
   );
