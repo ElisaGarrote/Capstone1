@@ -19,10 +19,7 @@ class AssetsService {
       const response = await fetch(API_URL + "products/");
 
       if (!response.ok) {
-        console.warn(
-          "Failed to fetch products, status:",
-          response.status
-        );
+        console.warn("Failed to fetch products, status:", response.status);
         return { products: [] };
       }
 
@@ -42,7 +39,10 @@ class AssetsService {
       const response = await fetch(API_URL + "products/contexts/");
 
       if (!response.ok) {
-        console.warn("Failed to fetch product contexts, status:", response.status);
+        console.warn(
+          "Failed to fetch product contexts, status:",
+          response.status
+        );
         return { categories: [], depreciations: [] };
       }
 
@@ -76,7 +76,10 @@ class AssetsService {
       // Return product object if wrapped, else data directly
       return data && data.product ? data.product : data;
     } catch (error) {
-      console.error(`Error occurred while fetching product with ID ${id}:`, error);
+      console.error(
+        `Error occurred while fetching product with ID ${id}:`,
+        error
+      );
       return null;
     }
   }
@@ -176,7 +179,10 @@ class AssetsService {
       const response = await fetch(API_URL + "assets/contexts/");
 
       if (!response.ok) {
-        console.warn("Failed to fetch asset contexts, status:", response.status);
+        console.warn(
+          "Failed to fetch asset contexts, status:",
+          response.status
+        );
         return { products: [], statuses: [] };
       }
 
@@ -208,7 +214,10 @@ class AssetsService {
 
       return data && data.asset ? data.asset : data;
     } catch (error) {
-      console.error(`Error occurred while fetching asset with ID ${id}:`, error);
+      console.error(
+        `Error occurred while fetching asset with ID ${id}:`,
+        error
+      );
       return null;
     }
   }
@@ -219,7 +228,10 @@ class AssetsService {
       const response = await fetch(API_URL + `assets/${id}/defaults/`);
 
       if (!response.ok) {
-        console.warn("Failed to fetch product defaults, status:", response.status);
+        console.warn(
+          "Failed to fetch product defaults, status:",
+          response.status
+        );
         return null;
       }
 
@@ -228,7 +240,10 @@ class AssetsService {
 
       return data && data.product ? data.product : data;
     } catch (error) {
-      console.error(`Error occurred while fetching product defaults with ID ${id}:`, error);
+      console.error(
+        `Error occurred while fetching product defaults with ID ${id}:`,
+        error
+      );
       return null;
     }
   }
@@ -305,20 +320,20 @@ class AssetsService {
   async createAssetCheckout(formData) {
     try {
       const response = await fetch(`${API_URL}assets/check-out/registration/`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.warn('Create Asset Checkout Error:', errorData);
+        console.warn("Create Asset Checkout Error:", errorData);
         throw errorData;
       }
 
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error creating asset checkout:', error);
+      console.error("Error creating asset checkout:", error);
       throw error;
     }
   }
@@ -327,23 +342,23 @@ class AssetsService {
   async createAssetCheckin(formData) {
     try {
       const response = await fetch(`${API_URL}assets/check-in/registration/`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.warn('Create Asset Check-In Error:', errorData);
+        console.warn("Create Asset Check-In Error:", errorData);
         throw errorData;
       }
 
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error creating asset check-in:', error);
+      console.error("Error creating asset check-in:", error);
       throw error;
     }
-  } 
+  }
 
   // AUDITS
   // Create Audit
@@ -746,12 +761,11 @@ class AssetsService {
       const data = await response.json();
 
       // Sort by name (A-Z), case-insensitive
-      const sortedData = data.sort((a, b) => 
+      const sortedData = data.sort((a, b) =>
         a.name.toLowerCase().localeCompare(b.name.toLowerCase())
       );
 
       return sortedData;
-
     } catch (error) {
       console.log("An error occurred while fetching all components!", error);
     }
@@ -761,13 +775,19 @@ class AssetsService {
     try {
       const response = await fetch(`${API_URL}components/${id}/`);
       if (!response.ok) {
-        console.warn(`Failed to fetch component with ID ${id}, status:`, response.status);
+        console.warn(
+          `Failed to fetch component with ID ${id}, status:`,
+          response.status
+        );
         return null;
       }
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error(`An error occurred while fetching component with ID ${id}:`, error);
+      console.error(
+        `An error occurred while fetching component with ID ${id}:`,
+        error
+      );
       return null;
     }
   }
@@ -775,20 +795,20 @@ class AssetsService {
   async createComponent(formData) {
     try {
       const response = await fetch(`${API_URL}components/registration/`, {
-        method: 'POST',
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.warn('Create Component Error:', errorData);
+        console.warn("Create Component Error:", errorData);
         throw errorData;
       }
 
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error creating component:', error);
+      console.error("Error creating component:", error);
       throw error;
     }
   }
@@ -796,13 +816,13 @@ class AssetsService {
   async updateComponent(id, formData) {
     try {
       const response = await fetch(`${API_URL}components/${id}/update/`, {
-        method: 'PUT',
+        method: "PUT",
         body: formData,
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        console.warn('Update Component Error:', errorData);
+        console.warn("Update Component Error:", errorData);
         throw errorData;
       }
 
@@ -819,7 +839,10 @@ class AssetsService {
       const response = await fetch(API_URL + "components/contexts/");
 
       if (!response.ok) {
-        console.warn("Failed to fetch component contexts, status:", response.status);
+        console.warn(
+          "Failed to fetch component contexts, status:",
+          response.status
+        );
         return [];
       }
 
@@ -827,14 +850,92 @@ class AssetsService {
 
       // Extract just the array
       return data.category || [];
-      
-      console.log("categories:", data.category);
 
+      console.log("categories:", data.category);
     } catch (error) {
       console.error("An error occurred while fetching all components!", error);
       return [];
     }
   }
+
+  // REPAIR
+  async postRepair(assetId, type, name, startDate, endDate, cost, notes) {
+    try {
+      const response = await fetch(API_URL + "repairs/create/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          asset: assetId,
+          type: type,
+          name: name,
+          start_date: startDate,
+          end_date: endDate ? endDate : null,
+          cost: cost,
+          notes: notes ? notes : null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn("Create Repair Error:", errorData);
+        return false;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error creating repair:", error);
+      throw error;
+    }
+  }
+
+  async postRepairFile(repairId, file) {
+    const formData = new FormData();
+    formData.append("repair", repairId);
+    formData.append("file", file);
+
+    try {
+      console.log("creating repair file from api...");
+      const response = await fetch(API_URL + "repairs/add/files/", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn("Create Repair File Error:", errorData);
+        return false;
+      }
+
+      const data = await response.json();
+      console.log("post repair file:", data);
+      return data;
+    } catch (error) {
+      console.error("Error creating repair file:", error);
+      throw error;
+    }
+  }
+
+  async fetchAllRepairs() {
+    try {
+      const response = await fetch(API_URL + "repairs/all/");
+
+      if (!response.ok) {
+        console.warn("Failed to fetch repairs, status:", response.status);
+        return false;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("An error occurred while fetching all repairs!", error);
+      throw error;
+    }
+  }
+
   async fetchAssetNames() {
     try {
       const response = await fetch(API_URL + "assets/names/");
@@ -847,12 +948,11 @@ class AssetsService {
       const data = await response.json();
 
       // Sort by name (A-Z), case-insensitive
-      const sortedData = data.sort((a, b) => 
+      const sortedData = data.sort((a, b) =>
         a.name.toLowerCase().localeCompare(b.name.toLowerCase())
       );
 
       return sortedData;
-
     } catch (error) {
       console.log("An error occurred while fetching all assets!", error);
     }
@@ -860,49 +960,54 @@ class AssetsService {
 
   async fetchPendingComponentCheckouts(componentId) {
     try {
-      const response = await fetch(`${API_URL}components/checkouts/${componentId}/pending/`);
+      const response = await fetch(
+        `${API_URL}components/checkouts/${componentId}/pending/`
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.warn('Fetch Pending Component Checkouts Error:', errorText);
+        console.warn("Fetch Pending Component Checkouts Error:", errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Pending checkouts:', data);
+      console.log("Pending checkouts:", data);
       return data;
     } catch (error) {
-      console.error('Error fetching pending component checkouts:', error);
+      console.error("Error fetching pending component checkouts:", error);
       throw error;
     }
   }
 
   async createComponentCheckout(formData) {
     try {
-      const response = await fetch(`${API_URL}components/checkout/registration/`, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        `${API_URL}components/checkout/registration/`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const text = await response.text();
-      console.log('Raw response:', text);
+      console.log("Raw response:", text);
 
       if (!response.ok) {
-        console.warn('Create Component Checkout Error:', text);
+        console.warn("Create Component Checkout Error:", text);
         throw new Error(`HTTP ${response.status}: ${text}`);
       }
 
       return JSON.parse(text);
     } catch (error) {
-      console.error('Error creating component checkout:', error);
+      console.error("Error creating component checkout:", error);
       throw error;
     }
   }
   async createComponentCheckin(formData) {
     const response = await fetch(`${API_URL}components/checkin/registration/`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(formData),
     });

@@ -78,7 +78,7 @@ class ContextsService {
       }
 
       const data = await response.json();
-      console.log("Data for all suppliers fetched: ", data);
+      // console.log("Data for all suppliers fetched: ", data);
 
       // Use helper to normalize response
       return this.normalizeResponseArray(data, "suppliers");
@@ -94,7 +94,10 @@ class ContextsService {
       const response = await fetch(API_URL + `contexts/suppliers/${id}/`);
 
       if (!response.ok) {
-        console.warn("Failed to fetch supplier's name by ID, status:", response.status);
+        console.warn(
+          "Failed to fetch supplier's name by ID, status:",
+          response.status
+        );
         return null;
       }
 
@@ -104,7 +107,10 @@ class ContextsService {
       // Return supplier object if wrapped, else data directly
       return data && data.supplier ? data.supplier : data;
     } catch (error) {
-      console.error(`Error occurred while fetching supplier with ID ${id}:`, error);
+      console.error(
+        `Error occurred while fetching supplier with ID ${id}:`,
+        error
+      );
       return null;
     }
   }
@@ -120,14 +126,13 @@ class ContextsService {
       }
 
       const data = await response.json();
-      console.log("Suppliers Parsed JSON data:", data); 
+      console.log("Suppliers Parsed JSON data:", data);
       // Sort by name (A-Z), case-insensitive
-      const sortedData = data.sort((a, b) => 
+      const sortedData = data.sort((a, b) =>
         a.name.toLowerCase().localeCompare(b.name.toLowerCase())
       );
 
       return sortedData;
-
     } catch (error) {
       console.log("An error occurred while fetching all suppliers!", error);
     }
@@ -137,48 +142,60 @@ class ContextsService {
     try {
       const response = await fetch(`${API_URL}contexts/suppliers/${id}/`);
       if (!response.ok) {
-        console.warn(`Failed to fetch suppliers with ID ${id}, status:`, response.status);
+        console.warn(
+          `Failed to fetch suppliers with ID ${id}, status:`,
+          response.status
+        );
         return null;
       }
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error(`An error occurred while fetching suppliers with ID ${id}:`, error);
+      console.error(
+        `An error occurred while fetching suppliers with ID ${id}:`,
+        error
+      );
       return null;
     }
   }
 
   async createSupplier(formData) {
     try {
-      const response = await fetch(`${API_URL}contexts/suppliers/registration/`, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        `${API_URL}contexts/suppliers/registration/`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.warn('Create Supplier Error:', errorData);
+        console.warn("Create Supplier Error:", errorData);
         throw errorData;
       }
 
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error creating supplier:', error);
+      console.error("Error creating supplier:", error);
       throw error;
     }
   }
 
   async updateSupplier(id, formData) {
     try {
-      const response = await fetch(`${API_URL}contexts/suppliers/${id}/update/`, {
-        method: 'PUT',
-        body: formData,
-      });
+      const response = await fetch(
+        `${API_URL}contexts/suppliers/${id}/update/`,
+        {
+          method: "PUT",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.warn('Update Supplier Error:', errorData);
+        console.warn("Update Supplier Error:", errorData);
         throw errorData;
       }
 
@@ -203,12 +220,11 @@ class ContextsService {
       const data = await response.json();
 
       // Sort by name (A-Z), case-insensitive
-      const sortedData = data.sort((a, b) => 
+      const sortedData = data.sort((a, b) =>
         a.name.toLowerCase().localeCompare(b.name.toLowerCase())
       );
 
       return sortedData;
-
     } catch (error) {
       console.log("An error occurred while fetching all manufacturers!", error);
     }
@@ -218,48 +234,60 @@ class ContextsService {
     try {
       const response = await fetch(`${API_URL}contexts/manufacturers/${id}/`);
       if (!response.ok) {
-        console.warn(`Failed to fetch manufacturer with ID ${id}, status:`, response.status);
+        console.warn(
+          `Failed to fetch manufacturer with ID ${id}, status:`,
+          response.status
+        );
         return null;
       }
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error(`An error occurred while fetching manufacturer with ID ${id}:`, error);
+      console.error(
+        `An error occurred while fetching manufacturer with ID ${id}:`,
+        error
+      );
       return null;
     }
   }
 
   async createManufacturer(formData) {
     try {
-      const response = await fetch(`${API_URL}contexts/manufacturers/registration/`, {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await fetch(
+        `${API_URL}contexts/manufacturers/registration/`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.warn('Create Manufacturer Error:', errorData);
+        console.warn("Create Manufacturer Error:", errorData);
         throw errorData;
       }
 
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error creating manufacturer:', error);
+      console.error("Error creating manufacturer:", error);
       throw error;
     }
   }
 
   async updateManufacturer(id, formData) {
     try {
-      const response = await fetch(`${API_URL}contexts/manufacturers/${id}/update/`, {
-        method: 'PUT',
-        body: formData,
-      });
-      
+      const response = await fetch(
+        `${API_URL}contexts/manufacturers/${id}/update/`,
+        {
+          method: "PUT",
+          body: formData,
+        }
+      );
+
       if (!response.ok) {
         const errorData = await response.json();
-        console.warn('Update Manufacturer Error:', errorData);
+        console.warn("Update Manufacturer Error:", errorData);
         throw errorData;
       }
 
@@ -289,13 +317,12 @@ class ContextsService {
       }
 
       // Sort by city name, handling missing cities safely
-      const filteredData = data.filter(item => item && item.city);
+      const filteredData = data.filter((item) => item && item.city);
       const sortedData = filteredData.sort((a, b) =>
         a.city.toLowerCase().localeCompare(b.city.toLowerCase())
       );
       console.log("locations:", sortedData);
       return sortedData;
-
     } catch (error) {
       console.log("An error occurred while fetching all locations!", error);
       return [];
