@@ -857,6 +857,7 @@ class AssetsService {
       console.log("An error occurred while fetching all assets!", error);
     }
   }
+
   async createComponentCheckout(formData) {
     try {
       const response = await fetch(`${API_URL}components/checkout/registration/`, {
@@ -864,14 +865,15 @@ class AssetsService {
         body: formData,
       });
 
+      const text = await response.text();
+      console.log('Raw response:', text);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        console.warn('Create Component Checkout Error:', errorData);
-        throw errorData;
+        console.warn('Create Component Checkout Error:', text);
+        throw new Error(`HTTP ${response.status}: ${text}`);
       }
 
-      const data = await response.json();
-      return data;
+      return JSON.parse(text);
     } catch (error) {
       console.error('Error creating component checkout:', error);
       throw error;
