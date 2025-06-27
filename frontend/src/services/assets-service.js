@@ -858,6 +858,25 @@ class AssetsService {
     }
   }
 
+  async fetchPendingComponentCheckouts(componentId) {
+    try {
+      const response = await fetch(`${API_URL}components/checkouts/${componentId}/pending/`);
+
+      const text = await response.text();
+      console.log('Raw response:', text);
+
+      if (!response.ok) {
+        console.warn('Fetch Pending Component Checkouts Error:', text);
+        throw new Error(`HTTP ${response.status}: ${text}`);
+      }
+
+      return JSON.parse(text);
+    } catch (error) {
+      console.error('Error fetching pending component checkouts:', error);
+      throw error;
+    }
+  }
+
   async createComponentCheckout(formData) {
     try {
       const response = await fetch(`${API_URL}components/checkout/registration/`, {

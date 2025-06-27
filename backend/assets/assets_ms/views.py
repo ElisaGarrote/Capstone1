@@ -710,6 +710,15 @@ def get_asset_names(request):
     serializer = AssetNameSerializer(assets, many=True).data
     return Response(serializer)
 
+@api_view(['GET'])
+def pending_component_checkouts(request, component_id):
+    checkouts = ComponentCheckout.objects.filter(
+        component_id=component_id,
+        component_checkins__isnull=True
+    )
+    serializer = ComponentCheckoutSerializer(checkouts, many=True)
+    return Response(serializer.data)
+
 @api_view(['POST'])
 def create_component_checkout(request):
     print("Received checkout data:", request.data)

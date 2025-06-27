@@ -66,6 +66,10 @@ export default function Components() {
     );
   };
 
+  const handleCheckIn = (item) => {
+    navigate(`/components/checked-out-list/${item.id}`);
+  };
+
   const handleCheckOut = (item) => {
     const available = item.quantity - item.checked_out;
     navigate(`/components/check-out/${item.id}`, {
