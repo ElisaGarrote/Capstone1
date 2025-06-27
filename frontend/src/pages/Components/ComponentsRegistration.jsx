@@ -161,21 +161,11 @@ export default function ComponentsRegistration() {
             </fieldset>
 
             <fieldset>
-              <label>Supplier</label>
-              <select {...register("supplier")}>
-                <option value="">Select Supplier</option>
-                {supplierList.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            </fieldset>
-
-            <fieldset>
               <label>Location</label>
               <select {...register("location")}>
                 <option value="">Select Location</option>
                 {locationList.map((loc) => (
-                  <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  <option key={loc.id} value={loc.id}>{loc.city}</option>
                 ))}
               </select>
             </fieldset>

@@ -689,7 +689,21 @@ def soft_delete_component(request, id):
         return Response({'detail': 'Component soft-deleted'})
     except Component.DoesNotExist:
         return Response({'detail': 'Component not found'}, status=status.HTTP_404_NOT_FOUND)
-    
+
+@api_view(['GET'])
+def get_component_registration_contexts(request):
+    categories = ComponentCategory.objects.filter(is_deleted=False)
+    manufacturers = Manufacturer.objects.filter(is_deleted=False)
+
+    category_serializer = ComponentCategoryNameSerializer(categories, many=True)
+    manufacturer_serializer = ManufacturerNameSerializer(manufacturers, many=True)
+
+    data = {
+        'category': category_serializer.data,
+        'manufacturer': manufacturer_serializer.data
+    }
+    return Response(data)
+# END COMPONENT
 
 # REPAIR
 @api_view(['POST'])

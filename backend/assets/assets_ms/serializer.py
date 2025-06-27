@@ -2,6 +2,11 @@ from rest_framework import serializers
 from .models import *
 from django.db.models import Sum
 
+class ManufacturerNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Manufacturer
+        fields = ['id', 'name']
+        
 class AllProductSerializer(serializers.ModelSerializer):
     category = serializers.CharField(source='category.name', read_only=True)
     depreciation = serializers.CharField(source='depreciation.name', read_only=True)
@@ -134,6 +139,11 @@ class ComponentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Component
         fields = "__all__"
+
+class ComponentCategoryNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComponentCategory
+        fields = ['id', 'name']
 
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
