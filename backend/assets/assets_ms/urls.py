@@ -73,7 +73,7 @@ urlpatterns = [
     path('components/<int:id>/update/', update_component, name='update_component_by_id'),
     path('components/<int:id>/delete/', soft_delete_component, name='soft_delete_component_by_id'),
 
-    path('components/checkout/registration', soft_delete_component, name='checkout_component'),
+    path('components/checkout/registration', create_component_checkout, name='checkout_component'),
 
     path('components/contexts/', get_component_registration_contexts, name='component_categories'),
     path('assets/names/', get_asset_names, name='all_asset_names'),

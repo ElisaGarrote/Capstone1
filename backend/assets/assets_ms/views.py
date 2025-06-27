@@ -711,10 +711,10 @@ def get_asset_names(request):
     return Response(serializer)
 
 @api_view(['POST'])
-def create_asset_checkout(request):
+def create_component_checkout(request):
     print("Received checkout data:", request.data)
 
-    serializer = AssetCheckoutSerializer(data=request.data)
+    serializer = ComponentCheckoutSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)

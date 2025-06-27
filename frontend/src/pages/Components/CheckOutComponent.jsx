@@ -59,11 +59,27 @@ export default function CheckOutComponent() {
     }
   });
 
-  const onSubmit = (data) => {
-    console.log("Check-Out submitted:", data);
-    navigate("/components", {
-      state: { successMessage: `Component "${name}" checked out successfully!` },
-    });
+  const onSubmit = async (data) => {
+    try {
+      console.log("Submitting checkout data:", data);
+      const formData = new FormData();
+
+      formData.append("component", routeId);
+      formData.append("to_asset", data.asset);
+      formData.append("quantity", data.quantity);
+      formData.append("notes", data.notes || "");
+
+      await assetsService.createComponentCheckout(formData);
+
+      navigate("/components", {
+        state: { successMessage: `Component "${name}" checked out successfully!` },
+      });
+    } catch (error) {
+      console.error("Error submitting checkout:", error);
+      alert(
+        error?.detail || error?.message || "Failed to submit checkout. Please try again."
+      );
+    }
   };
 
   return (
@@ -141,12 +157,19 @@ export default function CheckOutComponent() {
                 <input
                   type="number"
                   className={errors.quantity ? 'input-error' : ''}
-                  {...register("quantity",
-                    { required: 'Quantity is required',
-                      min: 1,
-                      max: available ? { value: available, message: `Cannot exceed available quantity (${available})` } : undefined,
+                  {...register("quantity", {
+                    required: 'Quantity is required',
+                    min: { value: 1, message: 'Quantity must be at least 1' },
+                    ...(available && {
+                      max: {
+                        value: available,
+                        message: `Cannot exceed available quantity (${available})`
+                      }
+                    })
                   })}
-                  placeholder="Enter quantity"
+                  placeholder={available ? `Up to ${available}` : 'Enter quantity'}
+                  max={available}
+                  min={1}
                 />
                 {errors.quantity && <span className="error-message">{errors.quantity.message}</span>}
               </fieldset>

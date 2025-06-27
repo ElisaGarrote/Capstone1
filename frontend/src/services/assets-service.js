@@ -857,6 +857,26 @@ class AssetsService {
       console.log("An error occurred while fetching all assets!", error);
     }
   }
+  async createComponentCheckout(formData) {
+    try {
+      const response = await fetch(`${API_URL}components/checkout/registration/`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn('Create Component Checkout Error:', errorData);
+        throw errorData;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating component checkout:', error);
+      throw error;
+    }
+  }
 }
 
 const assetsService = new AssetsService(); // Create object for Assets Service.
