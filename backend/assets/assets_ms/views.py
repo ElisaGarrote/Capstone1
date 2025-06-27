@@ -658,7 +658,7 @@ def create_component(request):
 @api_view(['PUT'])
 def update_component(request, id):
     name = request.data.get('name')
-    remove_logo = request.data.get('remove_logo') == 'true'
+    remove_image = request.data.get('remove_logo') == 'true'
 
     # Check for duplicate name, excluding the current component
     if name and Component.objects.filter(Q(name__iexact=name), Q(is_deleted=False)).exclude(pk=id).exists():
@@ -703,6 +703,24 @@ def get_component_registration_contexts(request):
         'manufacturer': manufacturer_serializer.data
     }
     return Response(data)
+
+@api_view(['GET'])
+def get_asset_names(request):
+    assets = Asset.objects.filter(is_deleted=False)
+    serializer = AssetNameSerializer(assets, many=True).data
+    return Response(serializer)
+
+@api_view(['POST'])
+def create_asset_checkout(request):
+    print("Received checkout data:", request.data)
+
+    serializer = AssetCheckoutSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    print("Checkout validation errors:", serializer.errors)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # END COMPONENT
 
 # REPAIR

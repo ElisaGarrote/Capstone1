@@ -145,6 +145,17 @@ class ComponentCategoryNameSerializer(serializers.ModelSerializer):
         model = ComponentCategory
         fields = ['id', 'name']
 
+
+class ComponentCheckoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComponentCheckout
+        fields = "__all__"
+
+class AssetNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Asset
+        fields = ['id', 'displayed_id', 'name']
+
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Status

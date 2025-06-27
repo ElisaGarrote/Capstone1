@@ -835,6 +835,28 @@ class AssetsService {
       return [];
     }
   }
+  async fetchAssetNames() {
+    try {
+      const response = await fetch(API_URL + "assets/names");
+
+      if (!response.ok) {
+        console.warn("Failed to fetch assets, status:", response.status);
+        return null;
+      }
+
+      const data = await response.json();
+
+      // Sort by name (A-Z), case-insensitive
+      const sortedData = data.sort((a, b) => 
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      );
+
+      return sortedData;
+
+    } catch (error) {
+      console.log("An error occurred while fetching all assets!", error);
+    }
+  }
 }
 
 const assetsService = new AssetsService(); // Create object for Assets Service.

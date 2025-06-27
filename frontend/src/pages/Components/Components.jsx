@@ -71,7 +71,7 @@ export default function Components() {
       state: {
         image: item.image,
         name: item.name,
-        category: item.category?.name || "N/A",
+        category: item.category || "N/A",
       },
     });
   };
@@ -178,7 +178,7 @@ export default function Components() {
                           />
                         </td>
                         <td>{item.name}</td>
-                        <td>{item.category?.name || "N/A"}</td>
+                        <td>{item.category || "N/A"}</td>
                         <td>
                           <span className="progress-container">
                             <span className="progress-text" style={{ color: "#34c759" }}>

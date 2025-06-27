@@ -5,19 +5,44 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import assetsService from "../../services/assets-service";  // make sure this has fetchAssetNames
 
 export default function CheckOutComponent() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id: routeId } = useParams();
-  
-  // Try to get state from navigation, fallback
+
+  // From navigate state
   const { image, name, category } = location.state || {};
 
   const currentDate = new Date().toISOString().split("T")[0];
 
-  // Dropdown options for assets
-  const assetList = ['XPS 13', 'Mouse', 'Keyboard', 'Monitor', 'Laptop'];
+  // ASSET DROPDOWN STATE
+  const [assetList, setAssetList] = useState([]);
+  const [loadingAssets, setLoadingAssets] = useState(true);
+  const [assetError, setAssetError] = useState("");
+
+  useEffect(() => {
+    const loadAssets = async () => {
+      try {
+        setLoadingAssets(true);
+        const assets = await assetsService.fetchAssetNames();
+        if (assets) {
+          setAssetList(assets);
+        } else {
+          setAssetError("Failed to load asset list.");
+        }
+      } catch (error) {
+        console.error("Error loading assets:", error);
+        setAssetError("An error occurred loading assets.");
+      } finally {
+        setLoadingAssets(false);
+      }
+    };
+
+    loadAssets();
+  }, []);
 
   // Form handling
   const {
@@ -80,17 +105,26 @@ export default function CheckOutComponent() {
           <section className="checkin-form">
             <h2>Check-Out Form</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
+              
               <fieldset>
                 <label>Check-Out To *</label>
-                <select
-                  className={errors.asset ? 'input-error' : ''}
-                  {...register("asset", { required: 'Asset is required' })}
-                >
-                  <option value="">Select an Asset</option>
-                  {assetList.map((asset, idx) => (
-                    <option key={idx} value={asset}>{asset}</option>
-                  ))}
-                </select>
+                {loadingAssets ? (
+                  <p>Loading assets...</p>
+                ) : assetError ? (
+                  <p className="error-message">{assetError}</p>
+                ) : (
+                  <select
+                    className={errors.asset ? 'input-error' : ''}
+                    {...register("asset", { required: 'Asset is required' })}
+                  >
+                    <option value="">Select an Asset</option>
+                    {assetList.map((asset) => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.displayed_id} - {asset.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 {errors.asset && <span className="error-message">{errors.asset.message}</span>}
               </fieldset>
 
