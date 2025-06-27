@@ -66,6 +66,16 @@ export default function Components() {
     );
   };
 
+  const handleCheckOut = (item) => {
+    navigate(`/components/check-out/${item.id}`, {
+      state: {
+        image: item.image,
+        name: item.name,
+        category: item.category?.name || "N/A",
+      },
+    });
+  };
+
   const fetchComponents = async () => {
     setLoading(true);
     try {

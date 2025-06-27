@@ -827,6 +827,8 @@ class AssetsService {
 
       // Extract just the array
       return data.category || [];
+      
+      console.log("categories:", data.category);
 
     } catch (error) {
       console.error("An error occurred while fetching all components!", error);

@@ -669,10 +669,10 @@ def update_component(request, id):
     except Component.DoesNotExist:
         return Response({'detail': 'Component not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Handle logo removal
-    if remove_logo and component.logo:
-        component.logo.delete()
-        component.logo = None
+    # Handle image removal
+    if remove_image and component.image:
+        component.image.delete(save=False)
+        component.image = None
 
     serializer = ComponentSerializer(component, data=request.data, partial=True)
     if serializer.is_valid():

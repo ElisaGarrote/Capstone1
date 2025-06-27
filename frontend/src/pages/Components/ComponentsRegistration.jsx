@@ -9,20 +9,24 @@ import { useEffect, useState } from "react";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
+import SystemLoading from '../../components/Loading/SystemLoading';
 
 export default function ComponentsRegistration() {
   const { id } = useParams();
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
 
+  const [componentName, setComponentName] = useState("");
+ 
   // State for dropdown options
   const [manufacturerList, setManufacturerList] = useState([]);
-  const [supplierList, setSupplierList] = useState([]);
   const [locationList, setLocationList] = useState([]);
+  const [categoryList, setCategoryList] = useState([]);
 
   // UI state
   const [previewImage, setPreviewImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -30,31 +34,31 @@ export default function ComponentsRegistration() {
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm();
 
-  // Fetch all dropdown data on mount
   useEffect(() => {
     const initialize = async () => {
       try {
         setIsLoading(true);
 
-        const [manufacturers, suppliers, locations] = await Promise.all([
+        const [manufacturers, locations, categories] = await Promise.all([
           contextsService.fetchAllManufacturers(),
-          contextsService.fetchAllSuppliers(),
           contextsService.fetchAllLocations(),
+          assetsService.fetchAllComponentContexts(),
         ]);
 
         setManufacturerList(manufacturers || []);
-        setSupplierList(suppliers || []);
         setLocationList(locations || []);
+        setCategoryList(categories || []);
 
-        // If editing, load existing data
         if (id) {
           const data = await assetsService.fetchComponentById(id);
           if (data) {
             Object.entries(data).forEach(([key, value]) => setValue(key, value));
             if (data.image) setPreviewImage(data.image);
+            if (data.name) setComponentName(data.name);  
           } else {
             setErrorMessage("Failed to fetch component details.");
           }
@@ -75,6 +79,7 @@ export default function ComponentsRegistration() {
     const file = e.target.files[0];
     if (file) {
       setSelectedImage(file);
+      setRemoveImage(false);
       setValue("image", file);
       const reader = new FileReader();
       reader.onloadend = () => setPreviewImage(reader.result);
@@ -82,11 +87,32 @@ export default function ComponentsRegistration() {
     }
   };
 
+  const handleRemoveImage = (e) => {
+    e.preventDefault();
+    setPreviewImage(null);
+    setSelectedImage(null);
+    setRemoveImage(true);
+    setValue("image", null);
+    const input = document.getElementById("image");
+    if (input) input.value = "";
+  };
+
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => formData.append(key, value));
-      if (selectedImage) formData.append("image", selectedImage);
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
+      if (removeImage) {
+        formData.append("remove_image", "true");
+      }
 
       if (id) {
         await assetsService.updateComponent(id, formData);
@@ -106,7 +132,7 @@ export default function ComponentsRegistration() {
   };
 
   if (isLoading) {
-    return <div className="loading">Loading...</div>;
+    return <SystemLoading />;
   }
 
   return (
@@ -121,7 +147,7 @@ export default function ComponentsRegistration() {
             root="Components"
             currentPage={id ? "Edit Component" : "New Component"}
             rootNavigatePage="/components"
-            title={id ? "Edit Component" : "New Component"}
+            title={id ? `${componentName}` : "New Component"}
           />
         </section>
         <section className="registration-form">
@@ -142,32 +168,33 @@ export default function ComponentsRegistration() {
               <label>Category *</label>
               <select {...register("category", { required: "Category is required" })}>
                 <option value="">Select Category</option>
-                <option value="RAM">RAM</option>
-                <option value="Storage">Storage</option>
-                <option value="Motherboard">Motherboard</option>
-                <option value="Networking">Networking</option>
+                {categoryList.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
               </select>
               {errors.category && <span className="error-message">{errors.category.message}</span>}
             </fieldset>
 
             <fieldset>
-              <label>Manufacturer</label>
-              <select {...register("manufacturer_id")}>
+              <label>Manufacturer *</label>
+              <select {...register("manufacturer", { required: "Manufacturer is required" })}>
                 <option value="">Select Manufacturer</option>
                 {manufacturerList.map((m) => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
               </select>
+              {errors.manufacturer && <span className="error-message">{errors.manufacturer.message}</span>}
             </fieldset>
 
             <fieldset>
-              <label>Location</label>
-              <select {...register("location")}>
+              <label>Location *</label>
+              <select {...register("location", { required: "Location is required" })}>
                 <option value="">Select Location</option>
                 {locationList.map((loc) => (
-                  <option key={loc.id} value={loc.id}>{loc.city}</option>
+                  <option key={loc.id} value={loc.city}>{loc.city}</option>
                 ))}
               </select>
+              {errors.location && <span className="error-message">{errors.location.message}</span>}
             </fieldset>
 
             <fieldset>
@@ -186,17 +213,21 @@ export default function ComponentsRegistration() {
             </fieldset>
 
             <fieldset>
-              <label>Default Purchase Cost</label>
+              <label>Purchase Cost</label>
               <div>
                 <p>PHP</p>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
-                  {...register("purchase_cost", { valueAsNumber: true })}
+                  {...register("purchase_cost", {
+                    required: "Purchase Cost is required",
+                    valueAsNumber: true,
+                  })}
                   placeholder="Purchase Cost"
                 />
               </div>
+              {errors.purchase_cost && <span className="error-message">{errors.purchase_cost.message}</span>}
             </fieldset>
 
             <fieldset>
@@ -219,15 +250,7 @@ export default function ComponentsRegistration() {
               {previewImage && (
                 <div className="image-selected">
                   <img src={previewImage} alt="Preview" />
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPreviewImage(null);
-                      setSelectedImage(null);
-                      setValue("image", null);
-                      document.getElementById("image").value = "";
-                    }}
-                  >
+                  <button onClick={handleRemoveImage}>
                     <img src={CloseIcon} alt="Remove" />
                   </button>
                 </div>
