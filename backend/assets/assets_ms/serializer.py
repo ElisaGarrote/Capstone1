@@ -153,6 +153,12 @@ class ComponentCheckoutSerializer(serializers.ModelSerializer):
         model = ComponentCheckout
         fields = "__all__"
         extra_fields = ['asset_name', 'asset_displayed_id']
+
+class ComponentCheckinSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ComponentCheckin
+        fields = "__all__"
         
 class AssetNameSerializer(serializers.ModelSerializer):
     class Meta:

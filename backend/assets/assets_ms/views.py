@@ -745,6 +745,18 @@ def create_component_checkout(request):
 
     print("Checkout validation errors:", serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def create_component_checkin(request):
+    print("Received checkin data:", request.data)
+
+    serializer = ComponentCheckinSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    print("Checkin validation errors:", serializer.errors)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 # END COMPONENT
 
 # REPAIR

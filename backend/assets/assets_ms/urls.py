@@ -75,6 +75,7 @@ urlpatterns = [
 
     path('components/checkouts/<int:component_id>/pending/', pending_component_checkouts, name='component_checkouts_without_checkin'),
     path('components/checkout/registration/', create_component_checkout, name='checkout_component'),
+    path('components/checkin/registration/', create_component_checkin, name='checkin_component'),
 
     path('components/contexts/', get_component_registration_contexts, name='component_categories'),
     path('assets/names/', get_asset_names, name='all_asset_names'),

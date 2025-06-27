@@ -898,6 +898,22 @@ class AssetsService {
       throw error;
     }
   }
+  async createComponentCheckin(formData) {
+    const response = await fetch(`${API_URL}components/checkin/registration/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    return await response.json();
+  }
 }
 
 const assetsService = new AssetsService(); // Create object for Assets Service.

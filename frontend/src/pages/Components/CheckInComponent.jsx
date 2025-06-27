@@ -11,7 +11,7 @@ export default function CheckInComponent() {
   const navigate = useNavigate();
   const item = location.state || {};
   const params = useParams();
-  const id = params.id;
+  const id = params.id; // this is the ComponentCheckout ID
 
   const currentDate = new Date().toISOString().split("T")[0];
 
@@ -19,34 +19,39 @@ export default function CheckInComponent() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      checkInDate: currentDate,
+      notes: "",
+    },
+  });
 
-  console.log("item:", item);
   const onSubmit = async (data) => {
     try {
-      console.log("Submitting checkout data:", data);
-      const formData = new FormData();
+      const formData = {
+        component_checkout: id,
+        checkin_date: data.checkInDate,
+        notes: data.notes,
+      };
 
-      formData.append("component_checkout", id);
-      formData.append("checkin_date", data.asset);
-      formData.append("notes", data.quantity);
+      console.log("Submitting formData:", formData);
+      await assetsService.createComponentCheckin(formData);
 
-      await assetsService.createComponentCheckout(formData);
-
-      navigate("/components", {
-        state: { successMessage: `Component "${name}" checked out successfully!` },
-      });
+      // Go back to list page for this component's pending checkouts
+      navigate(`/components/checked-out-list/${item.component}`);
     } catch (error) {
-      console.error("Error submitting checkout:", error);
+      console.error("Error submitting check-in:", error);
       alert(
-        error?.detail || error?.message || "Failed to submit checkout. Please try again."
+        error?.detail || error?.message || "Failed to submit check-in. Please try again."
       );
     }
   };
 
   return (
     <>
-      <nav><NavBar /></nav>
+      <nav>
+        <NavBar />
+      </nav>
       <main className="check-in-out-page">
         <section className="top">
           <TopSecFormPage
@@ -88,7 +93,6 @@ export default function CheckInComponent() {
                 <input
                   type="text"
                   readOnly
-                  value={currentDate}
                   className={errors.checkInDate ? 'input-error' : ''}
                   {...register("checkInDate", { required: true })}
                 />
