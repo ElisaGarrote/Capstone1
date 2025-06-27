@@ -67,11 +67,13 @@ export default function Components() {
   };
 
   const handleCheckOut = (item) => {
+    const available = item.quantity - item.checked_out;
     navigate(`/components/check-out/${item.id}`, {
       state: {
         image: item.image,
         name: item.name,
         category: item.category || "N/A",
+        available,
       },
     });
   };
@@ -161,84 +163,87 @@ export default function Components() {
                     </tr>
                   </thead>
                   <tbody>
-                    {components.map((item) => (
-                      <tr key={item.id}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={checkedItems.includes(item.id)}
-                            onChange={() => toggleItem(item.id)}
-                          />
-                        </td>
-                        <td>
-                          <img
-                            src={item.image || DefaultImage}
-                            alt={item.name}
-                            width="50"
-                          />
-                        </td>
-                        <td>{item.name}</td>
-                        <td>{item.category || "N/A"}</td>
-                        <td>
-                          <span className="progress-container">
-                            <span className="progress-text" style={{ color: "#34c759" }}>
-                              {item.quantity - item.checked_out}/{item.quantity}
-                            </span>
-                            <progress value={item.available_quantity} max={item.quantity}></progress>
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="check-in-btn"
-                            onClick={() => handleCheckIn(item)}
-                            disabled={item.checked_out === 0}
-                            title={item.checked_out === 0 ? "No items to check in" : "Check in component"}
-                          >
-                            Check-In
-                          </button>
-                        </td>
+                    {components.map((item) => {
+                      const available = item.quantity - item.checked_out;
 
-                        <td>
-                          <button
-                            className="check-out-btn"
-                            onClick={() => handleCheckOut(item)}
-                            disabled={item.quantity - item.checked_out === 0}
-                            title={item.quantity - item.checked_out === 0 ? "No available components" : "Check out component"}
-                          >
-                            Check-Out
-                          </button>
-                        </td>
-                        {authService.getUserInfo().role === "Admin" && (
-                          <>
-                            <td>
-                              <TableBtn
-                                type="edit"
-                                navigatePage={`/components/registration/${item.id}`}
-                                data={item.id}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="delete"
-                                showModal={() => {
-                                  setEndPoint(
-                                    `https://assets-service-production.up.railway.app/components/${item.id}/delete/`
-                                  );
-                                  setDeleteModalOpen(true);
-                                }}
-                                data={item.id}
-                              />
-                            </td>
-                          </>
-                        )}
-                        <td>
-                          <TableBtn
-                            type="view"
-                            onClick={() => handleView(item.id)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                      return (
+                        <tr key={item.id}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={checkedItems.includes(item.id)}
+                              onChange={() => toggleItem(item.id)}
+                            />
+                          </td>
+                          <td>
+                            <img
+                              src={item.image || DefaultImage}
+                              alt={item.name}
+                              width="50"
+                            />
+                          </td>
+                          <td>{item.name}</td>
+                          <td>{item.category || "N/A"}</td>
+                          <td>
+                            <span className="progress-container">
+                              <span className="progress-text" style={{ color: "#34c759" }}>
+                                {available}/{item.quantity}
+                              </span>
+                              <progress value={item.available_quantity} max={item.quantity}></progress>
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="check-in-btn"
+                              onClick={() => handleCheckIn(item)}
+                              disabled={item.checked_out === 0}
+                              title={item.checked_out === 0 ? "No items to check in" : "Check in component"}
+                            >
+                              Check-In
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              className="check-out-btn"
+                              onClick={() => handleCheckOut(item)}
+                              disabled={available === 0}
+                              title={available === 0 ? "No available components" : "Check out component"}
+                            >
+                              Check-Out
+                            </button>
+                          </td>
+                          {authService.getUserInfo().role === "Admin" && (
+                            <>
+                              <td>
+                                <TableBtn
+                                  type="edit"
+                                  navigatePage={`/components/registration/${item.id}`}
+                                  data={item.id}
+                                />
+                              </td>
+                              <td>
+                                <TableBtn
+                                  type="delete"
+                                  showModal={() => {
+                                    setEndPoint(
+                                      `https://assets-service-production.up.railway.app/components/${item.id}/delete/`
+                                    );
+                                    setDeleteModalOpen(true);
+                                  }}
+                                  data={item.id}
+                                />
+                              </td>
+                            </>
+                          )}
+                          <td>
+                            <TableBtn
+                              type="view"
+                              onClick={() => handleView(item.id)}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </section>

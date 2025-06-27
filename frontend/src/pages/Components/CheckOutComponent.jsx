@@ -14,7 +14,7 @@ export default function CheckOutComponent() {
   const { id: routeId } = useParams();
 
   // From navigate state
-  const { image, name, category } = location.state || {};
+  const { image, name, category, available } = location.state || {};
 
   const currentDate = new Date().toISOString().split("T")[0];
 
@@ -55,7 +55,6 @@ export default function CheckOutComponent() {
       asset: '',
       quantity: '',
       checkOutDate: currentDate,
-      expectedReturnDate: '',
       notes: '',
     }
   });
@@ -142,7 +141,11 @@ export default function CheckOutComponent() {
                 <input
                   type="number"
                   className={errors.quantity ? 'input-error' : ''}
-                  {...register("quantity", { required: 'Quantity is required', min: 1 })}
+                  {...register("quantity",
+                    { required: 'Quantity is required',
+                      min: 1,
+                      max: available ? { value: available, message: `Cannot exceed available quantity (${available})` } : undefined,
+                  })}
                   placeholder="Enter quantity"
                 />
                 {errors.quantity && <span className="error-message">{errors.quantity.message}</span>}
@@ -156,17 +159,6 @@ export default function CheckOutComponent() {
                   value={currentDate}
                   {...register("checkOutDate")}
                 />
-              </fieldset>
-
-              <fieldset>
-                <label>Expected Return Date *</label>
-                <input
-                  type="date"
-                  className={errors.expectedReturnDate ? 'input-error' : ''}
-                  min={currentDate}
-                  {...register("expectedReturnDate", { required: 'Expected return date is required' })}
-                />
-                {errors.expectedReturnDate && <span className="error-message">{errors.expectedReturnDate.message}</span>}
               </fieldset>
 
               <fieldset>
