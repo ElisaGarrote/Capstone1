@@ -73,5 +73,5 @@ class Checkout(models.Model):
         verbose_name_plural = "Asset Checkouts"
 
     def __str__(self):
-        status = "Checked Out" if self.is_checkout else "Checked In"
+        status = "Checked Out" if self.is_resolved else "Checked In"
         return f"[{self.ticket_id}] {self.asset_name} - {status}"

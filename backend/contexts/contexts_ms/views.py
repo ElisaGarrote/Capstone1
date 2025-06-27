@@ -257,9 +257,17 @@ def get_all_location(request):
 
 @api_view(['GET'])
 def get_all_tickets(request):
-    tickets = Checkout.objects.all()
-    serializer = AssetCheckinOutTicketsSerializer(tickets, many=True)
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['is_resolved']
+    tickets = Checkout.objects.filter(is_resolved=False)
+    serializer = CheckoutsSerializer(tickets, many=True)
 
     return Response(serializer.data)
+
+@api_view(['PATCH'])
+def resolve_ticket(request, id):
+    try:
+        ticket = Checkout.objects.get(pk=id)
+        ticket.is_resolved = True
+        ticket.save()
+        return Response({'detail': 'Ticket resolved'})
+    except Manufacturer.DoesNotExist:
+        return Response({'detail': 'Ticket not found'}, status=status.HTTP_404_NOT_FOUND)

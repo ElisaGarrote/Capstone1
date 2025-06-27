@@ -26,7 +26,12 @@ class LocationSerializer(serializers.ModelSerializer):
         model = Location
         fields = '__all__'
 
-class AssetCheckinOutTicketsSerializer(serializers.ModelSerializer):
+class CheckoutsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Checkout
         fields = '__all__'
+
+class TicketResolveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Checkout
+    fields = ['is_resolved']

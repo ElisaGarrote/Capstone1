@@ -24,4 +24,5 @@ urlpatterns = [
 
     path('locations/', get_all_location, name='all_locations'),
     path('tickets/', get_all_tickets, name='all_locations'),
+    path('tickets/<int:id>/resolve/', resolve_ticket, name='resolve_ticket'),
 ]
