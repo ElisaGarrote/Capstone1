@@ -708,6 +708,29 @@ def get_all_repair(request):
 
     return Response(serializer.data)
 
+@api_view(['PUT'])
+def update_repair(request, id):
+    try:
+        repair = Repair.objects.get(pk=id, is_deleted=False)
+    except Repair.DoesNotExist:
+        return Response({'detail': 'Repair not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = RepairSerializer(repair, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+def soft_delete_repair(request, id):
+    try:
+        repair = Repair.objects.get(pk=id)
+        repair.is_deleted = True
+        repair.save()
+        return Response({'detail': 'Repair soft-deleted'})
+    except Repair.DoesNotExist:
+        return Response({'detail': 'Repair not found'}, status=status.HTTP_404_NOT_FOUND)
+
 # Repair file
 @api_view(['POST'])
 def create_repair_file(request):
@@ -717,4 +740,14 @@ def create_repair_file(request):
         serializers.save()
         return Response(serializers.data, status=status.HTTP_201_CREATED)
     return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PATCH'])
+def soft_delete_repair_file(request, id):
+    try:
+        repair_file = RepairFile.objects.get(pk=id, is_deleted=False)
+        repair_file.is_deleted = True
+        repair_file.save()
+        return Response({'detail': 'Repair file soft-deleted'})
+    except RepairFile.DoesNotExist:
+        return Response({'detail': 'Repair file not found'}, status=status.HTTP_404_NOT_FOUND)
 # END REPAIR
