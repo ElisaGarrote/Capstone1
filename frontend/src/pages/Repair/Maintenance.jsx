@@ -18,6 +18,7 @@ export default function AssetRepairs() {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isDeleteSuccess, setDeleteSuccess] = useState(false);
+  const [deleteFailed, setDeleteFailed] = useState(false);
   const [isUpdated, setUpdated] = useState(false);
   const [isAddSuccess, setAddSuccess] = useState(false);
   const [selectedRowId, setSelectedRowId] = useState(null);
@@ -27,6 +28,8 @@ export default function AssetRepairs() {
   const [maintenanceItems, setMaintenanceItems] = useState([]);
   const [allSuppliers, setAllSuppliers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [endPoint, setEndPoint] = useState(null);
+  const [repairIdToDelete, setRepairIdToDelete] = useState(null);
 
   // Retrieve success states from navigation
   const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
@@ -150,8 +153,31 @@ export default function AssetRepairs() {
       {/* Delete modal */}
       {isDeleteModalOpen && (
         <DeleteModal
+          endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={handleDeleteConfirm}
+          confirmDelete={async () => {
+            // Refresh the data
+            const refreshData = await assetsService.fetchAllRepairs();
+            setMaintenanceItems(Array.from(refreshData));
+
+            // Delete all repair files
+            await assetsService.softDeleteRepairFileByRepairId(
+              repairIdToDelete
+            );
+
+            setDeleteSuccess(true);
+
+            setTimeout(() => {
+              setDeleteSuccess(false);
+            }, 5000);
+          }}
+          onDeleteFail={() => {
+            setDeleteFailed(true);
+
+            setTimeout(() => {
+              setDeleteFailed(false);
+            }, 5000);
+          }}
         />
       )}
 
@@ -159,6 +185,8 @@ export default function AssetRepairs() {
       {isDeleteSuccess && (
         <Alert message="Deleted Successfully!" type="success" />
       )}
+
+      {deleteFailed && <Alert message="Deletion failed!" type="danger" />}
 
       {isUpdated && <Alert message="Updated Successfully!" type="success" />}
 
@@ -279,8 +307,11 @@ export default function AssetRepairs() {
                         <TableBtn
                           type="delete"
                           showModal={() => {
+                            setEndPoint(
+                              assetsService.softDeleteRepairEndpoint(item.id)
+                            );
                             setDeleteModalOpen(true);
-                            setSelectedRowId(item.id);
+                            setRepairIdToDelete(item.id);
                           }}
                         />
                       </td>
