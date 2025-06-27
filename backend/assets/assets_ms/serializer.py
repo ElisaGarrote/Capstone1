@@ -147,9 +147,11 @@ class ComponentCategoryNameSerializer(serializers.ModelSerializer):
 
 
 class ComponentCheckoutSerializer(serializers.ModelSerializer):
+    asset_displayed_id = serializers.CharField(source='to_asset.displayed_id', read_only=True)
+    asset_name = serializers.CharField(source='to_asset.name', read_only=True)
     class Meta:
         model = ComponentCheckout
-        fields = "__all__"
+        fields = ['id', 'component','to_asset', 'quantity', 'checkout_date', 'notes', 'asset_displayed_id', 'asset_name']
 
 class AssetNameSerializer(serializers.ModelSerializer):
     class Meta:
