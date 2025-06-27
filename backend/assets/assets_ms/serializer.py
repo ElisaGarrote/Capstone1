@@ -147,10 +147,13 @@ class ComponentCategoryNameSerializer(serializers.ModelSerializer):
 
 
 class ComponentCheckoutSerializer(serializers.ModelSerializer):
+    asset_displayed_id = serializers.CharField(source='to_asset.displayed_id', read_only=True)
+    asset_name = serializers.CharField(source='to_asset.name', read_only=True)
     class Meta:
         model = ComponentCheckout
         fields = "__all__"
-
+        extra_fields = ['asset_name', 'asset_displayed_id']
+        
 class AssetNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
