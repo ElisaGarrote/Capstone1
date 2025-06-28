@@ -206,3 +206,18 @@
     height: 250px;
   }
 }
+
+/* No data message styling */
+.no-data-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: #6B7280;
+  font-style: italic;
+}
+
+.no-data-message p {
+  margin: 0;
+  font-size: 1rem;
+}
