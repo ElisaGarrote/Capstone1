@@ -1,3 +1,5 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../../styles/custom-colors.css";
 import "../../styles/Components.css";
 import "../../styles/StandardizedButtons.css";
@@ -8,6 +10,8 @@ import authService from "../../services/auth-service";
 import Pagination from "../../components/Pagination";
 import usePagination from "../../hooks/usePagination";
 import ComponentViewModal from "../../components/Modals/ComponentViewModal";
+import DeleteModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
 import SampleImage from "../../assets/img/default-image.jpg";
 
 // Sample asset data
@@ -54,6 +58,10 @@ export default function Components() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedComponent, setSelectedComponent] = useState(null);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [endPoint, setEndPoint] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const navigate = useNavigate(); // Use useNavigate hook
 
   const allChecked = checkedItems.length === sampleItems.length;
@@ -76,7 +84,7 @@ export default function Components() {
   } = usePagination(filteredComponents, 20);
 
   const toggleSelectAll = () => {
-    setCheckedItems(allChecked ? [] : components.map((component) => component.id));
+    setCheckedItems(allChecked ? [] : sampleItems.map((component) => component.id));
   };
 
   const toggleItem = (id) => {
@@ -86,8 +94,8 @@ export default function Components() {
   };
 
   const handleDelete = (id) => {
-    console.log(`Delete component with id: ${id}`);
-    // Add delete logic here
+    setEndPoint(`/components/${id}/delete/`);
+    setDeleteModalOpen(true);
   };
 
   const handleCheckInOut = (item) => {
@@ -130,10 +138,10 @@ export default function Components() {
         <DeleteModal
           endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={async () => {
-            await fetchComponents();
-            setSuccessMessage("Asset Deleted Successfully!");
+          confirmDelete={() => {
+            setSuccessMessage("Component Deleted Successfully!");
             setTimeout(() => setSuccessMessage(""), 5000);
+            setDeleteModalOpen(false);
           }}
           onDeleteFail={() => {
             setErrorMessage("Delete failed. Please try again.");
@@ -232,20 +240,20 @@ export default function Components() {
                     </td>
                     {authService.getUserInfo().role === "Admin" && (
                       <td>
-                        <ComponentsTableBtn
+                        <TableBtn
                           type="edit"
                           navigatePage={`/components/registration/${item.id}`}
                         />
                       </td>
                     )}
                     <td>
-                      <ComponentsTableBtn
+                      <TableBtn
                         type="delete"
                         onClick={() => handleDelete(item.id)}
                       />
                     </td>
                     <td>
-                      <ComponentsTableBtn
+                      <TableBtn
                         type="view"
                         onClick={() => handleView(item)}
                       />
