@@ -12,6 +12,8 @@ export default function DeleteModal({
   isOpen,
   onConfirm,
   onCancel,
+  title = "Delete",
+  message = "Are you sure you want to delete?",
 }) {
   const [isDeleting, setDeleting] = useState(false);
 
@@ -55,20 +57,28 @@ export default function DeleteModal({
         <button className="close-button" onClick={handleClose}>
           <img src={CloseIcon} alt="Close" />
         </button>
-        <img src={DeleteIcon} alt="Delete" />
-        <h3>Delete</h3>
-        <p>Are you sure you want to delete?</p>
+        {title !== "Deactivate User" && title !== "Activate User" && (
+          <img src={DeleteIcon} alt="Delete" />
+        )}
+        <h3>{title}</h3>
+        <p>{message}</p>
         <div>
           <button className="cancel-button" onClick={handleClose}>
             Cancel
           </button>
           <button
-            className="confirm-button"
+            className={`confirm-button ${title === "Activate User" ? "activate-confirm" : ""}`}
             onClick={handleConfirm}
             disabled={isDeleting}
           >
             {isDeleting && <LoadingButton />}
-            {!isDeleting ? "Confirm" : "Deleting..."}
+            {!isDeleting ? (
+              title === "Deactivate User" ? "Deactivate" :
+              title === "Activate User" ? "Activate" : "Confirm"
+            ) : (
+              title === "Deactivate User" ? "Deactivating..." :
+              title === "Activate User" ? "Activating..." : "Deleting..."
+            )}
           </button>
         </div>
       </div>

@@ -1,79 +1,159 @@
-import "../../styles/custom-colors.css";
-import "../../styles/Registration.css";
-import NavBar from "../../components/NavBar";
-import TopSecFormPage from "../../components/TopSecFormPage";
-import CloseIcon from "../../assets/icons/close.svg";
-import { useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
-import Alert from "../../components/Alert";
-import assetsService from "../../services/assets-service";
-import contextsService from "../../services/contexts-service";
-import SystemLoading from '../../components/Loading/SystemLoading';
+import NavBar from '../../components/NavBar';
+import '../../styles/Registration.css';
+import '../../styles/PerformAudits.css';
+import { useNavigate, useParams } from 'react-router-dom';
+import MediumButtons from '../../components/buttons/MediumButtons';
+import TopSecFormPage from '../../components/TopSecFormPage';
+import { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import SampleImage from '../../assets/img/dvi.jpeg';
+import CloseIcon from '../../assets/icons/close.svg';
+import Select from "react-select";
+import makeAnimated from "react-select/animated";
 
 export default function ComponentsRegistration() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const currentDate = new Date().toISOString().split("T")[0];
+  const currentDate = new Date().toISOString().split('T')[0];
 
-  const [componentName, setComponentName] = useState("");
- 
-  // State for dropdown options
-  const [manufacturerList, setManufacturerList] = useState([]);
-  const [locationList, setLocationList] = useState([]);
-  const [categoryList, setCategoryList] = useState([]);
+  // Animated components for react-select
+  const animatedComponents = makeAnimated();
 
-  // UI state
-  const [previewImage, setPreviewImage] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [removeImage, setRemoveImage] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  // Custom styles for dropdowns to match Asset form
+  const customStylesDropdown = {
+    control: (provided) => ({
+      ...provided,
+      width: "100%",
+      borderRadius: "25px",
+      fontSize: "0.875rem",
+      padding: "3px 8px",
+    }),
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "grey",
+      fontSize: "0.875rem",
+    }),
+  };
 
   const {
     register,
     handleSubmit,
     setValue,
-    getValues,
-    formState: { errors },
-  } = useForm();
+    control,
+    watch,
+    formState: { errors, isValid }
+  } = useForm({
+    mode: "all",
+    defaultValues: {
+      image: SampleImage,
+      componentName: '',
+      category: null,
+      modelNumber: '',
+      manufacturer: null,
+      supplier: null,
+      location: null,
+      orderNumber: '',
+      purchaseDate: '',
+      purchaseCost: '',
+      quantity: '',
+      minimumQuantity: '',
+      notes: ''
+    }
+  });
+
+  const componentData = {
+    '1': {
+      image: SampleImage,
+      componentName: 'Corsair Vengeance RAM',
+      category: 'RAM',
+      manufacturer: 'Corsair',
+      supplier: 'TechStore',
+      location: 'Main Warehouse',
+      modelNumber: 'CMK16GX4M2B3200C16',
+      orderNumber: 'ORD-2048',
+      purchaseDate: '2024-06-15',
+      purchaseCost: 120.99,
+      quantity: 20,
+      minimumQuantity: 5,
+      notes: 'High performance RAM module for gaming PCs',
+    },
+    '2': {
+      image: SampleImage,
+      componentName: 'Intel Network Card',
+      category: 'Networking',
+      manufacturer: 'Intel',
+      supplier: 'NetSupplies',
+      location: 'Storage Room B',
+      modelNumber: 'I350-T4V2',
+      orderNumber: 'ORD-3090',
+      purchaseDate: '2023-10-10',
+      purchaseCost: 89.5,
+      quantity: 15,
+      minimumQuantity: 3,
+      notes: '',
+    }
+  };
+
+  const categoryList = ['RAM', 'Storage', 'Motherboard', 'Networking'];
+  const manufacturerList = ['Corsair', 'Intel', 'Samsung', 'Kingston'];
+  const supplierList = ['TechStore', 'NetSupplies', 'HardwareHub'];
+  const locationList = ['Main Warehouse', 'Storage Room A', 'Storage Room B'];
+
+  // Create options arrays for react-select dropdowns
+  const categoryOptions = categoryList.map(category => ({
+    value: category,
+    label: category
+  }));
+
+  const manufacturerOptions = manufacturerList.map(manufacturer => ({
+    value: manufacturer,
+    label: manufacturer
+  }));
+
+  const supplierOptions = supplierList.map(supplier => ({
+    value: supplier,
+    label: supplier
+  }));
+
+  const locationOptions = locationList.map(location => ({
+    value: location,
+    label: location
+  }));
+
+  const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        setIsLoading(true);
+    if (id && componentData[id]) {
+      const component = componentData[id];
 
-        const [manufacturers, locations, categories] = await Promise.all([
-          contextsService.fetchAllManufacturers(),
-          contextsService.fetchAllLocations(),
-          assetsService.fetchAllComponentContexts(),
-        ]);
+      // Set regular form values
+      setValue('componentName', component.componentName);
+      setValue('modelNumber', component.modelNumber);
+      setValue('orderNumber', component.orderNumber);
+      setValue('purchaseDate', component.purchaseDate);
+      setValue('purchaseCost', component.purchaseCost);
+      setValue('quantity', component.quantity);
+      setValue('minimumQuantity', component.minimumQuantity);
+      setValue('notes', component.notes);
 
-        setManufacturerList(manufacturers || []);
-        setLocationList(locations || []);
-        setCategoryList(categories || []);
+      // Set dropdown values as option objects
+      const categoryOption = categoryOptions.find(option => option.value === component.category);
+      const manufacturerOption = manufacturerOptions.find(option => option.value === component.manufacturer);
+      const supplierOption = supplierOptions.find(option => option.value === component.supplier);
+      const locationOption = locationOptions.find(option => option.value === component.location);
 
-        if (id) {
-          const data = await assetsService.fetchComponentById(id);
-          if (data) {
-            Object.entries(data).forEach(([key, value]) => setValue(key, value));
-            if (data.image) setPreviewImage(data.image);
-            if (data.name) setComponentName(data.name);  
-          } else {
-            setErrorMessage("Failed to fetch component details.");
-          }
-        }
+      setValue('category', categoryOption || null);
+      setValue('manufacturer', manufacturerOption || null);
+      setValue('supplier', supplierOption || null);
+      setValue('location', locationOption || null);
 
-      } catch (error) {
-        console.error("Initialization error:", error);
-        setErrorMessage("Failed to load form data. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initialize();
-  }, [id, setValue]);
+      setPreviewImage(component.image);
+    }
+  }, [id, setValue, categoryOptions, manufacturerOptions, supplierOptions, locationOptions]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -87,53 +167,18 @@ export default function ComponentsRegistration() {
     }
   };
 
-  const handleRemoveImage = (e) => {
-    e.preventDefault();
-    setPreviewImage(null);
-    setSelectedImage(null);
-    setRemoveImage(true);
-    setValue("image", null);
-    const input = document.getElementById("image");
-    if (input) input.value = "";
+  const onSubmit = (data) => {
+    // Convert react-select values to strings for submission
+    const formData = {
+      ...data,
+      category: data.category?.value || '',
+      manufacturer: data.manufacturer?.value || '',
+      supplier: data.supplier?.value || '',
+      location: data.location?.value || ''
+    };
+    console.log('Form submitted:', formData);
+    navigate('/components');
   };
-
-  const onSubmit = async (data) => {
-    try {
-      const formData = new FormData();
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          formData.append(key, value);
-        }
-      });
-
-      if (selectedImage) {
-        formData.append("image", selectedImage);
-      }
-
-      if (removeImage) {
-        formData.append("remove_image", "true");
-      }
-
-      if (id) {
-        await assetsService.updateComponent(id, formData);
-      } else {
-        await assetsService.createComponent(formData);
-      }
-
-      navigate("/components", {
-        state: {
-          successMessage: `Component ${id ? "updated" : "created"} successfully!`,
-        },
-      });
-    } catch (error) {
-      console.error("Form submission error:", error);
-      setErrorMessage("Failed to submit the form. Please try again.");
-    }
-  };
-
-  if (isLoading) {
-    return <SystemLoading />;
-  }
 
   return (
     <>
@@ -141,8 +186,8 @@ export default function ComponentsRegistration() {
       <nav>
         <NavBar />
       </nav>
-      <main className="registration">
-        <section className="top">
+      <main className='perform-audit-page'>
+        <section className='top'>
           <TopSecFormPage
             root="Components"
             currentPage={id ? "Edit Component" : "New Component"}
@@ -150,61 +195,95 @@ export default function ComponentsRegistration() {
             title={id ? `${componentName}` : "New Component"}
           />
         </section>
-        <section className="registration-form">
+        <section className='perform-audit-form'>
           <form onSubmit={handleSubmit(onSubmit)}>
             <fieldset>
-              <label>Component Name *</label>
+              <label htmlFor='component-name'>Component Name <span style={{color: 'red'}}>*</span></label>
               <input
-                type="text"
-                className={errors.name ? "input-error" : ""}
-                {...register("name", { required: "Component Name is required" })}
-                maxLength="100"
-                placeholder="Component Name"
+                type='text'
+                className={errors.componentName ? 'input-error' : ''}
+                {...register('componentName', { required: 'Component Name is required' })}
+                maxLength='100'
+                placeholder='Component Name'
               />
               {errors.name && <span className="error-message">{errors.name.message}</span>}
             </fieldset>
 
             <fieldset>
-              <label>Category *</label>
-              <select {...register("category", { required: "Category is required" })}>
-                <option value="">Select Category</option>
-                {categoryList.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              {errors.category && <span className="error-message">{errors.category.message}</span>}
+              <label htmlFor='category'>Category <span style={{color: 'red'}}>*</span></label>
+              <Controller
+                name="category"
+                control={control}
+                rules={{ required: "Category is required" }}
+                render={({ field }) => (
+                  <Select
+                    components={animatedComponents}
+                    options={categoryOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Category"
+                    {...field}
+                  />
+                )}
+              />
+              {errors.category && <span className='error-message'>{errors.category.message}</span>}
             </fieldset>
 
             <fieldset>
-              <label>Manufacturer *</label>
-              <select {...register("manufacturer", { required: "Manufacturer is required" })}>
-                <option value="">Select Manufacturer</option>
-                {manufacturerList.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-              </select>
-              {errors.manufacturer && <span className="error-message">{errors.manufacturer.message}</span>}
+              <label htmlFor='manufacturer'>Manufacturer</label>
+              <Controller
+                name="manufacturer"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={manufacturerOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Manufacturer"
+                    {...field}
+                  />
+                )}
+              />
             </fieldset>
 
             <fieldset>
-              <label>Location *</label>
-              <select {...register("location", { required: "Location is required" })}>
-                <option value="">Select Location</option>
-                {locationList.map((loc) => (
-                  <option key={loc.id} value={loc.city}>{loc.city}</option>
-                ))}
-              </select>
-              {errors.location && <span className="error-message">{errors.location.message}</span>}
+              <label htmlFor='supplier'>Supplier</label>
+              <Controller
+                name="supplier"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={supplierOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Supplier"
+                    {...field}
+                  />
+                )}
+              />
             </fieldset>
 
             <fieldset>
-              <label>Model Number</label>
-              <input type="text" {...register("model_number")} maxLength="50" placeholder="Model Number" />
+              <label htmlFor='location'>Location</label>
+              <Controller
+                name="location"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={locationOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Location"
+                    {...field}
+                  />
+                )}
+              />
             </fieldset>
 
             <fieldset>
-              <label>Order Number</label>
-              <input type="text" {...register("order_number")} maxLength="30" placeholder="Order Number" />
+              <label htmlFor='model-number'>Model Number</label>
+              <input type='text' {...register('modelNumber')} maxLength='100' placeholder='Model Number' />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor='order-number'>Order Number</label>
+              <input type='text' {...register('orderNumber')} maxLength='100' placeholder='Order Number' />
             </fieldset>
 
             <fieldset>
@@ -213,36 +292,43 @@ export default function ComponentsRegistration() {
             </fieldset>
 
             <fieldset>
-              <label>Purchase Cost</label>
-              <div>
-                <p>PHP</p>
+              <label htmlFor='purchase-cost'>Purchase Cost</label>
+              <div className="purchase-cost-container">
+                <div className="currency-label">PHP</div>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register("purchase_cost", {
-                    required: "Purchase Cost is required",
-                    valueAsNumber: true,
-                  })}
-                  placeholder="Purchase Cost"
+                  type='number'
+                  {...register('purchaseCost')}
+                  step='0.01'
+                  min='0'
+                  placeholder='Purchase Cost'
+                  className="purchase-cost-input"
                 />
               </div>
-              {errors.purchase_cost && <span className="error-message">{errors.purchase_cost.message}</span>}
             </fieldset>
 
             <fieldset>
-              <label>Quantity</label>
-              <input type="number" min="1" {...register("quantity")} placeholder="Quantity" />
+              <label htmlFor='quantity'>Quantity</label>
+              <input
+                type='number'
+                {...register('quantity')}
+                min='1'
+                placeholder='Quantity'
+              />
             </fieldset>
 
             <fieldset>
-              <label>Minimum Quantity</label>
-              <input type="number" min="0" {...register("minimum_quantity")} placeholder="Minimum Quantity" />
+              <label htmlFor='minimum-quantity'>Minimum Quantity</label>
+              <input
+                type='number'
+                {...register('minimumQuantity')}
+                min='1'
+                placeholder='Minimum Quantity'
+              />
             </fieldset>
 
             <fieldset>
-              <label>Notes</label>
-              <textarea {...register("notes")} maxLength="500" placeholder="Notes..." />
+              <label htmlFor='notes'>Notes</label>
+              <textarea {...register('notes')} maxLength='500' placeholder='Notes...' />
             </fieldset>
 
             <fieldset>
@@ -267,7 +353,7 @@ export default function ComponentsRegistration() {
               </label>
             </fieldset>
 
-            <button type="submit" className="save-btn">
+            <button type='submit' className='save-btn' disabled={!isValid}>
               Save
             </button>
           </form>

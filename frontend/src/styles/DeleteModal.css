@@ -157,3 +157,44 @@
   transform: translateY(1px);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
+
+/* Deactivate Modal Specific Styles */
+.delete-modal .deactivate-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.delete-modal .warning-text {
+  color: #6c757d;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.delete-modal .deactivate-button {
+  background-color: #ffc107;
+  color: #212529;
+  border: 1px solid #ffc107;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.delete-modal .deactivate-button:hover {
+  background-color: #e0a800;
+  border-color: #d39e00;
+}
+
+/* Activate Confirm Button */
+.delete-modal .activate-confirm {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.delete-modal .activate-confirm:hover {
+  background-color: var(--primary-color-hover) !important;
+  border-color: var(--primary-color-hover) !important;
+}

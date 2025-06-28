@@ -3,7 +3,7 @@
     flex-direction: column;
     height: auto;
     width: auto;
-    padding: 100px 38px 38px 38px;
+    padding: 80px 38px 38px 38px;
     background-color: var(--bg-color);
     overflow: auto;
 }
@@ -21,7 +21,7 @@
     margin-top: 20px;
     background-color: #ffffff;
     box-shadow: 0 0 20px rgba(211, 211, 211, 0.3);
-    border-radius: 40px;
+    border-radius: 25px;
     border: 1px solid #d3d3d3;
 }
 
@@ -38,7 +38,7 @@
     gap: 5px;
 }
 
-.registration fieldset div {
+.registration fieldset div:not(.purchase-cost-container) {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -50,12 +50,75 @@
     font-weight: 600;
 }
 
+/* Error message styling to match Audits form */
+.registration fieldset .error-message {
+    color: red;
+    font-size: 0.875rem;
+}
+
+/* Input error styling */
+.registration .input-error {
+    border-color: red !important;
+}
+
+/* Readonly/disabled input styling to match Audits form */
+.registration input[readonly] {
+    background-color: rgba(211, 211, 211, 0.5);
+    color: var(--secondary-text-color);
+}
+
+/* Purchase Cost styling to match the format shown */
+.registration .purchase-cost-container,
+.perform-audit-page .purchase-cost-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    border: 1px solid #d3d3d3;
+    border-radius: 25px;
+    overflow: hidden;
+}
+
+.registration .currency-label,
+.perform-audit-page .currency-label {
+    background-color: #f8f9fa;
+    padding: 13px 16px;
+    border-right: 1px solid #d3d3d3;
+    font-size: 0.875rem;
+    color: var(--secondary-text-color);
+    white-space: nowrap;
+    min-width: 50px;
+    text-align: center;
+}
+
+.registration .purchase-cost-input,
+.perform-audit-page .purchase-cost-input {
+    flex: 1;
+    padding: 13px 16px;
+    border: none;
+    border-radius: 0;
+    outline: none;
+    background-color: white;
+}
+
+.registration .purchase-cost-input:focus,
+.perform-audit-page .purchase-cost-input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Ensure the purchase cost container has proper width */
+.registration .purchase-cost-container,
+.perform-audit-page .purchase-cost-container {
+    width: 100%;
+}
+
 .registration input,
 .registration select,
 .registration textarea {
     width: 100%;
     padding: 13px 16px;
-    border-radius: 10px;
+    border-radius: 25px;
     border: 1px solid #d3d3d3;
 }
 
@@ -65,23 +128,33 @@
 
 .registration fieldset p {
     padding: 13px 16px;
-    border-radius: 10px;
+    border-radius: 25px;
     border: 1px solid #d3d3d3;
     font-size: 0.875rem;
     color: var(--secondary-text-color);
 }
 
-.registration .save-btn {
+.registration .save-btn,
+.perform-audit-page .save-btn {
+    justify-content: center;
+    align-items: center;
     height: 48px;
     padding: 12px 16px;
-    border-radius: 40px;
+    border-radius: 25px;
     background-color: var(--primary-color);
     color: var(--bg-color);
     transition: 0.5s ease;
     cursor: pointer;
 }
 
-.registration .save-btn:hover {
+.registration button:disabled,
+.perform-audit-page button:disabled {
+    cursor: not-allowed;
+    background-color: #d3d3d3;
+}
+
+.registration .save-btn:hover:not(button:disabled),
+.perform-audit-page .save-btn:hover:not(button:disabled) {
     background-color: var(--primary-color-hover);
 }
 
@@ -91,7 +164,7 @@
     align-items: center;
     height: 100px;
     width: auto;
-    border-radius: 10px;
+    border-radius: 25px;
     position: relative;
 }
 
@@ -100,7 +173,7 @@
     height: 100%;
     width: 100%;
     object-fit: cover;
-    border-radius: 15px;
+    border-radius: 25px;
     padding: 2px;
 }
 
@@ -135,7 +208,7 @@
     justify-content: center;
     align-items: center;
     background-color: var(--primary-color);
-    border-radius: 40px;
+    border-radius: 25px;
     padding: 12px;
     font-size: 0.83333rem;
     color: var(--bg-color);

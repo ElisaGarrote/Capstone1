@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/custom-colors.css";
-import "../../styles/PageTable.css";
-import "../../styles/ApprovedTickets.css";
+import "../../styles/ApprovedTicketsTable.css";
+import "../../styles/StandardizedButtons.css";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TicketViewModal from "../../components/Modals/TicketViewModal";
+import Pagination from "../../components/Pagination";
+import TableBtn from "../../components/buttons/TableButtons";
 
 const ApprovedTickets = () => {
   const navigate = useNavigate();
@@ -14,6 +16,9 @@ const ApprovedTickets = () => {
   const [allChecked, setAllChecked] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [itemStatuses, setItemStatuses] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Import images for tickets
   const laptopImage = "/src/assets/img/laptop.png";
@@ -92,6 +97,12 @@ const ApprovedTickets = () => {
   const handleCheckout = (item) => {
     console.log(`Checkout ticket ${item.id}`);
 
+    // Update the status to checked out
+    setItemStatuses(prev => ({
+      ...prev,
+      [item.id]: 'checked-out'
+    }));
+
     // Map ticket categories to asset types for demonstration
     const assetTypeMap = {
       "Software Installation": "Laptop",
@@ -121,6 +132,17 @@ const ApprovedTickets = () => {
     });
   };
 
+  // Function to handle check-in button click
+  const handleCheckin = (item) => {
+    console.log(`Check-in ticket ${item.id}`);
+
+    // Update the status to checked in
+    setItemStatuses(prev => ({
+      ...prev,
+      [item.id]: 'checked-in'
+    }));
+  };
+
   // Filter items based on search query
   const filteredItems = ticketItems.filter(item =>
     item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -128,6 +150,23 @@ const ApprovedTickets = () => {
     item.requestor.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Pagination logic
+  const totalItems = filteredItems.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   return (
     <>
@@ -141,7 +180,7 @@ const ApprovedTickets = () => {
       <nav>
         <NavBar />
       </nav>
-      <main className="page">
+      <main className="page approved-tickets-page">
         <div className="container">
           <section className="top">
             <h1>Approved Tickets</h1>
@@ -158,77 +197,94 @@ const ApprovedTickets = () => {
             </div>
           </section>
           <section className="middle">
-            <table style={{ borderSpacing: '0', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  <th style={{ textAlign: 'center' }}>
-                    <input
-                      type="checkbox"
-                      checked={allChecked}
-                      onChange={toggleSelectAll}
-                    />
-                  </th>
-                  <th style={{ textAlign: 'left', paddingRight: '0', width: '120px' }}>TICKET NUMBER</th>
-                  <th style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0', width: '90px' }}>CHECKIN/OUT</th>
-                  <th style={{ textAlign: 'left' }}>CATEGORY</th>
-                  <th style={{ textAlign: 'left' }}>SUBJECT</th>
-                  <th style={{ textAlign: 'left' }}>REQUESTOR</th>
-                  <th style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>LOCATION</th>
-                  <th style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>ASSET</th>
-                  <th style={{ textAlign: 'center', width: '80px' }}>ACTION</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map((item) => (
-                  <tr key={item.id}>
-                    <td style={{ textAlign: 'center' }}>
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>
                       <input
                         type="checkbox"
-                        checked={checkedItems.includes(item.id)}
-                        onChange={() => toggleItemCheck(item.id)}
+                        checked={allChecked}
+                        onChange={toggleSelectAll}
                       />
-                    </td>
-                    <td style={{ textAlign: 'left', paddingRight: '0', width: '120px' }}>{item.id}</td>
-                    <td style={{ textAlign: 'center', paddingLeft: '0', paddingRight: '0', width: '90px' }}>
-                      <button
-                        className="checkout-btn"
-                        onClick={() => handleCheckout(item)}
-                      >
-                        Check-Out
-                      </button>
-                    </td>
-                    <td style={{ textAlign: 'left' }}>{item.subject}</td>
-                    <td style={{ textAlign: 'left' }}>{item.requestor}</td>
-                    <td style={{ textAlign: 'left' }}>{item.category}</td>
-                    <td style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>{item.lastUpdated}</td>
-                    <td style={{ textAlign: 'center', width: '130px', whiteSpace: 'nowrap', paddingRight: '15px' }}>{item.creationDate}</td>
-                    <td style={{ textAlign: 'center', width: '80px', padding: '8px' }}>
-                      <button
-                        className="view-btn"
-                        onClick={() => handleViewClick(item)}
-                        style={{
-                          backgroundColor: '#007bff',
-                          color: 'white',
-                          border: 'none',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px',
-                          minWidth: '50px',
-                          textAlign: 'center',
-                          display: 'block',
-                          margin: '0 auto',
-                          height: '26px'
-                        }}
-                      >
-                        View
-                      </button>
+                    </th>
+                    <th>TICKET NUMBER</th>
+                    <th>SUBJECT</th>
+                    <th>CATEGORY</th>
+                    <th>REQUESTOR</th>
+                    <th>CREATION DATE</th>
+                    <th>LAST UPDATED</th>
+                    <th>NOTES</th>
+                    <th>CHECKIN/OUT</th>
+                    <th>VIEW</th>
+                  </tr>
+                </thead>
+              <tbody>
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td colSpan="10" className="no-tickets-message">
+                      <p>No approved tickets found.</p>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  paginatedItems.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={checkedItems.includes(item.id)}
+                          onChange={() => toggleItemCheck(item.id)}
+                        />
+                      </td>
+                      <td>{item.id}</td>
+                      <td>{item.subject}</td>
+                      <td>{item.category}</td>
+                      <td>{item.requestor}</td>
+                      <td>{item.creationDate}</td>
+                      <td>{item.lastUpdated}</td>
+                      <td>{item.notes || 'No notes'}</td>
+                      <td>
+                        {itemStatuses[item.id] === 'checked-out' ? (
+                          <button
+                            className="check-in-btn"
+                            onClick={() => handleCheckin(item)}
+                          >
+                            Check In
+                          </button>
+                        ) : (
+                          <button
+                            className="check-out-btn"
+                            onClick={() => handleCheckout(item)}
+                          >
+                            Check Out
+                          </button>
+                        )}
+                      </td>
+                      <td>
+                        <TableBtn
+                          type="view"
+                          onClick={() => handleViewClick(item)}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
-            </table>
+              </table>
+            </div>
           </section>
+
+          {/* Pagination */}
+          {filteredItems.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+              onItemsPerPageChange={handleItemsPerPageChange}
+              itemsPerPageOptions={[10, 20, 50, 100]}
+            />
+          )}
         </div>
       </main>
     </>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
+import "../../styles/StandardizedButtons.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import MediumButtons from "../../components/buttons/MediumButtons";

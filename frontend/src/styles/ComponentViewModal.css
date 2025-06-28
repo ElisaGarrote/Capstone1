@@ -1,4 +1,4 @@
-.ticket-view-modal {
+.component-view-modal {
   display: flex;
   height: 100vh;
   width: 100vw;
@@ -10,7 +10,7 @@
   z-index: 1000;
 }
 
-.ticket-view-modal .overlay {
+.component-view-modal .overlay {
   display: flex;
   height: 100vh;
   width: 100vw;
@@ -18,21 +18,21 @@
   position: absolute;
 }
 
-.ticket-view-modal .content {
+.component-view-modal .content {
   display: flex;
   flex-direction: column;
   max-height: 80%;
   width: fit-content;
   background-color: white;
   padding: 20px;
-  border-radius: 40px;
+  border-radius: 25px;
   border: 1px solid #d3d3d3;
   position: absolute;
   z-index: 1001;
   overflow-y: auto;
 }
 
-.ticket-view-modal .close-button {
+.component-view-modal .close-button {
   height: 28px;
   width: 28px;
   padding: 5px;
@@ -49,17 +49,17 @@
   align-items: center;
 }
 
-.ticket-view-modal .close-button img {
+.component-view-modal .close-button img {
   width: 16px;
   height: 16px;
   filter: brightness(0) invert(1);
 }
 
-.ticket-view-modal .close-button:hover {
+.component-view-modal .close-button:hover {
   background-color: darkred;
 }
 
-.ticket-view-modal .header-fieldset {
+.component-view-modal .header-fieldset {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
@@ -67,21 +67,22 @@
   padding: 0;
 }
 
-.ticket-view-modal .header-fieldset img {
+.component-view-modal .header-fieldset img {
   width: 100px;
   height: 100px;
   object-fit: cover;
   margin-right: 20px;
+  border-radius: 25px;
 }
 
-.ticket-view-modal .header-fieldset h2 {
+.component-view-modal .header-fieldset h2 {
   font-size: 28px;
   font-weight: 600;
   color: #333;
   margin: 0;
 }
 
-.ticket-view-modal .details-container {
+.component-view-modal .details-container {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -91,15 +92,15 @@
   overflow-x: none;
 }
 
-.ticket-view-modal .left-content,
-.ticket-view-modal .right-content {
+.component-view-modal .left-content,
+.component-view-modal .right-content {
   width: 48%;
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.ticket-view-modal .detail-item {
+.component-view-modal .detail-item {
   display: flex;
   width: 100%;
   align-items: center;
@@ -107,33 +108,20 @@
   overflow-wrap: anywhere;
   padding: 20px;
   border: 1px solid #d3d3d3;
-  border-radius: 10px;
+  border-radius: 25px;
   background-color: #f9f9f9;
 }
 
-.ticket-view-modal .detail-item label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 45%;
+.component-view-modal .detail-item label {
   font-weight: 600;
   color: var(--secondary-text-color);
+  margin-bottom: 5px;
+  width: 100%;
 }
 
-.ticket-view-modal .detail-item label::after {
-  content: ":";
+.component-view-modal .detail-item p {
+  margin: 0;
+  color: #333;
+  word-break: break-word;
+  width: 100%;
 }
-
-.ticket-view-modal .detail-item p {
-  margin-left: 10px;
-  color: var(--secondary-text-color);
-  width: 50%;
-}
-
-.ticket-view-modal .action-buttons {
-  display: flex;
-  justify-content: center;
-  margin-top: 30px;
-}
-
-/* Checkout button styling - Now handled by StandardizedButtons.css */

@@ -139,34 +139,7 @@
   object-fit: cover;
 }
 
-.check-in-btn,
-.check-out-btn {
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.3s ease;
-  min-width: 70px;
-  text-align: center;
-}
-
-.check-in-btn {
-  background-color: var(--primary-color);
-}
-
-.check-in-btn:hover {
-  background-color: var(--primary-color-hover);
-}
-
-.check-out-btn {
-  background-color: var(--deployable-text);
-}
-
-.check-out-btn:hover {
-  background-color: rgba(52, 199, 89, 0.8);
-}
+/* Check-in/Check-out Button Styling - Now handled by StandardizedButtons.css */
 
 progress {
   height: 6px;

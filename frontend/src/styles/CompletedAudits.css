@@ -100,7 +100,7 @@
   height: auto;
   width: 100%;
   background-color: #ffffff;
-  border-radius: 40px;
+  border-radius: 20px;
   border: 1px solid #d3d3d3;
   box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   padding-bottom: 28px;
@@ -143,6 +143,9 @@
 
 .completed-audits-page table th {
   background-color: rgba(211, 211, 211, 0.2);
+  color: var(--secondary-text-color) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
 }
 
 .completed-audits-page table th,

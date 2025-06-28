@@ -25,7 +25,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
 }
 
 .close-button {
@@ -51,13 +61,14 @@
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   font-weight: 500;
+  color: #333;
 }
 
 /* Override the global asterisk rule from Settings.css */
@@ -79,32 +90,37 @@
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
   border-radius: 40px;
   font-size: 14px;
   transition: border-color 0.2s ease;
+  box-sizing: border-box;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
 }
 
 .register-btn {
   width: 100%;
-  padding: 10px;
-  background-color: #007bff;
+  padding: 12px 16px;
+  background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 40px;
   cursor: pointer;
   font-size: 16px;
-  margin-top: 10px;
+  font-weight: 500;
+  margin-top: 20px;
   transition: all 0.2s ease;
 }
 
 .register-btn:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-color-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import "../../styles/custom-colors.css";
-import "../../styles/PageTable.css";
+import "../../styles/Products.css";
+import "../../styles/StandardizedButtons.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import DefaultImage from "../../assets/img/default-image.jpg";
@@ -12,6 +13,8 @@ import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import ProductViewModal from "../../components/Modals/ProductViewModal";
+import Pagination from "../../components/Pagination";
+import usePagination from "../../hooks/usePagination";
 import authService from "../../services/auth-service";
 
 export default function Products() {
@@ -26,8 +29,26 @@ export default function Products() {
   const [successMessage, setSuccessMessage] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const allChecked = checkedItems.length === products.length;
+
+  // Filter products based on search query
+  const filteredProducts = products.filter(product => {
+    return product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           getManufacturerName(product.manufacturer_id).toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  // Pagination logic
+  const {
+    currentPage,
+    itemsPerPage,
+    paginatedData,
+    totalItems,
+    handlePageChange,
+    handleItemsPerPageChange
+  } = usePagination(filteredProducts, 20);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -175,7 +196,7 @@ export default function Products() {
         <NavBar />
       </nav>
 
-      <main className="page">
+      <main className="products-page">
         <div className="container">
           {isLoading ? (
             <SkeletonLoadingTable />
@@ -185,7 +206,12 @@ export default function Products() {
                 <h1>Products</h1>
                 <div>
                   <form>
-                    <input type="text" placeholder="Search..." />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                   </form>
                   <MediumButtons type="export" />
 
@@ -199,7 +225,8 @@ export default function Products() {
               </section>
 
               <section className="middle">
-                <table className="assets-table">
+                <div className="table-wrapper">
+                  <table>
                   <thead>
                     <tr>
                       <th>
@@ -225,14 +252,14 @@ export default function Products() {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.length === 0 ? (
+                    {filteredProducts.length === 0 ? (
                       <tr>
                         <td colSpan="11" className="no-products-message">
                           <p>No products found. Please add some products.</p>
                         </td>
                       </tr>
                     ) : (
-                      products.map((product) => (
+                      paginatedData.map((product) => (
                         <tr key={product.id}>
                           <td>
                             <input
@@ -296,7 +323,20 @@ export default function Products() {
                     )}
                   </tbody>
                 </table>
+                </div>
               </section>
+
+              {/* Pagination */}
+              {filteredProducts.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                  itemsPerPageOptions={[10, 20, 50, 100]}
+                />
+              )}
             </>
           )}
         </div>

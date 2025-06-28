@@ -56,6 +56,9 @@ export default function TableButtons({
     case "audit":
       icon = auditIcon;
       break;
+    case "deactivate":
+      // No icon needed for deactivate, will use text
+      break;
   }
 
   if (!isDisabled) {
@@ -76,6 +79,8 @@ export default function TableButtons({
           "Check-In"
         ) : type === "checkout" ? (
           "Check-Out"
+        ) : type === "deactivate" ? (
+          "Deactivate"
         ) : (
           <img src={icon} alt="icon" />
         )}
@@ -93,6 +98,8 @@ export default function TableButtons({
           "Check-In"
         ) : type === "checkout" ? (
           "Check-Out"
+        ) : type === "deactivate" ? (
+          "Deactivate"
         ) : (
           <img src={icon} alt="icon" />
         )}

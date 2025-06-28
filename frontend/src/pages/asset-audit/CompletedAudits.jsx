@@ -14,6 +14,8 @@ import ExportModal from "../../components/Modals/ExportModal";
 import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import Pagination from "../../components/Pagination";
+import usePagination from "../../hooks/usePagination";
 
 export default function CompletedAudits() {
   const location = useLocation();
@@ -22,6 +24,16 @@ export default function CompletedAudits() {
   const [isExportModalOpen, setExportModalOpen] = useState(false);
   const [auditData, setAuditData] = useState([]);
   const [isLoading, setLoading] = useState(true);
+
+  // Pagination logic
+  const {
+    currentPage,
+    itemsPerPage,
+    paginatedData,
+    totalItems,
+    handlePageChange,
+    handleItemsPerPageChange
+  } = usePagination(auditData, 20);
 
   // Retrieve all the audit data.
   useEffect(() => {
@@ -122,7 +134,7 @@ export default function CompletedAudits() {
                     </tr>
                   </thead>
                   <tbody>
-                    {auditData.map((data, index) => {
+                    {paginatedData.map((data, index) => {
                       return (
                         <tr key={index}>
                           <td>
@@ -154,6 +166,18 @@ export default function CompletedAudits() {
                     })}
                   </tbody>
                 </table>
+              )}
+
+              {/* Pagination */}
+              {auditData.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  onItemsPerPageChange={handleItemsPerPageChange}
+                  itemsPerPageOptions={[10, 20, 50, 100]}
+                />
               )}
             </section>
             <section></section>

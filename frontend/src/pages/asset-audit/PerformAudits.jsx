@@ -82,7 +82,7 @@ export default function PerformAudits() {
     control: (provided) => ({
       ...provided,
       width: "100%",
-      borderRadius: "10px",
+      borderRadius: "25px",
       fontSize: "0.875rem",
       padding: "3px 8px",
     }),
@@ -300,10 +300,10 @@ export default function PerformAudits() {
             onSubmit={handleSubmit(dataReceive == null ? submission : update)}
           >
             <fieldset>
-              <label htmlFor="asset">Select Asset *</label>
+              <label htmlFor="asset">Select Asset <span style={{color: 'red'}}>*</span></label>
 
               {isLoading && dataReceive === null ? (
-                <Skeleton height={40} borderRadius={10} />
+                <Skeleton height={40} borderRadius={25} />
               ) : (
                 dataReceive === null && (
                   <Controller
@@ -340,10 +340,10 @@ export default function PerformAudits() {
                 </div>
               )}
 
-              {errors.asset && <span>{errors.asset.message}</span>}
+              {errors.asset && <span className='error-message'>{errors.asset.message}</span>}
             </fieldset>
             <fieldset>
-              <label htmlFor="location">Location *</label>
+              <label htmlFor="location">Location <span style={{color: 'red'}}>*</span></label>
 
               <Controller
                 name="location"
@@ -353,16 +353,16 @@ export default function PerformAudits() {
                   <Select
                     options={locationOptions}
                     styles={customStylesDropdown}
-                    placeholder="Select locatioin..."
+                    placeholder="Select location..."
                     {...field}
                   />
                 )}
               />
 
-              {errors.location && <span>{errors.location.message}</span>}
+              {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
             <fieldset>
-              <label htmlFor="perform-by">Perform by *</label>
+              <label htmlFor="perform-by">Perform by <span style={{color: 'red'}}>*</span></label>
 
               <Controller
                 name="performBy"
@@ -382,10 +382,10 @@ export default function PerformAudits() {
                 )}
               />
 
-              {errors.performBy && <span>{errors.performBy.message}</span>}
+              {errors.performBy && <span className='error-message'>{errors.performBy.message}</span>}
             </fieldset>
             <fieldset>
-              <label htmlFor="audit-date">Audit Date *</label>
+              <label htmlFor="audit-date">Audit Date <span style={{color: 'red'}}>*</span></label>
               <input
                 type="date"
                 name="audit-date"
@@ -396,10 +396,10 @@ export default function PerformAudits() {
                 })}
               />
 
-              {errors.auditDate && <span>{errors.auditDate.message}</span>}
+              {errors.auditDate && <span className='error-message'>{errors.auditDate.message}</span>}
             </fieldset>
             <fieldset>
-              <label htmlFor="next-audit-date">Next Audit Date *</label>
+              <label htmlFor="next-audit-date">Next Audit Date <span style={{color: 'red'}}>*</span></label>
               <input
                 type="date"
                 name="next-audit-date"
@@ -411,7 +411,7 @@ export default function PerformAudits() {
               />
 
               {errors.nextAuditDate && (
-                <span>{errors.nextAuditDate.message}</span>
+                <span className='error-message'>{errors.nextAuditDate.message}</span>
               )}
             </fieldset>
             <fieldset>
@@ -420,6 +420,7 @@ export default function PerformAudits() {
                 name="notes"
                 id="notes"
                 maxLength="2000"
+                placeholder="Notes..."
                 {...register("notes")}
               ></textarea>
             </fieldset>

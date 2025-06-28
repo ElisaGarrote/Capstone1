@@ -72,7 +72,7 @@ export default function ScheduleRegistration() {
     control: (provided) => ({
       ...provided,
       width: "100%",
-      borderRadius: "10px",
+      borderRadius: "25px",
       fontSize: "0.875rem",
       padding: "3px 8px",
     }),
@@ -118,10 +118,10 @@ export default function ScheduleRegistration() {
         <section className="schedule-registration-form">
           <form onSubmit={handleSubmit(submission)}>
             <fieldset>
-              <label htmlFor="asset">Select Asset *</label>
+              <label htmlFor="asset">Select Asset <span style={{color: 'red'}}>*</span></label>
 
               {isLoading ? (
-                <Skeleton height={40} borderRadius={10} />
+                <Skeleton height={40} borderRadius={25} />
               ) : (
                 <Controller
                   name="asset"
@@ -132,7 +132,7 @@ export default function ScheduleRegistration() {
                       components={animatedComponents}
                       options={assetOptions}
                       styles={customStylesDropdown}
-                      placeholder="Select location..."
+                      placeholder="Select assets..."
                       {...field}
                       isMulti
                     />
@@ -140,10 +140,10 @@ export default function ScheduleRegistration() {
                 />
               )}
 
-              {errors.asset && <span>{errors.asset.message}</span>}
+              {errors.asset && <span className='error-message'>{errors.asset.message}</span>}
             </fieldset>
             <fieldset>
-              <label htmlFor="audit-due-date">Audit Due Date *</label>
+              <label htmlFor="audit-due-date">Audit Due Date <span style={{color: 'red'}}>*</span></label>
               <input
                 type="date"
                 name="audit-due-date"
@@ -155,7 +155,7 @@ export default function ScheduleRegistration() {
               />
 
               {errors.auditDueDate && (
-                <span>{errors.auditDueDate.message}</span>
+                <span className='error-message'>{errors.auditDueDate.message}</span>
               )}
             </fieldset>
             <fieldset>
@@ -164,6 +164,7 @@ export default function ScheduleRegistration() {
                 name="notes"
                 id="notes"
                 maxLength="500"
+                placeholder="Notes..."
                 {...register("notes")}
               ></textarea>
             </fieldset>

@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 100vh;
   width: auto;
-  padding: 100px 38px 38px 38px;
+  padding: 80px 38px 38px 38px;
   background-color: var(--bg-color);
   overflow-y: auto;
 }
@@ -30,7 +30,7 @@
   margin-top: 20px;
   background-color: #ffffff;
   box-shadow: 0 0 20px rgba(211, 211, 211, 0.3);
-  border-radius: 40px;
+  border-radius: 25px;
   border: 1px solid #d3d3d3;
 }
 
@@ -48,7 +48,7 @@
 }
 
 .perform-audit-page fieldset .asset {
-  border-radius: 10px;
+  border-radius: 25px;
   background-color: rgba(211, 211, 211, 0.5);
 }
 
@@ -71,7 +71,7 @@
 .perform-audit-page textarea {
   width: 100%;
   padding: 13px 16px;
-  border-radius: 10px;
+  border-radius: 25px;
   border: 1px solid #d3d3d3;
 }
 
@@ -81,7 +81,7 @@
 
 .perform-audit-page .perform-audit-form fieldset p {
   padding: 13px 16px;
-  border-radius: 10px;
+  border-radius: 25px;
   border: 1px solid #d3d3d3;
   font-size: 0.875rem;
   color: var(--secondary-text-color);
@@ -175,4 +175,9 @@
 
 .perform-audit-page .upload-image-btn:hover {
   background-color: var(--primary-color-hover);
+}
+
+.perform-audit-page .error-message {
+  color: red;
+  font-size: 0.875rem;
 }

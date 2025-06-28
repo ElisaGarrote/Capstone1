@@ -2,13 +2,16 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import "../../styles/Registration.css";
+import "../../styles/PerformAudits.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import Select from "react-select";
+import makeAnimated from "react-select/animated";
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
@@ -23,6 +26,29 @@ export default function AssetsRegistration() {
     { id: 6, name: "Taguig Office" },
     { id: 7, name: "Remote" }
   ]);
+
+  // Animated components for react-select
+  const animatedComponents = makeAnimated();
+
+  // Custom styles for dropdowns to match Audits form
+  const customStylesDropdown = {
+    control: (provided) => ({
+      ...provided,
+      width: "100%",
+      borderRadius: "25px",
+      fontSize: "0.875rem",
+      padding: "3px 8px",
+    }),
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "grey",
+      fontSize: "0.875rem",
+    }),
+  };
   
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
@@ -31,13 +57,14 @@ export default function AssetsRegistration() {
   const currentDate = new Date().toISOString().split("T")[0];
   const [generatedAssetId, setGeneratedAssetId] = useState('(Loading...)');
   
-  const { setValue, register, handleSubmit, formState: { errors } } = useForm({
+  const { setValue, register, handleSubmit, control, watch, formState: { errors, isValid } } = useForm({
+    mode: "all",
     defaultValues: {
       assetId: '',
-      product: '',
-      status: '',
-      supplier: '',
-      location: '',
+      product: null,
+      status: null,
+      supplier: null,
+      location: null,
       assetName: '',
       serialNumber: '',
       warrantyExpiration: '',
@@ -120,13 +147,37 @@ export default function AssetsRegistration() {
 
           // Set form values from retrieved asset data
           setValue('assetId', assetData.displayed_id);
-          
-          // For product and status, use the direct values from fetched product data
-          setValue('product', assetData.product);
-          setValue('status', assetData.status);
-          
-          setValue('supplier', assetData.supplier_id);
-          setValue('location', assetData.location || '');
+
+          // For dropdowns, find the matching option objects
+          const currentProductOptions = assetContextsData.products?.map(product => ({
+            value: product.id,
+            label: product.name
+          })) || [];
+
+          const currentStatusOptions = assetContextsData.statuses?.map(status => ({
+            value: status.id,
+            label: status.name
+          })) || [];
+
+          const currentSupplierOptions = contextsData.suppliers?.map(supplier => ({
+            value: supplier.id,
+            label: supplier.name
+          })) || [];
+
+          const currentLocationOptions = locations.map(location => ({
+            value: location.name,
+            label: location.name
+          }));
+
+          const productOption = currentProductOptions.find(option => option.value === assetData.product);
+          const statusOption = currentStatusOptions.find(option => option.value === assetData.status);
+          const supplierOption = currentSupplierOptions.find(option => option.value === assetData.supplier_id);
+          const locationOption = currentLocationOptions.find(option => option.value === assetData.location);
+
+          setValue('product', productOption || null);
+          setValue('status', statusOption || null);
+          setValue('supplier', supplierOption || null);
+          setValue('location', locationOption || null);
           setValue('assetName', assetData.name || '');
           setValue('serialNumber', assetData.serial_number || '');
           setValue('warrantyExpiration', assetData.warranty_expiration || '');
@@ -170,10 +221,10 @@ export default function AssetsRegistration() {
 
       // Append asset data to FormData object
       formData.append('displayed_id', data.assetId);
-      formData.append('product', data.product);
-      formData.append('status', data.status);
-      formData.append('supplier_id', data.supplier || '');
-      formData.append('location', data.location || '');
+      formData.append('product', data.product?.value || '');
+      formData.append('status', data.status?.value || '');
+      formData.append('supplier_id', data.supplier?.value || '');
+      formData.append('location', data.location?.value || '');
       formData.append('name', data.assetName);
       formData.append('serial_number', data.serialNumber || '');
       formData.append('warranty_expiration', data.warrantyExpiration || '');
@@ -225,25 +276,48 @@ export default function AssetsRegistration() {
     }
   };
 
+  // Create options arrays for react-select dropdowns
+  const productOptions = products.map(product => ({
+    value: product.id,
+    label: product.name
+  }));
+
+  const statusOptions = statuses.map(status => ({
+    value: status.id,
+    label: status.name
+  }));
+
+  const supplierOptions = suppliers.map(supplier => ({
+    value: supplier.id,
+    label: supplier.name
+  }));
+
+  const locationOptions = locations.map(location => ({
+    value: location.name,
+    label: location.name
+  }));
+
   // Add this function to handle product selection
-  const handleProductChange = async (e) => {
-    const productId = e.target.value;
-    if (productId) {
+  const handleProductChange = async (selectedOption) => {
+    if (selectedOption && selectedOption.value) {
       try {
         // Fetch the product defaults
-        const productDefaults = await assetsService.fetchProductDefaults(productId);
-        
+        const productDefaults = await assetsService.fetchProductDefaults(selectedOption.value);
+
         if (productDefaults) {
           console.log("Product defaults:", productDefaults);
-          
+
           // Set purchase cost if available
           if (productDefaults.default_purchase_cost) {
             setValue('purchaseCost', productDefaults.default_purchase_cost);
           }
-          
+
           // Set supplier if available
           if (productDefaults.default_supplier_id) {
-            setValue('supplier', productDefaults.default_supplier_id);
+            const supplierOption = supplierOptions.find(option => option.value === productDefaults.default_supplier_id);
+            if (supplierOption) {
+              setValue('supplier', supplierOption);
+            }
           }
         }
       } catch (error) {
@@ -261,20 +335,20 @@ export default function AssetsRegistration() {
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav><NavBar /></nav>
-      <main className="registration">
+      <main className="perform-audit-page">
         <section className="top">
           <TopSecFormPage
             root="Assets"
             currentPage={id ? "Edit Asset" : "New Asset"}
             rootNavigatePage="/assets"
-            title={id ? 'Edit' + ' ' + (asset.name) : 'New Asset'}
+            title={id ? 'Edit' + ' ' + (asset?.name || 'Asset') : 'New Asset'}
           />
         </section>
-        <section className="registration-form">
+        <section className="perform-audit-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Asset ID */}
             <fieldset>
-              <label htmlFor='asset-id'>Asset ID *</label>
+              <label htmlFor='asset-id'>Asset ID <span style={{color: 'red'}}>*</span></label>
               <input
                 type='text'
                 readOnly
@@ -288,89 +362,88 @@ export default function AssetsRegistration() {
 
             {/* Products selection */}
             <fieldset>
-              <label htmlFor='product'>Product *</label>
-              <div>
-                <select
-                  className={errors.product ? 'input-error' : ''}
-                  {...register('product', { required: 'Product is required' })}
-                  onChange={(e) => {
-                    // This ensures react-hook-form also gets the value
-                    register('product').onChange(e);
-                    // Then call our custom handler
-                    handleProductChange(e);
-                  }}
-                >
-                  <option value=''>Select Product</option>
-                  {products.map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <label htmlFor='product'>Product <span style={{color: 'red'}}>*</span></label>
+              <Controller
+                name="product"
+                control={control}
+                rules={{ required: "Product is required" }}
+                render={({ field }) => (
+                  <Select
+                    components={animatedComponents}
+                    options={productOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Product"
+                    {...field}
+                    onChange={(selectedOption) => {
+                      field.onChange(selectedOption);
+                      handleProductChange(selectedOption);
+                    }}
+                  />
+                )}
+              />
               {errors.product && <span className='error-message'>{errors.product.message}</span>}
             </fieldset>
 
             {/* Status selection, Default deployable */}
             <fieldset>
-              <label htmlFor='status'>Status *</label>
-              <div>
-                <select
-                  className={errors.status ? 'input-error' : ''}
-                  {...register('status', { required: 'Status is required' })}
-                >
-                  <option value=''>Select Status</option>
-                  {statuses.map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <label htmlFor='status'>Status <span style={{color: 'red'}}>*</span></label>
+              <Controller
+                name="status"
+                control={control}
+                rules={{ required: "Status is required" }}
+                render={({ field }) => (
+                  <Select
+                    options={statusOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Status"
+                    {...field}
+                  />
+                )}
+              />
               {errors.status && <span className='error-message'>{errors.status.message}</span>}
             </fieldset>
 
             {/* Supplier selection */}
             <fieldset>
-              <label htmlFor='supplier'>Supplier *</label>
-              <div>
-                <select
-                  className={errors.supplier ? 'input-error' : ''}
-                  {...register('supplier', { required: 'Supplier is required' })}
-                >
-                  <option value=''>Select Supplier</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <label htmlFor='supplier'>Supplier <span style={{color: 'red'}}>*</span></label>
+              <Controller
+                name="supplier"
+                control={control}
+                rules={{ required: "Supplier is required" }}
+                render={({ field }) => (
+                  <Select
+                    options={supplierOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Supplier"
+                    {...field}
+                  />
+                )}
+              />
               {errors.supplier && <span className='error-message'>{errors.supplier.message}</span>}
             </fieldset>
 
             {/* Location selection */}
             <fieldset>
-              <label htmlFor='location'>location *</label>
-              <div>
-                <select
-                  className={errors.location ? 'input-error' : ''}
-                  {...register('location', { required: 'Location is required' })}
-                >
-                  <option value=''>Select Location</option>
-                  {locations.map((location) => (
-                    <option key={location.id} value={location.name}>
-                      {location.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <label htmlFor='location'>Location <span style={{color: 'red'}}>*</span></label>
+              <Controller
+                name="location"
+                control={control}
+                rules={{ required: "Location is required" }}
+                render={({ field }) => (
+                  <Select
+                    options={locationOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Location"
+                    {...field}
+                  />
+                )}
+              />
               {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
 
             {/* Asset Name */}
             <fieldset>
-              <label htmlFor='asset-name'>Asset Name *</label>
+              <label htmlFor='asset-name'>Asset Name <span style={{color: 'red'}}>*</span></label>
               <input
                 type='text'
                 className={errors.assetName ? 'input-error' : ''}
@@ -425,15 +498,16 @@ export default function AssetsRegistration() {
 
             {/* Purchase Cost */}
             <fieldset>
-              <label>Purchase Cost</label>
-              <div>
-                <p>PHP</p>
-                <input 
+              <label>Default Purchase Cost</label>
+              <div className="purchase-cost-container">
+                <div className="currency-label">PHP</div>
+                <input
                   type="number"
                   step="0.01"
                   min="0"
                   {...register("purchaseCost", { valueAsNumber: true })}
-                  placeholder='Purchase Cost'
+                  placeholder='Default Purchase Cost'
+                  className="purchase-cost-input"
                 />
               </div>
             </fieldset>
@@ -482,7 +556,7 @@ export default function AssetsRegistration() {
               </div>
             </fieldset>
 
-            <button type="submit" className="save-btn">Save</button>
+            <button type="submit" className="save-btn" disabled={!isValid}>Save</button>
           </form>
         </section>
       </main>

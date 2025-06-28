@@ -1,14 +1,17 @@
 import NavBar from '../../components/NavBar';
 import '../../styles/Registration.css';
+import '../../styles/PerformAudits.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import contextsService from "../../services/contexts-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import Select from "react-select";
+import makeAnimated from "react-select/animated";
 
 
 export default function ProductsRegistration() {
@@ -18,19 +21,43 @@ export default function ProductsRegistration() {
   const [depreciations, setDepreciations] = useState([]);
   const [product, setProduct] = useState(null);
 
+  // Animated components for react-select
+  const animatedComponents = makeAnimated();
+
+  // Custom styles for dropdowns to match Asset form
+  const customStylesDropdown = {
+    control: (provided) => ({
+      ...provided,
+      width: "100%",
+      borderRadius: "25px",
+      fontSize: "0.875rem",
+      padding: "3px 8px",
+    }),
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "grey",
+      fontSize: "0.875rem",
+    }),
+  };
+
   const { id } = useParams();
-  const { setValue, register, handleSubmit, formState: { errors } } = useForm({
+  const { setValue, register, handleSubmit, control, watch, formState: { errors, isValid } } = useForm({
+    mode: "all",
     defaultValues: {
       productName: '',
-      category: '',
-      manufacturer: '',
-      depreciation: '',
+      category: null,
+      manufacturer: null,
+      depreciation: null,
       modelNumber: '',
       endOfLifeDate: '',
       defaultPurchaseCost: '',
-      supplier: '',
+      supplier: null,
       minimumQuantity: '',
-      operatingSystem: '',
+      operatingSystem: null,
       notes: ''
     }
   });
@@ -81,19 +108,51 @@ export default function ProductsRegistration() {
           setProduct(productData);
           console.log("Product Details:", productData);
 
+          // Create options arrays for react-select dropdowns
+          const currentCategoryOptions = productContextsData.categories?.map(category => ({
+            value: category.id,
+            label: category.name
+          })) || [];
+
+          const currentDepreciationOptions = productContextsData.depreciations?.map(depreciation => ({
+            value: depreciation.id,
+            label: depreciation.name
+          })) || [];
+
+          const currentManufacturerOptions = contextsData.manufacturers?.map(manufacturer => ({
+            value: manufacturer.id,
+            label: manufacturer.name
+          })) || [];
+
+          const currentSupplierOptions = contextsData.suppliers?.map(supplier => ({
+            value: supplier.id,
+            label: supplier.name
+          })) || [];
+
           // Set form values from retrieved product data
           setValue('productName', productData.name);
-          
-          setValue('category', productData.category);
-          setValue('depreciation', productData.depreciation);
-          
-          setValue('manufacturer', productData.manufacturer_id);
+
+          // For dropdowns, find the matching option objects
+          const categoryOption = currentCategoryOptions.find(option => option.value === productData.category);
+          const depreciationOption = currentDepreciationOptions.find(option => option.value === productData.depreciation);
+          const manufacturerOption = currentManufacturerOptions.find(option => option.value === productData.manufacturer_id);
+          const supplierOption = currentSupplierOptions.find(option => option.value === productData.default_supplier_id);
+
+          setValue('category', categoryOption || null);
+          setValue('depreciation', depreciationOption || null);
+          setValue('manufacturer', manufacturerOption || null);
           setValue('modelNumber', productData.model_number || '');
           setValue('endOfLifeDate', productData.end_of_life || '');
           setValue('defaultPurchaseCost', productData.default_purchase_cost || '');
-          setValue('supplier', productData.default_supplier_id || '');
+          setValue('supplier', supplierOption || null);
           setValue('minimumQuantity', productData.minimum_quantity || '');
-          setValue('operatingSystem', productData.operating_system || '');
+
+          // Handle operating system
+          const osOption = productData.operating_system ? {
+            value: productData.operating_system,
+            label: productData.operating_system.charAt(0).toUpperCase() + productData.operating_system.slice(1)
+          } : null;
+          setValue('operatingSystem', osOption);
           setValue('notes', productData.notes || '');
           
           if (productData.image) {
@@ -110,6 +169,38 @@ export default function ProductsRegistration() {
 
     initialize();
   }, [id, setValue]);
+
+  // Create options arrays for react-select dropdowns
+  const categoryOptions = categories.map(category => ({
+    value: category.id,
+    label: category.name
+  }));
+
+  const depreciationOptions = depreciations.map(depreciation => ({
+    value: depreciation.id,
+    label: depreciation.name
+  }));
+
+  const manufacturerOptions = manufacturers.map(manufacturer => ({
+    value: manufacturer.id,
+    label: manufacturer.name
+  }));
+
+  const supplierOptions = suppliers.map(supplier => ({
+    value: supplier.id,
+    label: supplier.name
+  }));
+
+  const operatingSystemOptions = [
+    { value: 'linux', label: 'Linux' },
+    { value: 'windows', label: 'Windows' },
+    { value: 'macos', label: 'macOS' },
+    { value: 'ubuntu', label: 'Ubuntu' },
+    { value: 'centos', label: 'CentOS' },
+    { value: 'debian', label: 'Debian' },
+    { value: 'fedora', label: 'Fedora' },
+    { value: 'other', label: 'Other' }
+  ];
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -156,15 +247,15 @@ export default function ProductsRegistration() {
 
       // Append all form data to FormData object
       formData.append('name', data.productName);
-      formData.append('category', data.category);
-      formData.append('manufacturer_id', data.manufacturer);
-      formData.append('depreciation', data.depreciation);
+      formData.append('category', data.category?.value || '');
+      formData.append('manufacturer_id', data.manufacturer?.value || '');
+      formData.append('depreciation', data.depreciation?.value || '');
       formData.append('model_number', data.modelNumber || '');
       formData.append('end_of_life', data.endOfLifeDate || '');
       formData.append('default_purchase_cost', data.defaultPurchaseCost || '');
-      formData.append('default_supplier_id', data.supplier || '');
+      formData.append('default_supplier_id', data.supplier?.value || '');
       formData.append('minimum_quantity', data.minimumQuantity);
-      formData.append('operating_system', data.operatingSystem || '');
+      formData.append('operating_system', data.operatingSystem?.value || '');
       formData.append('notes', data.notes || '');
       
       // Handle image upload
@@ -223,21 +314,21 @@ export default function ProductsRegistration() {
       <nav>
         <NavBar />
       </nav>
-      <main className='registration'>
+      <main className='perform-audit-page'>
         <section className='top'>
           <TopSecFormPage
             root='Products'
             currentPage={id ? 'Edit Product' : 'New Product'}
             rootNavigatePage='/products'
-            title={id ? 'Edit' + ' ' + (product.name) : 'New Product'}
+            title={id ? 'Edit' + ' ' + (product?.name || 'Product') : 'New Product'}
           />
         </section>
-        <section className='registration-form'>
+        <section className='perform-audit-form'>
           <form onSubmit={handleSubmit(onSubmit)}>
 
             {/* Product Name */}
             <fieldset>
-              <label htmlFor='product-name'>Product Name *</label>
+              <label htmlFor='product-name'>Product Name <span style={{color: 'red'}}>*</span></label>
               <input
                 type='text'
                 className={errors.productName ? 'input-error' : ''}
@@ -250,74 +341,77 @@ export default function ProductsRegistration() {
 
             {/* Category */}
             <fieldset>
-              <label htmlFor='category'>Category *</label>
-              <div>
-                <select
-                  className={errors.category ? 'input-error' : ''}
-                  {...register('category', { required: 'Category is required' })}
-                >
-                  <option value=''>Select Category</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <label htmlFor='category'>Category <span style={{color: 'red'}}>*</span></label>
+              <Controller
+                name="category"
+                control={control}
+                rules={{ required: "Category is required" }}
+                render={({ field }) => (
+                  <Select
+                    components={animatedComponents}
+                    options={categoryOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Category"
+                    {...field}
+                  />
+                )}
+              />
               {errors.category && <span className='error-message'>{errors.category.message}</span>}
             </fieldset>
 
             {/* Manufacturer */}
             <fieldset>
-              <label htmlFor='manufacturer'>Manufacturer *</label>
-              <div>
-                <select 
-                  className={errors.manufacturer ? 'input-error' : ''}
-                  {...register('manufacturer', { required: 'Manufacturer is required' })}
-                >
-                  <option value=''>Select Manufacturer</option>
-                  {manufacturers.map((manufacturer) => (
-                    <option key={manufacturer.id} value={manufacturer.id}>
-                      {manufacturer.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <label htmlFor='manufacturer'>Manufacturer <span style={{color: 'red'}}>*</span></label>
+              <Controller
+                name="manufacturer"
+                control={control}
+                rules={{ required: "Manufacturer is required" }}
+                render={({ field }) => (
+                  <Select
+                    options={manufacturerOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Manufacturer"
+                    {...field}
+                  />
+                )}
+              />
               {errors.manufacturer && <span className='error-message'>{errors.manufacturer.message}</span>}
             </fieldset>
 
             {/* Depreciation */}
             <fieldset>
-              <label htmlFor='depreciation'>Depreciation *</label>
-              <div>
-                <select 
-                  className={errors.depreciation ? 'input-error' : ''}
-                  {...register('depreciation', { required: 'Depreciation is required' })}
-                >
-                  <option value=''>Select Depreciation Method</option>
-                  {depreciations.map((depreciation) => (
-                    <option key={depreciation.id} value={depreciation.id}>
-                      {depreciation.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <label htmlFor='depreciation'>Depreciation <span style={{color: 'red'}}>*</span></label>
+              <Controller
+                name="depreciation"
+                control={control}
+                rules={{ required: "Depreciation is required" }}
+                render={({ field }) => (
+                  <Select
+                    options={depreciationOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Depreciation Method"
+                    {...field}
+                  />
+                )}
+              />
               {errors.depreciation && <span className='error-message'>{errors.depreciation.message}</span>}
             </fieldset>
 
             {/* Supplier */}
             <fieldset>
               <label htmlFor='supplier'>Default Supplier</label>
-              <div>
-                <select {...register('supplier')}>
-                  <option value=''>Select Supplier</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Controller
+                name="supplier"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={supplierOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Supplier"
+                    {...field}
+                  />
+                )}
+              />
             </fieldset>
 
             {/* Model Number */}
@@ -343,25 +437,26 @@ export default function ProductsRegistration() {
 
             {/* Default Purchase Cost */}
             <fieldset>
-              <label> Default Purchase Cost</label>
-              <div>
-                <p>PHP</p>
-                <input 
+              <label>Default Purchase Cost</label>
+              <div className="purchase-cost-container">
+                <div className="currency-label">PHP</div>
+                <input
                   type="number"
                   step="0.01"
                   min="0"
                   {...register("defaultPurchaseCost", { valueAsNumber: true })}
                   placeholder='Default Purchase Cost'
+                  className="purchase-cost-input"
                 />
               </div>
             </fieldset>
 
             <fieldset>
-              <label htmlFor='minimum-quantity'>Minimum Quantity *</label>
+              <label htmlFor='minimum-quantity'>Minimum Quantity <span style={{color: 'red'}}>*</span></label>
               <input
                 type='number'
                 className={errors.minimumQuantity ? 'input-error' : ''}
-                {...register('minimumQuantity', { 
+                {...register('minimumQuantity', {
                   required: 'Minimum Quantity is required',
                   min: { value: 0, message: 'Minimum Quantity must be at least 0' },
                   valueAsNumber: true
@@ -374,24 +469,18 @@ export default function ProductsRegistration() {
 
             <fieldset>
               <label htmlFor='operating_system'>Operating System</label>
-              <div>
-                <select 
-                  {...register('operatingSystem')}
-                  defaultValue=""
-                >
-                  <option value='' disabled hidden>
-                    Select Operating System
-                  </option>
-                  <option value='linux'>Linux</option>
-                  <option value='windows'>Windows</option>
-                  <option value='macos'>macOS</option>
-                  <option value='ubuntu'>Ubuntu</option>
-                  <option value='centos'>CentOS</option>
-                  <option value='debian'>Debian</option>
-                  <option value='fedora'>Fedora</option>
-                  <option value='other'>Other</option>
-                </select>
-              </div>
+              <Controller
+                name="operatingSystem"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={operatingSystemOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Operating System"
+                    {...field}
+                  />
+                )}
+              />
             </fieldset>
 
             <fieldset>
@@ -437,7 +526,7 @@ export default function ProductsRegistration() {
               </div>
             </fieldset>
 
-            <button type='submit' className='save-btn'>
+            <button type='submit' className='save-btn' disabled={!isValid}>
               Save
             </button>
           </form>
