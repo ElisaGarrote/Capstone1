@@ -152,10 +152,6 @@ export default function CheckInAsset() {
               <p>{checkOutDate}</p>
             </fieldset>
             <fieldset>
-              <label>Date Returned:</label>
-              <p>{returnDate}</p>
-            </fieldset>
-            <fieldset>
               <label>Condition:</label>
               <p>{condition}</p>
             </fieldset>
