@@ -1,32 +1,61 @@
 import NavBar from '../../components/NavBar';
 import '../../styles/Registration.css';
+import '../../styles/PerformAudits.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import MediumButtons from '../../components/buttons/MediumButtons';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import SampleImage from '../../assets/img/dvi.jpeg';
 import CloseIcon from '../../assets/icons/close.svg';
+import Select from "react-select";
+import makeAnimated from "react-select/animated";
 
 export default function ComponentsRegistration() {
   const { id } = useParams();
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split('T')[0];
 
+  // Animated components for react-select
+  const animatedComponents = makeAnimated();
+
+  // Custom styles for dropdowns to match Asset form
+  const customStylesDropdown = {
+    control: (provided) => ({
+      ...provided,
+      width: "100%",
+      borderRadius: "25px",
+      fontSize: "0.875rem",
+      padding: "3px 8px",
+    }),
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "grey",
+      fontSize: "0.875rem",
+    }),
+  };
+
   const {
     register,
     handleSubmit,
     setValue,
-    formState: { errors }
+    control,
+    watch,
+    formState: { errors, isValid }
   } = useForm({
+    mode: "all",
     defaultValues: {
       image: SampleImage,
       componentName: '',
-      category: '',
+      category: null,
       modelNumber: '',
-      manufacturer: '',
-      supplier: '',
-      location: '',
+      manufacturer: null,
+      supplier: null,
+      location: null,
       orderNumber: '',
       purchaseDate: '',
       purchaseCost: '',
@@ -74,17 +103,57 @@ export default function ComponentsRegistration() {
   const supplierList = ['TechStore', 'NetSupplies', 'HardwareHub'];
   const locationList = ['Main Warehouse', 'Storage Room A', 'Storage Room B'];
 
+  // Create options arrays for react-select dropdowns
+  const categoryOptions = categoryList.map(category => ({
+    value: category,
+    label: category
+  }));
+
+  const manufacturerOptions = manufacturerList.map(manufacturer => ({
+    value: manufacturer,
+    label: manufacturer
+  }));
+
+  const supplierOptions = supplierList.map(supplier => ({
+    value: supplier,
+    label: supplier
+  }));
+
+  const locationOptions = locationList.map(location => ({
+    value: location,
+    label: location
+  }));
+
   const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
     if (id && componentData[id]) {
       const component = componentData[id];
-      Object.entries(component).forEach(([key, value]) => {
-        setValue(key, value);
-      });
+
+      // Set regular form values
+      setValue('componentName', component.componentName);
+      setValue('modelNumber', component.modelNumber);
+      setValue('orderNumber', component.orderNumber);
+      setValue('purchaseDate', component.purchaseDate);
+      setValue('purchaseCost', component.purchaseCost);
+      setValue('quantity', component.quantity);
+      setValue('minimumQuantity', component.minimumQuantity);
+      setValue('notes', component.notes);
+
+      // Set dropdown values as option objects
+      const categoryOption = categoryOptions.find(option => option.value === component.category);
+      const manufacturerOption = manufacturerOptions.find(option => option.value === component.manufacturer);
+      const supplierOption = supplierOptions.find(option => option.value === component.supplier);
+      const locationOption = locationOptions.find(option => option.value === component.location);
+
+      setValue('category', categoryOption || null);
+      setValue('manufacturer', manufacturerOption || null);
+      setValue('supplier', supplierOption || null);
+      setValue('location', locationOption || null);
+
       setPreviewImage(component.image);
     }
-  }, [id, setValue]);
+  }, [id, setValue, categoryOptions, manufacturerOptions, supplierOptions, locationOptions]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -99,7 +168,15 @@ export default function ComponentsRegistration() {
   };
 
   const onSubmit = (data) => {
-    console.log('Form submitted:', data);
+    // Convert react-select values to strings for submission
+    const formData = {
+      ...data,
+      category: data.category?.value || '',
+      manufacturer: data.manufacturer?.value || '',
+      supplier: data.supplier?.value || '',
+      location: data.location?.value || ''
+    };
+    console.log('Form submitted:', formData);
     navigate('/components');
   };
 
@@ -108,7 +185,7 @@ export default function ComponentsRegistration() {
       <nav>
         <NavBar />
       </nav>
-      <main className='registration'>
+      <main className='perform-audit-page'>
         <section className='top'>
           <TopSecFormPage
             root='Components'
@@ -117,74 +194,95 @@ export default function ComponentsRegistration() {
             title={id ? 'Edit Component' : 'New Component'}
           />
         </section>
-        <section className='registration-form'>
+        <section className='perform-audit-form'>
           <form onSubmit={handleSubmit(onSubmit)}>
             <fieldset>
-              <label htmlFor='component-name'>Component Name *</label>
+              <label htmlFor='component-name'>Component Name <span style={{color: 'red'}}>*</span></label>
               <input
                 type='text'
                 className={errors.componentName ? 'input-error' : ''}
                 {...register('componentName', { required: 'Component Name is required' })}
                 maxLength='100'
+                placeholder='Component Name'
               />
               {errors.componentName && <span className='error-message'>{errors.componentName.message}</span>}
             </fieldset>
 
             <fieldset>
-              <label htmlFor='category'>Category *</label>
-              <div>
-                <select
-                  className={errors.category ? 'input-error' : ''}
-                  {...register('category', { required: 'Category is required' })}
-                >
-                  <option value=''>Select Category</option>
-                  {categoryList.map((cat, idx) => (
-                    <option key={idx} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                <MediumButtons type='new' />
-              </div>
+              <label htmlFor='category'>Category <span style={{color: 'red'}}>*</span></label>
+              <Controller
+                name="category"
+                control={control}
+                rules={{ required: "Category is required" }}
+                render={({ field }) => (
+                  <Select
+                    components={animatedComponents}
+                    options={categoryOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Category"
+                    {...field}
+                  />
+                )}
+              />
               {errors.category && <span className='error-message'>{errors.category.message}</span>}
             </fieldset>
 
             <fieldset>
               <label htmlFor='manufacturer'>Manufacturer</label>
-              <select {...register('manufacturer')}>
-                <option value=''>Select Manufacturer</option>
-                {manufacturerList.map((mfg, idx) => (
-                  <option key={idx} value={mfg}>{mfg}</option>
-                ))}
-              </select>
+              <Controller
+                name="manufacturer"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={manufacturerOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Manufacturer"
+                    {...field}
+                  />
+                )}
+              />
             </fieldset>
 
             <fieldset>
               <label htmlFor='supplier'>Supplier</label>
-              <select {...register('supplier')}>
-                <option value=''>Select Supplier</option>
-                {supplierList.map((sup, idx) => (
-                  <option key={idx} value={sup}>{sup}</option>
-                ))}
-              </select>
+              <Controller
+                name="supplier"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={supplierOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Supplier"
+                    {...field}
+                  />
+                )}
+              />
             </fieldset>
 
             <fieldset>
               <label htmlFor='location'>Location</label>
-              <select {...register('location')}>
-                <option value=''>Select Location</option>
-                {locationList.map((loc, idx) => (
-                  <option key={idx} value={loc}>{loc}</option>
-                ))}
-              </select>
+              <Controller
+                name="location"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={locationOptions}
+                    styles={customStylesDropdown}
+                    placeholder="Select Location"
+                    {...field}
+                  />
+                )}
+              />
             </fieldset>
 
             <fieldset>
               <label htmlFor='model-number'>Model Number</label>
-              <input type='text' {...register('modelNumber')} maxLength='100' />
+              <input type='text' {...register('modelNumber')} maxLength='100' placeholder='Model Number' />
             </fieldset>
 
             <fieldset>
               <label htmlFor='order-number'>Order Number</label>
-              <input type='text' {...register('orderNumber')} maxLength='100' />
+              <input type='text' {...register('orderNumber')} maxLength='100' placeholder='Order Number' />
             </fieldset>
 
             <fieldset>
@@ -198,12 +296,17 @@ export default function ComponentsRegistration() {
 
             <fieldset>
               <label htmlFor='purchase-cost'>Purchase Cost</label>
-              <input
-                type='number'
-                {...register('purchaseCost')}
-                step='0.01'
-                min='0'
-              />
+              <div className="purchase-cost-container">
+                <div className="currency-label">PHP</div>
+                <input
+                  type='number'
+                  {...register('purchaseCost')}
+                  step='0.01'
+                  min='0'
+                  placeholder='Purchase Cost'
+                  className="purchase-cost-input"
+                />
+              </div>
             </fieldset>
 
             <fieldset>
@@ -212,6 +315,7 @@ export default function ComponentsRegistration() {
                 type='number'
                 {...register('quantity')}
                 min='1'
+                placeholder='Quantity'
               />
             </fieldset>
 
@@ -221,12 +325,13 @@ export default function ComponentsRegistration() {
                 type='number'
                 {...register('minimumQuantity')}
                 min='1'
+                placeholder='Minimum Quantity'
               />
             </fieldset>
 
             <fieldset>
               <label htmlFor='notes'>Notes</label>
-              <textarea {...register('notes')} maxLength='500' />
+              <textarea {...register('notes')} maxLength='500' placeholder='Notes...' />
             </fieldset>
 
             <fieldset>
@@ -260,7 +365,7 @@ export default function ComponentsRegistration() {
               </label>
             </fieldset>
 
-            <button type='submit' className='save-btn'>
+            <button type='submit' className='save-btn' disabled={!isValid}>
               Save
             </button>
           </form>

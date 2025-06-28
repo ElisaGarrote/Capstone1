@@ -20,7 +20,7 @@
   height: auto;
   width: 100%;
   background-color: #ffffff;
-  border-radius: 40px;
+  border-radius: 20px;
   border: 1px solid #d3d3d3;
   box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   padding-bottom: 28px;
@@ -269,8 +269,8 @@
   padding: 8px 20px;
   border-top: 1px solid #e0e0e0;
   background-color: white;
-  border-bottom-left-radius: 40px;
-  border-bottom-right-radius: 40px;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
   margin-top: 0;
   width: 100%;
   box-sizing: border-box;

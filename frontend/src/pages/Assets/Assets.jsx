@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/custom-colors.css";
 import "../../styles/Assets.css";
+import "../../styles/StandardizedButtons.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -280,8 +281,8 @@ export default function Assets() {
                     <th>ID</th>
                     <th>NAME</th>
                     <th>CATEGORY</th>
-                    <th>CHECKIN/CHECKOUT</th>
                     <th>STATUS</th>
+                    <th>CHECKIN/CHECKOUT</th>
                     {authService.getUserInfo().role === "Admin" && (
                       <th>EDIT</th>
                     )}
@@ -323,6 +324,7 @@ export default function Assets() {
                         <td>{asset.displayed_id}</td>
                         <td>{asset.name}</td>
                         <td>{asset.category}</td>
+                        <td>{asset.status}</td>
                         <td>
                           {asset.hasCheckoutRecord ? (
                             asset.isCheckedOut ? (
@@ -330,19 +332,18 @@ export default function Assets() {
                                 className="check-in-btn"
                                 onClick={() => handleCheckInOut(asset)}
                               >
-                                Check-In
+                                Check In
                               </button>
                             ) : (
                               <button
                                 className="check-out-btn"
                                 onClick={() => handleCheckInOut(asset)}
                               >
-                                Check-Out
+                                Check Out
                               </button>
                             )
                           ) : null}
                         </td>
-                        <td>{asset.status}</td>
                         {authService.getUserInfo().role === "Admin" && (
                           <td>
                             <TableBtn

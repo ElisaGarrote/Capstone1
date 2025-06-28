@@ -5,6 +5,8 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/PageTable.css";
 import React, { useState } from "react";
+import Pagination from "../../components/Pagination";
+import usePagination from "../../hooks/usePagination";
 
 const sampleItems = [
   {
@@ -30,6 +32,17 @@ export default function CheckOutList() {
   const location = useLocation();
   const { id, name, category } = location.state || {};
   const [checkedItems, setCheckedItems] = useState([]);
+
+  // Pagination logic
+  const {
+    currentPage,
+    itemsPerPage,
+    paginatedData,
+    totalItems,
+    handlePageChange,
+    handleItemsPerPageChange
+  } = usePagination(sampleItems, 20);
+
   const allChecked = checkedItems.length === sampleItems.length;
 
   const toggleSelectAll = () => {
@@ -65,20 +78,19 @@ export default function CheckOutList() {
     <>
       <nav><NavBar /></nav>
       <main className="list-page">
-        <section className="table-header">
-          <TopSecFormPage
-            root="Components"
-            currentPage="Check-In Components"
-            rootNavigatePage="/components"
-            title={name}
-          />
-        </section>
+        <TopSecFormPage
+          root="Components"
+          currentPage="Check-In Components"
+          rootNavigatePage="/components"
+          title={name}
+        />
         <div className="container">
             <section className="top">
                 <p>Please select which employee/location's "{name}" you would like to check-in.</p>
                 <button onClick={handleBulkCheckIn}>Bulk Check-In</button>
             </section>
             <section className="middle">
+              <div className="table-wrapper">
                 <table>
                     <thead>
                     <tr>
@@ -97,7 +109,14 @@ export default function CheckOutList() {
                     </tr>
                     </thead>
                     <tbody>
-                    {sampleItems.map((item) => (
+                    {sampleItems.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="no-items-message">
+                          <p>No check-out records found.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedData.map((item) => (
                       <tr key={item.id}>
                         <td>
                           <input
@@ -119,11 +138,24 @@ export default function CheckOutList() {
                             </button>
                         </td>
                       </tr>
-                    ))}
+                      ))
+                    )}
                     </tbody>
                 </table>
+              </div>
             </section>
-            <section className="bottom"></section>
+
+            {/* Pagination */}
+            {sampleItems.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
+                itemsPerPageOptions={[10, 20, 50, 100]}
+              />
+            )}
         </div>
       </main>
     </>

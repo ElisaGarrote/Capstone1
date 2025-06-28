@@ -69,27 +69,7 @@
   background-color: var(--primary-color-hover) !important;
 }
 
-/* Checkout button styling */
-.checkout-btn {
-  background-color: var(--deployable-text) !important;
-  color: white !important;
-  border: none !important;
-  padding: 4px 6px !important;
-  border-radius: 4px !important;
-  cursor: pointer !important;
-  font-size: 12px !important;
-  transition: background-color 0.3s ease !important;
-  width: 70px !important;
-  text-align: center !important;
-  display: block !important;
-  margin: 0 auto !important;
-  height: 26px !important;
-  box-sizing: border-box !important;
-}
-
-.checkout-btn:hover {
-  background-color: rgba(52, 199, 89, 0.8) !important;
-}
+/* Checkout button styling - Now handled by StandardizedButtons.css */
 
 /* Table column widths - using pixel-based widths for more consistent layout */
 .page table th:nth-child(1),

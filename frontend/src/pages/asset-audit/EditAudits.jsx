@@ -2,20 +2,32 @@ import NavBar from "../../components/NavBar";
 import "../../styles/PerformAudits.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useState, useEffect } from "react";
-import DeleteModal from "../../components/Modals/DeleteModal";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 
 export default function EditAudits() {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentDate, setCurrentDate] = useState("");
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isDeleteSuccessFromEdit, setDeleteSucces] = useState(false);
 
-  // Retrieve the "id" value passed from the navigation state.
-  // If the "id" is not exist, the default value for this is "undifiend".
+  // Retrieve the data passed from the navigation state
+  const auditData = location.state?.data || null;
   const id = location.state?.id;
   const previousPage = location.state?.previousPage;
+
+  // Form handling
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isValid }
+  } = useForm({
+    mode: "all",
+    defaultValues: {
+      auditDueDate: '',
+      notes: ''
+    }
+  });
 
   // Function to assign the appropriate value for the root props in TopSecFormPage component
   const assignRoot = () => {
@@ -44,18 +56,31 @@ export default function EditAudits() {
     setCurrentDate(formattedDate);
   }, []);
 
+  // Set form values when audit data is available
+  useEffect(() => {
+    if (auditData) {
+      // Set the original audit due date (could be 'date' or 'due_date' depending on data structure)
+      const dueDate = auditData.date || auditData.due_date;
+      if (dueDate) {
+        setValue("auditDueDate", dueDate);
+      }
+      // Set the original notes
+      if (auditData.notes) {
+        setValue("notes", auditData.notes);
+      }
+    }
+  }, [auditData, setValue]);
+
+  // Form submission handler
+  const onSubmit = (data) => {
+    console.log('Form submitted:', data);
+    navigate(previousPage, {
+      state: { isUpdateFromEdit: true },
+    });
+  };
+
   return (
     <>
-      {isDeleteModalOpen && (
-        <DeleteModal
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => setDeleteSucces(true)}
-        />
-      )}
-
-      {isDeleteSuccessFromEdit &&
-        navigate(previousPage, { state: { isDeleteSuccessFromEdit } })}
-
       <nav>
         <NavBar />
       </nav>
@@ -65,41 +90,43 @@ export default function EditAudits() {
             root={assignRoot()}
             currentPage="Edit Audit"
             rootNavigatePage={previousPage}
-            title={id}
-            buttonType="delete"
-            deleteModalOpen={() => setDeleteModalOpen(true)}
+            title={auditData ? `${auditData.asset_info?.displayed_id || ''} - ${auditData.asset_info?.name || 'Edit Audit'}` : (id || 'Edit Audit')}
           />
         </section>
         <section className="perform-audit-form">
-          <form action="" method="post">
+          <form onSubmit={handleSubmit(onSubmit)}>
             <fieldset>
-              <label htmlFor="audit-date">Audit Due Date *</label>
+              <label htmlFor="audit-due-date">Audit Due Date <span style={{color: 'red'}}>*</span></label>
               <input
                 type="date"
                 name="audit-due-date"
                 id="audit-due-date"
-                defaultValue={currentDate}
-                max={currentDate}
-                required
+                {...register("auditDueDate", {
+                  required: "Audit due date is required",
+                })}
               />
+              {errors.auditDueDate && (
+                <span className='error-message'>{errors.auditDueDate.message}</span>
+              )}
             </fieldset>
             <fieldset>
               <label htmlFor="notes">Notes</label>
-              <textarea name="notes" id="notes" maxLength="2000"></textarea>
+              <textarea
+                name="notes"
+                id="notes"
+                maxLength="2000"
+                placeholder="Notes..."
+                {...register("notes")}
+              ></textarea>
             </fieldset>
+            <button
+              type="submit"
+              className="save-btn"
+              disabled={!isValid}
+            >
+              Update
+            </button>
           </form>
-          {/* Place this button inside the form when working on the backend. */}
-          <button
-            type="submit"
-            className="save-btn"
-            onClick={() => {
-              navigate(previousPage, {
-                state: { isUpdateFromEdit: true },
-              }); // navigate to audits page and pass the isUpdate as state
-            }}
-          >
-            Update
-          </button>
         </section>
       </main>
     </>

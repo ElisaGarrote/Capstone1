@@ -1,4 +1,5 @@
 import "../../styles/TicketViewModal.css";
+import "../../styles/StandardizedButtons.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import { useNavigate } from "react-router-dom";
 import TicketIcon from "../../assets/icons/ticket.svg";

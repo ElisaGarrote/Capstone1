@@ -1,4 +1,5 @@
 import "../../styles/AssetViewModal.css";
+import "../../styles/StandardizedButtons.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { useNavigate } from "react-router-dom";

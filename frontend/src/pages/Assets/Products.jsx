@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import "../../styles/custom-colors.css";
 import "../../styles/Products.css";
+import "../../styles/StandardizedButtons.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import DefaultImage from "../../assets/img/default-image.jpg";

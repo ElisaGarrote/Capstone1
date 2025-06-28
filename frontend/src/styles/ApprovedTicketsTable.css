@@ -1,0 +1,491 @@
+/* Approved Tickets Table - Recreated to match Products table styling exactly */
+
+/* Reset any conflicting styles first */
+.approved-tickets-page * {
+  box-sizing: border-box;
+}
+
+/* Force override any inherited table styles */
+.approved-tickets-page table {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: normal !important;
+  color: inherit !important;
+}
+
+/* Ensure headers have consistent styling - Exact Products Match */
+.approved-tickets-page table thead th {
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  color: var(--secondary-text-color) !important;
+  background-color: rgba(211, 211, 211, 0.2) !important;
+  letter-spacing: normal !important;
+  line-height: normal !important;
+}
+
+/* Ensure data cells have consistent styling - Exact Products Match */
+.approved-tickets-page table tbody td {
+  font-size: 0.88rem !important;
+  color: var(--secondary-text-color) !important;
+  font-weight: normal !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  line-height: normal !important;
+}
+
+/* Force consistent font family across all table elements */
+.approved-tickets-page table,
+.approved-tickets-page table th,
+.approved-tickets-page table td,
+.approved-tickets-page table button {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
+}
+
+/* Force exact Products table font sizes with highest specificity */
+.approved-tickets-page table th {
+  font-size: 0.75rem !important;
+}
+
+.approved-tickets-page table td {
+  font-size: 0.88rem !important;
+}
+
+/* Override any inherited font styles */
+.approved-tickets-page table th,
+.approved-tickets-page table td {
+  font-style: normal !important;
+  font-variant: normal !important;
+  text-decoration: none !important;
+}
+
+/* Approved Tickets Page Layout - Exact Products Page Match */
+.approved-tickets-page {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-color);
+  height: 100vh;
+  width: 100vw;
+  padding: 100px 38px 38px 38px;
+  position: relative;
+  z-index: 1;
+}
+
+.approved-tickets-page .container {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  height: auto;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 25px;
+  border: 1px solid #d3d3d3;
+  box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
+  padding-bottom: 28px;
+  overflow: hidden;
+}
+
+/* Top Section - Exact Products Table Match */
+.approved-tickets-page .top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 16px 34px;
+  border-bottom: 1px solid #d3d3d3;
+  border-collapse: collapse;
+}
+
+.approved-tickets-page .top h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: #111827;
+}
+
+.approved-tickets-page .top div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.approved-tickets-page .top input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 40px;
+  border: 1px solid #d3d3d3;
+}
+
+.approved-tickets-page .top input:hover {
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.15);
+}
+
+/* Middle Section - Exact Products Table Match */
+.approved-tickets-page .middle {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+/* Table wrapper for proper scrolling */
+.approved-tickets-page .table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* Approved Tickets Table Styling - Exact Products Table Recreation */
+.approved-tickets-page table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  table-layout: fixed !important;
+  min-width: 1000px !important; /* Reduced from 1200px */
+}
+
+/* Force override any conflicting header styles - Exact Products Match */
+.approved-tickets-page table th {
+  background-color: rgba(211, 211, 211, 0.2) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  color: var(--secondary-text-color) !important;
+  font-size: 0.75rem !important;
+  text-align: left !important;
+  padding: 0.75rem !important;
+  border-bottom: 1px solid #d3d3d3 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  border-radius: 0 !important;
+  line-height: normal !important;
+  font-family: inherit !important;
+  letter-spacing: normal !important;
+  font-style: normal !important;
+  vertical-align: middle !important;
+}
+
+/* Force override any conflicting cell styles - Exact Products Match */
+.approved-tickets-page table td {
+  color: var(--secondary-text-color) !important;
+  font-size: 0.88rem !important;
+  height: 50px !important;
+  vertical-align: middle !important;
+  text-align: left !important;
+  padding: 0.75rem !important;
+  border-bottom: 1px solid #d3d3d3 !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  border-radius: 0 !important;
+  line-height: normal !important;
+  font-family: inherit !important;
+  letter-spacing: normal !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+}
+
+/* Remove border radius - Same as Products */
+.approved-tickets-page table,
+.approved-tickets-page table th,
+.approved-tickets-page table td {
+  border-radius: 0 !important;
+}
+
+/* Table Hover Effect - Force Override */
+.approved-tickets-page table tbody tr:hover {
+  background-color: rgba(211, 211, 211, 0.1) !important;
+}
+
+/* Force consistent spacing and remove any inherited styles */
+.approved-tickets-page table tbody tr {
+  background-color: transparent !important;
+}
+
+.approved-tickets-page table tbody tr td {
+  background-color: transparent !important;
+}
+
+/* Column Styling - Force Override with High Specificity - ADJUSTED WIDTHS */
+
+/* Checkbox Column */
+.approved-tickets-page table th:nth-child(1),
+.approved-tickets-page table td:nth-child(1) {
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 0.5rem !important;
+}
+
+.approved-tickets-page table input[type="checkbox"] {
+  appearance: auto !important;
+  -webkit-appearance: checkbox !important;
+  -moz-appearance: checkbox !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* Ticket Number Column */
+.approved-tickets-page table th:nth-child(2),
+.approved-tickets-page table td:nth-child(2) {
+  width: 130px !important;
+  min-width: 130px !important;
+  max-width: 130px !important;
+  text-align: left !important;
+  padding: 0.75rem !important;
+}
+
+/* Subject Column - Now 3rd column */
+.approved-tickets-page table th:nth-child(3),
+.approved-tickets-page table td:nth-child(3) {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+  text-align: left !important;
+  padding: 0.75rem !important;
+}
+
+/* Category Column - Now 4th column - Increased width */
+.approved-tickets-page table th:nth-child(4),
+.approved-tickets-page table td:nth-child(4) {
+  width: 180px !important;
+  min-width: 180px !important;
+  max-width: 180px !important;
+  text-align: left !important;
+  padding: 0.75rem !important;
+}
+
+/* Requestor Column */
+.approved-tickets-page table th:nth-child(5),
+.approved-tickets-page table td:nth-child(5) {
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
+  text-align: left !important;
+  padding: 0.75rem !important;
+}
+
+/* Creation Date Column */
+.approved-tickets-page table th:nth-child(6),
+.approved-tickets-page table td:nth-child(6) {
+  width: 130px !important;
+  min-width: 130px !important;
+  max-width: 130px !important;
+  text-align: left !important;
+  padding: 0.75rem !important;
+}
+
+/* Last Updated Column */
+.approved-tickets-page table th:nth-child(7),
+.approved-tickets-page table td:nth-child(7) {
+  width: 130px !important;
+  min-width: 130px !important;
+  max-width: 130px !important;
+  text-align: left !important;
+  padding: 0.75rem !important;
+}
+
+/* Notes Column */
+.approved-tickets-page table th:nth-child(8),
+.approved-tickets-page table td:nth-child(8) {
+  width: 150px !important;
+  min-width: 150px !important;
+  max-width: 150px !important;
+  text-align: left !important;
+  padding: 0.75rem !important;
+}
+
+/* Check In/Out Column - Balanced Width */
+.approved-tickets-page table th:nth-child(9),
+.approved-tickets-page table td:nth-child(9) {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 0.5rem 0.25rem !important;
+  padding-right: 0.125rem !important;
+}
+
+/* View Column - Balanced Width */
+.approved-tickets-page table th:nth-child(10),
+.approved-tickets-page table td:nth-child(10) {
+  width: 70px !important;
+  min-width: 70px !important;
+  max-width: 70px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 0.5rem 0.25rem !important;
+  padding-left: 0.125rem !important;
+}
+
+/* Table Button Styling - Compact View Icon to Match Products */
+.approved-tickets-page .table-buttons-view {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 6px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  width: 32px !important;
+  height: 32px !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+  background-color: var(--bg-color) !important;
+  border: 1px solid #d3d3d3 !important;
+  transition: 0.3s ease !important;
+  font-size: inherit !important;
+}
+
+.approved-tickets-page .table-buttons-view:hover {
+  background-color: rgba(0, 123, 255, 0.2) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.approved-tickets-page .table-buttons-view img {
+  display: block !important;
+  height: 14px !important;
+  width: 14px !important;
+  object-fit: contain !important;
+  margin: 0 !important;
+}
+
+/* Override any global button styles that might interfere */
+.approved-tickets-page button.table-buttons-view {
+  background: var(--bg-color) !important;
+  color: inherit !important;
+  border: 1px solid #d3d3d3 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  text-transform: none !important;
+}
+
+/* Check In/Out Button Styling - MORE COMPACT */
+.approved-tickets-page .check-in-btn,
+.approved-tickets-page .check-out-btn {
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  padding: 4px 8px !important;
+  border-radius: 16px !important;
+  border: none !important;
+  cursor: pointer !important;
+  min-width: 60px !important;
+  text-align: center !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+  height: 24px !important;
+  font-family: inherit !important;
+  text-transform: none !important;
+  white-space: nowrap !important;
+}
+
+.approved-tickets-page .check-in-btn {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+.approved-tickets-page .check-out-btn {
+  background-color: #34c759 !important;
+  color: white !important;
+}
+
+.approved-tickets-page .check-in-btn:hover {
+  background-color: var(--primary-color-hover) !important;
+}
+
+.approved-tickets-page .check-out-btn:hover {
+  background-color: rgba(52, 199, 89, 0.8) !important;
+}
+
+/* No tickets message styling */
+.approved-tickets-page .no-tickets-message {
+  text-align: center !important;
+  padding: 2rem !important;
+  color: var(--secondary-text-color) !important;
+  font-style: italic !important;
+}
+
+.approved-tickets-page .no-tickets-message p {
+  margin: 0 !important;
+  font-size: 1rem !important;
+}
+
+/* Pagination Styling - Exact Products Table Match */
+.approved-tickets-page .pagination-container {
+  margin-top: 0;
+  border-top: 1px solid #d3d3d3;
+  background-color: white;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.approved-tickets-page .pagination-container .pagination-text {
+  color: #000000 !important;
+}
+
+.approved-tickets-page .pagination-container .pagination-select {
+  color: #000000 !important;
+}
+
+.approved-tickets-page .pagination-container .pagination-btn {
+  color: #000000 !important;
+}
+
+.approved-tickets-page .pagination-container .pagination-page-number {
+  background-color: var(--primary-color);
+  color: white !important;
+}
+
+/* Responsive Design - Exact Products Table Match */
+@media (max-width: 768px) {
+  .approved-tickets-page {
+    padding: 60px 20px 20px;
+  }
+
+  .approved-tickets-page .container {
+    padding: 16px;
+    border-radius: 25px;
+  }
+
+  .approved-tickets-page table th,
+  .approved-tickets-page table td {
+    padding: 8px 12px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .approved-tickets-page .table-buttons-view {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 2px !important;
+  }
+
+  .approved-tickets-page .table-buttons-view img {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .approved-tickets-page .top {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .approved-tickets-page .top div {
+    justify-content: center;
+  }
+
+  .approved-tickets-page .top form {
+    min-width: 100%;
+  }
+}

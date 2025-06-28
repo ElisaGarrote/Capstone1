@@ -238,6 +238,7 @@ export default function ScheduledAudits() {
                             <TableBtn
                               type="edit"
                               navigatePage={"/audits/edit"}
+                              data={data}
                               previousPage={location.pathname}
                             />
                           </td>

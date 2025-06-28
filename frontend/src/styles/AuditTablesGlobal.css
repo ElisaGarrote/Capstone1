@@ -103,9 +103,9 @@
   background-color: rgba(255, 59, 48, 0.2) !important;
 }
 
-/* Global audits table header color override */
+/* Global audits table header color override - Match Products table */
 .audits-table th {
-  color: #374151 !important;
+  color: var(--secondary-text-color) !important;
   font-weight: 600 !important;
   text-transform: uppercase !important;
 }

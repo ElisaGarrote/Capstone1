@@ -78,43 +78,25 @@
   left: -1px;
 }
 
-.table-buttons-checkin,
-.table-buttons-checkout,
-.table-buttons-checkin-disabled {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  min-width: 70px;
-  height: 28px;
-}
+/* Table Check-in/Check-out Button Styling - Now handled by StandardizedButtons.css */
 
 .table-buttons-checkin-disabled {
-  background-color: #a9a9a9;
-  cursor: default;
-}
-
-.table-buttons-checkout {
-  background-color: #34c759;
-  color: white;
-  transition: 0.5s ease;
-}
-
-.table-buttons-checkout:hover {
-  background-color: rgba(52, 199, 89, 0.8);
-}
-
-.table-buttons-checkin {
-  background-color: var(--primary-color);
-  color: white;
-  transition: 0.5s ease;
-}
-
-.table-buttons-checkin:hover {
-  background-color: rgba(0, 123, 255, 0.8);
+  background-color: #a9a9a9 !important;
+  color: white !important;
+  border: none !important;
+  padding: 8px 16px !important;
+  border-radius: 40px !important;
+  cursor: not-allowed !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  min-width: 80px !important;
+  text-align: center !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+  height: 32px !important;
 }
 
 .table-buttons-edit:hover,

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
 import "../../styles/custom-colors.css";
 import "../../styles/Components.css";
+import "../../styles/StandardizedButtons.css";
 import NavBar from "../../components/NavBar";
 import TableBtn from "../../components/buttons/TableButtons";
 import ComponentsTableBtn from "../../components/buttons/ComponentsTableButtons";
@@ -10,6 +11,7 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import authService from "../../services/auth-service";
 import Pagination from "../../components/Pagination";
 import usePagination from "../../hooks/usePagination";
+import ComponentViewModal from "../../components/Modals/ComponentViewModal";
 
 // Sample asset data
 const sampleItems = [
@@ -52,6 +54,8 @@ const sampleItems = [
 export default function Components() {
   const [checkedItems, setCheckedItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedComponent, setSelectedComponent] = useState(null);
   const navigate = useNavigate(); // Use useNavigate hook
 
   const allChecked = checkedItems.length === sampleItems.length;
@@ -113,6 +117,16 @@ export default function Components() {
     }
   };
 
+  const handleView = (component) => {
+    setSelectedComponent(component);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    setSelectedComponent(null);
+  };
+
   return (
     <>
       <nav>
@@ -155,10 +169,10 @@ export default function Components() {
                   </th>
                   <th>IMAGE</th>
                   <th>NAME</th>
-                  <th>CHECKIN/CHECKOUT</th>
                   <th>AVAILABLE</th>
                   <th>CATEGORY</th>
                   <th>MODEL NUMBER</th>
+                  <th>CHECKIN/CHECKOUT</th>
                   {authService.getUserInfo().role === "Admin" && <th>EDIT</th>}
                   <th>DELETE</th>
                   <th>VIEW</th>
@@ -189,6 +203,9 @@ export default function Components() {
                       />
                     </td>
                     <td>{item.componentName}</td>
+                    <td>{item.quantity}</td>
+                    <td>{item.category}</td>
+                    <td>{item.modelNumber}</td>
                     <td>
                       <button
                         className={
@@ -198,12 +215,9 @@ export default function Components() {
                         }
                         onClick={() => handleCheckInOut(item)}
                       >
-                        {item.status === "Deployed" ? "Check-In" : "Check-Out"}
+                        {item.status === "Deployed" ? "Check In" : "Check Out"}
                       </button>
                     </td>
-                    <td>{item.quantity}</td>
-                    <td>{item.category}</td>
-                    <td>{item.modelNumber}</td>
                     {authService.getUserInfo().role === "Admin" && (
                       <td>
                         <ComponentsTableBtn
@@ -221,7 +235,7 @@ export default function Components() {
                     <td>
                       <ComponentsTableBtn
                         type="view"
-                        navigatePage={`/assets/view/${item.id}`}
+                        onClick={() => handleView(item)}
                       />
                     </td>
                   </tr>
@@ -245,6 +259,14 @@ export default function Components() {
           )}
         </div>
       </main>
+
+      {/* Component View Modal */}
+      {isViewModalOpen && selectedComponent && (
+        <ComponentViewModal
+          component={selectedComponent}
+          closeModal={closeViewModal}
+        />
+      )}
     </>
   );
 }
