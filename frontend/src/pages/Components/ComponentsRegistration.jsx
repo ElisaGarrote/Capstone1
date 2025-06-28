@@ -353,7 +353,7 @@ export default function ComponentsRegistration() {
               </label>
             </fieldset>
 
-            <button type='submit' className='save-btn' disabled={!isValid}>
+            <button type='submit' className='save-btn'>
               Save
             </button>
           </form>
