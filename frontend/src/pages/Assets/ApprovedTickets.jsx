@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/custom-colors.css";
 import "../../styles/ApprovedTicketsTable.css";
@@ -6,64 +6,63 @@ import "../../styles/StandardizedButtons.css";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TicketViewModal from "../../components/Modals/TicketViewModal";
-import Pagination from "../../components/Pagination";
-import TableBtn from "../../components/buttons/TableButtons";
+import dtsService from "../../services/dts-integration-service";
+import Alert from "../../components/Alert";
+import DefaultImage from "../../assets/img/default-image.jpg";
 
 const ApprovedTickets = () => {
   const navigate = useNavigate();
+
+  const [ticketItems, setTicketItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [checkedItems, setCheckedItems] = useState([]);
   const [allChecked, setAllChecked] = useState(false);
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const [itemStatuses, setItemStatuses] = useState({});
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // Import images for tickets
-  const laptopImage = "/src/assets/img/laptop.png";
-  const keyboardImage = "/src/assets/img/keyboard.png";
-  const mouseImage = "/src/assets/img/mouse.png";
-  const dviImage = "/src/assets/img/dvi.jpeg";
+  useEffect(() => {
+    const fetchTickets = async () => {
+      setIsLoading(true);
+      try {
+        const response = await dtsService.fetchAssetCheckouts();
 
-  // Mock data for approved tickets
-  const ticketItems = [
-    {
-      id: "10234-EMP",
-      subject: "Laptop Not Booting",
-      requestor: "Jane Dela Cruz",
-      category: "Software Installation",
-      lastUpdated: "April 2, 2025",
-      creationDate: "April 2, 2025",
-      status: "Resolved",
-      notes: "Laptop won't boot past the BIOS screen. User needs this fixed urgently as they have a presentation tomorrow.",
-      image: laptopImage
-    },
-    {
-      id: "10235-EMP",
-      subject: "Keyboard Replacement",
-      requestor: "Mark Villanueva",
-      category: "Hardware Replacement",
-      lastUpdated: "April 4, 2025",
-      creationDate: "April 3, 2025",
-      status: "In Progress",
-      notes: "Several keys on the keyboard are not working. User needs a replacement as soon as possible.",
-      image: keyboardImage
-    },
-    {
-      id: "10236-EMP",
-      subject: "New Mouse Request",
-      requestor: "Carla Mendoza",
-      category: "Peripheral Request",
-      lastUpdated: "April 5, 2025",
-      creationDate: "April 4, 2025",
-      status: "Approved",
-      notes: "User needs a new mouse for their workstation. Current one is not working properly.",
-      image: mouseImage
-    }
-  ];
+        const mappedTickets = (response || []).map(ticket => {
+          const isCheckInOrOut = !ticket.is_resolved
+            ? (ticket.checkin_date ? "Check-In" : "Check-Out")
+            : null;
 
-  // Function to toggle select all
+          return {
+            id: ticket.ticket_id,
+            assetId: ticket.asset_id,
+            assetName: ticket.asset_name,
+            subject: ticket.subject,
+            requestor: ticket.requestor,
+            requestorId: ticket.requestor_id,
+            requestorLocation: ticket.requestor_location || "-",
+            checkoutDate: ticket.checkout_date,
+            returnDate: ticket.return_date,
+            image: DefaultImage,
+            isResolved: ticket.is_resolved,
+            isCheckInOrOut,
+          };
+        });
+
+        setTicketItems(mappedTickets);
+      } catch (error) {
+        console.error("Error fetching tickets:", error);
+        setErrorMessage("Failed to load tickets.");
+        setTicketItems([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTickets();
+  }, []);
+
   const toggleSelectAll = () => {
     if (allChecked) {
       setCheckedItems([]);
@@ -73,82 +72,67 @@ const ApprovedTickets = () => {
     setAllChecked(!allChecked);
   };
 
-  // Function to toggle individual item selection
   const toggleItemCheck = (id) => {
     if (checkedItems.includes(id)) {
       setCheckedItems(checkedItems.filter(item => item !== id));
       setAllChecked(false);
     } else {
-      setCheckedItems([...checkedItems, id]);
-      if (checkedItems.length + 1 === ticketItems.length) {
+      const updated = [...checkedItems, id];
+      setCheckedItems(updated);
+      if (updated.length === ticketItems.length) {
         setAllChecked(true);
       }
     }
   };
 
-  // Function to handle view button click
   const handleViewClick = (item) => {
-    console.log(`View ticket ${item.id}`);
     setSelectedTicket(item);
     setViewModalOpen(true);
   };
 
-  // Function to handle checkout button click
-  const handleCheckout = (item) => {
-    console.log(`Checkout ticket ${item.id}`);
-
-    // Update the status to checked out
-    setItemStatuses(prev => ({
-      ...prev,
-      [item.id]: 'checked-out'
-    }));
-
-    // Map ticket categories to asset types for demonstration
-    const assetTypeMap = {
-      "Software Installation": "Laptop",
-      "Hardware Replacement": "Keyboard",
-      "Peripheral Request": "Mouse"
-    };
-
-    // Create a mock asset based on the ticket information
-    const mockAsset = {
-      id: item.id,
-      image: dviImage, // Always use dvi.jpeg image
-      assetId: `ASSET-${item.id}`,
-      product: assetTypeMap[item.category] || "Generic Asset",
-    };
-
-    // Navigate to the asset checkout page with the mock asset information
-    navigate(`/assets/check-out/${item.id}`, {
-      state: {
-        id: item.id,
-        image: mockAsset.image,
-        assetId: mockAsset.assetId,
-        product: mockAsset.product,
-        ticketId: item.id,
-        ticketSubject: item.subject,
-        ticketRequestor: item.requestor
-      },
-    });
+  const handleCheckInOut = (item) => {
+    if (item.isCheckInOrOut === "Check-In") {
+      navigate(`/assets/check-in/${item.assetId}`, {
+        state: {
+          id: item.assetId,
+          assetId: item.assetId,
+          product: item.assetName || "Generic Asset",
+          image: DefaultImage,
+          employee: item.requestor || "Not assigned",
+          empLocation: item.requestorLocation || "Unknown",
+          checkOutDate: item.checkoutDate || "Unknown",
+          returnDate: item.returnDate || "Unknown",
+          checkoutId: item.id,
+          checkinDate: item.checkinDate || "Unknown",
+          condition: item.condition || "Unknown",
+          ticketId: item.id,
+          fromAsset: true,
+        },
+      });
+    } else {
+      navigate(`/assets/check-out/${item.assetId}`, {
+        state: {
+          id: item.assetId,
+          assetId: item.assetId,
+          product: item.assetName || "Generic Asset",
+          image: DefaultImage,
+          ticketId: item.id,
+          empId: item.requestorId,
+          employee: item.requestor || "Not assigned",
+          empLocation: item.requestorLocation || "Unknown",
+          checkoutDate: item.checkoutDate || "Unknown",
+          returnDate: item.returnDate || "Unknown",
+          fromAsset: true,
+        },
+      });
+    }
   };
 
-  // Function to handle check-in button click
-  const handleCheckin = (item) => {
-    console.log(`Check-in ticket ${item.id}`);
-
-    // Update the status to checked in
-    setItemStatuses(prev => ({
-      ...prev,
-      [item.id]: 'checked-in'
-    }));
-  };
-
-  // Filter items based on search query
   const filteredItems = ticketItems.filter(item =>
-    item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.requestor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchQuery.toLowerCase())
+    item.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.requestor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.assetName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Pagination logic
@@ -170,6 +154,9 @@ const ApprovedTickets = () => {
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isViewModalOpen && selectedTicket && (
         <TicketViewModal
           ticket={selectedTicket}
@@ -180,12 +167,13 @@ const ApprovedTickets = () => {
       <nav>
         <NavBar />
       </nav>
-      <main className="page approved-tickets-page">
+
+      <main className="page">
         <div className="container">
           <section className="top">
             <h1>Approved Tickets</h1>
             <div>
-              <form action="" method="post">
+              <form>
                 <input
                   type="text"
                   placeholder="Search..."
@@ -196,9 +184,12 @@ const ApprovedTickets = () => {
               <MediumButtons type="export" />
             </div>
           </section>
+
           <section className="middle">
-            <div className="table-wrapper">
-              <table>
+            {isLoading ? (
+              <p>Loading tickets...</p>
+            ) : (
+              <table className="tickets-table">
                 <thead>
                   <tr>
                     <th>
@@ -209,69 +200,60 @@ const ApprovedTickets = () => {
                       />
                     </th>
                     <th>TICKET NUMBER</th>
-                    <th>SUBJECT</th>
-                    <th>CATEGORY</th>
+                    <th>ASSET</th>
                     <th>REQUESTOR</th>
-                    <th>CREATION DATE</th>
-                    <th>LAST UPDATED</th>
-                    <th>NOTES</th>
+                    <th>SUBJECT</th>
+                    <th>LOCATION</th>
                     <th>CHECKIN/OUT</th>
                     <th>VIEW</th>
                   </tr>
                 </thead>
-              <tbody>
-                {filteredItems.length === 0 ? (
-                  <tr>
-                    <td colSpan="10" className="no-tickets-message">
-                      <p>No approved tickets found.</p>
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedItems.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={checkedItems.includes(item.id)}
-                          onChange={() => toggleItemCheck(item.id)}
-                        />
-                      </td>
-                      <td>{item.id}</td>
-                      <td>{item.subject}</td>
-                      <td>{item.category}</td>
-                      <td>{item.requestor}</td>
-                      <td>{item.creationDate}</td>
-                      <td>{item.lastUpdated}</td>
-                      <td>{item.notes || 'No notes'}</td>
-                      <td>
-                        {itemStatuses[item.id] === 'checked-out' ? (
-                          <button
-                            className="check-in-btn"
-                            onClick={() => handleCheckin(item)}
-                          >
-                            Check In
-                          </button>
-                        ) : (
-                          <button
-                            className="check-out-btn"
-                            onClick={() => handleCheckout(item)}
-                          >
-                            Check Out
-                          </button>
-                        )}
-                      </td>
-                      <td>
-                        <TableBtn
-                          type="view"
-                          onClick={() => handleViewClick(item)}
-                        />
+                <tbody>
+                  {filteredItems.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" style={{ textAlign: 'center' }}>
+                        No tickets found.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
+                  ) : (
+                    filteredItems.map((item) => (
+                      <tr key={item.id}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={checkedItems.includes(item.id)}
+                            onChange={() => toggleItemCheck(item.id)}
+                          />
+                        </td>
+                        <td>{item.id}</td>
+                        <td>{item.assetName}</td>
+                        <td>{item.requestor}</td>
+                        <td>{item.subject}</td>
+                        <td>{item.requestorLocation}</td>
+                        <td>
+                          {item.isCheckInOrOut && (
+                            <button
+                              className={item.isCheckInOrOut === "Check-In" ? "check-in-btn" : "check-out-btn"}
+                              onClick={() => handleCheckInOut(item)}
+                            >
+                              {item.isCheckInOrOut}
+                            </button>
+                          )}
+                        </td>
+                        <td>
+                          <button
+                            className="view-btn"
+                            onClick={() => handleViewClick(item)}
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
               </table>
-            </div>
+            )}
           </section>
 
           {/* Pagination */}

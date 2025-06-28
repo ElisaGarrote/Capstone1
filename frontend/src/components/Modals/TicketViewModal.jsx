@@ -2,13 +2,16 @@ import "../../styles/TicketViewModal.css";
 import "../../styles/StandardizedButtons.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import { useNavigate } from "react-router-dom";
-import TicketIcon from "../../assets/icons/ticket.svg";
 
 export default function TicketViewModal({ ticket, closeModal }) {
   const navigate = useNavigate();
 
-  // Always use the dvi.jpeg image for ticket view
+  // Always use this image for the modal
   const ticketImage = "/src/assets/img/dvi.jpeg";
+
+  // Format booleans and dates nicely
+  const formatDate = (date) => date ? new Date(date).toLocaleString() : "-";
+  const formatBool = (val) => val ? "Yes" : "No";
 
   return (
     <main className="ticket-view-modal">
@@ -31,35 +34,60 @@ export default function TicketViewModal({ ticket, closeModal }) {
             </fieldset>
 
             <fieldset className="detail-item">
+              <label>Asset Name</label>
+              <p>{ticket.assetName || "-"}</p>
+            </fieldset>
+
+            <fieldset className="detail-item">
+              <label>Subject</label>
+              <p>{ticket.subject || "-"}</p>
+            </fieldset>
+
+            <fieldset className="detail-item">
+              <label>Description</label>
+              <p>{ticket.description || "-"}</p>
+            </fieldset>
+
+            <fieldset className="detail-item">
               <label>Requestor</label>
-              <p>{ticket.requestor}</p>
+              <p>{ticket.requestor || "-"}</p>
             </fieldset>
 
             <fieldset className="detail-item">
-              <label>Creation Date</label>
-              <p>{ticket.creationDate}</p>
-            </fieldset>
-
-            <fieldset className="detail-item">
-              <label>Notes</label>
-              <p>{ticket.notes || "-"}</p>
+              <label>Requestor Location</label>
+              <p>{ticket.requestorLocation || "-"}</p>
             </fieldset>
           </section>
 
           <section className="right-content">
             <fieldset className="detail-item">
-              <label>Category</label>
-              <p>{ticket.category}</p>
+              <label>Checkout Date</label>
+              <p>{formatDate(ticket.checkoutDate)}</p>
             </fieldset>
 
             <fieldset className="detail-item">
-              <label>Status</label>
-              <p>{ticket.status}</p>
+              <label>Return Date</label>
+              <p>{formatDate(ticket.returnDate)}</p>
             </fieldset>
 
             <fieldset className="detail-item">
-              <label>Last Updated</label>
-              <p>{ticket.lastUpdated}</p>
+              <label>Created At</label>
+              <p>{formatDate(ticket.createdAt)}</p>
+            </fieldset>
+
+            <fieldset className="detail-item">
+              <label>Updated At</label>
+              <p>{formatDate(ticket.updatedAt)}</p>
+            </fieldset>
+
+            <fieldset className="detail-item">
+              <label>Is Resolved</label>
+              <p>{formatBool(ticket.isResolved)}</p>
+            </fieldset>
+
+            <fieldset className="detail-item">
+              <label>Condition</label>
+              <p>{ticket.condition || "-"}</p>
             </fieldset>
           </section>
         </div>
@@ -69,32 +97,19 @@ export default function TicketViewModal({ ticket, closeModal }) {
             className="checkout-btn"
             onClick={() => {
               closeModal();
-
-              // Map ticket categories to asset types for demonstration
-              const assetTypeMap = {
-                "Software Installation": "Laptop",
-                "Hardware Replacement": "Keyboard",
-                "Peripheral Request": "Mouse"
-              };
-
-              // Create a mock asset based on the ticket information
-              const mockAsset = {
-                id: ticket.id,
-                image: "/src/assets/img/dvi.jpeg", // Always use dvi.jpeg image
-                assetId: `ASSET-${ticket.id}`,
-                product: assetTypeMap[ticket.category] || "Generic Asset",
-              };
-
-              // Navigate to the asset checkout page with the mock asset information
-              navigate(`/assets/check-out/${ticket.id}`, {
+              navigate(`/assets/check-out/${ticket.assetId}`, {
                 state: {
-                  id: ticket.id,
-                  image: mockAsset.image,
-                  assetId: mockAsset.assetId,
-                  product: mockAsset.product,
+                  id: ticket.assetId,
+                  assetId: ticket.assetId,
+                  product: ticket.assetName || "Generic Asset",
+                  image: ticketImage,
                   ticketId: ticket.id,
-                  ticketSubject: ticket.subject,
-                  ticketRequestor: ticket.requestor
+                  empId: ticket.requestorId,
+                  employee: ticket.requestor || "Not assigned",
+                  empLocation: ticket.requestorLocation || "Unknown",
+                  checkoutDate: ticket.checkoutDate || "Unknown",
+                  returnDate: ticket.returnDate || "Unknown",
+                  fromAsset: true,
                 },
               });
             }}

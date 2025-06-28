@@ -262,11 +262,11 @@ def get_all_tickets(request):
     return Response(serializer.data)
 
 @api_view(['PATCH'])
-def resolve_ticket(request, id):
+def resolve_ticket(request, ticket_id):
     try:
-        ticket = Checkout.objects.get(pk=id)
+        ticket = Checkout.objects.get(pk=ticket_id)
         ticket.is_resolved = True
         ticket.save()
         return Response({'detail': 'Ticket resolved'})
-    except Manufacturer.DoesNotExist:
+    except Checkout.DoesNotExist:
         return Response({'detail': 'Ticket not found'}, status=status.HTTP_404_NOT_FOUND)
