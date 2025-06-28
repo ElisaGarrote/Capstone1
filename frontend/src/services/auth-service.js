@@ -2,6 +2,7 @@ const API_URL_AUTH =
   "https://authentication-service-production-d804.up.railway.app/auth/";
 const API_URL_USER =
   "https://authentication-service-production-d804.up.railway.app/users/";
+// const API_URL_USER = "http://127.0.0.1:8000/users/";
 
 class AuthService {
   // Login user and store tokens
@@ -81,6 +82,28 @@ class AuthService {
       return data;
     } catch (error) {
       console.log("Failed to get the current user!", error);
+    }
+  }
+
+  // Get all users
+  async getAllUsers() {
+    try {
+      const response = await fetch(API_URL_USER + "get_all_users/", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        console.log("failed to fetch all users");
+        return [];
+      }
+
+      const data = await response.json();
+
+      // console.log("here's the fetched: ", data);
+      return data;
+    } catch (error) {
+      console.log("Failed to get all users!", error);
+      return [];
     }
   }
 

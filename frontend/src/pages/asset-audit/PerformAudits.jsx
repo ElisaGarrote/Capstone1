@@ -11,6 +11,7 @@ import assetsService from "../../services/assets-service";
 import dateRelated from "../../utils/dateRelated";
 import Skeleton from "react-loading-skeleton";
 import LoadingButton from "../../components/LoadingButton";
+import authService from "../../services/auth-service";
 
 export default function PerformAudits() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function PerformAudits() {
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [isLoading, setLoading] = useState(true);
   const [isSubmitting, setSubmitting] = useState(false);
+  const [activeUsers, setActiveUsers] = useState([]);
 
   // Retrieve the "data" value passed from the navigation state.
   // If the "data" is not exist, the value for this is "null".
@@ -30,13 +32,18 @@ export default function PerformAudits() {
 
   // Get all the assets that have not yet been scheduled or audited.
   useEffect(() => {
-    const filteredAssets = async () => {
+    const fetchFilteredAssetsAndActiveUsers = async () => {
+      // Fetch filter assets for audit
       const fetchedData = await assetsService.filterAssetsForAudit();
       setFilteredAssets(fetchedData);
+
+      // Fetch all active users
+      const fetchedUsers = await authService.getAllUsers();
+      setActiveUsers(fetchedUsers);
       setLoading(false);
     };
 
-    filteredAssets();
+    fetchFilteredAssetsAndActiveUsers();
   }, []);
 
   // Handle current date
@@ -72,11 +79,9 @@ export default function PerformAudits() {
     { value: "Marikina", label: "Marikina" },
   ];
 
-  const performByOptions = [
-    { value: "Fernando Tempura", label: "Fernando Tempura" },
-    { value: "May Pamana", label: "May Pamana" },
-    { value: "Mary Grace Piattos", label: "Mary Grace Piattos" },
-  ];
+  const performByOptions = activeUsers.map((user) => {
+    return { value: user.id, label: user.full_name };
+  });
 
   const customStylesDropdown = {
     control: (provided) => ({
