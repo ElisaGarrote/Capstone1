@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/custom-colors.css";
-import "../../styles/ApprovedTicketsTable.css";
-import "../../styles/StandardizedButtons.css";
+import "../../styles/PageTable.css";
+import "../../styles/ApprovedTickets.css";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import TicketViewModal from "../../components/Modals/TicketViewModal";
@@ -135,23 +135,6 @@ const ApprovedTickets = () => {
     item.assetName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Pagination logic
-  const totalItems = filteredItems.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedItems = filteredItems.slice(startIndex, endIndex);
-
-  // Pagination handlers
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
-
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -255,18 +238,6 @@ const ApprovedTickets = () => {
               </table>
             )}
           </section>
-
-          {/* Pagination */}
-          {filteredItems.length > 0 && (
-            <Pagination
-              currentPage={currentPage}
-              totalItems={totalItems}
-              itemsPerPage={itemsPerPage}
-              onPageChange={handlePageChange}
-              onItemsPerPageChange={handleItemsPerPageChange}
-              itemsPerPageOptions={[10, 20, 50, 100]}
-            />
-          )}
         </div>
       </main>
     </>
