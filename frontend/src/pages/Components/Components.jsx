@@ -8,6 +8,7 @@ import authService from "../../services/auth-service";
 import Pagination from "../../components/Pagination";
 import usePagination from "../../hooks/usePagination";
 import ComponentViewModal from "../../components/Modals/ComponentViewModal";
+import SampleImage from "../../assets/img/default-image.jpg";
 
 // Sample asset data
 const sampleItems = [
