@@ -1,3 +1,4 @@
+import React from 'react';
 import NavBar from '../../components/NavBar';
 import '../../styles/Registration.css';
 import '../../styles/PerformAudits.css';
@@ -10,6 +11,7 @@ import SampleImage from '../../assets/img/dvi.jpeg';
 import CloseIcon from '../../assets/icons/close.svg';
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
+import Alert from '../../components/Alert';
 
 export default function ComponentsRegistration() {
   const { id } = useParams();
@@ -125,6 +127,11 @@ export default function ComponentsRegistration() {
   }));
 
   const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [componentName, setComponentName] = useState("");
 
   useEffect(() => {
     if (id && componentData[id]) {
@@ -132,6 +139,7 @@ export default function ComponentsRegistration() {
 
       // Set regular form values
       setValue('componentName', component.componentName);
+      setComponentName(component.componentName);
       setValue('modelNumber', component.modelNumber);
       setValue('orderNumber', component.orderNumber);
       setValue('purchaseDate', component.purchaseDate);
@@ -165,6 +173,13 @@ export default function ComponentsRegistration() {
       reader.onloadend = () => setPreviewImage(reader.result);
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setPreviewImage(null);
+    setSelectedImage(null);
+    setRemoveImage(true);
+    setValue("image", null);
   };
 
   const onSubmit = (data) => {
@@ -206,7 +221,7 @@ export default function ComponentsRegistration() {
                 maxLength='100'
                 placeholder='Component Name'
               />
-              {errors.name && <span className="error-message">{errors.name.message}</span>}
+              {errors.componentName && <span className="error-message">{errors.componentName.message}</span>}
             </fieldset>
 
             <fieldset>
