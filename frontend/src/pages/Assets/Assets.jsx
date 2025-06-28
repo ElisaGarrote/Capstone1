@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/custom-colors.css";
 import "../../styles/PageTable.css";
@@ -60,13 +60,17 @@ export default function Assets() {
 
         const enrichedAssets = assetData.map((asset) => {
           const checkout = checkoutMap[asset.id];
+          let isCheckInOrOut = null;
+
+          if (checkout && !checkout.is_resolved) {
+            isCheckInOrOut = checkout.checkin_date ? "Check-In" : "Check-Out";
+          }
+
           return {
             ...asset,
-            hasCheckoutRecord: !!checkout,
+            hasCheckoutRecord: checkout && !checkout.is_resolved,
             checkoutRecord: checkout || null,
-            isCheckInOrOut: checkout
-              ? (checkout.checkin_date ? "Check-In" : "Check-Out")
-              : null,
+            isCheckInOrOut,
           };
         });
 
@@ -129,7 +133,7 @@ export default function Assets() {
           checkoutId: checkout.checkout_ref_id || "Unknown",
           checkinDate: checkout.checkin_date || "Unknown",
           condition: checkout.condition || "Unknown",
-          ticketId: checkout.id,
+          ticketId: checkout.ticket_id,
           fromAsset: true,
         },
       });
@@ -140,7 +144,7 @@ export default function Assets() {
           assetId: asset.displayed_id,
           product: asset.product,
           image: baseImage,
-          ticketId: checkout.id,
+          ticketId: checkout.ticket_id,
           empId: checkout.requestor_id,
           employee: checkout.requestor || "Not assigned",
           empLocation: checkout.requestor_location || "Unknown",
@@ -256,8 +260,8 @@ export default function Assets() {
                     <th>ID</th>
                     <th>NAME</th>
                     <th>CATEGORY</th>
-                    <th>CHECKIN/CHECKOUT</th>
                     <th>STATUS</th>
+                    <th>CHECKIN/CHECKOUT</th>
                     {authService.getUserInfo().role === "Admin" && (
                       <>
                         <th>EDIT</th>
@@ -300,6 +304,7 @@ export default function Assets() {
                         <td>{asset.displayed_id}</td>
                         <td>{asset.name}</td>
                         <td>{asset.category}</td>
+                        <td>{asset.status}</td>
                         <td>
                           {asset.hasCheckoutRecord && asset.isCheckInOrOut && (
                             <button
@@ -309,8 +314,7 @@ export default function Assets() {
                               {asset.isCheckInOrOut}
                             </button>
                           )}
-                        </td>
-                        <td>{asset.status}</td>
+                        </td> 
                         {authService.getUserInfo().role === "Admin" && (
                           <>
                             <td>

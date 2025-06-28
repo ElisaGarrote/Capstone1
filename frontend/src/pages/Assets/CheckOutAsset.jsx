@@ -62,6 +62,21 @@ export default function CheckOutAsset() {
     fromAsset,
   } = passedState || {};
 
+  console.log({
+    id,
+    image,
+    assetId,
+    product,
+    empId,
+    employee,
+    empLocation,
+    checkoutDate,
+    returnDate,
+    ticketId,
+    fromAsset
+  });
+
+
   const {
     register,
     handleSubmit,
