@@ -27,3 +27,13 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'email')
+
+class UserFullNameSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'full_name')
+
+    def get_full_name(self, obj):
+            return ' '.join(part for part in [obj.first_name, obj.middle_name, obj.last_name] if part)

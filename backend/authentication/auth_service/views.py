@@ -26,6 +26,12 @@ class RegisterViewset(viewsets.ModelViewSet):
             return Response(serializer.data, status=201)
         else:
             return Response(serializer.errors, status=400)
+        
+    def destroy(self, request, pk=None):
+        user = self.queryset.get(pk=pk)
+        user.is_active = False
+        user.save()
+        return Response(status=204)
 
 class UsersViewset(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -39,10 +45,14 @@ class UsersViewset(viewsets.ModelViewSet):
 
         # Generate URL for actions
         has_active_url = self.reverse_action(self.has_active_admin.url_name)
+        get_current_user_url = self.reverse_action(self.get_current_user.url_name)
+        get_all_users_url = self.reverse_action(self.get_all_users.url_name)
 
         return Response({
             "has_active_admin": has_active_url,
             "update_user": f'{base_url}/pk',
+            "get_current_user": get_current_user_url,
+            "get_all_users": get_all_users_url,
         })
 
     # Update auth account by pk
@@ -65,5 +75,12 @@ class UsersViewset(viewsets.ModelViewSet):
     def get_current_user(self, request):
         user = request.user
         serializer = self.register_serializer(user)
+        return Response(serializer.data)
+    
+    # Get all active users fullname
+    @action(detail=False, methods=['get'])
+    def get_all_users(self, request):
+        users = self.queryset.filter(is_active=True)
+        serializer = UserFullNameSerializer(users, many=True)
         return Response(serializer.data)
     
