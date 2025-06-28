@@ -29,19 +29,26 @@ const ApprovedTickets = () => {
       try {
         const response = await dtsService.fetchAssetCheckouts();
 
-        const mappedTickets = (response || []).map(ticket => ({
-          id: ticket.ticket_id,
-          assetId: ticket.asset_id,
-          assetName: ticket.asset_name,
-          subject: ticket.subject,
-          requestor: ticket.requestor,
-          requestorId: ticket.requestor_id,
-          requestorLocation: ticket.requestor_location || "-",
-          checkoutDate: ticket.checkout_date,
-          returnDate: ticket.return_date,
-          image: DefaultImage,
-          isResolved: ticket.is_resolved,
-        }));
+        const mappedTickets = (response || []).map(ticket => {
+          const isCheckInOrOut = !ticket.is_resolved
+            ? (ticket.checkin_date ? "Check-In" : "Check-Out")
+            : null;
+
+          return {
+            id: ticket.ticket_id,
+            assetId: ticket.asset_id,
+            assetName: ticket.asset_name,
+            subject: ticket.subject,
+            requestor: ticket.requestor,
+            requestorId: ticket.requestor_id,
+            requestorLocation: ticket.requestor_location || "-",
+            checkoutDate: ticket.checkout_date,
+            returnDate: ticket.return_date,
+            image: DefaultImage,
+            isResolved: ticket.is_resolved,
+            isCheckInOrOut,
+          };
+        });
 
         setTicketItems(mappedTickets);
       } catch (error) {
@@ -70,8 +77,9 @@ const ApprovedTickets = () => {
       setCheckedItems(checkedItems.filter(item => item !== id));
       setAllChecked(false);
     } else {
-      setCheckedItems([...checkedItems, id]);
-      if (checkedItems.length + 1 === ticketItems.length) {
+      const updated = [...checkedItems, id];
+      setCheckedItems(updated);
+      if (updated.length === ticketItems.length) {
         setAllChecked(true);
       }
     }
@@ -82,22 +90,42 @@ const ApprovedTickets = () => {
     setViewModalOpen(true);
   };
 
-  const handleCheckout = (item) => {
-    navigate(`/assets/check-out/${item.assetId}`, {
-      state: {
-        id: item.assetId,
-        assetId: item.assetId,
-        product: item.assetName || "Generic Asset",
-        image: DefaultImage,
-        ticketId: item.id,
-        empId: item.requestorId,
-        employee: item.requestor || "Not assigned",
-        empLocation: item.requestorLocation || "Unknown",
-        checkoutDate: item.checkoutDate || "Unknown",
-        returnDate: item.returnDate || "Unknown",
-        fromAsset: true,
-      },
-    });
+  const handleCheckInOut = (item) => {
+    if (item.isCheckInOrOut === "Check-In") {
+      navigate(`/assets/check-in/${item.assetId}`, {
+        state: {
+          id: item.assetId,
+          assetId: item.assetId,
+          product: item.assetName || "Generic Asset",
+          image: DefaultImage,
+          employee: item.requestor || "Not assigned",
+          empLocation: item.requestorLocation || "Unknown",
+          checkOutDate: item.checkoutDate || "Unknown",
+          returnDate: item.returnDate || "Unknown",
+          checkoutId: item.id,
+          checkinDate: item.checkinDate || "Unknown",
+          condition: item.condition || "Unknown",
+          ticketId: item.id,
+          fromAsset: true,
+        },
+      });
+    } else {
+      navigate(`/assets/check-out/${item.assetId}`, {
+        state: {
+          id: item.assetId,
+          assetId: item.assetId,
+          product: item.assetName || "Generic Asset",
+          image: DefaultImage,
+          ticketId: item.id,
+          empId: item.requestorId,
+          employee: item.requestor || "Not assigned",
+          empLocation: item.requestorLocation || "Unknown",
+          checkoutDate: item.checkoutDate || "Unknown",
+          returnDate: item.returnDate || "Unknown",
+          fromAsset: true,
+        },
+      });
+    }
   };
 
   const filteredItems = ticketItems.filter(item =>
@@ -160,7 +188,7 @@ const ApprovedTickets = () => {
                     <th>SUBJECT</th>
                     <th>LOCATION</th>
                     <th>CHECKIN/OUT</th>
-                    <th>ACTION</th>
+                    <th>VIEW</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,12 +214,14 @@ const ApprovedTickets = () => {
                         <td>{item.subject}</td>
                         <td>{item.requestorLocation}</td>
                         <td>
-                          <button
-                            className="checkout-btn"
-                            onClick={() => handleCheckout(item)}
-                          >
-                            Check-Out
-                          </button>
+                          {item.isCheckInOrOut && (
+                            <button
+                              className={item.isCheckInOrOut === "Check-In" ? "check-in-btn" : "check-out-btn"}
+                              onClick={() => handleCheckInOut(item)}
+                            >
+                              {item.isCheckInOrOut}
+                            </button>
+                          )}
                         </td>
                         <td>
                           <button
