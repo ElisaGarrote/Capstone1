@@ -1065,6 +1065,27 @@ class AssetsService {
       throw error;
     }
   }
+
+  // Assset Status
+  async fetchAllAssetsStatus() {
+    try {
+      const response = await fetch(API_URL + "status/all/");
+
+      if (!response.ok) {
+        console.warn(
+          "Failed to fetch all assets status, status:",
+          response.status
+        );
+        return [];
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching all assets status:", error);
+      throw error;
+    }
+  }
 }
 
 const assetsService = new AssetsService(); // Create object for Assets Service.
