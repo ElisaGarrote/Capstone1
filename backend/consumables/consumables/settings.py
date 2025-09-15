@@ -157,11 +157,11 @@ CORS_ALLOWED_ORIGINS = [
 # Add your Railway domain to CSRF_TRUSTED_ORIGINS with the exact format
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
+    'https://capstone1-production-1c05.up.railway.app',
     'https://consumables-service-production.up.railway.app',
     'https://consumables.service.production.up.railway.app',
     'https://consumables-service-production-up.railway.app',
     'https://consumables.service.production-up.railway.app',
-    'https://capstone1-production-1c05.up.railway.app',
 ]
 
 # REST Framework settings

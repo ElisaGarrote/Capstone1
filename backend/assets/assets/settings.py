@@ -33,7 +33,6 @@ load_dotenv(BASE_DIR / ".env")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("ASSETS_SECRET_KEY")
 
-
 # Update DEBUG setting to help troubleshoot
 DEBUG = os.getenv("ASSETS_DEBUG", "False").lower() in ("true", "1", "yes")
 
@@ -89,10 +88,10 @@ WSGI_APPLICATION = 'assets.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-if os.getenv("DATABASE_URL"):
+if os.getenv("ASSETS_DATABASE_URL"):
     DATABASES = {
         "default": dj_database_url.config(
-            default=os.getenv("DATABASE_URL"),
+            default=os.getenv("ASSETS_DATABASE_URL"),
             conn_max_age=600
         )
     }
@@ -103,8 +102,8 @@ else:
             "NAME": os.getenv("ASSETS_DB_NAME"),
             "USER": os.getenv("ASSETS_DB_USER"),
             "PASSWORD": os.getenv("ASSETS_DB_PASSWORD"),
-            "HOST": os.getenv("ASSETS_DB_HOST", "localhost"),
-            "PORT": os.getenv("ASSETS_DB_PORT", "8001"),
+            "HOST": os.getenv("ASSETS_DB_HOST"),
+            "PORT": os.getenv("ASSETS_DB_PORT"),
         }
     }
 

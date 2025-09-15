@@ -12,22 +12,31 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
+from dotenv import load_dotenv
+import logging
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+def get_list(var_name, default=""):
+    value = os.getenv(var_name, default)
+    return [v.strip() for v in value.split(",") if v.strip()]
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#k7v(j$=w58+wzy+ghyu6jmpig!(!pu&wukg%s^+2)siv_fpps'
+SECRET_KEY = os.getenv("CONTEXTS_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("CONTEXTS_DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = ["*"]
-
+ALLOWED_HOSTS = get_list("CONTEXTS_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 # Application definition
 
@@ -80,16 +89,24 @@ WSGI_APPLICATION = 'contexts.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'railway',
-        'USER': 'postgres',
-        'PASSWORD': 'yNjnGbfqJKxwELKOEUpsWcrVPjZdALdX',
-        'HOST': 'ballast.proxy.rlwy.net',
-        'PORT': '56048',
+if os.getenv("CONTEXTS_DATABASE_URL"):
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.getenv("CONTEXTS_DATABASE_URL"),
+            conn_max_age=600
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("CONTEXTS_DB_NAME"),
+            "USER": os.getenv("CONTEXTS_DB_USER"),
+            "PASSWORD": os.getenv("CONTEXTS_DB_PASSWORD"),
+            "HOST": os.getenv("CONTEXTS_DB_HOST"),
+            "PORT": os.getenv("CONTEXTS_DB_PORT"),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -115,7 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Manila'
 
 USE_I18N = True
 
@@ -147,23 +164,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Ensure CORS is properly configured
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://capstone1-production-1c05.up.railway.app",
-    "https://contexts-service-production.up.railway.app"
-]
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
 
-# Add your Railway domain to CSRF_TRUSTED_ORIGINS with the exact format
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'https://contexts-service-production.up.railway.app',
-    'https://contexts.service.production.up.railway.app',
-    'https://contexts-service-production-up.railway.app',
-    'https://contexts.service.production-up.railway.app',
-    'https://capstone1-production-1c05.up.railway.app',
-    # Add the exact URL from the error message
-    'https://contexts-service.production.up.railway.app'
-]
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = get_list("CONTEXTS_CORS_ALLOWED_ORIGINS")
+CSRF_TRUSTED_ORIGINS = get_list("CONTEXTS_CSRF_TRUSTED_ORIGINS")

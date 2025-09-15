@@ -4,42 +4,36 @@ services:
   authentication:
     build:
       context: ./backend/authentication
-      target: development
-    container_name: authentication-service
+      target: production
+    container_name: authentication-service-prod
     ports:
       - "8000:8000"
     env_file:
-      - ./backend/authentication/.env
-    volumes:
-      - ./backend/authentication:/app
+      - ./backend/authentication/.env.prod
     networks:
       - app-network
 
   assets:
     build:
       context: ./backend/assets
-      target: development
-    container_name: assets-service
+      target: production
+    container_name: assets-service-prod
     ports:
       - "8001:8001"
     env_file:
-      - ./backend/assets/.env
-    volumes:
-      - ./backend/assets:/app
+      - ./backend/assets/.env.prod
     networks:
       - app-network
-
+    
   contexts:
     build:
       context: ./backend/contexts
-      target: development
-    container_name: contexts-service
+      target: production
+    container_name: contexts-service-prod
     ports:
       - "8002:8002"
     env_file:
-      - ./backend/contexts/.env
-    volumes:
-      - ./backend/contexts:/app
+      - ./backend/contexts/.env.prod
     networks:
       - app-network
 
