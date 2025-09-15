@@ -23,8 +23,9 @@ FROM base as development
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p static staticfiles media
+RUN chmod +x entrypoint.sh
 EXPOSE 8001
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8001"]
+CMD ["./entrypoint.sh"]
 
 # Production stage
 FROM base as production

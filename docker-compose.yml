@@ -1,6 +1,23 @@
 version: '3.8'
 
 services:
+  # Add database service
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: capstone
+      # Create multiple databases on startup
+      POSTGRES_MULTIPLE_DATABASES: ams_authentication,ams_assets,ams_contexts
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    networks:
+      - app-network
+
   authentication:
     build:
       context: ./backend/authentication
@@ -14,6 +31,8 @@ services:
       - ./backend/authentication:/app
     networks:
       - app-network
+    depends_on:
+      - db
 
   assets:
     build:
@@ -28,6 +47,8 @@ services:
       - ./backend/assets:/app
     networks:
       - app-network
+    depends_on:
+      - db
 
   contexts:
     build:
@@ -42,7 +63,12 @@ services:
       - ./backend/contexts:/app
     networks:
       - app-network
+    depends_on:
+      - db
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  postgres_data:
