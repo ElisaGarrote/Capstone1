@@ -17,25 +17,28 @@ from dotenv import load_dotenv
 import logging
 logger = logging.getLogger(__name__)
 
-# Load environment variables from .env file
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+def get_list(var_name, default=""):
+    value = os.getenv(var_name, default)
+    return [v.strip() for v in value.split(",") if v.strip()]
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-15afsph4_jmx@or6785n#%id06geq8gx+mp#4rk8h+_w#fgtox'
+SECRET_KEY = os.getenv("ASSETS_SECRET_KEY")
+
 
 # Update DEBUG setting to help troubleshoot
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.getenv("ASSETS_DEBUG", "False").lower() in ("true", "1", "yes")
 
 # Make sure ALLOWED_HOSTS includes your Railway domain
-ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1", "assets-service-production.up.railway.app"]
-
+ALLOWED_HOSTS = get_list("ASSETS_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 # Application definition
 INSTALLED_APPS = [
@@ -86,25 +89,22 @@ WSGI_APPLICATION = 'assets.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-if 'DATABASE_URL' in os.environ:
-    logger.info(f"Using DATABASE_URL from environment")
+if os.getenv("DATABASE_URL"):
     DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
+        "default": dj_database_url.config(
+            default=os.getenv("DATABASE_URL"),
             conn_max_age=600
         )
     }
 else:
-    logger.info(f"Using hardcoded database settings")
-    # Fallback for local development
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'railway',
-            'USER': 'postgres',
-            'PASSWORD': 'qoSFWIdZocmITRXhUflaawOfxIeGgljG',
-            'HOST': 'switchback.proxy.rlwy.net',
-            'PORT': '30647',
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("ASSETS_DB_NAME"),
+            "USER": os.getenv("ASSETS_DB_USER"),
+            "PASSWORD": os.getenv("ASSETS_DB_PASSWORD"),
+            "HOST": os.getenv("ASSETS_DB_HOST", "localhost"),
+            "PORT": os.getenv("ASSETS_DB_PORT", "8001"),
         }
     }
 
@@ -170,21 +170,12 @@ REST_FRAMEWORK = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Ensure CORS is properly configured
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://capstone1-production-1c05.up.railway.app",
-]
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
 
-# Add your Railway domain to CSRF_TRUSTED_ORIGINS with the exact format
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:5173',
-    'https://assets-service-production.up.railway.app',
-    'https://assets.service.production.up.railway.app',
-    'https://assets-service-production-up.railway.app',
-    'https://assets.service.production-up.railway.app',
-    # Add the exact URL from the error message
-    'https://assets-service.production.up.railway.app'
-]
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = get_list("ASSETS_CORS_ALLOWED_ORIGINS")
+CSRF_TRUSTED_ORIGINS = get_list("ASSETS_CSRF_TRUSTED_ORIGINS")
