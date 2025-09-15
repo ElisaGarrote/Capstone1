@@ -1,14 +1,12 @@
 version: '3.8'
 
 services:
-  # Add database service
   db:
     image: postgres:15
     container_name: postgres-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: capstone
-      # Create multiple databases on startup
       POSTGRES_MULTIPLE_DATABASES: ams_authentication,ams_assets,ams_contexts
     ports:
       - "5432:5432"
