@@ -237,3 +237,5 @@ LOGGING = {
         },
     },
 }
+
+print("Loaded DB host:", os.getenv("AUTH_DB_HOST"))

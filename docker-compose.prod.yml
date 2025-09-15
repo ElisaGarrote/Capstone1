@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+
   authentication:
     build:
       context: ./backend/authentication
@@ -40,3 +41,4 @@ services:
 networks:
   app-network:
     driver: bridge
+
