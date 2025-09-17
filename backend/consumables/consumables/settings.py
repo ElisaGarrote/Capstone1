@@ -75,6 +75,7 @@ WSGI_APPLICATION = 'consumables.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+"""
 if 'DATABASE_URL' in os.environ:
     logger.info(f"Using DATABASE_URL from environment")
     DATABASES = {
@@ -96,6 +97,16 @@ else:
             'PORT': '45721',
         }
     }
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ams_consumables',
+        'USER': 'postgres',
+        'PASSWORD': 'capstone',
+        'HOST': 'localhost',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

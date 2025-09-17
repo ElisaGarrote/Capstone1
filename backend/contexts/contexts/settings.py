@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'contexts.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -88,6 +88,16 @@ DATABASES = {
         'PASSWORD': 'yNjnGbfqJKxwELKOEUpsWcrVPjZdALdX',
         'HOST': 'ballast.proxy.rlwy.net',
         'PORT': '56048',
+    }
+}
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ams_contexts',
+        'USER': 'postgres',
+        'PASSWORD': 'capstone',
+        'HOST': 'localhost',
     }
 }
 

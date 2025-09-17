@@ -119,6 +119,7 @@ WSGI_APPLICATION = 'authentication.wsgi.application'
 
 # Database configuration
 # Use DATABASE_URL if available (Railway provides this)
+"""
 if 'DATABASE_URL' in os.environ:
     logger.info(f"Using DATABASE_URL from environment")
     DATABASES = {
@@ -140,7 +141,16 @@ else:
             'PORT': '57512',
         }
     }
-
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ams_authentication',
+        'USER': 'postgres',
+        'PASSWORD': 'capstone',
+        'HOST': 'localhost',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

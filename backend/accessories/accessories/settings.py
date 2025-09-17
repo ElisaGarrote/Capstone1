@@ -77,6 +77,7 @@ WSGI_APPLICATION = 'accessories.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 # Database configuration from environment variables
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -87,6 +88,17 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT', '22274'),
     }
 }
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'ams_accessories',
+        'USER': 'postgres',
+        'PASSWORD': 'capstone',
+        'HOST': 'localhost',
+    }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
