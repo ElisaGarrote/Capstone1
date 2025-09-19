@@ -43,6 +43,26 @@ function FilterForm({ title, placeholder, options }) {
 
 export default function AssetReport() {
   const [selectAll, setSelectAll] = useState(true);
+  const animatedComponents = makeAnimated();
+
+  const customStylesDropdown = {
+    control: (provided) => ({
+      ...provided,
+      width: "100%",
+      borderRadius: "25px",
+      fontSize: "0.875rem",
+      padding: "3px 8px",
+    }),
+    container: (provided) => ({
+      ...provided,
+      width: "100%",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "grey",
+      fontSize: "0.875rem",
+    }),
+  };
 
   const filters = [
     {
@@ -168,90 +188,125 @@ export default function AssetReport() {
     setSelectAll((prev) => (prev === desired ? prev : desired));
   }, [rightColumns, leftColumns]);
 
+  const savedTemplate = [
+    { value: "template1", label: "Template 1" },
+    { value: "template2", label: "Template 2" },
+    { value: "template3", label: "Template 3" },
+  ];
+
   return (
-    <div className="report-container">
+    <div className="asset-report-page">
       <NavBar />
-      <main className="report-content">
-        <h1>Asset Report</h1>
+      <main className="asset-report-main">
+        <section className="title-section">
+          <h1>Asset Report</h1>
+        </section>
 
-        <div className="report-card">
-          <div className="report-sections">
-            <div className="filters-section">
-              <h2>Select Filter</h2>
-              {filters.map((filter, index) => (
-                <FilterForm
-                  key={index}
-                  title={filter.title}
-                  placeholder={filter.placeholder}
-                  options={filter.options}
-                />
-              ))}
-            </div>
+        <section className="asset-report-content">
+          <section className="asset-report-left-card">
+            <div className="asset-report-sections">
+              <div className="filters-section">
+                <h2>Select Filter</h2>
+                {filters.map((filter, index) => (
+                  <FilterForm
+                    key={index}
+                    title={filter.title}
+                    placeholder={filter.placeholder}
+                    options={filter.options}
+                  />
+                ))}
+              </div>
 
-            <div className="columns-section">
-              <h2>Select Columns</h2>
-              <div className="columns-grid">
-                <div className="column-left">
-                  {leftColumns.map((column, idx) => (
-                    <div key={column.id} className="column-checkbox">
-                      <input
-                        type="checkbox"
-                        id={column.id}
-                        checked={column.checked}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          // If this is the select_all checkbox, explicitly update all columns
-                          if (column.id === "select_all") {
-                            setSelectAll(checked);
+              <div className="columns-section">
+                <h2>Select Columns</h2>
+                <div className="columns-grid">
+                  <div className="column-left">
+                    {leftColumns.map((column, idx) => (
+                      <div key={column.id} className="column-checkbox">
+                        <input
+                          type="checkbox"
+                          id={column.id}
+                          checked={column.checked}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            // If this is the select_all checkbox, explicitly update all columns
+                            if (column.id === "select_all") {
+                              setSelectAll(checked);
+                              setLeftColumns((prev) =>
+                                prev.map((c) => ({
+                                  ...c,
+                                  checked:
+                                    c.id === "select_all" ? checked : checked,
+                                }))
+                              );
+                              setRightColumns((prev) =>
+                                prev.map((c) => ({ ...c, checked }))
+                              );
+                              return;
+                            }
                             setLeftColumns((prev) =>
-                              prev.map((c) => ({
-                                ...c,
-                                checked:
-                                  c.id === "select_all" ? checked : checked,
-                              }))
+                              prev.map((c) =>
+                                c.id === column.id ? { ...c, checked } : c
+                              )
                             );
+                          }}
+                        />
+                        <label htmlFor={column.id}>{column.label}</label>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="column-right">
+                    {rightColumns.map((column) => (
+                      <div key={column.id} className="column-checkbox">
+                        <input
+                          type="checkbox"
+                          id={column.id}
+                          checked={column.checked}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
                             setRightColumns((prev) =>
-                              prev.map((c) => ({ ...c, checked }))
+                              prev.map((c) =>
+                                c.id === column.id ? { ...c, checked } : c
+                              )
                             );
-                            return;
-                          }
-                          setLeftColumns((prev) =>
-                            prev.map((c) =>
-                              c.id === column.id ? { ...c, checked } : c
-                            )
-                          );
-                        }}
-                      />
-                      <label htmlFor={column.id}>{column.label}</label>
-                    </div>
-                  ))}
-                </div>
-                <div className="column-right">
-                  {rightColumns.map((column) => (
-                    <div key={column.id} className="column-checkbox">
-                      <input
-                        type="checkbox"
-                        id={column.id}
-                        checked={column.checked}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setRightColumns((prev) =>
-                            prev.map((c) =>
-                              c.id === column.id ? { ...c, checked } : c
-                            )
-                          );
-                        }}
-                      />
-                      <label htmlFor={column.id}>{column.label}</label>
-                    </div>
-                  ))}
+                          }}
+                        />
+                        <label htmlFor={column.id}>{column.label}</label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <button className="download-button">Download Report</button>
-        </div>
+            <button className="download-button">Download Report</button>
+          </section>
+
+          <section className="asset-report-right-card">
+            <section className="top-section">
+              <h2>Open Saved Template</h2>
+              <Select
+                components={animatedComponents}
+                options={savedTemplate}
+                placeholder="Select a Template"
+                styles={customStylesDropdown}
+              />
+            </section>
+            <section className="middle-section">
+              <h2>Template Name</h2>
+              <input type="text" name="templateName" id="templateName" />
+              <button>Save Template</button>
+            </section>
+            <section className="bottom-section">
+              <h2>About Saved Templates</h2>
+              <p>
+                Select your options, then enter the name of your template in the
+                box above and click the 'Save Template' button. Use the dropdown
+                to select a previously saved template.
+              </p>
+            </section>
+          </section>
+        </section>
       </main>
     </div>
   );
