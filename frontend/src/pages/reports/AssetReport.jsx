@@ -72,6 +72,10 @@ export default function AssetReport() {
         { value: "makati", label: "Makati" },
         { value: "pasig", label: "Pasig" },
         { value: "marikina", label: "Marikina" },
+        { value: "quezon_city", label: "Quezon City" },
+        { value: "manila", label: "Manila" },
+        { value: "taguig", label: "Taguig" },
+        { value: "remote", label: "Remote" },
       ],
     },
     {
@@ -195,29 +199,30 @@ export default function AssetReport() {
   ];
 
   return (
-    <div className="asset-report-page">
+    <>
       <NavBar />
-      <main className="asset-report-main">
-        <section className="title-section">
-          <h1>Asset Report</h1>
-        </section>
+      <section className="page-layout">
+        <main className="asset-report-main">
+          <section className="title-section">
+            <h1>Asset Report</h1>
+          </section>
 
-        <section className="asset-report-content">
-          <section className="asset-report-left-card">
-            <div className="asset-report-sections">
-              <div className="filters-section">
+          <section className="asset-report-content">
+            <section className="asset-report-left-card">
+              <section className="asset-report-filter">
                 <h2>Select Filter</h2>
-                {filters.map((filter, index) => (
-                  <FilterForm
-                    key={index}
-                    title={filter.title}
-                    placeholder={filter.placeholder}
-                    options={filter.options}
-                  />
-                ))}
-              </div>
-
-              <div className="columns-section">
+                {filters.map((filter, index) => {
+                  return (
+                    <FilterForm
+                      key={index}
+                      title={filter.title}
+                      placeholder={filter.placeholder}
+                      options={filter.options}
+                    />
+                  );
+                })}
+              </section>
+              <section className="asset-report-column">
                 <h2>Select Columns</h2>
                 <div className="columns-grid">
                   <div className="column-left">
@@ -276,38 +281,44 @@ export default function AssetReport() {
                     ))}
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <button className="download-button">Download Report</button>
+              </section>
+              <section className="asset-report-download">
+                <button className="primary-button">Download Report</button>
+              </section>
+            </section>
+            <section className="asset-report-right-card">
+              <section className="top-section">
+                <h2>Open Saved Template</h2>
+                <Select
+                  components={animatedComponents}
+                  options={savedTemplate}
+                  placeholder="Select a Template"
+                  styles={customStylesDropdown}
+                />
+              </section>
+              <section className="middle-section">
+                <h2>Template Name</h2>
+                <input
+                  type="text"
+                  name="templateName"
+                  id="templateName"
+                  className="input-field"
+                  placeholder="Enter template name"
+                />
+                <button className="primary-button">Save Template</button>
+              </section>
+              <section className="bottom-section">
+                <h2>About Saved Templates</h2>
+                <p>
+                  Select your options, then enter the name of your template in
+                  the box above and click the 'Save Template' button. Use the
+                  dropdown to select a previously saved template.
+                </p>
+              </section>
+            </section>
           </section>
-
-          <section className="asset-report-right-card">
-            <section className="top-section">
-              <h2>Open Saved Template</h2>
-              <Select
-                components={animatedComponents}
-                options={savedTemplate}
-                placeholder="Select a Template"
-                styles={customStylesDropdown}
-              />
-            </section>
-            <section className="middle-section">
-              <h2>Template Name</h2>
-              <input type="text" name="templateName" id="templateName" />
-              <button>Save Template</button>
-            </section>
-            <section className="bottom-section">
-              <h2>About Saved Templates</h2>
-              <p>
-                Select your options, then enter the name of your template in the
-                box above and click the 'Save Template' button. Use the dropdown
-                to select a previously saved template.
-              </p>
-            </section>
-          </section>
-        </section>
-      </main>
-    </div>
+        </main>
+      </section>
+    </>
   );
 }
