@@ -76,3 +76,46 @@ button:disabled {
 .save-btn:hover:not(button:disabled) {
   background-color: var(--primary-color-hover);
 }
+
+.primary-button {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.primary-button:hover {
+  background-color: var(--primary-color-hover);
+}
+
+.page-layout {
+  width: 100vw;
+  height: 110vh;
+  background-color: var(--bg-color);
+  padding: var(--page-padding);
+}
+
+.card {
+  width: 100%;
+  height: auto;
+  background-color: white;
+  padding: var(--card-padding);
+  border-radius: 20px;
+  border: 1px solid #d3d3d3;
+}
+
+.input-field {
+  background-color: var(--bg-color);
+  border: 1px solid #E0E0E0;
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 25px;
+  color: var(--text-color);
+}
+
+.input-field:focus {
+  border: 1px solid var(--primary-color);
+}
