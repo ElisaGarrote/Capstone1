@@ -19,7 +19,9 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 # Build stage
 FROM base AS build
-RUN npm ci --only=production
+# Clean install to fix rollup issue
+RUN rm -rf node_modules package-lock.json
+RUN npm install
 COPY . ./
 RUN npm run build
 
