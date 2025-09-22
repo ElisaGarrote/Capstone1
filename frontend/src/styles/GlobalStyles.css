@@ -93,9 +93,27 @@ button:disabled {
 
 .page-layout {
   width: 100vw;
-  height: 110vh;
+  min-height: 100vh;
   background-color: var(--bg-color);
   padding: var(--page-padding);
+  overflow: auto;
+}
+
+.title-page-section {
+  padding: var(--title-page-padding);
+  background-color: var(--bg-color);
+  /* box-shadow:
+    38px 0 0 0 var(--bg-color),
+    -38px 0 0 var(--bg-color);
+  position: sticky;
+  top: 0;
+  z-index: 1; */
+}
+
+.title-page-section h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
 }
 
 .card {
