@@ -3,11 +3,12 @@ import NavBar from "../../components/NavBar";
 import "../../styles/reports/AssetReport.css";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 
 // FilterForm component for handling filter selections
 function FilterForm({ title, placeholder, options }) {
   const animatedComponents = makeAnimated();
+  const [hasSelectedOptions, setHasSelectedOptions] = useState(false);
 
   const customStylesDropdown = {
     control: (provided) => ({
@@ -28,15 +29,37 @@ function FilterForm({ title, placeholder, options }) {
     }),
   };
 
+  // Validation
+  const { register, watch, control } = useForm({
+    mode: "all",
+  });
+
+  const selectedOption = watch("selectedOption", "");
+
+  useEffect(() => {
+    if (selectedOption.length > 0) {
+      setHasSelectedOptions(true);
+    } else {
+      setHasSelectedOptions(false);
+    }
+  }, [selectedOption]);
+
   return (
     <div className="filter-form">
       <label htmlFor={`filter-${title}`}>{title}</label>
-      <Select
-        components={animatedComponents}
-        options={options}
-        placeholder={placeholder}
-        styles={customStylesDropdown}
-        isMulti
+      <Controller
+        name="selectedOption"
+        control={control}
+        render={({ field }) => (
+          <Select
+            components={animatedComponents}
+            options={options}
+            placeholder={placeholder}
+            styles={customStylesDropdown}
+            isMulti
+            {...field}
+          />
+        )}
       />
     </div>
   );
@@ -236,8 +259,6 @@ export default function AssetReport() {
       setHasTemplateName(false);
     }
   }, [templateName]);
-
-  console.log("has template:", hasTemplateName);
 
   return (
     <>
