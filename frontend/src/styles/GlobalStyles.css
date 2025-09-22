@@ -87,8 +87,17 @@ button:disabled {
   border-radius: 6px;
 }
 
+.primary-button:disabled {
+  cursor: not-allowed;
+  background-color: #d3d3d3;
+}
+
 .primary-button:hover {
   background-color: var(--primary-color-hover);
+}
+
+.primary-button:disabled:hover {
+  background-color: #d3d3d3;
 }
 
 .page-layout {
@@ -100,7 +109,7 @@ button:disabled {
 }
 
 .title-page-section {
-  padding: var(--title-page-padding);
+  margin-bottom: 20px;
   background-color: var(--bg-color);
   /* box-shadow:
     38px 0 0 0 var(--bg-color),
