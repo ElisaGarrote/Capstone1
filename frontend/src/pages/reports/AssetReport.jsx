@@ -42,8 +42,9 @@ function FilterForm({ title, placeholder, options }) {
 }
 
 export default function AssetReport() {
-  const [selectAll, setSelectAll] = useState(true);
   const animatedComponents = makeAnimated();
+  const [selectAll, setSelectAll] = useState(true);
+  const [downloadToggle, setDownloadToggle] = useState(false);
 
   const customStylesDropdown = {
     control: (provided) => ({
@@ -192,6 +193,20 @@ export default function AssetReport() {
     setSelectAll((prev) => (prev === desired ? prev : desired));
   }, [rightColumns, leftColumns]);
 
+  // Close download options when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.targer.closest(".asset-report-download")) {
+        setDownloadToggle(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
   const savedTemplate = [
     { value: "template1", label: "Template 1" },
     { value: "template2", label: "Template 2" },
@@ -200,125 +215,137 @@ export default function AssetReport() {
 
   return (
     <>
-      <NavBar />
-      <section className="page-layout">
-        <main className="asset-report-main">
-          <section className="title-section">
-            <h1>Asset Report</h1>
-          </section>
-
-          <section className="asset-report-content">
-            <section className="asset-report-left-card">
-              <section className="asset-report-filter">
-                <h2>Select Filter</h2>
-                {filters.map((filter, index) => {
-                  return (
-                    <FilterForm
-                      key={index}
-                      title={filter.title}
-                      placeholder={filter.placeholder}
-                      options={filter.options}
-                    />
-                  );
-                })}
-              </section>
-              <section className="asset-report-column">
-                <h2>Select Columns</h2>
-                <div className="columns-grid">
-                  <div className="column-left">
-                    {leftColumns.map((column, idx) => (
-                      <div key={column.id} className="column-checkbox">
-                        <input
-                          type="checkbox"
-                          id={column.id}
-                          checked={column.checked}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            // If this is the select_all checkbox, explicitly update all columns
-                            if (column.id === "select_all") {
-                              setSelectAll(checked);
-                              setLeftColumns((prev) =>
-                                prev.map((c) => ({
-                                  ...c,
-                                  checked:
-                                    c.id === "select_all" ? checked : checked,
-                                }))
-                              );
-                              setRightColumns((prev) =>
-                                prev.map((c) => ({ ...c, checked }))
-                              );
-                              return;
-                            }
+      <nav>
+        <NavBar />
+      </nav>
+      <main className="page-layout">
+        <section className="title-page-section">
+          <h1>Asset Report</h1>
+        </section>
+        <section className="asset-report-content">
+          <section className="asset-report-left-card">
+            <section className="asset-report-filter">
+              <h2>Select Filter</h2>
+              {filters.map((filter, index) => {
+                return (
+                  <FilterForm
+                    key={index}
+                    title={filter.title}
+                    placeholder={filter.placeholder}
+                    options={filter.options}
+                  />
+                );
+              })}
+            </section>
+            <section className="asset-report-column">
+              <h2>Select Columns</h2>
+              <div className="columns-grid">
+                <div className="column-left">
+                  {leftColumns.map((column, idx) => (
+                    <div key={column.id} className="column-checkbox">
+                      <input
+                        type="checkbox"
+                        id={column.id}
+                        checked={column.checked}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          // If this is the select_all checkbox, explicitly update all columns
+                          if (column.id === "select_all") {
+                            setSelectAll(checked);
                             setLeftColumns((prev) =>
-                              prev.map((c) =>
-                                c.id === column.id ? { ...c, checked } : c
-                              )
+                              prev.map((c) => ({
+                                ...c,
+                                checked:
+                                  c.id === "select_all" ? checked : checked,
+                              }))
                             );
-                          }}
-                        />
-                        <label htmlFor={column.id}>{column.label}</label>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="column-right">
-                    {rightColumns.map((column) => (
-                      <div key={column.id} className="column-checkbox">
-                        <input
-                          type="checkbox"
-                          id={column.id}
-                          checked={column.checked}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
                             setRightColumns((prev) =>
-                              prev.map((c) =>
-                                c.id === column.id ? { ...c, checked } : c
-                              )
+                              prev.map((c) => ({ ...c, checked }))
                             );
-                          }}
-                        />
-                        <label htmlFor={column.id}>{column.label}</label>
-                      </div>
-                    ))}
-                  </div>
+                            return;
+                          }
+                          setLeftColumns((prev) =>
+                            prev.map((c) =>
+                              c.id === column.id ? { ...c, checked } : c
+                            )
+                          );
+                        }}
+                      />
+                      <label htmlFor={column.id}>{column.label}</label>
+                    </div>
+                  ))}
                 </div>
-              </section>
-              <section className="asset-report-download">
-                <button className="primary-button">Download Report</button>
-              </section>
-            </section>
-            <section className="asset-report-right-card">
-              <section className="top-section">
-                <h2>Open Saved Template</h2>
-                <Select
-                  components={animatedComponents}
-                  options={savedTemplate}
-                  placeholder="Select a Template"
-                  styles={customStylesDropdown}
-                />
-              </section>
-              <section className="middle-section">
-                <h2>Template Name</h2>
-                <input
-                  type="text"
-                  name="templateName"
-                  id="templateName"
-                  className="input-field"
-                  placeholder="Enter template name"
-                />
-                <button className="primary-button">Save Template</button>
-              </section>
-              <section className="bottom-section">
-                <h2>About Saved Templates</h2>
-                <p>
-                  Select your options, then enter the name of your template in
-                  the box above and click the 'Save Template' button. Use the
-                  dropdown to select a previously saved template.
-                </p>
-              </section>
+                <div className="column-right">
+                  {rightColumns.map((column) => (
+                    <div key={column.id} className="column-checkbox">
+                      <input
+                        type="checkbox"
+                        id={column.id}
+                        checked={column.checked}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setRightColumns((prev) =>
+                            prev.map((c) =>
+                              c.id === column.id ? { ...c, checked } : c
+                            )
+                          );
+                        }}
+                      />
+                      <label htmlFor={column.id}>{column.label}</label>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </section>
           </section>
-        </main>
-      </section>
+          <section className="asset-report-right-card">
+            <section className="asset-report-download">
+              <button
+                className="primary-button"
+                onClick={() => setDownloadToggle(!downloadToggle)}
+              >
+                Download Report
+              </button>
+
+              {downloadToggle && (
+                <section className="download-toggle">
+                  <button>Download as Excel</button>
+                  <button>Download as PDF</button>
+                  <button>Download as CSV</button>
+                </section>
+              )}
+            </section>
+            <section className="top-section">
+              <h2>Open Saved Template</h2>
+              <Select
+                components={animatedComponents}
+                options={savedTemplate}
+                placeholder="Select a Template"
+                styles={customStylesDropdown}
+              />
+            </section>
+            <section className="middle-section">
+              <h2>Template Name</h2>
+              <input
+                type="text"
+                name="templateName"
+                id="templateName"
+                className="input-field"
+                placeholder="Enter template name"
+              />
+              <button className="primary-button">Save Template</button>
+            </section>
+            <section className="bottom-section">
+              <h2>About Saved Templates</h2>
+              <p>
+                Select your options, then enter the name of your template in the
+                box above and click the 'Save Template' button. Use the dropdown
+                to select a previously saved template.
+              </p>
+            </section>
+          </section>
+        </section>
+      </main>
     </>
   );
 }
