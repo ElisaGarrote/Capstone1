@@ -26,6 +26,7 @@
   --deployable-text: #34c759;
 
 
-  --page-padding: 100px 38px 38px 38px;
+  --page-padding: 0 38px 38px 38px;
+  --title-page-padding: 100px 0 20px 0;
   --card-padding: 20px;
 }
