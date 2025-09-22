@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
 import "../../styles/reports/AssetReport.css";
 import Select from "react-select";
@@ -45,6 +45,7 @@ export default function AssetReport() {
   const animatedComponents = makeAnimated();
   const [selectAll, setSelectAll] = useState(true);
   const [downloadToggle, setDownloadToggle] = useState(false);
+  const downloadRef = useRef(null);
 
   const customStylesDropdown = {
     control: (provided) => ({
@@ -196,7 +197,11 @@ export default function AssetReport() {
   // Close download options when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (!event.targer.closest(".asset-report-download")) {
+      const target = event.target || event.srcElement;
+      const refEl = downloadRef.current;
+      if (!refEl) return;
+      // If click is outside the downloadRef element, close the toggle
+      if (!refEl.contains(target)) {
         setDownloadToggle(false);
       }
     };
@@ -299,7 +304,7 @@ export default function AssetReport() {
             </section>
           </section>
           <section className="asset-report-right-card">
-            <section className="asset-report-download">
+            <section className="asset-report-download" ref={downloadRef}>
               <button
                 className="primary-button"
                 onClick={() => setDownloadToggle(!downloadToggle)}
