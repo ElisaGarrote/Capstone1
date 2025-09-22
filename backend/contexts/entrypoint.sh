@@ -25,4 +25,4 @@ done
 echo "Running migrations..."
 python manage.py migrate --noinput
 echo "Starting contexts service..."
-python manage.py runserver 0.0.0.0:8002
+python manage.py runserver 0.0.0.0:8003

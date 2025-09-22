@@ -22,7 +22,7 @@ COPY . .
 RUN mkdir -p staticfiles
 # Make entrypoint executable
 RUN chmod +x entrypoint.sh
-EXPOSE 8000
+EXPOSE 8001
 CMD ["./entrypoint.sh"]
 
 # Production stage
@@ -31,5 +31,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p staticfiles
 RUN python manage.py collectstatic --noinput
-EXPOSE 8000
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn authentication.wsgi:application --bind 0.0.0.0:8000"]
+EXPOSE 8001
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn authentication.wsgi:application --bind 0.0.0.0:8001"]
