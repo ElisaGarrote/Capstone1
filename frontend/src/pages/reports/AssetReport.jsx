@@ -3,6 +3,7 @@ import NavBar from "../../components/NavBar";
 import "../../styles/reports/AssetReport.css";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
+import { useForm } from "react-hook-form";
 
 // FilterForm component for handling filter selections
 function FilterForm({ title, placeholder, options }) {
@@ -46,6 +47,7 @@ export default function AssetReport() {
   const [selectAll, setSelectAll] = useState(true);
   const [downloadToggle, setDownloadToggle] = useState(false);
   const downloadRef = useRef(null);
+  const [hasTemplateName, setHasTemplateName] = useState(false);
 
   const customStylesDropdown = {
     control: (provided) => ({
@@ -66,6 +68,7 @@ export default function AssetReport() {
     }),
   };
 
+  // Mock data for filters fields
   const filters = [
     {
       title: "Location",
@@ -129,6 +132,13 @@ export default function AssetReport() {
         { value: "ready to deploy", label: "Ready to Deploy" },
       ],
     },
+  ];
+
+  // Mock data for saved templates
+  const savedTemplate = [
+    { value: "template1", label: "Template 1" },
+    { value: "template2", label: "Template 2" },
+    { value: "template3", label: "Template 3" },
   ];
 
   const [leftColumns, setLeftColumns] = useState([
@@ -212,11 +222,22 @@ export default function AssetReport() {
     };
   }, []);
 
-  const savedTemplate = [
-    { value: "template1", label: "Template 1" },
-    { value: "template2", label: "Template 2" },
-    { value: "template3", label: "Template 3" },
-  ];
+  // Validation
+  const { register, watch } = useForm({
+    mode: "all",
+  });
+
+  const templateName = watch("templateName", "");
+
+  useEffect(() => {
+    if (templateName.length > 0) {
+      setHasTemplateName(true);
+    } else {
+      setHasTemplateName(false);
+    }
+  }, [templateName]);
+
+  console.log("has template:", hasTemplateName);
 
   return (
     <>
@@ -337,8 +358,11 @@ export default function AssetReport() {
                 id="templateName"
                 className="input-field"
                 placeholder="Enter template name"
+                {...register("templateName")}
               />
-              <button className="primary-button">Save Template</button>
+              <button className="primary-button" disabled={!hasTemplateName}>
+                Save Template
+              </button>
             </section>
             <section className="bottom-section">
               <h2>About Saved Templates</h2>
