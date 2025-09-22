@@ -1,6 +1,6 @@
 import { useState } from "react";
 import NavBar from "../../components/NavBar";
-import Pagination1 from "../../components/table/Pagination1";
+import Pagination from "../../components/Pagination";
 import "../../styles/Category.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 
@@ -193,7 +193,7 @@ export default function Category() {
 
             {/* Table pagination */}
             <section className="table-pagination">
-              <Pagination1
+              <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
                 totalItems={categories.length}
