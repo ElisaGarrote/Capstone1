@@ -180,16 +180,18 @@ export default function Category() {
             </section>
 
             {/* Table Structure */}
-            <table>
-              <thead>
-                <TableHeader />
-              </thead>
-              <tbody>
-                {paginatedCategories.map((category, index) => (
-                  <TableItem key={index} category={category} />
-                ))}
-              </tbody>
-            </table>
+            <section className="table-section">
+              <table>
+                <thead>
+                  <TableHeader />
+                </thead>
+                <tbody>
+                  {paginatedCategories.map((category, index) => (
+                    <TableItem key={index} category={category} />
+                  ))}
+                </tbody>
+              </table>
+            </section>
 
             {/* Table pagination */}
             <section className="table-pagination">
