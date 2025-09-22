@@ -1,71 +1,71 @@
-import React from 'react';
-import '../styles/custom-colors.css';
-import '../styles/Pagination.css';
+// style
+import "../styles/Pagination.css";
 
 const Pagination = ({
   currentPage,
+  pageSize,
   totalItems,
-  itemsPerPage,
   onPageChange,
-  onItemsPerPageChange,
-  itemsPerPageOptions = [10, 20, 50, 100]
+  onPageSizeChange,
+  pageSizeOptions = [5, 10, 20, 50, 100],
 }) => {
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  const totalPages = Math.ceil(totalItems / pageSize);
 
-  const handlePrevious = () => {
-    if (currentPage > 1) {
-      onPageChange(currentPage - 1);
+  const handlePageClick = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      onPageChange(page);
     }
   };
 
-  const handleNext = () => {
-    if (currentPage < totalPages) {
-      onPageChange(currentPage + 1);
+  const renderPageNumbers = () => {
+    const pages = [];
+
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(
+        <button
+          key={i}
+          className={`pageButton ${i === currentPage ? "active" : ""}`}
+          onClick={() => handlePageClick(i)}
+        >
+          {i}
+        </button>
+      );
     }
-  };
 
-  const handleItemsPerPageChange = (e) => {
-    const newItemsPerPage = Number(e.target.value);
-    onItemsPerPageChange(newItemsPerPage);
-    // Reset to page 1 when changing items per page
-    onPageChange(1);
+    return pages;
   };
-
-  if (totalItems === 0) {
-    return null;
-  }
 
   return (
-    <div className="pagination-container">
-      <div className="pagination-left">
-        <span className="pagination-text">Show</span>
-        <select 
-          value={itemsPerPage} 
-          onChange={handleItemsPerPageChange}
-          className="pagination-select"
+    <div className="paginationContainer">
+      {/* Left Side: Page Size Selector */}
+      <div className="pageSizeSelector">
+        <label htmlFor="pageSize">Show</label>
+        <select
+          id="pageSize"
+          value={pageSize}
+          onChange={(e) => onPageSizeChange(Number(e.target.value))}
         >
-          {itemsPerPageOptions.map(option => (
-            <option key={option} value={option}>{option}</option>
+          {pageSizeOptions.map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
           ))}
         </select>
-        <span className="pagination-text">items per page</span>
+        <span>items per page</span>
       </div>
-      
-      <div className="pagination-right">
-        <button 
-          className="pagination-btn prev-btn" 
-          onClick={handlePrevious}
+
+      {/* Right Side: Page Navigation */}
+      <div className="pageNavigation">
+        <button
+          onClick={() => handlePageClick(currentPage - 1)}
           disabled={currentPage === 1}
         >
           Prev
         </button>
-        <span className="pagination-page-number">{currentPage}</span>
-        <button 
-          className="pagination-btn next-btn" 
-          onClick={handleNext}
-          disabled={currentPage >= totalPages}
+        {renderPageNumbers()}
+        <button
+          onClick={() => handlePageClick(currentPage + 1)}
+          disabled={currentPage === totalPages}
         >
           Next
         </button>
