@@ -15,7 +15,7 @@ const CategoryRegistration = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
     defaultValues: {
       categoryName: "",
@@ -144,7 +144,11 @@ const CategoryRegistration = () => {
               </small>
             </fieldset>
 
-            <button type="submit" className="save-btn">
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid}
+            >
               Save
             </button>
           </form>
