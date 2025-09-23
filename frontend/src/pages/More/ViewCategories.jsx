@@ -186,9 +186,17 @@ export default function Category() {
                   <TableHeader />
                 </thead>
                 <tbody>
-                  {paginatedCategories.map((category, index) => (
-                    <TableItem key={index} category={category} />
-                  ))}
+                  {paginatedCategories.length > 0 ? (
+                    paginatedCategories.map((category, index) => (
+                      <TableItem key={index} category={category} />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="no-data-message">
+                        No categories found.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </section>
