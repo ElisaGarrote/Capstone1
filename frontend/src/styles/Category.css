@@ -24,7 +24,7 @@
 
     .table-section {
         overflow-x: auto;
-        height: 500px;
+        max-height: 500px;
         overflow-y: auto;
 
 
@@ -68,6 +68,18 @@
                 border-bottom: 1px solid #cccccc;
 
                 height: 50px;
+            }
+
+            /* Ensure empty-state row spans correctly across all columns */
+            td.no-data-message {
+                display: table-cell !important;
+                width: 100% !important;
+                white-space: normal !important;
+                padding: 0.75rem !important;
+                text-align: center !important;
+                font-style: italic;
+                color: var(--secondary-text-color);
+                background: transparent;
             }
 
             tr:hover {
