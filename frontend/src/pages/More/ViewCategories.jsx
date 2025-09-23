@@ -4,13 +4,15 @@ import Pagination from "../../components/Pagination";
 import "../../styles/Category.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
+import { useNavigate } from "react-router-dom";
+import DeleteModal from "../../components/Modals/DeleteModal";
+
 // icons
 import keyboardIcon from "../../assets/img/keyboard_Icon.png";
 import chargerIcon from "../../assets/img/charger_Icon.png";
 import cablesIcon from "../../assets/img/cables_Icon.png";
 import paperprinterIcon from "../../assets/img/paperprinter_Icon.png";
 import printerinkIcon from "../../assets/img/printerink_Icon.png";
-import { useNavigate } from "react-router-dom";
 
 // mock data
 const categories = [
@@ -131,8 +133,9 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ category }) {
+function TableItem({ category, onDeleteClick }) {
   const navigate = useNavigate();
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   return (
     <tr>
@@ -160,7 +163,11 @@ function TableItem({ category }) {
           >
             <i className="fas fa-edit"></i>
           </button>
-          <button title="Delete" className="action-button">
+          <button
+            title="Delete"
+            className="action-button"
+            onClick={onDeleteClick}
+          >
             <i className="fas fa-trash-alt"></i>
           </button>
         </section>
@@ -170,6 +177,8 @@ function TableItem({ category }) {
 }
 
 export default function Category() {
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
@@ -181,6 +190,13 @@ export default function Category() {
 
   return (
     <>
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
+        />
+      )}
+
       <section>
         <nav>
           <NavBar />
@@ -200,7 +216,6 @@ export default function Category() {
                   placeholder="Search..."
                   className="search"
                 />
-                <MediumButtons type="export" />
                 <MediumButtons
                   type="new"
                   navigatePage="/More/CategoryRegistration"
@@ -217,7 +232,11 @@ export default function Category() {
                 <tbody>
                   {paginatedCategories.length > 0 ? (
                     paginatedCategories.map((category, index) => (
-                      <TableItem key={index} category={category} />
+                      <TableItem
+                        key={index}
+                        category={category}
+                        onDeleteClick={() => setDeleteModalOpen(true)}
+                      />
                     ))
                   ) : (
                     <tr>
