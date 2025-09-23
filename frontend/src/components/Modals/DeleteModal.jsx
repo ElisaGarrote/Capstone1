@@ -1,10 +1,10 @@
 import "../../styles/DeleteModal.css";
 import DeleteIcon from "../../assets/icons/delete-red.svg";
 import CloseIcon from "../../assets/icons/close-icon.svg";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LoadingButton from "../LoadingButton";
 
-export default function DeleteModal({
+export default function ConfirmatinModal({
   closeModal,
   confirmDelete,
   endPoint,
@@ -12,9 +12,15 @@ export default function DeleteModal({
   isOpen,
   onConfirm,
   onCancel,
-  title = "Delete",
-  message = "Are you sure you want to delete?",
+  actionType,
 }) {
+  /*
+  Action Type includes the following:
+    - delete
+    - activate
+    - deactivate
+  */
+
   const [isDeleting, setDeleting] = useState(false);
 
   // Handle compatibility with different prop patterns
@@ -50,38 +56,65 @@ export default function DeleteModal({
     }
   };
 
+  const getActionText = () => {
+    switch (actionType) {
+      case "delete":
+        return "Delete";
+      case "activate":
+        return "Activate";
+      case "deactivate":
+        return "Deactivate";
+      default:
+        return "Confirm";
+    }
+  };
+
+  const getProcessingText = () => {
+    switch (actionType) {
+      case "delete":
+        return "Deleting...";
+      case "activate":
+        return "Activating...";
+      case "deactivate":
+        return "Deactivating...";
+      default:
+        return "Processing...";
+    }
+  };
+
+  // Disable scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "auto";
+    return () => (document.body.style.overflow = "auto");
+  }, [isOpen]);
+
   return (
-    <main className="delete-modal">
-      <div className="overlay" onClick={handleClose}></div>
-      <div className="content">
-        <button className="close-button" onClick={handleClose}>
-          <img src={CloseIcon} alt="Close" />
-        </button>
-        {title !== "Deactivate User" && title !== "Activate User" && (
-          <img src={DeleteIcon} alt="Delete" />
-        )}
-        <h3>{title}</h3>
-        <p>{message}</p>
-        <div>
-          <button className="cancel-button" onClick={handleClose}>
-            Cancel
-          </button>
-          <button
-            className={`confirm-button ${title === "Activate User" ? "activate-confirm" : ""}`}
-            onClick={handleConfirm}
-            disabled={isDeleting}
-          >
-            {isDeleting && <LoadingButton />}
-            {!isDeleting ? (
-              title === "Deactivate User" ? "Deactivate" :
-              title === "Activate User" ? "Activate" : "Confirm"
-            ) : (
-              title === "Deactivate User" ? "Deactivating..." :
-              title === "Activate User" ? "Activating..." : "Deleting..."
-            )}
-          </button>
+    <section className="delete-modal">
+      <div className="overlay" onClick={handleClose}>
+        <div className="content">
+          <h2 className="modal-title">{getActionText()} Confirmation</h2>
+          <p className="modal-message">
+            Are you sure you want to {getActionText().toLowerCase()} this{" "}
+            {actionType != "activate" && actionType != "deactivate"
+              ? "item"
+              : "user"}
+            ? This action cannot be undone.
+          </p>
+          <div className="modal-actions">
+            <button className="cancel-btn" onClick={handleClose}>
+              Cancel
+            </button>
+            <button
+              className={`confirm-action-btn ${actionType}-btn`}
+              onClick={handleConfirm}
+              disabled={isDeleting}
+            >
+              {isDeleting && <LoadingButton />}
+              {!isDeleting ? getActionText() : getProcessingText()}
+            </button>
+          </div>
         </div>
       </div>
-    </main>
+    </section>
   );
 }
