@@ -146,3 +146,10 @@ button:disabled {
 .input-field:focus {
   border: 1px solid var(--primary-color);
 }
+
+/* .no-data-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--secondary-text-color);
+  font-style: italic;
+} */
