@@ -3,7 +3,7 @@ import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import "../../styles/Category.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
-
+import CategoryFilter from "../../components/FilterPanel";
 // icons
 import keyboardIcon from "../../assets/img/keyboard_Icon.png";
 import chargerIcon from "../../assets/img/charger_Icon.png";
@@ -92,6 +92,24 @@ const categories = [
   },
 ];
 
+const filterConfig = [
+  {
+    type: "select",
+    name: "type",
+    label: "Type",
+    options: [
+      { value: "accessory", label: "Accessory" },
+      { value: "consumable", label: "Consumable" },
+      { value: "component", label: "Component" },
+    ],
+  },
+  {
+    type: "number",
+    name: "quantity",
+    label: "Quantity",
+  },
+];
+
 // TableHeader component to render the table header
 function TableHeader() {
   return (
@@ -160,7 +178,11 @@ export default function Category() {
         <nav>
           <NavBar />
         </nav>
+
         <main className="page-layout">
+          {/* Table Filter */}
+          <CategoryFilter filters={filterConfig} />
+
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
