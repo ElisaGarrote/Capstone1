@@ -10,6 +10,7 @@ import chargerIcon from "../../assets/img/charger_Icon.png";
 import cablesIcon from "../../assets/img/cables_Icon.png";
 import paperprinterIcon from "../../assets/img/paperprinter_Icon.png";
 import printerinkIcon from "../../assets/img/printerink_Icon.png";
+import { useNavigate } from "react-router-dom";
 
 // mock data
 const categories = [
@@ -131,6 +132,8 @@ function TableHeader() {
 
 // TableItem component to render each ticket row
 function TableItem({ category }) {
+  const navigate = useNavigate();
+
   return (
     <tr>
       <td>
@@ -148,12 +151,16 @@ function TableItem({ category }) {
       <td>{category.quantity}</td>
       <td>
         <section className="action-button-section">
-          <button title="Edit" className="action-button">
-            {/* edit */}
+          <button
+            title="Edit"
+            className="action-button"
+            onClick={() =>
+              navigate("/More/CategoryEdit", { state: { category } })
+            }
+          >
             <i className="fas fa-edit"></i>
           </button>
           <button title="Delete" className="action-button">
-            {/* delete */}
             <i className="fas fa-trash-alt"></i>
           </button>
         </section>
