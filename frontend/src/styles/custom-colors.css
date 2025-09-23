@@ -6,6 +6,9 @@
   --secondary-text-color: #545f71;
   --light-text-color: #FCFCFC;
 
+  --error-color: #D92D20;
+  --error-color-hover: #e1574d;
+
   --warning-bg: #ffe0db;
   --warning-text: #ff3e1d;
   --success-bg: #e8f9df;
