@@ -82,7 +82,8 @@ input:focus {
     outline: none;
 }
 
-.filterGroup input[type="number"] {
+.filterGroup input[type="number"],
+.filterGroup input[type="text"] {
     cursor: auto;
 }
 
