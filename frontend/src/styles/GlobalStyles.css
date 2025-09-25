@@ -147,6 +147,36 @@ button:disabled {
   border: 1px solid var(--primary-color);
 }
 
+.table-layout {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #cccccc;
+  width: 100%;
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 30px;
+    border-radius: 8px 8px 0 0;
+
+    input[type="search"] {
+      display: flex;
+      align-items: center;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      padding: 10px 12px;
+      border: none;
+      border: 1px solid #cccccc;
+    }
+  }
+
+  .table-actions {
+    display: flex;
+    gap: 10px;
+  }
+}
+
 .export-button-section {
   display: flex;
   flex-direction: column;
