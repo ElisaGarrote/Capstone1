@@ -70,6 +70,17 @@ export default function FilterPanel({ filters = [], onReset }) {
                   step={filter.step ?? 1}
                 />
               )}
+
+              {/* Text */}
+              {filter.type === "text" && (
+                <input
+                  type="text"
+                  name={filter.name}
+                  className="textInput"
+                  value={values[filter.name] || ""}
+                  onChange={(e) => handleChange(filter.name, e.target.value)}
+                />
+              )}
             </div>
           ))}
 
