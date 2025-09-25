@@ -1,8 +1,7 @@
-const API_URL_AUTH =
-  "https://authentication-service-production-d804.up.railway.app/auth/";
-const API_URL_USER =
-  "https://authentication-service-production-d804.up.railway.app/users/";
-// const API_URL_USER = "http://127.0.0.1:8000/users/";
+//const API_URL_AUTH = "https://authentication-service-production-d804.up.railway.app/auth/";
+//const API_URL_USER = "https://authentication-service-production-d804.up.railway.app/users/";
+const API_URL_AUTH = "http://127.0.0.1:8001/auth/";
+const API_URL_USER = "http://127.0.0.1:8001/users/";
 
 class AuthService {
   // Login user and store tokens

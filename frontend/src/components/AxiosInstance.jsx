@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // Authentication service
-const baseUrl = 'https://authentication-service-production-d804.up.railway.app/'
+//const baseUrl = 'https://authentication-service-production-d804.up.railway.app/'
+const baseUrl = "http://127.0.0.1:8001/";
 
 const axiosInstance = axios.create({
     baseURL: baseUrl,
