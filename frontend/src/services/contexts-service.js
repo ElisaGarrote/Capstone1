@@ -1,7 +1,7 @@
 import dateRelated from "../utils/dateRelated";
 
 // const API_URL = "https://contexts-service-production.up.railway.app/";
-const API_URL = "http://localhost:8002/";
+const API_URL = "http://localhost:8003/";
 
 class ContextsService {
   // Helper to normalize array responses
