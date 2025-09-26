@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/Registration.css';
-import '../../styles/CategoryRegistration.css';
-import TopSecFormPage from '../../components/TopSecFormPage';
-import MediumButtons from '../../components/buttons/MediumButtons';
-import { useForm } from 'react-hook-form';
-import CloseIcon from '../../assets/icons/close.svg';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import "../../styles/Registration.css";
+import "../../styles/CategoryRegistration.css";
+import TopSecFormPage from "../../components/TopSecFormPage";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import { useForm } from "react-hook-form";
+import CloseIcon from "../../assets/icons/close.svg";
 
 const CategoryRegistration = () => {
   const navigate = useNavigate();
@@ -15,25 +15,37 @@ const CategoryRegistration = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors, isValid },
   } = useForm({
     defaultValues: {
-      categoryName: '',
-      categoryType: '',
-      customFields: '',
-      skipCheckoutConfirmation: false
-    }
+      categoryName: "",
+      categoryType: "",
+      customFields: "",
+      skipCheckoutConfirmation: false,
+    },
   });
 
-  const categoryTypes = ['Asset', 'Accessory', 'Consumable', 'Component', 'License'];
-  const customFieldOptions = ['Serial Number', 'MAC Address', 'Asset Tag', 'Purchase Date', 'Warranty'];
+  const categoryTypes = [
+    "Asset",
+    "Accessory",
+    "Consumable",
+    "Component",
+    "License",
+  ];
+  const customFieldOptions = [
+    "Serial Number",
+    "MAC Address",
+    "Asset Tag",
+    "Purchase Date",
+    "Warranty",
+  ];
 
   const handleFileSelection = (e) => {
     if (e.target.files && e.target.files[0]) {
       // Check file size (max 5MB)
       if (e.target.files[0].size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
-        e.target.value = '';
+        alert("File size must be less than 5MB");
+        e.target.value = "";
         return;
       }
       setAttachmentFile(e.target.files[0]);
@@ -42,10 +54,10 @@ const CategoryRegistration = () => {
 
   const onSubmit = (data) => {
     // Here you would typically send the data to your API
-    console.log('Form submitted:', data, attachmentFile);
+    console.log("Form submitted:", data, attachmentFile);
 
     // Optional: navigate back to categories view after successful submission
-    navigate('/More/ViewCategories');
+    navigate("/More/ViewCategories");
   };
 
   return (
@@ -70,54 +82,48 @@ const CategoryRegistration = () => {
                 type="text"
                 placeholder="Category Name"
                 maxLength="100"
-                className={errors.categoryName ? 'input-error' : ''}
-                {...register("categoryName", { required: 'Category Name is required' })}
+                className={errors.categoryName ? "input-error" : ""}
+                {...register("categoryName", {
+                  required: "Category Name is required",
+                })}
               />
-              {errors.categoryName && <span className='error-message'>{errors.categoryName.message}</span>}
+              {errors.categoryName && (
+                <span className="error-message">
+                  {errors.categoryName.message}
+                </span>
+              )}
             </fieldset>
 
             <fieldset>
               <label htmlFor="categoryType">Category Type *</label>
               <select
-                className={errors.categoryType ? 'input-error' : ''}
-                {...register("categoryType", { required: 'Category Type is required' })}
+                className={errors.categoryType ? "input-error" : ""}
+                {...register("categoryType", {
+                  required: "Category Type is required",
+                })}
               >
                 <option value="">Select Category Type</option>
                 {categoryTypes.map((type, idx) => (
-                  <option key={idx} value={type.toLowerCase()}>{type}</option>
+                  <option key={idx} value={type.toLowerCase()}>
+                    {type}
+                  </option>
                 ))}
               </select>
-              {errors.categoryType && <span className='error-message'>{errors.categoryType.message}</span>}
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="customFields">Custom Fields</label>
-              <div>
-                <select {...register("customFields")}>
-                  <option value="">Select Custom Fields</option>
-                  {customFieldOptions.map((field, idx) => (
-                    <option key={idx} value={field.toLowerCase().replace(/\s+/g, '_')}>{field}</option>
-                  ))}
-                </select>
-                <MediumButtons type="new" />
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="skipCheckoutConfirmation" className="checkbox-label">
-                <input
-                  type="checkbox"
-                  {...register("skipCheckoutConfirmation")}
-                />
-                Skip Checkout Confirmation Emails
-              </label>
+              {errors.categoryType && (
+                <span className="error-message">
+                  {errors.categoryType.message}
+                </span>
+              )}
             </fieldset>
 
             <fieldset>
               <label>Icon</label>
               {attachmentFile ? (
                 <div className="image-selected">
-                  <img src={URL.createObjectURL(attachmentFile)} alt="Selected icon" />
+                  <img
+                    src={URL.createObjectURL(attachmentFile)}
+                    alt="Selected icon"
+                  />
                   <button type="button" onClick={() => setAttachmentFile(null)}>
                     <img src={CloseIcon} alt="Remove" />
                   </button>
@@ -129,14 +135,22 @@ const CategoryRegistration = () => {
                     type="file"
                     accept="image/*"
                     onChange={handleFileSelection}
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                   />
                 </label>
               )}
-              <small className="file-size-info">Maximum file size must be 5MB</small>
+              <small className="file-size-info">
+                Maximum file size must be 5MB
+              </small>
             </fieldset>
 
-            <button type="submit" className="save-btn">Save</button>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid}
+            >
+              Save
+            </button>
           </form>
         </section>
       </main>

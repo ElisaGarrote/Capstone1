@@ -1,226 +1,267 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/custom-colors.css';
-import '../../styles/PageTable.css';
-import '../../styles/GlobalTableStyles.css';
-import '../../styles/Categories.css';
-import '../../styles/Assets.css';
-import '../../styles/CategoryQuantityFix.css';
-import DeleteModal from '../../components/Modals/DeleteModal';
+import { useState } from "react";
+import NavBar from "../../components/NavBar";
+import Pagination from "../../components/Pagination";
+import "../../styles/Category.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import keyboardIcon from '../../assets/img/keyboard_Icon.png';
-import chargerIcon from '../../assets/img/charger_Icon.png';
-import cablesIcon from '../../assets/img/cables_Icon.png';
-import paperprinterIcon from '../../assets/img/paperprinter_Icon.png';
-import printerinkIcon from '../../assets/img/printerink_Icon.png';
-import TableBtn from "../../components/buttons/TableButtons";
+import CategoryFilter from "../../components/FilterPanel";
+import { useNavigate } from "react-router-dom";
+import DeleteModal from "../../components/Modals/DeleteModal";
 
-export default function ViewCategories() {
-  const navigate = useNavigate();
-  const [categories, setCategories] = useState([
-    {
-      id: 1,
-      icon: cablesIcon,
-      name: "Cables",
-      type: "Accessory",
-      quantity: 2
-    },
-    {
-      id: 2,
-      icon: chargerIcon,
-      name: "Charger",
-      type: "Accessory",
-      quantity: 1
-    },
-    {
-      id: 3,
-      icon: keyboardIcon,
-      name: "Keyboards",
-      type: "Accessory",
-      quantity: 2
-    },
-    {
-      id: 5,
-      icon: paperprinterIcon,
-      name: "Printer Paper",
-      type: "Consumable",
-      quantity: 262
-    },
-    {
-      id: 6,
-      icon: printerinkIcon,
-      name: "Printer Ink",
-      type: "Consumable",
-      quantity: 95
-    }
-  ]);
+// icons
+import keyboardIcon from "../../assets/img/keyboard_Icon.png";
+import chargerIcon from "../../assets/img/charger_Icon.png";
+import cablesIcon from "../../assets/img/cables_Icon.png";
+import paperprinterIcon from "../../assets/img/paperprinter_Icon.png";
+import printerinkIcon from "../../assets/img/printerink_Icon.png";
 
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState(null);
+// mock data
+const categories = [
+  {
+    id: 1,
+    icon: cablesIcon,
+    name: "Cables",
+    type: "Accessory",
+    quantity: 2,
+  },
+  {
+    id: 2,
+    icon: chargerIcon,
+    name: "Charger",
+    type: "Accessory",
+    quantity: 1,
+  },
+  {
+    id: 3,
+    icon: keyboardIcon,
+    name: "Keyboards",
+    type: "Accessory",
+    quantity: 2,
+  },
+  {
+    id: 4,
+    icon: paperprinterIcon,
+    name: "Printer Paper",
+    type: "Consumable",
+    quantity: 262,
+  },
+  {
+    id: 5,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 6,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 7,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 8,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 9,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 10,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 11,
+    icon: printerinkIcon,
+    name: "Printer",
+    type: "Consumable",
+    quantity: 95,
+  },
+];
 
-  useEffect(() => {
-    console.log("Component mounted with navigate:", navigate);
-  }, []);
+const filterConfig = [
+  {
+    type: "select",
+    name: "type",
+    label: "Type",
+    options: [
+      { value: "accessory", label: "Accessory" },
+      { value: "consumable", label: "Consumable" },
+      { value: "component", label: "Component" },
+    ],
+  },
+  {
+    type: "number",
+    name: "quantity",
+    label: "Quantity",
+  },
+];
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  // Navigate to edit page
-  const handleEditCategory = (categoryId) => {
-    console.log("/More/CategoryEdit/${categoryId}");
-    navigate("/More/CategoryEdit/");
-  };
-
-  // Show delete modal
-  const handleDeleteClick = (categoryId) => {
-    console.log(`Opening delete modal for category ${categoryId}`);
-    setCategoryToDelete(categoryId);
-    setShowDeleteModal(true);
-  };
-
-  // Handle actual deletion
-  const confirmDelete = () => {
-    if (categoryToDelete) {
-      setCategories(categories.filter(category => category.id !== categoryToDelete));
-      setShowDeleteModal(false);
-      setCategoryToDelete(null);
-    }
-  };
-
-  // Cancel delete
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setCategoryToDelete(null);
-  };
-
-  // Filter categories based on search query
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase())
+// TableHeader component to render the table header
+function TableHeader() {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          name="checkbox-category"
+          id="checkbox-category"
+        />
+      </th>
+      <th>NAME</th>
+      <th>TYPE</th>
+      <th>QUANTITY</th>
+      <th>ACTIONS</th>
+    </tr>
   );
+}
+
+// TableItem component to render each ticket row
+function TableItem({ category, onDeleteClick }) {
+  const navigate = useNavigate();
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  return (
+    <tr>
+      <td>
+        <div className="checkbox-category">
+          <input type="checkbox" name="" id="" />
+        </div>
+      </td>
+      <td>
+        <div className="category-name">
+          <img src={category.icon} alt={category.name} />
+          {category.name}
+        </div>
+      </td>
+      <td>{category.type}</td>
+      <td>{category.quantity}</td>
+      <td>
+        <section className="action-button-section">
+          <button
+            title="Edit"
+            className="action-button"
+            onClick={() =>
+              navigate("/More/CategoryEdit", { state: { category } })
+            }
+          >
+            <i className="fas fa-edit"></i>
+          </button>
+          <button
+            title="Delete"
+            className="action-button"
+            onClick={onDeleteClick}
+          >
+            <i className="fas fa-trash-alt"></i>
+          </button>
+        </section>
+      </td>
+    </tr>
+  );
+}
+
+export default function Category() {
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+
+  // paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedCategories = categories.slice(startIndex, endIndex);
 
   return (
     <>
-      <nav>
-        <NavBar />
-      </nav>
-      <main className="page">
-        <div className="container">
-          <section className="top">
-            <h1 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0', color: '#545f71' }}>Categories ({categories.length})</h1>
-            <div>
-              <form action="" method="post" style={{ marginRight: '10px' }}>
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
+        />
+      )}
+
+      <section>
+        <nav>
+          <NavBar />
+        </nav>
+
+        <main className="page-layout">
+          {/* Table Filter */}
+          <CategoryFilter filters={filterConfig} />
+
+          <section className="table-layout">
+            {/* Table Header */}
+            <section className="table-header">
+              <h2 className="h2">Categories ({categories.length})</h2>
+              <section className="table-actions">
                 <input
-                  type="text"
+                  type="search"
                   placeholder="Search..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="search-input"
+                  className="search"
                 />
-              </form>
-              <MediumButtons type="export" />
-              <MediumButtons type="new" navigatePage="/More/CategoryRegistration" />
-            </div>
-          </section>
-          <section className="middle">
-            <table className="assets-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '40px' }}>
-                    <input type="checkbox" />
-                  </th>
-                  <th style={{ width: '30%' }}>NAME</th>
-                  <th style={{ width: '20%' }}>TYPE</th>
-                  <th className="quantity-header" style={{ width: '20%', textAlign: 'left', paddingLeft: '12px' }}>
-                    <div style={{ textAlign: 'left', display: 'block' }}>QUANTITY</div>
-                  </th>
-                  <th style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>EDIT</th>
-                  <th style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>DELETE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCategories.map((category) => (
-                  <tr key={category.id}>
-                    <td style={{ width: '40px' }}>
-                      <input type="checkbox" />
-                    </td>
-                    <td style={{ width: '30%' }}>
-                      <div className="category-name">
-                        <div className="category-icon">
-                          <img src={category.icon} alt={category.name} />
-                        </div>
-                        <span style={{ color: '#545f71' }}>{category.name}</span>
-                      </div>
-                    </td>
-                    <td style={{ width: '20%', color: '#545f71' }}>{category.type}</td>
-                    <td style={{ width: '20%', textAlign: 'left', paddingLeft: '12px', color: '#545f71' }}>
-                      {category.quantity}
-                    </td>
-                    <td style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>
-                      <button
-                        className="edit-button"
-                        onClick={() => handleEditCategory(category.id)}
-                        style={{ margin: '0 auto', display: 'block' }}
-                      >
-                        <TableBtn type="edit" />
-                      </button>
-                    </td>
-                    <td style={{ width: '60px', textAlign: 'center', padding: '0 12px' }}>
-                      <button
-                        className="delete-button"
-                        onClick={() => handleDeleteClick(category.id)}
-                        style={{ margin: '0 auto', display: 'block' }}
-                      >
-                        <TableBtn type="delete" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-          <section className="bottom" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '16px 34px', borderTop: '1px solid #d3d3d3' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71' }}>
-              <span style={{ color: '#545f71' }}>Show</span>
-              <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))} style={{ color: '#545f71' }}>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <span style={{ color: '#545f71' }}>items per page</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button className="prev-btn" disabled={currentPage === 1} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Prev</button>
-              <span className="page-number" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '30px', height: '30px', backgroundColor: '#007bff', color: 'white', borderRadius: '4px', fontSize: '14px' }}>{currentPage}</span>
-              <button className="next-btn" disabled={filteredCategories.length <= itemsPerPage} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Next</button>
-            </div>
-          </section>
+                <MediumButtons
+                  type="new"
+                  navigatePage="/More/CategoryRegistration"
+                />
+              </section>
+            </section>
 
-          {/* Delete Modal */}
-          {showDeleteModal && (
-            <DeleteModal
-              closeModal={cancelDelete}
-              confirmDelete={confirmDelete}
-            />
-          )}
+            {/* Table Structure */}
+            <section className="table-section">
+              <table>
+                <thead>
+                  <TableHeader />
+                </thead>
+                <tbody>
+                  {paginatedCategories.length > 0 ? (
+                    paginatedCategories.map((category, index) => (
+                      <TableItem
+                        key={index}
+                        category={category}
+                        onDeleteClick={() => setDeleteModalOpen(true)}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="no-data-message">
+                        No categories found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
 
-          {/* Debug button to test modal */}
-          <button
-            onClick={() => {
-              console.log("Manual modal trigger");
-              setShowDeleteModal(true);
-            }}
-            style={{ display: 'none' }}
-          >
-            Test Modal
-          </button>
-        </div>
-      </main>
+            {/* Table pagination */}
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={categories.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+      </section>
     </>
   );
 }

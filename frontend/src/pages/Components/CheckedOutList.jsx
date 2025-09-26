@@ -4,28 +4,10 @@ import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useNavigate, useParams } from "react-router-dom";
 import "../../styles/PageTable.css";
-import React, { useState } from "react";
-import Pagination from "../../components/Pagination";
-import usePagination from "../../hooks/usePagination";
-
-const sampleItems = [
-  {
-    id: 1,
-    checkOutDate: '2023-10-01',
-    user: 'John Doe',
-    asset: 'Dell XPS 13',
-    notes: 'For software development',
-    checkInDate: '',
-  },
-  {
-    id: 2,
-    checkOutDate: '2023-10-02',
-    user: 'Jane Smith',
-    asset: 'Logitech Mouse',
-    notes: 'For testing purposes',
-    checkInDate: '',
-  },
-];
+import React, { useEffect, useState } from "react";
+import assetsService from "../../services/assets-service";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import Alert from "../../components/Alert";
 
 export default function CheckOutList() {
   const navigate = useNavigate();
@@ -36,17 +18,10 @@ export default function CheckOutList() {
   const [pendingCheckouts, setPendingCheckouts] = useState([]);
   const [checkedItems, setCheckedItems] = useState([]);
 
-  // Pagination logic
-  const {
-    currentPage,
-    itemsPerPage,
-    paginatedData,
-    totalItems,
-    handlePageChange,
-    handleItemsPerPageChange
-  } = usePagination(sampleItems, 20);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const allChecked = checkedItems.length === sampleItems.length;
+  const allChecked = checkedItems.length === pendingCheckouts.length && pendingCheckouts.length > 0;
 
   useEffect(() => {
     const fetchPendingCheckouts = async () => {
@@ -117,84 +92,76 @@ export default function CheckOutList() {
     <>
       <nav><NavBar /></nav>
       <main className="list-page">
-        <TopSecFormPage
-          root="Components"
-          currentPage="Check-In Components"
-          rootNavigatePage="/components"
-          title={name}
-        />
+        <section className="table-header">
+          <TopSecFormPage
+            root="Components"
+            currentPage="Check-In Components"
+            rootNavigatePage="/components"
+            title={componentInfo.name || "Component"}
+          />
+        </section>
         <div className="container">
-            <section className="top">
-                <p>Please select which employee/location's "{name}" you would like to check-in.</p>
-                <button onClick={handleBulkCheckIn}>Bulk Check-In</button>
-            </section>
-            <section className="middle">
-              <div className="table-wrapper">
-                <table>
-                    <thead>
-                    <tr>
-                      <th>
+          {errorMessage && <Alert message={errorMessage} type="danger" />}
+
+          <section className="top">
+            <p>Please select which component checkouts you want to check-in.</p>
+            <button onClick={handleBulkCheckIn} disabled={checkedItems.length === 0}>
+              Bulk Check-In
+            </button>
+          </section>
+
+          <section className="middle">
+            {isLoading ? (
+              <SkeletonLoadingTable />
+            ) : pendingCheckouts.length === 0 ? (
+              <p className="no-data-message">No pending checkouts found.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={allChecked}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th>CHECK-OUT DATE</th>
+                    <th>ASSET</th>
+                    <th>QUANTITY</th>
+                    <th>NOTES</th>
+                    <th>CHECK-IN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingCheckouts.map((item) => (
+                    <tr key={item.id}>
+                      <td>
                         <input
                           type="checkbox"
-                          checked={allChecked}
-                          onChange={toggleSelectAll}
+                          checked={checkedItems.includes(item.id)}
+                          onChange={() => toggleItem(item.id)}
                         />
-                      </th>
-                      <th>CHECK-OUT DATE</th>
-                      <th>USER</th>
-                      <th>CHECKED-OUT TO</th>
-                      <th>NOTES</th>
-                      <th>CHECKIN</th>
+                      </td>
+                      <td>{new Date(item.checkout_date).toLocaleString()}</td>
+                      <td>{item.asset_displayed_id} - {item.asset_name}</td>
+                      <td>{item.quantity}</td>
+                      <td>{item.notes || "-"}</td>
+                      <td>
+                        <button
+                          className="cmp-check-in-btn"
+                          onClick={() => handleCheckIn(item)}
+                        >
+                          Check-In
+                        </button>
+                      </td>
                     </tr>
-                    </thead>
-                    <tbody>
-                    {sampleItems.length === 0 ? (
-                      <tr>
-                        <td colSpan="6" className="no-items-message">
-                          <p>No check-out records found.</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      paginatedData.map((item) => (
-                      <tr key={item.id}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={checkedItems.includes(item.id)}
-                            onChange={() => toggleItem(item.id)}
-                          />
-                        </td>
-                        <td>{item.checkOutDate}</td>
-                        <td>{item.user}</td>
-                        <td>{item.asset}</td>
-                        <td>{item.notes}</td>
-                        <td>
-                            <button
-                              className="cmp-check-in-btn"
-                              onClick={() => handleCheckIn(item.id)}
-                            >
-                              {"Check-In"}
-                            </button>
-                        </td>
-                      </tr>
-                      ))
-                    )}
-                    </tbody>
-                </table>
-              </div>
-            </section>
-
-            {/* Pagination */}
-            {sampleItems.length > 0 && (
-              <Pagination
-                currentPage={currentPage}
-                totalItems={totalItems}
-                itemsPerPage={itemsPerPage}
-                onPageChange={handlePageChange}
-                onItemsPerPageChange={handleItemsPerPageChange}
-                itemsPerPageOptions={[10, 20, 50, 100]}
-              />
+                  ))}
+                </tbody>
+              </table>
             )}
+          </section>
+          <section className="bottom"></section>
         </div>
       </main>
     </>

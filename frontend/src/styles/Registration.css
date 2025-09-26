@@ -1,7 +1,7 @@
 .registration {
     display: flex;
     flex-direction: column;
-    height: auto;
+    height: 100vh;
     width: auto;
     padding: 80px 38px 38px 38px;
     background-color: var(--bg-color);

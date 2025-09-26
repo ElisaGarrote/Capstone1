@@ -1,46 +1,72 @@
-.report-container {
-  width: 100%;
-  min-height: 100vh;
-  background-color: #f5f5f5;
-}
-
-.report-content {
-  padding: 80px 20px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.report-content h1 {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.report-card {
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.report-sections {
+.asset-report-content {
   display: flex;
-  gap: 30px;
+  flex-direction: row;
+  gap: 20px;
+}
+
+.asset-report-left-card {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "asset-report-filter asset-report-column";
+  width: 70%;
+  gap: 20px;
+  background-color: white;
+  padding: var(--card-padding);
+  border-radius: 25px;
+  border: 1px solid #d3d3d3;
+}
+
+.asset-report-filter {
+  grid-area: asset-report-filter;
+}
+
+.asset-report-column {
+  grid-area: asset-report-column;
+}
+
+.asset-report-right-card {
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+  gap: 10px;
+}
+
+.asset-report-right-card section:not(.asset-report-download):not(.asset-report-download section) {
+  background-color: white;
+  padding: var(--card-padding);
+  border-radius: 25px;
+  border: 1px solid #d3d3d3;
+}
+
+.asset-report-right-card .middle-section input {
   margin-bottom: 20px;
 }
 
-.filters-section {
-  flex: 1;
+.asset-report-right-card section:nth-child(4) {
+  border-top: 5px solid var(--primary-color);
 }
 
-.columns-section {
-  flex: 1;
+.asset-report-right-card p {
+  position: relative;
+  padding-top: 12px;
+  margin-top: 12px;
+  text-align: justify;
+  line-height: 1.5;
+  color: var(--secondary-text-color);
 }
 
-.filters-section h2,
-.columns-section h2 {
+.asset-report-right-card p::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.page-layout h2 {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 15px;
@@ -56,14 +82,6 @@
   font-size: 14px;
   margin-bottom: 5px;
   color: #555;
-}
-
-.filter-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
 }
 
 .columns-grid {
@@ -91,29 +109,62 @@
   color: #555;
 }
 
-.download-button {
+.asset-report-download {
+  position: relative;
+
+}
+
+.download-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
-  padding: 12px;
-  background-color: #0d6efd;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  font-weight: 500;
+  box-shadow: 0 0 20px 0 rgb(218, 215, 215);
+  border-radius: 6px;
+
+  position: absolute;
+  z-index: 1;
+  margin-top: 5px;
+}
+
+.download-toggle button {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #fff;
+  border-top: 1px solid #d3d3d3;
+
   cursor: pointer;
-  transition: background-color 0.2s;
 }
 
-.download-button:hover {
-  background-color: #0b5ed7;
+.download-toggle button:hover {
+  background-color: var(--primary-color-hover);
+  color: var(--bg-color);
 }
 
+.download-toggle button:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.download-toggle button:last-child {
+  border-radius: 0 0 6px 6px;
+}
+
+/* Tablet Screen Size */
 @media (max-width: 768px) {
-  .report-sections {
-    flex-direction: column;
-  }
-  
   .columns-grid {
     flex-direction: column;
+  }
+}
+
+/* Smartphone Screen Size */
+@media (max-width: 640px) {
+  .asset-report-left-card {
+    display: grid;
+    grid-template-columns: auto;
+    grid-template-areas:
+      "asset-report-filter"
+      "asset-report-column";
   }
 }

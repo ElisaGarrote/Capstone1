@@ -9,7 +9,7 @@ export default function MediumButtons({
   type,
   navigatePage = null,
   previousPage,
-  deleteModalOpen,
+  onClick = null,
 }) {
   /* List of Button Type:
     - new
@@ -47,15 +47,21 @@ export default function MediumButtons({
     }
   };
 
+  const handleClick = () => {
+    if (type.toLowerCase() === "export" && onClick) {
+      onClick();
+    }
+
+    if (navigatePage) {
+      navigate(navigatePage, { state: { previousPage } });
+    }
+  };
+
   return (
     <button
       type="button"
       className={`medium-button-${type}`}
-      onClick={
-        navigatePage == null
-          ? deleteModalOpen
-          : () => navigate(navigatePage, { state: { previousPage } })
-      }
+      onClick={handleClick}
     >
       {/* The img tag will be rendered when the icon is not null*/}
       {icon && <img src={icon} alt="" />}
