@@ -47,5 +47,19 @@
     "type": "deployable",
     "notes": "",
     "tag": 6
+  },
+  {
+    "id": 8,
+    "name": "Not Default 1",
+    "type": "deployable",
+    "notes": "",
+    "tag": 6
+  },
+  {
+    "id": 9,
+    "name": "Not Default 2",
+    "type": "deployable",
+    "notes": "",
+    "tag": 0
   }
 ]
