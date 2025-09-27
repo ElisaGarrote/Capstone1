@@ -161,6 +161,16 @@ button:disabled {
     padding: 15px 30px;
     border-radius: 8px 8px 0 0;
 
+    h2 {
+      font-size: 1.25rem;
+      color: var(--text-color);
+    }
+  }
+
+  .table-actions {
+    display: flex;
+    gap: 10px;
+
     input[type="search"] {
       display: flex;
       align-items: center;
@@ -170,11 +180,6 @@ button:disabled {
       border: none;
       border: 1px solid #cccccc;
     }
-  }
-
-  .table-actions {
-    display: flex;
-    gap: 10px;
   }
 }
 
