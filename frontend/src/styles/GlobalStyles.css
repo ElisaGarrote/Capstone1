@@ -157,6 +157,7 @@ button:disabled {
   .table-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 15px 30px;
     border-radius: 8px 8px 0 0;
 
@@ -213,6 +214,13 @@ button:disabled {
   button:last-child {
     border-radius: 0 0 6px 6px;
   }
+}
+
+/* Style for div element inside the td tag */
+.icon-td {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 /* .no-data-message {
