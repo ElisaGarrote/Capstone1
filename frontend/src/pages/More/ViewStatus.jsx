@@ -128,7 +128,7 @@ export default function Category() {
                 />
                 <MediumButtons
                   type="new"
-                  navigatePage="/More/CategoryRegistration"
+                  navigatePage="/More/StatusRegistration"
                 />
               </section>
             </section>
