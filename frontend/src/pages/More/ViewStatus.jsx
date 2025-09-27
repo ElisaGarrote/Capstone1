@@ -46,6 +46,46 @@ function TableItem({ status, onDeleteClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
+  const systemDefaultStatus = [
+    "Archived",
+    "Being Repaired",
+    "Broken",
+    "Deployed",
+    "Lost or Stolen",
+    "Pending",
+    "Ready to Deploy",
+  ];
+
+  const isDefaultStatus = (status) => {
+    // Check if the status is a system default
+    const isDefault = systemDefaultStatus.some(
+      (defaultStatus) =>
+        defaultStatus.toLowerCase() === status.name.toLowerCase()
+    );
+
+    return isDefault || status.tag > 0;
+  };
+
+  const getTitle = (actionType, status) => {
+    // Check if the status is a system default
+    const isDefault = systemDefaultStatus.some(
+      (defaultStatus) =>
+        defaultStatus.toLowerCase() === status.name.toLowerCase()
+    );
+
+    if (isDefault) {
+      return `This is a system default status label, and cannot be ${
+        actionType === "delete" ? "deleted" : "edited"
+      }`;
+    } else if (status.tag > 0) {
+      return `This status is currently in use and cannot be ${
+        actionType === "delete" ? "deleted" : "edited"
+      }`;
+    } else {
+      return actionType === "delete" ? "Delete" : "Edit";
+    }
+  };
+
   return (
     <tr>
       <td>
@@ -65,18 +105,20 @@ function TableItem({ status, onDeleteClick }) {
       <td>
         <section className="action-button-section">
           <button
-            title="Edit"
+            title={getTitle("edit", status)}
             className="action-button"
             onClick={() =>
-              navigate("/More/CategoryEdit", { state: { status } })
+              navigate(`/More/StatusEdit/${status.id}`, { state: { status } })
             }
+            disabled={isDefaultStatus(status)}
           >
             <i className="fas fa-edit"></i>
           </button>
           <button
-            title="Delete"
+            title={getTitle("delete", status)}
             className="action-button"
             onClick={onDeleteClick}
+            disabled={isDefaultStatus(status)}
           >
             <i className="fas fa-trash-alt"></i>
           </button>
