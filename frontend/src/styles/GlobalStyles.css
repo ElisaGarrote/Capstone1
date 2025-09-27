@@ -85,6 +85,7 @@ button:disabled {
   color: white;
   padding: 12px;
   border-radius: 6px;
+  cursor: pointer;
 }
 
 .primary-button:disabled {
