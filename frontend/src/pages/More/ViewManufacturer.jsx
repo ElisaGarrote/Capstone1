@@ -52,11 +52,11 @@ function TableItem({ manufacturer, onDeleteClick }) {
           <span>{manufacturer.name}</span>
         </div>
       </td>
-      <td>{manufacturer.url}</td>
-      <td>{manufacturer.supportUrl}</td>
-      <td>{manufacturer.phone}</td>
-      <td>{manufacturer.email}</td>
-      <td>{manufacturer.notes}</td>
+      <td>{manufacturer.url || "-"}</td>
+      <td>{manufacturer.supportUrl || "-"}</td>
+      <td>{manufacturer.phone || "-"}</td>
+      <td>{manufacturer.email || "-"}</td>
+      <td>{manufacturer.notes || "-"}</td>
       <td>
         <section className="action-button-section">
           <button title="View" className="action-button">
