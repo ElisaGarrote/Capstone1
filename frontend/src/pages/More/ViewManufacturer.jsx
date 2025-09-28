@@ -1,22 +1,92 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/custom-colors.css';
-import '../../styles/PageTable.css';
-import '../../styles/GlobalTableStyles.css';
-import '../../styles/ViewManufacturer.css';
-import '../../styles/TableButtons.css';
-import '../../styles/ManufacturerNotesFix.css';
-import DeleteModal from '../../components/Modals/DeleteModal';
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import TableBtn from "../../components/buttons/TableButtons";
+import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
-import contextsService from "../../services/contexts-service";
-import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import contextsService from "../../services/contexts-service";
 
+import "../../styles/Manufacturer.css";
 
-export default function ViewManufacturers() {
+// TableHeader component to render the table header
+function TableHeader() {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          name="checkbox-manufacturer"
+          id="checkbox-manufacturer"
+        />
+      </th>
+      <th>NAME</th>
+      <th>URL</th>
+      <th>SUPPORT URL</th>
+      <th>PHONE NUMBER</th>
+      <th>EMAIL</th>
+      <th>NOTES</th>
+      <th>ACTIONS</th>
+    </tr>
+  );
+}
+
+// TableItem component to render each ticket row
+function TableItem({ manufacturer, onDeleteClick }) {
+  const navigate = useNavigate();
+
+  return (
+    <tr>
+      <td>
+        <div className="checkbox-manufacturer">
+          <input type="checkbox" name="" id="" />
+        </div>
+      </td>
+      <td>
+        <div className="manufacturer-name">
+          <img
+            src={manufacturer.logo ? manufacturer.logo : DefaultImage}
+            alt={manufacturer.logo}
+          />
+          <span>{manufacturer.name}</span>
+        </div>
+      </td>
+      <td>{manufacturer.url}</td>
+      <td>{manufacturer.supportUrl}</td>
+      <td>{manufacturer.phone}</td>
+      <td>{manufacturer.email}</td>
+      <td>{manufacturer.notes}</td>
+      <td>
+        <section className="action-button-section">
+          <button title="View" className="action-button">
+            <i className="fas fa-eye"></i>
+          </button>
+          <button
+            title="Edit"
+            className="action-button"
+            onClick={() =>
+              navigate(`/More/ManufacturerRegistration/${manufacturer.id}`, {
+                state: { manufacturer },
+              })
+            }
+          >
+            <i className="fas fa-edit"></i>
+          </button>
+          <button
+            title="Delete"
+            className="action-button"
+            onClick={onDeleteClick}
+          >
+            <i className="fas fa-trash-alt"></i>
+          </button>
+        </section>
+      </td>
+    </tr>
+  );
+}
+
+export default function ViewManuDraft() {
   const location = useLocation();
   const [isLoading, setLoading] = useState(true);
   const [manufacturers, setManufacturers] = useState([]);
@@ -30,16 +100,16 @@ export default function ViewManufacturers() {
   const navigate = useNavigate();
 
   const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const contextServiceUrl = "https://contexts-service-production.up.railway.app";
+  const [searchQuery, setSearchQuery] = useState("");
+  const contextServiceUrl =
+    "https://contexts-service-production.up.railway.app";
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const manufacturerRes = await contextsService.fetchAllManufacturers();
-        const mapped = (manufacturerRes || []).map(manu => ({
+        const mapped = (manufacturerRes || []).map((manu) => ({
           id: manu.id,
           name: manu.name,
           url: manu.manu_url,
@@ -85,7 +155,7 @@ export default function ViewManufacturers() {
     setLoading(true);
     try {
       const res = await contextsService.fetchAllManufacturers();
-      const mapped = (res || []).map(manu => ({
+      const mapped = (res || []).map((manu) => ({
         id: manu.id,
         name: manu.name,
         url: manu.manu_url,
@@ -107,8 +177,20 @@ export default function ViewManufacturers() {
     setSearchQuery(e.target.value);
   };
 
-  const filteredManufacturers = manufacturers.filter(manufacturer =>
+  const filteredManufacturers = manufacturers.filter((manufacturer) =>
     manufacturer.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+
+  // paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedManufacturer = filteredManufacturers.slice(
+    startIndex,
+    endIndex
   );
 
   return (
@@ -120,6 +202,7 @@ export default function ViewManufacturers() {
         <DeleteModal
           endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
+          actionType={"delete"}
           confirmDelete={async () => {
             await fetchManufacturers();
             setSuccessMessage("Manufacturer Deleted Successfully!");
@@ -132,136 +215,77 @@ export default function ViewManufacturers() {
         />
       )}
 
-      <nav>
-        <NavBar />
-      </nav>
-      <main className="page">
-        <div className="container">
-          {isLoading ? (
-            <SkeletonLoadingTable />
-          ) : (
-            <>
-              <section className="top">
-                <h1 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0', color: '#545f71' }}>
-                  Manufacturers ({manufacturers.length})
-                </h1>
-                <div>
-                  <form action="" method="post" style={{ marginRight: '10px' }}>
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      className="search-inpaut"
-                    />
-                  </form>
-                  <MediumButtons type="export" />
-                  <MediumButtons type="new" navigatePage="/More/ManufacturerRegistration" />
-                </div>
+      <section>
+        <nav>
+          <NavBar />
+        </nav>
+
+        <main className="page-layout">
+          <section className="table-layout">
+            {/* Table Header */}
+            <section className="table-header">
+              <h2 className="h2">
+                Manue Draft ({filteredManufacturers.length})
+              </h2>
+              <section className="table-actions">
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="search"
+                />
+                <MediumButtons
+                  type="new"
+                  navigatePage="/More/ManufacturerRegistration"
+                />
               </section>
-              <section className="middle">
-                <table className="assets-table" style={{ borderRadius: '0', overflow: 'hidden' }}>
-                  <thead>
+            </section>
+
+            {/* Table Structure */}
+            <section className="manufacturer-page-table-section">
+              <table>
+                <thead>
+                  <TableHeader />
+                </thead>
+                <tbody>
+                  {paginatedManufacturer.length > 0 ? (
+                    paginatedManufacturer.map((manufacturer, index) => (
+                      <TableItem
+                        key={index}
+                        manufacturer={manufacturer}
+                        onDeleteClick={() => {
+                          setEndPoint(
+                            `${contextServiceUrl}/contexts/manufacturers/${manufacturer.id}/delete/`
+                          );
+                          setDeleteModalOpen(true);
+                        }}
+                      />
+                    ))
+                  ) : (
                     <tr>
-                      <th style={{ width: '40px' }}>
-                        <input
-                          type="checkbox"
-                          checked={allChecked}
-                          onChange={toggleSelectAll}
-                        />
-                      </th>
-                      <th style={{ width: '20%' }}>NAME</th>
-                      <th style={{ width: '15%' }}>URL</th>
-                      <th style={{ width: '15%' }}>SUPPORT URL</th>
-                      <th style={{ width: '10%' }}>PHONE</th>
-                      <th style={{ width: '15%' }}>EMAIL</th>
-                      <th className="notes-header" style={{ width: '15%', textAlign: 'left', paddingLeft: '12px' }}>
-                        <div style={{ textAlign: 'left', display: 'block' }}>NOTES</div>
-                      </th>
-                      <th style={{ width: '40px', textAlign: 'center', paddingLeft: '12px', paddingRight: '12px' }}>EDIT</th>
-                      <th style={{ width: '40px', textAlign: 'center', paddingLeft: '12px', paddingRight: '12px' }}>DELETE</th>
+                      <td colSpan={8} className="no-data-message">
+                        No manufacturer found.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {filteredManufacturers.map((manufacturer) => (
-                      <tr key={manufacturer.id}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={checkedItems.includes(manufacturer.id)}
-                            onChange={() => toggleItem(manufacturer.id)}
-                          />
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ width: '40px', height: '40px', overflow: 'hidden', borderRadius: '0' }}>
-                              <img
-                                src={manufacturer.logo ? `${contextServiceUrl}${manufacturer.logo}` : DefaultImage}
-                                alt={manufacturer.name}
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = DefaultImage;
-                                }}
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: 'contain',
-                                  display: 'block',
-                                  backgroundColor: '#f8f9fa'
-                                }}
-                              />
-                            </div>
-                            <span style={{ color: '#545f71' }}>{manufacturer.name}</span>
-                          </div>
-                        </td>
-                        <td style={{ color: '#545f71' }}>{manufacturer.url}</td>
-                        <td style={{ color: '#545f71' }}>{manufacturer.supportUrl}</td>
-                        <td style={{ color: '#545f71' }}>{manufacturer.phone}</td>
-                        <td style={{ color: '#545f71' }}>{manufacturer.email}</td>
-                        <td style={{ color: '#545f71', textAlign: 'left', paddingLeft: '12px' }}>{manufacturer.notes}</td>
-                        <td style={{ textAlign: 'center' }}>
-                          <TableBtn
-                            type="edit"
-                            navigatePage={`/More/ManufacturerRegistration/${manufacturer.id}`}
-                            data={manufacturer.id}
-                          />
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                          <TableBtn
-                            type="delete"
-                            showModal={() => {
-                              setEndPoint(`${contextServiceUrl}/contexts/manufacturers/${manufacturer.id}/delete/`);
-                              setDeleteModalOpen(true);
-                            }}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-              <section className="bottom" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '16px 34px', borderTop: '1px solid #d3d3d3' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71' }}>
-                  <span>Show</span>
-                  <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))}>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <span>items per page</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <button className="prev-btn" disabled={currentPage === 1}>Prev</button>
-                  <span className="page-number" style={{ width: '30px', height: '30px', backgroundColor: '#007bff', color: 'white', borderRadius: '4px', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {currentPage}
-                  </span>
-                  <button className="next-btn" disabled={filteredManufacturers.length <= itemsPerPage}>Next</button>
-                </div>
-              </section>
-            </>
-          )}
-        </div>
-      </main>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            {/* Table pagination */}
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={paginatedManufacturer.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+      </section>
     </>
   );
 }
