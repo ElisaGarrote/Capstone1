@@ -1,339 +1,237 @@
-import "../../styles/custom-colors.css";
-import "../../styles/AssetRepairs.css";
-import "../../styles/AssetRepairsButtons.css";
+import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
+import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import TableBtn from "../../components/buttons/TableButtons";
-import { useLocation, useNavigate } from "react-router-dom";
-import DeleteModal from "../../components/Modals/DeleteModal";
-import Alert from "../../components/Alert";
-import { useState, useEffect } from "react";
-import assetsService from "../../services/assets-service";
-import contextsService from "../../services/contexts-service";
-import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
-import dateRelated from "../../utils/dateRelated";
+import MockupData from "../../data/mockData/reports/activity-report-mockup-data.json";
+import DepreciationFilter from "../../components/FilterPanel";
+import Pagination from "../../components/Pagination";
+import { BsKeyboard } from "react-icons/bs";
+import { LuDroplet } from "react-icons/lu";
+import { HiOutlineTag } from "react-icons/hi";
+import { RxPerson } from "react-icons/rx";
+import { AiOutlineAudit } from "react-icons/ai";
+import { RxComponent1 } from "react-icons/rx";
+
+import "../../styles/reports/ActivityReport.css";
+
+const filterConfig = [
+  {
+    type: "select",
+    name: "type",
+    label: "Type",
+    options: [
+      { value: "accessory", label: "Accessory" },
+      { value: "asset", label: "Asset" },
+      { value: "audit", label: "Audit" },
+      { value: "component", label: "Component" },
+      { value: "consumable", label: "Consumable" },
+    ],
+  },
+  {
+    type: "select",
+    name: "status",
+    label: "Status",
+    options: [
+      { value: "beingrepaired", label: "Being Repaired" },
+      { value: "broken", label: "Broken" },
+      { value: "deployed", label: "Deployed" },
+      { value: "lostorstolen", label: "Lost or Stolen" },
+      { value: "pending", label: "Pending" },
+      { value: "readytodeploy", label: "Ready to Deploy" },
+    ],
+  },
+  {
+    type: "select",
+    name: "asset",
+    label: "Asset",
+    options: [
+      { value: "1", label: "Lenovo Yoga 7" },
+      { value: "2", label: "Iphone 16 Pro Max" },
+      { value: "3", label: "Ideapad 3" },
+      { value: "4", label: "Ipad Pro" },
+      { value: "5", label: "HP Spectre x360" },
+    ],
+  },
+];
+
+const getTypeIcon = (type) => {
+  switch (type) {
+    case "Asset":
+      return <HiOutlineTag className="type-icon" />;
+    case "Accessory":
+      return <BsKeyboard className="type-icon" />;
+    case "Consumable":
+      return <LuDroplet className="type-icon" />;
+    case "Audit":
+      return <AiOutlineAudit className="type-icon" />;
+    case "Component":
+      return <RxComponent1 className="type-icon" />;
+    default:
+      return <HiOutlineTag className="type-icon" />;
+  }
+};
+
+// TableHeader component to render the table header
+function TableHeader() {
+  return (
+    <tr>
+      <th>ASSET</th>
+      <th>TYPE</th>
+      <th>NAME</th>
+      <th>START DATE</th>
+      <th>END DATE</th>
+      <th>COST</th>
+      <th>STATUS</th>
+    </tr>
+  );
+}
+
+// TableItem component to render each ticket row
+function TableItem({ activity }) {
+  return (
+    <tr>
+      <td>{activity.date}</td>
+      <td>
+        <div className="user-name-activity-report">
+          <RxPerson className="user-icon" />
+          <span>{activity.user}</span>
+        </div>
+      </td>
+      <td>
+        <div className="type-info-activity-report">
+          {getTypeIcon(activity.type)}
+          <span>{activity.type}</span>
+        </div>
+      </td>
+      <td>
+        <Status type={activity.action.toLowerCase()} name={activity.action} />
+      </td>
+      <td>{activity.item}</td>
+      <td>
+        <div className="user-name-activity-report">
+          {activity.to_from ? <RxPerson className="user-icon" /> : "-"}
+          <span>{activity.to_from}</span>
+        </div>
+      </td>
+      <td>{activity.notes || "-"}</td>
+    </tr>
+  );
+}
 
 export default function AssetRepairs() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isDeleteSuccess, setDeleteSuccess] = useState(false);
-  const [deleteFailed, setDeleteFailed] = useState(false);
-  const [isUpdated, setUpdated] = useState(false);
-  const [isAddSuccess, setAddSuccess] = useState(false);
-  const [selectedRowId, setSelectedRowId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [exportToggle, setExportToggle] = useState(false);
+  const exportRef = useRef(null);
+  const toggleRef = useRef(null);
+
+  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [maintenanceItems, setMaintenanceItems] = useState([]);
-  const [allSuppliers, setAllSuppliers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [endPoint, setEndPoint] = useState(null);
-  const [repairIdToDelete, setRepairIdToDelete] = useState(null);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
-  // Retrieve success states from navigation
-  const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
-  const isUpdateFromEdit = location.state?.isUpdateFromEdit;
-  const isAddSuccessFromRegistration = location.state?.isAddSuccess;
+  // paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedActivity = MockupData.slice(startIndex, endIndex);
 
-  // Handle delete success message
   useEffect(() => {
-    if (isDeleteSuccessFromEdit === true) {
-      setDeleteSuccess(true);
-      setTimeout(() => {
-        setDeleteSuccess(false);
-      }, 5000);
-    }
-  }, [isDeleteSuccessFromEdit]);
-
-  // Handle update success message
-  useEffect(() => {
-    if (isUpdateFromEdit === true) {
-      setUpdated(true);
-      setTimeout(() => {
-        setUpdated(false);
-      }, 5000);
-    }
-  }, [isUpdateFromEdit]);
-
-  // Handle search functionality
-  const filteredItems = maintenanceItems.filter((item) => {
-    if (!searchQuery) return true;
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      (item.asset_info.displayed_id &&
-        item.asset_info.displayed_id.toLowerCase().includes(searchLower)) ||
-      (item.asset_info.name &&
-        item.asset_info.name.toLowerCase().includes(searchLower)) ||
-      (item.name && item.name.toLowerCase().includes(searchLower)) ||
-      (item.type && item.type.toLowerCase().includes(searchLower)) ||
-      (item.maintenanceName &&
-        item.maintenanceName.toLowerCase().includes(searchLower))
-      // (item.supplier && item.supplier.toLowerCase().includes(searchLower))
-    );
-  });
-
-  // Calculate pagination
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-
-  // Change page
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  const goToPrevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
-  const goToNextPage = () =>
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-
-  // Handle delete confirmation
-  const handleDeleteConfirm = () => {
-    if (selectedRowId) {
-      // Remove the selected item from maintenanceItems
-      const updatedItems = maintenanceItems.filter(
-        (item) => item.id !== selectedRowId
-      );
-      setMaintenanceItems(updatedItems);
-
-      // Update localStorage - only remove from stored records
-      const storedRecords =
-        JSON.parse(localStorage.getItem("maintenanceRecords")) || [];
-      const updatedRecords = storedRecords.filter(
-        (item) => item.id !== selectedRowId
-      );
-      localStorage.setItem(
-        "maintenanceRecords",
-        JSON.stringify(updatedRecords)
-      );
+    function handleClickOutside(event) {
+      if (
+        exportToggle &&
+        exportRef.current &&
+        !exportRef.current.contains(event.target) &&
+        toggleRef.current &&
+        !toggleRef.current.contains(event.target)
+      ) {
+        setExportToggle(false);
+      }
     }
 
-    setDeleteModalOpen(false);
-    setDeleteSuccess(true);
-    setTimeout(() => {
-      setDeleteSuccess(false);
-    }, 5000);
-  };
-
-  // Fetch all repair
-  useEffect(() => {
-    const fetchAllRepairsAndSuppliers = async () => {
-      // Fetch all repairs
-      const repairResponse = await assetsService.fetchAllRepairs();
-      setMaintenanceItems(repairResponse || []);
-
-      // Fetch all suppliers
-      const suppliersResponse = await contextsService.fetchAllSuppliers();
-      setAllSuppliers(suppliersResponse || []);
-
-      setIsLoading(false);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
     };
-
-    fetchAllRepairsAndSuppliers();
-  }, []);
-
-  // Clear isAddSuccess state
-  useEffect(() => {
-    if (isAddSuccessFromRegistration === true) {
-      setAddSuccess(true);
-      setTimeout(() => {
-        setAddSuccess(false);
-      }, 5000);
-    }
-  }, [isAddSuccessFromRegistration]);
-
-  const setSupplier = (id) => {
-    const supplier = allSuppliers.find((item) => id === item.id);
-    return supplier ? supplier.name : "";
-  };
-
-  console.log("maintenance items:", maintenanceItems);
-  console.log("suppliers:", allSuppliers);
+  }, [exportToggle]);
 
   return (
-    <div className="app-container">
-      {/* Delete modal */}
-      {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={async () => {
-            // Refresh the data
-            const refreshData = await assetsService.fetchAllRepairs();
-            setMaintenanceItems(Array.from(refreshData));
+    <>
+      <section>
+        <nav>
+          <NavBar />
+        </nav>
 
-            // Delete all repair files
-            await assetsService.softDeleteRepairFileByRepairId(
-              repairIdToDelete
-            );
-
-            setDeleteSuccess(true);
-
-            setTimeout(() => {
-              setDeleteSuccess(false);
-            }, 5000);
-          }}
-          onDeleteFail={() => {
-            setDeleteFailed(true);
-
-            setTimeout(() => {
-              setDeleteFailed(false);
-            }, 5000);
-          }}
-        />
-      )}
-
-      {/* Success alerts */}
-      {isDeleteSuccess && (
-        <Alert message="Deleted Successfully!" type="success" />
-      )}
-
-      {deleteFailed && <Alert message="Deletion failed!" type="danger" />}
-
-      {isUpdated && <Alert message="Updated Successfully!" type="success" />}
-
-      {isAddSuccess && <Alert message="Added Successfully!" type="success" />}
-
-      <nav>
-        <NavBar />
-      </nav>
-
-      <main className="page">
-        <div className="container">
-          <section className="top">
+        <main className="page-layout">
+          {/* Title of the Page */}
+          <section className="title-page-section">
             <h1>Asset Repairs</h1>
-            <div>
-              <form action="" method="post">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </form>
-              <MediumButtons type="export" />
-              <MediumButtons
-                type="new"
-                navigatePage="/dashboard/Repair/MaintenanceRegistration"
-              />
-            </div>
           </section>
-          <section className="middle">
-            {isLoading && <SkeletonLoadingTable />}
 
-            {!isLoading && Array.from(maintenanceItems).length === 0 && (
-              <p className="table-message">No maintenance records found.</p>
-            )}
+          {/* Table Filter */}
+          <DepreciationFilter filters={filterConfig} />
 
-            {!isLoading && Array.from(maintenanceItems).length > 0 && (
+          <section className="table-layout">
+            {/* Table Header */}
+            <section className="table-header">
+              <h2 className="h2">Activity Log ({MockupData.length})</h2>
+              <section className="table-actions">
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                />
+                <div ref={toggleRef}>
+                  <MediumButtons
+                    type="export"
+                    onClick={() => setExportToggle(!exportToggle)}
+                  />
+                </div>
+              </section>
+            </section>
+
+            {/* Table Structure */}
+            <section className="activity-report-table-section">
+              {exportToggle && (
+                <section className="export-button-section" ref={exportRef}>
+                  <button>Download as Excel</button>
+                  <button>Download as PDF</button>
+                  <button>Download as CSV</button>
+                </section>
+              )}
               <table>
                 <thead>
-                  <tr>
-                    <th>
-                      <input type="checkbox" onChange={() => {}} />
-                    </th>
-                    <th title="ASSET">ASSET</th>
-                    <th title="TYPE">TYPE</th>
-                    <th title="NAME">NAME</th>
-                    <th title="START DATE">START DATE</th>
-                    <th title="END DATE">END DATE</th>
-                    <th title="COST">COST</th>
-                    <th title="SUPPLIER">SUPPLIER</th>
-                    <th title="NOTES">NOTES</th>
-                    <th title="ATTACHMENTS">ATTACHMENTS</th>
-                    <th title="EDIT" className="action-column">
-                      EDIT
-                    </th>
-                    <th title="DELETE" className="action-column">
-                      DELETE
-                    </th>
-                    <th title="VIEW" className="action-column">
-                      VIEW
-                    </th>
-                  </tr>
+                  <TableHeader />
                 </thead>
                 <tbody>
-                  {currentItems.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <input type="checkbox" onChange={() => {}} />
-                      </td>
-                      <td className="asset-column">
-                        <span
-                          title={`${item.asset_info.displayed_id} - ${item.asset_info.name}`}
-                          style={{ color: "#007bff", textAlign: "left" }}
-                        >
-                          {item.asset_info.displayed_id} -{" "}
-                          {item.asset_info.name}
-                        </span>
-                      </td>
-                      <td title={item.type}>
-                        {item.type[0].toUpperCase() + item.type.slice(1)}
-                      </td>
-                      <td title={item.name}>{item.name}</td>
-                      <td title={item.start_date}>
-                        {dateRelated.formatDate(item.start_date)}
-                      </td>
-                      <td title={item.end_date}>
-                        {(item.end_date &&
-                          dateRelated.formatDate(item.end_date)) ||
-                          "-"}
-                      </td>
-                      <td title={item.cost}>
-                        {(item.cost > 0 && item.cost) || "-"}
-                      </td>
-                      <td title={item.supplier}>
-                        {setSupplier(item.asset_info.supplier_id)}
-                      </td>
-                      <td title={item.notes}>{item.notes || "-"}</td>
-                      <td
-                        title={
-                          item.repair_files.length > 0
-                            ? "Click view to see attachments"
-                            : "No attachment file"
-                        }
-                      >
-                        {item.repair_files.length > 0
-                          ? item.repair_files.length
-                          : "-"}
-                      </td>
-                      <td className="action-column">
-                        <TableBtn
-                          type="edit"
-                          navigatePage="/dashboard/Repair/EditMaintenance"
-                          id={`${item.id} - ${item.name}`}
-                          previousPage={location.pathname}
-                        />
-                      </td>
-                      <td className="action-column">
-                        <TableBtn
-                          type="delete"
-                          showModal={() => {
-                            setEndPoint(
-                              assetsService.softDeleteRepairEndpoint(item.id)
-                            );
-                            setDeleteModalOpen(true);
-                            setRepairIdToDelete(item.id);
-                          }}
-                        />
-                      </td>
-                      <td className="action-column">
-                        <TableBtn
-                          type="view"
-                          navigatePage="/dashboard/Repair/ViewMaintenance"
-                          id={`${item.id} - ${item.name}`}
-                          previousPage={location.pathname}
-                        />
+                  {paginatedActivity.length > 0 ? (
+                    paginatedActivity.map((activity, index) => (
+                      <TableItem
+                        key={index}
+                        activity={activity}
+                        onDeleteClick={() => setDeleteModalOpen(true)}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="no-data-message">
+                        No activity log found.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
-            )}
-          </section>
+            </section>
 
-          {/* We'll remove the pagination for consistency with other pages */}
-          <section className="bottom"></section>
-        </div>
-      </main>
-    </div>
+            {/* Table pagination */}
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={MockupData.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+      </section>
+    </>
   );
 }
