@@ -225,7 +225,7 @@ export default function ViewManuDraft() {
             {/* Table Header */}
             <section className="table-header">
               <h2 className="h2">
-                Manue Draft ({filteredManufacturers.length})
+                Manufacturers ({filteredManufacturers.length})
               </h2>
               <section className="table-actions">
                 <input
