@@ -1,5 +1,6 @@
 // styles
 import "../styles/FilterPanel.css";
+import Select from "react-select";
 
 // react
 import { useState } from "react";
@@ -79,6 +80,70 @@ export default function FilterPanel({ filters = [], onReset }) {
                   className="textInput"
                   value={values[filter.name] || ""}
                   onChange={(e) => handleChange(filter.name, e.target.value)}
+                />
+              )}
+
+              {/* Date Range */}
+              {filter.type === "dateRange" && (
+                <div className="dateRange">
+                  {/* Start Date */}
+                  <div className="filterGroup">
+                    <label htmlFor={`${filter.name}_from`}>
+                      {filter.fromLabel || "Start Date"}
+                    </label>
+                    <input
+                      type="date"
+                      id={`${filter.name}_from`}
+                      name={`${filter.name}_from`}
+                      className="dateTime"
+                      value={values[`${filter.name}_from`] || ""}
+                      onChange={(e) =>
+                        handleChange(`${filter.name}_from`, e.target.value)
+                      }
+                      max={values[`${filter.name}_to`] || undefined} 
+                    />
+                  </div>
+
+                  {/* Dash in between */}
+                  <span className="rangeSeparator">-</span>
+
+                  {/* End Date */}
+                  <div className="filterGroup">
+                    <label htmlFor={`${filter.name}_to`}>
+                      {filter.toLabel || "End Date"}
+                    </label>
+                    <input
+                      type="date"
+                      id={`${filter.name}_to`}
+                      name={`${filter.name}_to`}
+                      className="dateTime"
+                      value={values[`${filter.name}_to`] || ""}
+                      onChange={(e) =>
+                        handleChange(`${filter.name}_to`, e.target.value)
+                      }
+                      min={values[`${filter.name}_from`] || undefined} 
+                    />
+                  </div>
+                </div>
+              )}
+
+              
+
+              {/* Searchable Dropdown */}
+              {filter.type === "searchable" && (
+                <Select
+                  name={filter.name}
+                  classNamePrefix="dropdown"
+                  placeholder={`Select ${filter.label}`}
+                  options={filter.options}
+                  value={
+                    filter.options.find((opt) => opt.value === values[filter.name]) || null
+                  }
+                  onChange={(selected) => handleChange(filter.name, selected?.value || "")}
+                  isClearable
+                  isSearchable
+                  menuPortalTarget={document.body}
+                  unstyled
                 />
               )}
             </div>

@@ -3,7 +3,7 @@ import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/reports/activity-report-mockup-data.json";
-import DepreciationFilter from "../../components/FilterPanel";
+import RepairFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import { BsKeyboard } from "react-icons/bs";
 import { LuDroplet } from "react-icons/lu";
@@ -41,7 +41,13 @@ const filterConfig = [
     ],
   },
   {
-    type: "select",
+    type: "dateRange",
+    name: "assetsbeingrepaired",
+    fromLabel: "Start Date",
+    toLabel: "End Date",
+  },
+  {
+    type: "searchable",
     name: "asset",
     label: "Asset",
     options: [
@@ -82,6 +88,7 @@ function TableHeader() {
       <th>END DATE</th>
       <th>COST</th>
       <th>STATUS</th>
+      <th>ACITON</th>
     </tr>
   );
 }
@@ -161,16 +168,16 @@ export default function AssetRepairs() {
         <main className="page-layout">
           {/* Title of the Page */}
           <section className="title-page-section">
-            <h1>Asset Repairs</h1>
+            <h1>Repairs</h1>
           </section>
 
           {/* Table Filter */}
-          <DepreciationFilter filters={filterConfig} />
+          <RepairFilter filters={filterConfig} />
 
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Activity Log ({MockupData.length})</h2>
+              <h2 className="h2">Asset Repairs ({MockupData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
