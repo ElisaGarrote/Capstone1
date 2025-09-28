@@ -16,7 +16,7 @@ const ManufacturerRegistration = () => {
     setValue,
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
     defaultValues: {
       manufacturerName: "",
@@ -27,6 +27,7 @@ const ManufacturerRegistration = () => {
       notes: "",
       logo: null,
     },
+    mode: "all",
   });
 
   const [previewImage, setPreviewImage] = useState(null);
@@ -331,7 +332,11 @@ const ManufacturerRegistration = () => {
               </div>
             </fieldset>
 
-            <button type="submit" className="primary-button">
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid}
+            >
               Save
             </button>
           </form>
