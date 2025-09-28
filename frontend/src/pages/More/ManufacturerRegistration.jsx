@@ -1,25 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/Registration.css';
-import '../../styles/ManufacturerRegistration.css';
-import TopSecFormPage from '../../components/TopSecFormPage';
-import { useForm } from 'react-hook-form';
-import CloseIcon from '../../assets/icons/close.svg';
-import contextsService from '../../services/contexts-service';
-import Alert from '../../components/Alert';
-import SystemLoading from '../../components/Loading/SystemLoading';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import "../../styles/Registration.css";
+import "../../styles/ManufacturerRegistration.css";
+import TopSecFormPage from "../../components/TopSecFormPage";
+import { useForm } from "react-hook-form";
+import CloseIcon from "../../assets/icons/close.svg";
+import contextsService from "../../services/contexts-service";
+import Alert from "../../components/Alert";
+import SystemLoading from "../../components/Loading/SystemLoading";
 
 const ManufacturerRegistration = () => {
   const { id } = useParams();
-  const { setValue, register, handleSubmit, formState: { errors } } = useForm({
+  const {
+    setValue,
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
-      manufacturerName: '',
-      url: '',
-      supportUrl: '',
-      supportPhone: '',
-      supportEmail: '',
-      notes: '',
+      manufacturerName: "",
+      url: "",
+      supportUrl: "",
+      supportPhone: "",
+      supportEmail: "",
+      notes: "",
       logo: null,
     },
   });
@@ -27,38 +32,41 @@ const ManufacturerRegistration = () => {
   const [previewImage, setPreviewImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
-  const contextServiceUrl = 'https://contexts-service-production.up.railway.app';
+  const contextServiceUrl =
+    "https://contexts-service-production.up.railway.app";
 
   useEffect(() => {
     const initialize = async () => {
       try {
         setIsLoading(true);
         if (id) {
-          const manufacturerData = await contextsService.fetchManufacturerById(id);
+          const manufacturerData = await contextsService.fetchManufacturerById(
+            id
+          );
           if (!manufacturerData) {
-            setErrorMessage('Failed to fetch manufacturer details');
+            setErrorMessage("Failed to fetch manufacturer details");
             setIsLoading(false);
             return;
           }
-          console.log('Manufacturer Details:', manufacturerData);
-          setValue('manufacturerName', manufacturerData.name || '');
-          setValue('url', manufacturerData.manu_url || '');
-          setValue('supportUrl', manufacturerData.support_url || '');
-          setValue('supportPhone', manufacturerData.support_phone || '');
-          setValue('supportEmail', manufacturerData.support_email || '');
-          setValue('notes', manufacturerData.notes || '');
+          console.log("Manufacturer Details:", manufacturerData);
+          setValue("manufacturerName", manufacturerData.name || "");
+          setValue("url", manufacturerData.manu_url || "");
+          setValue("supportUrl", manufacturerData.support_url || "");
+          setValue("supportPhone", manufacturerData.support_phone || "");
+          setValue("supportEmail", manufacturerData.support_email || "");
+          setValue("notes", manufacturerData.notes || "");
           if (manufacturerData.logo) {
             setPreviewImage(`${contextServiceUrl}${manufacturerData.logo}`);
             setSelectedImage(null);
           }
         }
       } catch (error) {
-        console.error('Error initializing:', error);
-        setErrorMessage('Failed to initialize form data');
+        console.error("Error initializing:", error);
+        setErrorMessage("Failed to initialize form data");
       } finally {
         setIsLoading(false);
       }
@@ -70,20 +78,22 @@ const ManufacturerRegistration = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage('Image size exceeds 5MB. Please choose a smaller file.');
-        setTimeout(() => setErrorMessage(''), 5000);
-        e.target.value = '';
+        setErrorMessage(
+          "Image size exceeds 5MB. Please choose a smaller file."
+        );
+        setTimeout(() => setErrorMessage(""), 5000);
+        e.target.value = "";
         return;
       }
-      if (!file.type.startsWith('image/')) {
-        setErrorMessage('Please select a valid image file (e.g., PNG, JPEG).');
-        setTimeout(() => setErrorMessage(''), 5000);
-        e.target.value = '';
+      if (!file.type.startsWith("image/")) {
+        setErrorMessage("Please select a valid image file (e.g., PNG, JPEG).");
+        setTimeout(() => setErrorMessage(""), 5000);
+        e.target.value = "";
         return;
       }
 
       setSelectedImage(file);
-      setValue('logo', file);
+      setValue("logo", file);
       setRemoveImage(false);
 
       const reader = new FileReader();
@@ -98,39 +108,46 @@ const ManufacturerRegistration = () => {
     try {
       // Duplicate name check for creation
       if (!id) {
-        const existingManufacturers = await contextsService.fetchAllManufacturerNames();
+        const existingManufacturers =
+          await contextsService.fetchAllManufacturerNames();
         if (!existingManufacturers) {
-          throw new Error('Failed to fetch manufacturer names for duplicate check');
+          throw new Error(
+            "Failed to fetch manufacturer names for duplicate check"
+          );
         }
         const isDuplicate = existingManufacturers.manufacturers.some(
-          (manufacturer) => manufacturer.name.toLowerCase() === data.manufacturerName.toLowerCase(),
+          (manufacturer) =>
+            manufacturer.name.toLowerCase() ===
+            data.manufacturerName.toLowerCase()
         );
         if (isDuplicate) {
-          setErrorMessage('A manufacturer with this name already exists. Please use a different name.');
-          setTimeout(() => setErrorMessage(''), 5000);
+          setErrorMessage(
+            "A manufacturer with this name already exists. Please use a different name."
+          );
+          setTimeout(() => setErrorMessage(""), 5000);
           return;
         }
       }
 
       const formData = new FormData();
-      formData.append('name', data.manufacturerName);
-      formData.append('manu_url', data.url || '');
-      formData.append('support_url', data.supportUrl || '');
-      formData.append('support_phone', data.supportPhone || '');
-      formData.append('support_email', data.supportEmail || '');
-      formData.append('notes', data.notes || '');
+      formData.append("name", data.manufacturerName);
+      formData.append("manu_url", data.url || "");
+      formData.append("support_url", data.supportUrl || "");
+      formData.append("support_phone", data.supportPhone || "");
+      formData.append("support_email", data.supportEmail || "");
+      formData.append("notes", data.notes || "");
 
       if (selectedImage) {
-        formData.append('logo', selectedImage);
+        formData.append("logo", selectedImage);
       }
 
       if (removeImage) {
-        formData.append('remove_logo', 'true');
-        console.log('Removing logo: remove_logo flag set to true');
+        formData.append("remove_logo", "true");
+        console.log("Removing logo: remove_logo flag set to true");
       }
 
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('Form data before submission:');
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Form data before submission:");
         for (let pair of formData.entries()) {
           console.log(`${pair[0]}: ${pair[1]}`);
         }
@@ -144,23 +161,31 @@ const ManufacturerRegistration = () => {
       }
 
       if (!result) {
-        throw new Error(`Failed to ${id ? 'update' : 'create'} manufacturer.`);
+        throw new Error(`Failed to ${id ? "update" : "create"} manufacturer.`);
       }
 
-      console.log(`${id ? 'Updated' : 'Created'} manufacturer:`, result);
-      navigate('/More/ViewManufacturer', {
+      console.log(`${id ? "Updated" : "Created"} manufacturer:`, result);
+      navigate("/More/ViewManufacturer", {
         state: {
-          successMessage: `Manufacturer has been ${id ? 'updated' : 'created'} successfully!`,
+          successMessage: `Manufacturer has been ${
+            id ? "updated" : "created"
+          } successfully!`,
         },
       });
     } catch (error) {
-      console.error(`Error ${id ? 'updating' : 'creating'} manufacturer:`, error);
-      setErrorMessage(
-        error.message.includes('Failed to create manufacturer')
-          ? 'Failed to create manufacturer. Please check the server configuration or endpoint.'
-          : error.message || `An error occurred while ${id ? 'updating' : 'creating'} the manufacturer`
+      console.error(
+        `Error ${id ? "updating" : "creating"} manufacturer:`,
+        error
       );
-      setTimeout(() => setErrorMessage(''), 5000);
+      setErrorMessage(
+        error.message.includes("Failed to create manufacturer")
+          ? "Failed to create manufacturer. Please check the server configuration or endpoint."
+          : error.message ||
+              `An error occurred while ${
+                id ? "updating" : "creating"
+              } the manufacturer`
+      );
+      setTimeout(() => setErrorMessage(""), 5000);
     }
   };
 
@@ -178,9 +203,9 @@ const ManufacturerRegistration = () => {
         <section className="top">
           <TopSecFormPage
             root="Manufacturers"
-            currentPage={id ? 'Edit Manufacturer' : 'New Manufacturer'}
+            currentPage={id ? "Edit Manufacturer" : "New Manufacturer"}
             rootNavigatePage="/More/ViewManufacturer"
-            title={id ? 'Edit Manufacturer' : 'New Manufacturer'}
+            title={id ? "Edit Manufacturer" : "New Manufacturer"}
           />
         </section>
         <section className="registration-form">
@@ -190,35 +215,83 @@ const ManufacturerRegistration = () => {
               <input
                 type="text"
                 placeholder="Manufacturer Name"
-                className={errors.manufacturerName ? 'input-error' : ''}
-                {...register('manufacturerName', { required: 'Manufacturer Name is required' })}
+                maxLength="100"
+                className={errors.manufacturerName ? "input-error" : ""}
+                {...register("manufacturerName", {
+                  required: "Manufacturer Name is required",
+                })}
               />
-              {errors.manufacturerName && <span className="error-message">{errors.manufacturerName.message}</span>}
+              {errors.manufacturerName && (
+                <span className="error-message">
+                  {errors.manufacturerName.message}
+                </span>
+              )}
             </fieldset>
 
             <fieldset>
               <label htmlFor="url">URL</label>
-              <input type="url" placeholder="URL" {...register('url')} />
+              <input
+                type="url"
+                placeholder="URL"
+                className={errors.url ? "input-error" : ""}
+                {...register("url", {
+                  pattern: {
+                    value: /^(https?:\/\/).+/i,
+                    message: "URL must start with http:// or https://",
+                  },
+                })}
+              />
+              {errors.url && (
+                <span className="error-message">{errors.url.message}</span>
+              )}
             </fieldset>
 
             <fieldset>
               <label htmlFor="supportUrl">Support URL</label>
-              <input type="url" placeholder="Support URL" {...register('supportUrl')} />
+              <input
+                type="url"
+                placeholder="Support URL"
+                className={errors.supportUrl ? "input-error" : ""}
+                {...register("supportUrl", {
+                  pattern: {
+                    value: /^(https?:\/\/).+/i,
+                    message: "Support URL must start with http:// or https://",
+                  },
+                })}
+              />
+              {errors.supportUrl && (
+                <span className="error-message">
+                  {errors.supportUrl.message}
+                </span>
+              )}
             </fieldset>
 
             <fieldset>
-              <label htmlFor="supportPhone">Support Phone</label>
-              <input type="tel" placeholder="Support Phone" {...register('supportPhone')} />
+              <label htmlFor="supportPhone">Phone Number</label>
+              <input
+                type="tel"
+                placeholder="Phone Number"
+                {...register("supportPhone")}
+              />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="supportEmail">Support Email</label>
-              <input type="email" placeholder="Support Email" {...register('supportEmail')} />
+              <label htmlFor="supportEmail">Email</label>
+              <input
+                type="email"
+                placeholder="Email"
+                {...register("supportEmail")}
+              />
             </fieldset>
 
             <fieldset>
               <label htmlFor="notes">Notes</label>
-              <textarea placeholder="Notes" rows="4" {...register('notes')} />
+              <textarea
+                placeholder="Notes"
+                rows="4"
+                maxLength="500"
+                {...register("notes")}
+              />
             </fieldset>
 
             <fieldset>
@@ -232,10 +305,10 @@ const ManufacturerRegistration = () => {
                       onClick={() => {
                         setPreviewImage(null);
                         setSelectedImage(null);
-                        setValue('logo', null);
-                        document.getElementById('logo').value = '';
+                        setValue("logo", null);
+                        document.getElementById("logo").value = "";
                         setRemoveImage(true);
-                        console.log('Remove logo flag set to:', true);
+                        console.log("Remove logo flag set to:", true);
                       }}
                     >
                       <img src={CloseIcon} alt="Remove" />
@@ -243,20 +316,24 @@ const ManufacturerRegistration = () => {
                   </div>
                 )}
                 <label htmlFor="logo" className="upload-image-btn">
-                  {previewImage ? 'Change Logo' : 'Choose Logo'}
+                  {previewImage ? "Change Logo" : "Choose Logo"}
                   <input
                     type="file"
                     id="logo"
                     accept="image/*"
                     onChange={handleImageSelection}
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                   />
                 </label>
-                <small className="file-size-info">Maximum file size must be 5MB</small>
+                <small className="file-size-info">
+                  Maximum file size must be 5MB
+                </small>
               </div>
             </fieldset>
 
-            <button type="submit" className="save-btn">Save</button>
+            <button type="submit" className="primary-button">
+              Save
+            </button>
           </form>
         </section>
       </main>
