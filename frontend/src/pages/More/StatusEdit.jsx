@@ -1,42 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/Registration.css';
-import '../../styles/CategoryRegistration.css';
-import TopSecFormPage from '../../components/TopSecFormPage';
-import { useForm } from 'react-hook-form';
+import { useLocation, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import NavBar from "../../components/NavBar";
+import TopSecFormPage from "../../components/TopSecFormPage";
+import Status from "../../components/Status";
 
-const StatusEdit = () => {
+import "../../styles/Registration.css";
+import "../../styles/CategoryRegistration.css";
+
+const StatusRegistration = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const location = useLocation();
 
-  // Sample data for different status IDs
-  const statusData = {
-    1: { statusName: 'Deployable', statusType: 'asset', notes: 'Ready to be deployed to users', showInList: true, defaultStatus: true },
-    2: { statusName: 'Deployed', statusType: 'asset', notes: 'Currently in use by a user', showInList: true, defaultStatus: false },
-    3: { statusName: 'Pending', statusType: 'asset', notes: 'Awaiting approval or processing', showInList: true, defaultStatus: false },
-    4: { statusName: 'Archived', statusType: 'asset', notes: 'No longer in active use', showInList: false, defaultStatus: false },
-    5: { statusName: 'Undeployable', statusType: 'asset', notes: 'Cannot be deployed due to issues', showInList: true, defaultStatus: false }
-  };
-
-  const currentStatus = statusData[id] || statusData[1];
+  // Retrieve the "status" data value passed from the navigation state.
+  // If the "status" data is not exist, the default value for this is "undifiend".
+  const status = location.state?.status;
 
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors, isValid },
   } = useForm({
-    defaultValues: currentStatus
+    defaultValues: {
+      statusName: status.name,
+      statusType: status.type,
+      notes: status.notes,
+    },
   });
 
-  const statusTypes = ['Asset', 'Accessory', 'Consumable', 'Component', 'License'];
+  const statusTypes = [
+    "Archived",
+    "Deployable",
+    "Deployed",
+    "Pending",
+    "Undeployable",
+  ];
 
   const onSubmit = (data) => {
     // Here you would typically send the data to your API
-    console.log('Form submitted:', data);
+    console.log("Form submitted:", data);
 
     // Optional: navigate back to status view after successful submission
-    navigate('/More/ViewStatus');
+    navigate("/More/ViewStatus");
   };
 
   return (
@@ -50,73 +54,107 @@ const StatusEdit = () => {
             root="Statuses"
             currentPage="Edit Status"
             rootNavigatePage="/More/ViewStatus"
-            title={`Edit Status - ${currentStatus.statusName}`}
+            title="Edit Status Label"
           />
         </section>
-        <section className="registration-form">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <fieldset>
-              <label htmlFor="statusName">Status Name *</label>
-              <input
-                type="text"
-                placeholder="Status Name"
-                maxLength="100"
-                className={errors.statusName ? 'input-error' : ''}
-                {...register("statusName", { required: 'Status Name is required' })}
-              />
-              {errors.statusName && <span className='error-message'>{errors.statusName.message}</span>}
-            </fieldset>
+        <section className="status-registration-section">
+          <section className="registration-form">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <fieldset>
+                <label htmlFor="statusName">Status Name *</label>
+                <input
+                  type="text"
+                  placeholder="Status Name"
+                  maxLength="100"
+                  className={errors.statusName ? "input-error" : ""}
+                  {...register("statusName", {
+                    required: "Status Name is required",
+                  })}
+                />
+                {errors.statusName && (
+                  <span className="error-message">
+                    {errors.statusName.message}
+                  </span>
+                )}
+              </fieldset>
 
-            <fieldset>
-              <label htmlFor="statusType">Status Type *</label>
-              <select
-                className={errors.statusType ? 'input-error' : ''}
-                {...register("statusType", { required: 'Status Type is required' })}
+              <fieldset>
+                <label htmlFor="statusType">Status Type *</label>
+                <select
+                  className={errors.statusType ? "input-error" : ""}
+                  {...register("statusType", {
+                    required: "Status Type is required",
+                  })}
+                >
+                  <option value="">Select Status Type</option>
+                  {statusTypes.map((type, idx) => (
+                    <option key={idx} value={type.toLowerCase()}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                {errors.statusType && (
+                  <span className="error-message">
+                    {errors.statusType.message}
+                  </span>
+                )}
+              </fieldset>
+
+              <fieldset>
+                <label htmlFor="notes">Notes</label>
+                <textarea
+                  placeholder="Enter any additional notes about this status..."
+                  rows="4"
+                  maxLength="500"
+                  {...register("notes")}
+                />
+              </fieldset>
+
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={!isValid}
               >
-                <option value="">Select Status Type</option>
-                {statusTypes.map((type, idx) => (
-                  <option key={idx} value={type.toLowerCase()}>{type}</option>
-                ))}
-              </select>
-              {errors.statusType && <span className='error-message'>{errors.statusType.message}</span>}
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="notes">Notes</label>
-              <textarea
-                placeholder="Enter any additional notes about this status..."
-                rows="4"
-                maxLength="500"
-                {...register("notes")}
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="showInList" className="checkbox-label">
-                <input
-                  type="checkbox"
-                  {...register("showInList")}
-                />
-                Show in Status List
-              </label>
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="defaultStatus" className="checkbox-label">
-                <input
-                  type="checkbox"
-                  {...register("defaultStatus")}
-                />
-                Set as Default Status
-              </label>
-            </fieldset>
-
-            <button type="submit" className="save-btn">Save</button>
-          </form>
+                Save
+              </button>
+            </form>
+          </section>
+          <section className="status-info-section">
+            <h2>About Status Types</h2>
+            <section className="deployable-section">
+              <Status type={"deployable"} name={"Deployable"} />
+              <p>
+                Use this for assets that can be checked out. Once you check them
+                out, they will automatically change status to{" "}
+                <span>
+                  <Status type={"deployed"} name={"Deployed"} />.
+                </span>
+              </p>
+            </section>
+            <section className="pending-section">
+              <Status type={"pending"} name={"Pending"} />
+              <p>
+                Use this for assets that can't be checked out. Useful for assets
+                that are being repaired, and are expected to return to use.
+              </p>
+            </section>
+            <section className="undeployable-section">
+              <Status type={"undeployable"} name={"Undeployable"} />
+              <p>Use this for assets that can't be checked out to anyone.</p>
+            </section>
+            <section className="archived-section">
+              <Status type={"archived"} name={"Archived"} />
+              <p>
+                Use this for assets that can't be checked out to anyone, and
+                have been archived. Useful for keeping information about
+                historical assets and meanwhile keeping them out of daily sight.
+              </p>
+            </section>
+          </section>
         </section>
       </main>
     </>
   );
 };
 
-export default StatusEdit;
+export default StatusRegistration;
