@@ -85,6 +85,7 @@ button:disabled {
   color: white;
   padding: 12px;
   border-radius: 6px;
+  cursor: pointer;
 }
 
 .primary-button:disabled {
@@ -157,8 +158,19 @@ button:disabled {
   .table-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 15px 30px;
     border-radius: 8px 8px 0 0;
+
+    h2 {
+      font-size: 1.25rem;
+      color: var(--text-color);
+    }
+  }
+
+  .table-actions {
+    display: flex;
+    gap: 10px;
 
     input[type="search"] {
       display: flex;
@@ -169,11 +181,6 @@ button:disabled {
       border: none;
       border: 1px solid #cccccc;
     }
-  }
-
-  .table-actions {
-    display: flex;
-    gap: 10px;
   }
 }
 
@@ -213,6 +220,13 @@ button:disabled {
   button:last-child {
     border-radius: 0 0 6px 6px;
   }
+}
+
+/* Style for div element inside the td tag */
+.icon-td {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 /* .no-data-message {

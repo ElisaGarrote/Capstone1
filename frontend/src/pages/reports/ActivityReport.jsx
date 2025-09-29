@@ -93,13 +93,13 @@ function TableItem({ activity }) {
     <tr>
       <td>{activity.date}</td>
       <td>
-        <div className="user-name-activity-report">
+        <div className="icon-td">
           <RxPerson className="user-icon" />
           <span>{activity.user}</span>
         </div>
       </td>
       <td>
-        <div className="type-info-activity-report">
+        <div className="icon-td">
           {getTypeIcon(activity.type)}
           <span>{activity.type}</span>
         </div>
@@ -109,7 +109,7 @@ function TableItem({ activity }) {
       </td>
       <td>{activity.item}</td>
       <td>
-        <div className="user-name-activity-report">
+        <div className="icon-td">
           {activity.to_from ? <RxPerson className="user-icon" /> : "-"}
           <span>{activity.to_from}</span>
         </div>

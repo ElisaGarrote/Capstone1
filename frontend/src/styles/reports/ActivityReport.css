@@ -52,13 +52,6 @@
       border-bottom: 1px solid #cccccc;
 
       height: 50px;
-
-      .user-name-activity-report,
-      .type-info-activity-report {
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-      }
     }
 
     /* Ensure empty-state row spans correctly across all columns */
