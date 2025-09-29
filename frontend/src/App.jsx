@@ -33,7 +33,7 @@ import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
 import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
-import AssetRepairs from "./pages/Repair/Maintenance";
+import AssetRepairs from "./pages/Repair/Repairs";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
 import EditMaintenance from "./pages/Repair/EditMaintenance";
 import Consumables from "./pages/Consumables/Consumables";

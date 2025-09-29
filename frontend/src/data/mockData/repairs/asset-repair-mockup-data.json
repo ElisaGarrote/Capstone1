@@ -1,0 +1,106 @@
+[
+  {
+    "asset": "Laptop A123",
+    "type": "Asset",
+    "name": "Screen Replacement",
+    "start_date": "2025-09-01",
+    "end_date": "2025-09-03",
+    "cost": 150.00,
+    "statusType": "deployed",
+    "statusName": "Deployed",
+    "personName": "Juan Dela Cruz"
+  },
+  {
+    "asset": "Printer B456",
+    "type": "Asset",
+    "name": "Paper Jam Repair",
+    "start_date": "2025-09-05",
+    "end_date": "2025-09-05",
+    "cost": 50.00,
+    "statusType": "pending",
+    "statusName": "Pending Approval"
+  },
+  {
+    "asset": "Aircon C789",
+    "type": "Consumable",
+    "name": "Cooling System Check",
+    "start_date": "2025-09-07",
+    "end_date": "2025-09-09",
+    "cost": 200.00,
+    "statusType": "undeployable",
+    "statusName": "In Progress"
+  },
+  {
+    "asset": "Vehicle D321",
+    "type": "Asset",
+    "name": "Engine Oil Change",
+    "start_date": "2025-09-10",
+    "end_date": "2025-09-10",
+    "cost": 80.00,
+    "statusType": "deployed",
+    "statusName": "Deployed",
+    "personName": "Maria Santos"
+  },
+  {
+    "asset": "Projector E654",
+    "type": "Component",
+    "name": "Lamp Replacement",
+    "start_date": "2025-09-11",
+    "end_date": "2025-09-12",
+    "cost": 120.00,
+    "statusType": "pending",
+    "statusName": "Pending Approval"
+  },
+  {
+    "asset": "Laptop F987",
+    "type": "Asset",
+    "name": "OS Reinstallation",
+    "start_date": "2025-09-15",
+    "end_date": "2025-09-15",
+    "cost": 30.00,
+    "statusType": "archived",
+    "statusName": "Archived"
+  },
+  {
+    "asset": "Server G111",
+    "type": "Component",
+    "name": "Hard Drive Replacement",
+    "start_date": "2025-09-17",
+    "end_date": "2025-09-18",
+    "cost": 400.00,
+    "statusType": "deployable",
+    "statusName": "Ready to Deploy",
+    "location": "Data Center A"
+  },
+  {
+    "asset": "Router H222",
+    "type": "Accessory",
+    "name": "Firmware Update",
+    "start_date": "2025-09-20",
+    "end_date": "2025-09-20",
+    "cost": 0.00,
+    "statusType": "completed",
+    "statusName": "Completed"
+  },
+  {
+    "asset": "Vehicle I333",
+    "type": "Asset",
+    "name": "Tire Replacement",
+    "start_date": "2025-09-21",
+    "end_date": "2025-09-22",
+    "cost": 300.00,
+    "statusType": "deployed",
+    "statusName": "Deployed",
+    "personName": "Carlos Reyes"
+  },
+  {
+    "asset": "Laptop J444",
+    "type": "Asset",
+    "name": "Keyboard Replacement",
+    "start_date": "2025-09-23",
+    "end_date": "2025-09-24",
+    "cost": 100.00,
+    "statusType": "pending",
+    "statusName": "Pending Approval"
+  }
+]

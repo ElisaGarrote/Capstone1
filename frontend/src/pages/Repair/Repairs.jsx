@@ -98,6 +98,12 @@ function TableItem({ repair }) {
   return (
     <tr>
       <td>{repair.asset}</td>
+      <td>
+        <div className="type-info-activity-report">
+          {getTypeIcon(repair.type)}
+          <span>{repair.type}</span>
+        </div>
+      </td>
       <td>{repair.name}</td>
       <td>{repair.start_date}</td>
       <td>{repair.end_date}</td>
