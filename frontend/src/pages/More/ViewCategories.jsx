@@ -158,7 +158,7 @@ function TableItem({ category, onDeleteClick }) {
             title="Edit"
             className="action-button"
             onClick={() =>
-              navigate("/More/CategoryEdit", { state: { category } })
+              navigate("/Repair/CategoryEdit", { state: { category } })
             }
           >
             <i className="fas fa-edit"></i>

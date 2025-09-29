@@ -8,11 +8,11 @@ import Pagination from "../../components/Pagination";
 import { BsKeyboard } from "react-icons/bs";
 import { LuDroplet } from "react-icons/lu"; 
 import { HiOutlineTag } from "react-icons/hi";
-import { RxPerson } from "react-icons/rx";
 import { AiOutlineAudit } from "react-icons/ai";
 import { RxComponent1 } from "react-icons/rx";
-
 import "../../styles/reports/ActivityReport.css";
+import ActionButtons from "../../components/ActionsButtons";
+
 
 const filterConfig = [
   {
@@ -94,7 +94,7 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ repair }) {
+function TableItem({ repair, onDeleteClick }) {
   return (
     <tr>
       <td>{repair.asset}</td>
@@ -113,6 +113,16 @@ function TableItem({ repair }) {
           type={repair.statusType}
           name={repair.statusName}
           {...(repair.deployedTo && { personName: repair.deployedTo })}
+        />
+      </td>
+      <td>
+        <ActionButtons
+          showEdit
+          showDelete
+          showView
+          editPath="EditRepair"
+          editState={{ repair }}
+          onDeleteClick={() => handleDelete(repair.id)}
         />
       </td>
     </tr>

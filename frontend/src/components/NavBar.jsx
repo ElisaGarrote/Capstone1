@@ -256,7 +256,7 @@ export default function NavBar() {
             <li>
               <a
                 onClick={() => {
-                  navigate("/dashboard/Repair/Maintenance");
+                  navigate("/dashboard/Repairs");
                   setActiveMenu("repairs");
                 }}
                 className={activeMenu === "repairs" ? "active" : ""}

@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import CloseIcon from "../../assets/icons/close.svg"
 import { useState, useEffect } from "react";
 
-export default function EditMaintenance() {
+export default function EditRepair() {
     const navigate = useNavigate();
     const { id } = useParams();
     const currentDate = new Date().toISOString().split("T")[0];

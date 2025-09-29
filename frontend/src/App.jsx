@@ -35,7 +35,7 @@ import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
 import AssetRepairs from "./pages/Repair/Repairs";
 import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
-import EditMaintenance from "./pages/Repair/EditMaintenance";
+import EditRepair from "./pages/Repair/EditRepair";
 import Consumables from "./pages/Consumables/Consumables";
 import ConsumablesRegistration from "./pages/Consumables/ConsumablesRegistration";
 import PasswordResetRequest from "./pages/PasswordResetRequest";
@@ -179,7 +179,7 @@ function App() {
             element={<CheckInComponent />}
           />
           <Route
-            path="/dashboard/Repair/Maintenance"
+            path="/dashboard/Repairs/"
             element={<AssetRepairs />}
           />
           <Route
@@ -187,8 +187,8 @@ function App() {
             element={<MaintenanceRegistration />}
           />
           <Route
-            path="/dashboard/Repair/EditMaintenance"
-            element={<EditMaintenance />}
+            path="/dashboard/Repairs/EditRepair"
+            element={<EditRepair />}
           />
           <Route path="/audits/" element={<AssetAudits />} />
           <Route path="/audits/overdue" element={<OverdueAudits />} />

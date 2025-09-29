@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
 from django_rest_passwordreset.signals import reset_password_token_created
 from django.dispatch import receiver
@@ -13,7 +13,7 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('The Email field must be set')
         
         email = self.normalize_email(email)
-        extra_fields.setdefault('role', 'operator')
+        extra_fields.setdefault('role', 'Operator')
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -22,13 +22,13 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields['role'] = 'admin'
+        extra_fields['role'] = 'Admin'
 
         return self.create_user(email, password, **extra_fields)
 
-class CustomUser(AbstractBaseUser):
+class CustomUser(AbstractUser):
     ROLE_CHOICES = [
-        ('admin', 'Admin'), ('operator', 'Operator'),
+        ('Admin', 'admin'), ('Operator', 'operator'),
     ]
     
     username = None # removes username field inherited from AbstractUser
