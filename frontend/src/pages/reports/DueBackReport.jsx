@@ -4,7 +4,7 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/reports/due-for-checkin-mockup-data.json";
 import Pagination from "../../components/Pagination";
 import DepreciationFilter from "../../components/FilterPanel";
-
+import Footer from "../../components/Footer";
 import dateRelated from "../../utils/dateRelated";
 
 import { RxPerson } from "react-icons/rx";
@@ -140,12 +140,10 @@ export default function DueBackReport() {
 
   return (
     <>
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
+        <main className="main-with-table">
           {/* Title of the Page */}
           <section className="title-page-section">
             <h1>Due for Checkin Report</h1>
@@ -218,6 +216,7 @@ export default function DueBackReport() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );
