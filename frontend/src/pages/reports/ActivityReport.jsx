@@ -5,6 +5,7 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/reports/activity-report-mockup-data.json";
 import DepreciationFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
+import Footer from "../../components/Footer";
 import { BsKeyboard } from "react-icons/bs";
 import { LuDroplet } from "react-icons/lu";
 import { HiOutlineTag } from "react-icons/hi";
@@ -153,86 +154,79 @@ export default function ActivityReport() {
   }, [exportToggle]);
 
   return (
-    <>
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+    <section className="page-layout-with-table">
+      <NavBar />
 
-        <main className="page-layout">
-          {/* Title of the Page */}
-          <section className="title-page-section">
-            <h1>Activity Report</h1>
-          </section>
+      <main className="main-with-table">
+        {/* Title of the Page */}
+        <section className="title-page-section">
+          <h1>Activity Report</h1>
+        </section>
 
-          {/* Table Filter */}
-          <DepreciationFilter filters={filterConfig} />
+        {/* Table Filter */}
+        <DepreciationFilter filters={filterConfig} />
 
-          <section className="table-layout">
-            {/* Table Header */}
-            <section className="table-header">
-              <h2 className="h2">Activity Log ({MockupData.length})</h2>
-              <section className="table-actions">
-                <input
-                  type="search"
-                  placeholder="Search..."
-                  className="search"
+        <section className="table-layout">
+          {/* Table Header */}
+          <section className="table-header">
+            <h2 className="h2">Activity Log ({MockupData.length})</h2>
+            <section className="table-actions">
+              <input type="search" placeholder="Search..." className="search" />
+              <div ref={toggleRef}>
+                <MediumButtons
+                  type="export"
+                  onClick={() => setExportToggle(!exportToggle)}
                 />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
-              </section>
-            </section>
-
-            {/* Table Structure */}
-            <section className="activity-report-table-section">
-              {exportToggle && (
-                <section className="export-button-section" ref={exportRef}>
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
-              <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
-                  {paginatedActivity.length > 0 ? (
-                    paginatedActivity.map((activity, index) => (
-                      <TableItem
-                        key={index}
-                        activity={activity}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={7} className="no-data-message">
-                        No activity log found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </section>
-
-            {/* Table pagination */}
-            <section className="table-pagination">
-              <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalItems={MockupData.length}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-              />
+              </div>
             </section>
           </section>
-        </main>
-      </section>
-    </>
+
+          {/* Table Structure */}
+          <section className="activity-report-table-section">
+            {exportToggle && (
+              <section className="export-button-section" ref={exportRef}>
+                <button>Download as Excel</button>
+                <button>Download as PDF</button>
+                <button>Download as CSV</button>
+              </section>
+            )}
+            <table>
+              <thead>
+                <TableHeader />
+              </thead>
+              <tbody>
+                {paginatedActivity.length > 0 ? (
+                  paginatedActivity.map((activity, index) => (
+                    <TableItem
+                      key={index}
+                      activity={activity}
+                      onDeleteClick={() => setDeleteModalOpen(true)}
+                    />
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="no-data-message">
+                      No activity log found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </section>
+
+          {/* Table pagination */}
+          <section className="table-pagination">
+            <Pagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={MockupData.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+            />
+          </section>
+        </section>
+      </main>
+      <Footer />
+    </section>
   );
 }
