@@ -78,7 +78,7 @@ function Logout() {
 function App() {
   return (
     <BrowserRouter>
-      <ChatBot />
+      {/* <ChatBot /> */}
       <Routes>
         {/* This will Serve as Default Path*/}
         <Route path="/" element={<Navigate to="/login" />} />
