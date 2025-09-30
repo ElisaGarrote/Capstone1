@@ -36,6 +36,14 @@ a:active,
   text-decoration: none !important;
 }
 
+/* Ensure the app root fills the viewport so sticky footer patterns work */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
 .disabled-dropdown {
   display: flex;
 
@@ -104,6 +112,8 @@ button:disabled {
 .page-layout {
   width: 100vw;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background-color: var(--bg-color);
   padding: var(--page-padding);
   overflow: auto;
@@ -226,7 +236,8 @@ button:disabled {
 .page-layout-with-table {
   display: grid;
   grid-template-columns: 100%;
-  grid-template-rows: 60px auto auto;
+  /* keep header (60px), make the main content take remaining space, footer at the bottom */
+  grid-template-rows: 60px 1fr auto;
   grid-template-areas:
     "main-nav-bar"
     "main-with-table"
@@ -253,5 +264,10 @@ button:disabled {
 
   footer {
     grid-area: footer;
+    display: flex;
   }
+}
+
+footer {
+  margin-top: auto;
 }
