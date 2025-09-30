@@ -7,6 +7,7 @@ import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Status from "../../components/Status";
 import MockupData from "../../data/mockData/more/status-mockup-data.json";
+import Footer from "../../components/Footer";
 
 import "../../styles/Category.css";
 
@@ -149,12 +150,10 @@ export default function Category() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
+        <main className="main-with-table">
           {/* Table Filter */}
           <CategoryFilter filters={filterConfig} />
 
@@ -213,6 +212,7 @@ export default function Category() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );
