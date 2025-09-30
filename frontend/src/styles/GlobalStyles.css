@@ -111,13 +111,6 @@ button:disabled {
 
 .title-page-section {
   margin-bottom: 20px;
-  background-color: var(--bg-color);
-  /* box-shadow:
-    38px 0 0 0 var(--bg-color),
-    -38px 0 0 var(--bg-color);
-  position: sticky;
-  top: 0;
-  z-index: 1; */
 }
 
 .title-page-section h1 {
@@ -229,9 +222,70 @@ button:disabled {
   gap: 0.3rem;
 }
 
-/* .no-data-message {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--secondary-text-color);
-  font-style: italic;
-} */
+
+.page-layout-with-table {
+  display: grid;
+  grid-template-columns: auto;
+  grid-template-rows: 60px auto auto;
+  grid-template-areas:
+    "main-nav-bar"
+    "main-with-table"
+    "footer";
+  min-height: 100vh;
+  width: auto;
+  justify-content: center;
+  background-color: var(--bg-color);
+
+  .main-nav-bar {
+    grid-area: main-nav-bar;
+  }
+
+  .main-with-table {
+    grid-area: main-with-table;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 40px 20px 20px 20px;
+    overflow: auto;
+  }
+
+  footer {
+    grid-area: footer;
+  }
+}
+
+/* Responsiveness */
+/* Large desktop */
+@media (min-width: 1400px) {
+  .page-layout-with-table main {
+    max-width: 1400px;
+  }
+}
+
+/* Medium desktop */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .page-layout-with-table main {
+    max-width: 1200px;
+  }
+}
+
+/* Small desktop */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .page-layout-with-table main {
+    max-width: 992px;
+  }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 991px) {
+  .page-layout-with-table main {
+    max-width: 768px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .page-layout-with-table main {
+    max-width: 100%;
+  }
+}
