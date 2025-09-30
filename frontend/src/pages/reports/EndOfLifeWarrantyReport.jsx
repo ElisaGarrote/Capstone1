@@ -7,6 +7,7 @@ import MockupData from "../../data/mockData/reports/end-of-life-mockup-data.json
 import DepreciationFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import dateRelated from "../../utils/dateRelated";
+import Footer from "../../components/Footer";
 
 import "../../styles/UpcomingEndOfLife.css";
 
@@ -108,86 +109,79 @@ export default function EndOfLifeWarrantyReport() {
   }, [exportToggle]);
 
   return (
-    <>
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+    <section className="page-layout-with-table">
+      <NavBar />
 
-        <main className="page-layout">
-          {/* Title of the Page */}
-          <section className="title-page-section">
-            <h1>End of Life & Warranty Report</h1>
-          </section>
+      <main className="main-with-table">
+        {/* Title of the Page */}
+        <section className="title-page-section">
+          <h1>End of Life & Warranty Report</h1>
+        </section>
 
-          {/* Table Filter */}
-          <DepreciationFilter filters={filterConfig} />
+        {/* Table Filter */}
+        <DepreciationFilter filters={filterConfig} />
 
-          <section className="table-layout">
-            {/* Table Header */}
-            <section className="table-header">
-              <h2 className="h2">Asset ({MockupData.length})</h2>
-              <section className="table-actions">
-                <input
-                  type="search"
-                  placeholder="Search..."
-                  className="search"
+        <section className="table-layout">
+          {/* Table Header */}
+          <section className="table-header">
+            <h2 className="h2">Asset ({MockupData.length})</h2>
+            <section className="table-actions">
+              <input type="search" placeholder="Search..." className="search" />
+              <div ref={toggleRef}>
+                <MediumButtons
+                  type="export"
+                  onClick={() => setExportToggle(!exportToggle)}
                 />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
-              </section>
-            </section>
-
-            {/* Table Structure */}
-            <section className="eof-warranty-report-table-section">
-              {exportToggle && (
-                <section className="export-button-section" ref={exportRef}>
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
-              <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
-                  {paginatedDepreciation.length > 0 ? (
-                    paginatedDepreciation.map((asset, index) => (
-                      <TableItem
-                        key={index}
-                        asset={asset}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="no-data-message">
-                        No end of life & warranty found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </section>
-
-            {/* Table pagination */}
-            <section className="table-pagination">
-              <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalItems={MockupData.length}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-              />
+              </div>
             </section>
           </section>
-        </main>
-      </section>
-    </>
+
+          {/* Table Structure */}
+          <section className="eof-warranty-report-table-section">
+            {exportToggle && (
+              <section className="export-button-section" ref={exportRef}>
+                <button>Download as Excel</button>
+                <button>Download as PDF</button>
+                <button>Download as CSV</button>
+              </section>
+            )}
+            <table>
+              <thead>
+                <TableHeader />
+              </thead>
+              <tbody>
+                {paginatedDepreciation.length > 0 ? (
+                  paginatedDepreciation.map((asset, index) => (
+                    <TableItem
+                      key={index}
+                      asset={asset}
+                      onDeleteClick={() => setDeleteModalOpen(true)}
+                    />
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="no-data-message">
+                      No end of life & warranty found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </section>
+
+          {/* Table pagination */}
+          <section className="table-pagination">
+            <Pagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={MockupData.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+            />
+          </section>
+        </section>
+      </main>
+      <Footer />
+    </section>
   );
 }
