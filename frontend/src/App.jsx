@@ -133,6 +133,10 @@ function App() {
             element={<SupplierRegistration />}
           />
           <Route
+            path="/More/SupplierRegistration/:id"
+            element={<SupplierRegistration />}
+          />
+          <Route
             path="/More/SupplierTableDetails"
             element={<SupplierTableDetails />}
           />
