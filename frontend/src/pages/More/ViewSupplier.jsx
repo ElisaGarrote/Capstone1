@@ -9,6 +9,7 @@ import contextsService from "../../services/contexts-service";
 import Pagination from "../../components/Pagination";
 import SupplierFilter from "../../components/FilterPanel";
 import Footer from "../../components/Footer";
+import DefaultImage from "../../assets/img/default-image.jpg";
 
 import "../../styles/ViewSupplier.css";
 
@@ -71,11 +72,19 @@ function TableItem({ supplier, onDeleteClick }) {
           <input type="checkbox" name="" id="" />
         </div>
       </td>
-      <td>{supplier.name}</td>
+      <td>
+        <div className="supplier-name">
+          <img
+            src={supplier.logo ? supplier.logo : DefaultImage}
+            alt={supplier.logo}
+          />
+          <span>{supplier.name}</span>
+        </div>
+      </td>
       <td>{supplier.address || "-"}</td>
       <td>{supplier.city || "-"}</td>
       <td>{supplier.zip || "-"}</td>
-      <td>{supplier.contact_person || "-"}</td>
+      <td>{supplier.contactName || "-"}</td>
       <td>{supplier.phone || "-"}</td>
       <td>{supplier.email || "-"}</td>
       <td>{supplier.url || "-"}</td>
@@ -88,7 +97,9 @@ function TableItem({ supplier, onDeleteClick }) {
             title="Edit"
             className="action-button"
             onClick={() =>
-              navigate("/More/CategoryEdit", { state: { supplier } })
+              navigate(`/More/SupplierRegistration/${supplier.id}`, {
+                state: { supplier },
+              })
             }
           >
             <i className="fas fa-edit"></i>
