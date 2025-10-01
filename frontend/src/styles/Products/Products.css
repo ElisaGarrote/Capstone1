@@ -1,0 +1,102 @@
+.products-table-section {
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      padding: 0.75rem !important;
+      /* 12px */
+      text-align: left !important;
+      font-size: 0.75rem;
+      /* 12px */
+      font-weight: 600;
+      color: var(--text-color);
+      border-top: 1px solid #cccccc;
+      border-bottom: 1px solid #cccccc;
+      background-color: #f0f1f2;
+
+      height: 50px;
+
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    /* table header for 'Image' */
+    th:first-child {
+      width: 80px;
+    }
+
+    /* table header for 'Name'*/
+    th:nth-child(2) {
+      min-width: 150px;
+      max-width: fit-content;
+    }
+
+    td {
+      text-align: left !important;
+      padding: 0.75rem;
+      font-size: 0.8125rem;
+      /* 13px */
+      color: var(--text-color);
+      border-bottom: 1px solid #cccccc;
+
+      height: 50px;
+      vertical-align: middle;
+    }
+
+    /* Ensure empty-state row spans correctly across all columns */
+    td.no-data-message {
+      display: table-cell !important;
+      width: 100% !important;
+      white-space: normal !important;
+      padding: 0.75rem !important;
+      text-align: center !important;
+      font-style: italic;
+      color: var(--secondary-text-color);
+      background: transparent;
+    }
+
+    tr:hover {
+      background-color: #fcfcfc;
+    }
+  }
+}
+
+.products-table-section table td .table-img {
+  width: 50px !important;
+  height: 50px !important;
+  max-width: 50px !important;
+  max-height: 50px !important;
+  object-fit: cover !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+  margin: 0 !important;
+}
+
+.products-table-section .action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0px;
+  flex-wrap: nowrap;
+}
+
+.products-table-section .action-buttons button,
+.products-table-section .action-buttons > * {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.products-table-section table th:nth-child(7),
+.products-table-section table td:nth-child(7) {
+  width: auto;
+  min-width: 120px;
+  vertical-align: middle;
+  padding: 0.5rem 0.75rem;
+}
