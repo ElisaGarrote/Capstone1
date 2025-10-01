@@ -3,7 +3,7 @@ import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
-import RepairFilter from "../../components/FilterPanel";
+import DepreciationFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import { BsKeyboard } from "react-icons/bs";
 import { LuDroplet } from "react-icons/lu"; 
@@ -16,120 +16,59 @@ import ActionButtons from "../../components/ActionsButtons";
 
 const filterConfig = [
   {
-    type: "select",
-    name: "type",
-    label: "Type",
-    options: [
-      { value: "accessory", label: "Accessory" },
-      { value: "asset", label: "Asset" },
-      { value: "audit", label: "Audit" },
-      { value: "component", label: "Component" },
-      { value: "consumable", label: "Consumable" },
-    ],
-  },
-  {
-    type: "select",
-    name: "status",
-    label: "Status",
-    options: [
-      { value: "beingrepaired", label: "Being Repaired" },
-      { value: "broken", label: "Broken" },
-      { value: "deployed", label: "Deployed" },
-      { value: "lostorstolen", label: "Lost or Stolen" },
-      { value: "pending", label: "Pending" },
-      { value: "readytodeploy", label: "Ready to Deploy" },
-    ],
-  },
-  {
-    type: "dateRange",
-    name: "assetsbeingrepaired",
-    fromLabel: "Start Date",
-    toLabel: "End Date",
+    type: "number",
+    name: "duration",
+    label: "Duration (in months)",
   },
   {
     type: "searchable",
-    name: "asset",
-    label: "Asset",
+    name: "depreciationname",
+    label: "Name",
     options: [
-      { value: "1", label: "Lenovo Yoga 7" },
-      { value: "2", label: "Iphone 16 Pro Max" },
-      { value: "3", label: "Ideapad 3" },
-      { value: "4", label: "Ipad Pro" },
-      { value: "5", label: "HP Spectre x360" },
+      { value: "1", label: "Iphone Depreciation" },
+      { value: "2", label: "Laptop Depreciation" },
+      { value: "3", label: "Tablet Depreciation" },
+      { value: "4", label: "Desktop Depreciation" },
+      { value: "5", label: "Printer Depreciation" },
+      { value: "6", label: "Scanner Depreciation" },
+      { value: "7", label: "Projector Depreciation" },
     ],
   },
 ];
-
-const getTypeIcon = (type) => {
-  switch (type) {
-    case "Asset":
-      return <HiOutlineTag className="type-icon" />;
-    case "Accessory":
-      return <BsKeyboard className="type-icon" />;
-    case "Consumable":
-      return <LuDroplet className="type-icon" />;
-    case "Audit":
-      return <AiOutlineAudit className="type-icon" />;
-    case "Component":
-      return <RxComponent1 className="type-icon" />;
-    default:
-      return <HiOutlineTag className="type-icon" />;
-  }
-};
 
 // TableHeader component to render the table header
 function TableHeader() {
   return (
     <tr>
-      <th>ASSET</th>
-      <th>TYPE</th>
       <th>NAME</th>
-      <th>START DATE</th>
-      <th>END DATE</th>
-      <th>COST</th>
-      <th>STATUS</th>
+      <th>DURATION</th>
+      <th>MINIMUM VALUE</th>
       <th>ACITON</th>
     </tr>
   );
 }
 
-// TableItem component to render each ticket row
-function TableItem({ repair, onDeleteClick }) {
+// TableItem component to render each row
+function TableItem({  depreciation, onDeleteClick }) {
   return (
     <tr>
-      <td>{repair.asset}</td>
-      <td>
-        <div className="type-info-activity-report">
-          {getTypeIcon(repair.type)}
-          <span>{repair.type}</span>
-        </div>
-      </td>
-      <td>{repair.name}</td>
-      <td>{repair.start_date}</td>
-      <td>{repair.end_date}</td>
-      <td>{repair.cost}</td>
-      <td>
-        <Status
-          type={repair.statusType}
-          name={repair.statusName}
-          {...(repair.deployedTo && { personName: repair.deployedTo })}
-        />
-      </td>
+      <td>{depreciation.name}</td>
+      <td>{depreciation.duration}</td>
+      <td>{depreciation.minimum_value}</td>
       <td>
         <ActionButtons
           showEdit
           showDelete
-          showView
-          editPath="RepairEdit"
-          editState={{ repair }}
-          onDeleteClick={() => handleDelete(repair.id)}
+          editPath="DepreciationEdit"
+          editState={{ depreciation }}
+          onDeleteClick={() => handleDelete(depreciation.id)}
         />
       </td>
     </tr>
   );
 }
 
-export default function AssetRepairs() {
+export default function Depreciations() {
   const [exportToggle, setExportToggle] = useState(false);
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
@@ -172,16 +111,16 @@ export default function AssetRepairs() {
         <main className="page-layout">
           {/* Title of the Page */}
           <section className="title-page-section">
-            <h1>Repairs</h1>
+            <h1>Depreciations</h1>
           </section>
 
           {/* Table Filter */}
-          <RepairFilter filters={filterConfig} />
+          <DepreciationFilter filters={filterConfig} />
 
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Asset Repairs ({MockupData.length})</h2>
+              <h2 className="h2">Asset Depreciations ({MockupData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
@@ -212,17 +151,17 @@ export default function AssetRepairs() {
                 </thead>
                 <tbody>
                   {paginatedActivity.length > 0 ? (
-                    paginatedActivity.map((repair, index) => (
+                    paginatedActivity.map((depreciation, index) => (
                       <TableItem
                         key={index}
-                        repair={repair}
+                        depreciation={depreciation}
                         onDeleteClick={() => setDeleteModalOpen(true)}
                       />
                     ))
                   ) : (
                     <tr>
                       <td colSpan={7} className="no-data-message">
-                        No repairs found.
+                        No depreciations found.
                       </td>
                     </tr>
                   )}

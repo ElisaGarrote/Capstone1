@@ -14,7 +14,7 @@ import contextsService from "../../services/contexts-service";
 import LoadingButton from "../../components/LoadingButton";
 import Alert from "../../components/Alert";
 
-export default function MaintenanceRegistration() {
+export default function RepairRegistration() {
   const navigate = useNavigate();
   const animatedComponents = makeAnimated();
   const [attachmentFile, setAttachmentFile] = useState(null);
