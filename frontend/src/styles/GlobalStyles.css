@@ -236,7 +236,6 @@ button:disabled {
 .page-layout-with-table {
   display: grid;
   grid-template-columns: 100%;
-  /* keep header (60px), make the main content take remaining space, footer at the bottom */
   grid-template-rows: 60px 1fr auto;
   grid-template-areas:
     "main-nav-bar"
@@ -254,7 +253,7 @@ button:disabled {
     grid-area: main-with-table;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: start;
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
