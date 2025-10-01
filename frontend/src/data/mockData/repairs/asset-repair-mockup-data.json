@@ -1,5 +1,6 @@
 [
   {
+    "id": 1,
     "asset": "Laptop A123",
     "type": "Asset",
     "name": "Screen Replacement",
@@ -11,6 +12,7 @@
     "personName": "Juan Dela Cruz"
   },
   {
+    "id": 2,
     "asset": "Printer B456",
     "type": "Asset",
     "name": "Paper Jam Repair",
@@ -21,6 +23,7 @@
     "statusName": "Pending Approval"
   },
   {
+    "id": 3,
     "asset": "Aircon C789",
     "type": "Consumable",
     "name": "Cooling System Check",
@@ -31,6 +34,7 @@
     "statusName": "In Progress"
   },
   {
+    "id": 4,
     "asset": "Vehicle D321",
     "type": "Asset",
     "name": "Engine Oil Change",
@@ -42,6 +46,7 @@
     "personName": "Maria Santos"
   },
   {
+    "id": 5,
     "asset": "Projector E654",
     "type": "Component",
     "name": "Lamp Replacement",
@@ -52,6 +57,7 @@
     "statusName": "Pending Approval"
   },
   {
+    "id": 6,
     "asset": "Laptop F987",
     "type": "Asset",
     "name": "OS Reinstallation",
@@ -62,6 +68,7 @@
     "statusName": "Archived"
   },
   {
+    "id": 7,
     "asset": "Server G111",
     "type": "Component",
     "name": "Hard Drive Replacement",
@@ -73,6 +80,7 @@
     "location": "Data Center A"
   },
   {
+    "id": 8,
     "asset": "Router H222",
     "type": "Accessory",
     "name": "Firmware Update",
@@ -83,6 +91,7 @@
     "statusName": "Completed"
   },
   {
+    "id": 9,
     "asset": "Vehicle I333",
     "type": "Asset",
     "name": "Tire Replacement",
@@ -94,6 +103,7 @@
     "personName": "Carlos Reyes"
   },
   {
+    "id": 10,
     "asset": "Laptop J444",
     "type": "Asset",
     "name": "Keyboard Replacement",

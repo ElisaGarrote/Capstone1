@@ -152,7 +152,7 @@ function App() {
             element={<DepreciationRegistration />}
           />
           <Route
-            path="/MoreDepreciations/DepreciationEdit/:id"
+            path="/More/Depreciations/DepreciationEdit"
             element={<DepreciationEdit />}
           />
           <Route path="/More/RecycleBin" element={<RecycleBin />} />

@@ -153,7 +153,7 @@ export default function NavBar() {
     } else if (location.pathname.startsWith("/More/ViewStatus")) {
       setSelectedMore("Statuses");
       setActiveMenu("more");
-    } else if (location.pathname.startsWith("/More/ViewDepreciations")) {
+    } else if (location.pathname.startsWith("/More/Depreciations")) {
       setSelectedMore("Depreciations");
       setActiveMenu("more");
     } else if (location.pathname.startsWith("/More/RecycleBin")) {
@@ -409,7 +409,7 @@ export default function NavBar() {
                       </button>
                       <button
                         onClick={() => {
-                          navigate("/More/ViewDepreciations");
+                          navigate("/More/Depreciations");
                           setSelectedMore("Depreciations");
                           setShowMoreMenu(false);
                         }}

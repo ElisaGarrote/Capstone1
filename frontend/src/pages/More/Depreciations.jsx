@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
+import MockupData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
 import DepreciationFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import { BsKeyboard } from "react-icons/bs";
