@@ -155,7 +155,10 @@ function App() {
             path="/More/Depreciations/DepreciationEdit"
             element={<DepreciationEdit />}
           />
-          <Route path="/More/RecycleBin" element={<RecycleBin />} />
+          <Route
+            path="/More/RecycleBin"
+            element={<RecycleBin />}
+          />
         </Route>
 
         {/* Place here all the routes that accessible only for admin and operator */}

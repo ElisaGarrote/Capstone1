@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
 import BinFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
+import "../../styles/TabNavBar.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+
+// Import mock data
+import deletedAssets from "../../data/mockData/more/deleted-asset-mockup-data.json";
+import deletedComponents from "../../data/mockData/more/deleted-component-mockup-data.json";
 
 const filterConfig = [
   {
@@ -113,16 +117,22 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
 }
 
 export default function RecycleBin() {
+  // export toggle
   const [exportToggle, setExportToggle] = useState(false);
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
+
+  // active tab (assets | components)
+  const [activeTab, setActiveTab] = useState("assets");
+  // choose dataset depending on tab
+  const data = activeTab === "assets" ? deletedAssets : deletedComponents;
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = MockupData.slice(startIndex, endIndex);
+  const paginatedActivity = data.slice(startIndex, endIndex);
 
   // selection
   const [selectedIds, setSelectedIds] = useState([]);
@@ -250,11 +260,45 @@ export default function RecycleBin() {
             <h1>Recycle Bin</h1>
           </section>
 
+          { /* Tab Navigation */}
+          <div className="tab-nav">
+            <ul>
+              <li className={activeTab === "assets" ? "active" : ""}>
+                <a
+                  className={activeTab === "assets" ? "active" : ""}
+                  onClick={() => {
+                    setActiveTab("assets");
+                    setCurrentPage(1);
+                    setSelectedIds([]);
+                  }}
+                >
+                  Assets ({deletedAssets.length})
+                </a>
+              </li>
+              <li className={activeTab === "components" ? "active" : ""}>
+                <a
+                  className={activeTab === "components" ? "active" : ""}
+                  onClick={() => {
+                    setActiveTab("components");
+                    setCurrentPage(1);
+                    setSelectedIds([]);
+                  }}
+                >
+                  Components ({deletedComponents.length})
+                </a>
+              </li>
+            </ul>
+          </div>
+
           <BinFilter filters={filterConfig} />
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Recycle Bin ({MockupData.length})</h2>
+              <h2 className="h2">
+                {activeTab === "assets"
+                  ? `Deleted Assets (${deletedAssets.length})`
+                  : `Deleted Components (${deletedComponents.length})`}
+              </h2>
               <section className="table-actions">
                 {/* Bulk recover button only when checkboxes selected */}
                 {selectedIds.length > 0 && (
@@ -271,7 +315,9 @@ export default function RecycleBin() {
                     onClick={() => openDeleteModal(null)}
                   />
                 )}
+
                 <input type="search" placeholder="Search..." className="search" />
+                
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"
@@ -324,7 +370,7 @@ export default function RecycleBin() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={MockupData.length}
+                totalItems={data.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />
