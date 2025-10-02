@@ -19,6 +19,7 @@ export default function ConfirmationModal({
     - delete
     - activate
     - deactivate
+    - recover
   */
 
   const [isDeleting, setDeleting] = useState(false);
@@ -64,6 +65,8 @@ export default function ConfirmationModal({
         return "Activate";
       case "deactivate":
         return "Deactivate";
+      case "recover":
+        return "Recover";
       default:
         return "Confirm";
     }
@@ -77,6 +80,8 @@ export default function ConfirmationModal({
         return "Activating...";
       case "deactivate":
         return "Deactivating...";
+      case "recover":
+        return "Recovering...";
       default:
         return "Processing...";
     }

@@ -4,7 +4,8 @@
 .medium-button-perform-audits,
 .medium-button-delete,
 .medium-button-sort,
-.medium-button-filter {
+.medium-button-filter,
+.medium-button-recover {
   display: flex;
   height: 40px;
   justify-content: center;
@@ -23,7 +24,8 @@
 }
 
 .medium-button-new img,
-.medium-button-delete img {
+.medium-button-delete img,
+.medium-button-recover img {
   height: 16px !important;
   width: 16px !important;
 }
@@ -31,6 +33,16 @@
 .medium-button-new:hover {
   background-color: var(--primary-color-hover);
 }
+
+.medium-button-recover {
+  background-color: var(--success-color);
+  color: var(--bg-color);
+}
+
+.medium-button-recover:hover {
+  background-color: var(--success-color-hover);
+}
+
 
 .medium-button-export,
 .medium-button-sort,
@@ -69,31 +81,5 @@
 
 .medium-button-delete:hover {
   background-color: darkred;
-}
-
-/* Recover Button */
-.medium-button-recover {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 26px;
-  padding: 2px 8px;
-  border-radius: 16px;
-  background-color: var(--success-color);
-  color: white;
-  font-size: 0.7rem;
-  line-height: 1;          /* 🔑 keeps text centered vertically */
-  gap: 0.3rem;
-  cursor: pointer;
-  min-width: 60px;
-  white-space: nowrap;
-  text-transform: capitalize;
-}
-
-.medium-button-recover img {
-  height: 0.7rem !important;
-  width: 0.7rem !important;
-  margin-right: 0.15rem;
-  display: inline-block;
 }
 

@@ -127,6 +127,14 @@
   background-color: var(--primary-color-hover);
 }
 
+.confirm-action-btn.recover-btn {
+  background-color: var(--success-color);
+}
+
+.confirm-action-btn.recover-btn:hover {
+  background-color: var(--success-color-hover);
+}
+
 /* Responsive Layout */
 @media (max-width: 480px) {
   .modal-card {

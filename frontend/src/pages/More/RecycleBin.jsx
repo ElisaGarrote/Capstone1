@@ -81,7 +81,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem
-function TableItem({ item, isSelected, onRowChange, onDeleteClick }) {
+function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClick }) {
   return (
     <tr>
       <td>
@@ -97,12 +97,11 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick }) {
       <td>{item.supplier}</td>
       <td>{item.location}</td>
       <td>
-        <MediumButtons 
-          type="recover"
-          onClick={() => onDeleteClick(item.id)}
+        <ActionButtons
+          showDelete
+          onDeleteClick={() => onDeleteClick(item.id)}
         />
       </td>
-
       <td>
         <ActionButtons
           showDelete
@@ -179,6 +178,31 @@ export default function RecycleBin() {
     closeDeleteModal();
   };
 
+  // recover modal state
+  const [isRecoverModalOpen, setRecoverModalOpen] = useState(false);
+  const [recoverTarget, setRecoverTarget] = useState(null);
+
+  const openRecoverModal = (id = null) => {
+    setRecoverTarget(id);
+    setRecoverModalOpen(true);
+  };
+
+  const closeRecoverModal = () => {
+    setRecoverModalOpen(false);
+    setRecoverTarget(null);
+  };
+
+  const confirmRecover = () => {
+    if (recoverTarget) {
+      console.log("Recovering single id:", recoverTarget);
+      // API call or restore from mock
+    } else {
+      console.log("Recovering multiple ids:", selectedIds);
+      setSelectedIds([]); // clear selection if bulk
+    }
+    closeRecoverModal();
+  };
+
   // outside click for export toggle
   useEffect(() => {
     function handleClickOutside(event) {
@@ -208,6 +232,14 @@ export default function RecycleBin() {
         />
       )}
 
+      {isRecoverModalOpen && (
+        <ConfirmationModal
+          closeModal={closeRecoverModal}
+          actionType="recover"
+          onConfirm={confirmRecover}
+        />
+      )}
+
       <section>
         <nav>
           <NavBar />
@@ -224,6 +256,14 @@ export default function RecycleBin() {
             <section className="table-header">
               <h2 className="h2">Recycle Bin ({MockupData.length})</h2>
               <section className="table-actions">
+                {/* Bulk recover button only when checkboxes selected */}
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="recover"
+                    onClick={() => openRecoverModal(null)}
+                  />
+                )}
+
                 {/* Bulk delete button only when checkboxes selected */}
                 {selectedIds.length > 0 && (
                   <MediumButtons
@@ -266,6 +306,7 @@ export default function RecycleBin() {
                         isSelected={selectedIds.includes(item.id)}
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
+                        onRecoverClick={openRecoverModal}
                       />
                     ))
                   ) : (
