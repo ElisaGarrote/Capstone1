@@ -1,342 +1,294 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
-import "../../styles/ManufacturerRegistration.css";
+import "../../styles/CategoryRegistration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
-import contextsService from "../../services/contexts-service";
-import Alert from "../../components/Alert";
-import SystemLoading from "../../components/Loading/SystemLoading";
 
 const RepairRegistration = () => {
-  const { id } = useParams();
+  const navigate = useNavigate();
+  const [attachmentFile, setAttachmentFile] = useState(null);
+
   const {
-    setValue,
     register,
     handleSubmit,
+    control,
+    watch,
     formState: { errors, isValid },
   } = useForm({
-    defaultValues: {
-      manufacturerName: "",
-      url: "",
-      supportUrl: "",
-      supportPhone: "",
-      supportEmail: "",
-      notes: "",
-      logo: null,
-    },
     mode: "all",
   });
 
-  const [previewImage, setPreviewImage] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [removeImage, setRemoveImage] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-
-  const navigate = useNavigate();
-  const contextServiceUrl =
-    "https://contexts-service-production.up.railway.app";
-
-  useEffect(() => {
-    const initialize = async () => {
-      try {
-        setIsLoading(true);
-        if (id) {
-          const manufacturerData = await contextsService.fetchManufacturerById(
-            id
-          );
-          if (!manufacturerData) {
-            setErrorMessage("Failed to fetch manufacturer details");
-            setIsLoading(false);
-            return;
-          }
-          console.log("Manufacturer Details:", manufacturerData);
-          setValue("manufacturerName", manufacturerData.name || "");
-          setValue("url", manufacturerData.manu_url || "");
-          setValue("supportUrl", manufacturerData.support_url || "");
-          setValue("supportPhone", manufacturerData.support_phone || "");
-          setValue("supportEmail", manufacturerData.support_email || "");
-          setValue("notes", manufacturerData.notes || "");
-          if (manufacturerData.logo) {
-            setPreviewImage(`${contextServiceUrl}${manufacturerData.logo}`);
-            setSelectedImage(null);
-          }
-        }
-      } catch (error) {
-        console.error("Error initializing:", error);
-        setErrorMessage("Failed to initialize form data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    initialize();
-  }, [id, setValue]);
-
-  const handleImageSelection = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage(
-          "Image size exceeds 5MB. Please choose a smaller file."
-        );
-        setTimeout(() => setErrorMessage(""), 5000);
+  const handleFileSelection = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      if (e.target.files[0].size > 10 * 1024 * 1024) {
+        alert("File size must be less than 10MB");
         e.target.value = "";
         return;
       }
-      if (!file.type.startsWith("image/")) {
-        setErrorMessage("Please select a valid image file (e.g., PNG, JPEG).");
-        setTimeout(() => setErrorMessage(""), 5000);
-        e.target.value = "";
-        return;
-      }
-
-      setSelectedImage(file);
-      setValue("logo", file);
-      setRemoveImage(false);
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+      setAttachmentFile(e.target.files[0]);
     }
   };
 
-  const onSubmit = async (data) => {
-    try {
-      // Duplicate name check for creation
-      if (!id) {
-        const existingManufacturers =
-          await contextsService.fetchAllManufacturerNames();
-        if (!existingManufacturers) {
-          throw new Error(
-            "Failed to fetch manufacturer names for duplicate check"
-          );
-        }
-        const isDuplicate = existingManufacturers.manufacturers.some(
-          (manufacturer) =>
-            manufacturer.name.toLowerCase() ===
-            data.manufacturerName.toLowerCase()
-        );
-        if (isDuplicate) {
-          setErrorMessage(
-            "A manufacturer with this name already exists. Please use a different name."
-          );
-          setTimeout(() => setErrorMessage(""), 5000);
-          return;
-        }
-      }
-
-      const formData = new FormData();
-      formData.append("name", data.manufacturerName);
-      formData.append("manu_url", data.url || "");
-      formData.append("support_url", data.supportUrl || "");
-      formData.append("support_phone", data.supportPhone || "");
-      formData.append("support_email", data.supportEmail || "");
-      formData.append("notes", data.notes || "");
-
-      if (selectedImage) {
-        formData.append("logo", selectedImage);
-      }
-
-      if (removeImage) {
-        formData.append("remove_logo", "true");
-        console.log("Removing logo: remove_logo flag set to true");
-      }
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Form data before submission:");
-        for (let pair of formData.entries()) {
-          console.log(`${pair[0]}: ${pair[1]}`);
-        }
-      }
-
-      let result;
-      if (id) {
-        result = await contextsService.updateManufacturer(id, formData);
-      } else {
-        result = await contextsService.createManufacturer(formData);
-      }
-
-      if (!result) {
-        throw new Error(`Failed to ${id ? "update" : "create"} manufacturer.`);
-      }
-
-      console.log(`${id ? "Updated" : "Created"} manufacturer:`, result);
-      navigate("/More/ViewManufacturer", {
-        state: {
-          successMessage: `Manufacturer has been ${
-            id ? "updated" : "created"
-          } successfully!`,
-        },
-      });
-    } catch (error) {
-      console.error(
-        `Error ${id ? "updating" : "creating"} manufacturer:`,
-        error
-      );
-      setErrorMessage(
-        error.message.includes("Failed to create manufacturer")
-          ? "Failed to create manufacturer. Please check the server configuration or endpoint."
-          : error.message ||
-              `An error occurred while ${
-                id ? "updating" : "creating"
-              } the manufacturer`
-      );
-      setTimeout(() => setErrorMessage(""), 5000);
-    }
+  const onSubmit = (data) => {
+    console.log("Form submitted:", data, attachmentFile);
+    navigate("/Repairs");
   };
-
-  if (isLoading) {
-    return <SystemLoading />;
-  }
 
   return (
     <>
-      {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav>
         <NavBar />
       </nav>
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="Manufacturers"
-            currentPage={id ? "Edit Manufacturer" : "New Manufacturer"}
-            rootNavigatePage="/More/ViewManufacturer"
-            title={id ? "Edit Manufacturer" : "New Manufacturer"}
+            root="Repairs"
+            currentPage="New Repair"
+            rootNavigatePage="/Repairs"
+            title="New Repair"
           />
         </section>
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Asset */}
             <fieldset>
-              <label htmlFor="manufacturerName">Manufacturer Name *</label>
+              <label htmlFor="asset">Asset *</label>
+              <select
+                className={errors.asset ? "input-error" : ""}
+                {...register("asset", {
+                  required: "Asset is required",
+                })}
+              >
+                <option value="">Select Type</option>
+                <option value="Iphone 16 Pro Max">Hardware</option>
+                <option value="Ideapad 3">Software</option>
+                <option value="Google Pixelbook 2">Other</option>
+              </select>
+              {errors.repairType && (
+                <span className="error-message">
+                  {errors.asset.message}
+                </span>
+              )}
+            </fieldset>
+
+            {/* Supplier */}
+            <fieldset>
+              <label htmlFor="supplier">Supplier</label>
+              <select
+                className={errors.supplier ? "input-error" : ""}
+                {...register("supplier")}
+              >
+                <option value="">Select Type</option>
+                <option value="Apple">Hardware</option>
+                <option value="Lenovo">Software</option>
+                <option value="Google">Other</option>
+              </select>
+            </fieldset>
+
+            {/* Repair Type */}
+            <fieldset>
+              <label htmlFor="repairType">Repair Type*</label>
+              <select
+                className={errors.repairType ? "input-error" : ""}
+                {...register("repairType", {
+                  required: "Repair type is required",
+                })}
+              >
+                <option value="">Select Type</option>
+                <option value="hardware">Hardware</option>
+                <option value="software">Software</option>
+                <option value="other">Other</option>
+              </select>
+              {errors.repairType && (
+                <span className="error-message">
+                  {errors.repairType.message}
+                </span>
+              )}
+            </fieldset>
+
+            {/* Repair Name */}
+            <fieldset>
+              <label htmlFor="repairName">Repair Name*</label>
               <input
                 type="text"
-                placeholder="Manufacturer Name"
+                placeholder="Enter repair name"
                 maxLength="100"
-                className={errors.manufacturerName ? "input-error" : ""}
-                {...register("manufacturerName", {
-                  required: "Manufacturer Name is required",
+                className={errors.repairName ? "input-error" : ""}
+                {...register("repairName", {
+                  required: "Repair name is required",
                 })}
               />
-              {errors.manufacturerName && (
+              {errors.repairName && (
                 <span className="error-message">
-                  {errors.manufacturerName.message}
+                  {errors.repairName.message}
                 </span>
               )}
             </fieldset>
 
+            {/* Start Date */}
             <fieldset>
-              <label htmlFor="url">URL</label>
+              <label htmlFor="startDate">Start Date*</label>
               <input
-                type="url"
-                placeholder="URL"
-                className={errors.url ? "input-error" : ""}
-                {...register("url", {
-                  pattern: {
-                    value: /^(https?:\/\/).+/i,
-                    message: "URL must start with http:// or https://",
-                  },
+                type="date"
+                className={errors.startDate ? "input-error" : ""}
+                {...register("startDate", {
+                  required: "Start date is required",
                 })}
               />
-              {errors.url && (
-                <span className="error-message">{errors.url.message}</span>
+              {errors.startDate && (
+                <span className="error-message">{errors.startDate.message}</span>
               )}
             </fieldset>
 
+            {/* End Date (Optional) */}
             <fieldset>
-              <label htmlFor="supportUrl">Support URL</label>
+              <label htmlFor="endDate">End Date</label>
               <input
-                type="url"
-                placeholder="Support URL"
-                className={errors.supportUrl ? "input-error" : ""}
-                {...register("supportUrl", {
-                  pattern: {
-                    value: /^(https?:\/\/).+/i,
-                    message: "Support URL must start with http:// or https://",
+                type="date"
+                {...register("endDate", {
+                  validate: (value, formValues) => {
+                    if (value && formValues.startDate && value < formValues.startDate) {
+                      return "End date cannot be earlier than start date";
+                    }
+                    return true;
                   },
                 })}
+                min={watch("startDate") || ""}
               />
-              {errors.supportUrl && (
-                <span className="error-message">
-                  {errors.supportUrl.message}
-                </span>
+              {errors.endDate && (
+                <span className="error-message">{errors.endDate.message}</span>
               )}
             </fieldset>
 
-            <fieldset>
-              <label htmlFor="supportPhone">Phone Number</label>
-              <input
-                type="tel"
-                placeholder="Phone Number"
-                {...register("supportPhone")}
-              />
-            </fieldset>
+            {/* Cost */}
+            <div className="form-field">
+                <label htmlFor="cost">Cost *</label>
+                <div className="cost-input">
+                  <span className="currency">PHP</span>
+                  <input
+                    type="number"
+                    name="cost"
+                    id="cost"
+                    step="0.01"
+                    defaultValue={null}
+                    onInput={(e) => {
+                      // Prevent entering more than 2 decimal places
+                      const value = e.target.value;
+                      const parts = value.split(".");
+                      if (parts[1] && parts[1].length > 2) {
+                        e.target.value =
+                          parts[0] + "." + parts[1].substring(0, 2);
+                      }
+                    }}
+                    {...register("cost", {
+                      valueAsNumber: true,
+                      min: {
+                        value: 0,
+                        message: "Cost must be a non-negative number",
+                      },
+                      required: "Cost is required",
+                    })}
+                  />
+                </div>
 
-            <fieldset>
-              <label htmlFor="supportEmail">Email</label>
-              <input
-                type="email"
-                placeholder="Email"
-                {...register("supportEmail")}
-              />
-            </fieldset>
+                {errors.cost && (
+                  <span className="error-message">{errors.cost.message}</span>
+                )}
+              </div>
 
+            {/* Notes */}
             <fieldset>
               <label htmlFor="notes">Notes</label>
               <textarea
-                placeholder="Notes"
-                rows="4"
-                maxLength="500"
+                placeholder="Enter notes"
                 {...register("notes")}
-              />
+                rows="3"
+              ></textarea>
             </fieldset>
 
-            <fieldset>
-              <label htmlFor="logo">Logo</label>
-              <div>
-                {previewImage && (
-                  <div className="image-selected">
-                    <img src={previewImage} alt="Selected logo" />
+            {/* Attachments */}
+            <div className="form-field">
+              <label>Attachments</label>
+              <div className="attachments-container">
+                <button
+                  className="choose-file-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById("attachment").click();
+                  }}
+                >
+                  Choose File
+                </button>
+                <Controller
+                  name="attachment"
+                  control={control}
+                  rules={{
+                    validate: (value) => {
+                      if (
+                        value &&
+                        value[0] &&
+                        value[0].size > 10 * 1024 * 1024
+                      ) {
+                        return "File size must be less than 10MB";
+                      }
+                      return true;
+                    },
+                  }}
+                  render={({ field: { onChange, ...field } }) => (
+                    <input
+                      type="file"
+                      id="attachment"
+                      style={{ display: "none" }}
+                      accept=".pdf, .docx, .xlsx, .jpg, .jpeg, .png"
+                      onChange={(e) => {
+                        onChange(e.target.files);
+                        handleFileSelection(e);
+                      }}
+                      {...field}
+                    />
+                  )}
+                />
+                {attachmentFile ? (
+                  <div className="file-selected">
+                    <p>{attachmentFile.name}</p>
                     <button
-                      type="button"
-                      onClick={() => {
-                        setPreviewImage(null);
-                        setSelectedImage(null);
-                        setValue("logo", null);
-                        document.getElementById("logo").value = "";
-                        setRemoveImage(true);
-                        console.log("Remove logo flag set to:", true);
+                      className="remove-file-btn"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setAttachmentFile(null);
+                        document.getElementById("attachment").value = "";
                       }}
                     >
-                      <img src={CloseIcon} alt="Remove" />
+                      <img
+                        src={CloseIcon}
+                        alt="Remove file"
+                        style={{ background: "red" }}
+                      />
                     </button>
                   </div>
+                ) : (
+                  <span className="no-file">No file chosen</span>
                 )}
-                <label htmlFor="logo" className="upload-image-btn">
-                  {previewImage ? "Change Logo" : "Choose Logo"}
-                  <input
-                    type="file"
-                    id="logo"
-                    accept="image/*"
-                    onChange={handleImageSelection}
-                    style={{ display: "none" }}
-                  />
-                </label>
-                <small className="file-size-info">
-                  Maximum file size must be 5MB
-                </small>
-              </div>
-            </fieldset>
 
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={!isValid}
-            >
+                {errors.attachment && (
+                  <span className="error-message">
+                    {errors.attachment.message}
+                  </span>
+                )}
+
+                {!attachmentFile && !errors.attachment && (
+                  <p className="file-size-limit">
+                    Maximum file size must be 10MB
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid}>
               Save
             </button>
           </form>
