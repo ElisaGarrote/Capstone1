@@ -2,14 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
-import "../../styles/CategoryRegistration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
 
 const RepairRegistration = () => {
   const navigate = useNavigate();
-  const [attachmentFile, setAttachmentFile] = useState(null);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
 
   const {
     register,
@@ -22,15 +21,24 @@ const RepairRegistration = () => {
   });
 
   const handleFileSelection = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      if (e.target.files[0].size > 10 * 1024 * 1024) {
-        alert("File size must be less than 10MB");
-        e.target.value = "";
-        return;
+    const files = Array.from(e.target.files);
+    const maxSize = 5 * 1024 * 1024;
+
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 5MB and was not added.`);
+        return false;
       }
-      setAttachmentFile(e.target.files[0]);
-    }
+      return true;
+    });
+
+    setAttachmentFiles(prev => [...prev, ...validFiles]);
   };
+
+  const removeFile = (index) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
 
   const onSubmit = (data) => {
     console.log("Form submitted:", data, attachmentFile);
@@ -164,40 +172,20 @@ const RepairRegistration = () => {
             </fieldset>
 
             {/* Cost */}
-            <div className="form-field">
-                <label htmlFor="cost">Cost *</label>
-                <div className="cost-input">
-                  <span className="currency">PHP</span>
-                  <input
-                    type="number"
-                    name="cost"
-                    id="cost"
-                    step="0.01"
-                    defaultValue={null}
-                    onInput={(e) => {
-                      // Prevent entering more than 2 decimal places
-                      const value = e.target.value;
-                      const parts = value.split(".");
-                      if (parts[1] && parts[1].length > 2) {
-                        e.target.value =
-                          parts[0] + "." + parts[1].substring(0, 2);
-                      }
-                    }}
-                    {...register("cost", {
-                      valueAsNumber: true,
-                      min: {
-                        value: 0,
-                        message: "Cost must be a non-negative number",
-                      },
-                      required: "Cost is required",
-                    })}
-                  />
-                </div>
-
-                {errors.cost && (
-                  <span className="error-message">{errors.cost.message}</span>
-                )}
-              </div>
+            <fieldset className="cost-field">
+            <label htmlFor="cost">Cost</label>
+            <div className="cost-input-group">
+              <span className="cost-addon">PHP</span>
+              <input
+                type="number"
+                id="cost"
+                name="cost"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </fieldset>
 
             {/* Notes */}
             <fieldset>
@@ -210,82 +198,41 @@ const RepairRegistration = () => {
             </fieldset>
 
             {/* Attachments */}
-            <div className="form-field">
-              <label>Attachments</label>
-              <div className="attachments-container">
-                <button
-                  className="choose-file-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById("attachment").click();
-                  }}
-                >
-                  Choose File
-                </button>
-                <Controller
-                  name="attachment"
-                  control={control}
-                  rules={{
-                    validate: (value) => {
-                      if (
-                        value &&
-                        value[0] &&
-                        value[0].size > 10 * 1024 * 1024
-                      ) {
-                        return "File size must be less than 10MB";
-                      }
-                      return true;
-                    },
-                  }}
-                  render={({ field: { onChange, ...field } }) => (
+            <fieldset>
+              <label htmlFor="attachments">Attachments</label>
+
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="attachments" className="upload-image-btn">
+                    Choose File
                     <input
                       type="file"
-                      id="attachment"
+                      id="attachments"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileSelection}
                       style={{ display: "none" }}
-                      accept=".pdf, .docx, .xlsx, .jpg, .jpeg, .png"
-                      onChange={(e) => {
-                        onChange(e.target.files);
-                        handleFileSelection(e);
-                      }}
-                      {...field}
+                      multiple
                     />
-                  )}
-                />
-                {attachmentFile ? (
-                  <div className="file-selected">
-                    <p>{attachmentFile.name}</p>
-                    <button
-                      className="remove-file-btn"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setAttachmentFile(null);
-                        document.getElementById("attachment").value = "";
-                      }}
-                    >
-                      <img
-                        src={CloseIcon}
-                        alt="Remove file"
-                        style={{ background: "red" }}
-                      />
-                    </button>
-                  </div>
-                ) : (
-                  <span className="no-file">No file chosen</span>
-                )}
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
+                </div>
 
-                {errors.attachment && (
-                  <span className="error-message">
-                    {errors.attachment.message}
-                  </span>
-                )}
-
-                {!attachmentFile && !errors.attachment && (
-                  <p className="file-size-limit">
-                    Maximum file size must be 10MB
-                  </p>
-                )}
+                {/* Right column: Uploaded files */}
+                <div className="upload-right">
+                  {attachmentFiles.map((file, index) => (
+                    <div className="file-uploaded" key={index}>
+                      <span title={file.name}>{file.name}</span>
+                      <button type="button" onClick={() => removeFile(index)}>
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </fieldset>
 
             {/* Submit */}
             <button type="submit" className="primary-button" disabled={!isValid}>

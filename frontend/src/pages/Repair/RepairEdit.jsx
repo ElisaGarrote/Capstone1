@@ -1,305 +1,306 @@
-import NavBar from "../../components/NavBar"
-import "../../styles/MaintenanceRegistration.css"
-import { useNavigate, useParams } from "react-router-dom";
-import CloseIcon from "../../assets/icons/close.svg"
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import "../../styles/Registration.css";
+import "../../styles/CategoryRegistration.css";
+import TopSecFormPage from "../../components/TopSecFormPage";
+import { useForm, Controller } from "react-hook-form";
+import CloseIcon from "../../assets/icons/close.svg";
 
-export default function RepariEdit() {
-    const navigate = useNavigate();
-    const { id } = useParams();
-    const currentDate = new Date().toISOString().split("T")[0];
-    const [attachmentFile, setAttachmentFile] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [maintenanceData, setMaintenanceData] = useState({
-        assetId: "",
-        assetName: "",
-        supplier: "",
-        maintenanceType: "",
-        maintenanceName: "",
-        startDate: "",
-        endDate: "",
-        cost: "",
-        notes: "",
-        attachmentName: ""
-    });
+const RepairEdit = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const repairData = location.state; // Passed from navigate
 
-    // Simulate fetching maintenance details
-    useEffect(() => {
-        // In a real app, this would be an API call
-        setTimeout(() => {
-            // Mock data for demonstration - this would be fetched from API based on id
-            const mockData = {
-                assetId: "100002",
-                assetName: "iPhone 16 Pro Max",
-                supplier: "Newegg",
-                maintenanceType: "Hardware",
-                maintenanceName: "Serviced battery",
-                startDate: "2025-04-20",
-                endDate: "2025-04-25",
-                cost: "150.00",
-                notes: "Replaced battery due to reduced capacity. Battery health was at 78%.",
-                attachmentName: "battery_replacement_receipt.pdf"
-            };
+  const [attachmentFile, setAttachmentFile] = useState(null);
 
-            setMaintenanceData(mockData);
-            if (mockData.attachmentName) {
-                setAttachmentFile({ name: mockData.attachmentName });
-            }
-            setIsLoading(false);
-        }, 500); // Simulate loading delay
-    }, [id]);
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    formState: { errors, isValid },
+  } = useForm({
+    mode: "all",
+    defaultValues: {
+      asset: "",
+      supplier: "",
+      repairType: "",
+      repairName: "",
+      startDate: "",
+      endDate: "",
+      cost: "",
+      notes: "",
+    },
+  });
 
-    const handleFileSelection = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            setAttachmentFile(file);
-        } else {
-            setAttachmentFile(null);
-        }
+  // Populate form with existing values
+  useEffect(() => {
+    if (repairData) {
+      reset({
+        asset: repairData.asset || "",
+        supplier: repairData.supplier || "",
+        repairType: repairData.repairType || "",
+        repairName: repairData.repairName || "",
+        startDate: repairData.startDate || "",
+        endDate: repairData.endDate || "",
+        cost: repairData.cost || "",
+        notes: repairData.notes || "",
+      });
+      if (repairData.attachment) {
+        // If you store file metadata, keep name
+        setAttachmentFile({ name: repairData.attachment });
+      }
     }
+  }, [repairData, reset]);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setMaintenanceData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+  const handleFileSelection = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      if (e.target.files[0].size > 10 * 1024 * 1024) {
+        alert("File size must be less than 10MB");
+        e.target.value = "";
+        return;
+      }
+      setAttachmentFile(e.target.files[0]);
     }
+  };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        // Here you would send the updated data to your API
-        console.log("Submitting updated maintenance data:", maintenanceData);
-        // Navigate back after successful update
-        navigate('/dashboard/Repair/Maintenance');
-    }
+  const onSubmit = (data) => {
+    console.log("Edited repair submitted:", data, attachmentFile);
 
-    const handleDelete = () => {
-        if (window.confirm("Are you sure you want to delete this maintenance record?")) {
-            // Delete logic would go here (API call in real app)
-            console.log("Deleting maintenance record:", id);
-            navigate('/dashboard/Repair/Maintenance');
-        }
-    }
+    // Call API to update repair (PATCH/PUT)
+    // fetch(`/api/repairs/${repairData.id}`, { method: "PATCH", body: ... })
 
-    if (isLoading) {
-        return (
-            <div className="maintenance-page-container">
-                <NavBar />
-                <div className="maintenance-page-content">
-                    <div className="loading-spinner">Loading...</div>
-                </div>
+    navigate("/Repairs");
+  };
+
+  return (
+    <>
+      <nav>
+        <NavBar />
+      </nav>
+      <main className="registration">
+        <section className="top">
+          <TopSecFormPage
+            root="Repairs"
+            currentPage="Edit Repair"
+            rootNavigatePage="/Repairs"
+            title="Edit Repair"
+          />
+        </section>
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Asset */}
+            <fieldset>
+              <label htmlFor="asset">Asset *</label>
+              <select
+                className={errors.asset ? "input-error" : ""}
+                {...register("asset", { required: "Asset is required" })}
+              >
+                <option value="">Select Type</option>
+                <option value="Iphone 16 Pro Max">Hardware</option>
+                <option value="Ideapad 3">Software</option>
+                <option value="Google Pixelbook 2">Other</option>
+              </select>
+              {errors.asset && (
+                <span className="error-message">{errors.asset.message}</span>
+              )}
+            </fieldset>
+
+            {/* Supplier */}
+            <fieldset>
+              <label htmlFor="supplier">Supplier</label>
+              <select
+                className={errors.supplier ? "input-error" : ""}
+                {...register("supplier")}
+              >
+                <option value="">Select Type</option>
+                <option value="Apple">Hardware</option>
+                <option value="Lenovo">Software</option>
+                <option value="Google">Other</option>
+              </select>
+            </fieldset>
+
+            {/* Repair Type */}
+            <fieldset>
+              <label htmlFor="repairType">Repair Type*</label>
+              <select
+                className={errors.repairType ? "input-error" : ""}
+                {...register("repairType", {
+                  required: "Repair type is required",
+                })}
+              >
+                <option value="">Select Type</option>
+                <option value="hardware">Hardware</option>
+                <option value="software">Software</option>
+                <option value="other">Other</option>
+              </select>
+              {errors.repairType && (
+                <span className="error-message">
+                  {errors.repairType.message}
+                </span>
+              )}
+            </fieldset>
+
+            {/* Repair Name */}
+            <fieldset>
+              <label htmlFor="repairName">Repair Name*</label>
+              <input
+                type="text"
+                placeholder="Enter repair name"
+                maxLength="100"
+                className={errors.repairName ? "input-error" : ""}
+                {...register("repairName", {
+                  required: "Repair name is required",
+                })}
+              />
+              {errors.repairName && (
+                <span className="error-message">
+                  {errors.repairName.message}
+                </span>
+              )}
+            </fieldset>
+
+            {/* Start Date */}
+            <fieldset>
+              <label htmlFor="startDate">Start Date*</label>
+              <input
+                type="date"
+                className={errors.startDate ? "input-error" : ""}
+                {...register("startDate", {
+                  required: "Start date is required",
+                })}
+              />
+              {errors.startDate && (
+                <span className="error-message">
+                  {errors.startDate.message}
+                </span>
+              )}
+            </fieldset>
+
+            {/* End Date (Optional) */}
+            <fieldset>
+              <label htmlFor="endDate">End Date</label>
+              <input
+                type="date"
+                {...register("endDate", {
+                  validate: (value, formValues) => {
+                    if (
+                      value &&
+                      formValues.startDate &&
+                      value < formValues.startDate
+                    ) {
+                      return "End date cannot be earlier than start date";
+                    }
+                    return true;
+                  },
+                })}
+                min={watch("startDate") || ""}
+              />
+              {errors.endDate && (
+                <span className="error-message">
+                  {errors.endDate.message}
+                </span>
+              )}
+            </fieldset>
+
+            {/* Cost */}
+            <div className="form-field">
+              <label htmlFor="cost">Cost *</label>
+              <div className="cost-input">
+                <span className="currency">PHP</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  {...register("cost", {
+                    valueAsNumber: true,
+                    min: {
+                      value: 0,
+                      message: "Cost must be a non-negative number",
+                    },
+                    required: "Cost is required",
+                  })}
+                />
+              </div>
+              {errors.cost && (
+                <span className="error-message">{errors.cost.message}</span>
+              )}
             </div>
-        );
-    }
 
-    return (
-        <div className="maintenance-page-container">
-            <NavBar />
+            {/* Notes */}
+            <fieldset>
+              <label htmlFor="notes">Notes</label>
+              <textarea
+                placeholder="Enter notes"
+                {...register("notes")}
+                rows="3"
+              ></textarea>
+            </fieldset>
 
-            <div className="maintenance-page-content">
-                <div className="breadcrumb">
-                    <span className="root-link" onClick={() => navigate('/dashboard/Repair/Maintenance')}>Asset Repairs</span>
-                    <span className="separator"> / </span>
-                    <span className="current-page">Edit Repair</span>
-                </div>
-
-                <div className="page-header">
-                    <h1 className="page-title">{maintenanceData.maintenanceName}</h1>
-                    <button className="delete-btn" onClick={handleDelete}>
-                        <i className="fa fa-trash"></i> Delete
+            {/* Attachments */}
+            <div className="form-field">
+              <label>Attachments</label>
+              <div className="attachments-container">
+                <button
+                  className="choose-file-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById("attachment").click();
+                  }}
+                >
+                  Choose File
+                </button>
+                <Controller
+                  name="attachment"
+                  control={control}
+                  render={({ field: { onChange, ...field } }) => (
+                    <input
+                      type="file"
+                      id="attachment"
+                      style={{ display: "none" }}
+                      accept=".pdf, .docx, .xlsx, .jpg, .jpeg, .png"
+                      onChange={(e) => {
+                        onChange(e.target.files);
+                        handleFileSelection(e);
+                      }}
+                      {...field}
+                    />
+                  )}
+                />
+                {attachmentFile ? (
+                  <div className="file-selected">
+                    <p>{attachmentFile.name}</p>
+                    <button
+                      className="remove-file-btn"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setAttachmentFile(null);
+                        document.getElementById("attachment").value = "";
+                      }}
+                    >
+                      <img
+                        src={CloseIcon}
+                        alt="Remove file"
+                        style={{ background: "red" }}
+                      />
                     </button>
-                </div>
-
-                <div className="form-container">
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-field">
-                            <label htmlFor="asset">Asset <span className="required">*</span></label>
-                            <div className="selected-field">
-                                <span>{maintenanceData.assetId} - {maintenanceData.assetName}</span>
-                                <button type="button" className="clear-selection" onClick={() => {
-                                    setMaintenanceData(prev => ({
-                                        ...prev,
-                                        assetId: "",
-                                        assetName: ""
-                                    }));
-                                }}>×</button>
-                            </div>
-                        </div>
-
-                        <div className="form-field">
-                            <label htmlFor="supplier">Supplier</label>
-                            <div className="selected-field">
-                                <span>{maintenanceData.supplier}</span>
-                                <button type="button" className="clear-selection" onClick={() => {
-                                    setMaintenanceData(prev => ({
-                                        ...prev,
-                                        supplier: ""
-                                    }));
-                                }}>×</button>
-                            </div>
-                        </div>
-
-                        <div className="form-field">
-                            <label htmlFor="maintenanceType">Repair Type <span className="required">*</span></label>
-                            <div className="select-wrapper">
-                                <select
-                                    name="maintenanceType"
-                                    id="maintenanceType"
-                                    required
-                                    className="form-input"
-                                    value={maintenanceData.maintenanceType}
-                                    onChange={handleInputChange}
-                                >
-                                    <option value="">Select Repair Type</option>
-                                    <option value="Hardware">Hardware</option>
-                                    <option value="Software">Software</option>
-                                    <option value="Inspection">Inspection</option>
-                                    <option value="Calibration">Calibration</option>
-                                    <option value="Cleaning">Cleaning</option>
-                                </select>
-                                <span className="dropdown-arrow"></span>
-                            </div>
-                        </div>
-
-                        <div className="form-field">
-                            <label htmlFor="maintenanceName">Repair Name <span className="required">*</span></label>
-                            <input
-                                type="text"
-                                name="maintenanceName"
-                                id="maintenanceName"
-                                placeholder="Repair Name"
-                                maxLength="100"
-                                required
-                                className="form-input"
-                                value={maintenanceData.maintenanceName}
-                                onChange={handleInputChange}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label htmlFor="startDate">Start Date <span className="required">*</span></label>
-                            <div className="date-picker-wrapper">
-                                <input
-                                    type="date"
-                                    name="startDate"
-                                    id="startDate"
-                                    required
-                                    className="form-input"
-                                    value={maintenanceData.startDate}
-                                    onChange={handleInputChange}
-                                />
-                                <span className="calendar-icon"></span>
-                            </div>
-                        </div>
-
-                        <div className="form-field">
-                            <label htmlFor="endDate">End Date</label>
-                            <div className="date-picker-wrapper">
-                                <input
-                                    type="date"
-                                    name="endDate"
-                                    id="endDate"
-                                    className="form-input"
-                                    value={maintenanceData.endDate}
-                                    onChange={handleInputChange}
-                                />
-                                <span className="calendar-icon"></span>
-                            </div>
-                        </div>
-
-                        <div className="form-field">
-                            <label htmlFor="cost">Cost</label>
-                            <div className="cost-input">
-                                <span className="currency">PHP</span>
-                                <input
-                                    type="text"
-                                    name="cost"
-                                    id="cost"
-                                    pattern="[0-9]*\.?[0-9]*"
-                                    placeholder="0.00"
-                                    className="form-input"
-                                    value={maintenanceData.cost}
-                                    onChange={(e) => {
-                                        // Allow only numbers and a single decimal point
-                                        const value = e.target.value.replace(/[^0-9.]/g, '');
-                                        const decimalCount = (value.match(/\./g) || []).length;
-                                        if (decimalCount <= 1) {
-                                            setMaintenanceData(prev => ({
-                                                ...prev,
-                                                cost: value
-                                            }));
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="form-field">
-                            <label htmlFor="notes">Notes</label>
-                            <textarea
-                                name="notes"
-                                id="notes"
-                                maxLength="500"
-                                rows="6"
-                                className="form-input"
-                                value={maintenanceData.notes}
-                                onChange={handleInputChange}
-                            ></textarea>
-                        </div>
-
-                        <div className="form-field">
-                            <label>Attachments</label>
-                            <div className="attachments-container">
-                                <div className="file-upload-area">
-                                    <button className="choose-file-btn" onClick={(e) => {
-                                        e.preventDefault();
-                                        document.getElementById("attachment").click();
-                                    }}>
-                                        Choose File
-                                    </button>
-                                    <input
-                                        type="file"
-                                        name="attachment"
-                                        id="attachment"
-                                        onChange={handleFileSelection}
-                                        style={{ display: "none" }}
-                                    />
-                                    <p className="file-size-limit">Maximum file size must be 5MB</p>
-                                </div>
-
-                                {attachmentFile ? (
-                                    <div className="file-selected">
-                                        <p className="file-name">{attachmentFile.name}</p>
-                                        <button
-                                            className="remove-file-btn"
-                                            onClick={(event) => {
-                                                event.preventDefault();
-                                                setAttachmentFile(null);
-                                                document.getElementById("attachment").value = "";
-                                                setMaintenanceData(prev => ({
-                                                    ...prev,
-                                                    attachmentName: ""
-                                                }));
-                                            }}
-                                        >
-                                            <img src={CloseIcon} alt="Remove file" />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <p className="no-file">No file chosen</p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="form-actions">
-                            <button type="submit" className="save-btn">
-                                Save
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                  </div>
+                ) : (
+                  <span className="no-file">No file chosen</span>
+                )}
+              </div>
             </div>
-        </div>
-    );
-}
+
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid}>
+              Update
+            </button>
+          </form>
+        </section>
+      </main>
+    </>
+  );
+};
+
+export default RepairEdit;
