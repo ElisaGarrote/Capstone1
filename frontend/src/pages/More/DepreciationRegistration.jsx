@@ -8,7 +8,6 @@ import CloseIcon from "../../assets/icons/close.svg";
 
 const DepraciationRegistration = () => {
   const navigate = useNavigate();
-  const [attachmentFiles, setAttachmentFiles] = useState([]);
 
   const {
     register,
@@ -20,29 +19,10 @@ const DepraciationRegistration = () => {
     mode: "all",
   });
 
-  const handleFileSelection = (e) => {
-    const files = Array.from(e.target.files);
-    const maxSize = 5 * 1024 * 1024;
-
-    const validFiles = files.filter(file => {
-      if (file.size > maxSize) {
-        alert(`${file.name} is larger than 5MB and was not added.`);
-        return false;
-      }
-      return true;
-    });
-
-    setAttachmentFiles(prev => [...prev, ...validFiles]);
-  };
-
-  const removeFile = (index) => {
-    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
 
   const onSubmit = (data) => {
-    console.log("Form submitted:", data, attachmentFile);
-    navigate("/Repairs");
+    console.log("Form submitted:", data);
+    navigate("/More/Depreciations");
   };
 
   return (
@@ -53,7 +33,7 @@ const DepraciationRegistration = () => {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="Repairs"
+            root="More / Depreciations"
             currentPage="New Depreciation"
             rootNavigatePage="/More/Depreciations"
             title="New Depreciation"
@@ -107,20 +87,20 @@ const DepraciationRegistration = () => {
               <label htmlFor="minimumValue">Minimum Value *</label>
               <input
                 type="number"
-                id="minimum_value"
+                id="minimumValue"
                 placeholder="Enter  minimum value"
                 min="1"
                 step="1"
-                {...register("minimum_value", {
+                {...register("minimumValue", {
                   required: "Minimum value is required",
                   valueAsNumber: true,
                   validate: (value) =>
                     Number.isInteger(value) && value > 0 || "Must be a positive integer",
                 })}
-                className={errors.minimum_value ? "input-error" : ""}
+                className={errors.minimumValue ? "input-error" : ""}
               />
-              {errors.minimum_value && (
-                <span className="error-message">{errors.minimum_value.message}</span>
+              {errors.minimumValue && (
+                <span className="error-message">{errors.minimumValue.message}</span>
               )}
             </fieldset>
 

@@ -41,7 +41,7 @@ const RepairRegistration = () => {
 
 
   const onSubmit = (data) => {
-    console.log("Form submitted:", data, attachmentFile);
+    console.log("Form submitted:", data, attachmentFiles);
     navigate("/Repairs");
   };
 
