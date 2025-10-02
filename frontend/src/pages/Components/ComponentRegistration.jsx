@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
@@ -39,6 +39,14 @@ const ComponentRegistration = () => {
       notes: editState?.notes || "",
     },
   });
+
+  useEffect(() => {
+    if (isEdit) {
+      setValue("name", editState.name || "");
+      setValue("duration", editState.duration || "");
+      setValue("minimumValue", editState.minimumValue || "");
+    }
+  }, [editState, isEdit, setValue]);
   
   const categories = Array.from(new Set(MockupData.map((item) => item.category)));
   const manufacturers = Array.from(new Set(MockupData.map((item) => item.manufacturer)));
@@ -185,6 +193,7 @@ const ComponentRegistration = () => {
                   placeholder="0.00"
                   min="0"
                   step="0.01"
+                  {...register("purchaseCost", { valueAsNumber: true })}
                 />
               </div>
             </fieldset>

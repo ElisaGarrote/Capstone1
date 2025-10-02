@@ -36,7 +36,6 @@ import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
 import Repairs from "./pages/Repair/Repairs";
 import RepairRegistration from "./pages/Repair/RepairRegistration";
-import RepairEdit from "./pages/Repair/RepairEdit";
 import Consumables from "./pages/Consumables/Consumables";
 import ConsumablesRegistration from "./pages/Consumables/ConsumablesRegistration";
 import PasswordResetRequest from "./pages/PasswordResetRequest";
@@ -68,7 +67,6 @@ import StatusEdit from "./pages/More/StatusEdit";
 import StatusDetails from "./pages/More/StatusDetails";
 import Depreciations from "./pages/More/Depreciations";
 import DepreciationRegistration from "./pages/More/DepreciationRegistration";
-import DepreciationEdit from "./pages/More/DepreciationEdit";
 import RecycleBin from "./pages/More/RecycleBin";
 
 function Logout() {
@@ -174,7 +172,7 @@ function App() {
           />
           <Route
             path="/more/depreciations/edit/:id"
-            element={<DepreciationEdit />}
+            element={<DepreciationRegistration />}
           />
           <Route
             path="/more/recycle-bin"
@@ -224,7 +222,7 @@ function App() {
           />
           <Route
             path="/repairs/edit/:id"
-            element={<RepairEdit />}
+            element={<RepairRegistration />}
           />
           <Route path="/audits/" element={<AssetAudits />} />
           <Route path="/audits/overdue" element={<OverdueAudits />} />

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
@@ -8,17 +8,33 @@ import CloseIcon from "../../assets/icons/close.svg";
 
 const DepraciationRegistration = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editState = location.state?.depreciation || null;
+  const isEdit = !!editState;
 
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     watch,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
+    defaultValues: {
+      name: editState?.name || "",
+      duration: editState?.duration || "",
+      minimumValue: editState?.minimum_value || "",
+    },
   });
 
+  useEffect(() => {
+    if (editState) {
+      setValue("name", editState.name || "");
+      setValue("duration", editState.duration || "");
+      setValue("minimumValue", editState.minimumValue || "");
+    }
+  }, [editState, setValue]);
 
   const onSubmit = (data) => {
     console.log("Form submitted:", data);
