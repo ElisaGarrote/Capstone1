@@ -1,10 +1,4 @@
-.action-button-section {
-  display: flex;
-  flex-direction: row;   /* Make buttons align horizontally */
-  justify-content: center; /* Optional: center them */
-  align-items: center;
-}
-
+/* Base */
 .action-button {
   display: flex;
   align-items: center;
@@ -15,7 +9,33 @@
   padding: 4px;
 }
 
-/* Recover button aligns left inside its cell */
-.action-button-recover {
+/* Check-In Button (success style) */
+.action-button.action-button-checkin {
+  background-color: var(--success-color) !important;
+}
+
+.action-button.action-button-checkin:hover {
+  background-color: var(--success-color-hover) !important; 
+}
+
+/* Check-Out Button (primary style) */
+.action-button.action-button-checkout {
+  background-color: var(--primary-color) !important;
+}
+
+.action-button.action-button-checkout:hover {
+  background-color: var(--primary-color-hover) !important;
+}
+
+/* Make sure icons inside are white */
+.action-button-checkin i,
+.action-button-checkout i {
+  color: #fff;
+}
+
+/* Aligns left inside its cell */
+.action-button-recover,
+.action-button-checkin,
+.action-button-checkout {
   margin-right: auto;
 }

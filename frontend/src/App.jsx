@@ -25,6 +25,7 @@ import ComponentRegistration from "./pages/Components/ComponentRegistration";
 import ComponentCheckout from "./pages/Components/ComponentCheckout";
 import ComponentCheckedoutList from "./pages/Components/ComponentCheckedoutList";
 import ComponentCheckin from "./pages/Components/ComponentCheckin";
+import ComponentView from "./pages/Components/ComponentView";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
@@ -122,6 +123,10 @@ function App() {
             path="/components/check-in/:id"
             element={<ComponentCheckin />}
           />
+          <Route
+            path="/components/view/:id"
+            element={<ComponentView />}
+          />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
           <Route
@@ -204,6 +209,10 @@ function App() {
           <Route
             path="/components/check-in/:id"
             element={<ComponentCheckin />}
+          />
+          <Route
+            path="/components/view/:id"
+            element={<ComponentView />}
           />
           <Route
             path="/repairs/"

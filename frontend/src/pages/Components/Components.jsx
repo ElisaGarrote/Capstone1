@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
-import RepairFilter from "../../components/FilterPanel";
+import MockupData from "../../data/mockData/components/component-mockup-data.json";
+import PageFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
-import View from "../../components/Modals/View";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import DefaultImage from "../../assets/img/default-image.jpg";
 
 const filterConfig = [
   {
@@ -53,51 +53,57 @@ function TableHeader({ allSelected, onHeaderChange }) {
           onChange={onHeaderChange}
         />
       </th>
-      <th>ASSET</th>
-      <th>TYPE</th>
+      <th>IMAGE</th>
       <th>NAME</th>
-      <th>START DATE</th>
-      <th>END DATE</th>
-      <th>COST</th>
-      <th>STATUS</th>
+      <th>CATEGORY</th>
+      <th>MANUFACTURER</th>
+      <th>DEPRECIATION</th>
+      <th>CHECK-IN / CHECK-OUT</th>
       <th>ACTION</th>
     </tr>
   );
 }
 
 // TableItem
-function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick }) {
   return (
     <tr>
       <td>
         <input
           type="checkbox"
           checked={isSelected}
-          onChange={(e) => onRowChange(repair.id, e.target.checked)}
+          onChange={(e) => onRowChange(item.id, e.target.checked)}
         />
       </td>
-      <td>{repair.asset}</td>
-      <td>{repair.type}</td>
-      <td>{repair.name}</td>
-      <td>{repair.start_date}</td>
-      <td>{repair.end_date}</td>
-      <td>{repair.cost}</td>
       <td>
-        <Status
-          value={repair.id}
-          type={repair.statusType}
-          name={repair.status_name}
+        <img
+          src={item.image || DefaultImage}
+          alt={item.name || "No Image"}
+          onError={(e) => (e.currentTarget.src = DefaultImage)} // fallback for broken URLs
+          style={{
+            width: "50px",
+            height: "50px",
+            objectFit: "cover",
+            borderRadius: "4px",
+          }}
         />
+      </td>
+      <td>{item.name}</td>
+      <td>{item.category}</td>
+      <td>{item.manufacturer}</td>
+      <td>{item.depreciation}</td>
+      <td>
+        <ActionButtons showCheck statusType={item.status_type} />
       </td>
       <td>
         <ActionButtons
           showEdit
           showDelete
           showView
-          editPath="RepairEdit"
-          editState={{ repair }}
-          onDeleteClick={() => onDeleteClick(repair.id)}
-          onViewClick={() => onViewClick(repair)}
+          editPath={`edit/${item.id}`}
+          editState={{ item }}
+          onDeleteClick={() => onDeleteClick(item.id)}
+          onViewClick={onViewClick}
         />
       </td>
     </tr>
@@ -105,6 +111,7 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
 }
 
 export default function Components() {
+  const navigate = useNavigate();
   const [exportToggle, setExportToggle] = useState(false);
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
@@ -170,21 +177,6 @@ export default function Components() {
     closeDeleteModal();
   };
 
-  // Add state for view modal
-  const [isViewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedRepair, setSelectedRepair] = useState(null);
-
-  // Add view handler
-  const handleViewClick = (repair) => {
-    setSelectedRepair(repair);
-    setViewModalOpen(true);
-  };
-
-  const closeViewModal = () => {
-    setViewModalOpen(false);
-    setSelectedRepair(null);
-  };
-
   // outside click for export toggle
   useEffect(() => {
     function handleClickOutside(event) {
@@ -214,23 +206,6 @@ export default function Components() {
         />
       )}
 
-      {isViewModalOpen && selectedRepair && (
-        <View
-          title={`${selectedRepair.asset} - ${selectedRepair.name}`}
-          data={[
-            { label: "Asset", value: selectedRepair.asset },
-            { label: "Type", value: selectedRepair.type },
-            { label: "Name", value: selectedRepair.name },
-            { label: "Start Date", value: selectedRepair.start_date },
-            { label: "End Date", value: selectedRepair.end_date || "Ongoing" },
-            { label: "Cost", value: selectedRepair.cost },
-            { label: "Status", value: selectedRepair.status_name },
-            { label: "Notes", value: selectedRepair.notes || "No notes" }
-          ]}
-          closeModal={closeViewModal}
-        />
-      )}
-
       <section>
         <nav>
           <NavBar />
@@ -241,13 +216,12 @@ export default function Components() {
             <h1>Components</h1>
           </section>
 
-          <RepairFilter filters={filterConfig} />
+          <PageFilter filters={filterConfig} />
 
           <section className="table-layout">
             <section className="table-header">
               <h2 className="h2">Components ({MockupData.length})</h2>
               <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
                 {selectedIds.length > 0 && (
                   <MediumButtons
                     type="delete"
@@ -263,7 +237,7 @@ export default function Components() {
                 </div>
                 <MediumButtons
                   type="new"
-                  navigatePage="/Repairs/RepairRegistration"
+                  navigatePage="/components/registration"
                 />
               </section>
             </section>
@@ -286,14 +260,14 @@ export default function Components() {
                 </thead>
                 <tbody>
                   {paginatedActivity.length > 0 ? (
-                    paginatedActivity.map((repair) => (
+                    paginatedActivity.map((item) => (
                       <TableItem
-                        key={repair.id}
-                        repair={repair}
-                        isSelected={selectedIds.includes(repair.id)}
+                        key={item.id}
+                        item={item}
+                        isSelected={selectedIds.includes(item.id)}
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
+                        onViewClick={() => navigate(`/components/view/${item.id}`)}
                       />
                     ))
                   ) : (
@@ -322,4 +296,3 @@ export default function Components() {
     </>
   );
 }
-

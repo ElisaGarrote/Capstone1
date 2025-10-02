@@ -8,9 +8,12 @@ export default function ActionButtons({
   editPath = "",
   editState = {},
   showRecover = false,
+  showCheck = false, 
+  statusType = "",
   onDeleteClick = null,
   onViewClick = null,
   onRecoverClick = null,
+  onCheckClick = null, 
 }) {
   const navigate = useNavigate();
 
@@ -53,6 +56,26 @@ export default function ActionButtons({
           onClick={onRecoverClick}
         >
           <i className="fas fa-undo"></i>
+        </button>
+      )}
+
+      {showCheck && statusType && (
+        <button
+          title={statusType === "deployable" ? "Check Out" : "Check In"}
+          className={`action-button ${
+            statusType === "deployable"
+              ? "action-button-checkout"
+              : "action-button-checkin"
+          }`}
+          onClick={onCheckClick}
+        >
+          <i
+            className={
+              statusType === "deployable"
+                ? "fas fa-sign-out-alt"
+                : "fas fa-sign-in-alt"
+            }
+          ></i>
         </button>
       )}
     </section>
