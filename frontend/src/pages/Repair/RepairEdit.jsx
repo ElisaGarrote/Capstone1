@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
-import "../../styles/CategoryRegistration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
@@ -10,68 +9,62 @@ import CloseIcon from "../../assets/icons/close.svg";
 const RepairEdit = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const repairData = location.state; // Passed from navigate
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
 
-  const [attachmentFile, setAttachmentFile] = useState(null);
+  // Get repair data from navigation state
+  const repairData = location.state?.repair || null;
+
+  // Log what's being passed from Repairs page
+  console.log("RepairEdit - Received data:", location.state);
+  console.log("RepairEdit - Repair data:", repairData);
 
   const {
     register,
     handleSubmit,
     control,
     watch,
-    reset,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
-    defaultValues: {
-      asset: "",
-      supplier: "",
-      repairType: "",
-      repairName: "",
-      startDate: "",
-      endDate: "",
-      cost: "",
-      notes: "",
-    },
   });
 
-  // Populate form with existing values
+  // Populate form with existing repair data
   useEffect(() => {
     if (repairData) {
-      reset({
-        asset: repairData.asset || "",
-        supplier: repairData.supplier || "",
-        repairType: repairData.repairType || "",
-        repairName: repairData.repairName || "",
-        startDate: repairData.startDate || "",
-        endDate: repairData.endDate || "",
-        cost: repairData.cost || "",
-        notes: repairData.notes || "",
-      });
-      if (repairData.attachment) {
-        // If you store file metadata, keep name
-        setAttachmentFile({ name: repairData.attachment });
-      }
+      setValue("asset", repairData.asset || "");
+      setValue("supplier", repairData.supplier || "");
+      setValue("repairType", repairData.type || "");
+      setValue("repairName", repairData.name || "");
+      setValue("startDate", repairData.start_date || "");
+      setValue("endDate", repairData.end_date || "");
+      setValue("cost", repairData.cost || "");
+      setValue("notes", repairData.notes || "");
     }
-  }, [repairData, reset]);
+  }, [repairData, setValue]);
 
   const handleFileSelection = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      if (e.target.files[0].size > 10 * 1024 * 1024) {
-        alert("File size must be less than 10MB");
-        e.target.value = "";
-        return;
+    const files = Array.from(e.target.files);
+    const maxSize = 5 * 1024 * 1024;
+
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 5MB and was not added.`);
+        return false;
       }
-      setAttachmentFile(e.target.files[0]);
-    }
+      return true;
+    });
+
+    setAttachmentFiles(prev => [...prev, ...validFiles]);
   };
 
+  const removeFile = (index) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+
   const onSubmit = (data) => {
-    console.log("Edited repair submitted:", data, attachmentFile);
-
-    // Call API to update repair (PATCH/PUT)
-    // fetch(`/api/repairs/${repairData.id}`, { method: "PATCH", body: ... })
-
+    console.log("Form submitted:", data, attachmentFiles);
     navigate("/Repairs");
   };
 
@@ -93,33 +86,44 @@ const RepairEdit = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Asset */}
             <fieldset>
-              <label htmlFor="asset">Asset *</label>
-              <select
-                className={errors.asset ? "input-error" : ""}
-                {...register("asset", { required: "Asset is required" })}
-              >
-                <option value="">Select Type</option>
-                <option value="Iphone 16 Pro Max">Hardware</option>
-                <option value="Ideapad 3">Software</option>
-                <option value="Google Pixelbook 2">Other</option>
-              </select>
-              {errors.asset && (
-                <span className="error-message">{errors.asset.message}</span>
-              )}
-            </fieldset>
+                <label htmlFor="asset">Asset *</label>
+                <select
+                    className={errors.asset ? "input-error" : ""}
+                    {...register("asset", {
+                    required: "Asset is required",
+                    })}
+                >
+                    <option value="">Select Asset</option>
+                    <option value="Laptop A123">Laptop A123</option>
+                    <option value="Printer B456">Printer B456</option>
+                    <option value="Aircon C789">Aircon C789</option>
+                    <option value="Vehicle D321">Vehicle D321</option>
+                    <option value="Projector E654">Projector E654</option>
+                    <option value="Laptop F987">Laptop F987</option>
+                    <option value="Server G111">Server G111</option>
+                    <option value="Router H222">Router H222</option>
+                    <option value="Vehicle I333">Vehicle I333</option>
+                    <option value="Laptop J444">Laptop J444</option>
+                </select>
+                {errors.asset && (
+                    <span className="error-message">{errors.asset.message}</span>
+                )}
+                </fieldset>
 
             {/* Supplier */}
             <fieldset>
-              <label htmlFor="supplier">Supplier</label>
-              <select
-                className={errors.supplier ? "input-error" : ""}
-                {...register("supplier")}
-              >
-                <option value="">Select Type</option>
-                <option value="Apple">Hardware</option>
-                <option value="Lenovo">Software</option>
-                <option value="Google">Other</option>
-              </select>
+                <label htmlFor="supplier">Supplier</label>
+                <select
+                    className={errors.supplier ? "input-error" : ""}
+                    {...register("supplier")}
+                >
+                    <option value="">Select Supplier</option>
+                    <option value="Apple">Apple</option>
+                    <option value="Lenovo">Lenovo</option>
+                    <option value="Google">Google</option>
+                    <option value="HP">HP</option>
+                    <option value="Samsung">Samsung</option>
+                </select>
             </fieldset>
 
             {/* Repair Type */}
@@ -173,9 +177,7 @@ const RepairEdit = () => {
                 })}
               />
               {errors.startDate && (
-                <span className="error-message">
-                  {errors.startDate.message}
-                </span>
+                <span className="error-message">{errors.startDate.message}</span>
               )}
             </fieldset>
 
@@ -186,11 +188,7 @@ const RepairEdit = () => {
                 type="date"
                 {...register("endDate", {
                   validate: (value, formValues) => {
-                    if (
-                      value &&
-                      formValues.startDate &&
-                      value < formValues.startDate
-                    ) {
+                    if (value && formValues.startDate && value < formValues.startDate) {
                       return "End date cannot be earlier than start date";
                     }
                     return true;
@@ -199,34 +197,24 @@ const RepairEdit = () => {
                 min={watch("startDate") || ""}
               />
               {errors.endDate && (
-                <span className="error-message">
-                  {errors.endDate.message}
-                </span>
+                <span className="error-message">{errors.endDate.message}</span>
               )}
             </fieldset>
 
             {/* Cost */}
-            <div className="form-field">
-              <label htmlFor="cost">Cost *</label>
-              <div className="cost-input">
-                <span className="currency">PHP</span>
+            <fieldset className="cost-field">
+              <label htmlFor="cost">Cost</label>
+              <div className="cost-input-group">
+                <span className="cost-addon">PHP</span>
                 <input
                   type="number"
+                  placeholder="0.00"
+                  min="0"
                   step="0.01"
-                  {...register("cost", {
-                    valueAsNumber: true,
-                    min: {
-                      value: 0,
-                      message: "Cost must be a non-negative number",
-                    },
-                    required: "Cost is required",
-                  })}
+                  {...register("cost")}
                 />
               </div>
-              {errors.cost && (
-                <span className="error-message">{errors.cost.message}</span>
-              )}
-            </div>
+            </fieldset>
 
             {/* Notes */}
             <fieldset>
@@ -239,58 +227,41 @@ const RepairEdit = () => {
             </fieldset>
 
             {/* Attachments */}
-            <div className="form-field">
-              <label>Attachments</label>
-              <div className="attachments-container">
-                <button
-                  className="choose-file-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.getElementById("attachment").click();
-                  }}
-                >
-                  Choose File
-                </button>
-                <Controller
-                  name="attachment"
-                  control={control}
-                  render={({ field: { onChange, ...field } }) => (
+            <fieldset>
+              <label htmlFor="attachments">Attachments</label>
+
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="attachments" className="upload-image-btn">
+                    Choose File
                     <input
                       type="file"
-                      id="attachment"
+                      id="attachments"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileSelection}
                       style={{ display: "none" }}
-                      accept=".pdf, .docx, .xlsx, .jpg, .jpeg, .png"
-                      onChange={(e) => {
-                        onChange(e.target.files);
-                        handleFileSelection(e);
-                      }}
-                      {...field}
+                      multiple
                     />
-                  )}
-                />
-                {attachmentFile ? (
-                  <div className="file-selected">
-                    <p>{attachmentFile.name}</p>
-                    <button
-                      className="remove-file-btn"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setAttachmentFile(null);
-                        document.getElementById("attachment").value = "";
-                      }}
-                    >
-                      <img
-                        src={CloseIcon}
-                        alt="Remove file"
-                        style={{ background: "red" }}
-                      />
-                    </button>
-                  </div>
-                ) : (
-                  <span className="no-file">No file chosen</span>
-                )}
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
+                </div>
+
+                {/* Right column: Uploaded files */}
+                <div className="upload-right">
+                  {attachmentFiles.map((file, index) => (
+                    <div className="file-uploaded" key={index}>
+                      <span title={file.name}>{file.name}</span>
+                      <button type="button" onClick={() => removeFile(index)}>
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </fieldset>
 
             {/* Submit */}
             <button type="submit" className="primary-button" disabled={!isValid}>

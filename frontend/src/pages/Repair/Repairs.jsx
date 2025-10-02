@@ -61,23 +61,6 @@ const filterConfig = [
   },
 ];
 
-const getTypeIcon = (type) => {
-  switch (type) {
-    case "Asset":
-      return <HiOutlineTag className="type-icon" />;
-    case "Accessory":
-      return <BsKeyboard className="type-icon" />;
-    case "Consumable":
-      return <LuDroplet className="type-icon" />;
-    case "Audit":
-      return <AiOutlineAudit className="type-icon" />;
-    case "Component":
-      return <RxComponent1 className="type-icon" />;
-    default:
-      return <HiOutlineTag className="type-icon" />;
-  }
-};
-
 // TableHeader
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
@@ -113,12 +96,7 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
         />
       </td>
       <td>{repair.asset}</td>
-      <td>
-        <div>
-          {getTypeIcon(repair.type)}
-          <span>{repair.type}</span>
-        </div>
-      </td>
+      <td>{repair.type}</td>
       <td>{repair.name}</td>
       <td>{repair.start_date}</td>
       <td>{repair.end_date}</td>
@@ -127,7 +105,7 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
         <Status
           value={repair.id}
           type={repair.statusType}
-          name={repair.statusName}
+          name={repair.status_name}
         />
       </td>
       <td>
