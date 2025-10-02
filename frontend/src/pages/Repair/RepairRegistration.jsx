@@ -55,7 +55,7 @@ const RepairRegistration = () => {
           <TopSecFormPage
             root="Repairs"
             currentPage="New Repair"
-            rootNavigatePage="/Repairs"
+            rootNavigatePage="/repairs"
             title="New Repair"
           />
         </section>

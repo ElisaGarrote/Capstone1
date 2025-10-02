@@ -56,7 +56,7 @@ const ComponentRegistration = () => {
             root="Repairs"
             currentPage="New Repair"
             rootNavigatePage="/Repairs"
-            title="New Component"
+            title="New Repair"
           />
         </section>
         <section className="registration-form">

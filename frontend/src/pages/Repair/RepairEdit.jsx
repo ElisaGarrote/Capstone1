@@ -79,7 +79,7 @@ const RepairEdit = () => {
           <TopSecFormPage
             root="Repairs"
             currentPage="Edit Repair"
-            rootNavigatePage="/Repairs"
+            rootNavigatePage="/repairs"
             title="Edit Repair"
           />
         </section>

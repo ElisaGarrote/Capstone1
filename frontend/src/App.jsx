@@ -99,27 +99,27 @@ function App() {
             element={<AssetsRegistration />}
           />
           <Route
-            path="/Components"
+            path="/components"
             element={<Components />}
           />
           <Route
-            path="/Components/ComponentRegistration"
+            path="/components/registration"
             element={<ComponentRegistration />}
           />
           <Route
-            path="/Components/ComponentEdit"
+            path="/components/edit/:id"
             element={<ComponentRegistration />}
           />
           <Route
-            path="/Components/ComponentCheckout"
+            path="/components/check-out/:id"
             element={<ComponentCheckout />}
           />
           <Route
-            path="/Components/ComponentCheckedoutList"
+            path="/components/checked-out-list/:id"
             element={<ComponentCheckedoutList />}
           />
           <Route
-            path="/Components/ComponentCheckin"
+            path="/components/check-in/:id"
             element={<ComponentCheckin />}
           />
           <Route path="/user-management" element={<UserManagement />} />
@@ -160,19 +160,19 @@ function App() {
           <Route path="/More/StatusEdit/:id" element={<StatusEdit />} />
           <Route path="/More/StatusDetails/:id" element={<StatusDetails />} />
           <Route
-            path="/More/Depreciations"
+            path="/more/depreciations"
             element={<Depreciations />}
           />
           <Route
-            path="/More/Depreciations/DepreciationRegistration"
+            path="/more/depreciations/registration"
             element={<DepreciationRegistration />}
           />
           <Route
-            path="/More/Depreciations/DepreciationEdit"
+            path="/more/depreciations/edit/:id"
             element={<DepreciationEdit />}
           />
           <Route
-            path="/More/RecycleBin"
+            path="/more/recycle-bin"
             element={<RecycleBin />}
           />
         </Route>
@@ -186,27 +186,35 @@ function App() {
           <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
           <Route path="/components" element={<Components />} />
           <Route
+            path="/components/registration"
+            element={<ComponentRegistration />}
+          />
+          <Route
+            path="/components/edit/:id"
+            element={<ComponentRegistration />}
+          />
+          <Route
             path="/components/check-out/:id"
-            element={<CheckOutComponent />}
+            element={<ComponentCheckout />}
           />
           <Route
             path="/components/checked-out-list/:id"
-            element={<CheckedOutList />}
+            element={<ComponentCheckedoutList />}
           />
           <Route
             path="/components/check-in/:id"
-            element={<CheckInComponent />}
+            element={<ComponentCheckin />}
           />
           <Route
-            path="/Repairs/"
+            path="/repairs/"
             element={<Repairs />}
           />
           <Route
-            path="/Repairs/RepairRegistration"
+            path="/repairs/registration"
             element={<RepairRegistration />}
           />
           <Route
-            path="/Repairs/RepairEdit"
+            path="/repairs/edit/:id"
             element={<RepairEdit />}
           />
           <Route path="/audits/" element={<AssetAudits />} />

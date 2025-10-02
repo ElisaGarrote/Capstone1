@@ -35,7 +35,7 @@ const DepraciationRegistration = () => {
           <TopSecFormPage
             root="More / Depreciations"
             currentPage="New Depreciation"
-            rootNavigatePage="/More/Depreciations"
+            rootNavigatePage="/more/depreciations"
             title="New Depreciation"
           />
         </section>

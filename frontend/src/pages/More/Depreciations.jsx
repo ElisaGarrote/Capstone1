@@ -22,7 +22,7 @@ const filterConfig = [
     ],
   },
   {
-    type: "date",
+    type: "positiveInteger",
     name: "duration",
     label: "Duration (in months)",
   },
@@ -65,7 +65,7 @@ function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick }) {
         <ActionButtons
           showEdit
           showDelete
-          editPath="DepreciationEdit"
+          editPath={`edit/${depreciation.id}`}
           editState={{ depreciation }}
           onDeleteClick={() => onDeleteClick(depreciation.id)}
         />
@@ -201,7 +201,7 @@ export default function Depreciations() {
                 </div>
                 <MediumButtons
                   type="new"
-                  navigatePage="/More/Depreciations/DepreciationRegistration"
+                  navigatePage="/more/depreciations/registration"
                 />
               </section>
             </section>

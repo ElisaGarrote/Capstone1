@@ -52,7 +52,7 @@ const DepreciationEdit = () => {
           <TopSecFormPage
             root="More / Depreciations"
             currentPage="Edit Depreciation"
-            rootNavigatePage="/More/Depreciations"
+            rootNavigatePage="/more/depreciations"
             title="Edit Depreciation"
           />
         </section>

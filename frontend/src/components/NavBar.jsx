@@ -102,7 +102,7 @@ export default function NavBar() {
       location.pathname.startsWith("/components")
     ) {
       setActiveMenu("assets");
-    } else if (location.pathname.startsWith("/dashboard/Repair")) {
+    } else if (location.pathname.startsWith("/repairs")) {
       setActiveMenu("repairs");
     } else if (location.pathname.startsWith("/audits")) {
       setActiveMenu("audits");
@@ -153,10 +153,10 @@ export default function NavBar() {
     } else if (location.pathname.startsWith("/More/ViewStatus")) {
       setSelectedMore("Statuses");
       setActiveMenu("more");
-    } else if (location.pathname.startsWith("/More/Depreciations")) {
+    } else if (location.pathname.startsWith("/more/depreciations")) {
       setSelectedMore("Depreciations");
       setActiveMenu("more");
-    } else if (location.pathname.startsWith("/More/RecycleBin")) {
+    } else if (location.pathname.startsWith("/more/recycle-bin")) {
       setSelectedMore("Recycle Bin");
       setActiveMenu("more");
     }
@@ -256,7 +256,7 @@ export default function NavBar() {
             <li>
               <a
                 onClick={() => {
-                  navigate("/Repairs");
+                  navigate("/repairs");
                   setActiveMenu("repairs");
                 }}
                 className={activeMenu === "repairs" ? "active" : ""}
@@ -409,7 +409,7 @@ export default function NavBar() {
                       </button>
                       <button
                         onClick={() => {
-                          navigate("/More/Depreciations");
+                          navigate("/more/depreciations");
                           setSelectedMore("Depreciations");
                           setShowMoreMenu(false);
                         }}
@@ -418,7 +418,7 @@ export default function NavBar() {
                       </button>
                       <button
                         onClick={() => {
-                          navigate("/More/RecycleBin");
+                          navigate("/more/recycle-bin");
                           setSelectedMore("Recycle Bin");
                           setShowMoreMenu(false);
                         }}
