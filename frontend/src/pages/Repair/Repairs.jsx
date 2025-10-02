@@ -10,9 +10,10 @@ import { LuDroplet } from "react-icons/lu";
 import { HiOutlineTag } from "react-icons/hi";
 import { AiOutlineAudit } from "react-icons/ai";
 import { RxComponent1 } from "react-icons/rx";
-import "../../styles/Table.css"; // ✅ use the shared table style
+import "../../styles/Table.css"; // use same table css like Category
 import ActionButtons from "../../components/ActionButtons";
 import ViewAsset from "../../components/ViewPopup";
+import ConfirmatinModal from "../../components/Modals/DeleteModal";
 
 const filterConfig = [
   {
@@ -105,13 +106,11 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
   return (
     <tr>
       <td>
-        <div className="checkbox-container">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={(e) => onRowChange(repair.id, e.target.checked)}
-          />
-        </div>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onRowChange(repair.id, e.target.checked)}
+        />
       </td>
       <td>{repair.asset}</td>
       <td>
@@ -138,7 +137,7 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
           showView
           editPath="RepairEdit"
           editState={{ repair }}
-          onDeleteClick={() => onDeleteClick(repair.id)}
+          onDeleteClick={() => onDeleteClick(repair.id)} // ✅ opens modal for row delete
           onViewClick={() => onViewClick(repair)}
         />
       </td>
@@ -154,17 +153,12 @@ export default function AssetRepairs() {
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedActivity = MockupData.slice(startIndex, endIndex);
 
-  // checkbox state
+  // selection
   const [selectedIds, setSelectedIds] = useState([]);
-
-  useEffect(() => {
-    console.log("Currently selected IDs:", selectedIds);
-  }, [selectedIds]);
 
   const allSelected =
     paginatedActivity.length > 0 &&
@@ -191,16 +185,33 @@ export default function AssetRepairs() {
     }
   };
 
-  // delete & view actions
-  const handleDelete = (id) => {
-    console.log("Deleting id:", id);
+  // delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
   };
 
-  const handleView = (repair) => {
-    console.log("Viewing repair:", repair);
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
   };
 
-  // export toggle click outside
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single id:", deleteTarget);
+      // remove from mock data / API call
+    } else {
+      console.log("Deleting multiple ids:", selectedIds);
+      // remove multiple
+      setSelectedIds([]); // clear selection
+    }
+    closeDeleteModal();
+  };
+
+  // outside click for export toggle
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -213,7 +224,6 @@ export default function AssetRepairs() {
         setExportToggle(false);
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -222,30 +232,38 @@ export default function AssetRepairs() {
 
   return (
     <>
+      {isDeleteModalOpen && (
+        <ConfirmatinModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
+        />
+      )}
+
       <section>
         <nav>
           <NavBar />
         </nav>
 
         <main className="page-layout">
-          {/* Title */}
           <section className="title-page-section">
             <h1>Repairs</h1>
           </section>
 
-          {/* Filter */}
           <RepairFilter filters={filterConfig} />
 
           <section className="table-layout">
-            {/* Header */}
             <section className="table-header">
               <h2 className="h2">Asset Repairs ({MockupData.length})</h2>
               <section className="table-actions">
-                <input
-                  type="search"
-                  placeholder="Search..."
-                  className="search"
-                />
+                {/* Bulk delete button only when checkboxes selected */}
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
+                <input type="search" placeholder="Search..." className="search" />
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"
@@ -259,15 +277,15 @@ export default function AssetRepairs() {
               </section>
             </section>
 
-            {/* Table */}
+            {exportToggle && (
+              <section className="export-button-section" ref={exportRef}>
+                <button>Download as Excel</button>
+                <button>Download as PDF</button>
+                <button>Download as CSV</button>
+              </section>
+            )}
+
             <section className="table-section">
-              {exportToggle && (
-                <section className="export-button-section" ref={exportRef}>
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
               <table>
                 <thead>
                   <TableHeader
@@ -283,8 +301,8 @@ export default function AssetRepairs() {
                         repair={repair}
                         isSelected={selectedIds.includes(repair.id)}
                         onRowChange={handleRowChange}
-                        onDeleteClick={handleDelete}
-                        onViewClick={handleView}
+                        onDeleteClick={openDeleteModal}
+                        onViewClick={(r) => console.log("Viewing repair:", r)}
                       />
                     ))
                   ) : (
@@ -298,7 +316,6 @@ export default function AssetRepairs() {
               </table>
             </section>
 
-            {/* Pagination */}
             <section className="table-pagination">
               <Pagination
                 currentPage={currentPage}
@@ -314,3 +331,4 @@ export default function AssetRepairs() {
     </>
   );
 }
+

@@ -52,6 +52,10 @@ export default function MediumButtons({
       onClick();
     }
 
+    if (type.toLowerCase() === "delete" && onClick) {
+      onClick();
+    }
+
     if (navigatePage) {
       navigate(navigatePage, { state: { previousPage } });
     }
