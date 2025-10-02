@@ -45,17 +45,18 @@ const RepairEdit = () => {
 
   const handleFileSelection = (e) => {
     const files = Array.from(e.target.files);
-    const maxSize = 5 * 1024 * 1024;
+    const maxSize = 10 * 1024 * 1024; // Changed to 10MB
 
     const validFiles = files.filter(file => {
       if (file.size > maxSize) {
-        alert(`${file.name} is larger than 5MB and was not added.`);
+        alert(`${file.name} is larger than 10MB and was not added.`);
         return false;
       }
       return true;
     });
 
     setAttachmentFiles(prev => [...prev, ...validFiles]);
+    e.target.value = '';
   };
 
   const removeFile = (index) => {
@@ -245,7 +246,7 @@ const RepairEdit = () => {
                     />
                   </label>
                   <small className="file-size-info">
-                    Maximum file size must be 5MB
+                    Maximum file size must be 10MB
                   </small>
                 </div>
 
