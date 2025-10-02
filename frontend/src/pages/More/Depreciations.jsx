@@ -23,8 +23,8 @@ const filterConfig = [
   },
   {
     type: "date",
-    name: "assetsbeingrepaired",
-    fromLabel: "Duration (in months)",
+    name: "duration",
+    label: "Duration (in months)",
   },
 ];
 
@@ -176,14 +176,14 @@ export default function Depreciations() {
 
         <main className="page-layout">
           <section className="title-page-section">
-            <h1>Repairs</h1>
+            <h1>Depreciations</h1>
           </section>
 
           <RepairFilter filters={filterConfig} />
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Asset Repairs ({MockupData.length})</h2>
+              <h2 className="h2">Asset Depreciations ({MockupData.length})</h2>
               <section className="table-actions">
                 {/* Bulk delete button only when checkboxes selected */}
                 {selectedIds.length > 0 && (
@@ -236,7 +236,7 @@ export default function Depreciations() {
                   ) : (
                     <tr>
                       <td colSpan={9} className="no-data-message">
-                        No Repairs Found.
+                        No Depreciations Found.
                       </td>
                     </tr>
                   )}
