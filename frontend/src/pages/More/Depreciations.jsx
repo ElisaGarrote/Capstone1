@@ -11,7 +11,7 @@ import { HiOutlineTag } from "react-icons/hi";
 import { AiOutlineAudit } from "react-icons/ai";
 import { RxComponent1 } from "react-icons/rx";
 import "../../styles/reports/ActivityReport.css";
-import ActionButtons from "../../components/ActionsButtons";
+import ActionButtons from "../../components/ActionButtons";
 
 
 const filterConfig = [

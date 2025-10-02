@@ -10,7 +10,7 @@ import { LuDroplet } from "react-icons/lu";
 import { HiOutlineTag } from "react-icons/hi";
 import { AiOutlineAudit } from "react-icons/ai";
 import { RxComponent1 } from "react-icons/rx";
-import "../../styles/Table.css"; // ✅ use the shared table style
+import "../../styles/reports/ActivityReport.css";
 import ActionButtons from "../../components/ActionButtons";
 import ViewAsset from "../../components/ViewPopup";
 
@@ -77,8 +77,8 @@ const getTypeIcon = (type) => {
   }
 };
 
-// TableHeader
-function TableHeader({ allSelected, onHeaderChange }) {
+// TableHeader component to render the table header
+function TableHeader({allSelected, onHeaderChange}) {
   return (
     <tr>
       <th>
@@ -100,7 +100,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
   );
 }
 
-// TableItem
+// TableItem component to render each ticket row
 function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick }) {
   return (
     <tr>
@@ -151,22 +151,24 @@ export default function AssetRepairs() {
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
 
-  // pagination
+  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
+  // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedActivity = MockupData.slice(startIndex, endIndex);
 
-  // checkbox state
+  // Checkbox
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Log whenever the array changes
   useEffect(() => {
     console.log("Currently selected IDs:", selectedIds);
   }, [selectedIds]);
 
-  const allSelected =
+  const allSelected = 
     paginatedActivity.length > 0 &&
     paginatedActivity.every((item) => selectedIds.includes(item.id));
 
@@ -191,16 +193,16 @@ export default function AssetRepairs() {
     }
   };
 
-  // delete & view actions
+  // Delete modal
   const handleDelete = (id) => {
     console.log("Deleting id:", id);
   };
 
+  // View asset details modal
   const handleView = (repair) => {
     console.log("Viewing repair:", repair);
   };
 
-  // export toggle click outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -228,16 +230,16 @@ export default function AssetRepairs() {
         </nav>
 
         <main className="page-layout">
-          {/* Title */}
+          {/* Title of the Page */}
           <section className="title-page-section">
             <h1>Repairs</h1>
           </section>
 
-          {/* Filter */}
+          {/* Table Filter */}
           <RepairFilter filters={filterConfig} />
 
           <section className="table-layout">
-            {/* Header */}
+            {/* Table Header */}
             <section className="table-header">
               <h2 className="h2">Asset Repairs ({MockupData.length})</h2>
               <section className="table-actions">
@@ -259,8 +261,8 @@ export default function AssetRepairs() {
               </section>
             </section>
 
-            {/* Table */}
-            <section className="table-section">
+            {/* Table Structure */}
+            <section className="activity-report-table-section">
               {exportToggle && (
                 <section className="export-button-section" ref={exportRef}>
                   <button>Download as Excel</button>
@@ -270,7 +272,7 @@ export default function AssetRepairs() {
               )}
               <table>
                 <thead>
-                  <TableHeader
+                  <TableHeader 
                     allSelected={allSelected}
                     onHeaderChange={handleHeaderChange}
                   />
@@ -289,7 +291,7 @@ export default function AssetRepairs() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="no-data-message">
+                      <td colSpan={7} className="no-data-message">
                         No repairs found.
                       </td>
                     </tr>
@@ -298,7 +300,7 @@ export default function AssetRepairs() {
               </table>
             </section>
 
-            {/* Pagination */}
+            {/* Table pagination */}
             <section className="table-pagination">
               <Pagination
                 currentPage={currentPage}
