@@ -98,7 +98,7 @@ const RepairRegistration = () => {
 
             {/* Repair Type */}
             <fieldset>
-              <label htmlFor="repairType">Repair Type*</label>
+              <label htmlFor="repairType">Repair Type *</label>
               <select
                 className={errors.repairType ? "input-error" : ""}
                 {...register("repairType", {
@@ -119,7 +119,7 @@ const RepairRegistration = () => {
 
             {/* Repair Name */}
             <fieldset>
-              <label htmlFor="repairName">Repair Name*</label>
+              <label htmlFor="repairName">Repair Name *</label>
               <input
                 type="text"
                 placeholder="Enter repair name"
@@ -138,7 +138,7 @@ const RepairRegistration = () => {
 
             {/* Start Date */}
             <fieldset>
-              <label htmlFor="startDate">Start Date*</label>
+              <label htmlFor="startDate">Start Date *</label>
               <input
                 type="date"
                 className={errors.startDate ? "input-error" : ""}

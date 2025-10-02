@@ -201,7 +201,7 @@ export default function Depreciations() {
                 </div>
                 <MediumButtons
                   type="new"
-                  navigatePage="/Repairs/RepairRegistration"
+                  navigatePage="/More/Depreciations/DepreciationRegistration"
                 />
               </section>
             </section>
