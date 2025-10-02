@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
-import RepairFilter from "../../components/FilterPanel";
+import DepreciationFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
-import ConfirmatinModal from "../../components/Modals/DeleteModal";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 const filterConfig = [
   {
@@ -162,7 +162,7 @@ export default function Depreciations() {
   return (
     <>
       {isDeleteModalOpen && (
-        <ConfirmatinModal
+        <ConfirmationModal
           closeModal={closeDeleteModal}
           actionType="delete"
           onConfirm={confirmDelete}
@@ -179,7 +179,7 @@ export default function Depreciations() {
             <h1>Depreciations</h1>
           </section>
 
-          <RepairFilter filters={filterConfig} />
+          <DepreciationFilter filters={filterConfig} />
 
           <section className="table-layout">
             <section className="table-header">

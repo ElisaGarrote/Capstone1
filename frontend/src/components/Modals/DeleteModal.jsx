@@ -4,7 +4,7 @@ import CloseIcon from "../../assets/icons/close-icon.svg";
 import { useEffect, useState } from "react";
 import LoadingButton from "../LoadingButton";
 
-export default function ConfirmatinModal({
+export default function ConfirmationModal({
   closeModal,
   confirmDelete,
   endPoint,

@@ -1,204 +1,296 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/custom-colors.css';
-import '../../styles/RecycleBin.css';
-import '../../styles/AuditTablesGlobal.css';
+import { useEffect, useRef, useState } from "react";
+import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import TableBtn from "../../components/buttons/TableButtons";
+import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
+import BinFilter from "../../components/FilterPanel";
+import Pagination from "../../components/Pagination";
+import "../../styles/Table.css";
+import ActionButtons from "../../components/ActionButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
+
+const filterConfig = [
+  {
+    type: "searchable",
+    name: "category",
+    label: "Cataegory",
+    options: [
+      { value: "1", label: "Laptops" },
+      { value: "2", label: "Mobile Phones" },
+      { value: "3", label: "Tablets" },
+      { value: "4", label: "Desktops" },
+      { value: "5", label: "Monitors" },
+    ],
+  },
+  {
+    type: "searchable",
+    name: "manufacturer",
+    label: "Manufacturer",
+    options: [
+      { value: "1", label: "Lenovo" },
+      { value: "2", label: "Apple" },
+      { value: "3", label: "Samsung" },
+      { value: "4", label: "Microsoft" },
+      { value: "5", label: "HP" },
+    ],
+  },
+  {
+    type: "searchable",
+    name: "supplier",
+    label: "Supplier",
+    options: [
+      { value: "1", label: "Amazon" },
+      { value: "2", label: "WSI" },
+      { value: "3", label: "Iontech Inc." },
+      { value: "4", label: "Noventiq" },
+    ],
+  },
+  {
+    type: "searchable",
+    name: "location",
+    label: "Location",
+    options: [
+      { value: "1", label: "Makati" },
+      { value: "2", label: "Pasig" },
+      { value: "3", label: "Marikina" },
+      { value: "4", label: "Quezon City" },
+      { value: "5", label: "Remote" },
+    ],
+  },
+];
+
+// TableHeader
+function TableHeader({ allSelected, onHeaderChange }) {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={onHeaderChange}
+        />
+      </th>
+      <th>NAME</th>
+      <th>CATEGORY</th>
+      <th>MANUFACTURER</th>
+      <th>SUPPLIER</th>
+      <th>LOCATION</th>
+      <th>RECOVER</th>
+      <th>DELETE</th>
+    </tr>
+  );
+}
+
+// TableItem
+function TableItem({ item, isSelected, onRowChange, onDeleteClick }) {
+  return (
+    <tr>
+      <td>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onRowChange(item.id, e.target.checked)}
+        />
+      </td>
+      <td>{item.name}</td>
+      <td>{item.category}</td>
+      <td>{item.manufacturer}</td>
+      <td>{item.supplier}</td>
+      <td>{item.location}</td>
+      <td>
+        <MediumButtons 
+          type="recover"
+          onClick={() => onDeleteClick(item.id)}
+        />
+      </td>
+
+      <td>
+        <ActionButtons
+          showDelete
+          onDeleteClick={() => onDeleteClick(item.id)}
+        />
+      </td>
+    </tr>
+  );
+}
 
 export default function RecycleBin() {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('assets');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [exportToggle, setExportToggle] = useState(false);
+  const exportRef = useRef(null);
+  const toggleRef = useRef(null);
+
+  // pagination
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedActivity = MockupData.slice(startIndex, endIndex);
 
-  // Sample deleted data for different categories
-  const deletedData = {
-    assets: [],
-    accessories: [],
-    components: [],
-    consumables: [
-      {
-        id: 1,
-        name: 'Printer Paper A4',
-        category: 'Office Supplies',
-        deletedDate: '2024-01-15',
-        deletedBy: 'Admin User'
-      },
-      {
-        id: 2,
-        name: 'Ink Cartridge HP',
-        category: 'Printer Supplies',
-        deletedDate: '2024-01-10',
-        deletedBy: 'Admin User'
-      },
-      {
-        id: 3,
-        name: 'USB Cable Type-C',
-        category: 'Cables',
-        deletedDate: '2024-01-08',
-        deletedBy: 'Admin User'
-      }
-    ]
-  };
+  // selection
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  const tabs = [
-    { key: 'assets', label: 'Assets', count: deletedData.assets.length },
-    { key: 'accessories', label: 'Accessories', count: deletedData.accessories.length },
-    { key: 'components', label: 'Components', count: deletedData.components.length },
-    { key: 'consumables', label: 'Consumables', count: deletedData.consumables.length }
-  ];
+  const allSelected =
+    paginatedActivity.length > 0 &&
+    paginatedActivity.every((item) => selectedIds.includes(item.id));
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  // Filter data based on search query
-  const filteredData = deletedData[activeTab].filter(item =>
-    item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.category?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Handle restore action
-  const handleRestore = (itemId) => {
-    console.log(`Restoring ${activeTab} item with ID: ${itemId}`);
-    // Here you would typically call an API to restore the item
-  };
-
-  // Handle permanent delete action
-  const handlePermanentDelete = (itemId) => {
-    console.log(`Permanently deleting ${activeTab} item with ID: ${itemId}`);
-    // Here you would typically call an API to permanently delete the item
-  };
-
-  const renderTabContent = () => {
-    if (filteredData.length === 0) {
-      return (
-        <div className="empty-state">
-          No {tabs.find(tab => tab.key === activeTab)?.label} Found
-        </div>
+  const handleHeaderChange = (e) => {
+    if (e.target.checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...paginatedActivity.map((item) => item.id).filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !paginatedActivity.map((item) => item.id).includes(id))
       );
     }
-
-    return (
-      <table>
-        <thead>
-          <tr>
-            <th>
-              <input type="checkbox" />
-            </th>
-            <th>NAME</th>
-            <th>CATEGORY</th>
-            <th>DELETED DATE</th>
-            <th>DELETED BY</th>
-            <th>RESTORE</th>
-            <th>DELETE</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map((item) => (
-            <tr key={item.id}>
-              <td>
-                <input type="checkbox" />
-              </td>
-              <td>{item.name}</td>
-              <td>{item.category}</td>
-              <td>{item.deletedDate}</td>
-              <td>{item.deletedBy}</td>
-              <td>
-                <button
-                  onClick={() => handleRestore(item.id)}
-                  className="restore-button"
-                >
-                  Restore
-                </button>
-              </td>
-              <td>
-                <TableBtn
-                  type="delete"
-                  showModal={() => handlePermanentDelete(item.id)}
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
   };
+
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
+
+  // delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single id:", deleteTarget);
+      // remove from mock data / API call
+    } else {
+      console.log("Deleting multiple ids:", selectedIds);
+      // remove multiple
+      setSelectedIds([]); // clear selection
+    }
+    closeDeleteModal();
+  };
+
+  // outside click for export toggle
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        exportToggle &&
+        exportRef.current &&
+        !exportRef.current.contains(event.target) &&
+        toggleRef.current &&
+        !toggleRef.current.contains(event.target)
+      ) {
+        setExportToggle(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [exportToggle]);
 
   return (
     <>
-      <nav>
-        <NavBar />
-      </nav>
-      <main className="recycle-bin-page">
-        <section className="main-top">
-          <h1>Recycle Bin</h1>
-        </section>
+      {isDeleteModalOpen && (
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
+        />
+      )}
 
-        {/* Tab Navigation */}
-        <section className="tab-nav">
-          <div className="tab-nav-container">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`tab-button ${activeTab === tab.key ? 'active' : ''}`}
-              >
-                {tab.label} ({tab.count})
-              </button>
-            ))}
-          </div>
-        </section>
+      <section>
+        <nav>
+          <NavBar />
+        </nav>
 
-        <section className="container">
-          {/* Tab Content Header */}
-          <section className="top">
-            <h2>
-              {tabs.find(tab => tab.key === activeTab)?.label} ({filteredData.length})
-            </h2>
-            <div>
-              <form action="" method="post">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
-              </form>
-              <MediumButtons type="export" />
-            </div>
+        <main className="page-layout">
+          <section className="title-page-section">
+            <h1>Recycle Bin</h1>
           </section>
 
-          {/* Tab Content */}
-          <section className="middle">
-            {renderTabContent()}
-          </section>
+          <BinFilter filters={filterConfig} />
 
-          {/* Pagination */}
-          {filteredData.length > 0 && (
-            <section className="pagination">
-              <div className="pagination-left">
-                <span>Show</span>
-                <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))}>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-                <span>items per page</span>
-              </div>
-              <div className="pagination-right">
-                <button disabled={currentPage === 1}>Prev</button>
-                <span className="page-number">{currentPage}</span>
-                <button disabled={filteredData.length <= itemsPerPage}>Next</button>
-              </div>
+          <section className="table-layout">
+            <section className="table-header">
+              <h2 className="h2">Recycle Bin ({MockupData.length})</h2>
+              <section className="table-actions">
+                {/* Bulk delete button only when checkboxes selected */}
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
+                <input type="search" placeholder="Search..." className="search" />
+                <div ref={toggleRef}>
+                  <MediumButtons
+                    type="export"
+                    onClick={() => setExportToggle(!exportToggle)}
+                  />
+                </div>
+              </section>
             </section>
-          )}
-        </section>
-      </main>
+
+            {exportToggle && (
+              <section className="export-button-section" ref={exportRef}>
+                <button>Download as Excel</button>
+                <button>Download as PDF</button>
+                <button>Download as CSV</button>
+              </section>
+            )}
+
+            <section className="table-section">
+              <table>
+                <thead>
+                  <TableHeader
+                    allSelected={allSelected}
+                    onHeaderChange={handleHeaderChange}
+                  />
+                </thead>
+                <tbody>
+                  {paginatedActivity.length > 0 ? (
+                    paginatedActivity.map((item) => (
+                      <TableItem
+                        key={item.id}
+                        item={item}
+                        isSelected={selectedIds.includes(item.id)}
+                        onRowChange={handleRowChange}
+                        onDeleteClick={openDeleteModal}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={9} className="no-data-message">
+                        No Deleted Items Found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={MockupData.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+      </section>
     </>
   );
 }

@@ -8,7 +8,7 @@ import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
 import View from "../../components/Modals/View";
-import ConfirmatinModal from "../../components/Modals/DeleteModal";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 const filterConfig = [
   {
@@ -221,7 +221,7 @@ export default function AssetRepairs() {
   return (
     <>
       {isDeleteModalOpen && (
-        <ConfirmatinModal
+        <ConfirmationModal
           closeModal={closeDeleteModal}
           actionType="delete"
           onConfirm={confirmDelete}

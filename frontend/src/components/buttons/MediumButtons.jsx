@@ -4,6 +4,7 @@ import "../../styles/MediumButtons.css";
 import { useNavigate } from "react-router-dom";
 import plusIcon from "../../assets/icons/plus.svg";
 import deleteIcon from "../../assets/icons/delete-white.svg";
+import recoverIcon from "../../assets/icons/undo-icon.svg";
 
 export default function MediumButtons({
   type,
@@ -19,6 +20,7 @@ export default function MediumButtons({
     - delete
     - sort
     - filter
+    - recover
    */
   let icon;
   const navigate = useNavigate();
@@ -30,6 +32,9 @@ export default function MediumButtons({
       break;
     case "delete":
       icon = deleteIcon;
+      break;
+    case "recover":
+      icon = recoverIcon;
       break;
     default:
       icon = null;
@@ -53,6 +58,10 @@ export default function MediumButtons({
     }
 
     if (type.toLowerCase() === "delete" && onClick) {
+      onClick();
+    }
+
+    if (type.toLowerCase() === "recover" && onClick) {
       onClick();
     }
 
