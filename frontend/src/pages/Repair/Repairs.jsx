@@ -286,7 +286,7 @@ export default function AssetRepairs() {
                   ) : (
                     <tr>
                       <td colSpan={9} className="no-data-message">
-                        No repairs found.
+                        No Repairs Found.
                       </td>
                     </tr>
                   )}
