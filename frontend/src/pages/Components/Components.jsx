@@ -12,46 +12,32 @@ import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 const filterConfig = [
   {
-    type: "select",
-    name: "type",
-    label: "Type",
-    options: [
-      { value: "accessory", label: "Accessory" },
-      { value: "asset", label: "Asset" },
-      { value: "audit", label: "Audit" },
-      { value: "component", label: "Component" },
-      { value: "consumable", label: "Consumable" },
-    ],
-  },
-  {
-    type: "select",
-    name: "status",
-    label: "Status",
-    options: [
-      { value: "beingrepaired", label: "Being Repaired" },
-      { value: "broken", label: "Broken" },
-      { value: "deployed", label: "Deployed" },
-      { value: "lostorstolen", label: "Lost or Stolen" },
-      { value: "pending", label: "Pending" },
-      { value: "readytodeploy", label: "Ready to Deploy" },
-    ],
-  },
-  {
-    type: "dateRange",
-    name: "assetsbeingrepaired",
-    fromLabel: "Start Date",
-    toLabel: "End Date",
+    type: "text",
+    name: "name",
+    label: "Name",
   },
   {
     type: "searchable",
-    name: "asset",
-    label: "Asset",
+    name: "category",
+    label: "Cataegory",
     options: [
-      { value: "1", label: "Lenovo Yoga 7" },
-      { value: "2", label: "Iphone 16 Pro Max" },
-      { value: "3", label: "Ideapad 3" },
-      { value: "4", label: "Ipad Pro" },
-      { value: "5", label: "HP Spectre x360" },
+      { value: "1", label: "Laptops" },
+      { value: "2", label: "Mobile Phones" },
+      { value: "3", label: "Tablets" },
+      { value: "4", label: "Desktops" },
+      { value: "5", label: "Monitors" },
+    ],
+  },
+  {
+    type: "searchable",
+    name: "manufacturer",
+    label: "Manufacturer",
+    options: [
+      { value: "1", label: "Lenovo" },
+      { value: "2", label: "Apple" },
+      { value: "3", label: "Samsung" },
+      { value: "4", label: "Microsoft" },
+      { value: "5", label: "HP" },
     ],
   },
 ];
