@@ -12,7 +12,7 @@ import { AiOutlineAudit } from "react-icons/ai";
 import { RxComponent1 } from "react-icons/rx";
 import "../../styles/Table.css"; // use same table css like Category
 import ActionButtons from "../../components/ActionButtons";
-import ViewAsset from "../../components/ViewPopup";
+import View from "../../components/Modals/View";
 import ConfirmatinModal from "../../components/Modals/DeleteModal";
 
 const filterConfig = [
@@ -115,7 +115,7 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
           showView
           editPath="RepairEdit"
           editState={{ repair }}
-          onDeleteClick={() => onDeleteClick(repair.id)} // ✅ opens modal for row delete
+          onDeleteClick={() => onDeleteClick(repair.id)}
           onViewClick={() => onViewClick(repair)}
         />
       </td>
@@ -189,6 +189,21 @@ export default function AssetRepairs() {
     closeDeleteModal();
   };
 
+  // Add state for view modal
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedRepair, setSelectedRepair] = useState(null);
+
+  // Add view handler
+  const handleViewClick = (repair) => {
+    setSelectedRepair(repair);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    setSelectedRepair(null);
+  };
+
   // outside click for export toggle
   useEffect(() => {
     function handleClickOutside(event) {
@@ -215,6 +230,23 @@ export default function AssetRepairs() {
           closeModal={closeDeleteModal}
           actionType="delete"
           onConfirm={confirmDelete}
+        />
+      )}
+
+      {isViewModalOpen && selectedRepair && (
+        <View
+          title={`${selectedRepair.asset} - ${selectedRepair.name}`}
+          data={[
+            { label: "Asset", value: selectedRepair.asset },
+            { label: "Type", value: selectedRepair.type },
+            { label: "Name", value: selectedRepair.name },
+            { label: "Start Date", value: selectedRepair.start_date },
+            { label: "End Date", value: selectedRepair.end_date || "Ongoing" },
+            { label: "Cost", value: selectedRepair.cost },
+            { label: "Status", value: selectedRepair.status_name },
+            { label: "Notes", value: selectedRepair.notes || "No notes" }
+          ]}
+          closeModal={closeViewModal}
         />
       )}
 
@@ -280,7 +312,7 @@ export default function AssetRepairs() {
                         isSelected={selectedIds.includes(repair.id)}
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
-                        onViewClick={(r) => console.log("Viewing repair:", r)}
+                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (
