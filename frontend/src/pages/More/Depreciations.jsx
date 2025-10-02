@@ -1,177 +1,262 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/custom-colors.css';
-import '../../styles/PageTable.css';
-import '../../styles/GlobalTableStyles.css';
-import '../../styles/ViewManufacturer.css';
-import '../../styles/TableButtons.css';
-import '../../styles/ViewDepreciations.css';
-import DeleteModal from '../../components/Modals/DeleteModal';
+import { useEffect, useRef, useState } from "react";
+import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import TableBtn from "../../components/buttons/TableButtons";
+import MockupData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
+import RepairFilter from "../../components/FilterPanel";
+import Pagination from "../../components/Pagination";
+import "../../styles/Table.css";
+import ActionButtons from "../../components/ActionButtons";
+import ConfirmatinModal from "../../components/Modals/DeleteModal";
+
+const filterConfig = [
+  {
+    type: "searchable",
+    name: "depreciation",
+    label: "Depreciation",
+    options: [
+      { value: "1", label: "Laptop Depreciation" },
+      { value: "2", label: "iPhone Depreciation" },
+      { value: "3", label: "Tablet Depreciation" },
+      { value: "4", label: "" },
+      { value: "5", label: "" },
+    ],
+  },
+  {
+    type: "date",
+    name: "assetsbeingrepaired",
+    fromLabel: "Duration (in months)",
+  },
+];
+
+// TableHeader
+function TableHeader({ allSelected, onHeaderChange }) {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={onHeaderChange}
+        />
+      </th>
+      <th>NAME</th>
+      <th>DURATION</th>
+      <th> MINIMUM VALUE</th>
+      <th>ACTION</th>
+    </tr>
+  );
+}
+
+// TableItem
+function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick }) {
+  return (
+    <tr>
+      <td>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onRowChange(depreciation.id, e.target.checked)}
+        />
+      </td>
+      <td>{depreciation.name}</td>
+      <td>{depreciation.duration}</td>
+      <td>{depreciation.minimum_value}</td>
+      <td>
+        <ActionButtons
+          showEdit
+          showDelete
+          editPath="DepreciationEdit"
+          editState={{ depreciation }}
+          onDeleteClick={() => onDeleteClick(depreciation.id)}
+        />
+      </td>
+    </tr>
+  );
+}
 
 export default function Depreciations() {
-  const navigate = useNavigate();
-  const [depreciations, setDepreciations] = useState([
-    {
-      id: 1,
-      name: "iPhone Depreciation",
-      duration: "24 months",
-      minimumValue: "PHP 2,000"
-    },
-    {
-      id: 2,
-      name: "Laptop Depreciation",
-      duration: "36 months",
-      minimumValue: "PHP 5,000"
-    }
-  ]);
+  const [exportToggle, setExportToggle] = useState(false);
+  const exportRef = useRef(null);
+  const toggleRef = useRef(null);
 
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+  // pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [depreciationToDelete, setDepreciationToDelete] = useState(null);
+  const [pageSize, setPageSize] = useState(5);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedActivity = MockupData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    console.log("ViewDepreciations component mounted with navigate:", navigate);
-  }, [navigate]);
+  // selection
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
+  const allSelected =
+    paginatedActivity.length > 0 &&
+    paginatedActivity.every((item) => selectedIds.includes(item.id));
 
-  // Navigate to edit page
-  const handleEditDepreciation = (depreciationId) => {
-    console.log(`/More/DepreciationEdit/${depreciationId}`);
-    navigate(`/More/DepreciationEdit/${depreciationId}`);
-  };
-
-  // Show delete modal
-  const handleDeleteClick = (depreciationId) => {
-    console.log(`Opening delete modal for depreciation ${depreciationId}`);
-    setDepreciationToDelete(depreciationId);
-    setShowDeleteModal(true);
-  };
-
-  // Handle actual deletion
-  const confirmDelete = () => {
-    if (depreciationToDelete) {
-      setDepreciations(depreciations.filter(depreciation => depreciation.id !== depreciationToDelete));
-      setShowDeleteModal(false);
-      setDepreciationToDelete(null);
+  const handleHeaderChange = (e) => {
+    if (e.target.checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...paginatedActivity.map((item) => item.id).filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !paginatedActivity.map((item) => item.id).includes(id))
+      );
     }
   };
 
-  // Cancel delete
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setDepreciationToDelete(null);
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
   };
 
-  // Filter depreciations based on search query
-  const filteredDepreciations = depreciations.filter(depreciation =>
-    depreciation.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single id:", deleteTarget);
+      // remove from mock data / API call
+    } else {
+      console.log("Deleting multiple ids:", selectedIds);
+      // remove multiple
+      setSelectedIds([]); // clear selection
+    }
+    closeDeleteModal();
+  };
+
+  // outside click for export toggle
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        exportToggle &&
+        exportRef.current &&
+        !exportRef.current.contains(event.target) &&
+        toggleRef.current &&
+        !toggleRef.current.contains(event.target)
+      ) {
+        setExportToggle(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [exportToggle]);
 
   return (
     <>
-      <nav>
-        <NavBar />
-      </nav>
-      <main className="page">
-        <div className="container">
-          <section className="top depreciation-top-section">
-            <h1 className="depreciation-page-header">
-              Depreciation's ({depreciations.length})
-            </h1>
-            <div className="depreciation-top-section-actions">
-              <form action="" method="post" className="depreciation-search-form">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="search-input depreciation-search-input"
-                />
-              </form>
-              <MediumButtons type="export" />
-              <MediumButtons type="new" navigatePage="More/Depreciations/DepreciationRegistration" />
-            </div>
-          </section>
-          <section className="middle">
-            <div className="depreciation-table-wrapper">
-              <table className="depreciation-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '40px' }}>
-                      <input type="checkbox" />
-                    </th>
-                    <th style={{ width: '40%' }}>NAME</th>
-                    <th style={{ width: '25%' }}>DURATION</th>
-                    <th style={{ width: '25%' }}>MINIMUM VALUE</th>
-                    <th style={{ width: '60px', textAlign: 'center', paddingLeft: '8px', paddingRight: '8px' }}>EDIT</th>
-                    <th style={{ width: '60px', textAlign: 'center', paddingLeft: '8px', paddingRight: '8px' }}>DELETE</th>
-                  </tr>
-                </thead>
-              <tbody>
-                {filteredDepreciations.map((depreciation) => (
-                  <tr key={depreciation.id}>
-                    <td style={{ width: '40px' }}>
-                      <input type="checkbox" />
-                    </td>
-                    <td style={{ width: '40%', color: '#495057', fontWeight: '500' }}>{depreciation.name}</td>
-                    <td style={{ width: '25%', color: '#6c757d' }}>{depreciation.duration}</td>
-                    <td style={{ width: '25%', color: '#6c757d', fontWeight: '500' }}>{depreciation.minimumValue}</td>
-                    <td style={{ width: '60px', textAlign: 'center', paddingLeft: '8px', paddingRight: '8px' }}>
-                      <TableBtn
-                        type="edit"
-                        navigatePage={`/More/DepreciationEdit/${depreciation.id}`}
-                      />
-                    </td>
-                    <td style={{ width: '60px', textAlign: 'center', paddingLeft: '8px', paddingRight: '8px' }}>
-                      <TableBtn
-                        type="delete"
-                        showModal={() => handleDeleteClick(depreciation.id)}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              </table>
-              <div className="depreciation-pagination-container">
-                <div className="depreciation-pagination-left">
-                  <span className="depreciation-pagination-text">Show</span>
-                  <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))} className="depreciation-pagination-select">
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <span className="depreciation-pagination-text">items per page</span>
-                </div>
-                <div className="depreciation-pagination-right">
-                  <button className="prev-btn depreciation-prev-btn" disabled={currentPage === 1}>Prev</button>
-                  <span className="page-number depreciation-page-number">{currentPage}</span>
-                  <button className="next-btn depreciation-next-btn" disabled={filteredDepreciations.length <= itemsPerPage}>Next</button>
-                </div>
-              </div>
-            </div>
+      {isDeleteModalOpen && (
+        <ConfirmatinModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
+        />
+      )}
+
+      <section>
+        <nav>
+          <NavBar />
+        </nav>
+
+        <main className="page-layout">
+          <section className="title-page-section">
+            <h1>Repairs</h1>
           </section>
 
-          {/* Delete Modal */}
-          {showDeleteModal && (
-            <DeleteModal
-              isOpen={showDeleteModal}
-              onConfirm={confirmDelete}
-              onCancel={cancelDelete}
-              title="Delete Depreciation"
-              message="Are you sure you want to delete this depreciation? This action cannot be undone."
-            />
-          )}
-        </div>
-      </main>
+          <RepairFilter filters={filterConfig} />
+
+          <section className="table-layout">
+            <section className="table-header">
+              <h2 className="h2">Asset Repairs ({MockupData.length})</h2>
+              <section className="table-actions">
+                {/* Bulk delete button only when checkboxes selected */}
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
+                <input type="search" placeholder="Search..." className="search" />
+                <div ref={toggleRef}>
+                  <MediumButtons
+                    type="export"
+                    onClick={() => setExportToggle(!exportToggle)}
+                  />
+                </div>
+                <MediumButtons
+                  type="new"
+                  navigatePage="/Repairs/RepairRegistration"
+                />
+              </section>
+            </section>
+
+            {exportToggle && (
+              <section className="export-button-section" ref={exportRef}>
+                <button>Download as Excel</button>
+                <button>Download as PDF</button>
+                <button>Download as CSV</button>
+              </section>
+            )}
+
+            <section className="table-section">
+              <table>
+                <thead>
+                  <TableHeader
+                    allSelected={allSelected}
+                    onHeaderChange={handleHeaderChange}
+                  />
+                </thead>
+                <tbody>
+                  {paginatedActivity.length > 0 ? (
+                    paginatedActivity.map((depreciation) => (
+                      <TableItem
+                        key={depreciation.id}
+                        depreciation={depreciation}
+                        isSelected={selectedIds.includes(depreciation.id)}
+                        onRowChange={handleRowChange}
+                        onDeleteClick={openDeleteModal}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={9} className="no-data-message">
+                        No Repairs Found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={MockupData.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+      </section>
     </>
   );
 }
+

@@ -5,12 +5,7 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
 import RepairFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
-import { BsKeyboard } from "react-icons/bs";
-import { LuDroplet } from "react-icons/lu"; 
-import { HiOutlineTag } from "react-icons/hi";
-import { AiOutlineAudit } from "react-icons/ai";
-import { RxComponent1 } from "react-icons/rx";
-import "../../styles/Table.css"; // use same table css like Category
+import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
 import View from "../../components/Modals/View";
 import ConfirmatinModal from "../../components/Modals/DeleteModal";
