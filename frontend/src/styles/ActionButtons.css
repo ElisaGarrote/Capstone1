@@ -1,7 +1,6 @@
 .action-button-section {
   display: flex;
   flex-direction: row;   /* Make buttons align horizontally */
-
   justify-content: center; /* Optional: center them */
   align-items: center;
 }
@@ -14,4 +13,9 @@
   background: transparent;
   cursor: pointer;
   padding: 4px;
+}
+
+/* Recover button aligns left inside its cell */
+.action-button-recover {
+  margin-right: auto;
 }

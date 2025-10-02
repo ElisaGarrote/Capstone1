@@ -7,8 +7,10 @@ export default function ActionButtons({
   showView = false,
   editPath = "",
   editState = {},
+  showRecover = false,
   onDeleteClick = null,
   onViewClick = null,
+  onRecoverClick = null,
 }) {
   const navigate = useNavigate();
 
@@ -41,6 +43,16 @@ export default function ActionButtons({
           onClick={onViewClick}
         >
           <i className="fas fa-eye"></i>
+        </button>
+      )}
+
+      {showRecover && (
+        <button
+          title="Recover"
+          className="action-button action-button-recover"
+          onClick={onRecoverClick}
+        >
+          <i className="fas fa-undo"></i>
         </button>
       )}
     </section>

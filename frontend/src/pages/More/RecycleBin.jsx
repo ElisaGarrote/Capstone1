@@ -98,8 +98,8 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
       <td>{item.location}</td>
       <td>
         <ActionButtons
-          showDelete
-          onDeleteClick={() => onDeleteClick(item.id)}
+          showRecover
+          onRecoverClick={() => onRecoverClick(item.id)}
         />
       </td>
       <td>
