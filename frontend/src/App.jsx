@@ -21,10 +21,10 @@ import CheckinAccessory from "./pages/Accessories/CheckinAccessory";
 import CheckoutAccessory from "./pages/Accessories/CheckoutAccessory";
 import AccessoriesCheckoutList from "./pages/Accessories/AccessoriesCheckoutList";
 import Components from "./pages/Components/Components";
-import CheckOutComponent from "./pages/Components/CheckOutComponent";
-import CheckedOutList from "./pages/Components/CheckedOutList";
-import CheckInComponent from "./pages/Components/CheckInComponent";
-import ComponentsRegistration from "./pages/Components/ComponentsRegistration";
+import ComponentRegistration from "./pages/Components/ComponentRegistration";
+import ComponentCheckout from "./pages/Components/ComponentCheckout";
+import ComponentCheckedoutList from "./pages/Components/ComponentCheckedoutList";
+import ComponentCheckin from "./pages/Components/ComponentCheckin";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
@@ -99,12 +99,28 @@ function App() {
             element={<AssetsRegistration />}
           />
           <Route
-            path="/components/registration"
-            element={<ComponentsRegistration />}
+            path="/Components"
+            element={<Components />}
           />
           <Route
-            path="/components/registration/:id"
-            element={<ComponentsRegistration />}
+            path="/Components/ComponentRegistration"
+            element={<ComponentRegistration />}
+          />
+          <Route
+            path="/Components/ComponentEdit"
+            element={<ComponentRegistration />}
+          />
+          <Route
+            path="/Components/ComponentCheckout"
+            element={<ComponentCheckout />}
+          />
+          <Route
+            path="/Components/ComponentCheckedoutList"
+            element={<ComponentCheckedoutList />}
+          />
+          <Route
+            path="/Components/ComponentCheckin"
+            element={<ComponentCheckin />}
           />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
