@@ -61,6 +61,8 @@ import ViewSupplier from "./pages/More/ViewSupplier";
 import SupplierTableDetails from "./pages/More/SupplierTableDetails";
 import SupplierRegistration from "./pages/More/SupplierRegistration";
 import SupplierEdit from "./pages/More/SupplierEdit";
+import SupplierDetails from "./pages/More/supplier-details/SupplierDetails";
+import SupplierAsset from "./pages/More/supplier-details/SupplierAsset";
 import ViewStatus from "./pages/More/ViewStatus";
 import StatusRegistration from "./pages/More/StatusRegistration";
 import StatusEdit from "./pages/More/StatusEdit";
@@ -135,6 +137,14 @@ function App() {
           <Route
             path="/More/SupplierRegistration/:id"
             element={<SupplierRegistration />}
+          />
+          <Route
+            path="/More/SupplierDetails/:id"
+            element={<SupplierDetails />}
+          />
+          <Route
+            path="/More/SupplierDetails/:id/assets"
+            element={<SupplierAsset />}
           />
           <Route
             path="/More/SupplierTableDetails"
