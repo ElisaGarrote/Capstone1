@@ -9,6 +9,10 @@
     background-color: transparent;
 }
 
+.top-section-form-page.no-border {
+    border-bottom: none;
+}
+
 .breadcrumb-navigation {
     font-size: 0.875rem;
     color: var(--secondary-text-color);
