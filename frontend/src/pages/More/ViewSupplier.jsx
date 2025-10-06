@@ -78,7 +78,15 @@ function TableItem({ supplier, onDeleteClick }) {
             src={supplier.logo ? supplier.logo : DefaultImage}
             alt={supplier.logo}
           />
-          <span>{supplier.name}</span>
+          <span
+            onClick={() =>
+              navigate(`/More/SupplierDetails/${supplier.id}`, {
+                state: { supplier },
+              })
+            }
+          >
+            {supplier.name}
+          </span>
         </div>
       </td>
       <td>{supplier.address || "-"}</td>
