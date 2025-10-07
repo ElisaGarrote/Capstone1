@@ -1,33 +1,16 @@
+import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import NavBar from "../../../components/NavBar";
 import TopSecFormPage from "../../../components/TopSecFormPage";
 import SupplierTabNavBar from "../../../components/tab-nav-bar/SupplierTabNavBar";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
 import MediumButtons from "../../../components/buttons/MediumButtons";
 import MockupData from "../../../data/mockData/assets/assets-mockup-data.json";
-import { useState } from "react";
 import Pagination from "../../../components/Pagination";
-import AssetFilter from "../../../components/FilterPanel";
 import DefaultImage from "../../../assets/img/default-image.jpg";
+import Status from "../../../components/Status";
+import DeleteModal from "../../../components/Modals/DeleteModal";
 
 import "../../../styles/more/supplier/SupplierAsset.css";
-
-const filterConfig = [
-  {
-    type: "select",
-    name: "type",
-    label: "Type",
-    options: [
-      { value: "accessory", label: "Accessory" },
-      { value: "consumable", label: "Consumable" },
-      { value: "component", label: "Component" },
-    ],
-  },
-  {
-    type: "number",
-    name: "quantity",
-    label: "Quantity",
-  },
-];
 
 // TableHeader component to render the table header
 function TableHeader() {
@@ -65,8 +48,26 @@ function TableItem({ asset, onDeleteClick }) {
       <td>{asset.id}</td>
       <td>{asset.name}</td>
       <td>{asset.category}</td>
-      <td>{asset.isCheckInOrOut}</td>
-      <td>{asset.status}</td>
+
+      {/* CHECK-IN / CHECK-OUT Column */}
+      <td>
+        {asset.hasCheckoutRecord && asset.isCheckInOrOut && (
+          <button
+            className={
+              asset.isCheckInOrOut === "Check-In"
+                ? "check-in-btn"
+                : "check-out-btn"
+            }
+            onClick={() => onCheckInOut(asset)}
+          >
+            {asset.isCheckInOrOut}
+          </button>
+        )}
+      </td>
+
+      <td>
+        <Status type={asset.assetType} name={asset.status} />
+      </td>
       <td>
         <section className="action-button-section">
           <button
@@ -90,7 +91,6 @@ function TableItem({ asset, onDeleteClick }) {
 }
 
 export default function SupplierAsset() {
-  const { id } = useParams();
   const location = useLocation();
 
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -107,77 +107,86 @@ export default function SupplierAsset() {
   const paginatedAssets = MockupData.slice(startIndex, endIndex);
 
   return (
-    <section className="page-with-tab-layout">
-      <NavBar />
-      <main className="main-page-with-tab">
-        <section className="main-top">
-          <TopSecFormPage
-            root="Suppliers"
-            currentPage="Show Supplier"
-            rootNavigatePage="/More/ViewSupplier"
-            title={supplierDetails.name}
-            borderBottom={false}
-          />
-          <SupplierTabNavBar supplier={supplierDetails} />
-        </section>
+    <>
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
+        />
+      )}
 
-        <section className="page-with-tab-table-section">
-          {/* Table Filter */}
-          <AssetFilter filters={filterConfig} />
+      <section className="page-with-tab-layout">
+        <NavBar />
+        <main className="main-page-with-tab">
+          <section className="main-top">
+            <TopSecFormPage
+              root="Suppliers"
+              currentPage="Show Supplier"
+              rootNavigatePage="/More/ViewSupplier"
+              title={supplierDetails.name}
+              borderBottom={false}
+            />
+            <SupplierTabNavBar supplier={supplierDetails} />
+          </section>
 
-          <section className="table-layout">
-            {/* Table Header */}
-            <section className="table-header">
-              <h2 className="h2">Asset ({MockupData.length})</h2>
-              <section className="table-actions">
-                <input
-                  type="search"
-                  placeholder="Search..."
-                  className="search"
+          <section className="page-with-tab-table-section">
+            <section className="table-layout">
+              {/* Table Header */}
+              <section className="table-header">
+                <h2 className="h2">Asset ({MockupData.length})</h2>
+                <section className="table-actions">
+                  <input
+                    type="search"
+                    placeholder="Search..."
+                    className="search"
+                  />
+                  <MediumButtons
+                    type="new"
+                    navigatePage="/assets/registration"
+                  />
+                </section>
+              </section>
+
+              {/* Table Structure */}
+              <section className="page-with-tab-table">
+                <table>
+                  <thead>
+                    <TableHeader />
+                  </thead>
+                  <tbody>
+                    {paginatedAssets.length > 0 ? (
+                      paginatedAssets.map((asset, index) => (
+                        <TableItem
+                          key={index}
+                          asset={asset}
+                          onDeleteClick={() => setDeleteModalOpen(true)}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="no-data-message">
+                          No assets found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </section>
+
+              {/* Table pagination */}
+              <section className="table-pagination">
+                <Pagination
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  totalItems={MockupData.length}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
                 />
-                <MediumButtons type="new" navigatePage="/assets/registration" />
               </section>
             </section>
-
-            {/* Table Structure */}
-            <section className="page-with-tab-table">
-              <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
-                  {paginatedAssets.length > 0 ? (
-                    paginatedAssets.map((asset, index) => (
-                      <TableItem
-                        key={index}
-                        asset={asset}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="no-data-message">
-                        No assets found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </section>
-
-            {/* Table pagination */}
-            <section className="table-pagination">
-              <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalItems={MockupData.length}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-              />
-            </section>
           </section>
-        </section>
-      </main>
-    </section>
+        </main>
+      </section>
+    </>
   );
 }
