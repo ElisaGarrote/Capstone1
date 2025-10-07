@@ -276,6 +276,7 @@ footer {
   flex-direction: column;
   min-height: 100vh;
   background-color: var(--bg-color);
+  overflow-x: hidden;
 
   .main-page-with-tab {
     display: flex;
@@ -289,7 +290,7 @@ footer {
 
       .page-with-tab-table {
         height: 100%;
-        max-height: 43vh;
+        max-height: 46vh;
         height: 100%;
         overflow-y: auto;
         background-color: white;

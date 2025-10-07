@@ -2,6 +2,7 @@
     min-height: 100vh;
     padding: 80px 38px 38px 38px;
     background-color: var(--bg-color);
+    overflow-x: hidden;
 }
 
 .main-middle {
