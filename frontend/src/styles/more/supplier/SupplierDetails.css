@@ -24,12 +24,12 @@
     box-shadow: 0 0 20px rgba(211, 211, 211, 0.3);
     border-radius: 25px;
     border: 1px solid #d3d3d3;
-    gap: 20px;
+    gap: 25px;
 
     h2 {
         color: var(--secondary-text-color);
         font-weight: 600;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
 
     h2::after {
@@ -44,7 +44,7 @@
     h3 {
         color: var(--secondary-text-color);
         font-weight: 600;
-        font-size: 1.25rem;
+        font-size: 1.125rem;
     }
 
     fieldset {
@@ -52,5 +52,27 @@
         width: 100%;
         flex-direction: column;
         gap: 5px;
+
+        label {
+            color: #677788;
+            font-weight: 600;
+        }
+
+        label[for="email"]+p,
+        label[for="url"]+p,
+        label[for="phoneNumber"]+p {
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        label[for="email"]+p:hover,
+        label[for="url"]+p:hover,
+        label[for="phoneNumber"]+p:hover {
+            color: var(--primary-color-hover);
+        }
+
+        p {
+            color: #677788;
+        }
     }
 }
