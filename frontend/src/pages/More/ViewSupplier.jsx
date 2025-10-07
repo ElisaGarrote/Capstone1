@@ -93,12 +93,20 @@ function TableItem({ supplier, onDeleteClick }) {
       <td>{supplier.city || "-"}</td>
       <td>{supplier.zip || "-"}</td>
       <td>{supplier.contactName || "-"}</td>
-      <td>{supplier.phone || "-"}</td>
+      <td>{supplier.phoneNumber || "-"}</td>
       <td>{supplier.email || "-"}</td>
       <td>{supplier.url || "-"}</td>
       <td>
         <section className="action-button-section">
-          <button title="View" className="action-button">
+          <button
+            title="View"
+            className="action-button"
+            onClick={() =>
+              navigate(`/More/SupplierDetails/${supplier.id}`, {
+                state: { supplier },
+              })
+            }
+          >
             <i className="fas fa-eye"></i>
           </button>
           <button
