@@ -4,13 +4,12 @@ import NavBar from "../../../components/NavBar";
 import TopSecFormPage from "../../../components/TopSecFormPage";
 import SupplierTabNavBar from "../../../components/tab-nav-bar/SupplierTabNavBar";
 import MediumButtons from "../../../components/buttons/MediumButtons";
-import MockupData from "../../../data/mockData/assets/assets-mockup-data.json";
+import MockupData from "../../../data/mockData/components/components-mockup-data.json";
 import Pagination from "../../../components/Pagination";
 import DefaultImage from "../../../assets/img/default-image.jpg";
-import Status from "../../../components/Status";
 import DeleteModal from "../../../components/Modals/DeleteModal";
 
-import "../../../styles/more/supplier/SupplierAsset.css";
+import "../../../styles/more/supplier/SupplierComponent.css";
 
 // TableHeader component to render the table header
 function TableHeader() {
@@ -20,54 +19,37 @@ function TableHeader() {
         <input type="checkbox" name="checkbox-asset" id="checkbox-asset" />
       </th>
       <th>IMAGE</th>
-      <th>ID</th>
       <th>NAME</th>
       <th>CATEGORY</th>
-      <th>CHECKIN/CHECKOUT</th>
-      <th>STATUS</th>
+      <th>MANUFACTURER</th>
+      <th>DEPRECIATION</th>
       <th>ACTIONS</th>
     </tr>
   );
 }
 
 // TableItem component to render each ticket row
-function TableItem({ asset, onDeleteClick }) {
+function TableItem({ component, onDeleteClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   return (
     <tr>
       <td>
-        <div className="checkbox-asset">
+        <div className="checkbox-component">
           <input type="checkbox" name="" id="" />
         </div>
       </td>
       <td>
-        <img src={asset.image ? asset.image : DefaultImage} alt={asset.name} />
+        <img
+          src={component.image ? component.image : DefaultImage}
+          alt={component.name}
+        />
       </td>
-      <td>{asset.id}</td>
-      <td>{asset.name}</td>
-      <td>{asset.category}</td>
-
-      {/* CHECK-IN / CHECK-OUT Column */}
-      <td>
-        {asset.hasCheckoutRecord && asset.isCheckInOrOut && (
-          <button
-            className={
-              asset.isCheckInOrOut === "Check-In"
-                ? "check-in-btn"
-                : "check-out-btn"
-            }
-            onClick={() => onCheckInOut(asset)}
-          >
-            {asset.isCheckInOrOut}
-          </button>
-        )}
-      </td>
-
-      <td>
-        <Status type={asset.assetType} name={asset.status} />
-      </td>
+      <td>{component.name}</td>
+      <td>{component.category}</td>
+      <td>{component.manufacturer}</td>
+      <td>{component.depreciation}</td>
       <td>
         <section className="action-button-section">
           <button
@@ -133,7 +115,7 @@ export default function SupplierComponent() {
             <section className="table-layout">
               {/* Table Header */}
               <section className="table-header">
-                <h2 className="h2">Asset ({MockupData.length})</h2>
+                <h2 className="h2">Components ({MockupData.length})</h2>
                 <section className="table-actions">
                   <input
                     type="search"
@@ -155,17 +137,17 @@ export default function SupplierComponent() {
                   </thead>
                   <tbody>
                     {paginatedAssets.length > 0 ? (
-                      paginatedAssets.map((asset, index) => (
+                      paginatedAssets.map((component, index) => (
                         <TableItem
                           key={index}
-                          asset={asset}
+                          component={component}
                           onDeleteClick={() => setDeleteModalOpen(true)}
                         />
                       ))
                     ) : (
                       <tr>
                         <td colSpan={5} className="no-data-message">
-                          No assets found.
+                          No components found.
                         </td>
                       </tr>
                     )}
