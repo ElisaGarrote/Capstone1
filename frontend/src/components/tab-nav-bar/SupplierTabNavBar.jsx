@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
-
-import "../../styles/component/tab-nav-bar/SupplierTabNavBar.css";
+import AssetMockup from "../../data/mockData/assets/assets-mockup-data.json";
+import ComponentMockup from "../../data/mockData/components/components-mockup-data.json";
 
 export default function SupplierTabNavBar({ supplier }) {
   const navigate = useNavigate();
@@ -62,7 +61,7 @@ export default function SupplierTabNavBar({ supplier }) {
                 : ""
             }
           >
-            Assets ({MockupData.length})
+            Assets ({AssetMockup.length})
           </a>
         </li>
 
@@ -88,7 +87,7 @@ export default function SupplierTabNavBar({ supplier }) {
                 : ""
             }
           >
-            Components (390)
+            Components ({ComponentMockup.length})
           </a>
         </li>
       </ul>
