@@ -12,6 +12,7 @@ export default function SupplierTabNavBar({ supplier }) {
   return (
     <nav className="tab-nav">
       <ul>
+        {/* Supplier Details */}
         <li
           className={
             location.pathname === `/More/SupplierDetails/${supplier.id}`
@@ -39,6 +40,8 @@ export default function SupplierTabNavBar({ supplier }) {
             About
           </a>
         </li>
+
+        {/* Supplier Assets */}
         <li
           className={
             location.pathname === `/More/SupplierDetails/${supplier.id}/assets`
@@ -62,12 +65,19 @@ export default function SupplierTabNavBar({ supplier }) {
             Assets ({MockupData.length})
           </a>
         </li>
+
+        {/* Supplier Components */}
         <li
           className={
             location.pathname ===
             `/More/SupplierDetails/${supplier.id}/components`
               ? "active"
               : ""
+          }
+          onClick={() =>
+            navigate(`/More/SupplierDetails/${supplier.id}/components`, {
+              state: { supplier },
+            })
           }
         >
           <a
@@ -76,9 +86,6 @@ export default function SupplierTabNavBar({ supplier }) {
               `/More/SupplierDetails/${supplier.id}/components`
                 ? "active"
                 : ""
-            }
-            onClick={() =>
-              navigate(`/More/SupplierDetails/${supplier.id}/components`)
             }
           >
             Components (390)
