@@ -29,7 +29,7 @@ export default function SupplierDetails() {
           </section>
           <section className="main-middle">
             <section className="card-content">
-              <h2>About</h2>
+              <h2>About Supplier</h2>
               <h3>Details</h3>
               <fieldset>
                 <label htmlFor="address">Address</label>
@@ -45,19 +45,33 @@ export default function SupplierDetails() {
               </fieldset>
               <fieldset>
                 <label htmlFor="contactName">Contact Name</label>
-                <p>{supplierDetails.contact_name || "-"}</p>
+                <p>{supplierDetails.contactName || "-"}</p>
               </fieldset>
               <fieldset>
                 <label htmlFor="phoneNumber">Phone Number</label>
-                <p>{supplierDetails.phone_number || "-"}</p>
+                <p
+                  onClick={() =>
+                    window.open(`tel:${supplierDetails.phoneNumber}`, "_blank")
+                  }
+                >
+                  {supplierDetails.phoneNumber || "-"}
+                </p>
               </fieldset>
               <fieldset>
                 <label htmlFor="email">Email</label>
-                <p>{supplierDetails.email || "-"}</p>
+                <p
+                  onClick={() =>
+                    window.open(`mailto:${supplierDetails.email}`, "_blank")
+                  }
+                >
+                  {supplierDetails.email || "-"}
+                </p>
               </fieldset>
               <fieldset>
                 <label htmlFor="url">URL</label>
-                <p>{supplierDetails.url || "-"}</p>
+                <p onClick={() => window.open(supplierDetails.url, "_blank")}>
+                  {supplierDetails.url || "-"}
+                </p>
               </fieldset>
               <fieldset>
                 <label htmlFor="notes">Notes</label>
