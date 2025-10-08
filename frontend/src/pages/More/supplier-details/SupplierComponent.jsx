@@ -124,7 +124,7 @@ export default function SupplierComponent() {
                   />
                   <MediumButtons
                     type="new"
-                    navigatePage="/assets/registration"
+                    navigatePage="/components/registration"
                   />
                 </section>
               </section>
