@@ -31,6 +31,7 @@ const CategoryEdit = () => {
       categoryName: category.name,
       categoryType: category.type.toLowerCase(),
     },
+    mode: "all",
   });
 
   const categoryTypes = [
