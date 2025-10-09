@@ -1,0 +1,131 @@
+.assets-table-section {
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.assets-table-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.assets-table-section table th {
+  padding: 0.75rem !important;
+  text-align: left !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-top: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+  background-color: #f0f1f2;
+  height: 50px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.assets-table-section table th:first-child {
+  width: 200px;
+}
+
+.assets-table-section table th:nth-child(2) {
+  min-width: 200px;
+  max-width: fit-content;
+}
+
+.assets-table-section table td {
+  text-align: left !important;
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-color);
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+  vertical-align: middle;
+}
+
+.assets-table-section table td.no-data-message {
+  display: table-cell !important;
+  width: 100% !important;
+  white-space: normal !important;
+  padding: 0.75rem !important;
+  text-align: center !important;
+  font-style: italic;
+  color: var(--secondary-text-color);
+  background: transparent;
+}
+
+.assets-table-section table tr:hover {
+  background-color: #fcfcfc;
+}
+
+.assets-table-section table td .table-img {
+  width: 50px !important;
+  height: 50px !important;
+  max-width: 50px !important;
+  max-height: 50px !important;
+  object-fit: cover !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+  margin: 0 !important;
+}
+
+.assets-table-section table th:nth-child(7),
+.assets-table-section table td:nth-child(7) {
+  text-align: left !important;
+  padding-left: 0.75rem !important;
+  min-width: 120px;
+  width: 120px;
+}
+
+.check-in-btn,
+.check-out-btn {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+  border-radius: 20px !important;
+  border: none !important;
+  cursor: pointer !important;
+  min-width: 90px !important;
+  width: 90px !important;
+  text-align: center !important;
+  display: inline-block !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  height: 28px !important;
+  font-family: inherit !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+}
+
+.check-in-btn {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+.check-out-btn {
+  background-color: #34c759 !important;
+  color: white !important;
+}
+
+.check-in-btn:hover {
+  background-color: var(--primary-color-hover) !important;
+}
+
+.check-out-btn:hover {
+  background-color: rgba(52, 199, 89, 0.8) !important;
+}
+
+.assets-table-section .action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.assets-table-section .action-buttons button,
+.assets-table-section .action-buttons > * {
+  margin: 0;
+  flex-shrink: 0;
+}

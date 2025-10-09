@@ -12,9 +12,10 @@ import Products from "./pages/Assets/Products";
 import ProductsRegistration from "./pages/Assets/ProductsRegistration";
 import Assets from "./pages/Assets/Assets";
 import AssetsRegistration from "./pages/Assets/AssetsRegistration";
+import AssetViewPage from "./pages/Assets/AssetViewPage";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
-import ApprovedTickets from "./pages/Assets/ApprovedTickets";
+import Tickets from "./pages/Tickets/Tickets";
 import Accessories from "./pages/Accessories/Accessories";
 import AccessoriesRegistration from "./pages/Accessories/AccessoriesRegistration";
 import CheckinAccessory from "./pages/Accessories/CheckinAccessory";
@@ -185,6 +186,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/products" element={<Products />} />
           <Route path="/assets" element={<Assets />} />
+          <Route path="/assets/view/:id" element={<AssetViewPage />} />
           <Route path="/assets/check-in/:id" element={<CheckInAsset />} />
           <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
           <Route path="/components" element={<Components />} />
@@ -220,7 +222,7 @@ function App() {
           <Route path="/audits/schedule" element={<ScheduleRegistration />} />
           <Route path="/audits/edit" element={<EditAudits />} />
           <Route path="/audits/view" element={<ViewAudits />} />
-          <Route path="/approved-tickets" element={<ApprovedTickets />} />
+          <Route path="/approved-tickets" element={<Tickets />} />
           <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
           <Route path="/warranties" element={<ExpiringWarranties />} />
           <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />
