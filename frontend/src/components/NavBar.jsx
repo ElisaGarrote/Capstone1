@@ -102,7 +102,7 @@ export default function NavBar() {
       location.pathname.startsWith("/components")
     ) {
       setActiveMenu("assets");
-    } else if (location.pathname.startsWith("/dashboard/Repair")) {
+    } else if (location.pathname.startsWith("/Repair")) {
       setActiveMenu("repairs");
     } else if (location.pathname.startsWith("/audits")) {
       setActiveMenu("audits");
