@@ -22,13 +22,13 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields['role'] = 'admin'
+        extra_fields['role'] = 'Admin'
 
         return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser):
     ROLE_CHOICES = [
-        ('admin', 'Admin'), ('operator', 'Operator'),
+        ('Admin', 'Admin'), ('operator', 'Operator'),
     ]
     
     username = None # removes username field inherited from AbstractUser
