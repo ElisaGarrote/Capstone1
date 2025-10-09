@@ -23,6 +23,7 @@ const CategoryRegistration = () => {
       customFields: "",
       skipCheckoutConfirmation: false,
     },
+    mode: "all",
   });
 
   const categoryTypes = [

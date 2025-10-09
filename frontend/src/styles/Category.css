@@ -24,9 +24,11 @@
 
     .table-section {
         overflow-x: auto;
-        max-height: 500px;
+        max-height: 55vh;
         overflow-y: auto;
 
+        /* Prevent affecting the parent when scrolling. */
+        overscroll-behavior: contain;
 
         table {
             width: 100%;

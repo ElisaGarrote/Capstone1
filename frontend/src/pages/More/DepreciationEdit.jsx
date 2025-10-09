@@ -1,47 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/Registration.css';
-import '../../styles/CategoryRegistration.css';
-import TopSecFormPage from '../../components/TopSecFormPage';
-import { useForm } from 'react-hook-form';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import "../../styles/Registration.css";
+import TopSecFormPage from "../../components/TopSecFormPage";
+import { useForm, Controller } from "react-hook-form";
 
 const DepreciationEdit = () => {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const location = useLocation();
 
-  // Sample data for different depreciation IDs
-  const depreciationData = {
-    1: { 
-      depreciationName: 'iPhone Depreciation', 
-      duration: '24', 
-      minimumValue: '2000', 
-      notes: 'Standard depreciation for mobile devices' 
-    },
-    2: { 
-      depreciationName: 'Laptop Depreciation', 
-      duration: '36', 
-      minimumValue: '5000', 
-      notes: 'Standard depreciation for laptop computers' 
-    }
-  };
+  // Get depreciation data from navigation state
+  const depreciationData = location.state?.depreciation || null;
 
-  const currentDepreciation = depreciationData[id] || depreciationData[1];
+  // Log what's being passed from Depreciations page
+  console.log("DepreciationEdit - Received data:", location.state);
+  console.log("DepreciationEdit - Depreciation data:", depreciationData);
 
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    control,
+    watch,
+    setValue,
+    formState: { errors, isValid },
   } = useForm({
-    defaultValues: currentDepreciation
+    mode: "all",
   });
 
-  const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log('Form submitted:', data);
+  // Populate form with existing depreciation data
+  useEffect(() => {
+    if (depreciationData) {
+      setValue("depreciationName", depreciationData.name || "");
+      setValue("duration", depreciationData.duration || "");
+      setValue("minimumValue", depreciationData.minimum_value || "");
+    }
+  }, [depreciationData, setValue]);
 
-    // Optional: navigate back to depreciation view after successful submission
-    navigate('/More/ViewDepreciations');
+
+  const onSubmit = (data) => {
+    console.log("Form submitted:", data);
+    navigate("/More/Depreciations");
   };
 
   return (
@@ -52,70 +50,82 @@ const DepreciationEdit = () => {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="Depreciations"
+            root="More / Depreciations"
             currentPage="Edit Depreciation"
-            rootNavigatePage="/More/ViewDepreciations"
-            title={`Edit Depreciation - ${currentDepreciation.depreciationName}`}
+            rootNavigatePage="/More/Depreciations"
+            title="Edit Depreciation"
           />
         </section>
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
+
+            {/* Depreciation Name */}
             <fieldset>
-              <label htmlFor="depreciationName">Depreciation Name *</label>
+              <label htmlFor="depreciationName">Name *</label>
               <input
                 type="text"
-                placeholder="Depreciation Name"
+                placeholder="Enter depreciation name"
                 maxLength="100"
-                className={errors.depreciationName ? 'input-error' : ''}
-                {...register("depreciationName", { required: 'Depreciation Name is required' })}
-              />
-              {errors.depreciationName && <span className='error-message'>{errors.depreciationName.message}</span>}
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="duration">Duration (in months) *</label>
-              <input
-                type="number"
-                placeholder="Duration in months"
-                min="1"
-                max="120"
-                className={errors.duration ? 'input-error' : ''}
-                {...register("duration", { 
-                  required: 'Duration is required',
-                  min: { value: 1, message: 'Duration must be at least 1 month' },
-                  max: { value: 120, message: 'Duration cannot exceed 120 months' }
+                className={errors.depreciationName ? "input-error" : ""}
+                {...register("depreciationName", {
+                  required: "Depreciation name is required",
                 })}
               />
-              {errors.duration && <span className='error-message'>{errors.duration.message}</span>}
+              {errors.depreciationName && (
+                <span className="error-message">
+                  {errors.depreciationName.message}
+                </span>
+              )}
             </fieldset>
 
+            {/* Duration */}
+            <fieldset>
+              <label htmlFor="duration">Duration *</label>
+              <input
+                type="number"
+                id="duration"
+                placeholder="Enter depreciation duration"
+                min="1"
+                step="1"
+                {...register("duration", {
+                  required: "Duration is required",
+                  valueAsNumber: true,
+                  validate: (value) =>
+                    Number.isInteger(value) && value > 0 || "Must be a positive integer",
+                })}
+                className={errors.duration ? "input-error" : ""}
+              />
+              {errors.duration && (
+                <span className="error-message">{errors.duration.message}</span>
+              )}
+            </fieldset>
+
+            {/* Minimum Value */}
             <fieldset>
               <label htmlFor="minimumValue">Minimum Value *</label>
               <input
                 type="number"
-                placeholder="Minimum Value (PHP)"
-                min="0"
-                step="0.01"
-                className={errors.minimumValue ? 'input-error' : ''}
-                {...register("minimumValue", { 
-                  required: 'Minimum Value is required',
-                  min: { value: 0, message: 'Minimum Value cannot be negative' }
+                id="minimumValue"
+                placeholder="Enter  minimum value"
+                min="1"
+                step="1"
+                {...register("minimumValue", {
+                  required: "Minimum value is required",
+                  valueAsNumber: true,
+                  validate: (value) =>
+                    Number.isInteger(value) && value > 0 || "Must be a positive integer",
                 })}
+                className={errors.minimumValue ? "input-error" : ""}
               />
-              {errors.minimumValue && <span className='error-message'>{errors.minimumValue.message}</span>}
+              {errors.minimumValue && (
+                <span className="error-message">{errors.minimumValue.message}</span>
+              )}
             </fieldset>
 
-            <fieldset>
-              <label htmlFor="notes">Notes</label>
-              <textarea
-                placeholder="Enter any additional notes about this depreciation..."
-                rows="4"
-                maxLength="500"
-                {...register("notes")}
-              />
-            </fieldset>
-
-            <button type="submit" className="save-btn">Save</button>
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid}>
+              Update
+            </button>
           </form>
         </section>
       </main>

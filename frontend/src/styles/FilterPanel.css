@@ -267,7 +267,9 @@ input:focus {
 
     /* Date and Dropdown Inputs */
     .dateTime,
-    .dropdown {
+    .dropdown,
+    .dropdown__control,
+    .dropdown__option {
         padding: 6px 8px;
     }
 
@@ -275,11 +277,6 @@ input:focus {
         flex-direction: column;
         align-items: stretch;
         width: 100%;
-    }
-
-    .dateRange .filterGroup {
-        width: 100%;
-        margin-bottom: 5px;
     }
 
     .rangeSeparator {

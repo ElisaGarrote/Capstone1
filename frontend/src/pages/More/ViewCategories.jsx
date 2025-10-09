@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
-import "../../styles/Category.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
-import { useNavigate } from "react-router-dom";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import Footer from "../../components/Footer";
+
+import "../../styles/Category.css";
 
 // icons
 import keyboardIcon from "../../assets/img/keyboard_Icon.png";
@@ -197,12 +199,10 @@ export default function Category() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
+        <main className="main-with-table">
           {/* Table Filter */}
           <CategoryFilter filters={filterConfig} />
 
@@ -261,6 +261,7 @@ export default function Category() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

@@ -194,7 +194,12 @@
 }
 
 .recycle-bin-page table th:nth-child(6),
-.recycle-bin-page table td:nth-child(6),
+.recycle-bin-page table td:nth-child(6) {
+  width: 80px;
+  text-align: left;
+  padding: 0.75rem;
+}
+
 .recycle-bin-page table th:nth-child(7),
 .recycle-bin-page table td:nth-child(7) {
   width: 80px;

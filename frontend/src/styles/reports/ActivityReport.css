@@ -1,8 +1,10 @@
 .activity-report-table-section {
   overflow-x: auto;
-  max-height: 500px;
+  max-height: 55vh;
   overflow-y: auto;
 
+  /* Prevent affecting the parent when scrolling. */
+  overscroll-behavior: contain;
 
   table {
     width: 100%;
@@ -25,6 +27,25 @@
       position: sticky;
       top: 0;
       z-index: 1;
+    }
+
+    /* Target only the checkbox column */
+    th.checkbox-col,
+    td.checkbox-col {
+      width: 28px;
+      text-align: center;
+      padding: 0 !important; /* remove extra padding */
+    }
+
+    th.checkbox-col input[type="checkbox"],
+    td.checkbox-col input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
     }
 
     /* table header for 'Date' */

@@ -1,10 +1,9 @@
-import "../../styles/DeleteModal.css";
-import DeleteIcon from "../../assets/icons/delete-red.svg";
-import CloseIcon from "../../assets/icons/close-icon.svg";
 import { useEffect, useState } from "react";
 import LoadingButton from "../LoadingButton";
 
-export default function ConfirmatinModal({
+import "../../styles/DeleteModal.css";
+
+export default function ConfirmationModal({
   closeModal,
   confirmDelete,
   endPoint,
@@ -19,6 +18,7 @@ export default function ConfirmatinModal({
     - delete
     - activate
     - deactivate
+    - recover
   */
 
   const [isDeleting, setDeleting] = useState(false);
@@ -64,6 +64,8 @@ export default function ConfirmatinModal({
         return "Activate";
       case "deactivate":
         return "Deactivate";
+      case "recover":
+        return "Recover";
       default:
         return "Confirm";
     }
@@ -77,6 +79,8 @@ export default function ConfirmatinModal({
         return "Activating...";
       case "deactivate":
         return "Deactivating...";
+      case "recover":
+        return "Recovering...";
       default:
         return "Processing...";
     }

@@ -102,7 +102,7 @@ export default function NavBar() {
       location.pathname.startsWith("/components")
     ) {
       setActiveMenu("assets");
-    } else if (location.pathname.startsWith("/dashboard/Repair")) {
+    } else if (location.pathname.startsWith("/Repair")) {
       setActiveMenu("repairs");
     } else if (location.pathname.startsWith("/audits")) {
       setActiveMenu("audits");
@@ -153,7 +153,7 @@ export default function NavBar() {
     } else if (location.pathname.startsWith("/More/ViewStatus")) {
       setSelectedMore("Statuses");
       setActiveMenu("more");
-    } else if (location.pathname.startsWith("/More/ViewDepreciations")) {
+    } else if (location.pathname.startsWith("/More/Depreciations")) {
       setSelectedMore("Depreciations");
       setActiveMenu("more");
     } else if (location.pathname.startsWith("/More/RecycleBin")) {
@@ -256,7 +256,7 @@ export default function NavBar() {
             <li>
               <a
                 onClick={() => {
-                  navigate("/dashboard/Repair/Maintenance");
+                  navigate("/Repairs");
                   setActiveMenu("repairs");
                 }}
                 className={activeMenu === "repairs" ? "active" : ""}
@@ -409,7 +409,7 @@ export default function NavBar() {
                       </button>
                       <button
                         onClick={() => {
-                          navigate("/More/ViewDepreciations");
+                          navigate("/More/Depreciations");
                           setSelectedMore("Depreciations");
                           setShowMoreMenu(false);
                         }}

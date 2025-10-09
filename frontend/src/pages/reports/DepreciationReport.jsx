@@ -1,13 +1,15 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import "../../styles/reports/DepreciationReport.css";
 import Pagination from "../../components/Pagination";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import DepreciationFilter from "../../components/FilterPanel";
-import { useNavigate } from "react-router-dom";
+import Footer from "../../components/Footer";
 import MockupData from "../../data/mockData/reports/depreciation-mockup-data.json";
+
+import "../../styles/reports/DepreciationReport.css";
 
 const filterConfig = [
   {
@@ -147,12 +149,10 @@ export default function DepreciationReport() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
+        <main className="main-with-table">
           {/* Title of the Page */}
           <section className="title-page-section">
             <h1>Depreciation Report</h1>
@@ -225,6 +225,7 @@ export default function DepreciationReport() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

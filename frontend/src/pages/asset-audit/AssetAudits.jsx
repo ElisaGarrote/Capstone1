@@ -277,7 +277,12 @@ export default function AssetAudits() {
                     })}
                   </tbody>
                 </table>
-              )}
+              )} : 
+              {
+                <div>
+                  <p className="table-message">No asset audits found.</p>
+                </div>
+              }
 
               {/* Pagination */}
               {scheduleAuditData.length > 0 && (

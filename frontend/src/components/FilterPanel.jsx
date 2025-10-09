@@ -144,6 +144,7 @@ export default function FilterPanel({ filters = [], onReset }) {
                   isSearchable
                   menuPortalTarget={document.body}
                   unstyled
+                  maxMenuHeight={5 * 38}
                 />
               )}
             </div>

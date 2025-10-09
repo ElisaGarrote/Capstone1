@@ -253,6 +253,7 @@ class Repair(models.Model):
     end_date = models.DateField(blank=True, null=True)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     notes = models.TextField(blank=True, null=True)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='repair_status')
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):

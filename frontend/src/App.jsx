@@ -34,9 +34,9 @@ import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
 import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
-import AssetRepairs from "./pages/Repair/Maintenance";
-import MaintenanceRegistration from "./pages/Repair/MaintenanceRegistration";
-import EditMaintenance from "./pages/Repair/EditMaintenance";
+import Repairs from "./pages/Repair/Repairs";
+import RepairRegistration from "./pages/Repair/RepairRegistration";
+import RepairEdit from "./pages/Repair/RepairEdit";
 import Consumables from "./pages/Consumables/Consumables";
 import ConsumablesRegistration from "./pages/Consumables/ConsumablesRegistration";
 import PasswordResetRequest from "./pages/PasswordResetRequest";
@@ -62,11 +62,14 @@ import ViewSupplier from "./pages/More/ViewSupplier";
 import SupplierTableDetails from "./pages/More/SupplierTableDetails";
 import SupplierRegistration from "./pages/More/SupplierRegistration";
 import SupplierEdit from "./pages/More/SupplierEdit";
+import SupplierDetails from "./pages/More/supplier-details/SupplierDetails";
+import SupplierAsset from "./pages/More/supplier-details/SupplierAsset";
+import SupplierComponent from "./pages/More/supplier-details/SupplierComponent";
 import ViewStatus from "./pages/More/ViewStatus";
 import StatusRegistration from "./pages/More/StatusRegistration";
 import StatusEdit from "./pages/More/StatusEdit";
 import StatusDetails from "./pages/More/StatusDetails";
-import ViewDepreciations from "./pages/More/ViewDepreciations";
+import Depreciations from "./pages/More/Depreciations";
 import DepreciationRegistration from "./pages/More/DepreciationRegistration";
 import DepreciationEdit from "./pages/More/DepreciationEdit";
 import RecycleBin from "./pages/More/RecycleBin";
@@ -79,7 +82,7 @@ function Logout() {
 function App() {
   return (
     <BrowserRouter>
-      <ChatBot />
+      {/* <ChatBot /> */}
       <Routes>
         {/* This will Serve as Default Path*/}
         <Route path="/" element={<Navigate to="/login" />} />
@@ -134,6 +137,22 @@ function App() {
             element={<SupplierRegistration />}
           />
           <Route
+            path="/More/SupplierRegistration/:id"
+            element={<SupplierRegistration />}
+          />
+          <Route
+            path="/More/SupplierDetails/:id"
+            element={<SupplierDetails />}
+          />
+          <Route
+            path="/More/SupplierDetails/:id/assets"
+            element={<SupplierAsset />}
+          />
+          <Route
+            path="/More/SupplierDetails/:id/components"
+            element={<SupplierComponent />}
+          />
+          <Route
             path="/More/SupplierTableDetails"
             element={<SupplierTableDetails />}
           />
@@ -145,18 +164,21 @@ function App() {
           <Route path="/More/StatusEdit/:id" element={<StatusEdit />} />
           <Route path="/More/StatusDetails/:id" element={<StatusDetails />} />
           <Route
-            path="/More/ViewDepreciations"
-            element={<ViewDepreciations />}
+            path="/More/Depreciations"
+            element={<Depreciations />}
           />
           <Route
-            path="/More/DepreciationRegistration"
+            path="/More/Depreciations/DepreciationRegistration"
             element={<DepreciationRegistration />}
           />
           <Route
-            path="/More/DepreciationEdit/:id"
+            path="/More/Depreciations/DepreciationEdit"
             element={<DepreciationEdit />}
           />
-          <Route path="/More/RecycleBin" element={<RecycleBin />} />
+          <Route
+            path="/More/RecycleBin"
+            element={<RecycleBin />}
+          />
         </Route>
 
         {/* Place here all the routes that accessible only for admin and operator */}
@@ -181,16 +203,16 @@ function App() {
             element={<CheckInComponent />}
           />
           <Route
-            path="/dashboard/Repair/Maintenance"
-            element={<AssetRepairs />}
+            path="/Repairs/"
+            element={<Repairs />}
           />
           <Route
-            path="/dashboard/Repair/MaintenanceRegistration"
-            element={<MaintenanceRegistration />}
+            path="/Repairs/RepairRegistration"
+            element={<RepairRegistration />}
           />
           <Route
-            path="/dashboard/Repair/EditMaintenance"
-            element={<EditMaintenance />}
+            path="/Repairs/RepairEdit"
+            element={<RepairEdit />}
           />
           <Route path="/audits/" element={<AssetAudits />} />
           <Route path="/audits/overdue" element={<OverdueAudits />} />
