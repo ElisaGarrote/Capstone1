@@ -1,19 +1,18 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import "../../styles/custom-colors.css";
-import "../../styles/Products/Products.css";
+import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
-import TableBtn from "../../components/buttons/TableButtons";
-import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import DeleteModal from "../../components/Modals/DeleteModal";
-import Alert from "../../components/Alert";
-import ProductViewModal from "../../components/Modals/ProductViewModal";
-import Pagination from "../../components/Pagination";
-import DepreciationFilter from "../../components/FilterPanel";
-import authService from "../../services/auth-service";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
+import FilterPanel from "../../components/FilterPanel";
+import Pagination from "../../components/Pagination";
+import "../../styles/Table.css";
+import "../../styles/Products/Products.css";
+import ActionButtons from "../../components/ActionButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
+import { useNavigate, useLocation } from "react-router-dom";
+import DefaultImage from "../../assets/img/default-image.jpg";
+import Alert from "../../components/Alert";
+import authService from "../../services/auth-service";
 
 // Filter configuration for products
 const filterConfig = [
@@ -36,29 +35,43 @@ const filterConfig = [
   },
 ];
 
-// TableHeader component to render the table header
-function TableHeader() {
+// TableHeader
+function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
+      <th>
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={onHeaderChange}
+        />
+      </th>
       <th>IMAGE</th>
       <th>NAME</th>
       <th>CATEGORY</th>
       <th>MANUFACTURER</th>
       <th>DEPRECIATION</th>
       <th>END OF LIFE</th>
-      <th>ACTIONS</th>
+      <th>ACTION</th>
     </tr>
   );
 }
 
-// TableItem component to render each product row
-function TableItem({ product, manufacturer, onView, onEdit, onDelete }) {
+// TableItem
+function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteClick, onViewClick }) {
   const baseImage = product.image
     ? `https://assets-service-production.up.railway.app${product.image}`
     : DefaultImage;
 
   return (
     <tr>
+      <td>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onRowChange(product.id, e.target.checked)}
+        />
+      </td>
       <td>
         <img
           src={baseImage}
@@ -75,11 +88,15 @@ function TableItem({ product, manufacturer, onView, onEdit, onDelete }) {
       <td>{product.depreciation}</td>
       <td>{product.end_of_life}</td>
       <td>
-        <div className="action-buttons">
-          <TableBtn type="view" onClick={() => onView(product.id)} />
-          <TableBtn type="edit" onClick={() => onEdit(product.id)} />
-          <TableBtn type="delete" onClick={() => onDelete(product)} />
-        </div>
+        <ActionButtons
+          showEdit
+          showDelete
+          showView
+          editPath={`/products/registration/${product.id}`}
+          editState={{ product }}
+          onDeleteClick={() => onDeleteClick(product.id)}
+          onViewClick={() => onViewClick(product)}
+        />
       </td>
     </tr>
   );
@@ -88,26 +105,82 @@ function TableItem({ product, manufacturer, onView, onEdit, onDelete }) {
 export default function Products() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [products, setProducts] = useState(ProductsMockupData);
-  const [manufacturers, setManufacturers] = useState(ManufacturersMockupData);
-  const [endPoint, setEndPoint] = useState(null);
+  const [products] = useState(ProductsMockupData);
+  const [manufacturers] = useState(ManufacturersMockupData);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [exportToggle, setExportToggle] = useState(false);
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(5);
+
+  // selection
+  const [selectedIds, setSelectedIds] = useState([]);
 
   // Paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedProducts = products.slice(startIndex, endIndex);
+
+  // selection logic
+  const allSelected =
+    paginatedProducts.length > 0 &&
+    paginatedProducts.every((item) => selectedIds.includes(item.id));
+
+  const handleHeaderChange = (e) => {
+    if (e.target.checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...paginatedProducts.map((item) => item.id).filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !paginatedProducts.map((item) => item.id).includes(id))
+      );
+    }
+  };
+
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
+
+  // delete modal state
+  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single id:", deleteTarget);
+      // remove from mock data / API call
+    } else {
+      console.log("Deleting multiple ids:", selectedIds);
+      // remove multiple
+      setSelectedIds([]); // clear selection
+    }
+    closeDeleteModal();
+  };
+
+  // Add view handler
+  const handleViewClick = (product) => {
+    navigate(`/products/view/${product.id}`);
+  };
 
   useEffect(() => {
     // Using mockup data - no need to fetch from API
@@ -162,78 +235,7 @@ export default function Products() {
     return found ? found.name : "-";
   };
 
-  const fetchProducts = async () => {
-    // Using mockup data - just reset to original mockup data
-    setProducts(ProductsMockupData);
 
-    // Uncomment below to use real API data
-    /*
-    try {
-      const res = await assetsService.fetchAllProducts();
-      setProducts(res.products || []);
-    } catch (e) {
-      console.error("Error refreshing products:", e);
-    }
-    */
-  };
-
-  const handleView = async (productId) => {
-    console.log("product id:", productId);
-    try {
-      setLoading(true);
-      setErrorMessage("");
-
-      // Fetch the main product
-      const productData = await assetsService.fetchProductById(productId);
-      console.log("Product data:", productData);
-
-      if (!productData) {
-        setErrorMessage("Product details not found.");
-        setLoading(false);
-        return;
-      }
-
-      let manufacturerName = productData.manufacturer || "-";
-      let supplierName = productData.supplier || "-";
-
-      // Only try fetch if we have IDs
-      if (productData.manufacturer_id) {
-        try {
-          const manufacturerResponse = await contextsService.fetchManufacturerById(productData.manufacturer_id);
-          console.log("Manufacturer response:", manufacturerResponse);
-          manufacturerName = manufacturerResponse?.name || manufacturerName;
-        } catch (err) {
-          console.warn("Manufacturer fetch failed:", err);
-        }
-      }
-
-      if (productData.default_supplier_id) {
-        try {
-          const supplierResponse = await contextsService.fetchSuppNameById(productData.default_supplier_id);
-          console.log("Supplier response:", supplierResponse);
-          supplierName = supplierResponse?.name || supplierName;
-        } catch (err) {
-          console.warn("Supplier fetch failed:", err);
-        }
-      }
-
-      // Compose full view
-      const manuFullView = {
-        ...productData,
-        manufacturer: manufacturerName,
-        supplier: supplierName,
-      };
-
-      console.log("Prepared product view:", manuFullView);
-      setSelectedProduct(manuFullView);
-      setViewModalOpen(true);
-    } catch (error) {
-      console.error("Error fetching product details:", error);
-      setErrorMessage("Failed to load product details.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <>
@@ -241,68 +243,54 @@ export default function Products() {
       {successMessage && <Alert message={successMessage} type="success" />}
 
       {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={async () => {
-            await fetchProducts();
-            setSuccessMessage("Product Deleted Successfully!");
-            setTimeout(() => setSuccessMessage(""), 5000);
-          }}
-          onDeleteFail={() => {
-            setErrorMessage("Delete failed. Please try again.");
-            setTimeout(() => setErrorMessage(""), 5000);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
 
-      {isViewModalOpen && selectedProduct && (
-        <ProductViewModal
-          product={selectedProduct}
-          closeModal={() => setViewModalOpen(false)}
-        />
-      )}
 
-      <nav>
-        <NavBar />
-      </nav>
 
-      <main className="page-layout">
-        {/* Title of the Page */}
-        <section className="title-page-section">
-          <h1>Products</h1>
-          {authService.getUserInfo().role === "Admin" && (
-            <MediumButtons
-              type="new"
-              navigatePage="/products/registration"
-            />
-          )}
-        </section>
+      <section>
+        <nav>
+          <NavBar />
+        </nav>
 
-        {/* Table Filter */}
-        <DepreciationFilter filters={filterConfig} />
-
-        <section className="table-layout">
-          {/* Table Header */}
-          <section className="table-header">
-            <h2 className="h2">Products ({products.length})</h2>
-            <section className="table-actions">
-              <input
-                type="search"
-                placeholder="Search..."
-                className="search"
-              />
-              <div ref={toggleRef}>
-                <MediumButtons
-                  type="export"
-                  onClick={() => setExportToggle(!exportToggle)}
-                />
-              </div>
-            </section>
+        <main className="page-layout">
+          <section className="title-page-section">
+            <h1>Products</h1>
           </section>
 
-          {/* Table Structure */}
-          <section className="products-table-section">
+          <FilterPanel filters={filterConfig} />
+
+          <section className="table-layout">
+            <section className="table-header">
+              <h2 className="h2">Products ({products.length})</h2>
+              <section className="table-actions">
+                {/* Bulk delete button only when checkboxes selected */}
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
+                <input type="search" placeholder="Search..." className="search" />
+                <div ref={toggleRef}>
+                  <MediumButtons
+                    type="export"
+                    onClick={() => setExportToggle(!exportToggle)}
+                  />
+                </div>
+                {authService.getUserInfo().role === "Admin" && (
+                  <MediumButtons
+                    type="new"
+                    navigatePage="/products/registration"
+                  />
+                )}
+              </section>
+            </section>
+
             {exportToggle && (
               <section className="export-button-section" ref={exportRef}>
                 <button>Download as Excel</button>
@@ -310,54 +298,53 @@ export default function Products() {
                 <button>Download as CSV</button>
               </section>
             )}
-            <table>
-              <thead>
-                <TableHeader />
-              </thead>
-              <tbody>
-                {paginatedProducts.length > 0 ? (
-                  paginatedProducts.map((product) => (
-                    <TableItem
-                      key={product.id}
-                      product={product}
-                      manufacturer={getManufacturerName(
-                        product.manufacturer_id
-                      )}
-                      onView={handleView}
-                      onEdit={(id) =>
-                        navigate(`/products/registration/${id}`)
-                      }
-                      onDelete={(product) => {
-                        setEndPoint(
-                          `https://assets-service-production.up.railway.app/products/${product.id}/delete/`
-                        );
-                        setDeleteModalOpen(true);
-                      }}
-                    />
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="no-data-message">
-                      No products found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </section>
 
-          {/* Table pagination */}
-          <section className="table-pagination">
-            <Pagination
-              currentPage={currentPage}
-              pageSize={pageSize}
-              totalItems={products.length}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setPageSize}
-            />
+            <section className="table-section">
+              <table>
+                <thead>
+                  <TableHeader
+                    allSelected={allSelected}
+                    onHeaderChange={handleHeaderChange}
+                  />
+                </thead>
+                <tbody>
+                  {paginatedProducts.length > 0 ? (
+                    paginatedProducts.map((product) => (
+                      <TableItem
+                        key={product.id}
+                        product={product}
+                        manufacturer={getManufacturerName(
+                          product.manufacturer_id
+                        )}
+                        isSelected={selectedIds.includes(product.id)}
+                        onRowChange={handleRowChange}
+                        onDeleteClick={openDeleteModal}
+                        onViewClick={handleViewClick}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="no-data-message">
+                        No Products Found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={products.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
           </section>
-        </section>
-      </main>
+        </main>
+      </section>
     </>
   );
 }

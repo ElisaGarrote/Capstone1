@@ -10,12 +10,14 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Assets/Products";
 import ProductsRegistration from "./pages/Assets/ProductsRegistration";
+import ProductViewPage from "./pages/Assets/ProductViewPage";
 import Assets from "./pages/Assets/Assets";
 import AssetsRegistration from "./pages/Assets/AssetsRegistration";
 import AssetViewPage from "./pages/Assets/AssetViewPage";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
 import Tickets from "./pages/Tickets/Tickets";
+import TicketViewPage from "./pages/Tickets/TicketViewPage";
 import Accessories from "./pages/Accessories/Accessories";
 import AccessoriesRegistration from "./pages/Accessories/AccessoriesRegistration";
 import CheckinAccessory from "./pages/Accessories/CheckinAccessory";
@@ -185,6 +187,7 @@ function App() {
         <Route element={<ProtectedRoute roles={["admin", "operator"]} />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/view/:id" element={<ProductViewPage />} />
           <Route path="/assets" element={<Assets />} />
           <Route path="/assets/view/:id" element={<AssetViewPage />} />
           <Route path="/assets/check-in/:id" element={<CheckInAsset />} />
@@ -223,6 +226,7 @@ function App() {
           <Route path="/audits/edit" element={<EditAudits />} />
           <Route path="/audits/view" element={<ViewAudits />} />
           <Route path="/approved-tickets" element={<Tickets />} />
+          <Route path="/tickets/view/:id" element={<TicketViewPage />} />
           <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
           <Route path="/warranties" element={<ExpiringWarranties />} />
           <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />

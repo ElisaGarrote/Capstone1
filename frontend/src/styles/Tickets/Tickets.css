@@ -1,68 +1,108 @@
-.tickets-table-section {
+.table-section {
   overflow-x: auto;
   max-height: 500px;
   overflow-y: auto;
-
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-
-    th {
-      padding: 0.75rem !important;
-      /* 12px */
-      text-align: left !important;
-      font-size: 0.75rem;
-      /* 12px */
-      font-weight: 600;
-      color: var(--text-color);
-      border-top: 1px solid #cccccc;
-      border-bottom: 1px solid #cccccc;
-      background-color: #f0f1f2;
-
-      height: 50px;
-
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-
-    /* table header for 'Asset' */
-    th:first-child {
-      width: 200px;
-    }
-
-    /* table headear for 'Status'*/
-    th:nth-child(2) {
-      min-width: 200px;
-      max-width: fit-content;
-    }
-
-    td {
-      text-align: left !important;
-      padding: 0.75rem;
-      font-size: 0.8125rem;
-      /* 13px */
-      color: var(--text-color);
-      border-bottom: 1px solid #cccccc;
-
-      height: 50px;
-    }
-
-    /* Ensure empty-state row spans correctly across all columns */
-    td.no-data-message {
-      display: table-cell !important;
-      width: 100% !important;
-      white-space: normal !important;
-      padding: 0.75rem !important;
-      text-align: center !important;
-      font-style: italic;
-      color: var(--secondary-text-color);
-      background: transparent;
-    }
-
-    tr:hover {
-      background-color: #fcfcfc;
-    }
-  }
 }
+
+.table-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-section table th {
+  padding: 0.75rem !important;
+  text-align: left !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-top: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+  background-color: #f0f1f2;
+  height: 50px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.table-section table th:first-child {
+  width: 200px;
+}
+
+.table-section table th:nth-child(2) {
+  min-width: 200px;
+  max-width: fit-content;
+}
+
+.table-section table td {
+  text-align: left !important;
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-color);
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+}
+
+.table-section table td.no-data-message {
+  display: table-cell !important;
+  width: 100% !important;
+  white-space: normal !important;
+  padding: 0.75rem !important;
+  text-align: center !important;
+  font-style: italic;
+  color: var(--secondary-text-color);
+  background: transparent;
+}
+
+.table-section table tr:hover {
+  background-color: #fcfcfc;
+}
+
+.table-section table td {
+  text-decoration: none !important;
+}
+
+.table-section table td a {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+
+.check-in-btn,
+.check-out-btn {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+  border-radius: 20px !important;
+  border: none !important;
+  cursor: pointer !important;
+  min-width: 90px !important;
+  width: 90px !important;
+  text-align: center !important;
+  display: inline-block !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  height: 28px !important;
+  font-family: inherit !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+  vertical-align: middle !important;
+}
+
+.check-in-btn {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
+.check-out-btn {
+  background-color: #34c759 !important;
+  color: white !important;
+}
+
+.check-in-btn:hover {
+  background-color: var(--primary-color-hover) !important;
+}
+
+.check-out-btn:hover {
+  background-color: rgba(52, 199, 89, 0.8) !important;
+}
+
+

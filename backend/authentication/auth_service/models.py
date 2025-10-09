@@ -28,11 +28,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = [
-<<<<<<< HEAD
         ('Admin', 'Admin'), ('operator', 'Operator'),
-=======
-        ('Admin', 'admin'), ('Operator', 'operator'),
->>>>>>> ui-merge-area
     ]
     
     username = None # removes username field inherited from AbstractUser
