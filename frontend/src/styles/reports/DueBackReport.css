@@ -29,6 +29,11 @@
       z-index: 1;
     }
 
+    /* table header for 'Asset' */
+    th:first-child {
+      width: 200px;
+    }
+
     td {
       text-align: left !important;
       padding: 0.75rem;
