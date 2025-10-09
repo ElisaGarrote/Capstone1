@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
@@ -8,6 +8,8 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import Status from "../../components/Status";
 import MockupData from "../../data/mockData/more/status-mockup-data.json";
 import Footer from "../../components/Footer";
+import assetsService from "../../services/assets-service";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 import "../../styles/Category.css";
 
@@ -131,6 +133,8 @@ function TableItem({ status, onDeleteClick }) {
 
 export default function Category() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [statusData, setStatusData] = useState([]);
+  const [isLoading, setLoading] = useState(true);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -139,7 +143,19 @@ export default function Category() {
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCategories = MockupData.slice(startIndex, endIndex);
+  const paginatedCategories = statusData.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    const fetchAssetStatus = async () => {
+      const fetchedData = await assetsService.fetchAllAssetsStatus();
+      setStatusData(Array.from(fetchedData));
+      setLoading(false);
+    };
+
+    fetchAssetStatus();
+  }, []);
+
+  console.log("status:", statusData);
 
   return (
     <>
@@ -160,7 +176,7 @@ export default function Category() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Statuses ({MockupData.length})</h2>
+              <h2 className="h2">Statuses ({statusData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
@@ -176,28 +192,39 @@ export default function Category() {
 
             {/* Table Structure */}
             <section className="table-section">
-              <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
-                  {paginatedCategories.length > 0 ? (
-                    paginatedCategories.map((status, index) => (
-                      <TableItem
-                        key={index}
-                        status={status}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="no-data-message">
-                        No categories found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {/* Render loading skeleton while waiting to the response from the API request*/}
+              {isLoading && <SkeletonLoadingTable />}
+
+              {/* Render message if the statusData is empty */}
+              {!isLoading && statusData.length == 0 && (
+                <p className="table-message">No status found.</p>
+              )}
+
+              {/* Render table if the statusData is not empty */}
+              {statusData.length > 0 && (
+                <table>
+                  <thead>
+                    <TableHeader />
+                  </thead>
+                  <tbody>
+                    {paginatedCategories.length > 0 ? (
+                      paginatedCategories.map((status, index) => (
+                        <TableItem
+                          key={index}
+                          status={status}
+                          onDeleteClick={() => setDeleteModalOpen(true)}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="no-data-message">
+                          No categories found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             {/* Table pagination */}
@@ -205,7 +232,7 @@ export default function Category() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={MockupData.length}
+                totalItems={statusData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />
