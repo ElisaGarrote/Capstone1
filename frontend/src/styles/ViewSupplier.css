@@ -104,6 +104,14 @@
         border-bottom: 1px solid #cccccc;
 
         height: 50px;
+
+        span {
+          cursor: pointer;
+        }
+
+        span:hover {
+          color: var(--primary-color);
+        }
       }
 
       /* Ensure empty-state row spans correctly across all columns */
