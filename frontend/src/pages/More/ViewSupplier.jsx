@@ -78,19 +78,35 @@ function TableItem({ supplier, onDeleteClick }) {
             src={supplier.logo ? supplier.logo : DefaultImage}
             alt={supplier.logo}
           />
-          <span>{supplier.name}</span>
+          <span
+            onClick={() =>
+              navigate(`/More/SupplierDetails/${supplier.id}`, {
+                state: { supplier },
+              })
+            }
+          >
+            {supplier.name}
+          </span>
         </div>
       </td>
       <td>{supplier.address || "-"}</td>
       <td>{supplier.city || "-"}</td>
       <td>{supplier.zip || "-"}</td>
       <td>{supplier.contactName || "-"}</td>
-      <td>{supplier.phone || "-"}</td>
+      <td>{supplier.phoneNumber || "-"}</td>
       <td>{supplier.email || "-"}</td>
       <td>{supplier.url || "-"}</td>
       <td>
         <section className="action-button-section">
-          <button title="View" className="action-button">
+          <button
+            title="View"
+            className="action-button"
+            onClick={() =>
+              navigate(`/More/SupplierDetails/${supplier.id}`, {
+                state: { supplier },
+              })
+            }
+          >
             <i className="fas fa-eye"></i>
           </button>
           <button

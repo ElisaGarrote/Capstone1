@@ -10,12 +10,20 @@ export default function TopSecFormPage({
   buttonType,
   buttonNavigation,
   deleteModalOpen,
+  borderBottom = true,
+  image = null,
 }) {
   const navigate = useNavigate();
 
   return (
     <>
-      <main className="top-section-form-page">
+      <section
+        className={
+          borderBottom
+            ? `top-section-form-page`
+            : `top-section-form-page no-border`
+        }
+      >
         <section className="breadcrumb-navigation">
           <ul>
             <li>
@@ -34,7 +42,7 @@ export default function TopSecFormPage({
             />
           )}
         </section>
-      </main>
+      </section>
     </>
   );
 }

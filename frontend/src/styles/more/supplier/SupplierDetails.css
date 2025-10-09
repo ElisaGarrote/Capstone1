@@ -1,0 +1,78 @@
+.main-supplier {
+    min-height: 100vh;
+    padding: 80px 38px 38px 38px;
+    background-color: var(--bg-color);
+    overflow-x: hidden;
+}
+
+.main-middle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 28px;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    width: 60vw;
+    align-self: center;
+    padding: 24px;
+    background-color: #ffffff;
+    box-shadow: 0 0 20px rgba(211, 211, 211, 0.3);
+    border-radius: 25px;
+    border: 1px solid #d3d3d3;
+    gap: 25px;
+
+    h2 {
+        color: var(--secondary-text-color);
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    h2::after {
+        content: "";
+        display: block;
+        width: 100%;
+        height: 1px;
+        background-color: #d3d3d3;
+        margin-top: 15px;
+    }
+
+    h3 {
+        color: var(--secondary-text-color);
+        font-weight: 600;
+        font-size: 1.125rem;
+    }
+
+    fieldset {
+        display: flex;
+        width: 100%;
+        flex-direction: column;
+        gap: 5px;
+
+        label {
+            color: #677788;
+            font-weight: 600;
+        }
+
+        label[for="email"]+p,
+        label[for="url"]+p,
+        label[for="phoneNumber"]+p {
+            color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        label[for="email"]+p:hover,
+        label[for="url"]+p:hover,
+        label[for="phoneNumber"]+p:hover {
+            color: var(--primary-color-hover);
+        }
+
+        p {
+            color: #677788;
+        }
+    }
+}
