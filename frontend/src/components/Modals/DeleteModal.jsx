@@ -1,8 +1,7 @@
-import "../../styles/DeleteModal.css";
-import DeleteIcon from "../../assets/icons/delete-red.svg";
-import CloseIcon from "../../assets/icons/close-icon.svg";
 import { useEffect, useState } from "react";
 import LoadingButton from "../LoadingButton";
+
+import "../../styles/DeleteModal.css";
 
 export default function ConfirmationModal({
   closeModal,
