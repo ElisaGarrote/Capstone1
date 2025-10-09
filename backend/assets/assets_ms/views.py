@@ -483,6 +483,18 @@ def get_all_status(request):
     serializer = StatusSerializer(queryset, many=True)
     return Response(serializer.data)
 
+# Soft Delete Status
+# Soft delete a product
+@api_view(['PATCH'])
+def soft_delete_status(request, id):
+    try:
+        status = Status.objects.get(pk=id)
+        status.is_deleted = True
+        status.save()
+        return Response({'detail': 'Status soft-deleted'})
+    except Product.DoesNotExist:
+        return Response({'detail': 'Status not found'}, status=status.HTTP_404_NOT_FOUND)
+
 # END STATUS
 
 # CATEGORY
