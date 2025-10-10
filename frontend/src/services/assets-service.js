@@ -1088,7 +1088,7 @@ class AssetsService {
     }
   }
 
-  // Create Audit
+  // Create Status
   async postStatus(statusName, statusType, notes) {
     try {
       const response = await fetch(API_URL + "status/create/", {
@@ -1117,6 +1117,41 @@ class AssetsService {
       return { status: response.status, data: data };
     } catch (error) {
       console.error("Error occur while creating status!", error);
+    }
+  }
+
+  // Update Status
+  async updateStatus(statusId, statusName, statusType, notes) {
+    try {
+      const response = await fetch(
+        API_URL + `status/get/edit/status/${statusId}/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            name: statusName,
+            type: statusType,
+            notes: notes,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        // Attempt to parse and log the response body for details
+        const errorDetails = await response.json();
+        console.log("Failed updating status. Status:", response.status);
+        console.log("Error details:", errorDetails);
+        return { status: response.status, data: errorDetails };
+      }
+
+      const data = await response.json();
+      // console.log("data:", data);
+      return { status: response.status, data: data };
+    } catch (error) {
+      console.error("Error occur while updating status!", error);
     }
   }
 
