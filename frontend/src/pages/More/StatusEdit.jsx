@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Status from "../../components/Status";
@@ -11,6 +12,8 @@ import "../../styles/CategoryRegistration.css";
 const StatusRegistration = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [response, setResponse] = useState();
 
   // Retrieve the "status" data value passed from the navigation state.
   // If the "status" data is not exist, the default value for this is "undifiend".
@@ -26,7 +29,28 @@ const StatusRegistration = () => {
       statusType: status.type,
       notes: status.notes,
     },
+    mode: "all",
   });
+
+  const submission = async (data) => {
+    // console.log("data:", data);
+    // console.log("status id:", status.id);
+    setSubmitting(true);
+    const response = await assetsService.updateStatus(
+      status.id,
+      data.statusName,
+      data.statusType,
+      data.notes
+    );
+
+    if (response.status === 200) {
+      navigate("/More/ViewStatus", { state: { updatedStatus: true } });
+      setSubmitting(false);
+    } else {
+      setResponse(response);
+      console.log("Failed to create status!");
+    }
+  };
 
   const statusTypes = [
     "Archived",
@@ -36,13 +60,12 @@ const StatusRegistration = () => {
     "Undeployable",
   ];
 
-  const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log("Form submitted:", data);
-
-    // Optional: navigate back to status view after successful submission
-    navigate("/More/ViewStatus");
-  };
+  // Set isSubmitting to false after 3 seconds every response state changes
+  useEffect(() => {
+    setTimeout(() => {
+      setSubmitting(false);
+    }, 3000);
+  }, [response]);
 
   return (
     <>
