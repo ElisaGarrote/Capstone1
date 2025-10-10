@@ -137,7 +137,8 @@ export default function Category() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [statusData, setStatusData] = useState([]);
   const [isLoading, setLoading] = useState(true);
-  const [isAddStatusSucess, setAddStatusSucess] = useState(false);
+  const [isAddStatusSuccess, setAddStatusSuccess] = useState(false);
+  const [isUpdateStatusSuccess, setUpdateStatusSuccess] = useState(false);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -151,6 +152,7 @@ export default function Category() {
   // Retrieve the "addesStatus" value passed from the navigation state.
   // If the "addesStatus" is not exist, the default value for this is "undifiend".
   const addedStatus = location.state?.addedStatus;
+  const updatedStatus = location.state?.updatedStatus;
 
   // Fetch All Status
   useEffect(() => {
@@ -169,14 +171,14 @@ export default function Category() {
 
     if (addedStatus == true) {
       // show the alert once
-      setAddStatusSucess(true);
+      setAddStatusSuccess(true);
 
       // clear the navigation/history state so a full page refresh won't re-show the alert
       // replace the current history entry with an empty state
       navigate(location.pathname, { replace: true, state: {} });
 
       timeoutId = setTimeout(() => {
-        setAddStatusSucess(false);
+        setAddStatusSuccess(false);
       }, 5000);
     }
 
@@ -185,6 +187,29 @@ export default function Category() {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [addedStatus, navigate, location.pathname]);
+
+  // Set the setUpdateStatusSuccess state to true when the updatedStatus is true then set it to false after 5 seconds.
+  useEffect(() => {
+    let timeoutId;
+
+    if (updatedStatus == true) {
+      // show the alert once
+      setUpdateStatusSuccess(true);
+
+      // clear the navigation/history state so a full page refresh won't re-show the alert
+      // replace the current history entry with an empty state
+      navigate(location.pathname, { replace: true, state: {} });
+
+      timeoutId = setTimeout(() => {
+        setUpdateStatusSuccess(false);
+      }, 5000);
+    }
+
+    // cleanup the timeout on unmount or when updatedStatus changes
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [updatedStatus, navigate, location.pathname]);
 
   return (
     <>
@@ -195,8 +220,12 @@ export default function Category() {
         />
       )}
 
-      {isAddStatusSucess && (
+      {isAddStatusSuccess && (
         <Alert message="Status added successfully!" type="success" />
+      )}
+
+      {isUpdateStatusSuccess && (
+        <Alert message="Status updated successfully!" type="success" />
       )}
 
       <section className="page-layout-with-table">
