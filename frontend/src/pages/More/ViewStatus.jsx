@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Status from "../../components/Status";
-import MockupData from "../../data/mockData/more/status-mockup-data.json";
 import Footer from "../../components/Footer";
 import assetsService from "../../services/assets-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import Alert from "../../components/Alert";
 
 import "../../styles/Category.css";
 
@@ -132,9 +132,12 @@ function TableItem({ status, onDeleteClick }) {
 }
 
 export default function Category() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [statusData, setStatusData] = useState([]);
   const [isLoading, setLoading] = useState(true);
+  const [isAddStatusSucess, setAddStatusSucess] = useState(false);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -145,6 +148,11 @@ export default function Category() {
   const endIndex = startIndex + pageSize;
   const paginatedCategories = statusData.slice(startIndex, endIndex);
 
+  // Retrieve the "addesStatus" value passed from the navigation state.
+  // If the "addesStatus" is not exist, the default value for this is "undifiend".
+  const addedStatus = location.state?.addedStatus;
+
+  // Fetch All Status
   useEffect(() => {
     const fetchAssetStatus = async () => {
       const fetchedData = await assetsService.fetchAllAssetsStatus();
@@ -155,7 +163,28 @@ export default function Category() {
     fetchAssetStatus();
   }, []);
 
-  console.log("status:", statusData);
+  // Set the setAddStatusSucess state to true when the addedStatus is true then set it to false after 5 seconds.
+  useEffect(() => {
+    let timeoutId;
+
+    if (addedStatus == true) {
+      // show the alert once
+      setAddStatusSucess(true);
+
+      // clear the navigation/history state so a full page refresh won't re-show the alert
+      // replace the current history entry with an empty state
+      navigate(location.pathname, { replace: true, state: {} });
+
+      timeoutId = setTimeout(() => {
+        setAddStatusSucess(false);
+      }, 5000);
+    }
+
+    // cleanup the timeout on unmount or when addedStatus changes
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [addedStatus, navigate, location.pathname]);
 
   return (
     <>
@@ -164,6 +193,10 @@ export default function Category() {
           closeModal={() => setDeleteModalOpen(false)}
           actionType="delete"
         />
+      )}
+
+      {isAddStatusSucess && (
+        <Alert message="Status added successfully!" type="success" />
       )}
 
       <section className="page-layout-with-table">
