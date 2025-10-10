@@ -105,7 +105,7 @@ class Status(models.Model):
         ('deployable', 'Deployable'), ('deployed', 'Deployed'), ('undeployable', 'Undeployable'), ('pending', 'Pending'), ('archived', 'Archived'),
     ]
 
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     type = models.CharField(max_length=12, choices=STATUS_CHOICES)
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)

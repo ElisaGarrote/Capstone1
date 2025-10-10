@@ -1,8 +1,12 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Status from "../../components/Status";
+import assetsService from "../../services/assets-service";
+import LoadingButton from "../../components/LoadingButton";
+import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 
 import "../../styles/Registration.css";
@@ -10,20 +14,33 @@ import "../../styles/CategoryRegistration.css";
 
 const StatusRegistration = () => {
   const navigate = useNavigate();
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [response, setResponse] = useState();
 
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
   } = useForm({
-    defaultValues: {
-      statusName: "",
-      statusType: "",
-      notes: "",
-      showInList: true,
-      defaultStatus: false,
-    },
+    mode: "all",
   });
+
+  const submission = async (data) => {
+    setSubmitting(true);
+    const response = await assetsService.postStatus(
+      data.statusName,
+      data.statusType,
+      data.notes
+    );
+
+    if (response.status === 201) {
+      navigate("/More/ViewStatus", { state: { addedStatus: true } });
+      setSubmitting(false);
+    } else {
+      setResponse(response);
+      console.log("Failed to create status!");
+    }
+  };
 
   const statusTypes = [
     "Archived",
@@ -33,19 +50,22 @@ const StatusRegistration = () => {
     "Undeployable",
   ];
 
-  const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log("Form submitted:", data);
-
-    // Optional: navigate back to status view after successful submission
-    navigate("/More/ViewStatus");
-  };
+  // Set isSubmitting to false after 3 seconds every response state changes
+  useEffect(() => {
+    setTimeout(() => {
+      setSubmitting(false);
+    }, 3000);
+  }, [response]);
 
   return (
     <>
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
+          {response != null && response.status !== 201 && (
+            <Alert message={response.data.name} type="danger" />
+          )}
+
           <section className="top">
             <TopSecFormPage
               root="Statuses"
@@ -56,7 +76,7 @@ const StatusRegistration = () => {
           </section>
           <section className="status-registration-section">
             <section className="registration-form">
-              <form onSubmit={handleSubmit(onSubmit)}>
+              <form onSubmit={handleSubmit(submission)}>
                 <fieldset>
                   <label htmlFor="statusName">Status Name *</label>
                   <input
@@ -110,9 +130,10 @@ const StatusRegistration = () => {
                 <button
                   type="submit"
                   className="primary-button"
-                  disabled={!isValid}
+                  disabled={!isValid || isSubmitting}
                 >
-                  Save
+                  {isSubmitting && <LoadingButton />}
+                  {!isSubmitting ? "Save" : "Saving..."}
                 </button>
               </form>
             </section>
