@@ -1066,7 +1066,8 @@ class AssetsService {
     }
   }
 
-  // Assset Status
+  // STATUS
+  // Fetch All Assets Status
   async fetchAllAssetsStatus() {
     try {
       const response = await fetch(API_URL + "status/all/");
@@ -1086,6 +1087,40 @@ class AssetsService {
       throw error;
     }
   }
+
+  // Create Audit
+  async postStatus(statusName, statusType, notes) {
+    try {
+      const response = await fetch(API_URL + "status/create/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: statusName,
+          type: statusType,
+          notes: notes,
+        }),
+      });
+
+      if (response.status !== 201) {
+        // Attempt to parse and log the response body for details
+        const errorDetails = await response.json();
+        console.log("Failed creating status. Status:", response.status);
+        console.log("Error details:", errorDetails);
+        return { status: response.status, data: errorDetails };
+      }
+
+      const data = await response.json();
+      // console.log("data:", data);
+      return { status: response.status, data: data };
+    } catch (error) {
+      console.error("Error occur while creating status!", error);
+    }
+  }
+
+  // END OF STATUS
 }
 
 const assetsService = new AssetsService(); // Create object for Assets Service.
