@@ -7,7 +7,7 @@ import ProductsMockupData from "../../data/mockData/products/products-mockup-dat
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
 import "../../styles/ProductViewPage.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import DeleteModal from "../../components/Modals/DeleteModal";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 function ProductViewPage() {
   const { id } = useParams();
@@ -16,7 +16,6 @@ function ProductViewPage() {
   const [product, setProduct] = useState(null);
   const [manufacturer, setManufacturer] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [endPoint, setEndPoint] = useState(null);
 
   useEffect(() => {
     // Find product from mockup data
@@ -89,6 +88,17 @@ function ProductViewPage() {
     </>
   );
 
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+  };
+
+  const confirmDelete = () => {
+    // Handle product deletion logic here
+    console.log("Deleting product:", product.id);
+    closeDeleteModal();
+    navigate("/products");
+  };
+
   // Action buttons
   const actionButtons = (
     <>
@@ -97,10 +107,7 @@ function ProductViewPage() {
       </button>
       <button
         className="view-action-btn delete"
-        onClick={() => {
-          setEndPoint(`https://assets-service-production.up.railway.app/products/${product.id}/delete/`);
-          setDeleteModalOpen(true);
-        }}
+        onClick={() => setDeleteModalOpen(true)}
       >
         Delete
       </button>
@@ -111,16 +118,10 @@ function ProductViewPage() {
     <>
       <NavBar />
       {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
-            setDeleteModalOpen(false);
-            navigate("/products");
-          }}
-          onDeleteFail={() => {
-            setDeleteModalOpen(false);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
       <ViewPage

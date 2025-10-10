@@ -7,7 +7,7 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import TicketsMockupData from "../../data/mockData/tickets/tickets-mockup-data.json";
 import "../../styles/TicketViewPage.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import DeleteModal from "../../components/Modals/DeleteModal";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 function TicketViewPage() {
   const { id } = useParams();
@@ -15,7 +15,6 @@ function TicketViewPage() {
   const location = useLocation();
   const [ticket, setTicket] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [endPoint, setEndPoint] = useState(null);
 
   useEffect(() => {
     // Find ticket from mockup data
@@ -120,18 +119,23 @@ function TicketViewPage() {
     </>
   );
 
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+  };
+
+  const confirmDelete = () => {
+    // Handle ticket deletion logic here
+    console.log("Deleting ticket:", ticket.id);
+    closeDeleteModal();
+    navigate("/approved-tickets");
+  };
+
   // Action buttons
   const actionButtons = (
     <>
-      <button className="view-action-btn edit" onClick={() => navigate(`/tickets/edit/${ticket.id}`)}>
-        Edit
-      </button>
       <button
         className="view-action-btn delete"
-        onClick={() => {
-          setEndPoint(`https://dts-service-production.up.railway.app/tickets/${ticket.id}/delete/`);
-          setDeleteModalOpen(true);
-        }}
+        onClick={() => setDeleteModalOpen(true)}
       >
         Delete
       </button>
@@ -142,16 +146,10 @@ function TicketViewPage() {
     <>
       <NavBar />
       {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
-            setDeleteModalOpen(false);
-            navigate("/approved-tickets");
-          }}
-          onDeleteFail={() => {
-            setDeleteModalOpen(false);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
       <ViewPage

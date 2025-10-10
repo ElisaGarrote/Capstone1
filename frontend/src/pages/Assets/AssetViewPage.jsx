@@ -7,7 +7,7 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import "../../styles/AssetViewPage.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import DeleteModal from "../../components/Modals/DeleteModal";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 function AssetViewPage() {
   const { id } = useParams();
@@ -15,7 +15,6 @@ function AssetViewPage() {
   const location = useLocation();
   const [asset, setAsset] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [endPoint, setEndPoint] = useState(null);
 
   useEffect(() => {
     // Find asset from mockup data
@@ -90,6 +89,17 @@ function AssetViewPage() {
     </>
   );
 
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+  };
+
+  const confirmDelete = () => {
+    // Handle asset deletion logic here
+    console.log("Deleting asset:", asset.id);
+    closeDeleteModal();
+    navigate("/assets");
+  };
+
   // Action buttons
   const actionButtons = (
     <>
@@ -98,10 +108,7 @@ function AssetViewPage() {
       </button>
       <button
         className="view-action-btn delete"
-        onClick={() => {
-          setEndPoint(`https://assets-service-production.up.railway.app/assets/${asset.id}/delete/`);
-          setDeleteModalOpen(true);
-        }}
+        onClick={() => setDeleteModalOpen(true)}
       >
         Delete
       </button>
@@ -112,16 +119,10 @@ function AssetViewPage() {
     <>
       <NavBar />
       {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
-            setDeleteModalOpen(false);
-            navigate("/assets");
-          }}
-          onDeleteFail={() => {
-            setDeleteModalOpen(false);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
       <ViewPage
