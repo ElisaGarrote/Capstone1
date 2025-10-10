@@ -1,4 +1,5 @@
 import "../../styles/custom-colors.css";
+import "../../styles/Registration.css";
 import "../../styles/CheckInOut.css";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
@@ -226,7 +227,7 @@ export default function CheckOutAsset() {
             <h2>Check-Out Form</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label>Employee *</label>
+                <label>Employee <span style={{color: 'red'}}>*</span></label>
                 <input
                   type="text"
                   readOnly
@@ -235,7 +236,7 @@ export default function CheckOutAsset() {
               </fieldset>
 
               <fieldset>
-                <label>Location *</label>
+                <label>Location <span style={{color: 'red'}}>*</span></label>
                 <input
                   type="text"
                   readOnly
@@ -244,7 +245,7 @@ export default function CheckOutAsset() {
               </fieldset>
 
               <fieldset>
-                <label>Check-Out Date *</label>
+                <label>Check-Out Date <span style={{color: 'red'}}>*</span></label>
                 <input
                   type="text"
                   readOnly
@@ -253,7 +254,7 @@ export default function CheckOutAsset() {
               </fieldset>
 
               <fieldset>
-                <label>Expected Return Date *</label>
+                <label>Expected Return Date <span style={{color: 'red'}}>*</span></label>
                 <input
                   type="date"
                   className={errors.returnDate ? 'input-error' : ''}
@@ -264,7 +265,7 @@ export default function CheckOutAsset() {
               </fieldset>
 
               <fieldset>
-                <label>Condition *</label>
+                <label>Condition <span style={{color: 'red'}}>*</span></label>
                 <select 
                   {...register("condition", {required: "Condition is required"})}
                   className={errors.condition ? 'input-error' : ''}

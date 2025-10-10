@@ -12,7 +12,6 @@ import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
-import authService from "../../services/auth-service";
 
 // Filter configuration for tickets
 const filterConfig = [
@@ -356,12 +355,6 @@ const Tickets = () => {
                     onClick={() => setExportToggle(!exportToggle)}
                   />
                 </div>
-                {authService.getUserInfo().role === "Admin" && (
-                  <MediumButtons
-                    type="new"
-                    navigatePage="/tickets/registration"
-                  />
-                )}
               </section>
             </section>
 
