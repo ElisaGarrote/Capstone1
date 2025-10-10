@@ -136,9 +136,13 @@ export default function Category() {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [statusData, setStatusData] = useState([]);
-  const [isLoading, setLoading] = useState(true);
+  const [isLoading, setLoading] = useState(null);
   const [isAddStatusSuccess, setAddStatusSuccess] = useState(false);
   const [isUpdateStatusSuccess, setUpdateStatusSuccess] = useState(false);
+  const [endPoint, setEndPoint] = useState(null);
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -154,14 +158,27 @@ export default function Category() {
   const addedStatus = location.state?.addedStatus;
   const updatedStatus = location.state?.updatedStatus;
 
-  // Fetch All Status
-  useEffect(() => {
-    const fetchAssetStatus = async () => {
+  // Fetch All Asset Status
+  const fetchAssetStatus = async () => {
+    setLoading(true);
+    try {
       const fetchedData = await assetsService.fetchAllAssetsStatus();
       setStatusData(Array.from(fetchedData));
+    } catch (error) {
+      console.error("Error fetching asset status:", error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
+  // Handle deletion
+  const handleDelete = (status) => {
+    setEndPoint(`http://127.0.0.1:8002/status/${status.id}/delete/`);
+    setDeleteModalOpen(true);
+  };
+
+  // Fetch the asset status data when the component is mounted.
+  useEffect(() => {
     fetchAssetStatus();
   }, []);
 
@@ -213,10 +230,23 @@ export default function Category() {
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isDeleteModalOpen && (
         <DeleteModal
+          endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
           actionType="delete"
+          confirmDelete={async () => {
+            await fetchAssetStatus();
+            setSuccessMessage("Status Deleted Successfully!");
+            setTimeout(() => setSuccessMessage(""), 5000);
+          }}
+          onDeleteFail={() => {
+            setErrorMessage("Delete failed. Please try again.");
+            setTimeout(() => setErrorMessage(""), 5000);
+          }}
         />
       )}
 
@@ -274,7 +304,7 @@ export default function Category() {
                         <TableItem
                           key={index}
                           status={status}
-                          onDeleteClick={() => setDeleteModalOpen(true)}
+                          onDeleteClick={() => handleDelete(status)}
                         />
                       ))
                     ) : (
