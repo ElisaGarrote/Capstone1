@@ -1,3 +1,8 @@
+.asset-report-layout {
+  display: grid;
+
+}
+
 .asset-report-content {
   display: flex;
   flex-direction: row;

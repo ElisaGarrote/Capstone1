@@ -1,29 +1,52 @@
 import { useNavigate } from "react-router-dom";
+<<<<<<< HEAD
+=======
+import { useEffect, useState } from "react";
+>>>>>>> 59587ce7 (Backend Integration on UI and UI Update:)
 import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Status from "../../components/Status";
+<<<<<<< HEAD
 import Footer from "../../components/Footer";
+=======
+import assetsService from "../../services/assets-service";
+import LoadingButton from "../../components/LoadingButton";
+import Alert from "../../components/Alert";
+>>>>>>> 59587ce7 (Backend Integration on UI and UI Update:)
 
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
 
 const StatusRegistration = () => {
   const navigate = useNavigate();
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [response, setResponse] = useState();
 
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
   } = useForm({
-    defaultValues: {
-      statusName: "",
-      statusType: "",
-      notes: "",
-      showInList: true,
-      defaultStatus: false,
-    },
+    mode: "all",
   });
+
+  const submission = async (data) => {
+    setSubmitting(true);
+    const response = await assetsService.postStatus(
+      data.statusName,
+      data.statusType,
+      data.notes
+    );
+
+    if (response.status === 201) {
+      navigate("/More/ViewStatus", { state: { addedStatus: true } });
+      setSubmitting(false);
+    } else {
+      setResponse(response);
+      console.log("Failed to create status!");
+    }
+  };
 
   const statusTypes = [
     "Archived",
@@ -33,18 +56,18 @@ const StatusRegistration = () => {
     "Undeployable",
   ];
 
-  const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log("Form submitted:", data);
-
-    // Optional: navigate back to status view after successful submission
-    navigate("/More/ViewStatus");
-  };
+  // Set isSubmitting to false after 3 seconds every response state changes
+  useEffect(() => {
+    setTimeout(() => {
+      setSubmitting(false);
+    }, 3000);
+  }, [response]);
 
   return (
     <>
       <section className="page-layout-registration">
         <NavBar />
+<<<<<<< HEAD
         <main className="registration">
           <section className="top">
             <TopSecFormPage
@@ -74,6 +97,42 @@ const StatusRegistration = () => {
                     </span>
                   )}
                 </fieldset>
+=======
+      </nav>
+      <main className="registration">
+        {response != null && response.status !== 201 && (
+          <Alert message={response.data.name} type="danger" />
+        )}
+
+        <section className="top">
+          <TopSecFormPage
+            root="Statuses"
+            currentPage="New Status"
+            rootNavigatePage="/More/ViewStatus"
+            title="New Status Label"
+          />
+        </section>
+        <section className="status-registration-section">
+          <section className="registration-form">
+            <form onSubmit={handleSubmit(submission)}>
+              <fieldset>
+                <label htmlFor="statusName">Status Name *</label>
+                <input
+                  type="text"
+                  placeholder="Status Name"
+                  maxLength="100"
+                  className={errors.statusName ? "input-error" : ""}
+                  {...register("statusName", {
+                    required: "Status Name is required",
+                  })}
+                />
+                {errors.statusName && (
+                  <span className="error-message">
+                    {errors.statusName.message}
+                  </span>
+                )}
+              </fieldset>
+>>>>>>> 59587ce7 (Backend Integration on UI and UI Update:)
 
                 <fieldset>
                   <label htmlFor="statusType">Status Type *</label>
@@ -126,6 +185,7 @@ const StatusRegistration = () => {
                   <span>
                     <Status type={"deployed"} name={"Deployed"} />.
                   </span>
+<<<<<<< HEAD
                 </p>
               </section>
               <section className="pending-section">
@@ -149,6 +209,61 @@ const StatusRegistration = () => {
                   sight.
                 </p>
               </section>
+=======
+                )}
+              </fieldset>
+
+              <fieldset>
+                <label htmlFor="notes">Notes</label>
+                <textarea
+                  placeholder="Enter any additional notes about this status..."
+                  rows="4"
+                  maxLength="500"
+                  {...register("notes")}
+                />
+              </fieldset>
+
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={!isValid || isSubmitting}
+              >
+                {isSubmitting && <LoadingButton />}
+                {!isSubmitting ? "Save" : "Saving..."}
+              </button>
+            </form>
+          </section>
+          <section className="status-info-section">
+            <h2>About Status Types</h2>
+            <section className="deployable-section">
+              <Status type={"deployable"} name={"Deployable"} />
+              <p>
+                Use this for assets that can be checked out. Once you check them
+                out, they will automatically change status to{" "}
+                <span>
+                  <Status type={"deployed"} name={"Deployed"} />.
+                </span>
+              </p>
+            </section>
+            <section className="pending-section">
+              <Status type={"pending"} name={"Pending"} />
+              <p>
+                Use this for assets that can't be checked out. Useful for assets
+                that are being repaired, and are expected to return to use.
+              </p>
+            </section>
+            <section className="undeployable-section">
+              <Status type={"undeployable"} name={"Undeployable"} />
+              <p>Use this for assets that can't be checked out to anyone.</p>
+            </section>
+            <section className="archived-section">
+              <Status type={"archived"} name={"Archived"} />
+              <p>
+                Use this for assets that can't be checked out to anyone, and
+                have been archived. Useful for keeping information about
+                historical assets and meanwhile keeping them out of daily sight.
+              </p>
+>>>>>>> 59587ce7 (Backend Integration on UI and UI Update:)
             </section>
           </section>
         </main>
