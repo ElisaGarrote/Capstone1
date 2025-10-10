@@ -2,6 +2,7 @@ import { useLocation } from "react-router-dom";
 import NavBar from "../../../components/NavBar";
 import TopSecFormPage from "../../../components/TopSecFormPage";
 import SupplierTabNavBar from "../../../components/tab-nav-bar/SupplierTabNavBar";
+import Footer from "../../../components/Footer";
 
 import "../../../styles/more/supplier/SupplierDetails.css";
 
@@ -80,6 +81,7 @@ export default function SupplierDetails() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

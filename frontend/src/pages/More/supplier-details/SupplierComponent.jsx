@@ -8,6 +8,7 @@ import MockupData from "../../../data/mockData/components/components-mockup-data
 import Pagination from "../../../components/Pagination";
 import DefaultImage from "../../../assets/img/default-image.jpg";
 import DeleteModal from "../../../components/Modals/DeleteModal";
+import Footer from "../../../components/Footer";
 
 import "../../../styles/more/supplier/SupplierComponent.css";
 
@@ -168,6 +169,7 @@ export default function SupplierComponent() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

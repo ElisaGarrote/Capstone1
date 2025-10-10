@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import NavBar from "../../components/NavBar";
 import DeleteModal from "../../components/Modals/DeleteModal";
@@ -78,7 +78,14 @@ function TableItem({ supplier, onDeleteClick }) {
             src={supplier.logo ? supplier.logo : DefaultImage}
             alt={supplier.logo}
           />
-          <span
+          <Link
+            to={`/More/SupplierDetails/${supplier.id}`}
+            state={{ supplier }}
+            className="supplier-name-link"
+          >
+            {supplier.name}
+          </Link>
+          {/* <span
             onClick={() =>
               navigate(`/More/SupplierDetails/${supplier.id}`, {
                 state: { supplier },
@@ -86,7 +93,7 @@ function TableItem({ supplier, onDeleteClick }) {
             }
           >
             {supplier.name}
-          </span>
+          </span> */}
         </div>
       </td>
       <td>{supplier.address || "-"}</td>

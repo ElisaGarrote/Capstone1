@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import NavBar from "../../components/NavBar";
-import "../../styles/Registration.css";
-import "../../styles/ManufacturerRegistration.css";
-import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
+import NavBar from "../../components/NavBar";
+import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import contextsService from "../../services/contexts-service";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import Footer from "../../components/Footer";
 
+import "../../styles/Registration.css";
+import "../../styles/ManufacturerRegistration.css";
 const ManufacturerRegistration = () => {
   const { id } = useParams();
   const {
@@ -197,151 +198,154 @@ const ManufacturerRegistration = () => {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      <nav>
+
+      <section className="page-layout-registration">
         <NavBar />
-      </nav>
-      <main className="registration">
-        <section className="top">
-          <TopSecFormPage
-            root="Manufacturers"
-            currentPage={id ? "Edit Manufacturer" : "New Manufacturer"}
-            rootNavigatePage="/More/ViewManufacturer"
-            title={id ? "Edit Manufacturer" : "New Manufacturer"}
-          />
-        </section>
-        <section className="registration-form">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <fieldset>
-              <label htmlFor="manufacturerName">Manufacturer Name *</label>
-              <input
-                type="text"
-                placeholder="Manufacturer Name"
-                maxLength="100"
-                className={errors.manufacturerName ? "input-error" : ""}
-                {...register("manufacturerName", {
-                  required: "Manufacturer Name is required",
-                })}
-              />
-              {errors.manufacturerName && (
-                <span className="error-message">
-                  {errors.manufacturerName.message}
-                </span>
-              )}
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="url">URL</label>
-              <input
-                type="url"
-                placeholder="URL"
-                className={errors.url ? "input-error" : ""}
-                {...register("url", {
-                  pattern: {
-                    value: /^(https?:\/\/).+/i,
-                    message: "URL must start with http:// or https://",
-                  },
-                })}
-              />
-              {errors.url && (
-                <span className="error-message">{errors.url.message}</span>
-              )}
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="supportUrl">Support URL</label>
-              <input
-                type="url"
-                placeholder="Support URL"
-                className={errors.supportUrl ? "input-error" : ""}
-                {...register("supportUrl", {
-                  pattern: {
-                    value: /^(https?:\/\/).+/i,
-                    message: "Support URL must start with http:// or https://",
-                  },
-                })}
-              />
-              {errors.supportUrl && (
-                <span className="error-message">
-                  {errors.supportUrl.message}
-                </span>
-              )}
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="supportPhone">Phone Number</label>
-              <input
-                type="tel"
-                placeholder="Phone Number"
-                {...register("supportPhone")}
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="supportEmail">Email</label>
-              <input
-                type="email"
-                placeholder="Email"
-                {...register("supportEmail")}
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="notes">Notes</label>
-              <textarea
-                placeholder="Notes"
-                rows="4"
-                maxLength="500"
-                {...register("notes")}
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="logo">Logo</label>
-              <div>
-                {previewImage && (
-                  <div className="image-selected">
-                    <img src={previewImage} alt="Selected logo" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPreviewImage(null);
-                        setSelectedImage(null);
-                        setValue("logo", null);
-                        document.getElementById("logo").value = "";
-                        setRemoveImage(true);
-                        console.log("Remove logo flag set to:", true);
-                      }}
-                    >
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
+        <main className="registration">
+          <section className="top">
+            <TopSecFormPage
+              root="Manufacturers"
+              currentPage={id ? "Edit Manufacturer" : "New Manufacturer"}
+              rootNavigatePage="/More/ViewManufacturer"
+              title={id ? "Edit Manufacturer" : "New Manufacturer"}
+            />
+          </section>
+          <section className="registration-form">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <fieldset>
+                <label htmlFor="manufacturerName">Manufacturer Name *</label>
+                <input
+                  type="text"
+                  placeholder="Manufacturer Name"
+                  maxLength="100"
+                  className={errors.manufacturerName ? "input-error" : ""}
+                  {...register("manufacturerName", {
+                    required: "Manufacturer Name is required",
+                  })}
+                />
+                {errors.manufacturerName && (
+                  <span className="error-message">
+                    {errors.manufacturerName.message}
+                  </span>
                 )}
-                <label htmlFor="logo" className="upload-image-btn">
-                  {previewImage ? "Change Logo" : "Choose Logo"}
-                  <input
-                    type="file"
-                    id="logo"
-                    accept="image/*"
-                    onChange={handleImageSelection}
-                    style={{ display: "none" }}
-                  />
-                </label>
-                <small className="file-size-info">
-                  Maximum file size must be 5MB
-                </small>
-              </div>
-            </fieldset>
+              </fieldset>
 
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={!isValid}
-            >
-              Save
-            </button>
-          </form>
-        </section>
-      </main>
+              <fieldset>
+                <label htmlFor="url">URL</label>
+                <input
+                  type="url"
+                  placeholder="URL"
+                  className={errors.url ? "input-error" : ""}
+                  {...register("url", {
+                    pattern: {
+                      value: /^(https?:\/\/).+/i,
+                      message: "URL must start with http:// or https://",
+                    },
+                  })}
+                />
+                {errors.url && (
+                  <span className="error-message">{errors.url.message}</span>
+                )}
+              </fieldset>
+
+              <fieldset>
+                <label htmlFor="supportUrl">Support URL</label>
+                <input
+                  type="url"
+                  placeholder="Support URL"
+                  className={errors.supportUrl ? "input-error" : ""}
+                  {...register("supportUrl", {
+                    pattern: {
+                      value: /^(https?:\/\/).+/i,
+                      message:
+                        "Support URL must start with http:// or https://",
+                    },
+                  })}
+                />
+                {errors.supportUrl && (
+                  <span className="error-message">
+                    {errors.supportUrl.message}
+                  </span>
+                )}
+              </fieldset>
+
+              <fieldset>
+                <label htmlFor="supportPhone">Phone Number</label>
+                <input
+                  type="tel"
+                  placeholder="Phone Number"
+                  {...register("supportPhone")}
+                />
+              </fieldset>
+
+              <fieldset>
+                <label htmlFor="supportEmail">Email</label>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  {...register("supportEmail")}
+                />
+              </fieldset>
+
+              <fieldset>
+                <label htmlFor="notes">Notes</label>
+                <textarea
+                  placeholder="Notes"
+                  rows="4"
+                  maxLength="500"
+                  {...register("notes")}
+                />
+              </fieldset>
+
+              <fieldset>
+                <label htmlFor="logo">Logo</label>
+                <div>
+                  {previewImage && (
+                    <div className="image-selected">
+                      <img src={previewImage} alt="Selected logo" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewImage(null);
+                          setSelectedImage(null);
+                          setValue("logo", null);
+                          document.getElementById("logo").value = "";
+                          setRemoveImage(true);
+                          console.log("Remove logo flag set to:", true);
+                        }}
+                      >
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  )}
+                  <label htmlFor="logo" className="upload-image-btn">
+                    {previewImage ? "Change Logo" : "Choose Logo"}
+                    <input
+                      type="file"
+                      id="logo"
+                      accept="image/*"
+                      onChange={handleImageSelection}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
+                </div>
+              </fieldset>
+
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={!isValid}
+              >
+                Save
+              </button>
+            </form>
+          </section>
+        </main>
+        <Footer />
+      </section>
     </>
   );
 };

@@ -9,6 +9,7 @@ import Pagination from "../../../components/Pagination";
 import DefaultImage from "../../../assets/img/default-image.jpg";
 import Status from "../../../components/Status";
 import DeleteModal from "../../../components/Modals/DeleteModal";
+import Footer from "../../../components/Footer";
 
 import "../../../styles/more/supplier/SupplierAsset.css";
 
@@ -186,6 +187,7 @@ export default function SupplierAsset() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );
