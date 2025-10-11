@@ -60,9 +60,6 @@ function TableItem({ manufacturer, onDeleteClick }) {
       <td>{manufacturer.notes || "-"}</td>
       <td>
         <section className="action-button-section">
-          <button title="View" className="action-button">
-            <i className="fas fa-eye"></i>
-          </button>
           <button
             title="Edit"
             className="action-button"
