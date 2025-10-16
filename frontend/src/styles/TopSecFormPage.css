@@ -2,7 +2,7 @@
     display: flex;
     flex-direction: column;
     height: fit-content;
-    width: 100vw;
+    width: 100%;
     padding-bottom: 16px;
     border-bottom: 1px solid #d3d3d3;
     gap: 8px;

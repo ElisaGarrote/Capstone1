@@ -9,6 +9,7 @@ import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.jso
 const ComponentCheckin = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  console.log("Location state:", location.state);
   const item = location.state?.item || {};
 
   // Extract unique values from mock data
@@ -23,9 +24,8 @@ const ComponentCheckin = () => {
   } = useForm({
     mode: "all",
     defaultValues: {
-      asset: "",
+      checkinDate: new Date().toISOString().split("T")[0],
       quantity: "",
-      checkoutDate: "",
       notes: "",
     },
   });
@@ -44,37 +44,32 @@ const ComponentCheckin = () => {
         <section className="top">
           <TopSecFormPage
             root="Components"
-            currentPage="Checkout Component"
+            currentPage="Checkin Component"
             rootNavigatePage="/components"
-            title={item.name}
+            title={location.state?.componentName}
           />
         </section>
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
-            {/* Asset */}
+            {/* Checkin Date */}
             <fieldset>
-              <label htmlFor="asset">Check-out To *</label>
-              <select
-                className={errors.asset ? "input-error" : ""}
-                {...register("asset", {
-                  required: "Asset is required",
+              <label htmlFor="checkinDate">Checkin Date *</label>
+              <input
+                type="date"
+                className={errors.checkinDate ? "input-error" : ""}
+                defaultValue={new Date().toISOString().split("T")[0]}
+                {...register("checkinDate", {
+                  required: "Checkin date is required",
                 })}
-              >
-                <option value="">Select Asset</option>
-                {assets.map((asset) => (
-                  <option key={asset} value={asset}>{asset}</option>
-                ))}
-              </select>
-              {errors.asset && (
-                <span className="error-message">
-                  {errors.asset.message}
-                </span>
+              />
+              {errors.checkinDate && (
+                <span className="error-message">{errors.checkinDate.message}</span>
               )}
             </fieldset>
 
             {/* Quantity */}
             <fieldset>
-              <label htmlFor="quantity">Quantity * (Remaining: {item.available_quantity})</label>
+              <label htmlFor="quantity">Quantity * (Remaining: {item.remaining_quantity})</label>
               <input
                 className={errors.quantity ? "input-error" : ""}
                 type="number"
@@ -82,33 +77,17 @@ const ComponentCheckin = () => {
                 placeholder="Enter quantity"
                 min="0"
                 step="1"
-                max={item.available_quantity}
+                max={item.remaining_quantity}
                 {...register("quantity", {
                   valueAsNumber: true,
                   required: "Quantity is required",
                   validate: (value) =>
-                    value <= item.available_quantity ||
+                    value <= item.remaining_quantity ||
                     `Cannot exceed available quantity (${item.available_quantity})`,
                 })} 
               />
               {errors.quantity && (
                 <span className="error-message">{errors.quantity.message}</span>
-              )}
-            </fieldset>
-
-            {/* Checkout Date */}
-            <fieldset>
-              <label htmlFor="checkoutDate">Checkout Date *</label>
-              <input
-                type="date"
-                className={errors.checkoutDate ? "input-error" : ""}
-                defaultValue={new Date().toISOString().split("T")[0]} // today's date
-                {...register("checkoutDate", {
-                  required: "Checkout date is required",
-                })}
-              />
-              {errors.checkoutDate && (
-                <span className="error-message">{errors.checkoutDate.message}</span>
               )}
             </fieldset>
 

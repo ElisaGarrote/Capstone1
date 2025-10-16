@@ -1,10 +1,7 @@
 [
   {
     "id": 1,
-    "component": {
-      "id": 1,
-      "name": "8GB DDR4 RAM"
-    },
+    "component": 1,
     "to_asset": {
       "id": 1,
       "displayed_id": "Laptop A123"
@@ -12,16 +9,13 @@
     "quantity": 4,
     "checkout_date": "2025-10-01T09:30:00",
     "notes": "Upgraded RAM for laptop A123",
-    "total_checked_in": 0,
-    "remaining_quantity": 4,
+    "total_checked_in": 2,
+    "remaining_quantity": 2,
     "is_fully_returned": false
   },
   {
     "id": 2,
-    "component": {
-      "id": 1,
-      "name": "8GB DDR4 RAM"
-    },
+    "component": 1,
     "to_asset": {
       "id": 2,
       "displayed_id": "Laptop B456"
@@ -35,10 +29,7 @@
   },
   {
     "id": 3,
-    "component": {
-      "id": 1,
-      "name": "8GB DDR4 RAM"
-    },
+    "component": 1,
     "to_asset": {
       "id": 3,
       "displayed_id": "Desktop D789"
@@ -52,10 +43,7 @@
   },
   {
     "id": 4,
-    "component": {
-      "id": 2,
-      "name": "256GB SSD"
-    },
+    "component": 2,
     "to_asset": {
       "id": 4,
       "displayed_id": "Desktop D101"
@@ -69,10 +57,7 @@
   },
   {
     "id": 5,
-    "component": {
-      "id": 2,
-      "name": "256GB SSD"
-    },
+    "component": 2,
     "to_asset": {
       "id": 5,
       "displayed_id": "Desktop D102"
@@ -80,16 +65,13 @@
     "quantity": 6,
     "checkout_date": "2025-09-18T14:30:00",
     "notes": "SSD upgrade for D102",
-    "total_checked_in": 0,
-    "remaining_quantity": 6,
+    "total_checked_in": 4,
+    "remaining_quantity": 2,
     "is_fully_returned": false
   },
   {
     "id": 6,
-    "component": {
-      "id": 2,
-      "name": "256GB SSD"
-    },
+    "component": 2,
     "to_asset": {
       "id": 6,
       "displayed_id": "Desktop D103"
@@ -103,10 +85,7 @@
   },
   {
     "id": 7,
-    "component": {
-      "id": 4,
-      "name": "Cooling Fan 120mm"
-    },
+    "component": 4,
     "to_asset": {
       "id": 10,
       "displayed_id": "Server S201"
@@ -120,10 +99,7 @@
   },
   {
     "id": 8,
-    "component": {
-      "id": 4,
-      "name": "Cooling Fan 120mm"
-    },
+    "component": 4,
     "to_asset": {
       "id": 11,
       "displayed_id": "Server S202"
@@ -137,10 +113,7 @@
   },
   {
     "id": 9,
-    "component": {
-      "id": 4,
-      "name": "Cooling Fan 120mm"
-    },
+    "component": 4,
     "to_asset": {
       "id": 12,
       "displayed_id": "Server S203"
@@ -154,10 +127,7 @@
   },
   {
     "id": 10,
-    "component": {
-      "id": 5,
-      "name": "Network Card PCIe"
-    },
+    "component": 5,
     "to_asset": {
       "id": 13,
       "displayed_id": "Desktop D301"
@@ -171,10 +141,7 @@
   },
   {
     "id": 11,
-    "component": {
-      "id": 5,
-      "name": "Network Card PCIe"
-    },
+    "component": 5,
     "to_asset": {
       "id": 14,
       "displayed_id": "Desktop D302"
@@ -188,10 +155,7 @@
   },
   {
     "id": 12,
-    "component": {
-      "id": 6,
-      "name": "Graphics Card GTX 1660"
-    },
+    "component": 6,
     "to_asset": {
       "id": 15,
       "displayed_id": "Workstation W401"
@@ -205,10 +169,7 @@
   },
   {
     "id": 13,
-    "component": {
-      "id": 6,
-      "name": "Graphics Card GTX 1660"
-    },
+    "component": 6,
     "to_asset": {
       "id": 16,
       "displayed_id": "Workstation W402"
@@ -222,10 +183,7 @@
   },
   {
     "id": 14,
-    "component": {
-      "id": 7,
-      "name": "Motherboard ATX B450"
-    },
+    "component": 7,
     "to_asset": {
       "id": 17,
       "displayed_id": "Desktop D501"
@@ -239,10 +197,7 @@
   },
   {
     "id": 15,
-    "component": {
-      "id": 7,
-      "name": "Motherboard ATX B450"
-    },
+    "component": 7,
     "to_asset": {
       "id": 18,
       "displayed_id": "Desktop D502"
@@ -256,10 +211,7 @@
   },
   {
     "id": 16,
-    "component": {
-      "id": 8,
-      "name": "Laptop Battery 6-cell"
-    },
+    "component": 8,
     "to_asset": {
       "id": 19,
       "displayed_id": "Laptop L601"
@@ -273,10 +225,7 @@
   },
   {
     "id": 17,
-    "component": {
-      "id": 8,
-      "name": "Laptop Battery 6-cell"
-    },
+    "component": 8,
     "to_asset": {
       "id": 20,
       "displayed_id": "Laptop L602"
@@ -290,10 +239,7 @@
   },
   {
     "id": 18,
-    "component": {
-      "id": 9,
-      "name": "USB-C Docking Station"
-    },
+    "component": 9,
     "to_asset": {
       "id": 21,
       "displayed_id": "Laptop L701"
@@ -307,10 +253,7 @@
   },
   {
     "id": 19,
-    "component": {
-      "id": 9,
-      "name": "USB-C Docking Station"
-    },
+    "component": 9,
     "to_asset": {
       "id": 22,
       "displayed_id": "Laptop L702"
@@ -324,10 +267,7 @@
   },
   {
     "id": 20,
-    "component": {
-      "id": 9,
-      "name": "USB-C Docking Station"
-    },
+    "component": 9,
     "to_asset": {
       "id": 23,
       "displayed_id": "Laptop L703"
@@ -341,10 +281,7 @@
   },
   {
     "id": 21,
-    "component": {
-      "id": 10,
-      "name": "Cat6 Ethernet Cable 5m"
-    },
+    "component": 10,
     "to_asset": {
       "id": 24,
       "displayed_id": "Server Room R201"
@@ -358,10 +295,7 @@
   },
   {
     "id": 22,
-    "component": {
-      "id": 10,
-      "name": "Cat6 Ethernet Cable 5m"
-    },
+    "component": 10,
     "to_asset": {
       "id": 25,
       "displayed_id": "Server Room R202"

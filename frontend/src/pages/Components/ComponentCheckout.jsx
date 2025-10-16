@@ -25,7 +25,7 @@ const ComponentCheckout = () => {
     defaultValues: {
       asset: "",
       quantity: "",
-      checkoutDate: "",
+      checkoutDate: new Date().toISOString().split("T")[0],
       notes: "",
     },
   });
@@ -102,7 +102,7 @@ const ComponentCheckout = () => {
               <input
                 type="date"
                 className={errors.checkoutDate ? "input-error" : ""}
-                defaultValue={new Date().toISOString().split("T")[0]} // today's date
+                defaultValue={new Date().toISOString().split("T")[0]}
                 {...register("checkoutDate", {
                   required: "Checkout date is required",
                 })}
