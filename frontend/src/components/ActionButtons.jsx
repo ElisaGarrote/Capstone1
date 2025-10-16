@@ -2,18 +2,23 @@ import { useNavigate } from "react-router-dom";
 import "../styles/ActionButtons.css";
 
 export default function ActionButtons({
+  showView = false,
   showEdit = false,
   showDelete = false,
-  showView = false,
+  showRecover = false,
+  showCheckout = false,
+  showCheckin = false,
+
+  disableCheckout = false,
+  disableCheckin = false,
+
+  onViewClick = null,
   editPath = "",
   editState = {},
-  showRecover = false,
-  showCheck = false, 
-  statusType = "",
   onDeleteClick = null,
-  onViewClick = null,
   onRecoverClick = null,
-  onCheckClick = null, 
+  onCheckoutClick = null,
+  onCheckinClick = null,
 }) {
   const navigate = useNavigate();
 
@@ -59,25 +64,28 @@ export default function ActionButtons({
         </button>
       )}
 
-      {showCheck && statusType && (
+      {showCheckout && (
         <button
-          title={statusType === "deployable" ? "Check Out" : "Check In"}
-          className={`action-button ${
-            statusType === "deployable"
-              ? "action-button-checkout"
-              : "action-button-checkin"
-          }`}
-          onClick={onCheckClick}
+          title="Check Out"
+          className="action-button action-button-checkout"
+          onClick={() => !disableCheckout && onCheckoutClick?.()}
+          disabled={disableCheckout}
         >
-          <i
-            className={
-              statusType === "deployable"
-                ? "fas fa-sign-out-alt"
-                : "fas fa-sign-in-alt"
-            }
-          ></i>
+          <i className="fas fa-sign-out-alt"></i>
         </button>
       )}
+
+      {showCheckin && (
+        <button
+          title="Check In"
+          className="action-button action-button-checkin"
+          onClick={() => !disableCheckin && onCheckinClick?.()}
+          disabled={disableCheckin}
+        >
+          <i className="fas fa-sign-in-alt"></i>
+        </button>
+      )}
+
     </section>
   );
 }

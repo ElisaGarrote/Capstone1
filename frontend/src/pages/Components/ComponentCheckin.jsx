@@ -1,50 +1,38 @@
-import "../../styles/custom-colors.css";
-import "../../styles/CheckInOut.css";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import assetsService from "../../services/assets-service";
+import { useForm, Controller } from "react-hook-form";
+import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
 
-export default function ComponentCheckin() {
-  const location = useLocation();
+const ComponentCheckin = () => {
   const navigate = useNavigate();
-  const item = location.state || {};
-  const params = useParams();
-  const id = params.id; // this is the ComponentCheckout ID
+  const location = useLocation();
+  const item = location.state?.item || {};
 
-  const currentDate = new Date().toISOString().split("T")[0];
+  // Extract unique values from mock data
+  const assets = Array.from(new Set(MockupData.map(item => item.asset)));
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    control,
+    watch,
+    formState: { errors, isValid },
   } = useForm({
+    mode: "all",
     defaultValues: {
-      checkInDate: currentDate,
+      asset: "",
+      quantity: "",
+      checkoutDate: "",
       notes: "",
     },
   });
 
-  const onSubmit = async (data) => {
-    try {
-      const formData = {
-        component_checkout: id,
-        checkin_date: data.checkInDate,
-        notes: data.notes,
-      };
-
-      console.log("Submitting formData:", formData);
-      await assetsService.createComponentCheckin(formData);
-
-      // Go back to list page for this component's pending checkouts
-      navigate(`/components/checked-out-list/${item.component}`);
-    } catch (error) {
-      console.error("Error submitting check-in:", error);
-      alert(
-        error?.detail || error?.message || "Failed to submit check-in. Please try again."
-      );
-    }
+  const onSubmit = (data) => {
+    console.log("Form submitted:", data);
+    navigate("/components");
   };
 
   return (
@@ -52,63 +40,97 @@ export default function ComponentCheckin() {
       <nav>
         <NavBar />
       </nav>
-      <main className="check-in-out-page">
+      <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="Checkin List"
-            currentPage="Check-In Component"
-            rootNavigatePage={`/components/checked-out-list/${item.component}`}
-            title={item.componentName}
+            root="Components"
+            currentPage="Checkout Component"
+            rootNavigatePage="/components"
+            title={item.name}
           />
         </section>
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Asset */}
+            <fieldset>
+              <label htmlFor="asset">Check-out To *</label>
+              <select
+                className={errors.asset ? "input-error" : ""}
+                {...register("asset", {
+                  required: "Asset is required",
+                })}
+              >
+                <option value="">Select Asset</option>
+                {assets.map((asset) => (
+                  <option key={asset} value={asset}>{asset}</option>
+                ))}
+              </select>
+              {errors.asset && (
+                <span className="error-message">
+                  {errors.asset.message}
+                </span>
+              )}
+            </fieldset>
 
-        <section className="middle">
-          <section className="recent-checkout-info">
-            <h2>Check-Out Info</h2>
-            <div>
-              <fieldset>
-                <label>Check-Out Date:</label>
-                <p>{item.checkout_date ? new Date(item.checkout_date).toLocaleString() : "-"}</p>
-              </fieldset>
-              <fieldset>
-                <label>Checked-Out To:</label>
-                <p>{item.asset_displayed_id} - {item.asset_name}</p>
-              </fieldset>
-              <fieldset>
-                <label>Quantity:</label>
-                <p>{item.quantity || "-"}</p>
-              </fieldset>
-              <fieldset>
-                <label>Notes:</label>
-                <p>{item.notes || "-"}</p>
-              </fieldset>
-            </div>
-          </section>
+            {/* Quantity */}
+            <fieldset>
+              <label htmlFor="quantity">Quantity * (Remaining: {item.available_quantity})</label>
+              <input
+                className={errors.quantity ? "input-error" : ""}
+                type="number"
+                id="quantity"
+                placeholder="Enter quantity"
+                min="0"
+                step="1"
+                max={item.available_quantity}
+                {...register("quantity", {
+                  valueAsNumber: true,
+                  required: "Quantity is required",
+                  validate: (value) =>
+                    value <= item.available_quantity ||
+                    `Cannot exceed available quantity (${item.available_quantity})`,
+                })} 
+              />
+              {errors.quantity && (
+                <span className="error-message">{errors.quantity.message}</span>
+              )}
+            </fieldset>
 
-          <section className="checkin-form">
-            <h2>Check-In Form</h2>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <fieldset>
-                <label>Check-In Date *</label>
-                <input
-                  type="text"
-                  readOnly
-                  className={errors.checkInDate ? 'input-error' : ''}
-                  {...register("checkInDate", { required: true })}
-                />
-                {errors.checkInDate && <span className="error">Check-In Date is required</span>}
-              </fieldset>
+            {/* Checkout Date */}
+            <fieldset>
+              <label htmlFor="checkoutDate">Checkout Date *</label>
+              <input
+                type="date"
+                className={errors.checkoutDate ? "input-error" : ""}
+                defaultValue={new Date().toISOString().split("T")[0]} // today's date
+                {...register("checkoutDate", {
+                  required: "Checkout date is required",
+                })}
+              />
+              {errors.checkoutDate && (
+                <span className="error-message">{errors.checkoutDate.message}</span>
+              )}
+            </fieldset>
 
-              <fieldset>
-                <label>Notes</label>
-                <textarea {...register("notes")} maxLength="500" />
-              </fieldset>
+            {/* Notes */}
+            <fieldset>
+              <label htmlFor="notes">Notes</label>
+              <textarea
+                placeholder="Enter notes"
+                {...register("notes")}
+                rows="3"
+              ></textarea>
+            </fieldset>
 
-              <button type="submit" className="save-btn">Save</button>
-            </form>
-          </section>
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid}>
+              Save
+            </button>
+          </form>
         </section>
       </main>
     </>
   );
-}
+};
+
+export default ComponentCheckin;

@@ -58,14 +58,14 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>CATEGORY</th>
       <th>MANUFACTURER</th>
       <th>DEPRECIATION</th>
-      <th>CHECK-IN / CHECK-OUT</th>
+      <th>CHECK-OUT / CHECK-IN</th>
       <th>ACTION</th>
     </tr>
   );
 }
 
 // TableItem
-function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick, navigate }) {
   return (
     <tr>
       <td>
@@ -94,8 +94,16 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick }
       <td>{item.depreciation}</td>
       <td>
         <ActionButtons
-          showCheck
-          statusType={item.status_type}
+          showCheckout
+          showCheckin
+          disableCheckout={item.available_quantity <= 0}
+          disableCheckin={item.checked_out_quantity <= 0}
+          onCheckoutClick={() =>
+            navigate(`/components/check-out/${item.id}`, { state: { item } })
+          }
+          onCheckinClick={() =>
+            navigate(`/components/checked-out-list/${item.id}`, { state: { item } })
+          }
         />
       </td>
       <td>
@@ -271,6 +279,7 @@ export default function Components() {
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
                         onViewClick={() => navigate(`/components/view/${item.id}`)}
+                        navigate={navigate}
                       />
                     ))
                   ) : (
