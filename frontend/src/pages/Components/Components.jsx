@@ -79,7 +79,7 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick }
         <img
           src={item.image || DefaultImage}
           alt={item.name || "No Image"}
-          onError={(e) => (e.currentTarget.src = DefaultImage)} // fallback for broken URLs
+          onError={(e) => (e.currentTarget.src = DefaultImage)}
           style={{
             width: "50px",
             height: "50px",
@@ -93,7 +93,10 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick }
       <td>{item.manufacturer}</td>
       <td>{item.depreciation}</td>
       <td>
-        <ActionButtons showCheck statusType={item.status_type} />
+        <ActionButtons
+          showCheck
+          statusType={item.status_type}
+        />
       </td>
       <td>
         <ActionButtons
