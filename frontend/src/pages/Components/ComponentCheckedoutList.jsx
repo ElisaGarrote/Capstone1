@@ -1,339 +1,169 @@
-import { useEffect, useRef, useState } from "react";
+import "../../styles/custom-colors.css";
+import "../../styles/CheckedOutList.css";
 import NavBar from "../../components/NavBar";
-import Status from "../../components/Status";
-import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
-import RepairFilter from "../../components/FilterPanel";
-import Pagination from "../../components/Pagination";
-import "../../styles/Table.css";
-import ActionButtons from "../../components/ActionButtons";
-import View from "../../components/Modals/View";
-import ConfirmationModal from "../../components/Modals/DeleteModal";
-
-const filterConfig = [
-  {
-    type: "select",
-    name: "type",
-    label: "Type",
-    options: [
-      { value: "accessory", label: "Accessory" },
-      { value: "asset", label: "Asset" },
-      { value: "audit", label: "Audit" },
-      { value: "component", label: "Component" },
-      { value: "consumable", label: "Consumable" },
-    ],
-  },
-  {
-    type: "select",
-    name: "status",
-    label: "Status",
-    options: [
-      { value: "beingrepaired", label: "Being Repaired" },
-      { value: "broken", label: "Broken" },
-      { value: "deployed", label: "Deployed" },
-      { value: "lostorstolen", label: "Lost or Stolen" },
-      { value: "pending", label: "Pending" },
-      { value: "readytodeploy", label: "Ready to Deploy" },
-    ],
-  },
-  {
-    type: "dateRange",
-    name: "assetsbeingrepaired",
-    fromLabel: "Start Date",
-    toLabel: "End Date",
-  },
-  {
-    type: "searchable",
-    name: "asset",
-    label: "Asset",
-    options: [
-      { value: "1", label: "Lenovo Yoga 7" },
-      { value: "2", label: "Iphone 16 Pro Max" },
-      { value: "3", label: "Ideapad 3" },
-      { value: "4", label: "Ipad Pro" },
-      { value: "5", label: "HP Spectre x360" },
-    ],
-  },
-];
-
-// TableHeader
-function TableHeader({ allSelected, onHeaderChange }) {
-  return (
-    <tr>
-      <th>
-        <input
-          type="checkbox"
-          checked={allSelected}
-          onChange={onHeaderChange}
-        />
-      </th>
-      <th>ASSET</th>
-      <th>TYPE</th>
-      <th>NAME</th>
-      <th>START DATE</th>
-      <th>END DATE</th>
-      <th>COST</th>
-      <th>STATUS</th>
-      <th>ACTION</th>
-    </tr>
-  );
-}
-
-// TableItem
-function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick }) {
-  return (
-    <tr>
-      <td>
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={(e) => onRowChange(repair.id, e.target.checked)}
-        />
-      </td>
-      <td>{repair.asset}</td>
-      <td>{repair.type}</td>
-      <td>{repair.name}</td>
-      <td>{repair.start_date}</td>
-      <td>{repair.end_date}</td>
-      <td>{repair.cost}</td>
-      <td>
-        <Status
-          value={repair.id}
-          type={repair.statusType}
-          name={repair.status_name}
-        />
-      </td>
-      <td>
-        <ActionButtons
-          showEdit
-          showDelete
-          showView
-          editPath="RepairEdit"
-          editState={{ repair }}
-          onDeleteClick={() => onDeleteClick(repair.id)}
-          onViewClick={() => onViewClick(repair)}
-        />
-      </td>
-    </tr>
-  );
-}
+import TopSecFormPage from "../../components/TopSecFormPage";
+import { useNavigate, useParams } from "react-router-dom";
+import "../../styles/PageTable.css";
+import React, { useEffect, useState } from "react";
+import assetsService from "../../services/assets-service";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import Alert from "../../components/Alert";
 
 export default function ComponentCheckedoutList() {
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
+  const navigate = useNavigate();
+  const { id } = useParams();
 
-  // pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedActivity = MockupData.slice(startIndex, endIndex);
+  // Store both the component metadata and the pending checkouts
+  const [componentInfo, setComponentInfo] = useState({});
+  const [pendingCheckouts, setPendingCheckouts] = useState([]);
+  const [checkedItems, setCheckedItems] = useState([]);
 
-  // selection
-  const [selectedIds, setSelectedIds] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const allSelected =
-    paginatedActivity.length > 0 &&
-    paginatedActivity.every((item) => selectedIds.includes(item.id));
+  const allChecked = checkedItems.length === pendingCheckouts.length && pendingCheckouts.length > 0;
 
-  const handleHeaderChange = (e) => {
-    if (e.target.checked) {
-      setSelectedIds((prev) => [
-        ...prev,
-        ...paginatedActivity.map((item) => item.id).filter((id) => !prev.includes(id)),
-      ]);
-    } else {
-      setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedActivity.map((item) => item.id).includes(id))
-      );
-    }
-  };
-
-  const handleRowChange = (id, checked) => {
-    if (checked) {
-      setSelectedIds((prev) => [...prev, id]);
-    } else {
-      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
-    }
-  };
-
-  // delete modal state
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
-
-  const openDeleteModal = (id = null) => {
-    setDeleteTarget(id);
-    setDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteModalOpen(false);
-    setDeleteTarget(null);
-  };
-
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single id:", deleteTarget);
-      // remove from mock data / API call
-    } else {
-      console.log("Deleting multiple ids:", selectedIds);
-      // remove multiple
-      setSelectedIds([]); // clear selection
-    }
-    closeDeleteModal();
-  };
-
-  // Add state for view modal
-  const [isViewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedRepair, setSelectedRepair] = useState(null);
-
-  // Add view handler
-  const handleViewClick = (repair) => {
-    setSelectedRepair(repair);
-    setViewModalOpen(true);
-  };
-
-  const closeViewModal = () => {
-    setViewModalOpen(false);
-    setSelectedRepair(null);
-  };
-
-  // outside click for export toggle
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
+    const fetchPendingCheckouts = async () => {
+      try {
+        setIsLoading(true);
+        const data = await assetsService.fetchPendingComponentCheckouts(id);
+        console.log("Fetched component and pending checkouts:", data);
+
+        // Defensive fallback
+        if (data) {
+          setComponentInfo({
+            id: data.id,
+            name: data.name,
+            image: data.image
+          });
+          setPendingCheckouts(data.pending_checkouts || []);
+        } else {
+          setComponentInfo({});
+          setPendingCheckouts([]);
+        }
+      } catch (error) {
+        console.error("Error fetching pending checkouts:", error);
+        setErrorMessage("Failed to load pending checkouts.");
+      } finally {
+        setIsLoading(false);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [exportToggle]);
+
+    if (id) {
+      fetchPendingCheckouts();
+    } else {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  const toggleSelectAll = () => {
+    setCheckedItems(allChecked ? [] : pendingCheckouts.map((item) => item.id));
+  };
+
+  const toggleItem = (itemId) => {
+    setCheckedItems((prev) =>
+      prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]
+    );
+  };
+
+  const handleCheckIn = (item) => {
+    navigate(`/components/check-in/${item.id}`, {
+      state: {
+        ...item,
+        componentName: componentInfo.name,
+      }
+    });
+  };
+
+  const handleBulkCheckIn = () => {
+    if (checkedItems.length === 0) return;
+    navigate("/components/check-in/0", {
+      state: {
+        ids: checkedItems,
+        component: componentInfo.id,
+        componentName: componentInfo.name,
+        componentImage: componentInfo.image
+      }
+    });
+  };
 
   return (
     <>
-      {isDeleteModalOpen && (
-        <ConfirmationModal
-          closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
-        />
-      )}
+      <nav><NavBar /></nav>
+      <main className="list-page">
+        <section className="table-header">
+          <TopSecFormPage
+            root="Components"
+            currentPage="Check-In Components"
+            rootNavigatePage="/components"
+            title={componentInfo.name || "Component"}
+          />
+        </section>
+        <div className="container">
+          {errorMessage && <Alert message={errorMessage} type="danger" />}
 
-      {isViewModalOpen && selectedRepair && (
-        <View
-          title={`${selectedRepair.asset} - ${selectedRepair.name}`}
-          data={[
-            { label: "Asset", value: selectedRepair.asset },
-            { label: "Type", value: selectedRepair.type },
-            { label: "Name", value: selectedRepair.name },
-            { label: "Start Date", value: selectedRepair.start_date },
-            { label: "End Date", value: selectedRepair.end_date || "Ongoing" },
-            { label: "Cost", value: selectedRepair.cost },
-            { label: "Status", value: selectedRepair.status_name },
-            { label: "Notes", value: selectedRepair.notes || "No notes" }
-          ]}
-          closeModal={closeViewModal}
-        />
-      )}
-
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
-
-        <main className="page-layout">
-          <section className="title-page-section">
-            <h1>Components</h1>
+          <section className="top">
+            <p>Please select which component checkouts you want to check-in.</p>
+            <button onClick={handleBulkCheckIn} disabled={checkedItems.length === 0}>
+              Bulk Check-In
+            </button>
           </section>
 
-          <RepairFilter filters={filterConfig} />
-
-          <section className="table-layout">
-            <section className="table-header">
-              <h2 className="h2">Components ({MockupData.length})</h2>
-              <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
-                )}
-                <input type="search" placeholder="Search..." className="search" />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
-                <MediumButtons
-                  type="new"
-                  navigatePage="/Repairs/RepairRegistration"
-                />
-              </section>
-            </section>
-
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="table-section">
+          <section className="middle">
+            {isLoading ? (
+              <SkeletonLoadingTable />
+            ) : pendingCheckouts.length === 0 ? (
+              <p className="no-data-message">No pending checkouts found.</p>
+            ) : (
               <table>
                 <thead>
-                  <TableHeader
-                    allSelected={allSelected}
-                    onHeaderChange={handleHeaderChange}
-                  />
+                  <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        checked={allChecked}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th>CHECK-OUT DATE</th>
+                    <th>ASSET</th>
+                    <th>QUANTITY</th>
+                    <th>NOTES</th>
+                    <th>CHECK-IN</th>
+                  </tr>
                 </thead>
                 <tbody>
-                  {paginatedActivity.length > 0 ? (
-                    paginatedActivity.map((repair) => (
-                      <TableItem
-                        key={repair.id}
-                        repair={repair}
-                        isSelected={selectedIds.includes(repair.id)}
-                        onRowChange={handleRowChange}
-                        onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={9} className="no-data-message">
-                        No Repairs Found.
+                  {pendingCheckouts.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={checkedItems.includes(item.id)}
+                          onChange={() => toggleItem(item.id)}
+                        />
+                      </td>
+                      <td>{new Date(item.checkout_date).toLocaleString()}</td>
+                      <td>{item.asset_displayed_id} - {item.asset_name}</td>
+                      <td>{item.quantity}</td>
+                      <td>{item.notes || "-"}</td>
+                      <td>
+                        <button
+                          className="cmp-check-in-btn"
+                          onClick={() => handleCheckIn(item)}
+                        >
+                          Check-In
+                        </button>
                       </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
-            </section>
-
-            <section className="table-pagination">
-              <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalItems={MockupData.length}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
-              />
-            </section>
+            )}
           </section>
-        </main>
-      </section>
+          <section className="bottom"></section>
+        </div>
+      </main>
     </>
   );
 }
-

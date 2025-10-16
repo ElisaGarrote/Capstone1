@@ -1,48 +1,85 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import "../../styles/custom-colors.css";
+import "../../styles/CheckInOut.css";
 import NavBar from "../../components/NavBar";
-import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm, Controller } from "react-hook-form";
-import CloseIcon from "../../assets/icons/close.svg";
+import DefaultImage from "../../assets/img/default-image.jpg";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import assetsService from "../../services/assets-service";  // make sure this has fetchAssetNames
 
-const ComponentCheckout = () => {
+export default function ComponentCheckout() {
   const navigate = useNavigate();
-  const [attachmentFiles, setAttachmentFiles] = useState([]);
+  const location = useLocation();
+  const { id: routeId } = useParams();
 
+  // From navigate state
+  const { image, name, category, available } = location.state || {};
+
+  const currentDate = new Date().toISOString().split("T")[0];
+
+  // ASSET DROPDOWN STATE
+  const [assetList, setAssetList] = useState([]);
+  const [loadingAssets, setLoadingAssets] = useState(true);
+  const [assetError, setAssetError] = useState("");
+
+  useEffect(() => {
+    const loadAssets = async () => {
+      try {
+        setLoadingAssets(true);
+        const assets = await assetsService.fetchAssetNames();
+        if (assets) {
+          setAssetList(assets);
+        } else {
+          setAssetError("Failed to load asset list.");
+        }
+      } catch (error) {
+        console.error("Error loading assets:", error);
+        setAssetError("An error occurred loading assets.");
+      } finally {
+        setLoadingAssets(false);
+      }
+    };
+
+    loadAssets();
+  }, []);
+
+  // Form handling
   const {
     register,
     handleSubmit,
-    control,
-    watch,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm({
-    mode: "all",
+    defaultValues: {
+      componentId: routeId,
+      asset: '',
+      quantity: '',
+      checkOutDate: currentDate,
+      notes: '',
+    }
   });
 
-  const handleFileSelection = (e) => {
-    const files = Array.from(e.target.files);
-    const maxSize = 5 * 1024 * 1024;
+  const onSubmit = async (data) => {
+    try {
+      console.log("Submitting checkout data:", data);
+      const formData = new FormData();
 
-    const validFiles = files.filter(file => {
-      if (file.size > maxSize) {
-        alert(`${file.name} is larger than 5MB and was not added.`);
-        return false;
-      }
-      return true;
-    });
+      formData.append("component", routeId);
+      formData.append("to_asset", data.asset);
+      formData.append("quantity", data.quantity);
+      formData.append("notes", data.notes || "");
 
-    setAttachmentFiles(prev => [...prev, ...validFiles]);
-  };
+      await assetsService.createComponentCheckout(formData);
 
-  const removeFile = (index) => {
-    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-
-  const onSubmit = (data) => {
-    console.log("Form submitted:", data, attachmentFiles);
-    navigate("/Repairs");
+      navigate("/components", {
+        state: { successMessage: `Component "${name}" checked out successfully!` },
+      });
+    } catch (error) {
+      console.error("Error submitting checkout:", error);
+      alert(
+        error?.detail || error?.message || "Failed to submit checkout. Please try again."
+      );
+    }
   };
 
   return (
@@ -50,199 +87,117 @@ const ComponentCheckout = () => {
       <nav>
         <NavBar />
       </nav>
-      <main className="registration">
+      <main className="check-in-out-page">
         <section className="top">
           <TopSecFormPage
-            root="Repairs"
-            currentPage="New Repair"
-            rootNavigatePage="/Repairs"
-            title="New Repair"
+            root="Components"
+            currentPage="Check-Out Component"
+            rootNavigatePage="/components"
+            title={name || "Check-Out"}
           />
         </section>
-        <section className="registration-form">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            {/* Asset */}
-            <fieldset>
-              <label htmlFor="asset">Asset *</label>
-              <select
-                className={errors.asset ? "input-error" : ""}
-                {...register("asset", {
-                  required: "Asset is required",
-                })}
-              >
-                <option value="">Select Type</option>
-                <option value="Iphone 16 Pro Max">Hardware</option>
-                <option value="Ideapad 3">Software</option>
-                <option value="Google Pixelbook 2">Other</option>
-              </select>
-              {errors.repairType && (
-                <span className="error-message">
-                  {errors.asset.message}
-                </span>
-              )}
-            </fieldset>
 
-            {/* Supplier */}
+        <section className="middle">
+          <section className="recent-checkout-info">
+            <h2>Component Information</h2>
             <fieldset>
-              <label htmlFor="supplier">Supplier</label>
-              <select
-                className={errors.supplier ? "input-error" : ""}
-                {...register("supplier")}
-              >
-                <option value="">Select Type</option>
-                <option value="Apple">Hardware</option>
-                <option value="Lenovo">Software</option>
-                <option value="Google">Other</option>
-              </select>
-            </fieldset>
-
-            {/* Repair Type */}
-            <fieldset>
-              <label htmlFor="repairType">Repair Type *</label>
-              <select
-                className={errors.repairType ? "input-error" : ""}
-                {...register("repairType", {
-                  required: "Repair type is required",
-                })}
-              >
-                <option value="">Select Type</option>
-                <option value="hardware">Hardware</option>
-                <option value="software">Software</option>
-                <option value="other">Other</option>
-              </select>
-              {errors.repairType && (
-                <span className="error-message">
-                  {errors.repairType.message}
-                </span>
-              )}
-            </fieldset>
-
-            {/* Repair Name */}
-            <fieldset>
-              <label htmlFor="repairName">Repair Name *</label>
-              <input
-                type="text"
-                placeholder="Enter repair name"
-                maxLength="100"
-                className={errors.repairName ? "input-error" : ""}
-                {...register("repairName", {
-                  required: "Repair name is required",
-                })}
+              <img
+                src={image || DefaultImage}
+                alt={name || "Component Image"}
+                className="item-info-image"
               />
-              {errors.repairName && (
-                <span className="error-message">
-                  {errors.repairName.message}
-                </span>
-              )}
             </fieldset>
-
-            {/* Start Date */}
             <fieldset>
-              <label htmlFor="startDate">Start Date *</label>
-              <input
-                type="date"
-                className={errors.startDate ? "input-error" : ""}
-                {...register("startDate", {
-                  required: "Start date is required",
-                })}
-              />
-              {errors.startDate && (
-                <span className="error-message">{errors.startDate.message}</span>
-              )}
+              <label>Name:</label>
+              <p>{name || "N/A"}</p>
             </fieldset>
-
-            {/* End Date (Optional) */}
             <fieldset>
-              <label htmlFor="endDate">End Date</label>
-              <input
-                type="date"
-                {...register("endDate", {
-                  validate: (value, formValues) => {
-                    if (value && formValues.startDate && value < formValues.startDate) {
-                      return "End date cannot be earlier than start date";
-                    }
-                    return true;
-                  },
-                })}
-                min={watch("startDate") || ""}
-              />
-              {errors.endDate && (
-                <span className="error-message">{errors.endDate.message}</span>
-              )}
+              <label>Category:</label>
+              <p>{category || "N/A"}</p>
             </fieldset>
+          </section>
 
-            {/* Cost */}
-            <fieldset className="cost-field">
-            <label htmlFor="cost">Cost</label>
-            <div className="cost-input-group">
-              <span className="cost-addon">PHP</span>
-              <input
-                type="number"
-                id="cost"
-                name="cost"
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-              />
-            </div>
-          </fieldset>
+          <section className="checkin-form">
+            <h2>Check-Out Form</h2>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              
+              <fieldset>
+                <label>Check-Out To *</label>
+                {loadingAssets ? (
+                  <input
+                    type="text"
+                    value="Loading assets..."
+                    readOnly
+                    className="readonly-loading-input"
+                  />
+                ) : (
+                  <select
+                    className={errors.asset ? 'input-error' : ''}
+                    {...register("asset", { required: 'Asset is required' })}
+                  >
+                    {assetError || assetList.length === 0 ? (
+                      <option value="" disabled>No assets available</option>
+                    ) : (
+                      <>
+                        <option value="">Select an Asset</option>
+                        {assetList.map((asset) => (
+                          <option key={asset.id} value={asset.id}>
+                            {asset.displayed_id} - {asset.name}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+                )}
+                {errors.asset && <span className="error-message">{errors.asset.message}</span>}
+              </fieldset>
 
-            {/* Notes */}
-            <fieldset>
-              <label htmlFor="notes">Notes</label>
-              <textarea
-                placeholder="Enter notes"
-                {...register("notes")}
-                rows="3"
-              ></textarea>
-            </fieldset>
+              <fieldset>
+                <label htmlFor="component-quantity">Quantity *</label>
+                <input
+                  type="number"
+                  className={errors.quantity ? 'input-error' : ''}
+                  {...register("quantity", {
+                    required: 'Quantity is required',
+                    min: { value: 1, message: 'Quantity must be at least 1' },
+                    ...(available && {
+                      max: {
+                        value: available,
+                        message: `Cannot exceed available quantity (${available})`
+                      }
+                    })
+                  })}
+                  placeholder={available ? `Up to ${available}` : 'Enter quantity'}
+                  max={available}
+                  min={1}
+                />
+                {errors.quantity && <span className="error-message">{errors.quantity.message}</span>}
+              </fieldset>
 
-            {/* Attachments */}
-            <fieldset>
-              <label htmlFor="attachments">Attachments</label>
+              <fieldset>
+                <label>Check-Out Date *</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={currentDate}
+                  {...register("checkOutDate")}
+                />
+              </fieldset>
 
-              <div className="attachments-wrapper">
-                {/* Left column: Upload button & info */}
-                <div className="upload-left">
-                  <label htmlFor="attachments" className="upload-image-btn">
-                    Choose File
-                    <input
-                      type="file"
-                      id="attachments"
-                      accept="image/*,.pdf,.doc,.docx"
-                      onChange={handleFileSelection}
-                      style={{ display: "none" }}
-                      multiple
-                    />
-                  </label>
-                  <small className="file-size-info">
-                    Maximum file size must be 5MB
-                  </small>
-                </div>
+              <fieldset>
+                <label>Notes</label>
+                <textarea
+                  {...register("notes")}
+                  maxLength="500"
+                  placeholder="Additional notes..."
+                />
+              </fieldset>
 
-                {/* Right column: Uploaded files */}
-                <div className="upload-right">
-                  {attachmentFiles.map((file, index) => (
-                    <div className="file-uploaded" key={index}>
-                      <span title={file.name}>{file.name}</span>
-                      <button type="button" onClick={() => removeFile(index)}>
-                        <img src={CloseIcon} alt="Remove" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </fieldset>
-
-            {/* Submit */}
-            <button type="submit" className="primary-button" disabled={!isValid}>
-              Save
-            </button>
-          </form>
+              <button type="submit" className="save-btn">Save</button>
+            </form>
+          </section>
         </section>
       </main>
     </>
   );
-};
-
-export default ComponentCheckout;
+}
