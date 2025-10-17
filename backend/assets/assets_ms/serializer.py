@@ -9,15 +9,6 @@ class AllProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'depreciation', 'end_of_life']
 
-class AssetCategoryNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AssetCategory
-        fields = ['id', 'name']
-
-class DepreciationNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Depreciation
-        fields = ['id', 'name']
 
 class ProductNameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,14 +44,9 @@ class AllAssetSerializer(serializers.ModelSerializer):
             return obj.product.category.name
         return None
     
-class StatusNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Status
-        fields = ['id', 'name', 'type']
 
 class AssetSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
-    status_info = StatusNameSerializer(source='status', read_only=True)
     product_info = ProductNameSerializer(source='product', read_only=True)
 
     class Meta:
@@ -135,12 +121,6 @@ class ComponentSerializer(serializers.ModelSerializer):
         model = Component
         fields = "__all__"
 
-class ComponentCategoryNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ComponentCategory
-        fields = ['id', 'name']
-
-
 class ComponentCheckoutSerializer(serializers.ModelSerializer):
     asset_displayed_id = serializers.CharField(source='to_asset.displayed_id', read_only=True)
     asset_name = serializers.CharField(source='to_asset.name', read_only=True)
@@ -160,20 +140,6 @@ class AssetNameSerializer(serializers.ModelSerializer):
         model = Asset
         fields = ['id', 'displayed_id', 'name']
 
-class StatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Status
-        fields = "__all__"
-
-class AssetCategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AssetCategory
-        fields = "__all__"
-
-class DepreciationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Depreciation
-        fields = "__all__"
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckout

@@ -1,6 +1,18 @@
 from django.db import models
 
 # Create your models here.
+class Category(models.Model):
+    TYPE = [
+        ('asset', 'Asset'),
+        ('component', 'Component'),
+    ]
+    name = models.CharField(max_length=50)
+    type = models.CharField(max_length=9, choices=TYPE)
+    logo = models.ImageField(upload_to='category_logos/', blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
 class Supplier(models.Model):
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=100, blank=True, null=True)
@@ -35,6 +47,32 @@ class Manufacturer(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Status(models.Model):
+    STATUS_CHOICES = [
+        ('deployable', 'Deployable'), ('deployed', 'Deployed'), ('undeployable', 'Undeployable'), ('pending', 'Pending'), ('archived', 'Archived'),
+    ]
+
+    name = models.CharField(max_length=50)
+    type = models.CharField(max_length=12, choices=STATUS_CHOICES)
+    notes = models.TextField(blank=True, null=True)
+    is_deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+class Depreciation(models.Model):
+    name = models.CharField(max_length=500)
+    duration = models.PositiveIntegerField(help_text="Duration in months")
+    minimum_value = models.DecimalField(max_digits=8, decimal_places=2)
+    is_deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
+
+
+
+
 
 class Location(models.Model):
     city = models.CharField(max_length=50, blank=True, null=True)

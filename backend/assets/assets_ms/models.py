@@ -5,26 +5,6 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 import uuid
 import datetime
-
-# Create your models here.
-class Depreciation(models.Model):
-    name = models.CharField(max_length=500)
-    duration = models.PositiveIntegerField(help_text="Duration in months")
-    minimum_value = models.DecimalField(max_digits=8, decimal_places=2)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-    
-class AssetCategory(models.Model):
-    name = models.CharField(max_length=50)
-    type = models.CharField(max_length=5, default="Asset")
-    logo = models.ImageField(upload_to='asset_category_logos/', blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
 class Product(models.Model):
     OS_CHOICES = [
         ('linux', 'Linux'),
@@ -38,13 +18,9 @@ class Product(models.Model):
     ]
 
     name = models.CharField(max_length=100)
-    category = models.ForeignKey(AssetCategory, on_delete=models.CASCADE)
+    category_id = models.PositiveIntegerField()
     manufacturer_id = models.PositiveIntegerField()
-    depreciation = models.ForeignKey(
-        Depreciation,
-        on_delete=models.PROTECT,
-        related_name='depreciations'
-    )
+    depreciation_id = models.PositiveIntegerField()
     model_number = models.CharField(max_length=50, blank=True, null=True)
     end_of_life = models.DateField(blank=True, null=True)
     default_purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
@@ -57,24 +33,11 @@ class Product(models.Model):
     
     def __str__(self):
         return self.name
-
-class Status(models.Model):
-    STATUS_CHOICES = [
-        ('deployable', 'Deployable'), ('deployed', 'Deployed'), ('undeployable', 'Undeployable'), ('pending', 'Pending'), ('archived', 'Archived'),
-    ]
-
-    name = models.CharField(max_length=50)
-    type = models.CharField(max_length=12, choices=STATUS_CHOICES)
-    notes = models.TextField(blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
     
 class Asset(models.Model):
     displayed_id = models.CharField(max_length=20, unique=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets', limit_choices_to={'is_deleted': False})
-    status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='status_assets')
+    status_id = models.PositiveIntegerField()
     supplier_id = models.PositiveIntegerField()
     location = models.PositiveIntegerField()
     name = models.CharField(max_length=100)
@@ -163,19 +126,10 @@ class AssetCheckin(models.Model):
 
     def __str__(self):
         return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}" 
-
-class ComponentCategory(models.Model):
-    name = models.CharField(max_length=50)
-    type = models.CharField(max_length=9, default="Component")
-    logo = models.ImageField(upload_to='component_category_logos/', blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
     
 class Component(models.Model):
     name = models.CharField(max_length=100)
-    category = models.ForeignKey(ComponentCategory, on_delete=models.CASCADE)
+    category_id = models.PositiveIntegerField()
     manufacturer = models.IntegerField()
     supplier = models.PositiveIntegerField()
     location = models.PositiveIntegerField()
@@ -244,7 +198,7 @@ class Repair(models.Model):
     end_date = models.DateField(blank=True, null=True)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     notes = models.TextField(blank=True, null=True)
-    status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='repair_status')
+    status_id = models.PositiveIntegerField()
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -267,7 +221,7 @@ class AuditSchedule(models.Model):
     created_at = models.DateTimeField(default=timezone.now(), editable=False)
 
     def __str__(self):
-        return f"Audit Schedule for {self.asset.displayed_id} on {self.date}"
+        return f"Auditf Schedule for {self.asset.displayed_id} on {self.date}"
 
 class Audit(models.Model):
     location = models.CharField(max_length=50)
