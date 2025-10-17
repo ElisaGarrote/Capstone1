@@ -4,7 +4,6 @@ import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
-import completedAudits from "../../data/mockData/audits/completed-audit-mockup-data.json";
 import overdueAudits from "../../data/mockData/audits/overdue-audit-mockup-data.json";
 import dueAudits from "../../data/mockData/audits/due-audit-mockup-data.json";
 import scheduledAudits from "../../data/mockData/audits/scheduled-audit-mockup-data.json";
@@ -56,7 +55,7 @@ const ScheduleRegistration = () => {
       console.log("Creating new audit:", data);
       // Call your create API or state logic here
     }
-    navigate("/audits");
+    navigate(previousPage);
   };
 
 

@@ -34,8 +34,8 @@ function TableHeader() {
     <tr>
       <th>AUDIT DATE</th>
       <th>ASSET</th>
-      <th>CREATED</th>
-      <th>AUDIT</th>
+      <th>LOCATION</th>
+      <th>PERFOMED BY</th>
       <th>ACTION</th>
     </tr>
   );
@@ -47,15 +47,8 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
     <tr>
       <td>{item.audit_date}</td>
       <td>{item.audit_schedule.asset.displayed_id} - {item.audit_schedule.asset.name}</td>
-      <td>{new Date(item.created_at).toLocaleDateString()}</td>
-      <td>
-        <TableBtn
-          type="audit"
-          navigatePage="/audits/new"
-          data={item}
-          previousPage={location.pathname}
-        />
-      </td>
+      <td>{item.location}</td>
+      <td>{item.performed_by}</td>
       <td>
         <ActionButtons
           showView
