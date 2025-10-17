@@ -11,6 +11,7 @@ import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
 import "../../styles/Audits.css";
 import dueAudit from "../../data/mockData/audits/due-audit-mockup-data.json";
+import View from "../../components/Modals/View";
 
 
 const filterConfig = [
@@ -64,7 +65,7 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
           editPath={`edit/${item.id}`}
           editState={{ item, previousPage: "/audits" }}
           onDeleteClick={() => onDeleteClick(item.id)}
-          onViewClick={onViewClick}
+          onViewClick={() => onViewClick(item)}
         />
       </td>
     </tr>
@@ -88,7 +89,6 @@ export default function AssetAudits() {
 
   // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
 
   const openDeleteModal = (id = null) => {
     setDeleteTarget(id);
@@ -102,6 +102,21 @@ export default function AssetAudits() {
 
   const confirmDelete = () => {
     closeDeleteModal();
+  };
+
+  // Add state for view modal
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Add view handler
+  const handleViewClick = (item) => {
+    setSelectedItem(item);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    selectedItem(null);
   };
 
   // outside click for export toggle
@@ -130,6 +145,19 @@ export default function AssetAudits() {
           closeModal={closeDeleteModal}
           actionType="delete"
           onConfirm={confirmDelete}
+        />
+      )}
+
+      {isViewModalOpen && selectedItem && (
+        <View
+          title={`${selectedItem.asset.name} : ${selectedItem.date}`}
+          data={[
+            { label: "Due Date", value: selectedItem.date },
+            { label: "Asset", value: `${selectedItem.asset.displayed_id} - ${selectedItem.asset.name}` },
+            { label: "Created At", value: selectedItem.created_at },
+            { label: "Notes", value: selectedItem.notes },
+          ]}
+          closeModal={closeViewModal}
         />
       )}
 
@@ -196,7 +224,7 @@ export default function AssetAudits() {
                         key={item.id}
                         item={item}
                         onDeleteClick={openDeleteModal}
-                        onViewClick={() => navigate(`/components/view/${item.id}`)}
+                        onViewClick={handleViewClick}
                         navigate={navigate}
                         location={location}
                       />

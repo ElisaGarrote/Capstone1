@@ -11,6 +11,7 @@ import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
 import "../../styles/Audits.css";
 import overdueAudit from "../../data/mockData/audits/overdue-audit-mockup-data.json";
+import View from "../../components/Modals/View";
 
 
 const filterConfig = [
@@ -66,7 +67,7 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
           editPath={`edit/${item.id}`}
           editState={{ item, previousPage: "/audits" }}
           onDeleteClick={() => onDeleteClick(item.id)}
-          onViewClick={onViewClick}
+          onViewClick={() => onViewClick(item)}
         />
       </td>
     </tr>
@@ -106,6 +107,22 @@ export default function OverdueAudits() {
     closeDeleteModal();
   };
 
+  // Add state for view modal
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Add view handler
+  const handleViewClick = (item) => {
+    setSelectedItem(item);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    selectedItem(null);
+  };
+
+
   // outside click for export toggle
   useEffect(() => {
     function handleClickOutside(event) {
@@ -132,6 +149,20 @@ export default function OverdueAudits() {
           closeModal={closeDeleteModal}
           actionType="delete"
           onConfirm={confirmDelete}
+        />
+      )}
+
+      {isViewModalOpen && selectedItem && (
+        <View
+          title={`${selectedItem.asset.name} : ${selectedItem.overdue_by} day/s overdue`}
+          data={[
+            { label: "Due Date", value: selectedItem.date },
+            { label: "Overdue By", value: `${selectedItem.overdue_by} day/s` },
+            { label: "Asset", value: `${selectedItem.asset.displayed_id} - ${selectedItem.asset.name}` },
+            { label: "Created At", value: selectedItem.created_at },
+            { label: "Notes", value: selectedItem.notes },
+          ]}
+          closeModal={closeViewModal}
         />
       )}
 
@@ -198,7 +229,7 @@ export default function OverdueAudits() {
                         key={item.id}
                         item={item}
                         onDeleteClick={openDeleteModal}
-                        onViewClick={() => navigate(`/components/view/${item.id}`)}
+                        onViewClick={handleViewClick}
                         navigate={navigate}
                         location={location}
                       />

@@ -11,6 +11,7 @@ import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
 import "../../styles/Audits.css";
 import completedAudit from "../../data/mockData/audits/completed-audit-mockup-data.json";
+import View from "../../components/Modals/View";
 
 
 const filterConfig = [
@@ -52,7 +53,7 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
       <td>
         <ActionButtons
           showView
-          onViewClick={onViewClick}
+          onViewClick={() => onViewClick(item)}
         />
       </td>
     </tr>
@@ -92,6 +93,22 @@ export default function CompletedAudits() {
     closeDeleteModal();
   };
 
+  // Add state for view modal
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Add view handler
+  const handleViewClick = (item) => {
+    setSelectedItem(item);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    selectedItem(null);
+  };
+
+
   // outside click for export toggle
   useEffect(() => {
     function handleClickOutside(event) {
@@ -118,6 +135,23 @@ export default function CompletedAudits() {
           closeModal={closeDeleteModal}
           actionType="delete"
           onConfirm={confirmDelete}
+        />
+      )}
+
+      {isViewModalOpen && selectedItem && (
+        <View
+          title={`${selectedItem.audit_schedule.asset.name} : ${selectedItem.audit_date}`}
+          data={[
+            { label: "Asset", value: `${selectedItem.audit_schedule.asset.displayed_id} - ${selectedItem.audit_schedule.asset.name}` },
+            { label: "Location", value: selectedItem.location },
+            { label: "Performed By", value: selectedItem.performed_by },
+            { label: "Audit Date", value: selectedItem.audit_date },
+            { label: "Next Audit Date", value: selectedItem.next_audit_date },
+            { label: "Created At", value: selectedItem.created_at },
+            { label: "Notes", value: selectedItem.notes },
+            { label: "Files", value: selectedItem.files.map(f => f.file).join(", ") },
+          ]}
+          closeModal={closeViewModal}
         />
       )}
 
@@ -183,7 +217,7 @@ export default function CompletedAudits() {
                       <TableItem
                         key={item.id}
                         item={item}
-                        onViewClick={() => navigate(`/components/view/${item.id}`)}
+                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (
