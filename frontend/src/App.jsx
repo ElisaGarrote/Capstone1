@@ -32,7 +32,6 @@ import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
 import CompletedAudits from "./pages/asset-audit/CompletedAudits";
 import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
-import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
 import Repairs from "./pages/Repair/Repairs";
 import RepairRegistration from "./pages/Repair/RepairRegistration";
@@ -228,9 +227,11 @@ function App() {
           <Route path="/audits/overdue" element={<OverdueAudits />} />
           <Route path="/audits/scheduled" element={<ScheduledAudits />} />
           <Route path="/audits/completed" element={<CompletedAudits />} />
-          <Route path="/audits/new" element={<PerformAudits />} />
           <Route path="/audits/schedule" element={<ScheduleRegistration />} />
-          <Route path="/audits/edit" element={<EditAudits />} />
+          <Route path="/audits/edit/:id" element={<ScheduleRegistration />} />
+          <Route path="/audits/overdue/edit/:id" element={<ScheduleRegistration />} />
+          <Route path="/audits/scheduled/edit/:id" element={<ScheduleRegistration />} />
+          <Route path="/audits/new" element={<PerformAudits />} />
           <Route path="/audits/view" element={<ViewAudits />} />
           <Route path="/approved-tickets" element={<ApprovedTickets />} />
           <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />

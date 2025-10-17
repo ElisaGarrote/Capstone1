@@ -62,7 +62,7 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
           showDelete
           showView
           editPath={`edit/${item.id}`}
-          editState={{ item }}
+          editState={{ item, previousPage: "/audits" }}
           onDeleteClick={() => onDeleteClick(item.id)}
           onViewClick={onViewClick}
         />
@@ -146,7 +146,7 @@ export default function ScheduledAudits() {
               <MediumButtons
                 type="schedule-audits"
                 navigatePage="/audits/schedule"
-                previousPage={location.pathname}
+                previousPage="/audits/scheduled"
               />
               <MediumButtons
                 type="perform-audits"

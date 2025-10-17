@@ -58,12 +58,7 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
       </td>
       <td>
         <ActionButtons
-          showEdit
-          showDelete
           showView
-          editPath={`edit/${item.id}`}
-          editState={{ item }}
-          onDeleteClick={() => onDeleteClick(item.id)}
           onViewClick={onViewClick}
         />
       </td>
@@ -146,7 +141,7 @@ export default function CompletedAudits() {
               <MediumButtons
                 type="schedule-audits"
                 navigatePage="/audits/schedule"
-                previousPage={location.pathname}
+                previousPage="/audits/completed"
               />
               <MediumButtons
                 type="perform-audits"
@@ -195,10 +190,7 @@ export default function CompletedAudits() {
                       <TableItem
                         key={item.id}
                         item={item}
-                        onDeleteClick={openDeleteModal}
                         onViewClick={() => navigate(`/components/view/${item.id}`)}
-                        navigate={navigate}
-                        location={location}
                       />
                     ))
                   ) : (
