@@ -1,4 +1,11 @@
 /* Base */
+.action-button-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem; /* space between buttons */
+}
+
 .action-button {
   display: flex;
   align-items: center;

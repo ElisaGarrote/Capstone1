@@ -20,7 +20,6 @@
 .table-buttons-edit,
 .table-buttons-delete,
 .table-buttons-view,
-.table-buttons-audit,
 .table-buttons-delete-disabled,
 .table-buttons-deactivate {
   display: flex;
@@ -39,6 +38,18 @@
 
   transition: 0.5s ease;
 }
+
+.table-buttons-audit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 4px;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
 
 .table-buttons-deactivate {
   width: auto;

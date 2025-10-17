@@ -64,7 +64,7 @@ th:contains("URL") {
 }
 
 table td:nth-last-child(1) button:not(.action-button),
-table td:nth-last-child(2) button:not(.action-button),
+table td:nth-last-child(2) button:not(.action-button) button:not(.table-buttons-audit),
 table td:nth-last-child(3) button:not(.action-button) {
   margin: 0 auto !important;
   display: block !important;
