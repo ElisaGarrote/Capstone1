@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import Status from "../../components/Status";
-import MediumButtons from "../../components/buttons/MediumButtons";
-import TicketsMockupData from "../../data/mockData/tickets/tickets-mockup-data.json";
 import FilterPanel from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
-import "../../styles/Table.css";
-import "../../styles/Tickets/Tickets.css";
-import ActionButtons from "../../components/ActionButtons";
+import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import DefaultImage from "../../assets/img/default-image.jpg";
+import ActionButtons from "../../components/ActionButtons";
 import Alert from "../../components/Alert";
+import TicketsMockupData from "../../data/mockData/tickets/tickets-mockup-data.json";
+import DefaultImage from "../../assets/img/default-image.jpg";
+
+import "../../styles/Tickets/Tickets.css";
 
 // Filter configuration for tickets
 const filterConfig = [
@@ -324,7 +323,7 @@ const Tickets = () => {
           <NavBar />
         </nav>
 
-        <main className="page-layout">
+        <main className="page-layout tickets-page">
           <section className="title-page-section">
             <h1>Approved Tickets</h1>
           </section>

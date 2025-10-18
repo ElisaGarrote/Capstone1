@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
-import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
 import FilterPanel from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
-import "../../styles/Table.css";
-import "../../styles/Products/Products.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import { useNavigate, useLocation } from "react-router-dom";
-import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
-import authService from "../../services/auth-service";
+import DefaultImage from "../../assets/img/default-image.jpg";
+import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
+import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
+
+import "../../styles/Products/Products.css";
 
 // Filter configuration for products
 const filterConfig = [
@@ -257,7 +257,7 @@ export default function Products() {
           <NavBar />
         </nav>
 
-        <main className="page-layout">
+        <main className="page-layout products-page">
           <section className="title-page-section">
             <h1>Products</h1>
           </section>
