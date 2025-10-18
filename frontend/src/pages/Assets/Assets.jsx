@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import AssetFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
-import "../../styles/Table.css";
-import "../../styles/Assets/Assets.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import { useNavigate, useLocation } from "react-router-dom";
-import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
-import authService from "../../services/auth-service";
+import DefaultImage from "../../assets/img/default-image.jpg";
+import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
+
+import "../../styles/Assets/Assets.css";
 
 // Filter configuration for assets
 const filterConfig = [
@@ -191,13 +191,13 @@ export default function Assets() {
       // remove from mock data / API call
     } else {
       console.log("Deleting multiple ids:", selectedIds);
-      // remove multiple
-      setSelectedIds([]); // clear selection
+    
+      setSelectedIds([]); 
     }
     closeDeleteModal();
   };
 
-  // Add view handler
+
   const handleViewClick = (asset) => {
     navigate(`/assets/view/${asset.id}`);
   };
@@ -205,7 +205,6 @@ export default function Assets() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // outside click for export toggle
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -299,7 +298,7 @@ export default function Assets() {
           <NavBar />
         </nav>
 
-        <main className="page-layout">
+        <main className="page-layout assets-page">
           <section className="title-page-section">
             <h1>Assets</h1>
           </section>

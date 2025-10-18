@@ -1,131 +1,141 @@
-.assets-table-section {
-  overflow-x: auto;
-  max-height: 500px;
-  overflow-y: auto;
+.assets-page .table-section {
+  overflow-x: auto !important;
+  max-height: 55vh !important;
+  overflow-y: auto !important;
+
+  /* Prevent affecting the parent when scrolling. */
+  overscroll-behavior: contain;
 }
 
-.assets-table-section table {
-  width: 100%;
-  border-collapse: collapse;
+.assets-page .table-section table {
+  width: 100% !important;
+  border-collapse: collapse !important;
 }
 
-.assets-table-section table th {
+.assets-page .table-section table th {
   padding: 0.75rem !important;
   text-align: left !important;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-color);
-  border-top: 1px solid #cccccc;
-  border-bottom: 1px solid #cccccc;
-  background-color: #f0f1f2;
-  height: 50px;
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  color: var(--text-color) !important;
+  border-top: 1px solid #cccccc !important;
+  border-bottom: 1px solid #cccccc !important;
+  background-color: #f0f1f2 !important;
+  height: 50px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1 !important;
 }
 
-.assets-table-section table th:first-child {
-  width: 200px;
+.assets-page .table-section table th:first-child {
+  width: 50px !important;
 }
 
-.assets-table-section table th:nth-child(2) {
-  min-width: 200px;
-  max-width: fit-content;
+.assets-page .table-section table th:nth-child(2) {
+  min-width: 50px !important;
+  max-width: fit-content !important;
 }
 
-.assets-table-section table td {
+.assets-page .table-section table th:nth-child(3) {
+  min-width: 100px !important;
+  max-width: fit-content !important;
+}
+
+.assets-page .table-section table th:nth-child(4) {
+  min-width: 50px !important;
+  max-width: fit-content !important;
+}
+
+.assets-page .table-section table th:nth-child(5) {
+  min-width: 50px !important;
+  max-width: fit-content !important;
+}
+
+.assets-page .table-section table th:nth-child(6) {
+  min-width: 50px !important;
+  max-width: fit-content !important;
+}
+
+.assets-page .table-section table th:nth-child(7) {
+  min-width: 50px !important;
+  max-width: fit-content !important;
+}
+
+.assets-page .table-section table th:nth-child(8) {
+  min-width: 50px !important;
+  max-width: fit-content !important;
+}
+.assets-page .table-section table td {
   text-align: left !important;
-  padding: 0.75rem;
-  font-size: 0.8125rem;
-  color: var(--text-color);
-  border-bottom: 1px solid #cccccc;
-  height: 50px;
-  vertical-align: middle;
+  padding: 0.75rem !important;
+  font-size: 0.8125rem !important;
+  color: var(--text-color) !important;
+  border-bottom: 1px solid #cccccc !important;
+  height: 50px !important;
 }
 
-.assets-table-section table td.no-data-message {
+.assets-page .table-section table td.no-data-message {
   display: table-cell !important;
   width: 100% !important;
   white-space: normal !important;
   padding: 0.75rem !important;
   text-align: center !important;
-  font-style: italic;
-  color: var(--secondary-text-color);
-  background: transparent;
+  font-style: italic !important;
+  color: var(--secondary-text-color) !important;
+  background: transparent !important;
 }
 
-.assets-table-section table tr:hover {
-  background-color: #fcfcfc;
+.assets-page .table-section table tr:hover {
+  background-color: #fcfcfc !important;
 }
 
-.assets-table-section table td .table-img {
-  width: 50px !important;
-  height: 50px !important;
-  max-width: 50px !important;
-  max-height: 50px !important;
-  object-fit: cover !important;
-  border-radius: 4px !important;
-  display: inline-block !important;
-  margin: 0 !important;
+.assets-page .table-section table {
+  background-color: white !important;
+  border-radius: 0 !important;
 }
 
-.assets-table-section table th:nth-child(7),
-.assets-table-section table td:nth-child(7) {
+.assets-page .table-section table th {
+  background-color: #f0f1f2 !important;
+  color: #333 !important;
+}
+
+.assets-page .table-section table th:nth-child(8),
+.assets-page .table-section table th:nth-child(9) {
   text-align: left !important;
   padding-left: 0.75rem !important;
-  min-width: 120px;
-  width: 120px;
+  padding-right: 0.75rem !important;
 }
 
-.check-in-btn,
-.check-out-btn {
-  font-size: 11px !important;
-  font-weight: 500 !important;
-  padding: 6px 12px !important;
-  border-radius: 20px !important;
-  border: none !important;
-  cursor: pointer !important;
-  min-width: 90px !important;
-  width: 90px !important;
-  text-align: center !important;
-  display: inline-block !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-  height: 28px !important;
-  font-family: inherit !important;
-  white-space: nowrap !important;
-  line-height: 1.2 !important;
+.assets-page .table-section table td:nth-child(8),
+.assets-page .table-section table td:nth-child(9) {
+  text-align: left !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
   vertical-align: middle !important;
 }
 
-.check-in-btn {
-  background-color: var(--primary-color) !important;
-  color: white !important;
+.assets-page .table-section .check-in-btn,
+.assets-page .table-section .check-out-btn {
+  margin: 0 !important;
+  margin-right: auto !important;
+  display: block !important;
+  text-align: center !important;
 }
 
-.check-out-btn {
-  background-color: #34c759 !important;
-  color: white !important;
+.assets-page .table-section .action-button-section {
+  justify-content: flex-start !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-.check-in-btn:hover {
-  background-color: var(--primary-color-hover) !important;
+.assets-page .table-section .action-button {
+  margin: 0 2px 0 0 !important;
+  display: inline-flex !important;
 }
 
-.check-out-btn:hover {
-  background-color: rgba(52, 199, 89, 0.8) !important;
-}
-
-.assets-table-section .action-buttons {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 4px;
-  flex-wrap: nowrap;
-}
-
-.assets-table-section .action-buttons button,
-.assets-table-section .action-buttons > * {
-  margin: 0;
-  flex-shrink: 0;
+.assets-page .table-section .table-img {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: cover !important;
+  border-radius: 4px !important;
 }
