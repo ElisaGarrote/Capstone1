@@ -1,4 +1,5 @@
 import "../../styles/custom-colors.css";
+import "../../styles/Registration.css";
 import "../../styles/CheckInOut.css";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
@@ -181,7 +182,7 @@ export default function CheckInAsset() {
             <h2>Check-In Form</h2>
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label>Checkin Date *</label>
+                <label>Checkin Date <span style={{color: 'red'}}>*</span></label>
                 <input
                   type="date"
                   className={errors.checkinDate ? 'input-error' : ''}
@@ -192,7 +193,7 @@ export default function CheckInAsset() {
               </fieldset>
 
               <fieldset>
-                <label>Condition *</label>
+                <label>Condition <span style={{color: 'red'}}>*</span></label>
                 <select 
                   {...register("condition", {required: "Condition is required"})}
                   className={errors.condition ? 'input-error' : ''}

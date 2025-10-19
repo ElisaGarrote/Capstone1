@@ -28,7 +28,7 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractUser):
     ROLE_CHOICES = [
-        ('Admin', 'admin'), ('Operator', 'operator'),
+        ('Admin', 'Admin'), ('operator', 'Operator'),
     ]
     
     username = None # removes username field inherited from AbstractUser

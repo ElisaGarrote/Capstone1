@@ -94,7 +94,7 @@
     "name": "Dell XPS 13",
     "product": "XPS 13\"",
     "category": "Laptop",
-    "status": "Ready to Deploy",
+    "status": "Pending",
     "assetType": "deployable",
     "location": "Manila Office",
     "image": null,

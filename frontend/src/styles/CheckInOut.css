@@ -3,11 +3,15 @@
   flex-direction: column;
   height: auto;
   width: auto;
-  padding: 100px 38px 38px 38px;
+  padding: 80px 38px 38px 38px;
   background-color: var(--bg-color);
 }
 
-.check-in-out-page section {
+.check-in-out-page .top {
+  display: flex;
+}
+
+.check-in-out-page .middle {
   display: flex;
   flex-direction: row;
   width: 100%;
