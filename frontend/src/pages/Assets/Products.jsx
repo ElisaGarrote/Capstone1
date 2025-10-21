@@ -10,7 +10,7 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
-import contextsService from "../../services/contexts-service";
+import { fetchAllCategories } from "../../services/contexts-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import ProductViewModal from "../../components/Modals/ProductViewModal";
 import Pagination from "../../components/Pagination";
@@ -49,14 +49,14 @@ export default function Products() {
     handlePageChange,
     handleItemsPerPageChange
   } = usePagination(filteredProducts, 20);
-
+{/* Fetch products and manufacturers */}
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [productRes, manufacturerRes] = await Promise.all([
           assetsService.fetchAllProducts(),
-          contextsService.fetchAllManufacturerNames(),
+          fetchAllCategories(),
         ]);
         setProducts(productRes.products || []);
         setManufacturers(manufacturerRes.manufacturers || []);
@@ -128,7 +128,7 @@ export default function Products() {
       // Only try fetch if we have IDs
       if (productData.manufacturer_id) {
         try {
-          const manufacturerResponse = await contextsService.fetchManufacturerById(productData.manufacturer_id);
+          const manufacturerResponse = await fetchAllCategories (productData.manufacturer_id);
           console.log("Manufacturer response:", manufacturerResponse);
           manufacturerName = manufacturerResponse?.name || manufacturerName;
         } catch (err) {

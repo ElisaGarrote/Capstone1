@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const assetsAxios = axios.create({
-  baseURL: process.env.REACT_APP_ASSETS_API_URL,
+  baseURL: import.meta.env.VITE_ASSETS_API_URL,
   timeout: 10000,
 });
 

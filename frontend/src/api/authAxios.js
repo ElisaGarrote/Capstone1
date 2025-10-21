@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const authAxios = axios.create({
-  baseURL: process.env.REACT_APP_AUTH_API_URL,
+  baseURL: import.meta.env.VITE_AUTH_API_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

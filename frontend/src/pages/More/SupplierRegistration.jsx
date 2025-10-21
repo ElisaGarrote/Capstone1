@@ -7,7 +7,6 @@ import '../../styles/SupplierRegistration.css';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import Alert from '../../components/Alert';
 import SystemLoading from '../../components/Loading/SystemLoading';
-import contextsService from '../../services/contexts-service';
 
 const SupplierRegistration = () => {
   const { id } = useParams();
@@ -43,7 +42,7 @@ const SupplierRegistration = () => {
     const initialize = async () => {
       try {
         if (id) {
-          const supplierData = await contextsService.fetchSupplierById(id);
+          const supplierData = await fetchAllCategories();
           if (!supplierData) throw new Error('Failed to fetch supplier details');
 
           setValue('name', supplierData.name || '');

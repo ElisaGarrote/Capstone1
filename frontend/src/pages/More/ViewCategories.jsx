@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import "../../styles/Category.css";
@@ -6,94 +6,9 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
 import { useNavigate } from "react-router-dom";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import { fetchAllCategories, deleteCategory, } from "../../services/contexts-service";
+import DefaultImage from "../../assets/img/default-image.jpg";
 
-// icons
-import keyboardIcon from "../../assets/img/keyboard_Icon.png";
-import chargerIcon from "../../assets/img/charger_Icon.png";
-import cablesIcon from "../../assets/img/cables_Icon.png";
-import paperprinterIcon from "../../assets/img/paperprinter_Icon.png";
-import printerinkIcon from "../../assets/img/printerink_Icon.png";
-
-// mock data
-const categories = [
-  {
-    id: 1,
-    icon: cablesIcon,
-    name: "Cables",
-    type: "Accessory",
-    quantity: 2,
-  },
-  {
-    id: 2,
-    icon: chargerIcon,
-    name: "Charger",
-    type: "Accessory",
-    quantity: 1,
-  },
-  {
-    id: 3,
-    icon: keyboardIcon,
-    name: "Keyboards",
-    type: "Accessory",
-    quantity: 2,
-  },
-  {
-    id: 4,
-    icon: paperprinterIcon,
-    name: "Printer Paper",
-    type: "Consumable",
-    quantity: 262,
-  },
-  {
-    id: 5,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 6,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 7,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 8,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 9,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 10,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 11,
-    icon: printerinkIcon,
-    name: "Printer",
-    type: "Consumable",
-    quantity: 95,
-  },
-];
 
 const filterConfig = [
   {
@@ -146,7 +61,11 @@ function TableItem({ category, onDeleteClick }) {
       </td>
       <td>
         <div className="category-name">
-          <img src={category.icon} alt={category.name} />
+          <img
+            src={category.logo ? category.logo : DefaultImage}
+            alt={category.name}
+            className="category-logo"
+          />
           {category.name}
         </div>
       </td>
@@ -166,7 +85,7 @@ function TableItem({ category, onDeleteClick }) {
           <button
             title="Delete"
             className="action-button"
-            onClick={onDeleteClick}
+            onClick={() => onDeleteClick(category.id)}
           >
             <i className="fas fa-trash-alt"></i>
           </button>
@@ -177,6 +96,9 @@ function TableItem({ category, onDeleteClick }) {
 }
 
 export default function Category() {
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   // pagination state
@@ -188,12 +110,39 @@ export default function Category() {
   const endIndex = startIndex + pageSize;
   const paginatedCategories = categories.slice(startIndex, endIndex);
 
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      const data = await fetchAllCategories();
+      setCategories(data);
+      console.log("Categories:", data);
+    } catch (error) {
+      console.log("Failed to load categories:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // Handel Delete
+  const handleDelete =  async () => {
+    try {
+      await deleteCategory(selectedCategoryId);
+      setDeleteModalOpen(false);
+      fetchCategories();
+    } catch (error) {
+      console.log("Failed to delete category:", error);
+    }
+  }
+
   return (
     <>
       {isDeleteModalOpen && (
         <DeleteModal
           closeModal={() => setDeleteModalOpen(false)}
           actionType="delete"
+          onConfirm={handleDelete}
         />
       )}
 
@@ -235,7 +184,10 @@ export default function Category() {
                       <TableItem
                         key={index}
                         category={category}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
+                        onDeleteClick={(id) => {
+                          setSelectedCategoryId(id);
+                          setDeleteModalOpen(true);
+                        }}
                       />
                     ))
                   ) : (

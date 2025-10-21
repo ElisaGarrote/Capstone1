@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const contextsAxios = axios.create({
-  baseURL: process.env.REACT_APP_CONTEXTS_API_URL,
+  baseURL: import.meta.env.VITE_CONTEXTS_API_URL,
   timeout: 10000,
 });
 

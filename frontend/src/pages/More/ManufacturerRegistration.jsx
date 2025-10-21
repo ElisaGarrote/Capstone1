@@ -6,9 +6,9 @@ import "../../styles/ManufacturerRegistration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
-import contextsService from "../../services/contexts-service";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import { fetchAllCategories } from "../../services/contexts-service";
 
 const ManufacturerRegistration = () => {
   const { id } = useParams();
@@ -45,7 +45,7 @@ const ManufacturerRegistration = () => {
       try {
         setIsLoading(true);
         if (id) {
-          const manufacturerData = await contextsService.fetchManufacturerById(
+          const manufacturerData = await fetchAllCategories(
             id
           );
           if (!manufacturerData) {

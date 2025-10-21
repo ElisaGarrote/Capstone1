@@ -13,9 +13,9 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import TableBtn from "../../components/buttons/TableButtons";
 import SupplierTableDetails from './SupplierTableDetails';
 import Alert from "../../components/Alert";
-import contextsService from "../../services/contexts-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import { fetchAllCategories } from '../../services/contexts-service';
 
 
 export default function ViewSupplier() {
@@ -40,7 +40,7 @@ export default function ViewSupplier() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const suppRes = await contextsService.fetchAllSuppliers();
+        const suppRes = await fetchAllCategories();
         const mapped = (suppRes || []).map(supp => ({
           id: supp.id,
           name: supp.name,

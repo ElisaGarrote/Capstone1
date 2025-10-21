@@ -10,13 +10,13 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
-import contextsService from "../../services/contexts-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import AssetViewModal from "../../components/Modals/AssetViewModal";
 import dtsService from "../../services/dts-integration-service";
 import authService from "../../services/auth-service";
 import Pagination from "../../components/Pagination";
 import usePagination from "../../hooks/usePagination";
+import { fetchAllCategories } from "../../services/contexts-service";
 
 export default function Assets() {
   const location = useLocation();
@@ -193,7 +193,7 @@ export default function Assets() {
       let supplierName = "-";
       if (assetData.supplier_id) {
         try {
-          const supplierResponse = await contextsService.fetchSuppNameById(
+          const supplierResponse = await fetchAllCategories(
             assetData.supplier_id
           );
           supplierName = supplierResponse?.name || supplierName;
