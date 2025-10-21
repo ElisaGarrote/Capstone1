@@ -29,14 +29,14 @@ const filterConfig = [
 ];
 
 // TableHeader component to render the table header
-function TableHeader() {
+function TableHeader( { allSelected, onSelectAll }) {
   return (
     <tr>
       <th>
         <input
           type="checkbox"
-          name="checkbox-category"
-          id="checkbox-category"
+          checked={allSelected}
+          onChange={(e) => onSelectAll(e.target.checked)}
         />
       </th>
       <th>NAME</th>
@@ -48,21 +48,22 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ category, onDeleteClick }) {
+function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
   const navigate = useNavigate();
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   return (
     <tr>
       <td>
-        <div className="checkbox-category">
-          <input type="checkbox" name="" id="" />
-        </div>
+        <input
+          type="checkbox"
+          checked={isChecked}
+          onChange={(e) => onCheckboxChange(category.id, e.target.checked)}
+        />
       </td>
       <td>
         <div className="category-name">
           <img
-            src={category.logo ? category.logo : DefaultImage}
+            src={category.logo || DefaultImage}
             alt={category.name}
             className="category-logo"
           />
@@ -98,6 +99,24 @@ function TableItem({ category, onDeleteClick }) {
 export default function Category() {
   const [categories, setCategories] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  const allSelected = selectedIds.length === categories.length && categories.length > 0;
+
+  const handleCheckboxChange = (id, checked) => {
+    setSelectedIds((prev) =>
+      checked ? [...prev, id] : prev.filter((item) => item !== id)
+    );
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds(categories.map((c) => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
 
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -126,15 +145,22 @@ export default function Category() {
   }, []);
 
   // Handel Delete
-  const handleDelete =  async () => {
+  const handleDelete = async () => {
     try {
-      await deleteCategory(selectedCategoryId);
+      if (selectedCategoryId) {
+        // Single delete
+        await deleteCategory(selectedCategoryId);
+      } else if (selectedIds.length > 0) {
+        // Bulk delete
+        await Promise.all(selectedIds.map((id) => deleteCategory(id)));
+        setSelectedIds([]);
+      }
       setDeleteModalOpen(false);
       fetchCategories();
     } catch (error) {
       console.log("Failed to delete category:", error);
     }
-  }
+  };
 
   return (
     <>
@@ -160,6 +186,12 @@ export default function Category() {
             <section className="table-header">
               <h2 className="h2">Categories ({categories.length})</h2>
               <section className="table-actions">
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => setDeleteModalOpen(true)}
+                  />
+                )}
                 <input
                   type="search"
                   placeholder="Search..."
@@ -176,7 +208,7 @@ export default function Category() {
             <section className="table-section">
               <table>
                 <thead>
-                  <TableHeader />
+                  <TableHeader allSelected={allSelected} onSelectAll={handleSelectAll} />
                 </thead>
                 <tbody>
                   {paginatedCategories.length > 0 ? (
@@ -188,6 +220,8 @@ export default function Category() {
                           setSelectedCategoryId(id);
                           setDeleteModalOpen(true);
                         }}
+                        onCheckboxChange={handleCheckboxChange}
+                        isChecked={selectedIds.includes(category.id)}
                       />
                     ))
                   ) : (
