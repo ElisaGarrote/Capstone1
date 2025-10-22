@@ -335,7 +335,7 @@ export default function AssetsRegistration() {
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav><NavBar /></nav>
-      <main className="perform-audit-page">
+      <main className="registration">
         <section className="top">
           <TopSecFormPage
             root="Assets"
@@ -344,7 +344,7 @@ export default function AssetsRegistration() {
             title={id ? 'Edit' + ' ' + (asset?.name || 'Asset') : 'New Asset'}
           />
         </section>
-        <section className="perform-audit-form">
+        <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Asset ID */}
             <fieldset>

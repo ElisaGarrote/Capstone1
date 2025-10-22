@@ -1,21 +1,17 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import ViewPage from "../../components/View/Viewpage";
-import Status from "../../components/Status";
-import DefaultImage from "../../assets/img/default-image.jpg";
+import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import "../../styles/AssetViewPage.css";
-import MediumButtons from "../../components/buttons/MediumButtons";
-import DeleteModal from "../../components/Modals/DeleteModal";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 function AssetViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const [asset, setAsset] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [endPoint, setEndPoint] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     // Find asset from mockup data
@@ -36,152 +32,97 @@ function AssetViewPage() {
     );
   }
 
-  const imageSrc = asset.image
-    ? `https://assets-service-production.up.railway.app${asset.image}`
-    : DefaultImage;
+  // Define tabs for the detailed view
+  const tabs = [
+    { label: "Info" },
+    { label: "Assets" },
+    { label: "Products" },
+    { label: "Components" },
+    { label: "Maintenance" },
+    { label: "History" },
+    { label: "Files" },
+    { label: "Additional Info" }
+  ];
 
-  // Sidebar content
-  const sidebarContent = (
-    <>
-      <div className="view-info-item">
-        <label>Category:</label>
-        <p>{asset.category || "-"}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Min. QTY:</label>
-        <p>-</p>
-      </div>
-      <div className="view-info-item">
-        <label>Manufacturer:</label>
-        <p>https://www.dell.com</p>
-      </div>
-      <div className="view-info-item">
-        <label>Supplier:</label>
-        <p>
-          <a href="https://www.dell.com/support" target="_blank" rel="noopener noreferrer">
-            https://www.dell.com/support
-          </a>
-        </p>
-      </div>
-      <div className="view-info-item">
-        <label>Model #:</label>
-        <p>544 541</p>
-      </div>
-      <div className="view-info-item">
-        <label>Model Name:</label>
-        <p>4531794+19629</p>
-      </div>
-      <div className="view-info-item">
-        <label>Depreciation:</label>
-        <p>Laptop (4 months)</p>
-      </div>
-      <div className="view-info-item">
-        <label>EOL:</label>
-        <p>5 months</p>
-      </div>
-      <div className="view-info-item">
-        <label>Created At:</label>
-        <p>2025-08-14 19:09:01 PM</p>
-      </div>
-      <div className="view-info-item">
-        <label>Created By:</label>
-        <p>Elias Gamboa</p>
-      </div>
-    </>
-  );
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+  };
 
-  // Action buttons
-  const actionButtons = (
-    <>
-      <button className="view-action-btn edit" onClick={() => navigate(`/assets/registration/${asset.id}`)}>
-        Edit
-      </button>
-      <button
-        className="view-action-btn delete"
-        onClick={() => {
-          setEndPoint(`https://assets-service-production.up.railway.app/assets/${asset.id}/delete/`);
-          setDeleteModalOpen(true);
-        }}
-      >
-        Delete
-      </button>
-    </>
-  );
+  const confirmDelete = () => {
+    // Handle asset deletion logic here
+    console.log("Deleting asset:", asset.id);
+    closeDeleteModal();
+    navigate("/assets");
+  };
+
+  // Checked out to information
+  const checkedOutTo = asset.checkoutRecord ? {
+    name: "Elias Gamboa",
+    email: "garciamariaeliasgarcia@gmail.com",
+    checkoutDate: "2025-08-15"
+  } : null;
+
+  // Button action handlers
+  const handleEditClick = () => {
+    navigate(`/assets/registration/${asset.id}`);
+  };
+
+  const handleCheckInClick = () => {
+    console.log("Check-in asset:", asset.id);
+  };
+
+  const handleAddNoteClick = () => {
+    console.log("Add note to asset:", asset.id);
+  };
+
+  const handleAuditClick = () => {
+    console.log("Audit asset:", asset.id);
+  };
+
+  const handleUploadClick = () => {
+    console.log("Upload file for asset:", asset.id);
+  };
 
   return (
     <>
       <NavBar />
       {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
-            setDeleteModalOpen(false);
-            navigate("/assets");
-          }}
-          onDeleteFail={() => {
-            setDeleteModalOpen(false);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
-      <ViewPage
+      <DetailedViewPage
         breadcrumbRoot="Assets"
-        breadcrumbCurrent="Show Asset"
+        breadcrumbCurrent={asset.displayed_id + " - " + asset.name}
         breadcrumbRootPath="/assets"
-        title={`${asset.displayed_id} - ${asset.name}`}
-        sidebarContent={sidebarContent}
-        actionButtons={actionButtons}
-      >
-        {/* Main Content - Asset Table */}
-        <div className="asset-view-content">
-          {/* Top Actions */}
-          <div className="asset-view-header">
-            <div className="asset-view-tabs">
-              <span className="asset-tab-text">Assets (1)</span>
-            </div>
-            <div className="asset-view-actions">
-              <input type="search" placeholder="Search..." className="asset-search" />
-            </div>
-          </div>
-
-          {/* Asset Table */}
-          <div className="asset-view-table-wrapper">
-            <table className="asset-view-table">
-              <thead>
-                <tr>
-                  <th>IMAGE</th>
-                  <th>ASSET ID</th>
-                  <th>NAME</th>
-                  <th>CATEGORY</th>
-                  <th>STATUS</th>
-                  <th>LOCATION</th>
-                  <th>CHECKED OUT TO</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <img src={imageSrc} alt={asset.name} className="asset-thumbnail" onError={(e) => { e.target.src = DefaultImage; }} />
-                  </td>
-                  <td>{asset.displayed_id}</td>
-                  <td>{asset.name}</td>
-                  <td>{asset.category}</td>
-                  <td>
-                    <Status type={asset.status.toLowerCase()} name={asset.status} />
-                  </td>
-                  <td>{asset.location}</td>
-                  <td>{asset.checkoutRecord?.requestor || "-"}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="asset-view-pagination">
-            <span>Showing 1 to 1 of 1 rows</span>
-          </div>
-        </div>
-      </ViewPage>
+        title={asset.name}
+        subtitle={asset.displayed_id}
+        assetTag={asset.displayed_id}
+        status="Ready to Deploy"
+        statusType="ready-to-deploy"
+        company="Zip Technology Corp."
+        checkoutDate="2025-08-15 12:00 AM"
+        nextAuditDate="2025-08-19"
+        manufacturer="Apple"
+        manufacturerUrl="https://www.apple.com"
+        supportUrl="https://support.apple.com"
+        supportPhone="+1 800 136 900"
+        category="Mobile Phones"
+        model={asset.name || "iPhone 16 Pro Max"}
+        modelNo="2129GH3221"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        checkedOutTo={checkedOutTo}
+        onEditClick={handleEditClick}
+        onCheckInClick={handleCheckInClick}
+        onAddNoteClick={handleAddNoteClick}
+        onAuditClick={handleAuditClick}
+        onDeleteClick={() => setDeleteModalOpen(true)}
+        onUploadClick={handleUploadClick}
+      />
     </>
   );
 }
