@@ -840,12 +840,12 @@ def get_dashboard_stats(request):
 
     due_returns = AssetCheckout.objects.filter(
         return_date__gte=today,
-        asset_checkins__isnull=True
+        asset_checkin__isnull=True
     ).count()
 
     overdue_returns = AssetCheckout.objects.filter(
         return_date__lt=today,
-        asset_checkins__isnull=True
+        asset_checkin__isnull=True
     ).count()
 
     upcoming_audits = AuditSchedule.objects.filter(
