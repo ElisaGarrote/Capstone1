@@ -65,7 +65,7 @@ function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick }) {
         <ActionButtons
           showEdit
           showDelete
-          editPath={`edit/${depreciation.id}`}
+          editPath={`Edit/${depreciation.id}`}
           editState={{ depreciation }}
           onDeleteClick={() => onDeleteClick(depreciation.id)}
         />
@@ -201,7 +201,7 @@ export default function Depreciations() {
                 </div>
                 <MediumButtons
                   type="new"
-                  navigatePage="/more/depreciations/registration"
+                  navigatePage="/More/Depreciations/Registration"
                 />
               </section>
             </section>

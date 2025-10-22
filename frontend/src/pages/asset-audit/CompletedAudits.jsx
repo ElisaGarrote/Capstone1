@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import PageFilter from "../../components/FilterPanel";
@@ -7,9 +6,8 @@ import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
-import "../../styles/Audits.css";
+import "../../styles/AuditsCompleted.css";
 import completedAudit from "../../data/mockData/audits/completed-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 
@@ -43,7 +41,7 @@ function TableHeader() {
 }
 
 // TableItem
-function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
+function TableItem({ item, onViewClick }) {
   return (
     <tr>
       <td>{item.audit_date}</td>
@@ -61,11 +59,6 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
 }
 
 export default function CompletedAudits() {
-  const navigate = useNavigate();
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
-
   const data = completedAudit;
 
   // pagination
@@ -74,24 +67,6 @@ export default function CompletedAudits() {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedActivity = data.slice(startIndex, endIndex);
-
-  // delete modal state
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
-
-  const openDeleteModal = (id = null) => {
-    setDeleteTarget(id);
-    setDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteModalOpen(false);
-    setDeleteTarget(null);
-  };
-
-  const confirmDelete = () => {
-    closeDeleteModal();
-  };
 
   // Add state for view modal
   const [isViewModalOpen, setViewModalOpen] = useState(false);
@@ -105,39 +80,11 @@ export default function CompletedAudits() {
 
   const closeViewModal = () => {
     setViewModalOpen(false);
-    selectedItem(null);
+    setSelectedItem(null);
   };
-
-
-  // outside click for export toggle
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
 
   return (
     <>
-      {isDeleteModalOpen && (
-        <ConfirmationModal
-          closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
-        />
-      )}
-
       {isViewModalOpen && selectedItem && (
         <View
           title={`${selectedItem.audit_schedule.asset.name} : ${selectedItem.audit_date}`}
@@ -155,13 +102,11 @@ export default function CompletedAudits() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
-          <section className="title-page-section">
+        <main className="main-with-table">
+          <section className="completed-audit-title-page-section">
             <h1>Asset Audits</h1>
 
             <div>
@@ -186,27 +131,13 @@ export default function CompletedAudits() {
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Scheduled Audits ({data.length})</h2>
+              <h2 className="h2">Completed Audits ({data.length})</h2>
               <section className="table-actions">
                 <input type="search" placeholder="Search..." className="search" />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
               </section>
             </section>
 
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="audit-table-section">
+            <section className="completed-audit-table-section">
               <table>
                 <thead>
                   <TableHeader />
@@ -223,7 +154,7 @@ export default function CompletedAudits() {
                   ) : (
                     <tr>
                       <td colSpan={9} className="no-data-message">
-                        No Scheduled Audits Found.
+                        No Completed Audits Found.
                       </td>
                     </tr>
                   )}

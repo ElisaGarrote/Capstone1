@@ -188,7 +188,7 @@ function App() {
             element={<Depreciations />}
           />
           <Route
-            path="/More/Depreciations/DepreciationRegistration"
+            path="/More/Depreciations/Registration"
             element={<DepreciationRegistration />}
           />
           <Route
@@ -240,11 +240,11 @@ function App() {
             element={<Repairs />}
           />
           <Route
-            path="/Repairs/RepairRegistration"
+            path="/repairs/registration"
             element={<RepairRegistration />}
           />
           <Route
-            path="/Repairs/Edit/:id"
+            path="/repairs/edit/:id"
             element={<RepairRegistration />}
           />
           <Route path="/audits/" element={<AssetAudits />} />
@@ -254,6 +254,8 @@ function App() {
           <Route path="/audits/new" element={<PerformAudits />} />
           <Route path="/audits/schedule" element={<ScheduleRegistration />} />
           <Route path="/audits/edit/:id" element={<ScheduleRegistration />} />
+          <Route path="/audits/scheduled/edit/:id" element={<ScheduleRegistration />} />
+          <Route path="/audits/overdue/edit/:id" element={<ScheduleRegistration />} />
           <Route path="/audits/view" element={<ViewAudits />} />
           <Route path="/approved-tickets" element={<Tickets />} />
           <Route path="/tickets/view/:id" element={<TicketViewPage />} />

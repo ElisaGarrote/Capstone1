@@ -80,7 +80,7 @@ const PerformAudits = () => {
       case "/audits/overdue":
         return "Overdue for Audits";
       case "/audits/scheduled":
-        return "Schedule Audits";
+        return "Scheduled Audits";
       case "/audits/completed":
         return "Completed Audits";
     }

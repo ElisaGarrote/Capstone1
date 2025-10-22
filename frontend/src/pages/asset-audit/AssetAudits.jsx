@@ -12,6 +12,7 @@ import TabNavBar from "../../components/TabNavBar";
 import "../../styles/Audits.css";
 import dueAudit from "../../data/mockData/audits/due-audit-mockup-data.json";
 import View from "../../components/Modals/View";
+import Footer from "../../components/Footer";
 
 
 const filterConfig = [
@@ -74,9 +75,6 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
 
 export default function AssetAudits() {
   const navigate = useNavigate();
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
 
   const data = dueAudit;
 
@@ -89,18 +87,21 @@ export default function AssetAudits() {
 
   // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
-  const openDeleteModal = (id = null) => {
-    setDeleteTarget(id);
+  const openDeleteModal = (id) => {
+    setDeleteId(id);
     setDeleteModalOpen(true);
   };
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
-    setDeleteTarget(null);
+    setDeleteId(null);
   };
 
   const confirmDelete = () => {
+    console.log("Deleting ID:", deleteId);
+    // perform delete action here (API or filter)
     closeDeleteModal();
   };
 
@@ -108,7 +109,6 @@ export default function AssetAudits() {
   const [isViewModalOpen, setViewModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Add view handler
   const handleViewClick = (item) => {
     setSelectedItem(item);
     setViewModalOpen(true);
@@ -116,27 +116,9 @@ export default function AssetAudits() {
 
   const closeViewModal = () => {
     setViewModalOpen(false);
-    selectedItem(null);
+    setSelectedItem(null);
   };
 
-  // outside click for export toggle
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
 
   return (
     <>
@@ -161,13 +143,11 @@ export default function AssetAudits() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
-          <section className="title-page-section">
+        <main className="main-with-table">
+          <section className="audit-title-page-section">
             <h1>Asset Audits</h1>
 
             <div>
@@ -195,22 +175,8 @@ export default function AssetAudits() {
               <h2 className="h2">Due to be Audited ({data.length})</h2>
               <section className="table-actions">
                 <input type="search" placeholder="Search..." className="search" />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
               </section>
             </section>
-
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
 
             <section className="audit-table-section">
               <table>
@@ -251,6 +217,7 @@ export default function AssetAudits() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

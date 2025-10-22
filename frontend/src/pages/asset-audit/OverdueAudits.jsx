@@ -9,7 +9,7 @@ import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
-import "../../styles/Audits.css";
+import "../../styles/AuditsOverdue.css";
 import overdueAudit from "../../data/mockData/audits/overdue-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 
@@ -65,7 +65,7 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
           showDelete
           showView
           editPath={`edit/${item.id}`}
-          editState={{ item, previousPage: "/audits" }}
+          editState={{ item, previousPage: "/audits/overdue" }}
           onDeleteClick={() => onDeleteClick(item.id)}
           onViewClick={() => onViewClick(item)}
         />
@@ -76,9 +76,6 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
 
 export default function OverdueAudits() {
   const navigate = useNavigate();
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
 
   const data = overdueAudit;
 
@@ -91,19 +88,21 @@ export default function OverdueAudits() {
 
   // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+  const [deleteId, setDeleteId] = useState(null);
 
-  const openDeleteModal = (id = null) => {
-    setDeleteTarget(id);
+  const openDeleteModal = (id) => {
+    setDeleteId(id);
     setDeleteModalOpen(true);
   };
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
-    setDeleteTarget(null);
+    setDeleteId(null);
   };
 
   const confirmDelete = () => {
+    console.log("Deleting ID:", deleteId);
+    // perform delete action here (API or filter)
     closeDeleteModal();
   };
 
@@ -119,28 +118,8 @@ export default function OverdueAudits() {
 
   const closeViewModal = () => {
     setViewModalOpen(false);
-    selectedItem(null);
+    setSelectedItem(null);
   };
-
-
-  // outside click for export toggle
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
 
   return (
     <>
@@ -166,13 +145,11 @@ export default function OverdueAudits() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
-          <section className="title-page-section">
+        <main className="main-with-table">
+          <section className="audit-title-page-section">
             <h1>Asset Audits</h1>
 
             <div>
@@ -197,27 +174,13 @@ export default function OverdueAudits() {
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Overdue Audits ({data.length})</h2>
+              <h2 className="h2">Overdue for Audits ({data.length})</h2>
               <section className="table-actions">
                 <input type="search" placeholder="Search..." className="search" />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
               </section>
             </section>
 
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="audit-table-section">
+            <section className="overdue-audit-table-section">
               <table>
                 <thead>
                   <TableHeader />

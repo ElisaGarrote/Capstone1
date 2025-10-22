@@ -63,7 +63,7 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
           showDelete
           showView
           editPath={`edit/${item.id}`}
-          editState={{ item, previousPage: "/audits" }}
+          editState={{ item, previousPage: "/audits/scheduled" }}
           onDeleteClick={() => onDeleteClick(item.id)}
           onViewClick={() => onViewClick(item)}
         />
@@ -74,9 +74,6 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
 
 export default function ScheduledAudits() {
   const navigate = useNavigate();
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
 
   const data = scheduledAudit;
 
@@ -89,19 +86,21 @@ export default function ScheduledAudits() {
 
   // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+  const [deleteId, setDeleteId] = useState(null);
 
-  const openDeleteModal = (id = null) => {
-    setDeleteTarget(id);
+  const openDeleteModal = (id) => {
+    setDeleteId(id);
     setDeleteModalOpen(true);
   };
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
-    setDeleteTarget(null);
+    setDeleteId(null);
   };
 
   const confirmDelete = () => {
+    console.log("Deleting ID:", deleteId);
+    // perform delete action here (API or filter)
     closeDeleteModal();
   };
 
@@ -117,28 +116,9 @@ export default function ScheduledAudits() {
 
   const closeViewModal = () => {
     setViewModalOpen(false);
-    selectedItem(null);
+    setSelectedItem(null);
   };
 
-
-  // outside click for export toggle
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
 
   return (
     <>
@@ -163,13 +143,11 @@ export default function ScheduledAudits() {
         />
       )}
       
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
-          <section className="title-page-section">
+        <main className="main-with-table audit-layout">
+          <section className="audit-title-page-section">
             <h1>Asset Audits</h1>
 
             <div>
@@ -197,22 +175,8 @@ export default function ScheduledAudits() {
               <h2 className="h2">Scheduled Audits ({data.length})</h2>
               <section className="table-actions">
                 <input type="search" placeholder="Search..." className="search" />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
               </section>
             </section>
-
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
 
             <section className="audit-table-section">
               <table>
