@@ -8,7 +8,6 @@ import "../../styles/PerformAudits.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
-import contextsService from "../../services/contexts-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
@@ -117,7 +116,7 @@ export default function AssetsRegistration() {
         // Fetch all necessary data in parallel
         const [assetContextsData, contextsData] = await Promise.all([
           assetsService.fetchAssetContexts(),
-          contextsService.fetchAllSupplierNames()
+          fetchAllCategories()
         ]);
         
         console.log("Asset contexts data:", assetContextsData);
@@ -335,7 +334,7 @@ export default function AssetsRegistration() {
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav><NavBar /></nav>
-      <main className="perform-audit-page">
+      <main className="registration">
         <section className="top">
           <TopSecFormPage
             root="Assets"
@@ -344,7 +343,7 @@ export default function AssetsRegistration() {
             title={id ? 'Edit' + ' ' + (asset?.name || 'Asset') : 'New Asset'}
           />
         </section>
-        <section className="perform-audit-form">
+        <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Asset ID */}
             <fieldset>

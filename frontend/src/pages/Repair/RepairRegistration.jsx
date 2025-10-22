@@ -1,24 +1,61 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
+import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
 
 const RepairRegistration = () => {
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const editState = location.state?.repair || null;
+  const isEdit = !!editState;
+
   const [attachmentFiles, setAttachmentFiles] = useState([]);
+
+  // Extract unique values from mock data
+  const assets = Array.from(new Set(MockupData.map(item => item.asset)));
+  const suppliers = Array.from(new Set(MockupData.map(item => item.supplier)));
+  const repairTypes = Array.from(new Set(MockupData.map(item => item.type))); 
 
   const {
     register,
     handleSubmit,
     control,
+    setValue,
     watch,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
+    defaultValues: {
+      asset: editState?.asset || "",
+      supplier: editState?.supplier || "",
+      repairType: editState?.type || "",
+      repairName: editState?.name || "",
+      startDate: editState?.start_date || "",
+      endDate: editState?.end_date || "",
+      cost: editState?.cost || "",
+      notes: editState?.notes || "",
+    },
   });
+
+  useEffect(() => {
+    if (editState) {
+      setValue("asset", editState.asset || "");
+      setValue("supplier", editState.supplier || "");
+      setValue("repairType", editState.type || "");
+      setValue("repairName", editState.name || "");
+      setValue("startDate", editState.start_date || "");
+      setValue("endDate", editState.end_date || "");
+      setValue("cost", editState.cost || "");
+      setValue("notes", editState.notes || "");
+      // setAttachmentFiles(editState.attachments || []);
+    }
+  }, [editState, setValue]);
+
 
   const handleFileSelection = (e) => {
     const files = Array.from(e.target.files);
@@ -42,7 +79,7 @@ const RepairRegistration = () => {
 
   const onSubmit = (data) => {
     console.log("Form submitted:", data, attachmentFiles);
-    navigate("/Repairs");
+    navigate("/repairs");
   };
 
   return (
@@ -54,9 +91,9 @@ const RepairRegistration = () => {
         <section className="top">
           <TopSecFormPage
             root="Repairs"
-            currentPage="New Repair"
-            rootNavigatePage="/Repairs"
-            title="New Repair"
+            currentPage={isEdit ? "Edit Repair" : "New Repair"}
+            rootNavigatePage="/repairs"
+            title={isEdit ? "Edit Repair" : "New Repair"}
           />
         </section>
         <section className="registration-form">
@@ -70,12 +107,12 @@ const RepairRegistration = () => {
                   required: "Asset is required",
                 })}
               >
-                <option value="">Select Type</option>
-                <option value="Iphone 16 Pro Max">Hardware</option>
-                <option value="Ideapad 3">Software</option>
-                <option value="Google Pixelbook 2">Other</option>
+                <option value="">Select Asset</option>
+                {assets.map((asset) => (
+                  <option key={asset} value={asset}>{asset}</option>
+                ))}
               </select>
-              {errors.repairType && (
+              {errors.asset && (
                 <span className="error-message">
                   {errors.asset.message}
                 </span>
@@ -89,10 +126,10 @@ const RepairRegistration = () => {
                 className={errors.supplier ? "input-error" : ""}
                 {...register("supplier")}
               >
-                <option value="">Select Type</option>
-                <option value="Apple">Hardware</option>
-                <option value="Lenovo">Software</option>
-                <option value="Google">Other</option>
+                <option value="">Select Supplier</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier} value={supplier}>{supplier}</option>
+                ))}
               </select>
             </fieldset>
 
@@ -105,10 +142,10 @@ const RepairRegistration = () => {
                   required: "Repair type is required",
                 })}
               >
-                <option value="">Select Type</option>
-                <option value="hardware">Hardware</option>
-                <option value="software">Software</option>
-                <option value="other">Other</option>
+                <option value="">Select Repair Type</option>
+                {repairTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
               </select>
               {errors.repairType && (
                 <span className="error-message">
@@ -183,6 +220,7 @@ const RepairRegistration = () => {
                 placeholder="0.00"
                 min="0"
                 step="0.01"
+                {...register("cost", { valueAsNumber: true })}
               />
             </div>
           </fieldset>
@@ -236,7 +274,7 @@ const RepairRegistration = () => {
 
             {/* Submit */}
             <button type="submit" className="primary-button" disabled={!isValid}>
-              Save
+              {isEdit ? "Update Repair" : "Save"}
             </button>
           </form>
         </section>

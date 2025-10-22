@@ -1,93 +1,65 @@
-import NavBar from "../../components/NavBar";
-import "../../styles/ScheduleRegistration.css";
-import TopSecFormPage from "../../components/TopSecFormPage";
-import { useState, useEffect } from "react";
-import Select from "react-select";
-import makeAnimated from "react-select/animated";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import assetsService from "../../services/assets-service";
+import NavBar from "../../components/NavBar";
+import "../../styles/Registration.css";
+import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
-import dateRelated from "../../utils/dateRelated";
-import Skeleton from "react-loading-skeleton";
-import LoadingButton from "../../components/LoadingButton";
+import overdueAudits from "../../data/mockData/audits/overdue-audit-mockup-data.json";
+import dueAudits from "../../data/mockData/audits/due-audit-mockup-data.json";
+import scheduledAudits from "../../data/mockData/audits/scheduled-audit-mockup-data.json";
+import Footer from "../../components/Footer";
 
-export default function ScheduleRegistration() {
+const ScheduleRegistration = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const animatedComponents = makeAnimated();
-  const [currentDate, setCurrentDate] = useState("");
-  const [isLoading, setLoading] = useState(true);
-  const [filteredAssets, setFilteredAssets] = useState([]);
-  const [isSubmitting, setSubmitting] = useState(false);
-
-  // Retrieve the "previousPage" value passed from the navigation state.
-  // If the "previousPage" is not exist, the value for this is "null".
+  const item = location.state?.item || {};
   const previousPage = location.state?.previousPage || null;
 
-  // Get all the assets that have not yet been scheduled or audited.
-  useEffect(() => {
-    const filteredAssets = async () => {
-      const fetchedData = await assetsService.filterAssetsForAudit();
-      setFilteredAssets(fetchedData);
-      setLoading(false);
-    };
+  const extractAssets = (auditArray) => auditArray.map(a => a.asset.name);
+  const allAssets = [
+    ...extractAssets(overdueAudits),
+    ...extractAssets(dueAudits),
+    ...extractAssets(scheduledAudits),
+  ];
+  const uniqueAssets = Array.from(new Set(allAssets));
 
-    filteredAssets();
-  }, []);
-
-  // Get the current date and assign it to the currentDate state.
-  useEffect(() => {
-    setCurrentDate(dateRelated.getCurrentDate());
-  }, []);
-
-  const assetOptions = filteredAssets;
-
-  // Handle form
   const {
-    control,
     register,
     handleSubmit,
+    control,
+    watch,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
+    defaultValues: {
+      asset: item.asset?.name || "",
+      auditDueDate: item.date || "",
+      notes: item.notes || "",
+      },
   });
 
-  const submission = async (data) => {
-    setSubmitting(true);
-    const success = await assetsService.postScheduleAudit(
-      data.asset,
-      data.auditDueDate,
-      data.notes
-    );
+  useEffect(() => {
+  if (item) {
+    setValue("asset", item.asset?.name || "");
+    setValue("auditDueDate", item.date || "");
+    setValue("notes", item.notes || "");
+  }
+}, [item, setValue]);
 
-    if (success) {
-      navigate("/audits/scheduled", { state: { addedScheduleAudit: true } });
-      setSubmitting(false);
+
+  const onSubmit = (data) => {
+    if (item?.id) {
+      console.log("Updating audit:", { id: item.id, ...data });
+      // Call your update API or state logic here
     } else {
-      console.log("Failed to create schedule audit!");
+      console.log("Creating new audit:", data);
+      // Call your create API or state logic here
     }
+    navigate(previousPage);
   };
 
-  const customStylesDropdown = {
-    control: (provided) => ({
-      ...provided,
-      width: "100%",
-      borderRadius: "25px",
-      fontSize: "0.875rem",
-      padding: "3px 8px",
-    }),
-    container: (provided) => ({
-      ...provided,
-      width: "100%",
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      color: state.isSelected ? "white" : "grey",
-      fontSize: "0.875rem",
-    }),
-  };
 
-  // Set the root of the page.
   const getRootPage = () => {
     switch (previousPage) {
       case "/audits":
@@ -95,7 +67,7 @@ export default function ScheduleRegistration() {
       case "/audits/overdue":
         return "Overdue for Audits";
       case "/audits/scheduled":
-        return "Schedule Audits";
+        return "Scheduled Audits";
       case "/audits/completed":
         return "Completed Audits";
     }
@@ -106,79 +78,74 @@ export default function ScheduleRegistration() {
       <nav>
         <NavBar />
       </nav>
-      <main className="schedule-registration-page">
+      <main className="registration">
         <section className="top">
           <TopSecFormPage
             root={getRootPage()}
-            currentPage="Schedule Audits"
+            currentPage="Schedule Audit"
             rootNavigatePage={previousPage}
-            title="Schedule Audits"
+            title="Schedule Audit"
           />
         </section>
-        <section className="schedule-registration-form">
-          <form onSubmit={handleSubmit(submission)}>
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Asset */}
             <fieldset>
-              <label htmlFor="asset">Select Asset <span style={{color: 'red'}}>*</span></label>
-
-              {isLoading ? (
-                <Skeleton height={40} borderRadius={25} />
-              ) : (
-                <Controller
-                  name="asset"
-                  control={control}
-                  rules={{ required: "Asset is required" }}
-                  render={({ field }) => (
-                    <Select
-                      components={animatedComponents}
-                      options={assetOptions}
-                      styles={customStylesDropdown}
-                      placeholder="Select assets..."
-                      {...field}
-                      isMulti
-                    />
-                  )}
-                />
+              <label htmlFor="asset">Check-out To *</label>
+              <select
+                className={errors.asset ? "input-error" : ""}
+                {...register("asset", {
+                  required: "Asset is required",
+                })}
+              >
+                <option value="">Select Asset</option>
+                {uniqueAssets.map((asset) => (
+                  <option key={asset} value={asset}>{asset}</option>
+                ))}
+              </select>
+              {errors.asset && (
+                <span className="error-message">
+                  {errors.asset.message}
+                </span>
               )}
-
-              {errors.asset && <span className='error-message'>{errors.asset.message}</span>}
             </fieldset>
+
+            {/* Audit Due Date */}
             <fieldset>
-              <label htmlFor="audit-due-date">Audit Due Date <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor="auditDueDate">Audit Due Date *</label>
               <input
                 type="date"
-                name="audit-due-date"
-                id="audit-due-date"
-                min={currentDate}
+                className={errors.auditDueDate ? "input-error" : ""}
+                min={new Date().toISOString().split("T")[0]}
                 {...register("auditDueDate", {
                   required: "Audit due date is required",
                 })}
               />
-
               {errors.auditDueDate && (
-                <span className='error-message'>{errors.auditDueDate.message}</span>
+                <span className="error-message">{errors.auditDueDate.message}</span>
               )}
             </fieldset>
+
+            {/* Notes */}
             <fieldset>
               <label htmlFor="notes">Notes</label>
               <textarea
-                name="notes"
-                id="notes"
-                maxLength="500"
-                placeholder="Notes..."
+                placeholder="Enter notes"
                 {...register("notes")}
+                rows="3"
               ></textarea>
             </fieldset>
-            <button
-              type="submit"
-              className="save-btn"
-              disabled={!isValid || isSubmitting}
-            >
-              {isSubmitting && <LoadingButton />}
-              {!isSubmitting ? "Save" : "Saving..."}
+
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid}>
+              Save
             </button>
           </form>
         </section>
+        <Footer />
       </main>
     </>
   );
-}
+};
+
+export default ScheduleRegistration;

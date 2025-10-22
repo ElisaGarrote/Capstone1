@@ -8,7 +8,6 @@ import { useForm, Controller } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
-import contextsService from "../../services/contexts-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
@@ -80,7 +79,7 @@ export default function ProductsRegistration() {
         // Fetch all necessary data in parallel
         const [productContextsData, contextsData] = await Promise.all([
           assetsService.fetchProductContexts(),
-          contextsService.fetchContextNames()
+          fetchAllCategories()
         ]);
         
         // Set categories and depreciations from product contexts
@@ -311,19 +310,17 @@ export default function ProductsRegistration() {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      <nav>
-        <NavBar />
-      </nav>
-      <main className='perform-audit-page'>
-        <section className='top'>
+      <nav><NavBar /></nav>
+      <main className="registration">
+        <section className="top">
           <TopSecFormPage
-            root='Products'
-            currentPage={id ? 'Edit Product' : 'New Product'}
-            rootNavigatePage='/products'
+            root="Products"
+            currentPage={id ? "Edit Product" : "New Product"}
+            rootNavigatePage="/products"
             title={id ? 'Edit' + ' ' + (product?.name || 'Product') : 'New Product'}
           />
         </section>
-        <section className='perform-audit-form'>
+        <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
 
             {/* Product Name */}

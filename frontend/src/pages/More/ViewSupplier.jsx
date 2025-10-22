@@ -5,11 +5,11 @@ import NavBar from "../../components/NavBar";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Alert from "../../components/Alert";
-import contextsService from "../../services/contexts-service";
 import Pagination from "../../components/Pagination";
 import SupplierFilter from "../../components/FilterPanel";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import { fetchAllCategories } from '../../services/contexts-service';
 
 import "../../styles/ViewSupplier.css";
 
@@ -161,8 +161,8 @@ export default function ViewSupplier() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const suppRes = await contextsService.fetchAllSuppliers();
-        const mapped = (suppRes || []).map((supp) => ({
+        const suppRes = await fetchAllCategories();
+        const mapped = (suppRes || []).map(supp => ({
           id: supp.id,
           name: supp.name,
           address: supp.address,

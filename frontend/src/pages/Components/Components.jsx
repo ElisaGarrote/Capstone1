@@ -1,261 +1,310 @@
-import "../../styles/custom-colors.css";
-import "../../styles/PageTable.css";
-import "../../styles/ComponentsButtons.css";
-import React, { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import TableBtn from "../../components/buttons/TableButtons";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import authService from "../../services/auth-service";
+import MockupData from "../../data/mockData/components/component-mockup-data.json";
+import PageFilter from "../../components/FilterPanel";
+import Pagination from "../../components/Pagination";
+import "../../styles/Table.css";
+import ActionButtons from "../../components/ActionButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
-import Alert from "../../components/Alert";
-import DeleteModal from "../../components/Modals/DeleteModal";
-import assetsService from "../../services/assets-service";
+
+const filterConfig = [
+  {
+    type: "text",
+    name: "name",
+    label: "Name",
+  },
+  {
+    type: "searchable",
+    name: "category",
+    label: "Cataegory",
+    options: [
+      { value: "1", label: "Laptops" },
+      { value: "2", label: "Mobile Phones" },
+      { value: "3", label: "Tablets" },
+      { value: "4", label: "Desktops" },
+      { value: "5", label: "Monitors" },
+    ],
+  },
+  {
+    type: "searchable",
+    name: "manufacturer",
+    label: "Manufacturer",
+    options: [
+      { value: "1", label: "Lenovo" },
+      { value: "2", label: "Apple" },
+      { value: "3", label: "Samsung" },
+      { value: "4", label: "Microsoft" },
+      { value: "5", label: "HP" },
+    ],
+  },
+];
+
+// TableHeader
+function TableHeader({ allSelected, onHeaderChange }) {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={onHeaderChange}
+        />
+      </th>
+      <th>IMAGE</th>
+      <th>NAME</th>
+      <th>CATEGORY</th>
+      <th>MANUFACTURER</th>
+      <th>DEPRECIATION</th>
+      <th>CHECK-OUT / CHECK-IN</th>
+      <th>ACTION</th>
+    </tr>
+  );
+}
+
+// TableItem
+function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick, navigate }) {
+  return (
+    <tr>
+      <td>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onRowChange(item.id, e.target.checked)}
+        />
+      </td>
+      <td>
+        <img
+          src={item.image || DefaultImage}
+          alt={item.name || "No Image"}
+          onError={(e) => (e.currentTarget.src = DefaultImage)}
+          style={{
+            width: "50px",
+            height: "50px",
+            objectFit: "cover",
+            borderRadius: "4px",
+          }}
+        />
+      </td>
+      <td>{item.name}</td>
+      <td>{item.category}</td>
+      <td>{item.manufacturer}</td>
+      <td>{item.depreciation}</td>
+      <td>
+        <ActionButtons
+          showCheckout
+          showCheckin
+          disableCheckout={item.available_quantity <= 0}
+          disableCheckin={item.checked_out_quantity <= 0}
+          onCheckoutClick={() =>
+            navigate(`/components/check-out/${item.id}`, { state: { item } })
+          }
+          onCheckinClick={() =>
+            navigate(`/components/checked-out-list/${item.id}`, { state: { item } })
+          }
+        />
+      </td>
+      <td>
+        <ActionButtons
+          showEdit
+          showDelete
+          showView
+          editPath={`edit/${item.id}`}
+          editState={{ item }}
+          onDeleteClick={() => onDeleteClick(item.id)}
+          onViewClick={onViewClick}
+        />
+      </td>
+    </tr>
+  );
+}
 
 export default function Components() {
-  const [components, setComponents] = useState([]);
-  const [checkedItems, setCheckedItems] = useState([]);
-  const allChecked = checkedItems.length === components.length && components.length > 0;
-
-  const [isLoading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-
-  const [endPoint, setEndPoint] = useState(null);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isViewModalOpen, setViewModalOpen] = useState(false);
-
   const navigate = useNavigate();
+  const [exportToggle, setExportToggle] = useState(false);
+  const exportRef = useRef(null);
+  const toggleRef = useRef(null);
 
-  // Page initialization
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedActivity = MockupData.slice(startIndex, endIndex);
+
+  // selection
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  const allSelected =
+    paginatedActivity.length > 0 &&
+    paginatedActivity.every((item) => selectedIds.includes(item.id));
+
+  const handleHeaderChange = (e) => {
+    if (e.target.checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...paginatedActivity.map((item) => item.id).filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !paginatedActivity.map((item) => item.id).includes(id))
+      );
+    }
+  };
+
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
+
+  // delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single id:", deleteTarget);
+      // remove from mock data / API call
+    } else {
+      console.log("Deleting multiple ids:", selectedIds);
+      // remove multiple
+      setSelectedIds([]); // clear selection
+    }
+    closeDeleteModal();
+  };
+
+  // outside click for export toggle
   useEffect(() => {
-    if (location.state?.successMessage) {
-      setSuccessMessage(location.state.successMessage);
-      setTimeout(() => {
-        setSuccessMessage("");
-        window.history.replaceState({}, document.title);
-      }, 5000);
-    }
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const compRes = await assetsService.fetchAllComponents();
-        setComponents(compRes);
-      } catch (error) {
-        console.error("Error fetching components:", error);
-        setComponents([]);
-        setErrorMessage("Failed to load components.");
-      } finally {
-        setLoading(false);
+    function handleClickOutside(event) {
+      if (
+        exportToggle &&
+        exportRef.current &&
+        !exportRef.current.contains(event.target) &&
+        toggleRef.current &&
+        !toggleRef.current.contains(event.target)
+      ) {
+        setExportToggle(false);
       }
-    };
-
-    fetchData();
-  }, [location]);
-
-  // Checkbox toggling
-  const toggleSelectAll = () => {
-    setCheckedItems(allChecked ? [] : components.map((component) => component.id));
-  };
-
-  const toggleItem = (id) => {
-    setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
-    );
-  };
-
-  const handleCheckIn = (item) => {
-    navigate(`/components/checked-out-list/${item.id}`);
-  };
-
-  const handleCheckOut = (item) => {
-    const available = item.quantity - item.checked_out;
-    navigate(`/components/check-out/${item.id}`, {
-      state: {
-        image: item.image,
-        name: item.name,
-        category: item.category || "N/A",
-        available,
-      },
-    });
-  };
-
-  const fetchComponents = async () => {
-    setLoading(true);
-    try {
-      const response = await assetsService.fetchAllComponents();
-      setComponents(response.components || []);
-    } catch (error) {
-      console.error("Error fetching components:", error);
-      setComponents([]);
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const handleView = async (componentId) => {
-    // handle view logic
-  };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [exportToggle]);
 
   return (
     <>
-      {errorMessage && <Alert message={errorMessage} type="danger" />}
-      {successMessage && <Alert message={successMessage} type="success" />}
-
       {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={async () => {
-            await fetchComponents();
-            setSuccessMessage("Asset Deleted Successfully!");
-            setTimeout(() => setSuccessMessage(""), 5000);
-          }}
-          onDeleteFail={() => {
-            setErrorMessage("Delete failed. Please try again.");
-            setTimeout(() => setErrorMessage(""), 5000);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
-      <nav>
-        <NavBar />
-      </nav>
-      <main className="page components-page">
-        <div className="container">
-          {isLoading ? (
-            <SkeletonLoadingTable />
-          ) : (
-            <>
-              <section className="top">
-                <h1>Components</h1>
-                <div>
-                  <form>
-                    <input type="text" placeholder="Search..." />
-                  </form>
-                  <MediumButtons type="export" />
-                  {authService.getUserInfo().role === "Admin" && (
-                    <MediumButtons type="new" navigatePage="/components/registration" />
-                  )}
-                </div>
-              </section>
-              <section className="middle">
-                <table className="components-table">
-                  <thead>
-                    <tr>
-                      <th>
-                        <input
-                          type="checkbox"
-                          checked={allChecked}
-                          onChange={toggleSelectAll}
-                        />
-                      </th>
-                      <th>IMAGE</th>
-                      <th>NAME</th>
-                      <th>CATEGORY</th>
-                      <th>AVAILABLE</th>
-                      <th>CHECKIN</th>
-                      <th>CHECKOUT</th>
-                      {authService.getUserInfo().role === "Admin" && (
-                        <>
-                          <th>EDIT</th>
-                          <th>DELETE</th>
-                        </>
-                      )}
-                      <th>VIEW</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {components.map((item) => {
-                      const available = item.quantity - item.checked_out;
 
-                      return (
-                        <tr key={item.id}>
-                          <td>
-                            <input
-                              type="checkbox"
-                              checked={checkedItems.includes(item.id)}
-                              onChange={() => toggleItem(item.id)}
-                            />
-                          </td>
-                          <td>
-                            <img
-                              src={item.image || DefaultImage}
-                              alt={item.name}
-                              width="50"
-                            />
-                          </td>
-                          <td>{item.name}</td>
-                          <td>{item.category || "N/A"}</td>
-                          <td>
-                            <span className="progress-container">
-                              <span className="progress-text" style={{ color: "#34c759" }}>
-                                {available}/{item.quantity}
-                              </span>
-                              <progress value={item.available_quantity} max={item.quantity}></progress>
-                            </span>
-                          </td>
-                          <td>
-                            <button
-                              className="check-in-btn"
-                              onClick={() => handleCheckIn(item)}
-                              disabled={item.checked_out === 0}
-                              title={item.checked_out === 0 ? "No items to check in" : "Check in component"}
-                            >
-                              Check-In
-                            </button>
-                          </td>
-                          <td>
-                            <button
-                              className="check-out-btn"
-                              onClick={() => handleCheckOut(item)}
-                              disabled={available === 0}
-                              title={available === 0 ? "No available components" : "Check out component"}
-                            >
-                              Check-Out
-                            </button>
-                          </td>
-                          {authService.getUserInfo().role === "Admin" && (
-                            <>
-                              <td>
-                                <TableBtn
-                                  type="edit"
-                                  navigatePage={`/components/registration/${item.id}`}
-                                  data={item.id}
-                                />
-                              </td>
-                              <td>
-                                <TableBtn
-                                  type="delete"
-                                  showModal={() => {
-                                    setEndPoint(
-                                      `https://assets-service-production.up.railway.app/components/${item.id}/delete/`
-                                    );
-                                    setDeleteModalOpen(true);
-                                  }}
-                                  data={item.id}
-                                />
-                              </td>
-                            </>
-                          )}
-                          <td>
-                            <TableBtn
-                              type="view"
-                              onClick={() => handleView(item.id)}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+      <section>
+        <nav>
+          <NavBar />
+        </nav>
+
+        <main className="page-layout">
+          <section className="title-page-section">
+            <h1>Components</h1>
+          </section>
+
+          <PageFilter filters={filterConfig} />
+
+          <section className="table-layout">
+            <section className="table-header">
+              <h2 className="h2">Components ({MockupData.length})</h2>
+              <section className="table-actions">
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
+                <input type="search" placeholder="Search..." className="search" />
+                <div ref={toggleRef}>
+                  <MediumButtons
+                    type="export"
+                    onClick={() => setExportToggle(!exportToggle)}
+                  />
+                </div>
+                <MediumButtons
+                  type="new"
+                  navigatePage="/components/registration"
+                />
               </section>
-            </>
-          )}
-          <section className="bottom"></section>
-        </div>
-      </main>
+            </section>
+
+            {exportToggle && (
+              <section className="export-button-section" ref={exportRef}>
+                <button>Download as Excel</button>
+                <button>Download as PDF</button>
+                <button>Download as CSV</button>
+              </section>
+            )}
+
+            <section className="table-section">
+              <table>
+                <thead>
+                  <TableHeader
+                    allSelected={allSelected}
+                    onHeaderChange={handleHeaderChange}
+                  />
+                </thead>
+                <tbody>
+                  {paginatedActivity.length > 0 ? (
+                    paginatedActivity.map((item) => (
+                      <TableItem
+                        key={item.id}
+                        item={item}
+                        isSelected={selectedIds.includes(item.id)}
+                        onRowChange={handleRowChange}
+                        onDeleteClick={openDeleteModal}
+                        onViewClick={() => navigate(`/components/view/${item.id}`)}
+                        navigate={navigate}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={9} className="no-data-message">
+                        No Repairs Found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={MockupData.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+      </section>
     </>
   );
 }

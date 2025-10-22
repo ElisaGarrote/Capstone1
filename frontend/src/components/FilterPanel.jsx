@@ -127,8 +127,6 @@ export default function FilterPanel({ filters = [], onReset }) {
                 </div>
               )}
 
-              
-
               {/* Searchable Dropdown */}
               {filter.type === "searchable" && (
                 <Select
@@ -145,6 +143,35 @@ export default function FilterPanel({ filters = [], onReset }) {
                   menuPortalTarget={document.body}
                   unstyled
                   maxMenuHeight={5 * 38}
+                />
+              )}
+
+              {/* Positive Integer */}
+              {filter.type === "positiveInteger" && (
+                <input
+                  type="number"
+                  name={filter.name}
+                  className="numberInput"
+                  value={values[filter.name] || ""}
+                  onChange={(e) => {
+                    let val = e.target.value;
+
+                    // Convert to integer
+                    let num = parseInt(val, 10);
+
+                    if (isNaN(num) || num < 1) {
+                      handleChange(filter.name, "");
+                    } else {
+                      handleChange(filter.name, num);
+                    }
+                  }}
+                  min={1}
+                  step={1}
+                  onKeyDown={(e) => {
+                    if (["e", "E", "+", "-", "."].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                 />
               )}
             </div>

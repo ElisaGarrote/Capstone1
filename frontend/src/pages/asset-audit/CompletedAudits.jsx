@@ -1,189 +1,180 @@
-import "../../styles/custom-colors.css";
-import "../../styles/CompletedAudits.css";
-import "../../styles/AuditTablesGlobal.css";
+import { useState } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import TableBtn from "../../components/buttons/TableButtons";
-import Status from "../../components/Status";
-import { useLocation } from "react-router-dom";
-import TabNavBar from "../../components/TabNavBar";
-import DeleteModal from "../../components/Modals/DeleteModal";
-import Alert from "../../components/Alert";
-import { useState, useEffect } from "react";
-import ExportModal from "../../components/Modals/ExportModal";
-import assetsService from "../../services/assets-service";
-import dateRelated from "../../utils/dateRelated";
-import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import PageFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
-import usePagination from "../../hooks/usePagination";
+import "../../styles/Table.css";
+import ActionButtons from "../../components/ActionButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
+import TabNavBar from "../../components/TabNavBar";
+import "../../styles/AuditsCompleted.css";
+import completedAudit from "../../data/mockData/audits/completed-audit-mockup-data.json";
+import View from "../../components/Modals/View";
+import Footer from "../../components/Footer";
+
+const filterConfig = [
+  {
+    type: "searchable",
+    name: "asset",
+    label: "Asset",
+    options: [
+      { value: "1", label: "Lenovo" },
+      { value: "2", label: "Apple" },
+      { value: "3", label: "Samsung" },
+      { value: "4", label: "Microsoft" },
+      { value: "5", label: "HP" },
+    ],
+  },
+];
+
+// TableHeader
+function TableHeader() {
+  return (
+    <tr>
+      <th>AUDIT DATE</th>
+      <th>ASSET</th>
+      <th>LOCATION</th>
+      <th>PERFOMED BY</th>
+      <th>ACTION</th>
+    </tr>
+  );
+}
+
+// TableItem
+function TableItem({ item, onViewClick }) {
+  return (
+    <tr>
+      <td>{item.audit_date}</td>
+      <td>{item.audit_schedule.asset.displayed_id} - {item.audit_schedule.asset.name}</td>
+      <td>{item.location}</td>
+      <td>{item.performed_by}</td>
+      <td>
+        <ActionButtons
+          showView
+          onViewClick={() => onViewClick(item)}
+        />
+      </td>
+    </tr>
+  );
+}
 
 export default function CompletedAudits() {
-  const location = useLocation();
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isDeleteSuccess, setDeleteSucess] = useState(false);
-  const [isExportModalOpen, setExportModalOpen] = useState(false);
-  const [auditData, setAuditData] = useState([]);
-  const [isLoading, setLoading] = useState(true);
+  const data = completedAudit;
 
-  // Pagination logic
-  const {
-    currentPage,
-    itemsPerPage,
-    paginatedData,
-    totalItems,
-    handlePageChange,
-    handleItemsPerPageChange
-  } = usePagination(auditData, 20);
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedActivity = data.slice(startIndex, endIndex);
 
-  // Retrieve all the audit data.
-  useEffect(() => {
-    const fetchAllAudit = async () => {
-      const dataResponse = await assetsService.fetchAllAudits();
-      setAuditData(dataResponse);
-      setLoading(false);
-    };
+  // Add state for view modal
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
-    fetchAllAudit();
-  }, []);
+  // Add view handler
+  const handleViewClick = (item) => {
+    setSelectedItem(item);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    setSelectedItem(null);
+  };
 
   return (
     <>
-      {/* Handle the delete modal.
-      Open this model if the isDeleteModalOpen state is true */}
-      {isDeleteModalOpen && (
-        <DeleteModal
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
-            setDeleteSucess(true);
-            setTimeout(() => {
-              setDeleteSucess(false);
-            }, 5000);
-          }}
+      {isViewModalOpen && selectedItem && (
+        <View
+          title={`${selectedItem.audit_schedule.asset.name} : ${selectedItem.audit_date}`}
+          data={[
+            { label: "Asset", value: `${selectedItem.audit_schedule.asset.displayed_id} - ${selectedItem.audit_schedule.asset.name}` },
+            { label: "Location", value: selectedItem.location },
+            { label: "Performed By", value: selectedItem.performed_by },
+            { label: "Audit Date", value: selectedItem.audit_date },
+            { label: "Next Audit Date", value: selectedItem.next_audit_date },
+            { label: "Created At", value: selectedItem.created_at },
+            { label: "Notes", value: selectedItem.notes },
+            { label: "Files", value: selectedItem.files.map(f => f.file).join(", ") },
+          ]}
+          closeModal={closeViewModal}
         />
       )}
 
-      {/* Handle the display of the success alert.
-       Display this if the isDeleteSuccess state is true */}
-      {isDeleteSuccess && (
-        <Alert message="Deleted Successfully!" type="success" />
-      )}
-
-      {isExportModalOpen && (
-        <ExportModal closeModal={() => setExportModalOpen(false)} />
-      )}
-
-      <nav>
+      <section className="page-layout-with-table">
         <NavBar />
-      </nav>
-      <main className="completed-audits-page">
-        <section className="main-top">
-          <h1>Asset Audit</h1>
-          <div>
-            <MediumButtons
-              type="schedule-audits"
-              navigatePage="/audits/schedule"
-              previousPage={location.pathname}
-            />
-            <MediumButtons
-              type="perform-audits"
-              navigatePage="/audits/new"
-              previousPage={location.pathname}
-            />
-          </div>
-        </section>
-        <section className="main-middle">
+
+        <main className="main-with-table">
+          <section className="completed-audit-title-page-section">
+            <h1>Asset Audits</h1>
+
+            <div>
+              <MediumButtons
+                type="schedule-audits"
+                navigatePage="/audits/schedule"
+                previousPage="/audits/completed"
+              />
+              <MediumButtons
+                type="perform-audits"
+                navigatePage="/audits/new"
+                previousPage={location.pathname}
+              />
+            </div>
+          </section>
+
           <section>
             <TabNavBar />
           </section>
-          <section className="container">
-            <section className="top">
-              <h2>Completed Audit</h2>
-              <div>
-                <form action="" method="post">
-                  <input type="text" placeholder="Search..." />
-                </form>
-                <MediumButtons
-                  type="export"
-                  deleteModalOpen={() => setExportModalOpen(true)}
-                />
-              </div>
+
+          <PageFilter filters={filterConfig} />
+
+          <section className="table-layout">
+            <section className="table-header">
+              <h2 className="h2">Completed Audits ({data.length})</h2>
+              <section className="table-actions">
+                <input type="search" placeholder="Search..." className="search" />
+              </section>
             </section>
-            <section className="middle">
-              {/* Render loading skeleton while waiting to the response from the API request*/}
-              {isLoading && <SkeletonLoadingTable />}
 
-              {/* Render message if the auditData is empty */}
-              {!isLoading && auditData.length == 0 && (
-                <p className="table-message">No completed audit found.</p>
-              )}
-
-              {/* Render table if auditData is not empty */}
-              {auditData.length > 0 && (
-                <table>
-                  <thead>
+            <section className="completed-audit-table-section">
+              <table>
+                <thead>
+                  <TableHeader />
+                </thead>
+                <tbody>
+                  {paginatedActivity.length > 0 ? (
+                    paginatedActivity.map((item) => (
+                      <TableItem
+                        key={item.id}
+                        item={item}
+                        onViewClick={handleViewClick}
+                      />
+                    ))
+                  ) : (
                     <tr>
-                      <th>
-                        <input type="checkbox" name="" id="" />
-                      </th>
-                      <th>AUDIT DATE</th>
-                      <th>ASSET</th>
-                      <th>STATUS</th>
-                      <th>LOCATION</th>
-                      <th>PERFORM BY</th>
-                      <th>VIEW</th>
+                      <td colSpan={9} className="no-data-message">
+                        No Completed Audits Found.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedData.map((data, index) => {
-                      return (
-                        <tr key={index}>
-                          <td>
-                            <input type="checkbox" name="" id="" />
-                          </td>
-                          <td>{dateRelated.formatDate(data.audit_date)}</td>
-                          <td>
-                            {data.asset_info.displayed_id} -{" "}
-                            {data.asset_info.name}
-                          </td>
-                          <td>
-                            <Status
-                              type={data.asset_info.status_info.type}
-                              name={data.asset_info.status_info.name}
-                            />
-                          </td>
-                          <td>{data.location}</td>
-                          <td>Pia Piatos-Lim</td>
-                          <td>
-                            <TableBtn
-                              type="view"
-                              navigatePage="/audits/view"
-                              data={data}
-                              previousPage={location.pathname}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-
-              {/* Pagination */}
-              {auditData.length > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={totalItems}
-                  itemsPerPage={itemsPerPage}
-                  onPageChange={handlePageChange}
-                  onItemsPerPageChange={handleItemsPerPageChange}
-                  itemsPerPageOptions={[10, 20, 50, 100]}
-                />
-              )}
+                  )}
+                </tbody>
+              </table>
             </section>
-            <section></section>
+
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={data.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
           </section>
-        </section>
-      </main>
+        </main>
+        <Footer />
+      </section>
     </>
   );
 }

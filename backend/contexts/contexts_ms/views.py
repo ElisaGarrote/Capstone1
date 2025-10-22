@@ -1,9 +1,11 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import viewsets, status
 from .models import *
 from .serializer import *
 from django.db.models import Q
+from rest_framework.decorators import parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
 
 # Get all manufacturer's names
 @api_view(['GET'])
@@ -270,3 +272,14 @@ def resolve_ticket(request, ticket_id):
         return Response({'detail': 'Ticket resolved'})
     except Checkout.DoesNotExist:
         return Response({'detail': 'Ticket not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = CategorySerializer
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        return Category.objects.filter(is_deleted=False).order_by('name')
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save()

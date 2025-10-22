@@ -10,33 +10,34 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Assets/Products";
 import ProductsRegistration from "./pages/Assets/ProductsRegistration";
+import ProductViewPage from "./pages/Assets/ProductViewPage";
 import Assets from "./pages/Assets/Assets";
 import AssetsRegistration from "./pages/Assets/AssetsRegistration";
 import AssetViewPage from "./pages/Assets/AssetViewPage";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
 import Tickets from "./pages/Tickets/Tickets";
+import TicketViewPage from "./pages/Tickets/TicketViewPage";
 import Accessories from "./pages/Accessories/Accessories";
 import AccessoriesRegistration from "./pages/Accessories/AccessoriesRegistration";
 import CheckinAccessory from "./pages/Accessories/CheckinAccessory";
 import CheckoutAccessory from "./pages/Accessories/CheckoutAccessory";
 import AccessoriesCheckoutList from "./pages/Accessories/AccessoriesCheckoutList";
 import Components from "./pages/Components/Components";
-import CheckOutComponent from "./pages/Components/CheckOutComponent";
-import CheckedOutList from "./pages/Components/CheckedOutList";
-import CheckInComponent from "./pages/Components/CheckInComponent";
-import ComponentsRegistration from "./pages/Components/ComponentsRegistration";
+import ComponentRegistration from "./pages/Components/ComponentRegistration";
+import ComponentCheckout from "./pages/Components/ComponentCheckout";
+import ComponentCheckedoutList from "./pages/Components/ComponentCheckedoutList";
+import ComponentCheckin from "./pages/Components/ComponentCheckin";
+import ComponentView from "./pages/Components/ComponentView";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
 import CompletedAudits from "./pages/asset-audit/CompletedAudits";
 import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
-import EditAudits from "./pages/asset-audit/EditAudits";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
 import Repairs from "./pages/Repair/Repairs";
 import RepairRegistration from "./pages/Repair/RepairRegistration";
-import RepairEdit from "./pages/Repair/RepairEdit";
 import Consumables from "./pages/Consumables/Consumables";
 import ConsumablesRegistration from "./pages/Consumables/ConsumablesRegistration";
 import PasswordResetRequest from "./pages/PasswordResetRequest";
@@ -71,7 +72,6 @@ import StatusEdit from "./pages/More/StatusEdit";
 import StatusDetails from "./pages/More/StatusDetails";
 import Depreciations from "./pages/More/Depreciations";
 import DepreciationRegistration from "./pages/More/DepreciationRegistration";
-import DepreciationEdit from "./pages/More/DepreciationEdit";
 import RecycleBin from "./pages/More/RecycleBin";
 
 function Logout() {
@@ -103,12 +103,32 @@ function App() {
             element={<AssetsRegistration />}
           />
           <Route
-            path="/components/registration"
-            element={<ComponentsRegistration />}
+            path="/components"
+            element={<Components />}
           />
           <Route
-            path="/components/registration/:id"
-            element={<ComponentsRegistration />}
+            path="/components/registration"
+            element={<ComponentRegistration />}
+          />
+          <Route
+            path="/components/edit/:id"
+            element={<ComponentRegistration />}
+          />
+          <Route
+            path="/components/check-out/:id"
+            element={<ComponentCheckout />}
+          />
+          <Route
+            path="/components/checked-out-list/:id"
+            element={<ComponentCheckedoutList />}
+          />
+          <Route
+            path="/components/check-in/:id"
+            element={<ComponentCheckin />}
+          />
+          <Route
+            path="/components/view/:id"
+            element={<ComponentView />}
           />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
@@ -168,12 +188,12 @@ function App() {
             element={<Depreciations />}
           />
           <Route
-            path="/More/Depreciations/DepreciationRegistration"
+            path="/More/Depreciations/Registration"
             element={<DepreciationRegistration />}
           />
           <Route
-            path="/More/Depreciations/DepreciationEdit"
-            element={<DepreciationEdit />}
+            path="/More/Depreciations/Edit/:id"
+            element={<DepreciationRegistration />}
           />
           <Route
             path="/More/RecycleBin"
@@ -185,34 +205,47 @@ function App() {
         <Route element={<ProtectedRoute roles={["admin", "operator"]} />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/products/view/:id" element={<ProductViewPage />} />
           <Route path="/assets" element={<Assets />} />
           <Route path="/assets/view/:id" element={<AssetViewPage />} />
           <Route path="/assets/check-in/:id" element={<CheckInAsset />} />
           <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
           <Route path="/components" element={<Components />} />
           <Route
+            path="/components/registration"
+            element={<ComponentRegistration />}
+          />
+          <Route
+            path="/components/edit/:id"
+            element={<ComponentRegistration />}
+          />
+          <Route
             path="/components/check-out/:id"
-            element={<CheckOutComponent />}
+            element={<ComponentCheckout />}
           />
           <Route
             path="/components/checked-out-list/:id"
-            element={<CheckedOutList />}
+            element={<ComponentCheckedoutList />}
           />
           <Route
             path="/components/check-in/:id"
-            element={<CheckInComponent />}
+            element={<ComponentCheckin />}
+          />
+          <Route
+            path="/components/view/:id"
+            element={<ComponentView />}
           />
           <Route
             path="/Repairs/"
             element={<Repairs />}
           />
           <Route
-            path="/Repairs/RepairRegistration"
+            path="/repairs/registration"
             element={<RepairRegistration />}
           />
           <Route
-            path="/Repairs/RepairEdit"
-            element={<RepairEdit />}
+            path="/repairs/edit/:id"
+            element={<RepairRegistration />}
           />
           <Route path="/audits/" element={<AssetAudits />} />
           <Route path="/audits/overdue" element={<OverdueAudits />} />
@@ -220,9 +253,12 @@ function App() {
           <Route path="/audits/completed" element={<CompletedAudits />} />
           <Route path="/audits/new" element={<PerformAudits />} />
           <Route path="/audits/schedule" element={<ScheduleRegistration />} />
-          <Route path="/audits/edit" element={<EditAudits />} />
+          <Route path="/audits/edit/:id" element={<ScheduleRegistration />} />
+          <Route path="/audits/scheduled/edit/:id" element={<ScheduleRegistration />} />
+          <Route path="/audits/overdue/edit/:id" element={<ScheduleRegistration />} />
           <Route path="/audits/view" element={<ViewAudits />} />
           <Route path="/approved-tickets" element={<Tickets />} />
+          <Route path="/tickets/view/:id" element={<TicketViewPage />} />
           <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
           <Route path="/warranties" element={<ExpiringWarranties />} />
           <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />

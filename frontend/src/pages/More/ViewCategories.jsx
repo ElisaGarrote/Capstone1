@@ -1,101 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import { fetchAllCategories, deleteCategory, } from "../../services/contexts-service";
+import DefaultImage from "../../assets/img/default-image.jpg";
+
 import Footer from "../../components/Footer";
 
 import "../../styles/Category.css";
-
-// icons
-import keyboardIcon from "../../assets/img/keyboard_Icon.png";
-import chargerIcon from "../../assets/img/charger_Icon.png";
-import cablesIcon from "../../assets/img/cables_Icon.png";
-import paperprinterIcon from "../../assets/img/paperprinter_Icon.png";
-import printerinkIcon from "../../assets/img/printerink_Icon.png";
-
-// mock data
-const categories = [
-  {
-    id: 1,
-    icon: cablesIcon,
-    name: "Cables",
-    type: "Accessory",
-    quantity: 2,
-  },
-  {
-    id: 2,
-    icon: chargerIcon,
-    name: "Charger",
-    type: "Accessory",
-    quantity: 1,
-  },
-  {
-    id: 3,
-    icon: keyboardIcon,
-    name: "Keyboards",
-    type: "Accessory",
-    quantity: 2,
-  },
-  {
-    id: 4,
-    icon: paperprinterIcon,
-    name: "Printer Paper",
-    type: "Consumable",
-    quantity: 262,
-  },
-  {
-    id: 5,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 6,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 7,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 8,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 9,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 10,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 11,
-    icon: printerinkIcon,
-    name: "Printer",
-    type: "Consumable",
-    quantity: 95,
-  },
-];
 
 const filterConfig = [
   {
@@ -116,14 +31,14 @@ const filterConfig = [
 ];
 
 // TableHeader component to render the table header
-function TableHeader() {
+function TableHeader( { allSelected, onSelectAll }) {
   return (
     <tr>
       <th>
         <input
           type="checkbox"
-          name="checkbox-category"
-          id="checkbox-category"
+          checked={allSelected}
+          onChange={(e) => onSelectAll(e.target.checked)}
         />
       </th>
       <th>NAME</th>
@@ -135,20 +50,25 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ category, onDeleteClick }) {
+function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
   const navigate = useNavigate();
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   return (
     <tr>
       <td>
-        <div className="checkbox-category">
-          <input type="checkbox" name="" id="" />
-        </div>
+        <input
+          type="checkbox"
+          checked={isChecked}
+          onChange={(e) => onCheckboxChange(category.id, e.target.checked)}
+        />
       </td>
       <td>
         <div className="category-name">
-          <img src={category.icon} alt={category.name} />
+          <img
+            src={category.logo || DefaultImage}
+            alt={category.name}
+            className="category-logo"
+          />
           {category.name}
         </div>
       </td>
@@ -168,7 +88,7 @@ function TableItem({ category, onDeleteClick }) {
           <button
             title="Delete"
             className="action-button"
-            onClick={onDeleteClick}
+            onClick={() => onDeleteClick(category.id)}
           >
             <i className="fas fa-trash-alt"></i>
           </button>
@@ -179,6 +99,27 @@ function TableItem({ category, onDeleteClick }) {
 }
 
 export default function Category() {
+  const [categories, setCategories] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  const allSelected = selectedIds.length === categories.length && categories.length > 0;
+
+  const handleCheckboxChange = (id, checked) => {
+    setSelectedIds((prev) =>
+      checked ? [...prev, id] : prev.filter((item) => item !== id)
+    );
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds(categories.map((c) => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   // pagination state
@@ -190,12 +131,46 @@ export default function Category() {
   const endIndex = startIndex + pageSize;
   const paginatedCategories = categories.slice(startIndex, endIndex);
 
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      const data = await fetchAllCategories();
+      setCategories(data);
+      console.log("Categories:", data);
+    } catch (error) {
+      console.log("Failed to load categories:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  // Handel Delete
+  const handleDelete = async () => {
+    try {
+      if (selectedCategoryId) {
+        // Single delete
+        await deleteCategory(selectedCategoryId);
+      } else if (selectedIds.length > 0) {
+        // Bulk delete
+        await Promise.all(selectedIds.map((id) => deleteCategory(id)));
+        setSelectedIds([]);
+      }
+      setDeleteModalOpen(false);
+      fetchCategories();
+    } catch (error) {
+      console.log("Failed to delete category:", error);
+    }
+  };
+
   return (
     <>
       {isDeleteModalOpen && (
         <DeleteModal
           closeModal={() => setDeleteModalOpen(false)}
           actionType="delete"
+          onConfirm={handleDelete}
         />
       )}
 
@@ -211,6 +186,12 @@ export default function Category() {
             <section className="table-header">
               <h2 className="h2">Categories ({categories.length})</h2>
               <section className="table-actions">
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => setDeleteModalOpen(true)}
+                  />
+                )}
                 <input
                   type="search"
                   placeholder="Search..."
@@ -227,7 +208,7 @@ export default function Category() {
             <section className="table-section">
               <table>
                 <thead>
-                  <TableHeader />
+                  <TableHeader allSelected={allSelected} onSelectAll={handleSelectAll} />
                 </thead>
                 <tbody>
                   {paginatedCategories.length > 0 ? (
@@ -235,7 +216,12 @@ export default function Category() {
                       <TableItem
                         key={index}
                         category={category}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
+                        onDeleteClick={(id) => {
+                          setSelectedCategoryId(id);
+                          setDeleteModalOpen(true);
+                        }}
+                        onCheckboxChange={handleCheckboxChange}
+                        isChecked={selectedIds.includes(category.id)}
                       />
                     ))
                   ) : (
