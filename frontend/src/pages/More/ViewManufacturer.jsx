@@ -99,6 +99,8 @@ export default function ViewManuDraft() {
 
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [searchQuery, setSearchQuery] = useState("");
+
+  /* BACKEND INTEGRATION HERE
   const contextServiceUrl =
     "https://contexts-service-production.up.railway.app";
 
@@ -171,6 +173,8 @@ export default function ViewManuDraft() {
     }
   };
 
+  */
+
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -198,6 +202,7 @@ export default function ViewManuDraft() {
           endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
           actionType={"delete"}
+          /* BACKEND INTEGRATION HERE
           confirmDelete={async () => {
             await fetchManufacturers();
             setSuccessMessage("Manufacturer Deleted Successfully!");
@@ -207,6 +212,7 @@ export default function ViewManuDraft() {
             setErrorMessage("Delete failed. Please try again.");
             setTimeout(() => setErrorMessage(""), 5000);
           }}
+            */
         />
       )}
 
@@ -246,9 +252,10 @@ export default function ViewManuDraft() {
                         key={index}
                         manufacturer={manufacturer}
                         onDeleteClick={() => {
+                          /* BACKEND INTEGRATION HERE
                           setEndPoint(
                             `${contextServiceUrl}/contexts/manufacturers/${manufacturer.id}/delete/`
-                          );
+                          ); */
                           setDeleteModalOpen(true);
                         }}
                       />
