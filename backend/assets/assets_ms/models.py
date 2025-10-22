@@ -5,68 +5,6 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 import uuid
 import datetime
-
-# Create your models here.
-class Supplier(models.Model):
-    name = models.CharField(max_length=50)
-    address = models.CharField(max_length=100, blank=True, null=True)
-    city = models.CharField(max_length=50, blank=True, null=True)
-    zip = models.CharField(max_length=4, blank=True, null=True)
-
-    contact_name = models.CharField(max_length=100, blank=True, null=True)
-    phone_number = models.CharField(max_length=13, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True)
-    URL = models.URLField(blank=True, null=True)
-
-    notes = models.TextField(blank=True, null=True)
-    logo = models.ImageField(upload_to='supplier_logos/', blank=True, null=True)
-
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
-class Manufacturer(models.Model):
-    name = models.CharField(max_length=50)
-    manu_url = models.URLField(blank=True, null=True)
-
-    support_url = models.URLField(blank=True, null=True)
-    support_phone = models.CharField(max_length=13, blank=True, null=True)
-    support_email = models.EmailField(blank=True, null=True)
-    
-    notes = models.TextField(blank=True, null=True)
-    logo = models.ImageField(upload_to='manufacturer_logos/', blank=True, null=True)
-    
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-class ComponentCategory(models.Model):
-    name = models.CharField(max_length=50)
-    type = models.CharField(max_length=9, default="Component")
-    logo = models.ImageField(upload_to='component_category_logos/', blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-class Depreciation(models.Model):
-    name = models.CharField(max_length=500)
-    duration = models.PositiveIntegerField(help_text="Duration in months")
-    minimum_value = models.DecimalField(max_digits=8, decimal_places=2)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-    
-class AssetCategory(models.Model):
-    name = models.CharField(max_length=50)
-    type = models.CharField(max_length=5, default="Asset")
-    logo = models.ImageField(upload_to='asset_category_logos/', blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
 class Product(models.Model):
     OS_CHOICES = [
         ('linux', 'Linux'),
@@ -80,13 +18,9 @@ class Product(models.Model):
     ]
 
     name = models.CharField(max_length=100)
-    category = models.ForeignKey(AssetCategory, on_delete=models.CASCADE)
+    category_id = models.PositiveIntegerField()
     manufacturer_id = models.PositiveIntegerField()
-    depreciation = models.ForeignKey(
-        Depreciation,
-        on_delete=models.PROTECT,
-        related_name='depreciations'
-    )
+    depreciation_id = models.PositiveIntegerField()
     model_number = models.CharField(max_length=50, blank=True, null=True)
     end_of_life = models.DateField(blank=True, null=True)
     default_purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
@@ -99,26 +33,13 @@ class Product(models.Model):
     
     def __str__(self):
         return self.name
-
-class Status(models.Model):
-    STATUS_CHOICES = [
-        ('deployable', 'Deployable'), ('deployed', 'Deployed'), ('undeployable', 'Undeployable'), ('pending', 'Pending'), ('archived', 'Archived'),
-    ]
-
-    name = models.CharField(max_length=50)
-    type = models.CharField(max_length=12, choices=STATUS_CHOICES)
-    notes = models.TextField(blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
     
 class Asset(models.Model):
     displayed_id = models.CharField(max_length=20, unique=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets', limit_choices_to={'is_deleted': False})
-    status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='status_assets')
+    status_id = models.PositiveIntegerField()
     supplier_id = models.PositiveIntegerField()
-    location = models.CharField(max_length=50)
+    location = models.PositiveIntegerField()
     name = models.CharField(max_length=100)
     serial_number = models.CharField(max_length=50, blank=True, null=True)
     warranty_expiration = models.DateField(blank=True, null=True)
@@ -195,7 +116,7 @@ class AssetCheckout(models.Model):
         return f"Checkout of {self.asset.displayed_id} by user {self.to_user_id}"
 
 class AssetCheckin(models.Model):
-    asset_checkout = models.ForeignKey(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkins')
+    asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
     checkin_date = models.DateTimeField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
@@ -205,12 +126,13 @@ class AssetCheckin(models.Model):
 
     def __str__(self):
         return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}" 
-
+    
 class Component(models.Model):
     name = models.CharField(max_length=100)
-    category = models.ForeignKey(ComponentCategory, on_delete=models.CASCADE)
+    category_id = models.PositiveIntegerField()
     manufacturer = models.IntegerField()
-    location = models.CharField(max_length=50)
+    supplier = models.PositiveIntegerField()
+    location = models.PositiveIntegerField()
     model_number = models.CharField(max_length=50, blank=True, null=True)
     order_number = models.CharField(max_length=30, blank=True, null=True)
     purchase_date = models.DateField(auto_now_add=True)
@@ -233,15 +155,38 @@ class ComponentCheckout(models.Model):
 
     def __str__(self):
         return f"Checkout of {self.component.name} to {self.to_asset.displayed_id}"
+    
+    @property
+    def total_checked_in(self):
+        return sum(checkin.quantity for checkin in self.component_checkins.all())
+
+    @property
+    def remaining_quantity(self):
+        return self.quantity - self.total_checked_in
+
+    @property
+    def is_fully_returned(self):
+        return self.remaining_quantity <= 0
 
 class ComponentCheckin(models.Model):
     component_checkout = models.ForeignKey(ComponentCheckout, on_delete=models.CASCADE, related_name='component_checkins')
-    checkin_date = models.DateTimeField(blank=True, null=True)
+    checkin_date = models.DateTimeField(auto_now_add=True)
+    quantity = models.PositiveIntegerField(default=1)
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.displayed_id}"  
     
+    def save(self, *args, **kwargs):
+        # Prevent over-returning
+        if self.pk is None:  # Only validate on new checkins
+            if self.quantity > self.component_checkout.remaining_quantity:
+                raise ValueError(
+                    f"Checkin quantity ({self.quantity}) exceeds remaining quantity "
+                    f"({self.component_checkout.remaining_quantity}) for this checkout."
+                )
+        super().save(*args, **kwargs)
+
 class Repair(models.Model):
     REPAIR_CHOICES = [
         ('maintenance', 'Maintenance'), ('repair', 'Repair'), ('upgrade', 'Upgrade'), ('test', 'Test'), ('hardware', 'Hardware'), ('software', 'Software'),
@@ -249,11 +194,11 @@ class Repair(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='repair_assets')
     type = models.CharField(max_length=20, choices=REPAIR_CHOICES) 
     name = models.CharField(max_length=100)
-    start_date = models.DateField(auto_now_add=True)
+    start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(blank=True, null=True)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     notes = models.TextField(blank=True, null=True)
-    status = models.ForeignKey(Status, on_delete=models.CASCADE, related_name='repair_status')
+    status_id = models.PositiveIntegerField()
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -276,21 +221,21 @@ class AuditSchedule(models.Model):
     created_at = models.DateTimeField(default=timezone.now(), editable=False)
 
     def __str__(self):
-        return f"Audit Schedule for {self.asset.displayed_id} on {self.date}"
+        return f"Auditf Schedule for {self.asset.displayed_id} on {self.date}"
 
 class Audit(models.Model):
     location = models.CharField(max_length=50)
     user_id = models.IntegerField()
-    audit_date = models.DateField(default=timezone.now().date())
-    next_audit_date = models.DateField(default=timezone.now().date())
+    audit_date = models.DateField(default=timezone.now)
+    next_audit_date = models.DateField(default=timezone.now)
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
-    audit_schedule = models.ForeignKey(AuditSchedule, on_delete=models.CASCADE, related_name='asset_audits')
-    created_at = models.DateTimeField(default=timezone.now(), editable=False)
+    audit_schedule = models.OneToOneField(AuditSchedule, on_delete=models.CASCADE, related_name='schedule_audit')
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
-        return f"Audit on {self.created_at} for {self.audit_schedule.asset.displayed_id}"
-
+        return f"Audit on {self.audit_date} for {self.audit_schedule.asset.displayed_id}"
+    
 class AuditFile(models.Model):
     audit = models.ForeignKey(Audit, on_delete=models.CASCADE, related_name='files')
     file = models.FileField(upload_to='audit_files/')

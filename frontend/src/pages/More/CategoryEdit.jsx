@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
+import TopSecFormPage from "../../components/TopSecFormPage";
+import CloseIcon from "../../assets/icons/close.svg";
+import Footer from "../../components/Footer";
+
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
-import TopSecFormPage from "../../components/TopSecFormPage";
-import MediumButtons from "../../components/buttons/MediumButtons";
-import { useForm } from "react-hook-form";
-import CloseIcon from "../../assets/icons/close.svg";
-import { object } from "prop-types";
 
 const CategoryEdit = () => {
   const navigate = useNavigate();
@@ -66,109 +66,113 @@ const CategoryEdit = () => {
 
   return (
     <>
-      <nav>
+      <section className="page-layout-registration">
         <NavBar />
-      </nav>
-      <main className="registration">
-        <section className="top">
-          <TopSecFormPage
-            root="Categories"
-            currentPage="Edit Category"
-            rootNavigatePage="/More/ViewCategories"
-            title="Edit Category"
-          />
-        </section>
-        <section className="registration-form">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <fieldset>
-              <label htmlFor="categoryName">Category Name *</label>
-              <input
-                type="text"
-                placeholder="Category Name"
-                maxLength="100"
-                className={errors.categoryName ? "input-error" : ""}
-                {...register("categoryName", {
-                  required: "Category Name is required",
-                })}
-              />
-              {errors.categoryName && (
-                <span className="error-message">
-                  {errors.categoryName.message}
-                </span>
-              )}
-            </fieldset>
+        <main className="registration">
+          <section className="top">
+            <TopSecFormPage
+              root="Categories"
+              currentPage="Edit Category"
+              rootNavigatePage="/More/ViewCategories"
+              title="Edit Category"
+            />
+          </section>
+          <section className="registration-form">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <fieldset>
+                <label htmlFor="categoryName">Category Name *</label>
+                <input
+                  type="text"
+                  placeholder="Category Name"
+                  maxLength="100"
+                  className={errors.categoryName ? "input-error" : ""}
+                  {...register("categoryName", {
+                    required: "Category Name is required",
+                  })}
+                />
+                {errors.categoryName && (
+                  <span className="error-message">
+                    {errors.categoryName.message}
+                  </span>
+                )}
+              </fieldset>
 
-            <fieldset>
-              <label htmlFor="categoryType">Category Type *</label>
-              <select
-                className={errors.categoryType ? "input-error" : ""}
-                {...register("categoryType", {
-                  required: "Category Type is required",
-                })}
+              <fieldset>
+                <label htmlFor="categoryType">Category Type *</label>
+                <select
+                  className={errors.categoryType ? "input-error" : ""}
+                  {...register("categoryType", {
+                    required: "Category Type is required",
+                  })}
+                >
+                  <option value="">Select Category Type</option>
+                  {categoryTypes.map((type, idx) => (
+                    <option key={idx} value={type.toLowerCase()}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                {errors.categoryType && (
+                  <span className="error-message">
+                    {errors.categoryType.message}
+                  </span>
+                )}
+              </fieldset>
+
+              <fieldset>
+                <label>Icon</label>
+                {attachmentFile || initialAttachment ? (
+                  <div className="image-selected">
+                    <img
+                      // src={category.icon}
+                      src={
+                        initialAttachment
+                          ? category.icon
+                          : URL.createObjectURL(attachmentFile)
+                      }
+                      alt="Selected icon"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachmentFile(null);
+                        setInitialAttachment(false);
+                      }}
+                    >
+                      <img src={CloseIcon} alt="Remove" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                )}
+                <small className="file-size-info">
+                  Maximum file size must be 5MB
+                </small>
+              </fieldset>
+
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={!isValid}
               >
-                <option value="">Select Category Type</option>
-                {categoryTypes.map((type, idx) => (
-                  <option key={idx} value={type.toLowerCase()}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-              {errors.categoryType && (
-                <span className="error-message">
-                  {errors.categoryType.message}
-                </span>
-              )}
-            </fieldset>
-
-            <fieldset>
-              <label>Icon</label>
-              {attachmentFile || initialAttachment ? (
-                <div className="image-selected">
-                  <img
-                    // src={category.icon}
-                    src={
-                      initialAttachment
-                        ? category.icon
-                        : URL.createObjectURL(attachmentFile)
-                    }
-                    alt="Selected icon"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAttachmentFile(null);
-                      setInitialAttachment(false);
-                    }}
-                  >
-                    <img src={CloseIcon} alt="Remove" />
-                  </button>
-                </div>
-              ) : (
-                <label className="upload-image-btn">
-                  Choose File
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelection}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              )}
-              <small className="file-size-info">
-                Maximum file size must be 5MB
-              </small>
-            </fieldset>
-
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={!isValid}
-            >
-              Save
-            </button>
-          </form>
-        </section>
-      </main>
+                Save
+              </button>
+            </form>
+          </section>
+        </main>
+        <Footer />
+      </section>
+      {/* <nav>
+        <NavBar />
+      </nav> */}
     </>
   );
 };

@@ -108,7 +108,7 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
           showEdit
           showDelete
           showView
-          editPath="RepairEdit"
+          editPath={`edit/${repair.id}`}
           editState={{ repair }}
           onDeleteClick={() => onDeleteClick(repair.id)}
           onViewClick={() => onViewClick(repair)}
@@ -277,7 +277,7 @@ export default function AssetRepairs() {
                 </div>
                 <MediumButtons
                   type="new"
-                  navigatePage="/Repairs/RepairRegistration"
+                  navigatePage="/repairs/registration"
                 />
               </section>
             </section>

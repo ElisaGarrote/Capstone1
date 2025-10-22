@@ -400,3 +400,36 @@ footer {
     }
   }
 }
+
+.page-layout-registration {
+  display: grid;
+  grid-template-columns: 100%;
+  grid-template-rows: 60px 1fr auto;
+  grid-template-areas:
+    "main-nav-bar"
+    "main-with-table"
+    "footer";
+  min-height: 100vh;
+  justify-content: center;
+  background-color: var(--bg-color);
+
+  .main-nav-bar {
+    grid-area: main-nav-bar;
+  }
+
+  .registration {
+    grid-area: main-with-table;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    width: auto;
+    padding: 20px 38px 20px 38px;
+    background-color: var(--bg-color);
+    overflow: auto;
+  }
+
+  footer {
+    grid-area: footer;
+    display: flex;
+  }
+}

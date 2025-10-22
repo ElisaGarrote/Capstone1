@@ -9,8 +9,8 @@ import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 // Import mock data
-import deletedAssets from "../../data/mockData/more/deleted-asset-mockup-data.json";
-import deletedComponents from "../../data/mockData/more/deleted-component-mockup-data.json";
+import deletedAssets from "../../data/mockData/assets/deleted-asset-mockup-data.json";
+import deletedComponents from "../../data/mockData/components/deleted-component-mockup-data.json";
 
 const filterConfig = [
   {

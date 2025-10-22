@@ -102,7 +102,7 @@ export default function NavBar() {
       location.pathname.startsWith("/components")
     ) {
       setActiveMenu("assets");
-    } else if (location.pathname.startsWith("/Repair")) {
+    } else if (location.pathname.startsWith("/repair")) {
       setActiveMenu("repairs");
     } else if (location.pathname.startsWith("/audits")) {
       setActiveMenu("audits");
@@ -256,7 +256,7 @@ export default function NavBar() {
             <li>
               <a
                 onClick={() => {
-                  navigate("/Repairs");
+                  navigate("/repairs");
                   setActiveMenu("repairs");
                 }}
                 className={activeMenu === "repairs" ? "active" : ""}

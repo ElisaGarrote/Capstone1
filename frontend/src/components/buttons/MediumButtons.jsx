@@ -47,6 +47,8 @@ export default function MediumButtons({
         return "Schedule Audit";
       case "perform-audits":
         return "Perform Audit";
+      case "bulk":
+        return "Bulk Checkin";
       default:
         return buttonType.replace("-", " ");
     }

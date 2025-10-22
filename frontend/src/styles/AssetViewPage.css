@@ -1,3 +1,143 @@
+<<<<<<< HEAD
+/* Asset View Page Specific Styles */
+
+.asset-view-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Asset View Header */
+.asset-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  border-bottom: 1px solid #cccccc;
+  background-color: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.asset-view-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.asset-tab-text {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--text-color);
+}
+
+.asset-view-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.asset-search {
+  display: flex;
+  align-items: center;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 10px 12px;
+  border: 1px solid #cccccc;
+  font-size: 0.875rem;
+  outline: none;
+  width: 200px;
+}
+
+.asset-search:focus {
+  border-color: var(--primary-color);
+}
+
+/* Asset View Table */
+.asset-view-table-wrapper {
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+  margin-top: 0;
+}
+
+.asset-view-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.asset-view-table thead {
+  background-color: #f0f1f2;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.asset-view-table th {
+  padding: 0.75rem !important;
+  text-align: left !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-top: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+  white-space: nowrap;
+}
+
+.asset-view-table td {
+  padding: 0.75rem;
+  text-align: left !important;
+  font-size: 0.8125rem;
+  color: var(--text-color);
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+  vertical-align: middle;
+}
+
+.asset-view-table tbody tr:hover {
+  background-color: #fcfcfc;
+}
+
+.asset-thumbnail {
+  width: 50px !important;
+  height: 50px !important;
+  max-width: 50px !important;
+  max-height: 50px !important;
+  object-fit: cover !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+  margin: 0 !important;
+}
+
+/* Pagination */
+.asset-view-pagination {
+  padding: 15px 30px;
+  border-top: 1px solid #cccccc;
+  background-color: white;
+  text-align: left;
+  font-size: 0.875rem;
+  color: #666;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .asset-view-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .asset-view-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .asset-search {
+    flex: 1;
+  }
+}
+=======
 /* Asset View Page Specific Styles */
 
 .asset-view-content {
@@ -137,3 +277,4 @@
   }
 }
 
+>>>>>>> ui-merge-area

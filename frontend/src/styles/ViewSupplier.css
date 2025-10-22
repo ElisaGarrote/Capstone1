@@ -55,6 +55,15 @@
         display: flex;
         align-items: center;
         gap: 5px;
+
+        .supplier-name-link {
+          color: var(--primary-color);
+          cursor: pointer;
+        }
+
+        .supplier-name-link:hover {
+          color: var(--primary-color-hover);
+        }
       }
 
       .supplier-name span {

@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import "../../styles/Registration.css";
-import "../../styles/SupplierRegistration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import contextsService from "../../services/contexts-service";
+import Footer from "../../components/Footer";
+
+import "../../styles/Registration.css";
+import "../../styles/SupplierRegistration.css";
 
 const SupplierRegistration = () => {
   const { id } = useParams();
@@ -45,9 +46,8 @@ const SupplierRegistration = () => {
     const initialize = async () => {
       try {
         if (id) {
-          const supplierData = await contextsService.fetchSupplierById(id);
-          if (!supplierData)
-            throw new Error("Failed to fetch supplier details");
+          const supplierData = await fetchAllCategories();
+          if (!supplierData) throw new Error('Failed to fetch supplier details');
 
           setValue("name", supplierData.name || "");
           setValue("address", supplierData.address || "");
@@ -157,172 +157,179 @@ const SupplierRegistration = () => {
 
   return (
     <>
-      <NavBar />
-      <main className="registration">
-        <section className="top">
-          <TopSecFormPage
-            root="Suppliers"
-            currentPage={id ? "Edit Supplier" : "New Supplier"}
-            rootNavigatePage="/More/ViewSupplier"
-            title={id ? "Edit Supplier" : "New Supplier"}
-          />
-        </section>
-        {errorMessage && <Alert type="danger" message={errorMessage} />}
-        <form onSubmit={handleSubmit(onSubmit)} className="registration-form">
-          <fieldset>
-            <label>Supplier Name *</label>
-            <input
-              type="text"
-              placeholder="Supplier Name"
-              maxLength={100}
-              className={errors.name ? "input-error" : ""}
-              {...register("name", { required: "Supplier Name is required" })}
+      <section className="page-layout-registration">
+        <NavBar />
+        <main className="registration">
+          <section className="top">
+            <TopSecFormPage
+              root="Suppliers"
+              currentPage={id ? "Edit Supplier" : "New Supplier"}
+              rootNavigatePage="/More/ViewSupplier"
+              title={id ? "Edit Supplier" : "New Supplier"}
             />
-            {errors.name && (
-              <span className="error-message">{errors.name.message}</span>
-            )}
-          </fieldset>
+          </section>
+          {errorMessage && <Alert type="danger" message={errorMessage} />}
+          <form onSubmit={handleSubmit(onSubmit)} className="registration-form">
+            <fieldset>
+              <label>Supplier Name *</label>
+              <input
+                type="text"
+                placeholder="Supplier Name"
+                maxLength={100}
+                className={errors.name ? "input-error" : ""}
+                {...register("name", { required: "Supplier Name is required" })}
+              />
+              {errors.name && (
+                <span className="error-message">{errors.name.message}</span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>Address *</label>
-            <input
-              type="text"
-              placeholder="Address"
-              maxLength={200}
-              className={errors.address ? "input-error" : ""}
-              {...register("address", { required: "Address is required" })}
-            />
-            {errors.address && (
-              <span className="error-message">{errors.address.message}</span>
-            )}
-          </fieldset>
+            <fieldset>
+              <label>Address *</label>
+              <input
+                type="text"
+                placeholder="Address"
+                maxLength={200}
+                className={errors.address ? "input-error" : ""}
+                {...register("address", { required: "Address is required" })}
+              />
+              {errors.address && (
+                <span className="error-message">{errors.address.message}</span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>City</label>
-            <input placeholder="City" {...register("city")} maxLength={50} />
-          </fieldset>
+            <fieldset>
+              <label>City</label>
+              <input placeholder="City" {...register("city")} maxLength={50} />
+            </fieldset>
 
-          <fieldset>
-            <label>Zip Code</label>
-            <input
-              type="number"
-              placeholder="ZIP"
-              maxLength={4}
-              className={errors.zip ? "input-error" : ""}
-              {...register("zip", {
-                pattern: {
-                  value: /^[0-9]{4}$/,
-                  message: "Zip code must be a number with 4 digits only",
-                },
-                maxLength: {
-                  value: 4,
-                  message: "Zip code must not exceed 4 digits",
-                },
-              })}
-            />
-            {errors.zip && (
-              <span className="error-message">{errors.zip.message}</span>
-            )}
-          </fieldset>
+            <fieldset>
+              <label>Zip Code</label>
+              <input
+                type="number"
+                placeholder="ZIP"
+                maxLength={4}
+                className={errors.zip ? "input-error" : ""}
+                {...register("zip", {
+                  pattern: {
+                    value: /^[0-9]{4}$/,
+                    message: "Zip code must be a number with 4 digits only",
+                  },
+                  maxLength: {
+                    value: 4,
+                    message: "Zip code must not exceed 4 digits",
+                  },
+                })}
+              />
+              {errors.zip && (
+                <span className="error-message">{errors.zip.message}</span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>Contact Person *</label>
-            <input
-              type="text"
-              placeholder="Supplier's Contact Name"
-              maxLength={100}
-              {...register("contact_name", {
-                required: "Contact Person is required",
-              })}
-            />
-            {errors.contact_name && (
-              <span className="error-message">
-                {errors.contact_name.message}
-              </span>
-            )}
-          </fieldset>
+            <fieldset>
+              <label>Contact Person *</label>
+              <input
+                type="text"
+                placeholder="Supplier's Contact Name"
+                maxLength={100}
+                {...register("contact_name", {
+                  required: "Contact Person is required",
+                })}
+              />
+              {errors.contact_name && (
+                <span className="error-message">
+                  {errors.contact_name.message}
+                </span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>Phone Number</label>
-            <input
-              type="number"
-              placeholder="Contact's Phone Number"
-              maxLength={13}
-              {...register("phone_number")}
-            />
-          </fieldset>
+            <fieldset>
+              <label>Phone Number</label>
+              <input
+                type="number"
+                placeholder="Contact's Phone Number"
+                maxLength={13}
+                {...register("phone_number")}
+              />
+            </fieldset>
 
-          <fieldset>
-            <label>Email</label>
-            <input
-              type="email"
-              placeholder="Contact's Email"
-              {...register("email")}
-            />
-          </fieldset>
+            <fieldset>
+              <label>Email</label>
+              <input
+                type="email"
+                placeholder="Contact's Email"
+                {...register("email")}
+              />
+            </fieldset>
 
-          <fieldset>
-            <label>URL</label>
-            <input
-              type="url"
-              placeholder="URL"
-              className={errors.URL ? "input-error" : ""}
-              {...register("URL", {
-                pattern: {
-                  value: /^(https?:\/\/).+/i,
-                  message: "URL must start with http:// or https://",
-                },
-              })}
-            />
-            {errors.URL && (
-              <span className="error-message">{errors.URL.message}</span>
-            )}
-          </fieldset>
+            <fieldset>
+              <label>URL</label>
+              <input
+                type="url"
+                placeholder="URL"
+                className={errors.URL ? "input-error" : ""}
+                {...register("URL", {
+                  pattern: {
+                    value: /^(https?:\/\/).+/i,
+                    message: "URL must start with http:// or https://",
+                  },
+                })}
+              />
+              {errors.URL && (
+                <span className="error-message">{errors.URL.message}</span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>Notes</label>
-            <textarea
-              placeholder="Notes..."
-              {...register("notes")}
-              maxLength={500}
-            />
-          </fieldset>
+            <fieldset>
+              <label>Notes</label>
+              <textarea
+                placeholder="Notes..."
+                {...register("notes")}
+                maxLength={500}
+              />
+            </fieldset>
 
-          <fieldset>
-            <label>Logo</label>
-            {previewImage ? (
-              <div className="image-selected">
-                <img src={previewImage} alt="Logo preview" />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPreviewImage(null);
-                    setSelectedImage(null);
-                    setRemoveImage(true);
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            ) : (
-              <label className="upload-image-btn">
-                Choose File
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageSelection}
-                  hidden
-                />
-              </label>
-            )}
-            <small className="file-size-info">Max file size: 5MB</small>
-          </fieldset>
+            <fieldset>
+              <label>Logo</label>
+              {previewImage ? (
+                <div className="image-selected">
+                  <img src={previewImage} alt="Logo preview" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewImage(null);
+                      setSelectedImage(null);
+                      setRemoveImage(true);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <label className="upload-image-btn">
+                  Choose File
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelection}
+                    hidden
+                  />
+                </label>
+              )}
+              <small className="file-size-info">Max file size: 5MB</small>
+            </fieldset>
 
-          <button type="submit" className="primary-button" disabled={!isValid}>
-            Save
-          </button>
-        </form>
-      </main>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid}
+            >
+              Save
+            </button>
+          </form>
+        </main>
+        <Footer />
+      </section>
     </>
   );
 };

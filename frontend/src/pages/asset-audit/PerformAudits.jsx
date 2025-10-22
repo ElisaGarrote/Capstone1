@@ -1,271 +1,78 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import "../../styles/PerformAudits.css";
+import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useState, useEffect, use } from "react";
-import CloseIcon from "../../assets/icons/close.svg";
-import Select from "react-select";
-import makeAnimated from "react-select/animated";
-import { useLocation, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
-import assetsService from "../../services/assets-service";
-import dateRelated from "../../utils/dateRelated";
-import Skeleton from "react-loading-skeleton";
-import LoadingButton from "../../components/LoadingButton";
-import authService from "../../services/auth-service";
-
-export default function PerformAudits() {
+import CloseIcon from "../../assets/icons/close.svg";
+import overdueAudits from "../../data/mockData/audits/overdue-audit-mockup-data.json";
+import dueAudits from "../../data/mockData/audits/due-audit-mockup-data.json";
+import scheduledAudits from "../../data/mockData/audits/scheduled-audit-mockup-data.json";
+import completedAudits from "../../data/mockData/audits/completed-audit-mockup-data.json";
+import Footer from "../../components/Footer";
+const PerformAudits = () => {
   const navigate = useNavigate();
-  const animatedComponents = makeAnimated();
-  const location = useLocation();
-  const [currentDate, setCurrentDate] = useState("");
-  const [previewImages, setPreviewImages] = useState([]);
-  const [fileList, setFileList] = useState([]);
-  const [filteredAssets, setFilteredAssets] = useState([]);
-  const [isLoading, setLoading] = useState(true);
-  const [isSubmitting, setSubmitting] = useState(false);
-  const [activeUsers, setActiveUsers] = useState([]);
 
-  // Retrieve the "data" value passed from the navigation state.
-  // If the "data" is not exist, the value for this is "null".
-  const dataReceive = location.state?.data || null;
+  const location = useLocation();
+  const item = location.state?.item || null;
+
   const previousPage = location.state?.previousPage || null;
 
-  // Get all the assets that have not yet been scheduled or audited.
-  useEffect(() => {
-    const fetchFilteredAssetsAndActiveUsers = async () => {
-      // Fetch filter assets for audit
-      const fetchedData = await assetsService.filterAssetsForAudit();
-      setFilteredAssets(fetchedData);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
 
-      // Fetch all active users
-      const fetchedUsers = await authService.getAllUsers();
-      setActiveUsers(fetchedUsers);
-      setLoading(false);
-    };
-
-    fetchFilteredAssetsAndActiveUsers();
-  }, []);
-
-  // Handle current date
-  useEffect(() => {
-    setCurrentDate(dateRelated.getCurrentDate());
-  }, []);
-
-  const handleImagesSelection = (event) => {
-    const fileList = event.target.files;
-    setFileList(fileList);
-
-    const selectedFiles = Array.from(event.target.files); // Convert the FileList to Array
-
-    if (selectedFiles.length > 0) {
-      const imagesArray = selectedFiles.map((file) => {
-        return URL.createObjectURL(file);
-      });
-
-      // console.log("Selected Images:", imagesArray);
-      setPreviewImages(imagesArray);
-    } else {
-      setPreviewImages([]);
-    }
-  };
-
-  // console.log("File list:", fileList);
-
-  const assetOptions = filteredAssets;
-
-  const locationOptions = [
-    { value: "Makati", label: "Makati" },
-    { value: "Pasig", label: "Pasig" },
-    { value: "Marikina", label: "Marikina" },
+  const extractAssets = (auditArray) => auditArray.map(a => a.asset.name);
+  const allAssets = [
+    ...extractAssets(overdueAudits),
+    ...extractAssets(dueAudits),
+    ...extractAssets(scheduledAudits),
   ];
+  const uniqueAssets = Array.from(new Set(allAssets));
+  const locations = Array.from(new Set(completedAudits.map(item => item.location)));
+  const users = Array.from(new Set(completedAudits.map(item => item.performed_by)));
 
-  const performByOptions = activeUsers.map((user) => {
-    return { value: user.id, label: user.full_name };
-  });
-
-  const customStylesDropdown = {
-    control: (provided) => ({
-      ...provided,
-      width: "100%",
-      borderRadius: "25px",
-      fontSize: "0.875rem",
-      padding: "3px 8px",
-    }),
-    container: (provided) => ({
-      ...provided,
-      width: "100%",
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      color: state.isSelected ? "white" : "grey",
-      fontSize: "0.875rem",
-    }),
-  };
-
-  // Handle form
   const {
-    control,
     register,
     handleSubmit,
+    control,
     setValue,
+    watch,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
     defaultValues: {
-      performBy: { value: "Mary Grace Piattos", label: "Mary Grace Piattos" },
-      auditDate: "",
-      files: null,
+      asset: "",
+      location: "",
+      performBy: "John Doe" || "",
+      auditDate: new Date().toISOString().split("T")[0],
+      nextAuditDate: "",
+      notes: "",
     },
   });
 
-  // Set the default valule for the auditDate every time the currentDate has changes.
-  useEffect(() => {
-    if (currentDate) {
-      setValue("auditDate", currentDate);
-    }
-  }, [currentDate, setValue]);
+  const handleFileSelection = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 5 * 1024 * 1024;
 
-  // Create schedule audit
-
-  // Handle form submission
-  const submission = async (data) => {
-    setSubmitting(true);
-    // console.log("submission", data);
-    // console.table(fileList);
-
-    // Extract neccessary data.
-    const { nextAuditDate, notes, auditDate } = data;
-    const assetId = data.asset.value;
-    const location = data.location.value;
-    const userId = 1;
-    // console.log("nextAuditDate: ", nextAuditDate);
-
-    // POST schedule audit
-    const scheduleAuditResponse = await assetsService.postScheduleAudit(
-      assetId,
-      nextAuditDate,
-      notes
-    );
-
-    const auditScheduleId = scheduleAuditResponse.id;
-
-    if (scheduleAuditResponse) {
-      // console.log("Successfully created schedule audit!");
-      // console.table(scheduleAuditResponse);
-
-      // POST audit
-      const auditDataResponse = await assetsService.postAudit(
-        location,
-        userId,
-        notes,
-        auditScheduleId,
-        auditDate,
-        nextAuditDate
-      );
-
-      if (auditDataResponse) {
-        // console.log("Successfully created audit!");
-
-        // POST file fro the created audit if length of fileList is more than 0
-        if (fileList.length > 0) {
-          // POST file for the created audit
-          const success = await assetsService.postAuditFiles(
-            auditDataResponse.id,
-            fileList
-          );
-        }
-
-        // Navigate to the audit page.
-        navigate("/audits", { state: { addedNewAudit: true } });
-        setSubmitting(false);
-      } else {
-        console.log("Failed to create audit!");
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 5MB and was not added.`);
+        return false;
       }
-    }
+      return true;
+    });
+
+    setAttachmentFiles(prev => [...prev, ...validFiles]);
   };
 
-  // Update audit
-  const update = async (data) => {
-    setSubmitting(true);
-    // console.log("Data for update:", data);
-
-    // Update schedule audit by id
-    const updateScheduleAuditResponse = await assetsService.updateAuditSchedule(
-      dataReceive.id,
-      Number(data.asset),
-      data.nextAuditDate,
-      data.notes
-    );
-
-    // Post audit if audit_info is null from the dataReceive and update schedule audit is successful.
-    if (dataReceive.audit_info == null && updateScheduleAuditResponse) {
-      // Post audit
-      const postAuditResponse = await assetsService.postAudit(
-        data.location.value,
-        1,
-        data.notes,
-        dataReceive.id,
-        data.auditDate,
-        data.nextAuditDate
-      );
-      // const postAuditResponse = await postAudit(data);
-
-      // Check if post audit is successfully created then navigate to audit page.
-      if (postAuditResponse) {
-        // POST audit file if the length of the fileList is more than 0.
-        if (fileList.length > 0) {
-          const success = await assetsService.postAuditFiles(
-            postAuditResponse.id,
-            fileList
-          );
-
-          // console.log("successfully created audit files?:", success);
-        }
-
-        // Navigate to the audit page.
-        navigate("/audits", { state: { addedNewAudit: true } });
-        setSubmitting(false);
-      }
-    }
-
-    // Update audit if audit_info from dataReceive is not null
-    if (dataReceive.audit_info != null) {
-      // Soft delete audit files if audit_files from dataReceive is not null
-      if (dataReceive.audit_info.audit_files.length > 0) {
-        await assetsService.softDeleteAuditFiles(dataReceive.audit_info.id);
-      }
-
-      // Update audit
-      const updateAuditResponse = await assetsService.updateAudit(
-        dataReceive.audit_info.id,
-        data.location.value,
-        1,
-        data.notes,
-        dataReceive.id,
-        data.auditDate,
-        data.nextAuditDate
-      );
-
-      // Check if audit successfully updated then navigate to audit page.
-      if (updateAuditResponse) {
-        // POST audit file if the length of the fileList is more than 0.
-        if (fileList.length > 0) {
-          const success = await assetsService.postAuditFiles(
-            dataReceive.audit_info.id,
-            fileList
-          );
-
-          // console.log("successfully created audit files?:", success);
-        }
-
-        // Navigate to the audit page.
-        navigate("/audits", { state: { addedNewAudit: true } });
-        setSubmitting(false);
-      }
-    }
+  const removeFile = (index) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Set the root of the page.
+  const onSubmit = (data) => {
+    console.log("Form submitted:", data, attachmentFiles);
+    navigate(previousPage);
+  };
+
   const getRootPage = () => {
     switch (previousPage) {
       case "/audits":
@@ -273,209 +80,166 @@ export default function PerformAudits() {
       case "/audits/overdue":
         return "Overdue for Audits";
       case "/audits/scheduled":
-        return "Schedule Audits";
+        return "Scheduled Audits";
       case "/audits/completed":
         return "Completed Audits";
     }
   };
-
-  // For debugging only.
-  // console.log("data received:", dataReceive);
 
   return (
     <>
       <nav>
         <NavBar />
       </nav>
-      <main className="perform-audit-page">
+      <main className="registration">
         <section className="top">
           <TopSecFormPage
             root={getRootPage()}
-            currentPage="Perform Audits"
+            currentPage="Perform Audit"
             rootNavigatePage={previousPage}
-            title={
-              dataReceive != null
-                ? `${dataReceive.asset_info.displayed_id} - ${dataReceive.asset_info.name}`
-                : "Perform Audits"
-            }
+            title="Perform Audit"
           />
         </section>
-        <section className="perform-audit-form">
-          <form
-            onSubmit={handleSubmit(dataReceive == null ? submission : update)}
-          >
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Asset */}
             <fieldset>
-              <label htmlFor="asset">Select Asset <span style={{color: 'red'}}>*</span></label>
-
-              {isLoading && dataReceive === null ? (
-                <Skeleton height={40} borderRadius={25} />
-              ) : (
-                dataReceive === null && (
-                  <Controller
-                    name="asset"
-                    control={control}
-                    rules={{ required: "Asset is required" }}
-                    render={({ field }) => (
-                      <Select
-                        components={animatedComponents}
-                        options={assetOptions}
-                        styles={customStylesDropdown}
-                        placeholder="Select asset..."
-                        {...field}
-                      />
-                    )}
-                  />
-                )
+              <label htmlFor="asset">Select Asset *</label>
+              <select
+                className={errors.asset ? "input-error" : ""}
+                {...register("asset", {
+                  required: "Asset is required",
+                })}
+              >
+                <option value="">Select Asset</option>
+                {uniqueAssets.map((asset) => (
+                  <option key={asset} value={asset}>{asset}</option>
+                ))}
+              </select>
+              {errors.asset && (
+                <span className="error-message">
+                  {errors.asset.message}
+                </span>
               )}
+            </fieldset>
 
-              {dataReceive != null && (
-                <div className="asset">
-                  <input
-                    type="text"
-                    value={`${dataReceive.asset_info.displayed_id} - ${dataReceive.asset_info.name}`}
-                    disabled
-                  />
-
-                  {/* Hide input for the value of asset id */}
-                  <input
-                    type="hidden"
-                    value={dataReceive.asset_info.id}
-                    {...register("asset")}
-                  />
-                </div>
+            {/* Location */}
+            <fieldset>
+              <label htmlFor="location">Location *</label>
+              <select
+                className={errors.location ? "input-error" : ""}
+                {...register("location", {
+                  required: "Location is required",
+                })}
+              >
+                <option value="">Select Location</option>
+                {locations.map((location) => (
+                  <option key={location} value={location}>{location}</option>
+                ))}
+              </select>
+              {errors.location && (
+                <span className="error-message">
+                  {errors.location.message}
+                </span>
               )}
-
-              {errors.asset && <span className='error-message'>{errors.asset.message}</span>}
             </fieldset>
-            <fieldset>
-              <label htmlFor="location">Location <span style={{color: 'red'}}>*</span></label>
 
-              <Controller
-                name="location"
-                control={control}
-                rules={{ required: "Location is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={locationOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select location..."
-                    {...field}
-                  />
-                )}
+            {/* Performed By */}
+            <fieldset className="readonly-input">
+              <label htmlFor="performBy">Performed By</label>
+              <input
+                type="text"
+                value="John Doe"
+                readOnly
               />
-
-              {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
-            <fieldset>
-              <label htmlFor="perform-by">Perform by <span style={{color: 'red'}}>*</span></label>
 
-              <Controller
-                name="performBy"
-                control={control}
-                rules={{ required: "Perform by is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={performByOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select user..."
-                    defaultValue={{
-                      value: "mary grace piattos",
-                      label: "Mary Grace Piattos",
-                    }}
-                    {...field}
-                  />
-                )}
-              />
-
-              {errors.performBy && <span className='error-message'>{errors.performBy.message}</span>}
-            </fieldset>
+            {/* Audit Date */}
             <fieldset>
-              <label htmlFor="audit-date">Audit Date <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor="auditDate">Audit Date *</label>
               <input
                 type="date"
-                name="audit-date"
-                id="audit-date"
-                max={currentDate}
+                className={errors.checkoutDate ? "input-error" : ""}
+                defaultValue={new Date().toISOString().split("T")[0]}
                 {...register("auditDate", {
                   required: "Audit date is required",
                 })}
               />
-
-              {errors.auditDate && <span className='error-message'>{errors.auditDate.message}</span>}
-            </fieldset>
-            <fieldset>
-              <label htmlFor="next-audit-date">Next Audit Date <span style={{color: 'red'}}>*</span></label>
-              <input
-                type="date"
-                name="next-audit-date"
-                id="next-audit-date"
-                min={currentDate}
-                {...register("nextAuditDate", {
-                  required: "Next audit date is required",
-                })}
-              />
-
-              {errors.nextAuditDate && (
-                <span className='error-message'>{errors.nextAuditDate.message}</span>
+              {errors.auditDate && (
+                <span className="error-message">{errors.auditDate.message}</span>
               )}
             </fieldset>
+
+            {/* Next Audit Date */}
+            <fieldset>
+              <label htmlFor="nextAuditDate">Next Audit Date</label>
+              <input
+                type="date"
+                className={errors.nextAuditDate ? "input-error" : ""}
+                {...register("nextAuditDate")}
+              />
+              {errors.nextAuditDate && (
+                <span className="error-message">{errors.nextAuditDate.message}</span>
+              )}
+            </fieldset>
+
+            {/* Notes */}
             <fieldset>
               <label htmlFor="notes">Notes</label>
               <textarea
-                name="notes"
-                id="notes"
-                maxLength="2000"
-                placeholder="Notes..."
+                placeholder="Enter notes"
                 {...register("notes")}
+                rows="3"
               ></textarea>
             </fieldset>
+
+            {/* Attachments */}
             <fieldset>
               <label htmlFor="attachments">Attachments</label>
-              <div className="images-container">
-                {previewImages &&
-                  previewImages.map((image, index) => {
-                    return (
-                      <div key={image} className="image-selected">
-                        <img src={image} alt="" key={index} />
-                        <button
-                          onClick={() =>
-                            setPreviewImages(
-                              previewImages.filter((e) => e !== image)
-                            )
-                          }
-                        >
-                          <img src={CloseIcon} alt="" />
-                        </button>
-                      </div>
-                    );
-                  })}
-                <input
-                  type="file"
-                  name="attachments"
-                  id="attachments"
-                  accept=".pdf, .docx, .xlsx, .jpg, .jpeg, .img, .png"
-                  multiple
-                  onChange={handleImagesSelection}
-                  style={{ display: "none" }}
-                />
+
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="attachments" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="attachments"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                      multiple
+                    />
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
+                </div>
+
+                {/* Right column: Uploaded files */}
+                <div className="upload-right">
+                  {attachmentFiles.map((file, index) => (
+                    <div className="file-uploaded" key={index}>
+                      <span title={file.name}>{file.name}</span>
+                      <button type="button" onClick={() => removeFile(index)}>
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <label htmlFor="attachments" className="upload-image-btn">
-                {previewImages.length == 0
-                  ? "Choose Files"
-                  : "Change Attachements"}
-              </label>
             </fieldset>
-            <button
-              type="submit"
-              className="save-btn"
-              disabled={!isValid || isSubmitting}
-            >
-              {isSubmitting && <LoadingButton />}
-              {!isSubmitting ? "Save" : "Saving..."}
+
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid}>
+              Save
             </button>
           </form>
         </section>
+        <Footer />
       </main>
     </>
   );
-}
+};
+
+export default PerformAudits;

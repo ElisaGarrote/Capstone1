@@ -190,7 +190,7 @@ export default function Products() {
       try {
         const [productRes, manufacturerRes] = await Promise.all([
           assetsService.fetchAllProducts(),
-          contextsService.fetchAllManufacturerNames(),
+          fetchAllCategories(),
         ]);
         setProducts(productRes.products || []);
         setManufacturers(manufacturerRes.manufacturers || []);
