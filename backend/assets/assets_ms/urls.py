@@ -1,6 +1,13 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import *
 
+router = DefaultRouter()
+router.register('assets', AssetViewset, basename='assets')
+
+urlpatterns = router.urls
+
+"""
 urlpatterns = [
     # Products
     path('products/', get_all_products, name='all_products'),
@@ -95,3 +102,5 @@ urlpatterns = [
     #Dahsboard
     path('dashboard/', get_dashboard_stats, name='dashboard-stats'),
 ]
+
+"""
