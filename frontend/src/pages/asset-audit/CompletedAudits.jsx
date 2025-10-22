@@ -10,7 +10,7 @@ import TabNavBar from "../../components/TabNavBar";
 import "../../styles/AuditsCompleted.css";
 import completedAudit from "../../data/mockData/audits/completed-audit-mockup-data.json";
 import View from "../../components/Modals/View";
-
+import Footer from "../../components/Footer";
 
 const filterConfig = [
   {
@@ -173,6 +173,7 @@ export default function CompletedAudits() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

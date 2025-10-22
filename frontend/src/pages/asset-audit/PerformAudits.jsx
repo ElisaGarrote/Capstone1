@@ -9,7 +9,7 @@ import overdueAudits from "../../data/mockData/audits/overdue-audit-mockup-data.
 import dueAudits from "../../data/mockData/audits/due-audit-mockup-data.json";
 import scheduledAudits from "../../data/mockData/audits/scheduled-audit-mockup-data.json";
 import completedAudits from "../../data/mockData/audits/completed-audit-mockup-data.json";
-
+import Footer from "../../components/Footer";
 const PerformAudits = () => {
   const navigate = useNavigate();
 
@@ -236,6 +236,7 @@ const PerformAudits = () => {
             </button>
           </form>
         </section>
+        <Footer />
       </main>
     </>
   );

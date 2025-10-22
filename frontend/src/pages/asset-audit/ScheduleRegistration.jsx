@@ -7,6 +7,7 @@ import { useForm, Controller } from "react-hook-form";
 import overdueAudits from "../../data/mockData/audits/overdue-audit-mockup-data.json";
 import dueAudits from "../../data/mockData/audits/due-audit-mockup-data.json";
 import scheduledAudits from "../../data/mockData/audits/scheduled-audit-mockup-data.json";
+import Footer from "../../components/Footer";
 
 const ScheduleRegistration = () => {
   const navigate = useNavigate();
@@ -141,6 +142,7 @@ const ScheduleRegistration = () => {
             </button>
           </form>
         </section>
+        <Footer />
       </main>
     </>
   );

@@ -12,7 +12,7 @@ import TabNavBar from "../../components/TabNavBar";
 import "../../styles/Audits.css";
 import scheduledAudit from "../../data/mockData/audits/scheduled-audit-mockup-data.json";
 import View from "../../components/Modals/View";
-
+import Footer from "../../components/Footer";
 
 const filterConfig = [
   {
@@ -217,6 +217,7 @@ export default function ScheduledAudits() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

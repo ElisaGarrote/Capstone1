@@ -12,7 +12,7 @@ import TabNavBar from "../../components/TabNavBar";
 import "../../styles/AuditsOverdue.css";
 import overdueAudit from "../../data/mockData/audits/overdue-audit-mockup-data.json";
 import View from "../../components/Modals/View";
-
+import Footer from "../../components/Footer";
 
 const filterConfig = [
   {
@@ -219,6 +219,7 @@ export default function OverdueAudits() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

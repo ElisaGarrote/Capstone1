@@ -14,7 +14,6 @@ import dueAudit from "../../data/mockData/audits/due-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 
-
 const filterConfig = [
   {
     type: "searchable",
