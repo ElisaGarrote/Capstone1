@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import Alert from "../../components/Alert";
-import SystemLoading from "../../components/Loading/SystemLoading";
 import Footer from "../../components/Footer";
 
 import "../../styles/Registration.css";
 import "../../styles/ManufacturerRegistration.css";
 const ManufacturerRegistration = () => {
   const { id } = useParams();
+  const location = useLocation();
+
+  // Retrieve the "manufacturer" data value passed from the navigation state.
+  // If the "manufacturer" data is not exist, the default value for this is "undifiend".
+  const manufacturer = location.state?.manufacturer;
+
   const {
     setValue,
     register,
@@ -19,24 +24,27 @@ const ManufacturerRegistration = () => {
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
-      manufacturerName: "",
-      url: "",
-      supportUrl: "",
-      supportPhone: "",
-      supportEmail: "",
-      notes: "",
-      logo: null,
+      manufacturerName: manufacturer ? manufacturer.name : "",
+      url: manufacturer ? manufacturer.url : "",
+      supportUrl: manufacturer ? manufacturer.support_url : "",
+      supportPhone: manufacturer ? manufacturer.phone_number : "",
+      supportEmail: manufacturer ? manufacturer.email : "",
+      notes: manufacturer ? manufacturer.notes : "",
+      logo: manufacturer ? manufacturer.logo : "",
     },
     mode: "all",
   });
 
-  const [previewImage, setPreviewImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(
+    manufacturer ? manufacturer.logo : null
+  );
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
+
+  /* BACKEND INTEGRATION HERE
   const contextServiceUrl =
     "https://contexts-service-production.up.railway.app";
 
@@ -75,6 +83,8 @@ const ManufacturerRegistration = () => {
     initialize();
   }, [id, setValue]);
 
+  */
+
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -105,7 +115,12 @@ const ManufacturerRegistration = () => {
     }
   };
 
+  const state = manufacturer
+    ? { updatedManufacturer: true }
+    : { addedManufacturer: true };
+
   const onSubmit = async (data) => {
+    /* BACKEND INTEGRATION HERE
     try {
       // Duplicate name check for creation
       if (!id) {
@@ -188,11 +203,9 @@ const ManufacturerRegistration = () => {
       );
       setTimeout(() => setErrorMessage(""), 5000);
     }
+    */
+    navigate("/More/ViewManufacturer", { state });
   };
-
-  if (isLoading) {
-    return <SystemLoading />;
-  }
 
   return (
     <>
