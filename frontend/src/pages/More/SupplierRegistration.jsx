@@ -5,7 +5,6 @@ import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import contextsService from "../../services/contexts-service";
 import Footer from "../../components/Footer";
 
 import "../../styles/Registration.css";
@@ -47,9 +46,8 @@ const SupplierRegistration = () => {
     const initialize = async () => {
       try {
         if (id) {
-          const supplierData = await contextsService.fetchSupplierById(id);
-          if (!supplierData)
-            throw new Error("Failed to fetch supplier details");
+          const supplierData = await fetchAllCategories();
+          if (!supplierData) throw new Error('Failed to fetch supplier details');
 
           setValue("name", supplierData.name || "");
           setValue("address", supplierData.address || "");

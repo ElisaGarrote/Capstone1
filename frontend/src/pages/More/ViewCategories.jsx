@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import DefaultImage from "../../assets/img/default-image.jpg";
+
 import Footer from "../../components/Footer";
 
 import "../../styles/Category.css";
@@ -116,14 +118,14 @@ const filterConfig = [
 ];
 
 // TableHeader component to render the table header
-function TableHeader() {
+function TableHeader({ allSelected, onSelectAll }) {
   return (
     <tr>
       <th>
         <input
           type="checkbox"
-          name="checkbox-category"
-          id="checkbox-category"
+          checked={allSelected}
+          onChange={(e) => onSelectAll(e.target.checked)}
         />
       </th>
       <th>NAME</th>
@@ -135,16 +137,18 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ category, onDeleteClick }) {
+function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   return (
     <tr>
       <td>
-        <div className="checkbox-category">
-          <input type="checkbox" name="" id="" />
-        </div>
+        <input
+          type="checkbox"
+          checked={isChecked}
+          onChange={(e) => onCheckboxChange(category.id, e.target.checked)}
+        />
       </td>
       <td>
         <div className="category-name">

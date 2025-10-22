@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from .models import *
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = '__all__'
+
 class SupplierNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
@@ -26,12 +31,7 @@ class LocationSerializer(serializers.ModelSerializer):
         model = Location
         fields = '__all__'
 
-class CheckoutsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Checkout
-        fields = '__all__'
-
 class TicketResolveSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Checkout
+        model = Ticket
     fields = ['is_resolved']

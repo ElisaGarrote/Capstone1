@@ -6,7 +6,6 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import contextsService from "../../services/contexts-service";
 import Footer from "../../components/Footer";
 
 import "../../styles/Manufacturer.css";
@@ -106,7 +105,7 @@ export default function ViewManuDraft() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const manufacturerRes = await contextsService.fetchAllManufacturers();
+        const manufacturerRes = await fetchAllCategories();
         const mapped = (manufacturerRes || []).map((manu) => ({
           id: manu.id,
           name: manu.name,
@@ -152,7 +151,7 @@ export default function ViewManuDraft() {
   const fetchManufacturers = async () => {
     setLoading(true);
     try {
-      const res = await contextsService.fetchAllManufacturers();
+      const res = await fetchAllCategories();
       const mapped = (res || []).map((manu) => ({
         id: manu.id,
         name: manu.name,
