@@ -116,7 +116,7 @@ export default function NavBar() {
 
     // Set selected asset based on path
     if (location.pathname.startsWith("/products")) {
-      setSelectedAsset("Products");
+      setSelectedAsset("Asset Models");
     } else if (location.pathname.startsWith("/assets")) {
       setSelectedAsset("Assets");
     } else if (location.pathname.startsWith("/accessories")) {
@@ -205,11 +205,11 @@ export default function NavBar() {
                     <button
                       onClick={() => {
                         navigate("/products");
-                        setSelectedAsset("Products");
+                        setSelectedAsset("Asset Models");
                         setShowAssetsMenu(false);
                       }}
                     >
-                      Products
+                      Asset Models
                     </button>
                     <button
                       onClick={() => {

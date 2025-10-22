@@ -259,14 +259,14 @@ export default function Products() {
 
         <main className="page-layout products-page">
           <section className="title-page-section">
-            <h1>Products</h1>
+            <h1>Asset Models</h1>
           </section>
 
           <FilterPanel filters={filterConfig} />
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Products ({products.length})</h2>
+              <h2 className="h2">Asset Models ({products.length})</h2>
               <section className="table-actions">
                 {/* Bulk delete button only when checkboxes selected */}
                 {selectedIds.length > 0 && (
@@ -325,7 +325,7 @@ export default function Products() {
                   ) : (
                     <tr>
                       <td colSpan={8} className="no-data-message">
-                        No Products Found.
+                        No Asset Models Found.
                       </td>
                     </tr>
                   )}

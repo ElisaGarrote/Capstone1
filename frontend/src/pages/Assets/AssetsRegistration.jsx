@@ -360,19 +360,19 @@ export default function AssetsRegistration() {
               {errors.assetId && <span className='error-message'>{errors.assetId.message}</span>}
             </fieldset>
 
-            {/* Products selection */}
+            {/* Asset Model selection */}
             <fieldset>
-              <label htmlFor='product'>Product <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor='product'>Asset Model <span style={{color: 'red'}}>*</span></label>
               <Controller
                 name="product"
                 control={control}
-                rules={{ required: "Product is required" }}
+                rules={{ required: "Asset Model is required" }}
                 render={({ field }) => (
                   <Select
                     components={animatedComponents}
                     options={productOptions}
                     styles={customStylesDropdown}
-                    placeholder="Select Product"
+                    placeholder="Select Asset Model"
                     {...field}
                     onChange={(selectedOption) => {
                       field.onChange(selectedOption);
