@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import *
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from .models import *
 from .serializer import *
 from django.db.models import Q
@@ -121,6 +121,24 @@ def get_all_assets(request):
     asset = Asset.objects.filter(is_deleted=False)
     serializer = AllAssetSerializer(asset, many=True)
     return Response(serializer.data)
+
+class AssetViewset(viewsets.ViewSet):
+    permission_classes = [permissions.AllowAny]
+    queryset = Asset.objects.all()
+    serializer_class = AssetSerializer
+
+    def list(self, request):
+        # Get all active assets
+        queryset = Asset.objects.filter(is_deleted=False)
+        serializer = AllAssetSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request):
+        serializer = AssetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Get products and statuses for asset registration
 @api_view(['GET'])
