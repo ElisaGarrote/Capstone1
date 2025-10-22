@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -7,12 +8,26 @@ import '../../styles/SupplierRegistration.css';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import Alert from '../../components/Alert';
 import SystemLoading from '../../components/Loading/SystemLoading';
+=======
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate, useParams } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import TopSecFormPage from "../../components/TopSecFormPage";
+import Alert from "../../components/Alert";
+import SystemLoading from "../../components/Loading/SystemLoading";
+import contextsService from "../../services/contexts-service";
+import Footer from "../../components/Footer";
+
+import "../../styles/Registration.css";
+import "../../styles/SupplierRegistration.css";
+>>>>>>> ui-merge-area
 
 const SupplierRegistration = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
@@ -21,46 +36,54 @@ const SupplierRegistration = () => {
     register,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
     defaultValues: {
-      name: '',
-      address: '',
-      city: '',
-      zip: '',
-      contact_name: '',
-      phone_number: '',
-      email: '',
-      URL: '',
-      notes: '',
+      name: "",
+      address: "",
+      city: "",
+      zip: "",
+      contact_name: "",
+      phone_number: "",
+      email: "",
+      URL: "",
+      notes: "",
     },
+    mode: "all",
   });
 
-  const contextServiceUrl = 'https://contexts-service-production.up.railway.app';
+  const contextServiceUrl =
+    "https://contexts-service-production.up.railway.app";
 
   useEffect(() => {
     const initialize = async () => {
       try {
         if (id) {
+<<<<<<< HEAD
           const supplierData = await fetchAllCategories();
           if (!supplierData) throw new Error('Failed to fetch supplier details');
+=======
+          const supplierData = await contextsService.fetchSupplierById(id);
+          if (!supplierData)
+            throw new Error("Failed to fetch supplier details");
+>>>>>>> ui-merge-area
 
-          setValue('name', supplierData.name || '');
-          setValue('address', supplierData.address || '');
-          setValue('city', supplierData.city || '');
-          setValue('zip', supplierData.zip || '');
-          setValue('contact_name', supplierData.contact_name || '');
-          setValue('phone_number', supplierData.phone_number || '');
-          setValue('email', supplierData.email || '');
-          setValue('URL', supplierData.URL || '');
-          setValue('notes', supplierData.notes || '');
+          setValue("name", supplierData.name || "");
+          setValue("address", supplierData.address || "");
+          setValue("city", supplierData.city || "");
+          setValue("zip", supplierData.zip || "");
+          setValue("contact_name", supplierData.contact_name || "");
+          setValue("phone_number", supplierData.phone_number || "");
+          setValue("email", supplierData.email || "");
+          setValue("URL", supplierData.URL || "");
+          setValue("notes", supplierData.notes || "");
 
           if (supplierData.logo) {
             setPreviewImage(`${contextServiceUrl}${supplierData.logo}`);
           }
         }
       } catch (error) {
-        setErrorMessage(error.message || 'Failed to initialize form');
+        setErrorMessage(error.message || "Failed to initialize form");
       } finally {
         setIsLoading(false);
       }
@@ -72,13 +95,13 @@ const SupplierRegistration = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage('Image exceeds 5MB.');
-        setTimeout(() => setErrorMessage(''), 5000);
+        setErrorMessage("Image exceeds 5MB.");
+        setTimeout(() => setErrorMessage(""), 5000);
         return;
       }
-      if (!file.type.startsWith('image/')) {
-        setErrorMessage('Only image files are allowed.');
-        setTimeout(() => setErrorMessage(''), 5000);
+      if (!file.type.startsWith("image/")) {
+        setErrorMessage("Only image files are allowed.");
+        setTimeout(() => setErrorMessage(""), 5000);
         return;
       }
 
@@ -94,32 +117,35 @@ const SupplierRegistration = () => {
   const onSubmit = async (data) => {
     try {
       if (!id) {
-      const existingSuppliers = await contextsService.fetchAllSupplierNames();
-      if (!existingSuppliers) throw new Error('Failed to fetch supplier names for duplicate check');
+        const existingSuppliers = await contextsService.fetchAllSupplierNames();
+        if (!existingSuppliers)
+          throw new Error("Failed to fetch supplier names for duplicate check");
 
-      const isDuplicate = existingSuppliers.suppliers.some(
-        (supplier) => supplier.name.toLowerCase() === data.name.toLowerCase()
-      );
-      if (isDuplicate) {
-        setErrorMessage('A supplier with this name already exists. Please use a different name.');
-        setTimeout(() => setErrorMessage(''), 5000);
-        return;
+        const isDuplicate = existingSuppliers.suppliers.some(
+          (supplier) => supplier.name.toLowerCase() === data.name.toLowerCase()
+        );
+        if (isDuplicate) {
+          setErrorMessage(
+            "A supplier with this name already exists. Please use a different name."
+          );
+          setTimeout(() => setErrorMessage(""), 5000);
+          return;
         }
       }
 
       const formData = new FormData();
-      formData.append('name', data.name);
-      formData.append('address', data.address);
-      formData.append('city', data.city);
-      formData.append('zip', data.zip);
-      formData.append('contact_name', data.contact_name);
-      formData.append('phone_number', data.phone_number);
-      formData.append('email', data.email);
-      formData.append('URL', data.URL || '');
-      formData.append('notes', data.notes || '');
+      formData.append("name", data.name);
+      formData.append("address", data.address);
+      formData.append("city", data.city);
+      formData.append("zip", data.zip);
+      formData.append("contact_name", data.contact_name);
+      formData.append("phone_number", data.phone_number);
+      formData.append("email", data.email);
+      formData.append("URL", data.URL || "");
+      formData.append("notes", data.notes || "");
 
-      if (selectedImage) formData.append('logo', selectedImage);
-      if (removeImage) formData.append('remove_logo', 'true');
+      if (selectedImage) formData.append("logo", selectedImage);
+      if (removeImage) formData.append("remove_logo", "true");
 
       let result;
       if (id) {
@@ -128,102 +154,201 @@ const SupplierRegistration = () => {
         result = await contextsService.createSupplier(formData);
       }
 
-      if (!result) throw new Error('Failed to save supplier');
+      if (!result) throw new Error("Failed to save supplier");
 
-      navigate('/More/ViewSupplier', {
-        state: { successMessage: `Supplier successfully ${id ? 'updated' : 'created'}` },
+      navigate("/More/ViewSupplier", {
+        state: {
+          successMessage: `Supplier successfully ${id ? "updated" : "created"}`,
+        },
       });
     } catch (error) {
-      const message = typeof error === 'string'
-        ? error
-        : error?.error || error?.message || 'An unexpected error occurred';
-      
-      setErrorMessage(message);
-      setTimeout(() => setErrorMessage(''), 5000);
-    }
+      const message =
+        typeof error === "string"
+          ? error
+          : error?.error || error?.message || "An unexpected error occurred";
 
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
   };
 
   if (isLoading) return <SystemLoading />;
 
   return (
     <>
-      <NavBar />
-      <main className="registration">
-        <TopSecFormPage
-          root="Suppliers"
-          currentPage={id ? 'Edit Supplier' : 'New Supplier'}
-          rootNavigatePage="/More/ViewSupplier"
-          title={id ? 'Edit Supplier' : 'New Supplier'}
-        />
-        {errorMessage && <Alert type="danger" message={errorMessage} />}
-        <form onSubmit={handleSubmit(onSubmit)} className="registration-form">
-          <fieldset>
-            <label>Supplier Name *</label>
-            <input placeholder="Supplier Name" {...register('name', { required: true })} maxLength={100} />
-          </fieldset>
+      <section className="page-layout-registration">
+        <NavBar />
+        <main className="registration">
+          <section className="top">
+            <TopSecFormPage
+              root="Suppliers"
+              currentPage={id ? "Edit Supplier" : "New Supplier"}
+              rootNavigatePage="/More/ViewSupplier"
+              title={id ? "Edit Supplier" : "New Supplier"}
+            />
+          </section>
+          {errorMessage && <Alert type="danger" message={errorMessage} />}
+          <form onSubmit={handleSubmit(onSubmit)} className="registration-form">
+            <fieldset>
+              <label>Supplier Name *</label>
+              <input
+                type="text"
+                placeholder="Supplier Name"
+                maxLength={100}
+                className={errors.name ? "input-error" : ""}
+                {...register("name", { required: "Supplier Name is required" })}
+              />
+              {errors.name && (
+                <span className="error-message">{errors.name.message}</span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>Address</label>
-            <input placeholder="Address" {...register('address')} maxLength={200} />
-          </fieldset>
+            <fieldset>
+              <label>Address *</label>
+              <input
+                type="text"
+                placeholder="Address"
+                maxLength={200}
+                className={errors.address ? "input-error" : ""}
+                {...register("address", { required: "Address is required" })}
+              />
+              {errors.address && (
+                <span className="error-message">{errors.address.message}</span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>City</label>
-            <input placeholder="City" {...register('city')} maxLength={50} />
-          </fieldset>
+            <fieldset>
+              <label>City</label>
+              <input placeholder="City" {...register("city")} maxLength={50} />
+            </fieldset>
 
-          <fieldset>
-            <label>Zip Code</label>
-            <input placeholder="ZIP" {...register('zip')} maxLength={5} />
-          </fieldset>
+            <fieldset>
+              <label>Zip Code</label>
+              <input
+                type="number"
+                placeholder="ZIP"
+                maxLength={4}
+                className={errors.zip ? "input-error" : ""}
+                {...register("zip", {
+                  pattern: {
+                    value: /^[0-9]{4}$/,
+                    message: "Zip code must be a number with 4 digits only",
+                  },
+                  maxLength: {
+                    value: 4,
+                    message: "Zip code must not exceed 4 digits",
+                  },
+                })}
+              />
+              {errors.zip && (
+                <span className="error-message">{errors.zip.message}</span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>Contact Name</label>
-            <input placeholder="Supplier's Contact Name" {...register('contact_name')} maxLength={100} />
-          </fieldset>
+            <fieldset>
+              <label>Contact Person *</label>
+              <input
+                type="text"
+                placeholder="Supplier's Contact Name"
+                maxLength={100}
+                {...register("contact_name", {
+                  required: "Contact Person is required",
+                })}
+              />
+              {errors.contact_name && (
+                <span className="error-message">
+                  {errors.contact_name.message}
+                </span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>Phone Number</label>
-            <input placeholder="Contact's Phone Number" {...register('phone_number')} maxLength={13} />
-          </fieldset>
+            <fieldset>
+              <label>Phone Number</label>
+              <input
+                type="number"
+                placeholder="Contact's Phone Number"
+                maxLength={13}
+                {...register("phone_number")}
+              />
+            </fieldset>
 
-          <fieldset>
-            <label>Email</label>
-            <input type="email" placeholder="Contact's Email" {...register('email')} />
-          </fieldset>
+            <fieldset>
+              <label>Email</label>
+              <input
+                type="email"
+                placeholder="Contact's Email"
+                {...register("email")}
+              />
+            </fieldset>
 
-          <fieldset>
-            <label>URL</label>
-            <input placeholder="URL" {...register('URL')} />
-          </fieldset>
+            <fieldset>
+              <label>URL</label>
+              <input
+                type="url"
+                placeholder="URL"
+                className={errors.URL ? "input-error" : ""}
+                {...register("URL", {
+                  pattern: {
+                    value: /^(https?:\/\/).+/i,
+                    message: "URL must start with http:// or https://",
+                  },
+                })}
+              />
+              {errors.URL && (
+                <span className="error-message">{errors.URL.message}</span>
+              )}
+            </fieldset>
 
-          <fieldset>
-            <label>Notes</label>
-            <textarea placeholder="Notes..." {...register('notes')} maxLength={500} />
-          </fieldset>
+            <fieldset>
+              <label>Notes</label>
+              <textarea
+                placeholder="Notes..."
+                {...register("notes")}
+                maxLength={500}
+              />
+            </fieldset>
 
-          <fieldset>
-            <label>Logo</label>
-            {previewImage ? (
-              <div className="image-selected">
-                <img src={previewImage} alt="Logo preview" />
-                <button type="button" onClick={() => { setPreviewImage(null); setSelectedImage(null); setRemoveImage(true); }}>
-                  ×
-                </button>
-              </div>
-            ) : (
-              <label className="upload-image-btn">
-                Choose File
-                <input type="file" accept="image/*" onChange={handleImageSelection} hidden />
-              </label>
-            )}
-            <small className="file-size-info">Max file size: 5MB</small>
-          </fieldset>
+            <fieldset>
+              <label>Logo</label>
+              {previewImage ? (
+                <div className="image-selected">
+                  <img src={previewImage} alt="Logo preview" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewImage(null);
+                      setSelectedImage(null);
+                      setRemoveImage(true);
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <label className="upload-image-btn">
+                  Choose File
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelection}
+                    hidden
+                  />
+                </label>
+              )}
+              <small className="file-size-info">Max file size: 5MB</small>
+            </fieldset>
 
-          <button type="submit" className="save-btn">Save</button>
-        </form>
-      </main>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid}
+            >
+              Save
+            </button>
+          </form>
+        </main>
+        <Footer />
+      </section>
     </>
   );
 };

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import "../../styles/custom-colors.css";
@@ -15,31 +16,132 @@ import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import ProductViewModal from "../../components/Modals/ProductViewModal";
 import Pagination from "../../components/Pagination";
 import usePagination from "../../hooks/usePagination";
+=======
+import { useEffect, useRef, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+>>>>>>> ui-merge-area
 import authService from "../../services/auth-service";
+import NavBar from "../../components/NavBar";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import FilterPanel from "../../components/FilterPanel";
+import Pagination from "../../components/Pagination";
+import ActionButtons from "../../components/ActionButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
+import DefaultImage from "../../assets/img/default-image.jpg";
+import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
+import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
+
+import "../../styles/Products/Products.css";
+
+// Filter configuration for products
+const filterConfig = [
+  {
+    type: "select",
+    name: "category",
+    label: "Category",
+    options: [
+      { value: "laptop", label: "Laptop" },
+      { value: "desktop", label: "Desktop" },
+      { value: "mobile", label: "Mobile Phone" },
+      { value: "tablet", label: "Tablet" },
+      { value: "accessory", label: "Accessory" },
+    ],
+  },
+  {
+    type: "text",
+    name: "manufacturer",
+    label: "Manufacturer",
+  },
+];
+
+// TableHeader
+function TableHeader({ allSelected, onHeaderChange }) {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={onHeaderChange}
+        />
+      </th>
+      <th>IMAGE</th>
+      <th>NAME</th>
+      <th>CATEGORY</th>
+      <th>MANUFACTURER</th>
+      <th>DEPRECIATION</th>
+      <th>END OF LIFE</th>
+      <th>ACTION</th>
+    </tr>
+  );
+}
+
+// TableItem
+function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+  const baseImage = product.image
+    ? `https://assets-service-production.up.railway.app${product.image}`
+    : DefaultImage;
+
+  return (
+    <tr>
+      <td>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onRowChange(product.id, e.target.checked)}
+        />
+      </td>
+      <td>
+        <img
+          src={baseImage}
+          alt={product.name}
+          className="table-img"
+          onError={(e) => {
+            e.target.src = DefaultImage;
+          }}
+        />
+      </td>
+      <td>{product.name}</td>
+      <td>{product.category}</td>
+      <td>{manufacturer}</td>
+      <td>{product.depreciation}</td>
+      <td>{product.end_of_life}</td>
+      <td>
+        <ActionButtons
+          showEdit
+          showDelete
+          showView
+          editPath={`/products/registration/${product.id}`}
+          editState={{ product }}
+          onDeleteClick={() => onDeleteClick(product.id)}
+          onViewClick={() => onViewClick(product)}
+        />
+      </td>
+    </tr>
+  );
+}
 
 export default function Products() {
   const location = useLocation();
-  const [isLoading, setLoading] = useState(true);
-  const [products, setProducts] = useState([]);
-  const [manufacturers, setManufacturers] = useState([]);
-  const [checkedItems, setCheckedItems] = useState([]);
-  const [endPoint, setEndPoint] = useState(null);
+  const navigate = useNavigate();
+  const [products] = useState(ProductsMockupData);
+  const [manufacturers] = useState(ManufacturersMockupData);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isViewModalOpen, setViewModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [exportToggle, setExportToggle] = useState(false);
+  const exportRef = useRef(null);
+  const toggleRef = useRef(null);
 
-  const allChecked = checkedItems.length === products.length;
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
-  // Filter products based on search query
-  const filteredProducts = products.filter(product => {
-    return product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           getManufacturerName(product.manufacturer_id).toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  // selection
+  const [selectedIds, setSelectedIds] = useState([]);
 
+<<<<<<< HEAD
   // Pagination logic
   const {
     currentPage,
@@ -50,9 +152,74 @@ export default function Products() {
     handleItemsPerPageChange
   } = usePagination(filteredProducts, 20);
 {/* Fetch products and manufacturers */}
+=======
+  // Paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedProducts = products.slice(startIndex, endIndex);
+
+  // selection logic
+  const allSelected =
+    paginatedProducts.length > 0 &&
+    paginatedProducts.every((item) => selectedIds.includes(item.id));
+
+  const handleHeaderChange = (e) => {
+    if (e.target.checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...paginatedProducts.map((item) => item.id).filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !paginatedProducts.map((item) => item.id).includes(id))
+      );
+    }
+  };
+
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
+
+  // delete modal state
+  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single id:", deleteTarget);
+      // remove from mock data / API call
+    } else {
+      console.log("Deleting multiple ids:", selectedIds);
+      // remove multiple
+      setSelectedIds([]); // clear selection
+    }
+    closeDeleteModal();
+  };
+
+  // Add view handler
+  const handleViewClick = (product) => {
+    navigate(`/products/view/${product.id}`);
+  };
+
+>>>>>>> ui-merge-area
   useEffect(() => {
+    // Using mockup data - no need to fetch from API
+    // Uncomment below to use real API data
+    /*
     const fetchData = async () => {
-      setLoading(true);
       try {
         const [productRes, manufacturerRes] = await Promise.all([
           assetsService.fetchAllProducts(),
@@ -63,10 +230,10 @@ export default function Products() {
       } catch (error) {
         console.error("Fetch error:", error);
         setErrorMessage("Failed to load data.");
-      } finally {
-        setLoading(false);
       }
     };
+    fetchData();
+    */
 
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
@@ -75,19 +242,34 @@ export default function Products() {
         window.history.replaceState({}, document.title);
       }, 5000);
     }
-
-    fetchData();
   }, [location]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        exportToggle &&
+        exportRef.current &&
+        !exportRef.current.contains(event.target) &&
+        toggleRef.current &&
+        !toggleRef.current.contains(event.target)
+      ) {
+        setExportToggle(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [exportToggle]);
 
   const getManufacturerName = (id) => {
     const found = manufacturers.find((m) => m.id === id);
     return found ? found.name : "-";
   };
 
-  const toggleSelectAll = () => {
-    setCheckedItems(allChecked ? [] : products.map((item) => item.id));
-  };
 
+<<<<<<< HEAD
   const toggleItem = (id) => {
     setCheckedItems((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
@@ -163,6 +345,8 @@ export default function Products() {
       setLoading(false);
     }
   };
+=======
+>>>>>>> ui-merge-area
 
   return (
     <>
@@ -170,177 +354,108 @@ export default function Products() {
       {successMessage && <Alert message={successMessage} type="success" />}
 
       {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={async () => {
-            await fetchProducts();
-            setSuccessMessage("Product Deleted Successfully!");
-            setTimeout(() => setSuccessMessage(""), 5000);
-          }}
-          onDeleteFail={() => {
-            setErrorMessage("Delete failed. Please try again.");
-            setTimeout(() => setErrorMessage(""), 5000);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
 
-      {isViewModalOpen && selectedProduct && (
-        <ProductViewModal
-          product={selectedProduct}
-          closeModal={() => setViewModalOpen(false)}
-        />
-      )}
 
-      <nav>
-        <NavBar />
-      </nav>
 
-      <main className="products-page">
-        <div className="container">
-          {isLoading ? (
-            <SkeletonLoadingTable />
-          ) : (
-            <>
-              <section className="top">
-                <h1>Products</h1>
-                <div>
-                  <form>
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </form>
-                  <MediumButtons type="export" />
+      <section>
+        <nav>
+          <NavBar />
+        </nav>
 
-                  {authService.getUserInfo().role === "Admin" && (
-                    <MediumButtons
-                      type="new"
-                      navigatePage="/products/registration"
-                    />
-                  )}
+        <main className="page-layout products-page">
+          <section className="title-page-section">
+            <h1>Products</h1>
+          </section>
+
+          <FilterPanel filters={filterConfig} />
+
+          <section className="table-layout">
+            <section className="table-header">
+              <h2 className="h2">Products ({products.length})</h2>
+              <section className="table-actions">
+                {/* Bulk delete button only when checkboxes selected */}
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
+                <input type="search" placeholder="Search..." className="search" />
+                <div ref={toggleRef}>
+                  <MediumButtons
+                    type="export"
+                    onClick={() => setExportToggle(!exportToggle)}
+                  />
                 </div>
+                {authService.getUserInfo().role === "Admin" && (
+                  <MediumButtons
+                    type="new"
+                    navigatePage="/products/registration"
+                  />
+                )}
               </section>
+            </section>
 
-              <section className="middle">
-                <div className="table-wrapper">
-                  <table>
-                  <thead>
+            {exportToggle && (
+              <section className="export-button-section" ref={exportRef}>
+                <button>Download as Excel</button>
+                <button>Download as PDF</button>
+                <button>Download as CSV</button>
+              </section>
+            )}
+
+            <section className="table-section">
+              <table>
+                <thead>
+                  <TableHeader
+                    allSelected={allSelected}
+                    onHeaderChange={handleHeaderChange}
+                  />
+                </thead>
+                <tbody>
+                  {paginatedProducts.length > 0 ? (
+                    paginatedProducts.map((product) => (
+                      <TableItem
+                        key={product.id}
+                        product={product}
+                        manufacturer={getManufacturerName(
+                          product.manufacturer_id
+                        )}
+                        isSelected={selectedIds.includes(product.id)}
+                        onRowChange={handleRowChange}
+                        onDeleteClick={openDeleteModal}
+                        onViewClick={handleViewClick}
+                      />
+                    ))
+                  ) : (
                     <tr>
-                      <th>
-                        <input
-                          type="checkbox"
-                          checked={allChecked}
-                          onChange={toggleSelectAll}
-                        />
-                      </th>
-                      <th>IMAGE</th>
-                      <th>NAME</th>
-                      <th>CATEGORY</th>
-                      <th>MANUFACTURER</th>
-                      <th>DEPRECIATION</th>
-                      <th>END OF LIFE</th>
-                      {authService.getUserInfo().role === "Admin" && (
-                        <>
-                          <th>EDIT</th>
-                          <th>DELETE</th>
-                        </>
-                      )}
-                      <th>VIEW</th>
+                      <td colSpan={8} className="no-data-message">
+                        No Products Found.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProducts.length === 0 ? (
-                      <tr>
-                        <td colSpan="11" className="no-products-message">
-                          <p>No products found. Please add some products.</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      paginatedData.map((product) => (
-                        <tr key={product.id}>
-                          <td>
-                            <input
-                              type="checkbox"
-                              checked={checkedItems.includes(product.id)}
-                              onChange={() => toggleItem(product.id)}
-                            />
-                          </td>
-                          <td>
-                            <img
-                              src={
-                                product.image
-                                  ? `https://assets-service-production.up.railway.app${product.image}`
-                                  : DefaultImage
-                              }
-                              alt={`Product-${product.name}`}
-                              className="table-img"
-                              onError={(e) => {
-                                e.target.src = DefaultImage;
-                              }}
-                            />
-                          </td>
-                          <td>{product.name}</td>
-                          <td>{product.category}</td>
-                          <td>
-                            {getManufacturerName(product.manufacturer_id)}
-                          </td>
-                          <td>{product.depreciation}</td>
-                          <td>{product.end_of_life}</td>
-                          {authService.getUserInfo().role === "Admin" && (
-                            <>
-                              <td>
-                                <TableBtn
-                                  type="edit"
-                                  navigatePage={`/products/registration/${product.id}`}
-                                  data={product.id}
-                                />
-                              </td>
-                              <td>
-                                <TableBtn
-                                  type="delete"
-                                  showModal={() => {
-                                    setEndPoint(
-                                      `https://assets-service-production.up.railway.app/products/${product.id}/delete/`
-                                    );
-                                    setDeleteModalOpen(true);
-                                  }}
-                                  data={product.id}
-                                />
-                              </td>
-                            </>
-                          )}
-                          <td>
-                            <TableBtn
-                              type="view"
-                              onClick={() => handleView(product.id)}
-                            />
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-                </div>
-              </section>
+                  )}
+                </tbody>
+              </table>
+            </section>
 
-              {/* Pagination */}
-              {filteredProducts.length > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={totalItems}
-                  itemsPerPage={itemsPerPage}
-                  onPageChange={handlePageChange}
-                  onItemsPerPageChange={handleItemsPerPageChange}
-                  itemsPerPageOptions={[10, 20, 50, 100]}
-                />
-              )}
-            </>
-          )}
-        </div>
-      </main>
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={products.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+      </section>
     </>
   );
 }

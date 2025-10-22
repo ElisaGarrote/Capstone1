@@ -14,6 +14,16 @@ export default function Status({
     - undeployable
     - pending
     - deployable
+    - lost
+    - create
+    - update
+    - delete
+    - checkin
+    - checkout
+    - schedule
+    - passed
+    - failed
+    - repair
   */
 
   return (

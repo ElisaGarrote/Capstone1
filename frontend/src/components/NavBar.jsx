@@ -102,7 +102,11 @@ export default function NavBar() {
       location.pathname.startsWith("/components")
     ) {
       setActiveMenu("assets");
+<<<<<<< HEAD
     } else if (location.pathname.startsWith("/repairs")) {
+=======
+    } else if (location.pathname.startsWith("/Repair")) {
+>>>>>>> ui-merge-area
       setActiveMenu("repairs");
     } else if (location.pathname.startsWith("/audits")) {
       setActiveMenu("audits");

@@ -1,13 +1,22 @@
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
+=======
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+>>>>>>> ui-merge-area
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
-import "../../styles/Category.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
-import { useNavigate } from "react-router-dom";
 import DeleteModal from "../../components/Modals/DeleteModal";
+<<<<<<< HEAD
 import { fetchAllCategories, deleteCategory, } from "../../services/contexts-service";
 import DefaultImage from "../../assets/img/default-image.jpg";
+=======
+import Footer from "../../components/Footer";
+
+import "../../styles/Category.css";
+>>>>>>> ui-merge-area
 
 
 const filterConfig = [
@@ -78,7 +87,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
             title="Edit"
             className="action-button"
             onClick={() =>
-              navigate("/Repair/CategoryEdit", { state: { category } })
+              navigate("/More/CategoryEdit", { state: { category } })
             }
           >
             <i className="fas fa-edit"></i>
@@ -172,12 +181,10 @@ export default function Category() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
+        <main className="main-with-table">
           {/* Table Filter */}
           <CategoryFilter filters={filterConfig} />
 
@@ -247,6 +254,7 @@ export default function Category() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

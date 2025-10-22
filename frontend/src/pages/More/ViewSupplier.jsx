@@ -1,22 +1,149 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/custom-colors.css';
-import '../../styles/PageTable.css';
-import '../../styles/GlobalTableStyles.css';
-import '../../styles/ViewSupplier.css';
-import '../../styles/TableButtons.css';
-import '../../styles/SupplierURLFix.css';
-import '../../styles/SupplierColumnSpacingFix.css';
-import DeleteModal from '../../components/Modals/DeleteModal';
-import MediumButtons from "../../components/buttons/MediumButtons";
-import TableBtn from "../../components/buttons/TableButtons";
-import SupplierTableDetails from './SupplierTableDetails';
-import Alert from "../../components/Alert";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import NavBar from "../../components/NavBar";
+import DeleteModal from "../../components/Modals/DeleteModal";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import Alert from "../../components/Alert";
+<<<<<<< HEAD
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+=======
+import contextsService from "../../services/contexts-service";
+import Pagination from "../../components/Pagination";
+import SupplierFilter from "../../components/FilterPanel";
+import Footer from "../../components/Footer";
+>>>>>>> ui-merge-area
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllCategories } from '../../services/contexts-service';
 
+import "../../styles/ViewSupplier.css";
+
+const filterConfig = [
+  {
+    type: "text",
+    name: "supplierName",
+    label: "Supplier Name",
+  },
+  {
+    type: "select",
+    name: "city",
+    label: "City",
+    options: [
+      { value: "makati", label: "Makati" },
+      { value: "marikina", label: "Marikina" },
+      { value: "pasig", label: "Pasig" },
+    ],
+  },
+  {
+    type: "text",
+    name: "contactPerson",
+    label: "Contat Person",
+  },
+];
+
+// TableHeader component to render the table header
+function TableHeader() {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          name="checkbox-supplier"
+          id="checkbox-supplier"
+        />
+      </th>
+      <th>NAME</th>
+      <th>ADDRESS</th>
+      <th>CITY</th>
+      <th>ZIP</th>
+      <th>CONTACT PERSON</th>
+      <th>PHONE</th>
+      <th>EMAIL</th>
+      <th>URL</th>
+      <th>ACTIONS</th>
+    </tr>
+  );
+}
+
+// TableItem component to render each ticket row
+function TableItem({ supplier, onDeleteClick }) {
+  const navigate = useNavigate();
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  return (
+    <tr>
+      <td>
+        <div className="checkbox-supplier">
+          <input type="checkbox" name="" id="" />
+        </div>
+      </td>
+      <td>
+        <div className="supplier-name">
+          <img
+            src={supplier.logo ? supplier.logo : DefaultImage}
+            alt={supplier.logo}
+          />
+          <Link
+            to={`/More/SupplierDetails/${supplier.id}`}
+            state={{ supplier }}
+            className="supplier-name-link"
+          >
+            {supplier.name}
+          </Link>
+          {/* <span
+            onClick={() =>
+              navigate(`/More/SupplierDetails/${supplier.id}`, {
+                state: { supplier },
+              })
+            }
+          >
+            {supplier.name}
+          </span> */}
+        </div>
+      </td>
+      <td>{supplier.address || "-"}</td>
+      <td>{supplier.city || "-"}</td>
+      <td>{supplier.zip || "-"}</td>
+      <td>{supplier.contactName || "-"}</td>
+      <td>{supplier.phoneNumber || "-"}</td>
+      <td>{supplier.email || "-"}</td>
+      <td>{supplier.url || "-"}</td>
+      <td>
+        <section className="action-button-section">
+          <button
+            title="View"
+            className="action-button"
+            onClick={() =>
+              navigate(`/More/SupplierDetails/${supplier.id}`, {
+                state: { supplier },
+              })
+            }
+          >
+            <i className="fas fa-eye"></i>
+          </button>
+          <button
+            title="Edit"
+            className="action-button"
+            onClick={() =>
+              navigate(`/More/SupplierRegistration/${supplier.id}`, {
+                state: { supplier },
+              })
+            }
+          >
+            <i className="fas fa-edit"></i>
+          </button>
+          <button
+            title="Delete"
+            className="action-button"
+            onClick={onDeleteClick}
+          >
+            <i className="fas fa-trash-alt"></i>
+          </button>
+        </section>
+      </td>
+    </tr>
+  );
+}
 
 export default function ViewSupplier() {
   const location = useLocation();
@@ -31,17 +158,21 @@ export default function ViewSupplier() {
   const allChecked = checkedItems.length === suppliers.length;
   const navigate = useNavigate();
 
-  const [itemsPerPage, setItemsPerPage] = useState(20);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
-  const contextServiceUrl = "https://contexts-service-production.up.railway.app";
-  
+  const [searchQuery, setSearchQuery] = useState("");
+  const contextServiceUrl =
+    "https://contexts-service-production.up.railway.app";
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
+<<<<<<< HEAD
         const suppRes = await fetchAllCategories();
         const mapped = (suppRes || []).map(supp => ({
+=======
+        const suppRes = await contextsService.fetchAllSuppliers();
+        const mapped = (suppRes || []).map((supp) => ({
+>>>>>>> ui-merge-area
           id: supp.id,
           name: supp.name,
           address: supp.address,
@@ -90,7 +221,7 @@ export default function ViewSupplier() {
     setLoading(true);
     try {
       const res = await contextsService.fetchAllSuppliers();
-      const mapped = (res || []).map(supp => ({
+      const mapped = (res || []).map((supp) => ({
         id: supp.id,
         name: supp.name,
         address: supp.address,
@@ -114,11 +245,19 @@ export default function ViewSupplier() {
     setSearchQuery(e.target.value);
   };
 
-  const filteredSuppliers = suppliers.filter(supplier =>
+  const filteredSuppliers = suppliers.filter((supplier) =>
     supplier.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+
+  // paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedSuppliers = filteredSuppliers.slice(startIndex, endIndex);
+
   // ----------------- Render -----------------
   return (
     <>
@@ -129,6 +268,7 @@ export default function ViewSupplier() {
         <DeleteModal
           endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
           confirmDelete={async () => {
             await fetchSuppliers();
             setSuccessMessage("Supplier Deleted Successfully!");
@@ -141,124 +281,77 @@ export default function ViewSupplier() {
         />
       )}
 
-      <nav>
+      <section className="page-layout-with-table">
         <NavBar />
-      </nav>
-      <main className="page">
-        <div className="container">
-          {isLoading ? (
-            <SkeletonLoadingTable />
-          ) : (
-            <>
-              <section className="top">
-                <h1 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0', color: '#545f71' }}>Suppliers ({suppliers.length})</h1>
-                <div>
-                  <form action="" method="post" style={{ marginRight: '10px' }}>
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      className="search-input"
-                    />
-                  </form>
-                  <MediumButtons type="export" />
-                  <MediumButtons type="new" navigatePage="/More/SupplierRegistration" />
-                </div>
+
+        <main className="main-with-table">
+          {/* Table Filter */}
+          <SupplierFilter filters={filterConfig} />
+
+          <section className="table-layout">
+            {/* Table Header */}
+            <section className="table-header">
+              <h2 className="h2">Suppliers ({filteredSuppliers.length})</h2>
+              <section className="table-actions">
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="search"
+                />
+                <MediumButtons
+                  type="new"
+                  navigatePage="/More/SupplierRegistration"
+                />
               </section>
-              <section className="middle">
-                <table className="suppliers-table">
-                  <thead>
+            </section>
+
+            {/* Table Structure */}
+            <section className="supplier-page-table-section">
+              <table>
+                <thead>
+                  <TableHeader />
+                </thead>
+                <tbody>
+                  {paginatedSuppliers.length > 0 ? (
+                    paginatedSuppliers.map((supplier, index) => (
+                      <TableItem
+                        key={index}
+                        supplier={supplier}
+                        onDeleteClick={() => {
+                          setEndPoint(
+                            `${contextServiceUrl}/contexts/suppliers/${supplier.id}/delete/`
+                          );
+                          setDeleteModalOpen(true);
+                        }}
+                      />
+                    ))
+                  ) : (
                     <tr>
-                      <th className="checkbox-header">
-                        <input
-                          type="checkbox"
-                          checked={allChecked}
-                          onChange={toggleSelectAll}
-                        />
-                      </th>
-                      <th className="name-header">NAME</th>
-                      <th className="address-header">ADDRESS</th>
-                      <th className="city-header">CITY</th>
-                      <th className="country-header">ZIP</th>
-                      <th className="contact-header">CONTACT</th>
-                      <th className="phone-header">PHONE</th>
-                      <th className="email-header">EMAIL</th>
-                      <th className="url-header" style={{ textAlign: 'left', paddingLeft: '12px' }}>
-                        <div style={{ textAlign: 'left', display: 'block' }}>URL</div>
-                      </th>
-                      <th className="action-header">EDIT</th>
-                      <th className="action-header">DELETE</th>
+                      <td colSpan={10} className="no-data-message">
+                        No suppliers available.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSuppliers.map((supplier) => (
-                      <tr key={supplier.id} className="supplier-row">
-                        <td className="checkbox-cell">
-                          <input
-                            type="checkbox"
-                            checked={checkedItems.includes(supplier.id)}
-                            onChange={() => toggleItem(supplier.id)}
-                          />
-                        </td>
-                        <td className="name-cell">
-                          <div className="supplier-name-container">
-                            {supplier.logo && (
-                              <div className="supplier-logo">
-                                <img src={`${contextServiceUrl}${supplier.logo}`} alt={supplier.name} />
-                              </div>
-                            )}
-                            <span className="supplier-name" style={{ color: '#545f71' }}>{supplier.name}</span>
-                          </div>
-                        </td>
-                        <td className="address-cell" style={{ color: '#545f71' }}>{supplier.address}</td>
-                        <td className="city-cell" style={{ color: '#545f71' }}>{supplier.city}</td>
-                        <td className="country-cell" style={{ color: '#545f71' }}>{supplier.zip}</td>
-                        <td className="contact-cell" style={{ color: '#545f71' }}>{supplier.contactName}</td>
-                        <td className="phone-cell" style={{ color: '#545f71' }}>{supplier.phoneNumber}</td>
-                        <td className="email-cell" style={{ color: '#545f71' }} title={supplier.email}>{supplier.email}</td>
-                        <td className="url-cell" style={{ color: '#545f71', textAlign: 'left', paddingLeft: '12px', paddingRight: '20px' }} title={supplier.url}>{supplier.url}</td>
-                        <td className="action-cell" style={{ textAlign: 'center' }}>
-                          <TableBtn
-                            type="edit"
-                            navigatePage={`/More/SupplierRegistration/${supplier.id}`}
-                            data={supplier.id}
-                          />
-                        </td>
-                        <td className="action-cell" style={{ textAlign: 'center' }}>
-                          <TableBtn
-                            type="delete"
-                            showModal={() => {
-                              setEndPoint(`${contextServiceUrl}/contexts/suppliers/${supplier.id}/delete/`);
-                              setDeleteModalOpen(true);
-                            }}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-              <section className="bottom" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '16px 34px', borderTop: '1px solid #d3d3d3' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71' }}>
-                  <span style={{ color: '#545f71' }}>Show</span>
-                  <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))} style={{ color: '#545f71' }}>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <span style={{ color: '#545f71' }}>items per page</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <button className="prev-btn" disabled={currentPage === 1} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Prev</button>
-                  <span className="page-number" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '30px', height: '30px', backgroundColor: '#007bff', color: 'white', borderRadius: '4px', fontSize: '14px' }}>{currentPage}</span>
-                  <button className="next-btn" disabled={filteredSuppliers.length <= itemsPerPage} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Next</button>
-                </div>
-              </section>
-            </>
-          )}
-        </div>
-      </main>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            {/* Table pagination */}
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={filteredSuppliers.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+        <Footer />
+      </section>
     </>
   );
 }

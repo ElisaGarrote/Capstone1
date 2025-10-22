@@ -310,19 +310,17 @@ export default function ProductsRegistration() {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      <nav>
-        <NavBar />
-      </nav>
-      <main className='perform-audit-page'>
-        <section className='top'>
+      <nav><NavBar /></nav>
+      <main className="registration">
+        <section className="top">
           <TopSecFormPage
-            root='Products'
-            currentPage={id ? 'Edit Product' : 'New Product'}
-            rootNavigatePage='/products'
+            root="Products"
+            currentPage={id ? "Edit Product" : "New Product"}
+            rootNavigatePage="/products"
             title={id ? 'Edit' + ' ' + (product?.name || 'Product') : 'New Product'}
           />
         </section>
-        <section className='perform-audit-form'>
+        <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
 
             {/* Product Name */}

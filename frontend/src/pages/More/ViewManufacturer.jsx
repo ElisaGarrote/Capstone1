@@ -6,6 +6,12 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
+<<<<<<< HEAD
+=======
+import contextsService from "../../services/contexts-service";
+import Footer from "../../components/Footer";
+
+>>>>>>> ui-merge-area
 import "../../styles/Manufacturer.css";
 
 // TableHeader component to render the table header
@@ -57,9 +63,6 @@ function TableItem({ manufacturer, onDeleteClick }) {
       <td>{manufacturer.notes || "-"}</td>
       <td>
         <section className="action-button-section">
-          <button title="View" className="action-button">
-            <i className="fas fa-eye"></i>
-          </button>
           <button
             title="Edit"
             className="action-button"
@@ -213,12 +216,10 @@ export default function ViewManuDraft() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
+        <main className="main-with-table">
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
@@ -283,6 +284,7 @@ export default function ViewManuDraft() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

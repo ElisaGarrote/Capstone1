@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+<<<<<<< HEAD
 import "../../styles/custom-colors.css";
 import "../../styles/Assets.css";
 import "../../styles/StandardizedButtons.css";
@@ -13,46 +14,235 @@ import assetsService from "../../services/assets-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import AssetViewModal from "../../components/Modals/AssetViewModal";
 import dtsService from "../../services/dts-integration-service";
+=======
+>>>>>>> ui-merge-area
 import authService from "../../services/auth-service";
+import NavBar from "../../components/NavBar";
+import Status from "../../components/Status";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import AssetFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
+<<<<<<< HEAD
 import usePagination from "../../hooks/usePagination";
 import { fetchAllCategories } from "../../services/contexts-service";
+=======
+import ActionButtons from "../../components/ActionButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
+import DefaultImage from "../../assets/img/default-image.jpg";
+import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
+
+import "../../styles/Assets/Assets.css";
+
+// Filter configuration for assets
+const filterConfig = [
+  {
+    type: "select",
+    name: "status",
+    label: "Status",
+    options: [
+      { value: "archived", label: "Archived" },
+      { value: "beingrepaired", label: "Being Repaired" },
+      { value: "broken", label: "Broken" },
+      { value: "deployed", label: "Deployed" },
+      { value: "lostorstolen", label: "Lost or Stolen" },
+      { value: "pending", label: "Pending" },
+      { value: "readytodeploy", label: "Ready to Deploy" },
+    ],
+  },
+  {
+    type: "text",
+    name: "category",
+    label: "Category",
+  },
+  {
+    type: "text",
+    name: "location",
+    label: "Location",
+  },
+];
+
+// TableHeader
+function TableHeader({ allSelected, onHeaderChange }) {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={onHeaderChange}
+        />
+      </th>
+      <th>IMAGE</th>
+      <th>ASSET ID</th>
+      <th>NAME</th>
+      <th>CATEGORY</th>
+      <th>STATUS</th>
+      <th>LOCATION</th>
+      <th>CHECK-IN / CHECK-OUT</th>
+      <th>ACTION</th>
+    </tr>
+  );
+}
+
+// TableItem
+function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+  const baseImage = asset.image
+    ? `https://assets-service-production.up.railway.app${asset.image}`
+    : DefaultImage;
+
+  return (
+    <tr>
+      <td>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onRowChange(asset.id, e.target.checked)}
+        />
+      </td>
+      <td>
+        <img
+          src={baseImage}
+          alt={asset.name}
+          className="table-img"
+          onError={(e) => {
+            e.target.src = DefaultImage;
+          }}
+        />
+      </td>
+      <td>{asset.displayed_id}</td>
+      <td>{asset.name}</td>
+      <td>{asset.category}</td>
+      <td>
+        <Status type={asset.status.toLowerCase()} name={asset.status} />
+      </td>
+      <td>{asset.location || "-"}</td>
+
+      {/* CHECK-IN / CHECK-OUT Column */}
+      <td>
+        {asset.hasCheckoutRecord && asset.isCheckInOrOut && (
+          <button
+            className={
+              asset.isCheckInOrOut === "Check-In"
+                ? "check-in-btn"
+                : "check-out-btn"
+            }
+            onClick={() => onCheckInOut(asset)}
+          >
+            {asset.isCheckInOrOut}
+          </button>
+        )}
+      </td>
+
+      <td>
+        <ActionButtons
+          showEdit
+          showDelete
+          showView
+          editPath={`/assets/registration/${asset.id}`}
+          editState={{ asset }}
+          onDeleteClick={() => onDeleteClick(asset.id)}
+          onViewClick={() => onViewClick(asset)}
+        />
+      </td>
+    </tr>
+  );
+}
+>>>>>>> ui-merge-area
 
 export default function Assets() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [exportToggle, setExportToggle] = useState(false);
+  const exportRef = useRef(null);
+  const toggleRef = useRef(null);
 
-  const [assets, setAssets] = useState([]);
-  const [checkedItems, setCheckedItems] = useState([]);
-  const [isLoading, setLoading] = useState(true);
-  const [endPoint, setEndPoint] = useState(null);
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedAssets = MockupData.slice(startIndex, endIndex);
+
+  // selection
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  const allSelected =
+    paginatedAssets.length > 0 &&
+    paginatedAssets.every((item) => selectedIds.includes(item.id));
+
+  const handleHeaderChange = (e) => {
+    if (e.target.checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...paginatedAssets.map((item) => item.id).filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !paginatedAssets.map((item) => item.id).includes(id))
+      );
+    }
+  };
+
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
+
+  // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isViewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single id:", deleteTarget);
+      // remove from mock data / API call
+    } else {
+      console.log("Deleting multiple ids:", selectedIds);
+    
+      setSelectedIds([]); 
+    }
+    closeDeleteModal();
+  };
+
+
+  const handleViewClick = (asset) => {
+    navigate(`/assets/view/${asset.id}`);
+  };
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const allChecked = checkedItems.length === assets.length && assets.length > 0;
-
-  // Filter assets based on search query
-  const filteredAssets = assets.filter(asset => {
-    return asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           asset.displayed_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           asset.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           asset.status.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  // Pagination logic
-  const {
-    currentPage,
-    itemsPerPage,
-    paginatedData,
-    totalItems,
-    handlePageChange,
-    handleItemsPerPageChange
-  } = usePagination(filteredAssets, 20);
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        exportToggle &&
+        exportRef.current &&
+        !exportRef.current.contains(event.target) &&
+        toggleRef.current &&
+        !toggleRef.current.contains(event.target)
+      ) {
+        setExportToggle(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [exportToggle]);
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -62,76 +252,7 @@ export default function Assets() {
         window.history.replaceState({}, document.title);
       }, 5000);
     }
-
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [assetsResponse, checkoutsResponse] = await Promise.all([
-          assetsService.fetchAllAssets(),
-          dtsService.fetchAssetCheckouts(),
-        ]);
-        const assetData = assetsResponse.assets || [];
-        const checkouts = checkoutsResponse || [];
-
-        const checkoutMap = {};
-        checkouts.forEach((record) => {
-          if (record.asset_id != null) {
-            checkoutMap[record.asset_id] = record;
-          }
-        });
-
-        const enrichedAssets = assetData.map((asset) => {
-          const checkout = checkoutMap[asset.id];
-          let isCheckInOrOut = null;
-
-          if (checkout && !checkout.is_resolved) {
-            isCheckInOrOut = checkout.checkin_date ? "Check-In" : "Check-Out";
-          }
-
-          return {
-            ...asset,
-            hasCheckoutRecord: checkout && !checkout.is_resolved,
-            checkoutRecord: checkout || null,
-            isCheckInOrOut,
-          };
-        });
-
-        console.log("data:", enrichedAssets);
-        setAssets(enrichedAssets);
-      } catch (error) {
-        console.error("Error fetching assets:", error);
-        setAssets([]);
-        setErrorMessage("Failed to load assets.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
   }, [location]);
-
-  const toggleSelectAll = () => {
-    setCheckedItems(allChecked ? [] : assets.map((asset) => asset.id));
-  };
-
-  const toggleItem = (id) => {
-    setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]
-    );
-  };
-
-  const fetchAssets = async () => {
-    setLoading(true);
-    try {
-      const response = await assetsService.fetchAllAssets();
-      setAssets(response.assets || []);
-    } catch (error) {
-      console.error("Error fetching assets:", error);
-      setAssets([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCheckInOut = (asset) => {
     const baseImage = asset.image
@@ -178,11 +299,8 @@ export default function Assets() {
     }
   };
 
-  const handleView = async (assetId) => {
-    try {
-      setLoading(true);
-      setErrorMessage("");
 
+<<<<<<< HEAD
       const assetData = await assetsService.fetchAssetById(assetId);
       if (!assetData) {
         setErrorMessage("Asset details not found.");
@@ -216,6 +334,8 @@ export default function Assets() {
       setLoading(false);
     }
   };
+=======
+>>>>>>> ui-merge-area
 
   return (
     <>
@@ -223,180 +343,104 @@ export default function Assets() {
       {successMessage && <Alert message={successMessage} type="success" />}
 
       {isDeleteModalOpen && (
-        <DeleteModal
-          endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={async () => {
-            await fetchAssets();
-            setSuccessMessage("Asset Deleted Successfully!");
-            setTimeout(() => setSuccessMessage(""), 5000);
-          }}
-          onDeleteFail={() => {
-            setErrorMessage("Delete failed. Please try again.");
-            setTimeout(() => setErrorMessage(""), 5000);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
 
-      {isViewModalOpen && selectedAsset && (
-        <AssetViewModal
-          asset={selectedAsset}
-          closeModal={() => setViewModalOpen(false)}
-        />
-      )}
+      <section>
+        <nav>
+          <NavBar />
+        </nav>
 
-      <nav>
-        <NavBar />
-      </nav>
-
-      <main className="assets-page">
-        <div className="container">
-          <section className="top">
+        <main className="page-layout assets-page">
+          <section className="title-page-section">
             <h1>Assets</h1>
-            <div>
-              <form>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </form>
-              <MediumButtons type="export" />
-              {authService.getUserInfo().role === "Admin" && (
-                <MediumButtons type="new" navigatePage="/assets/registration" />
-              )}
-            </div>
           </section>
 
-          {isLoading ? (
-            <SkeletonLoadingTable />
-          ) : (
-            <>
-              <section className="middle">
-                <div className="table-wrapper">
-                  <table>
+          <AssetFilter filters={filterConfig} />
+
+          <section className="table-layout">
+            <section className="table-header">
+              <h2 className="h2">Assets ({MockupData.length})</h2>
+              <section className="table-actions">
+                {/* Bulk delete button only when checkboxes selected */}
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
+                <input type="search" placeholder="Search..." className="search" />
+                <div ref={toggleRef}>
+                  <MediumButtons
+                    type="export"
+                    onClick={() => setExportToggle(!exportToggle)}
+                  />
+                </div>
+                {authService.getUserInfo().role === "Admin" && (
+                  <MediumButtons
+                    type="new"
+                    navigatePage="/assets/registration"
+                  />
+                )}
+              </section>
+            </section>
+
+            {exportToggle && (
+              <section className="export-button-section" ref={exportRef}>
+                <button>Download as Excel</button>
+                <button>Download as PDF</button>
+                <button>Download as CSV</button>
+              </section>
+            )}
+
+            <section className="table-section">
+              <table>
                 <thead>
-                  <tr>
-                    <th>
-                      <input
-                        type="checkbox"
-                        checked={allChecked}
-                        onChange={toggleSelectAll}
-                      />
-                    </th>
-                    <th>IMAGE</th>
-                    <th>ID</th>
-                    <th>NAME</th>
-                    <th>CATEGORY</th>
-                    <th>STATUS</th>
-                    <th>CHECKIN/CHECKOUT</th>
-                    {authService.getUserInfo().role === "Admin" && (
-                      <>
-                        <th>EDIT</th>
-                        <th>DELETE</th>
-                      </>
-                    )}
-                    <th>VIEW</th>
-                  </tr>
+                  <TableHeader
+                    allSelected={allSelected}
+                    onHeaderChange={handleHeaderChange}
+                  />
                 </thead>
                 <tbody>
-                  {filteredAssets.length === 0 ? (
+                  {paginatedAssets.length > 0 ? (
+                    paginatedAssets.map((asset) => (
+                      <TableItem
+                        key={asset.id}
+                        asset={asset}
+                        isSelected={selectedIds.includes(asset.id)}
+                        onRowChange={handleRowChange}
+                        onDeleteClick={openDeleteModal}
+                        onViewClick={handleViewClick}
+                        onCheckInOut={handleCheckInOut}
+                      />
+                    ))
+                  ) : (
                     <tr>
-                      <td colSpan="10" className="no-assets-message">
-                        <p>No assets found. Please add some assets.</p>
+                      <td colSpan={9} className="no-data-message">
+                        No Assets Found.
                       </td>
                     </tr>
-                  ) : (
-                    paginatedData.map((asset) => (
-                      <tr key={asset.id}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={checkedItems.includes(asset.id)}
-                            onChange={() => toggleItem(asset.id)}
-                          />
-                        </td>
-                        <td>
-                          <img
-                            className="table-img"
-                            src={
-                              asset.image
-                                ? `https://assets-service-production.up.railway.app${asset.image}`
-                                : DefaultImage
-                            }
-                            alt={`Asset-${asset.name}`}
-                            onError={(e) => {
-                              e.target.src = DefaultImage;
-                            }}
-                          />
-                        </td>
-                        <td>{asset.displayed_id}</td>
-                        <td>{asset.name}</td>
-                        <td>{asset.category}</td>
-                        <td>{asset.status}</td>
-                        <td>
-                          {asset.hasCheckoutRecord && asset.isCheckInOrOut && (
-                            <button
-                              className={asset.isCheckInOrOut === "Check-In" ? "check-in-btn" : "check-out-btn"}
-                              onClick={() => handleCheckInOut(asset)}
-                            >
-                              {asset.isCheckInOrOut}
-                            </button>
-                          )}
-                        </td> 
-                        {authService.getUserInfo().role === "Admin" && (
-                          <>
-                            <td>
-                              <TableBtn
-                                type="edit"
-                                navigatePage={`/assets/registration/${asset.id}`}
-                                data={asset.id}
-                              />
-                            </td>
-                            <td>
-                              <TableBtn
-                                type="delete"
-                                showModal={() => {
-                                  setEndPoint(
-                                    `https://assets-service-production.up.railway.app/assets/${asset.id}/delete/`
-                                  );
-                                  setDeleteModalOpen(true);
-                                }}
-                                data={asset.id}
-                              />
-                            </td>
-                          </>
-                        )}
-                        <td>
-                          <TableBtn
-                            type="view"
-                            onClick={() => handleView(asset.id)}
-                          />
-                        </td>
-                      </tr>
-                    ))
                   )}
                 </tbody>
               </table>
-              </div>
             </section>
 
-              {/* Pagination */}
-              {filteredAssets.length > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalItems={totalItems}
-                  itemsPerPage={itemsPerPage}
-                  onPageChange={handlePageChange}
-                  onItemsPerPageChange={handleItemsPerPageChange}
-                  itemsPerPageOptions={[10, 20, 50, 100]}
-                />
-              )}
-            </>
-          )}
-        </div>
-      </main>
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={MockupData.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+      </section>
     </>
   );
 }
