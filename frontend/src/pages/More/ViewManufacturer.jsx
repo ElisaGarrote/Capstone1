@@ -7,6 +7,7 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Footer from "../../components/Footer";
+import MockupData from "../../data/mockData/more/manufacturer-mockup-data.json";
 
 import "../../styles/Manufacturer.css";
 
@@ -53,8 +54,8 @@ function TableItem({ manufacturer, onDeleteClick }) {
         </div>
       </td>
       <td>{manufacturer.url || "-"}</td>
-      <td>{manufacturer.supportUrl || "-"}</td>
-      <td>{manufacturer.phone || "-"}</td>
+      <td>{manufacturer.support_url || "-"}</td>
+      <td>{manufacturer.phone_number || "-"}</td>
       <td>{manufacturer.email || "-"}</td>
       <td>{manufacturer.notes || "-"}</td>
       <td>
@@ -185,10 +186,7 @@ export default function ViewManuDraft() {
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedManufacturer = filteredManufacturers.slice(
-    startIndex,
-    endIndex
-  );
+  const paginatedManufacturer = MockupData.slice(startIndex, endIndex);
 
   return (
     <>
@@ -219,9 +217,7 @@ export default function ViewManuDraft() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">
-                Manufacturers ({filteredManufacturers.length})
-              </h2>
+              <h2 className="h2">Manufacturers ({MockupData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
