@@ -1,14 +1,3 @@
-<<<<<<< HEAD
-import React, { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/Registration.css';
-import '../../styles/SupplierRegistration.css';
-import TopSecFormPage from '../../components/TopSecFormPage';
-import Alert from '../../components/Alert';
-import SystemLoading from '../../components/Loading/SystemLoading';
-=======
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,12 +5,10 @@ import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import contextsService from "../../services/contexts-service";
 import Footer from "../../components/Footer";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
->>>>>>> ui-merge-area
 
 const SupplierRegistration = () => {
   const { id } = useParams();
@@ -59,14 +46,8 @@ const SupplierRegistration = () => {
     const initialize = async () => {
       try {
         if (id) {
-<<<<<<< HEAD
           const supplierData = await fetchAllCategories();
           if (!supplierData) throw new Error('Failed to fetch supplier details');
-=======
-          const supplierData = await contextsService.fetchSupplierById(id);
-          if (!supplierData)
-            throw new Error("Failed to fetch supplier details");
->>>>>>> ui-merge-area
 
           setValue("name", supplierData.name || "");
           setValue("address", supplierData.address || "");

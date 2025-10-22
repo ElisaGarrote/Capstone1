@@ -1,25 +1,5 @@
-<<<<<<< HEAD
-import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import "../../styles/custom-colors.css";
-import "../../styles/Products.css";
-import "../../styles/StandardizedButtons.css";
-import NavBar from "../../components/NavBar";
-import TableBtn from "../../components/buttons/TableButtons";
-import DefaultImage from "../../assets/img/default-image.jpg";
-import MediumButtons from "../../components/buttons/MediumButtons";
-import DeleteModal from "../../components/Modals/DeleteModal";
-import Alert from "../../components/Alert";
-import assetsService from "../../services/assets-service";
-import { fetchAllCategories } from "../../services/contexts-service";
-import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
-import ProductViewModal from "../../components/Modals/ProductViewModal";
-import Pagination from "../../components/Pagination";
-import usePagination from "../../hooks/usePagination";
-=======
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
->>>>>>> ui-merge-area
 import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -141,18 +121,6 @@ export default function Products() {
   // selection
   const [selectedIds, setSelectedIds] = useState([]);
 
-<<<<<<< HEAD
-  // Pagination logic
-  const {
-    currentPage,
-    itemsPerPage,
-    paginatedData,
-    totalItems,
-    handlePageChange,
-    handleItemsPerPageChange
-  } = usePagination(filteredProducts, 20);
-{/* Fetch products and manufacturers */}
-=======
   // Paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -214,7 +182,6 @@ export default function Products() {
     navigate(`/products/view/${product.id}`);
   };
 
->>>>>>> ui-merge-area
   useEffect(() => {
     // Using mockup data - no need to fetch from API
     // Uncomment below to use real API data
@@ -269,84 +236,6 @@ export default function Products() {
   };
 
 
-<<<<<<< HEAD
-  const toggleItem = (id) => {
-    setCheckedItems((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const res = await assetsService.fetchAllProducts();
-      setProducts(res.products || []);
-    } catch (e) {
-      console.error("Error refreshing products:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleView = async (productId) => {
-    console.log("product id:", productId);
-    try {
-      setLoading(true);
-      setErrorMessage("");
-
-      // Fetch the main product
-      const productData = await assetsService.fetchProductById(productId);
-      console.log("Product data:", productData);
-
-      if (!productData) {
-        setErrorMessage("Product details not found.");
-        setLoading(false);
-        return;
-      }
-
-      let manufacturerName = productData.manufacturer || "-";
-      let supplierName = productData.supplier || "-";
-
-      // Only try fetch if we have IDs
-      if (productData.manufacturer_id) {
-        try {
-          const manufacturerResponse = await fetchAllCategories (productData.manufacturer_id);
-          console.log("Manufacturer response:", manufacturerResponse);
-          manufacturerName = manufacturerResponse?.name || manufacturerName;
-        } catch (err) {
-          console.warn("Manufacturer fetch failed:", err);
-        }
-      }
-
-      if (productData.default_supplier_id) {
-        try {
-          const supplierResponse = await contextsService.fetchSuppNameById(productData.default_supplier_id);
-          console.log("Supplier response:", supplierResponse);
-          supplierName = supplierResponse?.name || supplierName;
-        } catch (err) {
-          console.warn("Supplier fetch failed:", err);
-        }
-      }
-
-      // Compose full view
-      const manuFullView = {
-        ...productData,
-        manufacturer: manufacturerName,
-        supplier: supplierName,
-      };
-
-      console.log("Prepared product view:", manuFullView);
-      setSelectedProduct(manuFullView);
-      setViewModalOpen(true);
-    } catch (error) {
-      console.error("Error fetching product details:", error);
-      setErrorMessage("Failed to load product details.");
-    } finally {
-      setLoading(false);
-    }
-  };
-=======
->>>>>>> ui-merge-area
 
   return (
     <>

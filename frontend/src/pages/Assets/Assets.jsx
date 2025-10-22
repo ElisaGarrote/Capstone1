@@ -1,31 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-<<<<<<< HEAD
-import "../../styles/custom-colors.css";
-import "../../styles/Assets.css";
-import "../../styles/StandardizedButtons.css";
-import NavBar from "../../components/NavBar";
-import TableBtn from "../../components/buttons/TableButtons";
-import MediumButtons from "../../components/buttons/MediumButtons";
-import DefaultImage from "../../assets/img/default-image.jpg";
-import DeleteModal from "../../components/Modals/DeleteModal";
-import Alert from "../../components/Alert";
-import assetsService from "../../services/assets-service";
-import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
-import AssetViewModal from "../../components/Modals/AssetViewModal";
-import dtsService from "../../services/dts-integration-service";
-=======
->>>>>>> ui-merge-area
 import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import AssetFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
-<<<<<<< HEAD
-import usePagination from "../../hooks/usePagination";
-import { fetchAllCategories } from "../../services/contexts-service";
-=======
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
@@ -148,7 +128,6 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
     </tr>
   );
 }
->>>>>>> ui-merge-area
 
 export default function Assets() {
   const location = useLocation();
@@ -300,42 +279,6 @@ export default function Assets() {
   };
 
 
-<<<<<<< HEAD
-      const assetData = await assetsService.fetchAssetById(assetId);
-      if (!assetData) {
-        setErrorMessage("Asset details not found.");
-        setLoading(false);
-        return;
-      }
-
-      let supplierName = "-";
-      if (assetData.supplier_id) {
-        try {
-          const supplierResponse = await fetchAllCategories(
-            assetData.supplier_id
-          );
-          supplierName = supplierResponse?.name || supplierName;
-        } catch (err) {
-          console.warn("Supplier fetch failed:", err);
-        }
-      }
-
-      const assetWithSupplier = {
-        ...assetData,
-        supplier: supplierName,
-      };
-
-      setSelectedAsset(assetWithSupplier);
-      setViewModalOpen(true);
-    } catch (error) {
-      console.error("Error fetching asset or supplier details:", error);
-      setErrorMessage("Failed to load asset details.");
-    } finally {
-      setLoading(false);
-    }
-  };
-=======
->>>>>>> ui-merge-area
 
   return (
     <>

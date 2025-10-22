@@ -102,11 +102,7 @@ export default function NavBar() {
       location.pathname.startsWith("/components")
     ) {
       setActiveMenu("assets");
-<<<<<<< HEAD
-    } else if (location.pathname.startsWith("/repairs")) {
-=======
-    } else if (location.pathname.startsWith("/Repair")) {
->>>>>>> ui-merge-area
+    } else if (location.pathname.startsWith("/repair")) {
       setActiveMenu("repairs");
     } else if (location.pathname.startsWith("/audits")) {
       setActiveMenu("audits");
@@ -157,10 +153,10 @@ export default function NavBar() {
     } else if (location.pathname.startsWith("/More/ViewStatus")) {
       setSelectedMore("Statuses");
       setActiveMenu("more");
-    } else if (location.pathname.startsWith("/more/depreciations")) {
+    } else if (location.pathname.startsWith("/More/Depreciations")) {
       setSelectedMore("Depreciations");
       setActiveMenu("more");
-    } else if (location.pathname.startsWith("/more/recycle-bin")) {
+    } else if (location.pathname.startsWith("/More/RecycleBin")) {
       setSelectedMore("Recycle Bin");
       setActiveMenu("more");
     }
@@ -413,7 +409,7 @@ export default function NavBar() {
                       </button>
                       <button
                         onClick={() => {
-                          navigate("/more/depreciations");
+                          navigate("/More/Depreciations");
                           setSelectedMore("Depreciations");
                           setShowMoreMenu(false);
                         }}
@@ -422,7 +418,7 @@ export default function NavBar() {
                       </button>
                       <button
                         onClick={() => {
-                          navigate("/more/recycle-bin");
+                          navigate("/More/RecycleBin");
                           setSelectedMore("Recycle Bin");
                           setShowMoreMenu(false);
                         }}

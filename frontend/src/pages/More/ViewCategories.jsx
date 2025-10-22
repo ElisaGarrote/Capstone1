@@ -1,23 +1,16 @@
-<<<<<<< HEAD
 import { useState, useEffect } from "react";
-=======
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
->>>>>>> ui-merge-area
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
-<<<<<<< HEAD
 import { fetchAllCategories, deleteCategory, } from "../../services/contexts-service";
 import DefaultImage from "../../assets/img/default-image.jpg";
-=======
+
 import Footer from "../../components/Footer";
 
 import "../../styles/Category.css";
->>>>>>> ui-merge-area
-
 
 const filterConfig = [
   {
