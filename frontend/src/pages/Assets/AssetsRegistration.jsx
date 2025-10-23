@@ -725,7 +725,7 @@ export default function AssetsRegistration() {
                 </label>
               )}
               <small className="file-size-info">
-                Allows only JPEG and PNG formats, maximum file size 5MB
+                Maximum file size must be 5MB
               </small>
             </fieldset>
 

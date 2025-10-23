@@ -40,7 +40,6 @@ const AddEntryModal = ({
     onClose();
   };
 
-  // Prevent background scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
       document.body.classList.add('modal-open');
@@ -48,7 +47,6 @@ const AddEntryModal = ({
       document.body.classList.remove('modal-open');
     }
 
-    // Cleanup on unmount
     return () => {
       document.body.classList.remove('modal-open');
     };
