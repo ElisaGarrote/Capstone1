@@ -38,7 +38,7 @@
     gap: 5px;
 }
 
-.registration fieldset div:not(.purchase-cost-container):not(.attachments-wrapper):not(.upload-left):not(.upload-right):not(.file-uploaded) {
+.registration fieldset div:not(.purchase-cost-container):not(.attachments-wrapper):not(.upload-left):not(.upload-right):not(.file-uploaded):not(.import-section):not(.dropdown-with-add) {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -395,4 +395,73 @@
   height: 12px;
   width: 12px;
   filter: brightness(0) saturate(100%);
+}
+
+/* Import Button Styles */
+.import-section {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.import-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.import-btn:hover {
+    background-color: var(--primary-color-hover);
+    transform: translateY(-1px);
+}
+
+.import-btn img {
+    width: 16px;
+    height: 16px;
+    filter: brightness(0) invert(1);
+}
+
+/* Dropdown with Add Button Styles */
+.dropdown-with-add {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-with-add select {
+    flex: 1;
+}
+
+.add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.add-btn:hover {
+    background-color: var(--primary-color-hover);
+    transform: translateY(-1px);
+}
+
+.add-btn img {
+    width: 16px;
+    height: 16px;
+    filter: brightness(0) invert(1);
 }
