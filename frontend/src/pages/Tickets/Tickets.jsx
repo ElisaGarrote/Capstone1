@@ -13,7 +13,7 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 
 import "../../styles/Tickets/Tickets.css";
 
-// Filter configuration for tickets
+
 const filterConfig = [
   {
     type: "select",

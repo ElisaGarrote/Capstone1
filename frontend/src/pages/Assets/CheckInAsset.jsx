@@ -3,13 +3,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-
 import { useForm } from "react-hook-form";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import dtsService from "../../services/dts-integration-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import DefaultImage from "../../assets/img/default-image.jpg";
 
 
 export default function CheckInAsset() {
