@@ -69,9 +69,9 @@ export default function SupplierDetails() {
                 </p>
               </fieldset>
               <fieldset>
-                <label htmlFor="url">URL</label>
-                <p onClick={() => window.open(supplierDetails.url, "_blank")}>
-                  {supplierDetails.url || "-"}
+              <label htmlFor="URL">URL</label>
+                <p onClick={() => window.open(supplierDetails.URL, "_blank")}>
+                  {supplierDetails.URL || "-"}
                 </p>
               </fieldset>
               <fieldset>

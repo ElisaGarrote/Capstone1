@@ -43,11 +43,12 @@ export default function ConfirmationModal({
   const handleDelete = async (endPoint) => {
     try {
       const response = await fetch(endPoint, {
-        method: "PATCH",
+        method: "DELETE", // 🔥 Change PATCH → DELETE
         headers: {
           "Content-Type": "application/json",
         },
       });
+
       if (!response.ok) throw new Error("Delete failed");
       return true;
     } catch (error) {
@@ -55,7 +56,6 @@ export default function ConfirmationModal({
       return false;
     }
   };
-
   const getActionText = () => {
     switch (actionType) {
       case "delete":

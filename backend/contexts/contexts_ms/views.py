@@ -148,19 +148,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
         instance.save()
 
 #SUPPLIER 
-@api_view(['GET'])
-def get_supplier_details(request, supplier_id):
-    try:
-        supplier = Supplier.objects.get(id=supplier_id)
-        return Response({
-            'id': supplier.id,
-            'name': supplier.name,
-            'email': supplier.email,
-            'phone_number': supplier.phone_number,
-        })
-    except Supplier.DoesNotExist:
-        return Response({'error': 'Supplier not found'}, status=404)
-
 class SupplierViewSet(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
     parser_classes = [MultiPartParser, FormParser]

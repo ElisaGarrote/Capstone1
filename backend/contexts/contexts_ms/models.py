@@ -23,7 +23,7 @@ class Supplier(models.Model):
     contact_name = models.CharField(max_length=100, blank=True, null=True)
     phone_number = models.CharField(max_length=13, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
-    URL = models.URLField(blank=True, null=True)
+    url = models.URLField(blank=True, null=True)
 
     notes = models.TextField(blank=True, null=True)
     logo = models.ImageField(upload_to='supplier_logos/', blank=True, null=True)

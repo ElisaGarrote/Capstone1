@@ -6,6 +6,8 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Footer from "../../components/Footer";
+import * as contextsService from "../../services/contexts-service";
+
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -33,7 +35,7 @@ const SupplierRegistration = () => {
       contact_name: "",
       phone_number: "",
       email: "",
-      URL: "",
+      url: "",
       notes: "",
     },
     mode: "all",
@@ -46,8 +48,8 @@ const SupplierRegistration = () => {
     const initialize = async () => {
       try {
         if (id) {
-          const supplierData = await fetchAllCategories();
-          if (!supplierData) throw new Error('Failed to fetch supplier details');
+          const supplierData = await contextsService.getSupplierById(id);
+          if (!supplierData) throw new Error("Failed to fetch supplier details");
 
           setValue("name", supplierData.name || "");
           setValue("address", supplierData.address || "");
@@ -56,7 +58,7 @@ const SupplierRegistration = () => {
           setValue("contact_name", supplierData.contact_name || "");
           setValue("phone_number", supplierData.phone_number || "");
           setValue("email", supplierData.email || "");
-          setValue("URL", supplierData.URL || "");
+          setValue("url", supplierData.url || "");
           setValue("notes", supplierData.notes || "");
 
           if (supplierData.logo) {
@@ -98,21 +100,25 @@ const SupplierRegistration = () => {
   const onSubmit = async (data) => {
     try {
       if (!id) {
-        const existingSuppliers = await contextsService.fetchAllSupplierNames();
-        if (!existingSuppliers)
-          throw new Error("Failed to fetch supplier names for duplicate check");
+      const existingSuppliers = await contextsService.fetchAllSupplierNames();
 
-        const isDuplicate = existingSuppliers.suppliers.some(
-          (supplier) => supplier.name.toLowerCase() === data.name.toLowerCase()
-        );
-        if (isDuplicate) {
-          setErrorMessage(
-            "A supplier with this name already exists. Please use a different name."
-          );
-          setTimeout(() => setErrorMessage(""), 5000);
-          return;
-        }
+      if (!Array.isArray(existingSuppliers)) {
+        console.error("Unexpected supplier list:", existingSuppliers);
+        setErrorMessage("Unable to validate supplier names.");
+        setIsLoading(false);
+        return;
       }
+
+      const isDuplicate = existingSuppliers.some(
+        (supplier) =>
+          supplier.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+      );
+      if (isDuplicate) {
+        setErrorMessage("A supplier with this name already exists.");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+    }
 
       const formData = new FormData();
       formData.append("name", data.name);
@@ -122,7 +128,7 @@ const SupplierRegistration = () => {
       formData.append("contact_name", data.contact_name);
       formData.append("phone_number", data.phone_number);
       formData.append("email", data.email);
-      formData.append("URL", data.URL || "");
+      formData.append("url", data.url || "");
       formData.append("notes", data.notes || "");
 
       if (selectedImage) formData.append("logo", selectedImage);
@@ -266,17 +272,17 @@ const SupplierRegistration = () => {
               <label>URL</label>
               <input
                 type="url"
-                placeholder="URL"
-                className={errors.URL ? "input-error" : ""}
-                {...register("URL", {
+                placeholder="url"
+                className={errors.url ? "input-error" : ""}
+                {...register("url", {
                   pattern: {
                     value: /^(https?:\/\/).+/i,
                     message: "URL must start with http:// or https://",
                   },
                 })}
               />
-              {errors.URL && (
-                <span className="error-message">{errors.URL.message}</span>
+              {errors.url && (
+                <span className="error-message">{errors.url.message}</span>
               )}
             </fieldset>
 

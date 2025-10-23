@@ -9,7 +9,8 @@ import Pagination from "../../components/Pagination";
 import SupplierFilter from "../../components/FilterPanel";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import { fetchAllCategories } from '../../services/contexts-service';
+import { getSuppliers } from "../../services/contexts-service";
+
 
 import "../../styles/ViewSupplier.css";
 
@@ -64,6 +65,8 @@ function TableHeader() {
 function TableItem({ supplier, onDeleteClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [endPoint, setEndPoint] = useState("");
+
 
   return (
     <tr>
@@ -102,7 +105,7 @@ function TableItem({ supplier, onDeleteClick }) {
       <td>{supplier.contactName || "-"}</td>
       <td>{supplier.phoneNumber || "-"}</td>
       <td>{supplier.email || "-"}</td>
-      <td>{supplier.url || "-"}</td>
+      <td>{supplier.URL || "-"}</td>
       <td>
         <section className="action-button-section">
           <button
@@ -161,8 +164,8 @@ export default function ViewSupplier() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const suppRes = await fetchAllCategories();
-        const mapped = (suppRes || []).map(supp => ({
+        const suppRes = await getSuppliers();
+        const mapped = (suppRes || []).map((supp) => ({
           id: supp.id,
           name: supp.name,
           address: supp.address,
@@ -171,7 +174,7 @@ export default function ViewSupplier() {
           contactName: supp.contact_name,
           phoneNumber: supp.phone_number,
           email: supp.email,
-          url: supp.URL,
+          URL: supp.url, 
           notes: supp.notes,
           logo: supp.logo,
         }));
@@ -186,6 +189,17 @@ export default function ViewSupplier() {
       }
     };
 
+    const handleDeleteSuccess = async () => {
+      try {
+        const updatedSuppliers = await getSuppliers();
+        setSuppliers(updatedSuppliers); // refresh list
+        setDeleteModalOpen(false); // close modal
+      } catch (error) {
+        console.error("Failed to refresh suppliers after delete:", error);
+      }
+    };
+
+
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
       setTimeout(() => {
@@ -196,6 +210,7 @@ export default function ViewSupplier() {
 
     fetchData();
   }, [location]);
+
 
   const toggleSelectAll = () => {
     setCheckedItems(allChecked ? [] : suppliers.map((item) => item.id));
@@ -220,7 +235,7 @@ export default function ViewSupplier() {
         contactName: supp.contact_name,
         phoneNumber: supp.phone_number,
         email: supp.email,
-        url: supp.URL,
+        URL: supp.URL,
         notes: supp.notes,
       }));
       setSuppliers(mapped);
@@ -310,9 +325,7 @@ export default function ViewSupplier() {
                         key={index}
                         supplier={supplier}
                         onDeleteClick={() => {
-                          setEndPoint(
-                            `${contextServiceUrl}/contexts/suppliers/${supplier.id}/delete/`
-                          );
+                        setEndPoint(`${import.meta.env.VITE_CONTEXTS_API_URL}suppliers/${supplier.id}/`);
                           setDeleteModalOpen(true);
                         }}
                       />
