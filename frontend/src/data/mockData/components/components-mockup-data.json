@@ -1,5 +1,6 @@
 [
   {
+    "id": 1,
     "name": "1TB SSD",
     "available": 6,
     "quantity": 6,
@@ -17,6 +18,7 @@
     "created_at": "2025-09-17"
   },
   {
+    "id": 2,
     "name": "2TB SSD",
     "available": 18,
     "quantity": 30,
@@ -34,6 +36,7 @@
     "created_at": "2025-09-17"
   },
   {
+    "id": 3,
     "name": "500GB SSD",
     "available": 28,
     "quantity": 28,

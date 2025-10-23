@@ -7,6 +7,7 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Footer from "../../components/Footer";
+import MockupData from "../../data/mockData/more/manufacturer-mockup-data.json";
 
 import "../../styles/Manufacturer.css";
 
@@ -53,8 +54,8 @@ function TableItem({ manufacturer, onDeleteClick }) {
         </div>
       </td>
       <td>{manufacturer.url || "-"}</td>
-      <td>{manufacturer.supportUrl || "-"}</td>
-      <td>{manufacturer.phone || "-"}</td>
+      <td>{manufacturer.support_url || "-"}</td>
+      <td>{manufacturer.phone_number || "-"}</td>
       <td>{manufacturer.email || "-"}</td>
       <td>{manufacturer.notes || "-"}</td>
       <td>
@@ -90,6 +91,9 @@ export default function ViewManuDraft() {
   const [checkedItems, setCheckedItems] = useState([]);
   const [endPoint, setEndPoint] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isAddRecordSuccess, setAddRecordSuccess] = useState(false);
+  const [isUpdateRecordSuccess, setUpdateRecordSuccess] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -98,6 +102,24 @@ export default function ViewManuDraft() {
 
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+
+  // paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedManufacturer = MockupData.slice(startIndex, endIndex);
+
+  // Retrieve the "addManufacturer" value passed from the navigation state.
+  // If the "addManufacturer" is not exist, the default value for this is "undifiend".
+  const addedManufacturer = location.state?.addedManufacturer;
+  const updatedManufacturer = location.state?.updatedManufacturer;
+
+  console.log("value", addedManufacturer);
+
+  /* BACKEND INTEGRATION HERE
   const contextServiceUrl =
     "https://contexts-service-production.up.railway.app";
 
@@ -170,6 +192,8 @@ export default function ViewManuDraft() {
     }
   };
 
+  */
+
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -178,28 +202,73 @@ export default function ViewManuDraft() {
     manufacturer.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+  const actionStatus = (action, status) => {
+    let timeoutId;
 
-  // paginate the data
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedManufacturer = filteredManufacturers.slice(
-    startIndex,
-    endIndex
-  );
+    if (action === "create" && status === true) {
+      setAddRecordSuccess(true);
+    }
+
+    if (action === "update" && status === true) {
+      setUpdateRecordSuccess(true);
+    }
+
+    // clear the navigation/history state so a full page refresh won't re-show the alert
+    // replace the current history entry with an empty state
+    navigate(location.pathname, { replace: true, state: {} });
+
+    return (timeoutId = setTimeout(() => {
+      if (action === "create") {
+        setAddRecordSuccess(false);
+      } else {
+        setUpdateRecordSuccess(false);
+      }
+    }, 5000));
+  };
+
+  const getAction = () => {
+    if (addedManufacturer == true) {
+      return "create";
+    }
+
+    if (updatedManufacturer == true) {
+      return "update";
+    }
+
+    return null;
+  };
+
+  // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
+  useEffect(() => {
+    let timeoutId;
+
+    timeoutId = actionStatus(getAction(), true);
+
+    // cleanup the timeout on unmount or when addedManufacturer or updatedManufacturer changes
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [addedManufacturer, updatedManufacturer, navigate, location.pathname]);
 
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
+      {isAddRecordSuccess && (
+        <Alert message="Manufacturer added successfully!" type="success" />
+      )}
+
+      {isUpdateRecordSuccess && (
+        <Alert message="Manufacturer updated successfully!" type="success" />
+      )}
+
       {isDeleteModalOpen && (
         <DeleteModal
           endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
           actionType={"delete"}
+          /* BACKEND INTEGRATION HERE
           confirmDelete={async () => {
             await fetchManufacturers();
             setSuccessMessage("Manufacturer Deleted Successfully!");
@@ -209,6 +278,7 @@ export default function ViewManuDraft() {
             setErrorMessage("Delete failed. Please try again.");
             setTimeout(() => setErrorMessage(""), 5000);
           }}
+            */
         />
       )}
 
@@ -219,9 +289,7 @@ export default function ViewManuDraft() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">
-                Manufacturers ({filteredManufacturers.length})
-              </h2>
+              <h2 className="h2">Manufacturers ({MockupData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
@@ -250,9 +318,10 @@ export default function ViewManuDraft() {
                         key={index}
                         manufacturer={manufacturer}
                         onDeleteClick={() => {
+                          /* BACKEND INTEGRATION HERE
                           setEndPoint(
                             `${contextServiceUrl}/contexts/manufacturers/${manufacturer.id}/delete/`
-                          );
+                          ); */
                           setDeleteModalOpen(true);
                         }}
                       />

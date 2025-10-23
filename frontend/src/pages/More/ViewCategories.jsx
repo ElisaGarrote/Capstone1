@@ -5,13 +5,100 @@ import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
-import { fetchAllCategories, deleteCategory, } from "../../services/contexts-service";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
 
 import Footer from "../../components/Footer";
 
 import "../../styles/Category.css";
+
+// icons
+import keyboardIcon from "../../assets/img/keyboard_Icon.png";
+import chargerIcon from "../../assets/img/charger_Icon.png";
+import cablesIcon from "../../assets/img/cables_Icon.png";
+import paperprinterIcon from "../../assets/img/paperprinter_Icon.png";
+import printerinkIcon from "../../assets/img/printerink_Icon.png";
+
+// mock data
+const categories = [
+  {
+    id: 1,
+    icon: cablesIcon,
+    name: "Cables",
+    type: "Accessory",
+    quantity: 2,
+  },
+  {
+    id: 2,
+    icon: chargerIcon,
+    name: "Charger",
+    type: "Accessory",
+    quantity: 1,
+  },
+  {
+    id: 3,
+    icon: keyboardIcon,
+    name: "Keyboards",
+    type: "Accessory",
+    quantity: 2,
+  },
+  {
+    id: 4,
+    icon: paperprinterIcon,
+    name: "Printer Paper",
+    type: "Consumable",
+    quantity: 262,
+  },
+  {
+    id: 5,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 6,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 7,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 8,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 9,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 10,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 11,
+    icon: printerinkIcon,
+    name: "Printer",
+    type: "Consumable",
+    quantity: 95,
+  },
+];
 
 const filterConfig = [
   {
@@ -32,7 +119,7 @@ const filterConfig = [
 ];
 
 // TableHeader component to render the table header
-function TableHeader( { allSelected, onSelectAll }) {
+function TableHeader({ allSelected, onSelectAll }) {
   return (
     <tr>
       <th>
@@ -53,6 +140,7 @@ function TableHeader( { allSelected, onSelectAll }) {
 // TableItem component to render each ticket row
 function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
   const navigate = useNavigate();
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   return (
     <tr>
@@ -65,11 +153,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
       </td>
       <td>
         <div className="category-name">
-          <img
-            src={category.logo || DefaultImage}
-            alt={category.name}
-            className="category-logo"
-          />
+          <img src={category.icon} alt={category.name} />
           {category.name}
         </div>
       </td>
@@ -89,7 +173,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
           <button
             title="Delete"
             className="action-button"
-            onClick={() => onDeleteClick(category.id)}
+            onClick={onDeleteClick}
           >
             <i className="fas fa-trash-alt"></i>
           </button>
@@ -197,7 +281,6 @@ export default function Category() {
         <DeleteModal
           closeModal={() => setDeleteModalOpen(false)}
           actionType="delete"
-          onConfirm={handleDelete}
         />
       )}
 
@@ -239,7 +322,7 @@ export default function Category() {
             <section className="table-section">
               <table>
                 <thead>
-                  <TableHeader allSelected={allSelected} onSelectAll={handleSelectAll} />
+                  <TableHeader />
                 </thead>
                 <tbody>
                   {paginatedCategories.length > 0 ? (

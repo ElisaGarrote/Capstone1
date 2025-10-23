@@ -56,7 +56,11 @@ function TableItem({ component, onDeleteClick }) {
           <button
             title="Edit"
             className="action-button"
-            onClick={() => navigate("/More/CategoryEdit", { state: { asset } })}
+            onClick={() =>
+              navigate(`/components/edit/${component.id}`, {
+                state: { component },
+              })
+            }
           >
             <i className="fas fa-edit"></i>
           </button>
