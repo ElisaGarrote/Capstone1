@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import "../../styles/Registration.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
+import MediumButtons from "../../components/buttons/MediumButtons";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import { fetchAllCategories } from "../../services/contexts-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
+import DeleteModal from "../../components/Modals/DeleteModal";
 
-export default function AssetsRegistration() {
+export default function AssetEditPage() {
   const [products, setProducts] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -35,16 +37,12 @@ export default function AssetsRegistration() {
     { id: 7, name: "Stolen" }
   ]);
 
-
-  
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
-  const location = useLocation();
 
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
-  const [generatedAssetId, setGeneratedAssetId] = useState('(Loading...)');
-  
+
   const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
@@ -76,33 +74,9 @@ export default function AssetsRegistration() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Import file state
-  const [importFile, setImportFile] = useState(null);
-
-  useEffect(() => {
-    // Only fetch the next asset ID if we're creating a new asset (no ID provided)
-    if (!id) {
-      const fetchNextAssetId = async () => {
-        try {
-          setIsLoading(true);
-          const response = await assetsService.getNextAssetId();
-          if (response && response.next_id) {
-            setValue('assetId', response.next_id);
-            setGeneratedAssetId(response.next_id);
-          } else {
-            console.error("Failed to get next asset ID");
-            setErrorMessage("Failed to generate asset ID. Please try again.");
-          }
-        } catch (error) {
-          console.error("Error fetching next asset ID:", error);
-          setErrorMessage("Error generating asset ID. Please try again.");
-        }
-      };
-
-      fetchNextAssetId();
-    }
-  }, [id, setValue]);
+  const watchedFields = watch();
 
   useEffect(() => {
     const initialize = async () => {
@@ -113,13 +87,13 @@ export default function AssetsRegistration() {
           assetsService.fetchAssetContexts(),
           fetchAllCategories()
         ]);
-        
+
         console.log("Asset contexts data:", assetContextsData);
-        
+
         // Set products and statuses from asset contexts
         setProducts(assetContextsData.products || []);
         setStatuses(assetContextsData.statuses || []);
-        
+
         // Set suppliers from contexts
         setSuppliers(contextsData.suppliers || []);
 
@@ -141,9 +115,6 @@ export default function AssetsRegistration() {
 
           // Set form values from retrieved asset data
           setValue('assetId', assetData.displayed_id);
-
-
-
           setValue('product', assetData.product_id || '');
           setValue('status', assetData.status_id || '');
           setValue('supplier', assetData.supplier_id || '');
@@ -157,7 +128,7 @@ export default function AssetsRegistration() {
           setValue('disposalStatus', assetData.disposal_status || '');
           setValue('scheduleAuditDate', assetData.schedule_audit_date || '');
           setValue('notes', assetData.notes || '');
-          
+
           if (assetData.image) {
             setPreviewImage(`https://assets-service-production.up.railway.app${assetData.image}`);
           }
@@ -173,15 +144,42 @@ export default function AssetsRegistration() {
     initialize();
   }, [id, setValue]);
 
-  // Handle cloned asset name from location state
-  useEffect(() => {
-    console.log('AssetsRegistration location.state:', location.state);
-    if (location.state?.clonedAssetName && !id) {
-      console.log('Setting cloned asset name:', location.state.clonedAssetName);
-      setValue('assetName', location.state.clonedAssetName);
+  // Handle Clone Asset
+  const handleCloneAsset = () => {
+    console.log('Clone button clicked, asset:', asset);
+    if (asset) {
+      console.log('Navigating to registration with cloned name:', `${asset.name} (cloned)`);
+      navigate('/assets/registration', {
+        state: { clonedAssetName: `${asset.name} (cloned)` }
+      });
+    } else {
+      console.log('No asset found for cloning');
     }
-  }, [location.state, setValue, id]);
+  };
 
+  // Handle Delete Asset
+  const handleDeleteAsset = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteAsset = async () => {
+    try {
+      setIsLoading(true);
+      await assetsService.deleteAsset(id);
+      setErrorMessage("");
+      setTimeout(() => {
+        navigate('/assets');
+      }, 2000);
+    } catch (error) {
+      console.error("Error deleting asset:", error);
+      setErrorMessage("Failed to delete asset");
+    } finally {
+      setIsLoading(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  // Handle image selection - copied from AssetRegistration
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -211,206 +209,99 @@ export default function AssetsRegistration() {
     }
   };
 
-  const handleImportFile = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-        setErrorMessage("Please select a valid .xlsx file");
-        setTimeout(() => setErrorMessage(""), 5000);
-        return;
-      }
-      setImportFile(file);
-      // Here you would typically process the Excel file
-      console.log("Import file selected:", file.name);
-    }
+  // Remove selected image
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setPreviewImage(null);
+    setValue('image', null);
+    setRemoveImage(true);
+    document.getElementById('image-upload').value = '';
   };
 
-  // Modal field configurations
-  const statusFields = [
-    {
-      name: 'name',
-      label: 'Status Label',
-      type: 'text',
-      placeholder: 'Status Label',
-      required: true,
-      maxLength: 100,
-      validation: { required: 'Status Label is required' }
-    },
-    {
-      name: 'type',
-      label: 'Status Type',
-      type: 'select',
-      placeholder: 'Select Status Type',
-      required: true,
-      options: [
-        { value: 'deployable', label: 'Deployable' },
-        { value: 'deployed', label: 'Deployed' },
-        { value: 'undeployable', label: 'Undeployable' },
-        { value: 'pending', label: 'Pending' },
-        { value: 'archived', label: 'Archived' }
-      ],
-      validation: { required: 'Status Type is required' }
-    }
-  ];
-
-  const supplierFields = [
-    {
-      name: 'name',
-      label: 'Supplier Name',
-      type: 'text',
-      placeholder: 'Supplier Name',
-      required: true,
-      maxLength: 100,
-      validation: { required: 'Supplier Name is required' }
-    },
-    {
-      name: 'email',
-      label: 'Email',
-      type: 'email',
-      placeholder: 'Email',
-      required: false,
-      maxLength: 100
-    },
-    {
-      name: 'phone_number',
-      label: 'Phone Number',
-      type: 'text',
-      placeholder: 'Phone Number',
-      required: false,
-      maxLength: 20
-    }
-  ];
-
-  const locationFields = [
-    {
-      name: 'name',
-      label: 'Location Name',
-      type: 'text',
-      placeholder: 'Location Name',
-      required: true,
-      maxLength: 100,
-      validation: { required: 'Location Name is required' }
-    }
-  ];
-
-  // Modal save handlers
-  const handleSaveStatus = async (data) => {
-    try {
-      // Here you would call the API to create a new status
-      console.log('Creating status:', data);
-      // For now, just add to local state
-      const newStatus = {
-        id: statuses.length + 1,
-        name: data.name,
-        type: data.type
-      };
-      setStatuses(prev => [...prev, newStatus]);
-    } catch (error) {
-      console.error('Error creating status:', error);
-      throw error;
-    }
-  };
-
-  const handleSaveSupplier = async (data) => {
-    try {
-      // Here you would call the API to create a new supplier
-      console.log('Creating supplier:', data);
-      // For now, just add to local state
-      const newSupplier = {
-        id: suppliers.length + 1,
-        name: data.name,
-        email: data.email,
-        phone_number: data.phone_number
-      };
-      setSuppliers(prev => [...prev, newSupplier]);
-    } catch (error) {
-      console.error('Error creating supplier:', error);
-      throw error;
-    }
-  };
-
-  const handleSaveLocation = async (data) => {
-    try {
-      // Here you would call the API to create a new location
-      console.log('Creating location:', data);
-      // For now, just add to local state
-      const newLocation = {
-        id: locations.length + 1,
-        name: data.name
-      };
-      setLocations(prev => [...prev, newLocation]);
-    } catch (error) {
-      console.error('Error creating location:', error);
-      throw error;
-    }
-  };
-  
+  // Handle form submission - copied from AssetRegistration
   const onSubmit = async (data) => {
+    setIsLoading(true);
+    setErrorMessage("");
+
     try {
       const formData = new FormData();
 
-      // Append asset data to FormData object
-      formData.append('displayed_id', data.assetId);
-      formData.append('product', data.product || '');
-      formData.append('status', data.status || '');
-      formData.append('supplier_id', data.supplier || '');
-      formData.append('location', data.location || '');
-      formData.append('name', data.assetName);
-      formData.append('serial_number', data.serialNumber || '');
-      formData.append('warranty_expiration', data.warrantyExpiration || '');
-      formData.append('order_number', data.orderNumber || '');
-      formData.append('purchase_date', data.purchaseDate || '');
-      formData.append('purchase_cost', data.purchaseCost || '');
-      formData.append('disposal_status', data.disposalStatus || '');
-      formData.append('schedule_audit_date', data.scheduleAuditDate || '');
-      formData.append('notes', data.notes || '');
-      
-      // Handle image upload
-      if (selectedImage) {
-        formData.append('image', selectedImage);
-      }
-
-      // Handle image removal
-      if (removeImage) {
-        formData.append('remove_image', 'true');
-      }
-      
-      console.log("Form data before submission:");
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
-      }
-      
-      let result;
-      
-      if (id) {
-        // Update existing asset
-        result = await assetsService.updateAsset(id, formData);
-      } else {
-        // Create new asset
-        result = await assetsService.createAsset(formData);
-      }
-
-      if (!result) {
-        throw new Error(`Failed to ${id ? 'update' : 'create'} asset.`);
-      }
-
-      console.log(`${id ? 'Updated' : 'Created'} asset:`, result);
-      
-      // Navigate to assets page with success message
-      navigate('/assets', { 
-        state: { 
-          successMessage: `Asset has been ${id ? 'updated' : 'created'} successfully!` 
-        } 
+      // Append all form fields
+      Object.keys(data).forEach(key => {
+        if (key === 'image' && selectedImage) {
+          formData.append(key, selectedImage);
+        } else if (key !== 'image' && data[key] !== null && data[key] !== '') {
+          formData.append(key, data[key]);
+        }
       });
+
+      if (removeImage) {
+        formData.append('removeImage', 'true');
+      }
+
+      await assetsService.updateAsset(id, formData);
+      setErrorMessage("");
+
+      setTimeout(() => {
+        navigate('/assets');
+      }, 2000);
     } catch (error) {
-      console.error(`Error ${id ? 'updating' : 'creating'} asset:`, error);
-      setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the asset`);
+      console.error("Error updating asset:", error);
+      setErrorMessage("Failed to update asset. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Add new status - copied from AssetRegistration
+  const handleAddStatus = async (statusData) => {
+    try {
+      const newStatus = await assetsService.createStatus(statusData);
+      setStatuses(prev => [...prev, newStatus]);
+      setValue('status', newStatus.id);
+      setShowStatusModal(false);
+      setErrorMessage("");
+      setTimeout(() => setErrorMessage(""), 3000);
+    } catch (error) {
+      console.error("Error adding status:", error);
+      setErrorMessage("Failed to add status");
+      setTimeout(() => setErrorMessage(""), 3000);
+    }
+  };
 
+  // Add new supplier - copied from AssetRegistration
+  const handleAddSupplier = async (supplierData) => {
+    try {
+      const newSupplier = await assetsService.createSupplier(supplierData);
+      setSuppliers(prev => [...prev, newSupplier]);
+      setValue('supplier', newSupplier.id);
+      setShowSupplierModal(false);
+      setErrorMessage("");
+      setTimeout(() => setErrorMessage(""), 3000);
+    } catch (error) {
+      console.error("Error adding supplier:", error);
+      setErrorMessage("Failed to add supplier");
+      setTimeout(() => setErrorMessage(""), 3000);
+    }
+  };
 
-  // Add this function to handle product selection
+  // Add new location - copied from AssetRegistration
+  const handleAddLocation = async (locationData) => {
+    try {
+      const newLocation = await assetsService.createLocation(locationData);
+      setLocations(prev => [...prev, newLocation]);
+      setValue('location', newLocation.id);
+      setShowLocationModal(false);
+      setErrorMessage("");
+      setTimeout(() => setErrorMessage(""), 3000);
+    } catch (error) {
+      console.error("Error adding location:", error);
+      setErrorMessage("Failed to add location");
+      setTimeout(() => setErrorMessage(""), 3000);
+    }
+  };
+
+  // Add this function to handle product selection - copied from AssetRegistration
   const handleProductChange = async (event) => {
     const productId = event.target.value;
     if (productId) {
@@ -450,22 +341,31 @@ export default function AssetsRegistration() {
         <section className="top">
           <TopSecFormPage
             root="Assets"
-            currentPage={id ? "Edit Asset" : "New Asset"}
+            currentPage="Edit Asset"
             rootNavigatePage="/assets"
-            title={id ? 'Edit' + ' ' + (asset?.name || 'Asset') : 'New Asset'}
+            title={'Edit' + ' ' + (asset?.name || 'Asset')}
             rightComponent={
               <div className="import-section">
-                <label htmlFor="import-file" className="import-btn">
-                  <img src={PlusIcon} alt="Import" />
-                  Import
-                  <input
-                    type="file"
-                    id="import-file"
-                    accept=".xlsx"
-                    onChange={handleImportFile}
-                    style={{ display: "none" }}
-                  />
-                </label>
+                <button
+                  type="button"
+                  className="import-btn"
+                  onClick={handleCloneAsset}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="white"
+                    style={{ marginRight: '4px' }}
+                  >
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                  </svg>
+                  Clone
+                </button>
+                <MediumButtons
+                  type="delete"
+                  onClick={handleDeleteAsset}
+                />
               </div>
             }
           />
@@ -506,7 +406,7 @@ export default function AssetsRegistration() {
               {errors.product && <span className='error-message'>{errors.product.message}</span>}
             </fieldset>
 
-            {/* Status Dropdown with + button */}
+            {/* Status Dropdown with Add Button */}
             <fieldset>
               <label htmlFor='status'>Status <span style={{color: 'red'}}>*</span></label>
               <div className="dropdown-with-add">
@@ -526,22 +426,20 @@ export default function AssetsRegistration() {
                   type="button"
                   className="add-btn"
                   onClick={() => setShowStatusModal(true)}
-                  title="Add new status"
                 >
-                  <img src={PlusIcon} alt="Add" />
+                  <img src={PlusIcon} alt="Add Status" />
                 </button>
               </div>
               {errors.status && <span className='error-message'>{errors.status.message}</span>}
             </fieldset>
 
-            {/* Supplier Dropdown with + button */}
+            {/* Supplier Dropdown with Add Button */}
             <fieldset>
               <label htmlFor='supplier'>Supplier</label>
               <div className="dropdown-with-add">
                 <select
                   id="supplier"
                   {...register("supplier")}
-                  className={errors.supplier ? 'input-error' : ''}
                 >
                   <option value="">Select Supplier</option>
                   {suppliers.map(supplier => (
@@ -554,15 +452,13 @@ export default function AssetsRegistration() {
                   type="button"
                   className="add-btn"
                   onClick={() => setShowSupplierModal(true)}
-                  title="Add new supplier"
                 >
-                  <img src={PlusIcon} alt="Add" />
+                  <img src={PlusIcon} alt="Add Supplier" />
                 </button>
               </div>
-              {errors.supplier && <span className='error-message'>{errors.supplier.message}</span>}
             </fieldset>
 
-            {/* Location Dropdown with + button */}
+            {/* Location Dropdown with Add Button */}
             <fieldset>
               <label htmlFor='location'>Location</label>
               <div className="dropdown-with-add">
@@ -608,10 +504,12 @@ export default function AssetsRegistration() {
               <label htmlFor='serial-number'>Serial Number</label>
               <input
                 type='text'
+                className={errors.serialNumber ? 'input-error' : ''}
                 {...register('serialNumber')}
                 maxLength='50'
                 placeholder='Serial Number'
               />
+              {errors.serialNumber && <span className='error-message'>{errors.serialNumber.message}</span>}
             </fieldset>
 
             {/* Warranty Expiration Date */}
@@ -619,9 +517,10 @@ export default function AssetsRegistration() {
               <label htmlFor='warranty-expiration'>Warranty Expiration Date</label>
               <input
                 type='date'
+                className={errors.warrantyExpiration ? 'input-error' : ''}
                 {...register('warrantyExpiration')}
-                min={!id ? currentDate : undefined}
               />
+              {errors.warrantyExpiration && <span className='error-message'>{errors.warrantyExpiration.message}</span>}
             </fieldset>
 
             {/* Order Number */}
@@ -629,10 +528,12 @@ export default function AssetsRegistration() {
               <label htmlFor='order-number'>Order Number</label>
               <input
                 type='text'
+                className={errors.orderNumber ? 'input-error' : ''}
                 {...register('orderNumber')}
                 maxLength='50'
                 placeholder='Order Number'
               />
+              {errors.orderNumber && <span className='error-message'>{errors.orderNumber.message}</span>}
             </fieldset>
 
             {/* Purchase Date */}
@@ -640,9 +541,10 @@ export default function AssetsRegistration() {
               <label htmlFor='purchase-date'>Purchase Date</label>
               <input
                 type='date'
+                className={errors.purchaseDate ? 'input-error' : ''}
                 {...register('purchaseDate')}
-                min={!id ? currentDate : undefined}
               />
+              {errors.purchaseDate && <span className='error-message'>{errors.purchaseDate.message}</span>}
             </fieldset>
 
             {/* Purchase Cost */}
@@ -657,9 +559,11 @@ export default function AssetsRegistration() {
                   placeholder="0.00"
                   min="0"
                   step="0.01"
+                  className={errors.purchaseCost ? 'input-error' : ''}
                   {...register("purchaseCost", { valueAsNumber: true })}
                 />
               </div>
+              {errors.purchaseCost && <span className='error-message'>{errors.purchaseCost.message}</span>}
             </fieldset>
 
             {/* Disposal Status */}
@@ -685,92 +589,123 @@ export default function AssetsRegistration() {
               <label htmlFor='schedule-audit-date'>Schedule Audit Date</label>
               <input
                 type='date'
-                id="schedule-audit-date"
+                className={errors.scheduleAuditDate ? 'input-error' : ''}
                 {...register('scheduleAuditDate')}
-                min={currentDate}
               />
+              {errors.scheduleAuditDate && <span className='error-message'>{errors.scheduleAuditDate.message}</span>}
             </fieldset>
 
             {/* Notes */}
             <fieldset>
               <label htmlFor='notes'>Notes</label>
               <textarea
+                className={errors.notes ? 'input-error' : ''}
                 {...register('notes')}
                 maxLength='500'
-                placeholder='Notes...'
+                placeholder='Notes'
+                rows='4'
               />
+              {errors.notes && <span className='error-message'>{errors.notes.message}</span>}
             </fieldset>
 
             {/* Image Upload */}
             <fieldset>
-              <label>Image Upload</label>
-              {previewImage ? (
+              <label htmlFor='image'>Image Upload</label>
+              {previewImage && (
                 <div className="image-selected">
-                  <img src={previewImage} alt="Selected image" />
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      setPreviewImage(null);
-                      setSelectedImage(null);
-                      setValue('image', null);
-                      document.getElementById('image').value = '';
-                      setRemoveImage(true);
-                      console.log("Remove image flag set to:", true);
-                    }}
-                  >
+                  <img src={previewImage} alt="Asset preview" />
+                  <button type="button" onClick={handleRemoveImage}>
                     <img src={CloseIcon} alt="Remove" />
                   </button>
                 </div>
-              ) : (
-                <label className="upload-image-btn">
-                  Choose File
-                  <input
-                    type="file"
-                    id="image"
-                    accept=".jpeg,.jpg,.png"
-                    onChange={handleImageSelection}
-                    style={{ display: "none" }}
-                  />
-                </label>
               )}
+              <label htmlFor="image-upload" className="upload-image-btn">
+                Choose File
+              </label>
+              <input
+                type="file"
+                id="image-upload"
+                accept="image/jpeg,image/jpg,image/png"
+                onChange={handleImageSelection}
+                style={{ display: 'none' }}
+              />
               <small className="file-size-info">
                 Maximum file size must be 5MB
               </small>
             </fieldset>
 
-            <button type="submit" className="primary-button" disabled={!isValid}>Save</button>
+            {/* Save Button */}
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid || isLoading}
+            >
+              {isLoading ? "Saving..." : "Save Changes"}
+            </button>
           </form>
         </section>
       </main>
 
       {/* Modals */}
-      <AddEntryModal
-        isOpen={showStatusModal}
-        onClose={() => setShowStatusModal(false)}
-        onSave={handleSaveStatus}
-        title="New Status Label"
-        fields={statusFields}
-        type="status"
-      />
+      {showStatusModal && (
+        <AddEntryModal
+          title="Add New Status"
+          fields={[
+            {
+              name: "name",
+              label: "Status Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter status name"
+            }
+          ]}
+          onSubmit={handleAddStatus}
+          onClose={() => setShowStatusModal(false)}
+        />
+      )}
 
-      <AddEntryModal
-        isOpen={showSupplierModal}
-        onClose={() => setShowSupplierModal(false)}
-        onSave={handleSaveSupplier}
-        title="New Supplier"
-        fields={supplierFields}
-        type="supplier"
-      />
+      {showSupplierModal && (
+        <AddEntryModal
+          title="Add New Supplier"
+          fields={[
+            {
+              name: "name",
+              label: "Supplier Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter supplier name"
+            }
+          ]}
+          onSubmit={handleAddSupplier}
+          onClose={() => setShowSupplierModal(false)}
+        />
+      )}
 
-      <AddEntryModal
-        isOpen={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
-        onSave={handleSaveLocation}
-        title="New Location"
-        fields={locationFields}
-        type="location"
-      />
+      {showLocationModal && (
+        <AddEntryModal
+          title="Add New Location"
+          fields={[
+            {
+              name: "name",
+              label: "Location Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter location name"
+            }
+          ]}
+          onSubmit={handleAddLocation}
+          onClose={() => setShowLocationModal(false)}
+        />
+      )}
+
+      {showDeleteModal && (
+        <DeleteModal
+          isOpen={showDeleteModal}
+          onCancel={() => setShowDeleteModal(false)}
+          onConfirm={confirmDeleteAsset}
+          actionType="delete"
+        />
+      )}
     </>
   );
 }

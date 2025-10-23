@@ -64,7 +64,7 @@ function AssetViewPage() {
 
   // Button action handlers
   const handleEditClick = () => {
-    navigate(`/assets/registration/${asset.id}`);
+    navigate(`/assets/edit/${asset.id}`);
   };
 
   const handleCheckInClick = () => {

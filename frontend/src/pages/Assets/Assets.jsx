@@ -109,7 +109,7 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
           showEdit
           showDelete
           showView
-          editPath={`/assets/registration/${asset.id}`}
+          editPath={`/assets/edit/${asset.id}`}
           editState={{ asset }}
           onDeleteClick={() => onDeleteClick(asset.id)}
           onViewClick={() => onViewClick(asset)}
