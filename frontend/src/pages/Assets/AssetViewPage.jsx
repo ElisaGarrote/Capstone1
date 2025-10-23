@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
-import "../../styles/AssetViewPage.css";
+import "../../styles/Assets/AssetViewPage.css";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 function AssetViewPage() {

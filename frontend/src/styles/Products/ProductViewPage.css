@@ -1,12 +1,9 @@
-/* Product View Page Specific Styles */
-
 .product-view-content {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-/* Product View Header */
 .product-view-header {
   display: flex;
   justify-content: space-between;
@@ -50,7 +47,6 @@
   border-color: var(--primary-color);
 }
 
-/* Product View Table */
 .product-view-table-wrapper {
   overflow-x: auto;
   max-height: 500px;
@@ -108,7 +104,6 @@
   margin: 0 !important;
 }
 
-/* Pagination */
 .product-view-pagination {
   padding: 15px 30px;
   border-top: 1px solid #cccccc;
@@ -119,7 +114,6 @@
   border-radius: 0 0 8px 8px;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .product-view-header {
     flex-direction: column;
