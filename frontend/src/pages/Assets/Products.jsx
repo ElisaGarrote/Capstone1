@@ -8,6 +8,7 @@ import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
@@ -35,7 +36,7 @@ const filterConfig = [
   },
 ];
 
-// TableHeader
+// TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
@@ -57,7 +58,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
   );
 }
 
-// TableItem
+// TableItem component to render each product row
 function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteClick, onViewClick }) {
   const baseImage = product.image
     ? `https://assets-service-production.up.railway.app${product.image}`
@@ -114,14 +115,14 @@ export default function Products() {
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
 
-  // Pagination state
+  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
-  // selection
+  // selection state
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Paginate the data
+  // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedProducts = products.slice(startIndex, endIndex);
@@ -250,21 +251,20 @@ export default function Products() {
         />
       )}
 
+      <section className="page-layout-with-table">
+        <NavBar />
 
-
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
-
-        <main className="page-layout products-page">
+        <main className="main-with-table">
+          {/* Title of the Page */}
           <section className="title-page-section">
             <h1>Asset Models</h1>
           </section>
 
+          {/* Table Filter */}
           <FilterPanel filters={filterConfig} />
 
           <section className="table-layout">
+            {/* Table Header */}
             <section className="table-header">
               <h2 className="h2">Asset Models ({products.length})</h2>
               <section className="table-actions">
@@ -291,15 +291,15 @@ export default function Products() {
               </section>
             </section>
 
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="table-section">
+            {/* Table Structure */}
+            <section className="products-table-section">
+              {exportToggle && (
+                <section className="export-button-section" ref={exportRef}>
+                  <button>Download as Excel</button>
+                  <button>Download as PDF</button>
+                  <button>Download as CSV</button>
+                </section>
+              )}
               <table>
                 <thead>
                   <TableHeader
@@ -333,6 +333,7 @@ export default function Products() {
               </table>
             </section>
 
+            {/* Table pagination */}
             <section className="table-pagination">
               <Pagination
                 currentPage={currentPage}
@@ -344,6 +345,7 @@ export default function Products() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

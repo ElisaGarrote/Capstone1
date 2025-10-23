@@ -113,6 +113,43 @@
     width: 100%;
 }
 
+/* Cost input group styling for RepairRegistration pattern */
+.registration .cost-input-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    border: 1px solid #d3d3d3;
+    border-radius: 25px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.registration .cost-addon {
+    background-color: #f8f9fa;
+    padding: 13px 16px;
+    border-right: 1px solid #d3d3d3;
+    font-size: 0.875rem;
+    color: var(--secondary-text-color);
+    white-space: nowrap;
+    min-width: 50px;
+    text-align: center;
+}
+
+.registration .cost-input-group input {
+    flex: 1;
+    padding: 13px 16px;
+    border: none;
+    border-radius: 0;
+    outline: none;
+    background-color: white;
+}
+
+.registration .cost-input-group input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
 .registration input,
 .registration select,
 .registration textarea {
@@ -120,6 +157,23 @@
     padding: 13px 16px;
     border-radius: 25px;
     border: 1px solid #d3d3d3;
+}
+
+/* Custom dropdown arrow styling */
+.registration select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 48px;
+}
+
+.registration select:focus {
+    outline: none;
+    border-color: var(--primary-color);
 }
 
 .registration textarea {
@@ -218,6 +272,14 @@
 
 .registration .upload-image-btn:hover {
     background-color: var(--primary-color-hover);
+}
+
+/* File size info styling for image upload */
+.registration .file-size-info {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--secondary-text-color);
 }
 
 .registration .attachments-wrapper {

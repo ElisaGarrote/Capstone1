@@ -2,15 +2,12 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import "../../styles/Registration.css";
-import "../../styles/PerformAudits.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import Select from "react-select";
-import makeAnimated from "react-select/animated";
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
@@ -26,28 +23,7 @@ export default function AssetsRegistration() {
     { id: 7, name: "Remote" }
   ]);
 
-  // Animated components for react-select
-  const animatedComponents = makeAnimated();
 
-  // Custom styles for dropdowns to match Audits form
-  const customStylesDropdown = {
-    control: (provided) => ({
-      ...provided,
-      width: "100%",
-      borderRadius: "25px",
-      fontSize: "0.875rem",
-      padding: "3px 8px",
-    }),
-    container: (provided) => ({
-      ...provided,
-      width: "100%",
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      color: state.isSelected ? "white" : "grey",
-      fontSize: "0.875rem",
-    }),
-  };
   
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
@@ -56,14 +32,14 @@ export default function AssetsRegistration() {
   const currentDate = new Date().toISOString().split("T")[0];
   const [generatedAssetId, setGeneratedAssetId] = useState('(Loading...)');
   
-  const { setValue, register, handleSubmit, control, watch, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       assetId: '',
-      product: null,
-      status: null,
-      supplier: null,
-      location: null,
+      product: '',
+      status: '',
+      supplier: '',
+      location: '',
       assetName: '',
       serialNumber: '',
       warrantyExpiration: '',
@@ -147,36 +123,12 @@ export default function AssetsRegistration() {
           // Set form values from retrieved asset data
           setValue('assetId', assetData.displayed_id);
 
-          // For dropdowns, find the matching option objects
-          const currentProductOptions = assetContextsData.products?.map(product => ({
-            value: product.id,
-            label: product.name
-          })) || [];
 
-          const currentStatusOptions = assetContextsData.statuses?.map(status => ({
-            value: status.id,
-            label: status.name
-          })) || [];
 
-          const currentSupplierOptions = contextsData.suppliers?.map(supplier => ({
-            value: supplier.id,
-            label: supplier.name
-          })) || [];
-
-          const currentLocationOptions = locations.map(location => ({
-            value: location.name,
-            label: location.name
-          }));
-
-          const productOption = currentProductOptions.find(option => option.value === assetData.product);
-          const statusOption = currentStatusOptions.find(option => option.value === assetData.status);
-          const supplierOption = currentSupplierOptions.find(option => option.value === assetData.supplier_id);
-          const locationOption = currentLocationOptions.find(option => option.value === assetData.location);
-
-          setValue('product', productOption || null);
-          setValue('status', statusOption || null);
-          setValue('supplier', supplierOption || null);
-          setValue('location', locationOption || null);
+          setValue('product', assetData.product_id || '');
+          setValue('status', assetData.status_id || '');
+          setValue('supplier', assetData.supplier_id || '');
+          setValue('location', assetData.location || '');
           setValue('assetName', assetData.name || '');
           setValue('serialNumber', assetData.serial_number || '');
           setValue('warrantyExpiration', assetData.warranty_expiration || '');
@@ -220,10 +172,10 @@ export default function AssetsRegistration() {
 
       // Append asset data to FormData object
       formData.append('displayed_id', data.assetId);
-      formData.append('product', data.product?.value || '');
-      formData.append('status', data.status?.value || '');
-      formData.append('supplier_id', data.supplier?.value || '');
-      formData.append('location', data.location?.value || '');
+      formData.append('product', data.product || '');
+      formData.append('status', data.status || '');
+      formData.append('supplier_id', data.supplier || '');
+      formData.append('location', data.location || '');
       formData.append('name', data.assetName);
       formData.append('serial_number', data.serialNumber || '');
       formData.append('warranty_expiration', data.warrantyExpiration || '');
@@ -275,33 +227,15 @@ export default function AssetsRegistration() {
     }
   };
 
-  // Create options arrays for react-select dropdowns
-  const productOptions = products.map(product => ({
-    value: product.id,
-    label: product.name
-  }));
 
-  const statusOptions = statuses.map(status => ({
-    value: status.id,
-    label: status.name
-  }));
-
-  const supplierOptions = suppliers.map(supplier => ({
-    value: supplier.id,
-    label: supplier.name
-  }));
-
-  const locationOptions = locations.map(location => ({
-    value: location.name,
-    label: location.name
-  }));
 
   // Add this function to handle product selection
-  const handleProductChange = async (selectedOption) => {
-    if (selectedOption && selectedOption.value) {
+  const handleProductChange = async (event) => {
+    const productId = event.target.value;
+    if (productId) {
       try {
         // Fetch the product defaults
-        const productDefaults = await assetsService.fetchProductDefaults(selectedOption.value);
+        const productDefaults = await assetsService.fetchProductDefaults(productId);
 
         if (productDefaults) {
           console.log("Product defaults:", productDefaults);
@@ -313,10 +247,7 @@ export default function AssetsRegistration() {
 
           // Set supplier if available
           if (productDefaults.default_supplier_id) {
-            const supplierOption = supplierOptions.find(option => option.value === productDefaults.default_supplier_id);
-            if (supplierOption) {
-              setValue('supplier', supplierOption);
-            }
+            setValue('supplier', productDefaults.default_supplier_id);
           }
         }
       } catch (error) {
@@ -362,81 +293,73 @@ export default function AssetsRegistration() {
             {/* Asset Model selection */}
             <fieldset>
               <label htmlFor='product'>Asset Model <span style={{color: 'red'}}>*</span></label>
-              <Controller
-                name="product"
-                control={control}
-                rules={{ required: "Asset Model is required" }}
-                render={({ field }) => (
-                  <Select
-                    components={animatedComponents}
-                    options={productOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select Asset Model"
-                    {...field}
-                    onChange={(selectedOption) => {
-                      field.onChange(selectedOption);
-                      handleProductChange(selectedOption);
-                    }}
-                  />
-                )}
-              />
+              <select
+                id="product"
+                {...register("product", { required: "Asset Model is required" })}
+                onChange={handleProductChange}
+                className={errors.product ? 'input-error' : ''}
+              >
+                <option value="">Select Asset Model</option>
+                {products.map(product => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
               {errors.product && <span className='error-message'>{errors.product.message}</span>}
             </fieldset>
 
             {/* Status selection, Default deployable */}
             <fieldset>
               <label htmlFor='status'>Status <span style={{color: 'red'}}>*</span></label>
-              <Controller
-                name="status"
-                control={control}
-                rules={{ required: "Status is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={statusOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select Status"
-                    {...field}
-                  />
-                )}
-              />
+              <select
+                id="status"
+                {...register("status", { required: "Status is required" })}
+                className={errors.status ? 'input-error' : ''}
+              >
+                <option value="">Select Status</option>
+                {statuses.map(status => (
+                  <option key={status.id} value={status.id}>
+                    {status.name}
+                  </option>
+                ))}
+              </select>
               {errors.status && <span className='error-message'>{errors.status.message}</span>}
             </fieldset>
 
             {/* Supplier selection */}
             <fieldset>
               <label htmlFor='supplier'>Supplier <span style={{color: 'red'}}>*</span></label>
-              <Controller
-                name="supplier"
-                control={control}
-                rules={{ required: "Supplier is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={supplierOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select Supplier"
-                    {...field}
-                  />
-                )}
-              />
+              <select
+                id="supplier"
+                {...register("supplier", { required: "Supplier is required" })}
+                className={errors.supplier ? 'input-error' : ''}
+              >
+                <option value="">Select Supplier</option>
+                {suppliers.map(supplier => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
               {errors.supplier && <span className='error-message'>{errors.supplier.message}</span>}
             </fieldset>
 
             {/* Location selection */}
             <fieldset>
               <label htmlFor='location'>Location <span style={{color: 'red'}}>*</span></label>
-              <Controller
-                name="location"
-                control={control}
-                rules={{ required: "Location is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={locationOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select Location"
-                    {...field}
-                  />
-                )}
-              />
+              <select
+                id="location"
+                {...register("location", { required: "Location is required" })}
+                className={errors.location ? 'input-error' : ''}
+              >
+                <option value="">Select Location</option>
+                {locations.map(location => (
+                  <option key={location.id} value={location.name}>
+                    {location.name}
+                  </option>
+                ))}
+              </select>
               {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
 
@@ -496,17 +419,18 @@ export default function AssetsRegistration() {
             </fieldset>
 
             {/* Purchase Cost */}
-            <fieldset>
-              <label>Default Purchase Cost</label>
-              <div className="purchase-cost-container">
-                <div className="currency-label">PHP</div>
+            <fieldset className="cost-field">
+              <label htmlFor="purchaseCost">Purchase Cost</label>
+              <div className="cost-input-group">
+                <span className="cost-addon">PHP</span>
                 <input
                   type="number"
-                  step="0.01"
+                  id="purchaseCost"
+                  name="purchaseCost"
+                  placeholder="0.00"
                   min="0"
+                  step="0.01"
                   {...register("purchaseCost", { valueAsNumber: true })}
-                  placeholder='Default Purchase Cost'
-                  className="purchase-cost-input"
                 />
               </div>
             </fieldset>
@@ -522,37 +446,40 @@ export default function AssetsRegistration() {
             </fieldset>
 
             <fieldset>
-              <label htmlFor='upload-image'>Image</label>
-              <div>
-                {previewImage ? (
-                  <div className='image-selected'>
-                    <img src={previewImage} alt='Preview' />
-                    <button
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPreviewImage(null);
-                        setSelectedImage(null);
-                        setValue('image', null);
-                        document.getElementById('image').value = '';
-                        setRemoveImage(true);
-                        console.log("Remove image flag set to:", true);
-                      }}
-                    >
-                      <img src={CloseIcon} alt='Remove' />
-                    </button>
-                  </div>
-                ) : null}
-                <input
-                  type='file'
-                  id='image'
-                  accept='image/*'
-                  onChange={handleImageSelection}
-                  style={{ display: 'none' }}
-                />
-                <label htmlFor='image' className='upload-image-btn'>
-                  {!previewImage ? 'Choose Image' : 'Change Image'}
+              <label>Image</label>
+              {previewImage ? (
+                <div className="image-selected">
+                  <img src={previewImage} alt="Selected image" />
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setPreviewImage(null);
+                      setSelectedImage(null);
+                      setValue('image', null);
+                      document.getElementById('image').value = '';
+                      setRemoveImage(true);
+                      console.log("Remove image flag set to:", true);
+                    }}
+                  >
+                    <img src={CloseIcon} alt="Remove" />
+                  </button>
+                </div>
+              ) : (
+                <label className="upload-image-btn">
+                  Choose File
+                  <input
+                    type="file"
+                    id="image"
+                    accept="image/*"
+                    onChange={handleImageSelection}
+                    style={{ display: "none" }}
+                  />
                 </label>
-              </div>
+              )}
+              <small className="file-size-info">
+                Maximum file size must be 5MB
+              </small>
             </fieldset>
 
             <button type="submit" className="save-btn" disabled={!isValid}>Save</button>
