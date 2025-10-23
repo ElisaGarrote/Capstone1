@@ -482,7 +482,7 @@ export default function AssetsRegistration() {
               </small>
             </fieldset>
 
-            <button type="submit" className="save-btn" disabled={!isValid}>Save</button>
+            <button type="submit" className="primary-button" disabled={!isValid}>Save</button>
           </form>
         </section>
       </main>

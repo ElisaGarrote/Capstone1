@@ -432,7 +432,7 @@ export default function ProductsRegistration() {
               </small>
             </fieldset>
 
-            <button type='submit' className='save-btn' disabled={!isValid}>
+            <button type='submit' className='primary-button' disabled={!isValid}>
               Save
             </button>
           </form>

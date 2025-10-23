@@ -36,11 +36,6 @@ const filterConfig = [
     name: "category",
     label: "Category",
   },
-  {
-    type: "text",
-    name: "location",
-    label: "Location",
-  },
 ];
 
 // TableHeader component to render the table header
@@ -59,7 +54,6 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>NAME</th>
       <th>CATEGORY</th>
       <th>STATUS</th>
-      <th>LOCATION</th>
       <th>CHECK-IN / CHECK-OUT</th>
       <th>ACTION</th>
     </tr>
@@ -97,7 +91,6 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       <td>
         <Status type={asset.status.toLowerCase()} name={asset.status} />
       </td>
-      <td>{asset.location || "-"}</td>
 
       {/* CHECK-IN / CHECK-OUT Column */}
       <td>
@@ -365,7 +358,7 @@ export default function Assets() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="no-data-message">
+                      <td colSpan={8} className="no-data-message">
                         No Assets Found.
                       </td>
                     </tr>

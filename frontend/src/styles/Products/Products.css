@@ -2,8 +2,6 @@
   overflow-x: auto;
   max-height: 55vh;
   overflow-y: auto;
-
-  /* Prevent affecting the parent when scrolling. */
   overscroll-behavior: contain;
 
   table {
@@ -12,18 +10,14 @@
 
     th {
       padding: 0.75rem !important;
-      /* 12px */
       text-align: left !important;
       font-size: 0.75rem;
-      /* 12px */
       font-weight: 600;
       color: var(--text-color);
       border-top: 1px solid #cccccc;
       border-bottom: 1px solid #cccccc;
       background-color: #f0f1f2;
-
       height: 50px;
-
       position: sticky;
       top: 0;
       z-index: 1;
@@ -44,14 +38,11 @@
       text-align: left !important;
       padding: 0.75rem;
       font-size: 0.8125rem;
-      /* 13px */
       color: var(--text-color);
       border-bottom: 1px solid #cccccc;
-
       height: 50px;
     }
 
-    /* Ensure empty-state row spans correctly across all columns */
     td.no-data-message {
       display: table-cell !important;
       width: 100% !important;
@@ -69,7 +60,6 @@
   }
 }
 
-/* Action button styling for Products table */
 .products-table-section .action-button-section {
   justify-content: flex-start !important;
   margin: 0 !important;

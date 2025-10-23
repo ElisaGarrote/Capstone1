@@ -50,24 +50,20 @@
     font-weight: 600;
 }
 
-/* Error message styling to match Audits form */
 .registration fieldset .error-message {
     color: red;
     font-size: 0.875rem;
 }
 
-/* Input error styling */
 .registration .input-error {
     border-color: red !important;
 }
 
-/* Readonly/disabled input styling to match Audits form */
 .registration input[readonly] {
     background-color: rgba(211, 211, 211, 0.5);
     color: var(--secondary-text-color);
 }
 
-/* Purchase Cost styling to match the format shown */
 .registration .purchase-cost-container,
 .perform-audit-page .purchase-cost-container {
     display: flex;
@@ -107,13 +103,11 @@
     box-shadow: none;
 }
 
-/* Ensure the purchase cost container has proper width */
 .registration .purchase-cost-container,
 .perform-audit-page .purchase-cost-container {
     width: 100%;
 }
 
-/* Cost input group styling for RepairRegistration pattern */
 .registration .cost-input-group {
     display: flex;
     flex-direction: row;
@@ -159,7 +153,6 @@
     border: 1px solid #d3d3d3;
 }
 
-/* Custom dropdown arrow styling */
 .registration select {
     appearance: none;
     -webkit-appearance: none;
@@ -274,7 +267,6 @@
     background-color: var(--primary-color-hover);
 }
 
-/* File size info styling for image upload */
 .registration .file-size-info {
     display: block;
     margin-top: 0.5rem;
@@ -312,7 +304,6 @@
   overflow-x: hidden;
 }
 
-/* Responsive design for attachments */
 @media (max-width: 768px) {
   .registration .attachments-wrapper {
     flex-direction: column;
@@ -355,7 +346,6 @@
   flex-direction: column !important;
 }
 
-/* Override any inline or flex display that might be applied */
 .registration .upload-left small.file-size-info {
   display: block !important;
   width: 100% !important;
