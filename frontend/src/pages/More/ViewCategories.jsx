@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -7,6 +7,7 @@ import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import { fetchAllCategories, deleteCategory, } from "../../services/contexts-service";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import Alert from "../../components/Alert";
 
 import Footer from "../../components/Footer";
 
@@ -72,7 +73,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
           {category.name}
         </div>
       </td>
-      <td>{category.type}</td>
+      <td>{category.type_display}</td>
       <td>{category.quantity}</td>
       <td>
         <section className="action-button-section">
@@ -80,7 +81,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
             title="Edit"
             className="action-button"
             onClick={() =>
-              navigate("/More/CategoryEdit", { state: { category } })
+              navigate(`/More/CategoryEdit/${category.id}`, { state: { category } })
             }
           >
             <i className="fas fa-edit"></i>
@@ -100,8 +101,14 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
 
 export default function Category() {
   const [categories, setCategories] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [errorMessage, setErrorMessage] = useState(location.state?.error || "");
+  const [successMessage, setSuccessMessage] = useState(location.state?.success || "");
+
 
   const allSelected = selectedIds.length === categories.length && categories.length > 0;
 
@@ -149,23 +156,43 @@ export default function Category() {
   // Handel Delete
   const handleDelete = async () => {
     try {
-      if (selectedCategoryId) {
-        // Single delete
-        await deleteCategory(selectedCategoryId);
-      } else if (selectedIds.length > 0) {
-        // Bulk delete
-        await Promise.all(selectedIds.map((id) => deleteCategory(id)));
+      setSuccessMessage("");
+      setErrorMessage("");
+
+      if (selectedIds.length > 0) {
+        await Promise.all(selectedIds.map(id => deleteCategory(id)));
         setSelectedIds([]);
+        fetchCategories();
+        setSuccessMessage(
+          selectedIds.length > 1
+            ? "Categories successfully deleted."
+            : "Category successfully deleted."
+        );
       }
       setDeleteModalOpen(false);
-      fetchCategories();
     } catch (error) {
       console.log("Failed to delete category:", error);
+      setErrorMessage("Failed to delete category. Please try again.");
     }
   };
 
+  // Clear success/error messages after 4 seconds
+  useEffect(() => {
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+        setErrorMessage("");
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
+
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isDeleteModalOpen && (
         <DeleteModal
           closeModal={() => setDeleteModalOpen(false)}
@@ -189,7 +216,11 @@ export default function Category() {
                 {selectedIds.length > 0 && (
                   <MediumButtons
                     type="delete"
-                    onClick={() => setDeleteModalOpen(true)}
+                    onClick={() => {
+                      if (selectedIds.length > 0) {
+                        setDeleteModalOpen(true);
+                      }
+                    }}
                   />
                 )}
                 <input
@@ -217,7 +248,7 @@ export default function Category() {
                         key={index}
                         category={category}
                         onDeleteClick={(id) => {
-                          setSelectedCategoryId(id);
+                          setSelectedIds([id]);
                           setDeleteModalOpen(true);
                         }}
                         onCheckboxChange={handleCheckboxChange}

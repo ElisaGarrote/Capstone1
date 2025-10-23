@@ -1,18 +1,31 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 class Category(models.Model):
-    TYPE = [
-        ('asset', 'Asset'),
-        ('component', 'Component'),
-    ]
+    class CategoryType(models.TextChoices):
+        ASSET = 'asset', 'Asset'
+        COMPONENT = 'component', 'Component'
     name = models.CharField(max_length=50)
-    type = models.CharField(max_length=9, choices=TYPE)
+    type = models.CharField(max_length=9, choices=CategoryType.choices)
     logo = models.ImageField(upload_to='category_logos/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
 
+    def clean(self):
+        # Check for categories with the same name and type that has is_deleted=False
+        # Safe registration for django admin
+        if Category.objects.filter(
+            name__exact=self.name,
+            type=self.type,
+            is_deleted=False
+        ).exclude(pk=self.pk).exists():
+            raise ValidationError({
+                "name": "A category with this name and type already exists."
+            })
+
     def __str__(self):
         return self.name
+
 class Supplier(models.Model):
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=100, blank=True, null=True)
