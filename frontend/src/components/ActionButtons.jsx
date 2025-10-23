@@ -24,6 +24,16 @@ export default function ActionButtons({
 
   return (
     <section className="action-button-section">
+      {showView && (
+        <button
+          title="View"
+          className="action-button"
+          onClick={onViewClick}
+        >
+          <i className="fas fa-eye"></i>
+        </button>
+      )}
+
       {showEdit && (
         <button
           title="Edit"
@@ -41,16 +51,6 @@ export default function ActionButtons({
           onClick={onDeleteClick}
         >
           <i className="fas fa-trash-alt"></i>
-        </button>
-      )}
-
-      {showView && (
-        <button
-          title="View"
-          className="action-button"
-          onClick={onViewClick}
-        >
-          <i className="fas fa-eye"></i>
         </button>
       )}
 
