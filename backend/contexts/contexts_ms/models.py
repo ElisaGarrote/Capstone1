@@ -13,6 +13,7 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
 class Supplier(models.Model):
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=100, blank=True, null=True)

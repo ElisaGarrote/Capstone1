@@ -151,22 +151,32 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class RepairSerializer(serializers.ModelSerializer):
-    asset_info = AllAssetSerializer(source='asset', read_only=True)
-    repair_files = serializers.SerializerMethodField()
+    supplier_details = serializers.SerializerMethodField()
+    supplier_choices = serializers.SerializerMethodField()  # Add a field for dropdown choices
 
     class Meta:
         model = Repair
-        fields = "__all__"
-    
-    def get_repair_files(self, obj):
-        # Retrieve all files that are not deleted and the repair matches the current repair instance.
-        files = obj.files.filter(is_deleted=False, repair=obj.id)
-        return RepairFileSerializer(files, many=True).data
+        fields = '__all__'
 
-class RepairFileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RepairFile
-        fields = "__all__"
+    def get_supplier_details(self, obj):
+        try:
+            base_url = os.getenv('CONTEXTS_API_URL', 'http://contexts-service:8003')
+            response = requests.get(f"{base_url}/api/suppliers/{obj.supplier_id}/")
+            if response.status_code == 200:
+                return response.json()
+            return None
+        except Exception as e:
+            return {'error': str(e)}
+
+    def get_supplier_choices(self, obj):
+        try:
+            base_url = os.getenv('CONTEXTS_API_URL', 'http://contexts-service:8003')
+            response = requests.get(f"{base_url}/api/suppliers/")
+            if response.status_code == 200:
+                return response.json()  # Return the list of suppliers
+            return []
+        except Exception as e:
+            return [{'error': str(e)}]
 
 class DashboardStatsSerializer(serializers.Serializer):
     due_for_return = serializers.IntegerField()

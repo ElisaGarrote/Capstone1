@@ -1,7 +1,12 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import *
 
+router = DefaultRouter()
+router.register('repairs', RepairViewSet, basename='repair')
+
 urlpatterns = [
+    path('', include(router.urls)),
     # Products
     path('products/', get_all_products, name='all_products'),
     path('products/contexts/', get_product_contexts, name='product_registration_contexts'),
@@ -79,18 +84,6 @@ urlpatterns = [
 
     path('components/contexts/', get_component_registration_contexts, name='component_categories'),
     path('assets/names/', get_asset_names, name='all_asset_names'),
-
-    # Repair
-    path('repairs/create/', create_repair, name='create_repair'),
-    path('repairs/all/', get_all_repair, name='get_all_repair'),
-    path('repairs/<int:id>/update/', update_repair, name='update_repair_by_id'),
-    path('repairs/<int:id>/delete/', soft_delete_repair, name='soft_delete_repair_by_id'),
-
-    # Repair file
-    path('repairs/add/files/', create_repair_file, name='create_repair_file'),
-    path('repairs/file/<int:id>/delete/', soft_delete_repair_file_by_id, name='soft_delete_repair_file_by_id'),
-    path('repairs/<int:id>/delete/files/', soft_delete_repair_file_by_repair_id, name='soft_delete_repair_file_by_repair_id'),
-    
-    #Dahsboard
+    #Dashboard
     path('dashboard/', get_dashboard_stats, name='dashboard-stats'),
 ]

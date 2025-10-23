@@ -1,6 +1,8 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import *
+from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework import status
 from .models import *
 from .serializer import *
@@ -763,75 +765,55 @@ def create_component_checkin(request):
 # END COMPONENT
 
 # REPAIR
-@api_view(['POST'])
-def create_repair(request):
-    data = request.data
-    serializers = RepairSerializer(data=data)
-    if serializers.is_valid():
-        serializers.save()
-        return Response(serializers.data, status=status.HTTP_201_CREATED)
-    return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+class RepairViewSet(viewsets.ModelViewSet):
+    serializer_class = RepairSerializer
 
-@api_view(['GET'])
-def get_all_repair(request):
-    queryset = Repair.objects.all().filter(is_deleted=False)
-    serializer = RepairSerializer(queryset, many=True)
+    def get_queryset(self):
+        return Repair.objects.filter(is_deleted=False).order_by('-id')
 
-    return Response(serializer.data)
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save()
 
-@api_view(['PUT'])
-def update_repair(request, id):
-    try:
-        repair = Repair.objects.get(pk=id, is_deleted=False)
-    except Repair.DoesNotExist:
-        return Response({'detail': 'Repair not found'}, status=status.HTTP_404_NOT_FOUND)
+    @action(detail=True, methods=['patch'])
+    def soft_delete(self, request, pk=None):
+        """Soft delete a repair."""
+        try:
+            repair = self.get_object()
+            repair.is_deleted = True
+            repair.save()
+            return Response({'detail': 'Repair soft-deleted'}, status=status.HTTP_200_OK)
+        except Repair.DoesNotExist:
+            return Response({'detail': 'Repair not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = RepairSerializer(repair, data=request.data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @action(detail=False, methods=['post'])
+    def create_repair_file(self, request):
+        """Create a repair file."""
+        serializer = RepairFileSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['PATCH'])
-def soft_delete_repair(request, id):
-    try:
-        repair = Repair.objects.get(pk=id)
-        repair.is_deleted = True
-        repair.save()
-        return Response({'detail': 'Repair soft-deleted'})
-    except Repair.DoesNotExist:
-        return Response({'detail': 'Repair not found'}, status=status.HTTP_404_NOT_FOUND)
+    @action(detail=True, methods=['patch'])
+    def soft_delete_repair_file(self, request, pk=None):
+        """Soft delete a repair file by ID."""
+        try:
+            repair_file = RepairFile.objects.get(pk=pk, is_deleted=False)
+            repair_file.is_deleted = True
+            repair_file.save()
+            return Response({'detail': 'Repair file soft-deleted'}, status=status.HTTP_200_OK)
+        except RepairFile.DoesNotExist:
+            return Response({'detail': 'Repair file not found'}, status=status.HTTP_404_NOT_FOUND)
 
-# Repair file
-@api_view(['POST'])
-def create_repair_file(request):
-    data = request.data
-    serializers = RepairFileSerializer(data=data)
-    if serializers.is_valid():
-        serializers.save()
-        return Response(serializers.data, status=status.HTTP_201_CREATED)
-    return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['PATCH'])
-def soft_delete_repair_file_by_id(request, id):
-    "Delete repair file by id."
-    try:
-        repair_file = RepairFile.objects.get(pk=id, is_deleted=False)
-        repair_file.is_deleted = True
-        repair_file.save()
-        return Response({'detail': 'Repair file soft-deleted'})
-    except RepairFile.DoesNotExist:
-        return Response({'detail': 'Repair file not found'}, status=status.HTTP_404_NOT_FOUND)
-
-@api_view(['PATCH'])
-def soft_delete_repair_file_by_repair_id(request, id):
-    "Delete all repair files by repair id."
-    try:
-        repair_files = RepairFile.objects.filter(repair=id, is_deleted=False)
+    @action(detail=True, methods=['patch'])
+    def soft_delete_repair_files_by_repair(self, request, pk=None):
+        """Soft delete all repair files by repair ID."""
+        repair_files = RepairFile.objects.filter(repair=pk, is_deleted=False)
+        if not repair_files.exists():
+            return Response({'detail': 'Repair files not found'}, status=status.HTTP_404_NOT_FOUND)
         repair_files.update(is_deleted=True)
-        return Response({'detail': 'Repair files soft-deleted'})
-    except RepairFile.DoesNotExist:
-        return Response({'detail': 'Repair files not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'detail': 'Repair files soft-deleted'}, status=status.HTTP_200_OK)
 # END REPAIR
 
 @api_view(['GET'])

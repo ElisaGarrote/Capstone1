@@ -6,10 +6,10 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
 
-class SupplierNameSerializer(serializers.ModelSerializer):
+class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
-        fields = ['id', 'name']
+        fields = '__all__'
 
 class ManufacturerNameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +19,11 @@ class ManufacturerNameSerializer(serializers.ModelSerializer):
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
+        fields = '__all__'
+
+class DepreciationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Depreciation
         fields = '__all__'
 
 class ManufacturerSerializer(serializers.ModelSerializer):
