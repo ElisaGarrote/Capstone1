@@ -21,8 +21,10 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 FROM base AS build
 # Clean install to fix rollup issue
 RUN rm -rf node_modules package-lock.json
-RUN npm install
+RUN npm ci --only=production=false
 COPY . ./
+# Rebuild native dependencies to ensure compatibility
+RUN npm rebuild esbuild
 RUN npm run build
 
 # Production stage
