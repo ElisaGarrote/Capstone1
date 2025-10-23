@@ -9,7 +9,8 @@ import Pagination from "../../components/Pagination";
 import SupplierFilter from "../../components/FilterPanel";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import { fetchAllCategories } from '../../services/contexts-service';
+import MockupData from "../../data/mockData/more/supplier-mockup-data.json";
+import { fetchAllCategories } from "../../services/contexts-service";
 
 import "../../styles/ViewSupplier.css";
 
@@ -147,6 +148,9 @@ export default function ViewSupplier() {
   const [checkedItems, setCheckedItems] = useState([]);
   const [endPoint, setEndPoint] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isAddRecordSuccess, setAddRecordSuccess] = useState(false);
+  const [isUpdateRecordSuccess, setUpdateRecordSuccess] = useState(false);
+
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -154,6 +158,22 @@ export default function ViewSupplier() {
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+
+  // paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedSuppliers = MockupData.slice(startIndex, endIndex);
+
+  // Retrieve the "addManufacturer" value passed from the navigation state.
+  // If the "addManufacturer" is not exist, the default value for this is "undifiend".
+  const addedSupplier = location.state?.addedSupplier;
+  const updatedSupplier = location.state?.updatedSupplier;
+
+  /* BACKEND INTEGRATION HERE
   const contextServiceUrl =
     "https://contexts-service-production.up.railway.app";
 
@@ -162,7 +182,7 @@ export default function ViewSupplier() {
       setLoading(true);
       try {
         const suppRes = await fetchAllCategories();
-        const mapped = (suppRes || []).map(supp => ({
+        const mapped = (suppRes || []).map((supp) => ({
           id: supp.id,
           name: supp.name,
           address: supp.address,
@@ -230,6 +250,7 @@ export default function ViewSupplier() {
       setLoading(false);
     }
   };
+  */
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -239,14 +260,53 @@ export default function ViewSupplier() {
     supplier.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+  const actionStatus = (action, status) => {
+    let timeoutId;
 
-  // paginate the data
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedSuppliers = filteredSuppliers.slice(startIndex, endIndex);
+    if (action === "create" && status === true) {
+      setAddRecordSuccess(true);
+    }
+
+    if (action === "update" && status === true) {
+      setUpdateRecordSuccess(true);
+    }
+
+    // clear the navigation/history state so a full page refresh won't re-show the alert
+    // replace the current history entry with an empty state
+    navigate(location.pathname, { replace: true, state: {} });
+
+    return (timeoutId = setTimeout(() => {
+      if (action === "create") {
+        setAddRecordSuccess(false);
+      } else {
+        setUpdateRecordSuccess(false);
+      }
+    }, 5000));
+  };
+
+  const getAction = () => {
+    if (addedSupplier == true) {
+      return "create";
+    }
+
+    if (updatedSupplier == true) {
+      return "update";
+    }
+
+    return null;
+  };
+
+  // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
+  useEffect(() => {
+    let timeoutId;
+
+    timeoutId = actionStatus(getAction(), true);
+
+    // cleanup the timeout on unmount or when addedManufacturer or updatedManufacturer changes
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [addedSupplier, updatedSupplier, navigate, location.pathname]);
 
   // ----------------- Render -----------------
   return (
@@ -254,11 +314,20 @@ export default function ViewSupplier() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
+      {isAddRecordSuccess && (
+        <Alert message="Supplier added successfully!" type="success" />
+      )}
+
+      {isUpdateRecordSuccess && (
+        <Alert message="Supplier updated successfully!" type="success" />
+      )}
+
       {isDeleteModalOpen && (
         <DeleteModal
           endPoint={endPoint}
           closeModal={() => setDeleteModalOpen(false)}
           actionType="delete"
+          /* BACKEND INTEGRATION HERE
           confirmDelete={async () => {
             await fetchSuppliers();
             setSuccessMessage("Supplier Deleted Successfully!");
@@ -268,6 +337,7 @@ export default function ViewSupplier() {
             setErrorMessage("Delete failed. Please try again.");
             setTimeout(() => setErrorMessage(""), 5000);
           }}
+          */
         />
       )}
 
@@ -281,7 +351,7 @@ export default function ViewSupplier() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Suppliers ({filteredSuppliers.length})</h2>
+              <h2 className="h2">Suppliers ({MockupData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
@@ -310,9 +380,10 @@ export default function ViewSupplier() {
                         key={index}
                         supplier={supplier}
                         onDeleteClick={() => {
+                          /* BACKEND INTEGRATION HERE
                           setEndPoint(
                             `${contextServiceUrl}/contexts/suppliers/${supplier.id}/delete/`
-                          );
+                          ); */
                           setDeleteModalOpen(true);
                         }}
                       />
