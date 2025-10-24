@@ -101,7 +101,7 @@ class Ticket(models.Model):
     asset = models.PositiveIntegerField()
     checkout_date = models.DateField(null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
-    asset_checkout = models.PositiveIntegerField()
+    asset_checkout = models.PositiveIntegerField(null=True, blank=True)
     checkin_date = models.DateField(null=True, blank=True)
     is_resolved = models.BooleanField(default=False)
 
