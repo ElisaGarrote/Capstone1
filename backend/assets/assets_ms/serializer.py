@@ -312,8 +312,5 @@ class DashboardStatsSerializer(serializers.Serializer):
     upcoming_end_of_life = serializers.IntegerField()
     expired_warranties = serializers.IntegerField()
     expiring_warranties = serializers.IntegerField()
-    low_stock = serializers.IntegerField()
     total_asset_costs = serializers.DecimalField(max_digits=12, decimal_places=2)
     asset_utilization = serializers.IntegerField()
-    asset_categories = serializers.ListField(child=serializers.DictField())
-    asset_statuses = serializers.ListField(child=serializers.DictField())

@@ -1,3 +1,4 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 from .views import *
 
@@ -9,4 +10,6 @@ router.register('asset-checkin', AssetCheckinViewSet, basename='asset-checkin')
 router.register('components', ComponentViewSet, basename='components')
 router.register('component-checkout', ComponentCheckoutViewSet, basename='component-checkout')
 router.register('component-checkin', ComponentCheckinViewSet, basename='component-checkin')
+router.register('dashboard', DashboardViewSet, basename='dashboard')
+
 urlpatterns = router.urls
