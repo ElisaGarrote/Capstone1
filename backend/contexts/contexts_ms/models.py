@@ -96,8 +96,6 @@ class Location(models.Model):
 
     def __str__(self):
         return self.city
-    
-from django.db import models
 
 class Ticket(models.Model):
     ticket_id = models.CharField(max_length=100, unique=True)

@@ -3,11 +3,12 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-import uuid
 from django.core.exceptions import ValidationError
-import magic
 from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
+from PIL import Image
+import uuid
+import magic
 
 def validate_image(image):
     max_size = 5 * 1024 * 1024
@@ -130,7 +131,7 @@ def generate_asset_id(sender, instance, **kwargs):
 class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts', limit_choices_to={'is_deleted': False})
     checkout_to = models.PositiveIntegerField()
-    to_location = models.CharField()
+    location = models.CharField()
     checkout_date = models.DateTimeField(auto_now_add=True)
     return_date = models.DateTimeField()
     condition = models.PositiveSmallIntegerField(
@@ -212,7 +213,7 @@ class Component(models.Model):
     
 class ComponentCheckout(models.Model):
     component = models.ForeignKey(Component, on_delete=models.CASCADE, related_name='components_checkouts')
-    to_asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='checkout_to')
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='checkout_to')
     quantity = models.PositiveIntegerField(default=1)
     checkout_date = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(max_length=500, blank=True, null=True)
