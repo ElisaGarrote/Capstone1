@@ -38,7 +38,7 @@
     gap: 5px;
 }
 
-.registration fieldset div:not(.purchase-cost-container):not(.attachments-wrapper):not(.upload-left):not(.upload-right):not(.file-uploaded) {
+.registration fieldset div:not(.purchase-cost-container):not(.attachments-wrapper):not(.upload-left):not(.upload-right):not(.file-uploaded):not(.import-section):not(.dropdown-with-add) {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -50,24 +50,20 @@
     font-weight: 600;
 }
 
-/* Error message styling to match Audits form */
 .registration fieldset .error-message {
     color: red;
     font-size: 0.875rem;
 }
 
-/* Input error styling */
 .registration .input-error {
     border-color: red !important;
 }
 
-/* Readonly/disabled input styling to match Audits form */
 .registration input[readonly] {
     background-color: rgba(211, 211, 211, 0.5);
     color: var(--secondary-text-color);
 }
 
-/* Purchase Cost styling to match the format shown */
 .registration .purchase-cost-container,
 .perform-audit-page .purchase-cost-container {
     display: flex;
@@ -107,10 +103,45 @@
     box-shadow: none;
 }
 
-/* Ensure the purchase cost container has proper width */
 .registration .purchase-cost-container,
 .perform-audit-page .purchase-cost-container {
     width: 100%;
+}
+
+.registration .cost-input-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    border: 1px solid #d3d3d3;
+    border-radius: 25px;
+    overflow: hidden;
+    width: 100%;
+}
+
+.registration .cost-addon {
+    background-color: #f8f9fa;
+    padding: 13px 16px;
+    border-right: 1px solid #d3d3d3;
+    font-size: 0.875rem;
+    color: var(--secondary-text-color);
+    white-space: nowrap;
+    min-width: 50px;
+    text-align: center;
+}
+
+.registration .cost-input-group input {
+    flex: 1;
+    padding: 13px 16px;
+    border: none;
+    border-radius: 0;
+    outline: none;
+    background-color: white;
+}
+
+.registration .cost-input-group input:focus {
+    outline: none;
+    box-shadow: none;
 }
 
 .registration input,
@@ -120,6 +151,22 @@
     padding: 13px 16px;
     border-radius: 25px;
     border: 1px solid #d3d3d3;
+}
+
+.registration select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 48px;
+}
+
+.registration select:focus {
+    outline: none;
+    border-color: var(--primary-color);
 }
 
 .registration textarea {
@@ -220,6 +267,13 @@
     background-color: var(--primary-color-hover);
 }
 
+.registration .file-size-info {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--secondary-text-color);
+}
+
 .registration .attachments-wrapper {
   display: flex;
   flex-direction: row;
@@ -250,7 +304,6 @@
   overflow-x: hidden;
 }
 
-/* Responsive design for attachments */
 @media (max-width: 768px) {
   .registration .attachments-wrapper {
     flex-direction: column;
@@ -293,7 +346,6 @@
   flex-direction: column !important;
 }
 
-/* Override any inline or flex display that might be applied */
 .registration .upload-left small.file-size-info {
   display: block !important;
   width: 100% !important;
@@ -343,4 +395,73 @@
   height: 12px;
   width: 12px;
   filter: brightness(0) saturate(100%);
+}
+
+/* Import Button Styles */
+.import-section {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.import-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.import-btn:hover {
+    background-color: var(--primary-color-hover);
+    transform: translateY(-1px);
+}
+
+.import-btn img {
+    width: 16px;
+    height: 16px;
+    filter: brightness(0) invert(1);
+}
+
+/* Dropdown with Add Button Styles */
+.dropdown-with-add {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-with-add select {
+    flex: 1;
+}
+
+.add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.add-btn:hover {
+    background-color: var(--primary-color-hover);
+    transform: translateY(-1px);
+}
+
+.add-btn img {
+    width: 16px;
+    height: 16px;
+    filter: brightness(0) invert(1);
 }

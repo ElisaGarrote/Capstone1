@@ -5,7 +5,7 @@ import ViewPage from "../../components/View/Viewpage";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
-import "../../styles/ProductViewPage.css";
+import "../../styles/Products/ProductViewPage.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 

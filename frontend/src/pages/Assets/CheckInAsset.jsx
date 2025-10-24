@@ -1,17 +1,13 @@
-import "../../styles/custom-colors.css";
-import "../../styles/Registration.css";
-import "../../styles/CheckInOut.css";
-import NavBar from "../../components/NavBar";
-import TopSecFormPage from "../../components/TopSecFormPage";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import CloseIcon from "../../assets/icons/close.svg";
+import NavBar from "../../components/NavBar";
+import "../../styles/Registration.css";
+import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import dtsService from "../../services/dts-integration-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import DefaultImage from "../../assets/img/default-image.jpg";
 
 
 export default function CheckInAsset() {
@@ -33,7 +29,6 @@ export default function CheckInAsset() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
 
 
   const {
@@ -56,8 +51,9 @@ export default function CheckInAsset() {
     register,
     handleSubmit,
     setValue,
-    formState: { errors }
+    formState: { errors, isValid }
   } = useForm({
+    mode: "all",
     defaultValues: {
       checkinDate: checkinDate || currentDate,
       condition: '',
@@ -65,51 +61,15 @@ export default function CheckInAsset() {
     }
   });
 
-  const [previewImages, setPreviewImages] = useState([]);
 
-  useEffect(() => {
-  const initialize = async () => {
-    setIsLoading(true);
-    try {
-      setValue("condition", "");
-      setValue("notes", "");
-      setValue("image", []);
-    } catch (error) {
-      console.error("Error initializing Check-In form:", error);
-      setErrorMessage("Failed to initialize data.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  initialize();
-}, [setValue]);
-
-  const handleImageSelection = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file); // store the actual file
-      setValue('image', file); // optional: sync with react-hook-form
-  
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result); // for display only
-      };
-      reader.readAsDataURL(file);
-    }
-  }; 
 
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
       formData.append("asset_checkout", checkoutId);
-      formData.append("checkin_date", checkinDate);
+      formData.append("checkin_date", data.checkinDate);
       formData.append("condition", data.condition);
       formData.append("notes", data.notes || "");
-      
-      if (selectedImage) {
-        formData.append("image", selectedImage);
-      }
 
       await assetsService.createAssetCheckin(formData);
       await dtsService.resolveCheckoutTicket(ticketId);
@@ -132,7 +92,7 @@ export default function CheckInAsset() {
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav><NavBar /></nav>
-      <main className="check-in-out-page">
+      <main className="registration">
         <section className="top">
           <TopSecFormPage
             root="Assets"
@@ -141,112 +101,58 @@ export default function CheckInAsset() {
             title={assetId}
           />
         </section>
-        <section className="middle">
-          <section className="recent-checkout-info">
-            <h2>Check-Out Information</h2>
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Checkin Date */}
             <fieldset>
-              <label>Checked-Out To:</label>
-              <p>{employee}</p>
-            </fieldset>
-            <fieldset>
-              <label>Check-Out Date:</label>
-              <p>{checkOutDate}</p>
-            </fieldset>
-            <fieldset>
-              <label>Condition:</label>
-              <p>{condition}</p>
-            </fieldset>
-
-            <h2>Asset Information</h2>
-            <fieldset>
-              <img
-                className="item-info-image"
-                src={image} alt="asset"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = DefaultImage;
-                }}
+              <label htmlFor="checkinDate">Checkin Date <span style={{color: 'red'}}>*</span></label>
+              <input
+                type="date"
+                id="checkinDate"
+                className={errors.checkinDate ? 'input-error' : ''}
+                {...register("checkinDate", { required: "Checkin date is required" })}
+                defaultValue={checkinDate || currentDate}
               />
+              {errors.checkinDate && (
+                <span className="error-message">{errors.checkinDate.message}</span>
+              )}
             </fieldset>
+
+            {/* Condition */}
             <fieldset>
-              <label>Asset ID:</label>
-              <p>{assetId}</p>
+              <label htmlFor="condition">Condition <span style={{color: 'red'}}>*</span></label>
+              <select
+                id="condition"
+                {...register("condition", {required: "Condition is required"})}
+                className={errors.condition ? 'input-error' : ''}
+              >
+                <option value="">Select Condition</option>
+                {conditionOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
             </fieldset>
+
+            {/* Notes */}
             <fieldset>
-              <label>Product:</label>
-              <p>{product}</p>
+              <label htmlFor="notes">Notes</label>
+              <textarea
+                id="notes"
+                placeholder="Enter notes"
+                {...register("notes")}
+                rows="3"
+                maxLength="500"
+              ></textarea>
             </fieldset>
-          </section>
 
-          <section className="checkin-form">
-            <h2>Check-In Form</h2>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <fieldset>
-                <label>Checkin Date <span style={{color: 'red'}}>*</span></label>
-                <input
-                  type="date"
-                  className={errors.checkinDate ? 'input-error' : ''}
-                  {...register("checkinDate", { required: "Checkin date is required" })}
-                  defaultValue={checkinDate || ""}
-                  {...(checkinDate ? {} : { min: currentDate })}
-                />
-              </fieldset>
-
-              <fieldset>
-                <label>Condition <span style={{color: 'red'}}>*</span></label>
-                <select 
-                  {...register("condition", {required: "Condition is required"})}
-                  className={errors.condition ? 'input-error' : ''}
-                  >
-                  <option value="">Select Condition</option>
-                  {conditionOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
-              </fieldset>
-
-              <fieldset>
-                <label>Image</label>
-                <div className="images-container">
-                  {previewImages.map((img, index) => (
-                    <div key={index} className="image-selected">
-                      <img src={img} alt={`Preview ${index}`} />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPreviewImages(previewImages.filter((_, i) => i !== index));
-                          setValue("image", previewImages.filter((_, i) => i !== index));
-                        }}
-                      >
-                        <img src={CloseIcon} alt="Remove" />
-                      </button>
-                    </div>
-                  ))}
-                  <input
-                    type="file"
-                    id="images"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageSelection}
-                    style={{ display: "none" }}
-                  />
-                </div>
-                <label htmlFor="images" className="upload-image-btn">
-                  {previewImages.length === 0 ? "Choose Image" : "Change Image"}
-                </label>
-              </fieldset>
-
-              <fieldset>
-                <label>Notes</label>
-                <textarea {...register("notes")} maxLength="500" />
-              </fieldset>
-
-              <button type="submit" className="save-btn">Save</button>
-            </form>
-          </section>
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid}>
+              Save
+            </button>
+          </form>
         </section>
       </main>
     </>

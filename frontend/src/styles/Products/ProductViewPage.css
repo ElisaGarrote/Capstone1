@@ -1,0 +1,132 @@
+.product-view-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.product-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  border-bottom: 1px solid #cccccc;
+  background-color: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.product-view-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.product-tab-text {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--text-color);
+}
+
+.product-view-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.product-search {
+  display: flex;
+  align-items: center;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 10px 12px;
+  border: 1px solid #cccccc;
+  font-size: 0.875rem;
+  outline: none;
+  width: 200px;
+}
+
+.product-search:focus {
+  border-color: var(--primary-color);
+}
+
+.product-view-table-wrapper {
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+  margin-top: 0;
+}
+
+.product-view-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.product-view-table thead {
+  background-color: #f0f1f2;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.product-view-table th {
+  padding: 0.75rem !important;
+  text-align: left !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-top: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+  white-space: nowrap;
+}
+
+.product-view-table td {
+  padding: 0.75rem;
+  text-align: left !important;
+  font-size: 0.8125rem;
+  color: var(--text-color);
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+  vertical-align: middle;
+}
+
+.product-view-table tbody tr:hover {
+  background-color: #fcfcfc;
+}
+
+.product-thumbnail {
+  width: 50px !important;
+  height: 50px !important;
+  max-width: 50px !important;
+  max-height: 50px !important;
+  object-fit: cover !important;
+  border-radius: 4px !important;
+  display: inline-block !important;
+  margin: 0 !important;
+}
+
+.product-view-pagination {
+  padding: 15px 30px;
+  border-top: 1px solid #cccccc;
+  background-color: white;
+  text-align: left;
+  font-size: 0.875rem;
+  color: #666;
+  border-radius: 0 0 8px 8px;
+}
+
+@media (max-width: 768px) {
+  .product-view-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .product-view-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .product-search {
+    flex: 1;
+  }
+}

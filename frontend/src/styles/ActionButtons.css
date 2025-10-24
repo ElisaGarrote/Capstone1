@@ -44,27 +44,39 @@
   border-color: #999999;
 }
 
-/* Check-In Button (success style) */
+/* Check-In Button (primary blue style - matches Components) */
 .action-button.action-button-checkin {
-  background-color: var(--success-color) !important;
+  background-color: var(--primary-color) !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 100px;
+  justify-content: center;
 }
 
 .action-button.action-button-checkin:hover {
-  background-color: var(--success-color-hover) !important; 
-}
-
-/* Check-Out Button (primary style) */
-.action-button.action-button-checkout {
-  background-color: var(--primary-color) !important;
-}
-
-.action-button.action-button-checkout:hover {
   background-color: var(--primary-color-hover) !important;
 }
 
-/* Make sure icons inside are white */
+/* Check-Out Button (green style - matches Components) */
+.action-button.action-button-checkout {
+  background-color: #34c759 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.action-button.action-button-checkout:hover {
+  background-color: rgba(52, 199, 89, 0.8) !important;
+}
+
+/* Make sure icons and text inside are white */
 .action-button-checkin i,
-.action-button-checkout i {
+.action-button-checkout i,
+.action-button-checkin span,
+.action-button-checkout span {
   color: #fff;
 }
 

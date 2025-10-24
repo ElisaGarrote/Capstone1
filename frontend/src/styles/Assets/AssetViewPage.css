@@ -1,13 +1,10 @@
-/* Product View Page Specific Styles */
-
-.product-view-content {
+.asset-view-content {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-/* Product View Header */
-.product-view-header {
+.asset-view-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -17,24 +14,24 @@
   border-radius: 8px 8px 0 0;
 }
 
-.product-view-tabs {
+.asset-view-tabs {
   display: flex;
   gap: 8px;
 }
 
-.product-tab-text {
+.asset-tab-text {
   font-size: 1.25rem;
   font-weight: 400;
   color: var(--text-color);
 }
 
-.product-view-actions {
+.asset-view-actions {
   display: flex;
   gap: 10px;
   align-items: center;
 }
 
-.product-search {
+.asset-search {
   display: flex;
   align-items: center;
   background-color: #f9f9f9;
@@ -46,32 +43,31 @@
   width: 200px;
 }
 
-.product-search:focus {
+.asset-search:focus {
   border-color: var(--primary-color);
 }
 
-/* Product View Table */
-.product-view-table-wrapper {
+.asset-view-table-wrapper {
   overflow-x: auto;
   max-height: 500px;
   overflow-y: auto;
   margin-top: 0;
 }
 
-.product-view-table {
+.asset-view-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.8125rem;
 }
 
-.product-view-table thead {
+.asset-view-table thead {
   background-color: #f0f1f2;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
-.product-view-table th {
+.asset-view-table th {
   padding: 0.75rem !important;
   text-align: left !important;
   font-size: 0.75rem;
@@ -83,7 +79,7 @@
   white-space: nowrap;
 }
 
-.product-view-table td {
+.asset-view-table td {
   padding: 0.75rem;
   text-align: left !important;
   font-size: 0.8125rem;
@@ -93,11 +89,11 @@
   vertical-align: middle;
 }
 
-.product-view-table tbody tr:hover {
+.asset-view-table tbody tr:hover {
   background-color: #fcfcfc;
 }
 
-.product-thumbnail {
+.asset-thumbnail {
   width: 50px !important;
   height: 50px !important;
   max-width: 50px !important;
@@ -108,8 +104,7 @@
   margin: 0 !important;
 }
 
-/* Pagination */
-.product-view-pagination {
+.asset-view-pagination {
   padding: 15px 30px;
   border-top: 1px solid #cccccc;
   background-color: white;
@@ -119,20 +114,20 @@
   border-radius: 0 0 8px 8px;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
-  .product-view-header {
+  .asset-view-header {
     flex-direction: column;
     gap: 12px;
     align-items: flex-start;
   }
 
-  .product-view-actions {
+  .asset-view-actions {
     width: 100%;
     justify-content: space-between;
   }
 
-  .product-search {
+  .asset-search {
     flex: 1;
   }
 }
+

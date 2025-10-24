@@ -12,6 +12,7 @@ export default function TopSecFormPage({
   deleteModalOpen,
   borderBottom = true,
   image = null,
+  rightComponent = null,
 }) {
   const navigate = useNavigate();
 
@@ -34,13 +35,16 @@ export default function TopSecFormPage({
         </section>
         <section className="title">
           <h1>{title}</h1>
-          {buttonType && (
-            <MediumButtons
-              type={buttonType}
-              navigatePage={buttonNavigation}
-              deleteModalOpen={deleteModalOpen}
-            />
-          )}
+          <div className="title-right">
+            {buttonType && (
+              <MediumButtons
+                type={buttonType}
+                navigatePage={buttonNavigation}
+                deleteModalOpen={deleteModalOpen}
+              />
+            )}
+            {rightComponent}
+          </div>
         </section>
       </section>
     </>

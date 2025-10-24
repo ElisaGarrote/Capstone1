@@ -7,12 +7,13 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import ActionButtons from "../../components/ActionButtons";
 import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
 import TicketsMockupData from "../../data/mockData/tickets/tickets-mockup-data.json";
 import DefaultImage from "../../assets/img/default-image.jpg";
 
 import "../../styles/Tickets/Tickets.css";
 
-// Filter configuration for tickets
+
 const filterConfig = [
   {
     type: "select",
@@ -85,16 +86,12 @@ function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick
       {/* CHECK-IN / CHECK-OUT Column */}
       <td>
         {ticket.isCheckInOrOut && (
-          <button
-            className={
-              ticket.isCheckInOrOut === "Check-In"
-                ? "check-in-btn"
-                : "check-out-btn"
-            }
-            onClick={() => onCheckInOut(ticket)}
-          >
-            {ticket.isCheckInOrOut}
-          </button>
+          <ActionButtons
+            showCheckout={ticket.isCheckInOrOut === "Check-Out"}
+            showCheckin={ticket.isCheckInOrOut === "Check-In"}
+            onCheckoutClick={() => onCheckInOut(ticket)}
+            onCheckinClick={() => onCheckInOut(ticket)}
+          />
         )}
       </td>
 
@@ -308,8 +305,6 @@ const Tickets = () => {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-
-
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}
@@ -318,19 +313,20 @@ const Tickets = () => {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout tickets-page">
+        <main className="main-with-table">
+          {/* Title of the Page */}
           <section className="title-page-section">
             <h1>Approved Tickets</h1>
           </section>
 
+          {/* Table Filter */}
           <FilterPanel filters={filterConfig} />
 
           <section className="table-layout">
+            {/* Table Header */}
             <section className="table-header">
               <h2 className="h2">Tickets ({filteredTickets.length})</h2>
               <section className="table-actions">
@@ -357,15 +353,15 @@ const Tickets = () => {
               </section>
             </section>
 
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="table-section">
+            {/* Table Structure */}
+            <section className="tickets-table-section">
+              {exportToggle && (
+                <section className="export-button-section" ref={exportRef}>
+                  <button>Download as Excel</button>
+                  <button>Download as PDF</button>
+                  <button>Download as CSV</button>
+                </section>
+              )}
               <table>
                 <thead>
                   <TableHeader
@@ -409,6 +405,7 @@ const Tickets = () => {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

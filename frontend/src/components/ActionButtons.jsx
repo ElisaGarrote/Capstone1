@@ -24,6 +24,16 @@ export default function ActionButtons({
 
   return (
     <section className="action-button-section">
+      {showView && (
+        <button
+          title="View"
+          className="action-button"
+          onClick={onViewClick}
+        >
+          <i className="fas fa-eye"></i>
+        </button>
+      )}
+
       {showEdit && (
         <button
           title="Edit"
@@ -41,16 +51,6 @@ export default function ActionButtons({
           onClick={onDeleteClick}
         >
           <i className="fas fa-trash-alt"></i>
-        </button>
-      )}
-
-      {showView && (
-        <button
-          title="View"
-          className="action-button"
-          onClick={onViewClick}
-        >
-          <i className="fas fa-eye"></i>
         </button>
       )}
 
@@ -72,6 +72,7 @@ export default function ActionButtons({
           disabled={disableCheckout}
         >
           <i className="fas fa-sign-out-alt"></i>
+          <span>Check-Out</span>
         </button>
       )}
 
@@ -83,6 +84,7 @@ export default function ActionButtons({
           disabled={disableCheckin}
         >
           <i className="fas fa-sign-in-alt"></i>
+          <span>Check-In</span>
         </button>
       )}
 

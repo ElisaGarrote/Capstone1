@@ -1,4 +1,4 @@
-import "./DetailedViewPage.css";
+import "../../styles/DetailedViewPage.css";
 import Status from "../Status";
 import MediumButtons from "../buttons/MediumButtons";
 import DefaultProfile from "../../assets/img/default-profile.svg";
