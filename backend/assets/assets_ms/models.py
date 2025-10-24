@@ -10,6 +10,7 @@ from PIL import Image
 import uuid
 import magic
 
+
 def validate_image(image):
     max_size = 5 * 1024 * 1024
     valid_formats = ['JPEG', 'JPG', 'PNG']
@@ -84,7 +85,7 @@ class Product(models.Model):
         return self.name
 
 class Asset(models.Model):
-    asset_id = models.CharField(max_length=20, unique=True)
+    asset_id = models.CharField(max_length=23, unique=True, blank=True, editable=False)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets', limit_choices_to={'is_deleted': False})
     status = models.PositiveIntegerField()
     supplier = models.PositiveIntegerField(blank=True, null=True)
@@ -105,28 +106,27 @@ class Asset(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.displayed_id
+        return self.asset_id
 
 @receiver(pre_save, sender=Asset)
 def generate_asset_id(sender, instance, **kwargs):
-    if instance.displayed_id:  # already has one (from frontend)
-        return  # don’t regenerate
+    # If no asset_id and is an empty string, None
+    if not instance.asset_id or instance.asset_id.strip() == "":
+        today = timezone.now().strftime('%Y%m%d')
+        prefix = f"AST-{today}-"
+        last_asset = sender.objects.filter(asset_id__startswith=prefix).order_by('-asset_id').first()
 
-    today = timezone.now().strftime('%Y%m%d')
-    prefix = f"AST-{today}-"
-    last_asset = sender.objects.filter(displayed_id__startswith=prefix).order_by('-displayed_id').first()
-
-    if last_asset:
-        try:
-            seq_num = int(last_asset.displayed_id.split('-')[2])
-            new_seq_num = seq_num + 1
-        except (ValueError, IndexError):
+        if last_asset:
+            try:
+                seq_num = int(last_asset.asset_id.split('-')[2])
+                new_seq_num = seq_num + 1
+            except (ValueError, IndexError):
+                new_seq_num = 1
+        else:
             new_seq_num = 1
-    else:
-        new_seq_num = 1
 
-    random_suffix = uuid.uuid4().hex[:4].upper()
-    instance.displayed_id = f"{prefix}{new_seq_num:05d}-{random_suffix}"
+        random_suffix = uuid.uuid4().hex[:4].upper()
+        instance.asset_id = f"{prefix}{new_seq_num:05d}-{random_suffix}"
 
 class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts', limit_choices_to={'is_deleted': False})
@@ -146,7 +146,7 @@ class AssetCheckout(models.Model):
     )
     
     def __str__(self):
-        return f"Checkout of {self.asset.displayed_id} by user {self.to_user_id}"
+        return f"Checkout of {self.asset.asset_id} by user {self.checkout_to}"
 
 class AssetCheckin(models.Model):
     asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
@@ -163,7 +163,7 @@ class AssetCheckin(models.Model):
     )
 
     def __str__(self):
-        return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}" 
+        return f"Checkin of {self.asset_checkout.asset.asset_id} by user {self.asset_checkout.checkout_to}" 
     
 class Component(models.Model):
     name = models.CharField(max_length=100)
@@ -219,7 +219,7 @@ class ComponentCheckout(models.Model):
     notes = models.TextField(max_length=500, blank=True, null=True)
 
     def __str__(self):
-        return f"Checkout of {self.component.name} to {self.to_asset.displayed_id}"
+        return f"Checkout of {self.component.name} to {self.to_asset.asset_id}"
     
     @property
     def total_checked_in(self):
@@ -240,7 +240,7 @@ class ComponentCheckin(models.Model):
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.displayed_id}"  
+        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.asset_id}"  
     
     def save(self, *args, **kwargs):
         # Prevent over-returning

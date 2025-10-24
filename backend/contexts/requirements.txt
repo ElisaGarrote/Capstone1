@@ -12,7 +12,6 @@ sqlparse==0.5.3
 tzdata==2025.2
 typing_extensions==4.13.2
 packaging==25.0
-python-magic-bin==0.4.14
 
 
 

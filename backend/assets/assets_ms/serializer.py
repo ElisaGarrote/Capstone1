@@ -36,6 +36,11 @@ class AssetSerializer(serializers.ModelSerializer):
         name = data.get('name')
         instance = self.instance
 
+        # Convert empty string to None
+        if name == "":
+            data['name'] = None
+
+        # Check for duplicate name
         if Asset.objects.filter(
             name__exact=name,
             is_deleted=False
@@ -45,36 +50,41 @@ class AssetSerializer(serializers.ModelSerializer):
             })
         return data
 
+from django.db import transaction
+
 class AssetCheckoutSerializer(serializers.ModelSerializer):
+    return_date = serializers.DateTimeField(input_formats=['%m/%d/%Y %I:%M %p', 'iso-8601'])
+
     class Meta:
         model = AssetCheckout
         fields = '__all__'
 
     def validate(self, data):
         asset = data.get('asset')
-        checkout_date = data.get('checkout_date', timezone.now())
-        return_date = data.get('return_date')
+
+        if asset is None:
+            raise serializers.ValidationError({"asset": "Asset is required."})
 
         # Check if asset is deleted
-        if asset and asset.is_deleted:
-            raise serializers.ValidationError({
-                "asset": "Cannot check out a deleted asset."
-            })
+        if asset.is_deleted:
+            raise serializers.ValidationError({"asset": "Cannot check out a deleted asset."})
 
-        # Prevent multiple active checkouts
-        if asset and AssetCheckout.objects.filter(asset=asset, is_deleted=False, asset_checkin__isnull=True).exists():
-            raise serializers.ValidationError({
-                "asset": "This asset is already checked out and not yet checked in."
-            })
-        
-        # Return date after checkout
+        # Prevent multiple active checkouts using select_for_update for concurrency safety
+        with transaction.atomic():
+            if AssetCheckout.objects.select_for_update().filter(asset=asset, asset_checkin__isnull=True).exists():
+                raise serializers.ValidationError({
+                    "asset": "This asset is already checked out and not yet checked in."
+                })
+
+        # Return date validation
+        checkout_date = data.get('checkout_date', timezone.now())
+        return_date = data.get('return_date')
         if return_date and return_date < checkout_date:
             raise serializers.ValidationError({
                 "return_date": "Return date cannot be before checkout date."
             })
 
         return data
-
 
 class AssetCheckinSerializer(serializers.ModelSerializer):
     class Meta:
