@@ -86,10 +86,6 @@ class Depreciation(models.Model):
     def __str__(self):
         return self.name
 
-
-
-
-
 class Location(models.Model):
     city = models.CharField(max_length=50, blank=True, null=True)
     zip = models.CharField(max_length=4, blank=True, null=True)
@@ -98,31 +94,20 @@ class Location(models.Model):
         return self.city
 
 class Ticket(models.Model):
-    ticket_id = models.CharField(max_length=100, unique=True)
-
-    asset_id = models.IntegerField(null=True, blank=True)
-
-    requestor = models.CharField(max_length=100)
-    requestor_location = models.CharField(max_length=255)
-    requestor_id = models.IntegerField(null=True, blank=True)
-
+    ticket_number = models.CharField(max_length=6, unique=True)
+    employee = models.CharField(max_length=100)
+    subject = models.CharField(max_length=255)
+    location = models.CharField(max_length=255)
+    asset = models.PositiveIntegerField()
     checkout_date = models.DateField(null=True, blank=True)
-    checkin_date = models.DateField(null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
-
+    asset_checkout = models.PositiveIntegerField()
+    checkin_date = models.DateField(null=True, blank=True)
     is_resolved = models.BooleanField(default=False)
-
-    checkout_ref_id = models.CharField(max_length=100, default="1", null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    condition = models.IntegerField(default=1, null=True, blank=True)
-
-    class Meta:
-        ordering = ['-checkout_date']
-        verbose_name = "Asset Checkout"
-        verbose_name_plural = "Asset Checkouts"
 
     def __str__(self):
-        status = "Checked Out" if self.is_resolved else "Checked In"
-        return f"[{self.ticket_id}] {self.asset_name} - {status}"
+        status = "Check Out Request" if self.asset_checkout is None else "Checked In Request"
+        return f"[{self.ticket_number}] {self.asset} - {self.is_resolved}"

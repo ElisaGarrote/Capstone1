@@ -41,6 +41,21 @@ class CategorySerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = '__all__'
+
+class TicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = '__all__'
+
+
+
+
+
+
 class SupplierNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
