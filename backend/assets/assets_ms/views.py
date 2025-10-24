@@ -53,7 +53,7 @@ class ComponentCheckoutViewSet(viewsets.ModelViewSet):
     serializer_class = ComponentCheckoutSerializer
 
     def get_queryset(self):
-        return ComponentCheckout.objects.select_related('component', 'to_asset').order_by('-checkout_date')
+        return ComponentCheckout.objects.select_related('component', 'asset').order_by('-checkout_date')
 
 
 class ComponentCheckinViewSet(viewsets.ModelViewSet):

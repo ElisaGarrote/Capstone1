@@ -132,7 +132,7 @@ class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts', limit_choices_to={'is_deleted': False})
     checkout_to = models.PositiveIntegerField()
     location = models.CharField()
-    checkout_date = models.DateTimeField(auto_now_add=True)
+    checkout_date = models.DateTimeField()
     return_date = models.DateTimeField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
@@ -150,7 +150,7 @@ class AssetCheckout(models.Model):
 
 class AssetCheckin(models.Model):
     asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
-    checkin_date = models.DateTimeField(auto_now_add=True)
+    checkin_date = models.DateTimeField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
@@ -219,7 +219,7 @@ class ComponentCheckout(models.Model):
     notes = models.TextField(max_length=500, blank=True, null=True)
 
     def __str__(self):
-        return f"Checkout of {self.component.name} to {self.to_asset.asset_id}"
+        return f"Checkout of {self.component.name} to {self.asset.asset_id}"
     
     @property
     def total_checked_in(self):
@@ -235,12 +235,12 @@ class ComponentCheckout(models.Model):
 
 class ComponentCheckin(models.Model):
     component_checkout = models.ForeignKey(ComponentCheckout, on_delete=models.CASCADE, related_name='component_checkins')
-    checkin_date = models.DateTimeField(auto_now_add=True)
+    checkin_date = models.DateTimeField()
     quantity = models.PositiveIntegerField(default=1)
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.asset_id}"  
+        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.asset.asset_id}"
     
     def save(self, *args, **kwargs):
         # Prevent over-returning

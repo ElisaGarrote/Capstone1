@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import *
 from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 
 # Product or Asset Model
 class ProductSerializer(serializers.ModelSerializer):
@@ -48,13 +49,10 @@ class AssetSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "name": "An asset with this name already exists."
             })
+        
         return data
 
-from django.db import transaction
-
 class AssetCheckoutSerializer(serializers.ModelSerializer):
-    return_date = serializers.DateTimeField(input_formats=['%m/%d/%Y %I:%M %p', 'iso-8601'])
-
     class Meta:
         model = AssetCheckout
         fields = '__all__'
@@ -69,14 +67,13 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         if asset.is_deleted:
             raise serializers.ValidationError({"asset": "Cannot check out a deleted asset."})
 
-        # Prevent multiple active checkouts using select_for_update for concurrency safety
-        with transaction.atomic():
-            if AssetCheckout.objects.select_for_update().filter(asset=asset, asset_checkin__isnull=True).exists():
-                raise serializers.ValidationError({
-                    "asset": "This asset is already checked out and not yet checked in."
-                })
+        # Check for existing active checkouts (without select_for_update)
+        if AssetCheckout.objects.filter(asset=asset, asset_checkin__isnull=True).exists():
+            raise serializers.ValidationError({
+                "asset": "This asset is already checked out and not yet checked in."
+            })
 
-        # Return date validation
+        # Validate return date
         checkout_date = data.get('checkout_date', timezone.now())
         return_date = data.get('return_date')
         if return_date and return_date < checkout_date:
@@ -85,7 +82,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
             })
 
         return data
-
+    
 class AssetCheckinSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckin
@@ -282,47 +279,11 @@ class AuditFileSerializer(serializers.ModelSerializer):
         model = AuditFile
         fields = "__all__"
 
-class AllComponentSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(source='category.name', read_only=True)
-    checked_out = serializers.SerializerMethodField()
-    class Meta:
-        model = Component
-        fields = ['id', 'image', 'name', 'category', 'quantity', 'checked_out']
-
-    def get_checked_out(self, obj):
-        total_checked_out = obj.components_checkouts.filter(
-            component_checkins__isnull=True
-        ).aggregate(total=Sum('quantity'))['total'] or 0
-        return total_checked_out
-
-class ComponentCheckoutSerializer(serializers.ModelSerializer):
-    asset_displayed_id = serializers.CharField(source='to_asset.displayed_id', read_only=True)
-    asset_name = serializers.CharField(source='to_asset.name', read_only=True)
-    class Meta:
-        model = ComponentCheckout
-        fields = "__all__"
-        extra_fields = ['asset_name', 'asset_displayed_id']
-
-class ComponentCheckinSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ComponentCheckin
-        fields = "__all__"
         
 class AssetNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = ['id', 'displayed_id', 'name']
-
-class AssetCheckoutSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AssetCheckout
-        fields = "__all__"
-
-class AssetCheckinSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AssetCheckin
-        fields = "__all__"
 
 class RepairSerializer(serializers.ModelSerializer):
     asset_info = AllAssetSerializer(source='asset', read_only=True)
