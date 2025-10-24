@@ -62,12 +62,15 @@ class Manufacturer(models.Model):
         return self.name
     
 class Status(models.Model):
-    STATUS_CHOICES = [
-        ('deployable', 'Deployable'), ('deployed', 'Deployed'), ('undeployable', 'Undeployable'), ('pending', 'Pending'), ('archived', 'Archived'),
-    ]
+    class StatusType(models.TextChoices):
+        DEPLOYABLE = 'deployable', 'Deployable'
+        DEPLOYED = 'deployed', 'Deployed'
+        UNDEPLOYABLE = 'undeployable', 'Undeployable'
+        PENDING = 'pending', 'Pending'
+        ARCHIVED = 'archived', 'Archived'
 
     name = models.CharField(max_length=50)
-    type = models.CharField(max_length=12, choices=STATUS_CHOICES)
+    type = models.CharField(max_length=12, choices=StatusType.choices)
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
 
