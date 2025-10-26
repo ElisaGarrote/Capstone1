@@ -59,7 +59,7 @@ const CategoryEdit = () => {
     console.log("Form submitted:", data, attachmentFile);
 
     // Optional: navigate back to categories view after successful submission
-    navigate("/More/ViewCategories");
+    navigate("/More/ViewCategories", { state: { updatedCategory: true } });
   };
 
   console.log("initial:", initialAttachment);
