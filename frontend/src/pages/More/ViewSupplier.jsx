@@ -51,7 +51,9 @@ function TableHeader() {
       <th>NAME</th>
       <th>ADDRESS</th>
       <th>CITY</th>
+      <th>STATE</th>
       <th>ZIP</th>
+      <th>COUNTRY</th>
       <th>CONTACT PERSON</th>
       <th>PHONE</th>
       <th>EMAIL</th>
@@ -99,7 +101,9 @@ function TableItem({ supplier, onDeleteClick }) {
       </td>
       <td>{supplier.address || "-"}</td>
       <td>{supplier.city || "-"}</td>
+      <td>{supplier.state || "-"}</td>
       <td>{supplier.zip || "-"}</td>
+      <td>{supplier.country || "-"}</td>
       <td>{supplier.contactName || "-"}</td>
       <td>{supplier.phoneNumber || "-"}</td>
       <td>{supplier.email || "-"}</td>
