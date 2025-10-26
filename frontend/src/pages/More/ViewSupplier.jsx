@@ -56,7 +56,6 @@ function TableHeader() {
       <th>COUNTRY</th>
       <th>CONTACT PERSON</th>
       <th>PHONE</th>
-      <th>EMAIL</th>
       <th>URL</th>
       <th>ACTIONS</th>
     </tr>
@@ -106,7 +105,6 @@ function TableItem({ supplier, onDeleteClick }) {
       <td>{supplier.country || "-"}</td>
       <td>{supplier.contactName || "-"}</td>
       <td>{supplier.phoneNumber || "-"}</td>
-      <td>{supplier.email || "-"}</td>
       <td>{supplier.url || "-"}</td>
       <td>
         <section className="action-button-section">
