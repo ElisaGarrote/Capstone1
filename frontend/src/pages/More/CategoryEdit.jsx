@@ -100,6 +100,8 @@ const CategoryEdit = () => {
               <fieldset>
                 <label htmlFor="categoryType">Category Type *</label>
                 <select
+                  disabled
+                  title="Cannot change category type"
                   className={errors.categoryType ? "input-error" : ""}
                   {...register("categoryType", {
                     required: "Category Type is required",
