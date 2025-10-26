@@ -11,6 +11,7 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MockupData from "../../data/mockData/more/supplier-mockup-data.json";
 import { fetchAllCategories } from "../../services/contexts-service";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/ViewSupplier.css";
 
@@ -313,6 +314,11 @@ export default function ViewSupplier() {
     return null;
   };
 
+  const handleExport = () => {
+    const dataToExport = suppliers.length > 0 ? suppliers : MockupData;
+    exportToExcel(dataToExport, "Supplier_Records.xlsx");
+  };
+
   // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
   useEffect(() => {
     let timeoutId;
@@ -377,6 +383,7 @@ export default function ViewSupplier() {
                   onChange={handleSearchChange}
                   className="search"
                 />
+                <MediumButtons type="export" onClick={handleExport} />
                 <MediumButtons
                   type="new"
                   navigatePage="/More/SupplierRegistration"
