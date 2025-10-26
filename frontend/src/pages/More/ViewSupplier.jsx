@@ -16,11 +16,6 @@ import "../../styles/ViewSupplier.css";
 
 const filterConfig = [
   {
-    type: "text",
-    name: "supplierName",
-    label: "Supplier Name",
-  },
-  {
     type: "select",
     name: "city",
     label: "City",
@@ -53,7 +48,7 @@ const filterConfig = [
   {
     type: "text",
     name: "contactPerson",
-    label: "Contat Person",
+    label: "Contact Person",
   },
 ];
 
