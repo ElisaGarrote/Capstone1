@@ -6,6 +6,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
+import PlusIcon from "../../assets/icons/plus.svg";
 
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
@@ -13,6 +14,9 @@ import "../../styles/CategoryRegistration.css";
 const CategoryRegistration = () => {
   const navigate = useNavigate();
   const [attachmentFile, setAttachmentFile] = useState(null);
+
+  // Import file state
+  const [importFile, setImportFile] = useState(null);
 
   const {
     register,
@@ -60,7 +64,24 @@ const CategoryRegistration = () => {
     console.log("Form submitted:", data, attachmentFile);
 
     // Optional: navigate back to categories view after successful submission
-    navigate("/More/ViewCategories");
+    navigate("/More/ViewCategories", { state: { addedCategory: true } });
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (
+        file.type !==
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ) {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+      setImportFile(file);
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
+    }
   };
 
   return (
@@ -74,6 +95,21 @@ const CategoryRegistration = () => {
               currentPage="New Category"
               rootNavigatePage="/More/ViewCategories"
               title="New Category"
+              rightComponent={
+                <div className="import-section">
+                  <label htmlFor="import-file" className="import-btn">
+                    <img src={PlusIcon} alt="Import" />
+                    Import
+                    <input
+                      type="file"
+                      id="import-file"
+                      accept=".xlsx"
+                      onChange={handleImportFile}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                </div>
+              }
             />
           </section>
           <section className="registration-form">
