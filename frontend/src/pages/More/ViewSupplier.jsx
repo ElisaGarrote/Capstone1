@@ -31,6 +31,26 @@ const filterConfig = [
     ],
   },
   {
+    type: "select",
+    name: "state",
+    label: "State",
+    options: [
+      { value: "washington", label: "Washington" },
+      { value: "california", label: "California" },
+      { value: "new york", label: "New York" },
+    ],
+  },
+  {
+    type: "select",
+    name: "country",
+    label: "Country",
+    options: [
+      { value: "philippines", label: "Philippines" },
+      { value: "united states	", label: "United States" },
+      { value: "united kingdom", label: "United Kingdom" },
+    ],
+  },
+  {
     type: "text",
     name: "contactPerson",
     label: "Contat Person",
