@@ -198,9 +198,9 @@ const SupplierRegistration = () => {
           <section className="top">
             <TopSecFormPage
               root="Suppliers"
-              currentPage={id ? "Edit Supplier" : "New Supplier"}
+              currentPage={id ? "Update Supplier" : "New Supplier"}
               rootNavigatePage="/More/ViewSupplier"
-              title={id ? "Edit Supplier" : "New Supplier"}
+              title={id ? supplier.name : "New Supplier"}
               rightComponent={
                 <div className="import-section">
                   <label htmlFor="import-file" className="import-btn">
