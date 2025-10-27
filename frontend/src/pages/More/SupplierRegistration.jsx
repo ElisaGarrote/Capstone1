@@ -6,6 +6,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Footer from "../../components/Footer";
+import PlusIcon from "../../assets/icons/plus.svg";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -26,6 +27,9 @@ const SupplierRegistration = () => {
   );
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
+
+  // Import file state
+  const [importFile, setImportFile] = useState(null);
 
   const {
     register,
@@ -169,6 +173,23 @@ const SupplierRegistration = () => {
     navigate("/More/ViewSupplier", { state });
   };
 
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (
+        file.type !==
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ) {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+      setImportFile(file);
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
+    }
+  };
+
   return (
     <>
       <section className="page-layout-registration">
@@ -180,6 +201,21 @@ const SupplierRegistration = () => {
               currentPage={id ? "Edit Supplier" : "New Supplier"}
               rootNavigatePage="/More/ViewSupplier"
               title={id ? "Edit Supplier" : "New Supplier"}
+              rightComponent={
+                <div className="import-section">
+                  <label htmlFor="import-file" className="import-btn">
+                    <img src={PlusIcon} alt="Import" />
+                    Import
+                    <input
+                      type="file"
+                      id="import-file"
+                      accept=".xlsx"
+                      onChange={handleImportFile}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                </div>
+              }
             />
           </section>
 
