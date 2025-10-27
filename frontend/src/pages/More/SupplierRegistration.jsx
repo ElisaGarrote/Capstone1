@@ -7,6 +7,8 @@ import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Footer from "../../components/Footer";
 import PlusIcon from "../../assets/icons/plus.svg";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -17,6 +19,9 @@ const SupplierRegistration = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   // Retrieve the "supplier" data value passed from the navigation state.
   // If the "supplier" data is not exist, the default value for this is "undifiend".
@@ -192,6 +197,13 @@ const SupplierRegistration = () => {
 
   return (
     <>
+      {isDeleteModalOpen && (
+        <ConfirmationModal
+          closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
+        />
+      )}
+
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
@@ -202,19 +214,26 @@ const SupplierRegistration = () => {
               rootNavigatePage="/More/ViewSupplier"
               title={id ? supplier.name : "New Supplier"}
               rightComponent={
-                <div className="import-section">
-                  <label htmlFor="import-file" className="import-btn">
-                    <img src={PlusIcon} alt="Import" />
-                    Import
-                    <input
-                      type="file"
-                      id="import-file"
-                      accept=".xlsx"
-                      onChange={handleImportFile}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                </div>
+                !id ? (
+                  <div className="import-section">
+                    <label htmlFor="import-file" className="import-btn">
+                      <img src={PlusIcon} alt="Import" />
+                      Import
+                      <input
+                        type="file"
+                        id="import-file"
+                        accept=".xlsx"
+                        onChange={handleImportFile}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => setDeleteModalOpen(true)}
+                  />
+                )
               }
             />
           </section>
