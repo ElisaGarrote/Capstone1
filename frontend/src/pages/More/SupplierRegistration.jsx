@@ -279,6 +279,28 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
+              <label htmlFor="state">State</label>
+              <input
+                type="text"
+                placeholder="State"
+                maxLength={50}
+                className={errors.state ? "input-error" : ""}
+                {...register("state")}
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="country">Country</label>
+              <input
+                type="text"
+                placeholder="Country"
+                maxLength={50}
+                className={errors.state ? "input-error" : ""}
+                {...register("country")}
+              />
+            </fieldset>
+
+            <fieldset>
               <label htmlFor="contact_name">Contact Person</label>
               <input
                 type="text"
@@ -301,6 +323,20 @@ const SupplierRegistration = () => {
                 maxLength={13}
                 {...register("phone_number")}
               />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="fax">Fax</label>
+              <input
+                type="text"
+                placeholder="Fax"
+                maxLength={50}
+                className={errors.state ? "input-error" : ""}
+                {...register("fax")}
+              />
+              {errors.fax && (
+                <span className="error-message">{errors.fax.message}</span>
+              )}
             </fieldset>
 
             <fieldset>
