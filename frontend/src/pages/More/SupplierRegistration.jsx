@@ -237,13 +237,13 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="address">Address *</label>
+              <label htmlFor="address">Address</label>
               <input
                 type="text"
                 placeholder="Address"
                 maxLength={200}
                 className={errors.address ? "input-error" : ""}
-                {...register("address", { required: "Address is required" })}
+                {...register("address")}
               />
               {errors.address && (
                 <span className="error-message">{errors.address.message}</span>
@@ -279,14 +279,12 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="contact_name">Contact Person *</label>
+              <label htmlFor="contact_name">Contact Person</label>
               <input
                 type="text"
                 placeholder="Supplier's Contact Name"
                 maxLength={100}
-                {...register("contact_name", {
-                  required: "Contact Person is required",
-                })}
+                {...register("contact_name")}
               />
               {errors.contact_name && (
                 <span className="error-message">
