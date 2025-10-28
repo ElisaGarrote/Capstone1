@@ -6,18 +6,18 @@ router = DefaultRouter()
 router.register('categories', CategoryViewSet, basename='categories')
 router.register('suppliers', SupplierViewSet, basename='supplier')
 router.register('depreciations', DepreciationViewSet, basename='depreciation')
+router.register('manufacturers', ManufacturerViewSet, basename='manufacturer')
 
 urlpatterns = [
     path('', include(router.urls)),
     path('names/', get_contexts_names, name='all_suppliers_manufacturers_name'),
     #path('api/suppliers/<int:supplier_id>/', get_supplier_details, name='get_supplier_details'),
+    # Manufacturer names endpoint (custom)
     path('manufacturers/names/', get_manaufacturers_names, name='all_manufacturers_name'),
-    path('manufacturers/<int:id>/name', get_manu_name_by_id, name='manufacturer name by id'),
-    path('manufacturers/', get_all_manufacturers, name='all_manufacturers'),
-    path('manufacturers/<int:id>/', get_manufacturer_by_id, name='get_manufacturer_by_id'),
-    path('manufacturers/registration/', create_manufacturer, name='add_new_manufacturer'),
-    path('manufacturers/<int:id>/update/', update_manufacturer, name='update_manufacturer_by_id'),
-    path('manufacturers/<int:id>/delete/', soft_delete_manufacturer, name='soft_delete_manufacturer_by_id'),
+    # The CRUD endpoints for manufacturers are provided by the registered viewset
+    # via the DefaultRouter (router.register('manufacturers', ManufacturerViewSet, ...)).
+    # If you remove the function-based views (get/put/delete), be sure to also
+    # remove any urlpatterns that reference them to avoid NameError on import.
 
     path('locations/', get_all_location, name='all_locations'),
     path('tickets/', get_all_tickets, name='all_locations'),
