@@ -15,7 +15,7 @@ class Category(models.Model):
         return self.name
     
 class Supplier(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     address = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
     zip = models.CharField(max_length=4, blank=True, null=True)
@@ -34,7 +34,7 @@ class Supplier(models.Model):
         return self.name
 
 class Manufacturer(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     manu_url = models.URLField(blank=True, null=True)
 
     support_url = models.URLField(blank=True, null=True)
@@ -63,7 +63,7 @@ class Status(models.Model):
         return self.name
 
 class Depreciation(models.Model):
-    name = models.CharField(max_length=500, unique=True)
+    name = models.CharField(max_length=500)
     duration = models.PositiveIntegerField(help_text="Duration in months")
     minimum_value = models.DecimalField(max_digits=8, decimal_places=2)
     is_deleted = models.BooleanField(default=False)
