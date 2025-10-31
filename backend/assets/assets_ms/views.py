@@ -63,8 +63,7 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         return AssetCheckout.objects.select_related('asset').filter(
             asset_checkin__isnull=True
         ).order_by('-checkout_date')
-
-
+    
 class AssetCheckinViewSet(viewsets.ModelViewSet):
     serializer_class = AssetCheckinSerializer
 
@@ -89,9 +88,12 @@ class ComponentViewSet(viewsets.ModelViewSet):
 
 class ComponentCheckoutViewSet(viewsets.ModelViewSet):
     serializer_class = ComponentCheckoutSerializer
-
+    
     def get_queryset(self):
-        return ComponentCheckout.objects.select_related('component', 'asset').order_by('-checkout_date')
+        # Only checkouts that have NOT been checked in
+        return ComponentCheckout.objects.select_related('component', 'asset').filter(
+            component_checkins__isnull=True
+        ).order_by('-checkout_date')
 
 
 class ComponentCheckinViewSet(viewsets.ModelViewSet):

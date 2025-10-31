@@ -72,7 +72,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         self.fields['asset'].queryset = Asset.objects.filter(
             is_deleted=False
         ).exclude(
-            asset_checkouts__asset_checkin__isnull=True
+            id__in=AssetCheckout.objects.filter(asset_checkin__isnull=True).values_list('asset_id', flat=True)
         )
 
     def validate(self, data):
@@ -170,13 +170,15 @@ class ComponentCheckoutSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Limit the component dropdown to components that are not checked out
+        # Allow checkout only if component still has stock
+        available_components = [
+            c for c in Component.objects.filter(is_deleted=False)
+            if c.available_quantity > 0
+        ]
         self.fields['component'].queryset = Component.objects.filter(
-            is_deleted=False
-        ).exclude(
-            compoponent_checkouts__component_checkins__isnull=True
+            id__in=[c.id for c in available_components]
         )
-
+        
     def validate(self, data):
         component = data.get('component')
         quantity = data.get('quantity')

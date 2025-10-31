@@ -176,7 +176,7 @@ class Component(models.Model):
     purchase_date = models.DateField(blank=True, null=True)
     purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     quantity = models.PositiveIntegerField(default=1)
-    minimum_quantity = models.PositiveIntegerField(default=0)
+    minimum_quantity = models.PositiveIntegerField(default=1)
     notes = models.TextField(blank=True, null=True)
     image = models.ImageField(
         upload_to='component_images/',
@@ -215,7 +215,7 @@ class ComponentCheckout(models.Model):
     component = models.ForeignKey(Component, on_delete=models.CASCADE, related_name='component_checkouts')
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='checkout_to')
     quantity = models.PositiveIntegerField(default=1)
-    checkout_date = models.DateTimeField()
+    checkout_date = models.DateField()
     notes = models.TextField(max_length=500, blank=True, null=True)
 
     def __str__(self):
@@ -235,7 +235,7 @@ class ComponentCheckout(models.Model):
 
 class ComponentCheckin(models.Model):
     component_checkout = models.ForeignKey(ComponentCheckout, on_delete=models.CASCADE, related_name='component_checkins')
-    checkin_date = models.DateTimeField()
+    checkin_date = models.DateField()
     quantity = models.PositiveIntegerField(default=1)
     notes = models.TextField(blank=True, null=True)
 
