@@ -10,7 +10,9 @@ router.register('asset-checkin', AssetCheckinViewSet, basename='asset-checkin')
 router.register('components', ComponentViewSet, basename='components')
 router.register('component-checkout', ComponentCheckoutViewSet, basename='component-checkout')
 router.register('component-checkin', ComponentCheckinViewSet, basename='component-checkin')
-
+router.register('audit-schedule', AuditScheduleViewSet, basename='audit-schedule')
+router.register('audits', AuditViewSet, basename='audits')
+router.register('audit-files', AuditFileViewSet, basename='audit-files')
 router.register('dashboard', DashboardViewSet, basename='dashboard')
 
 urlpatterns = router.urls

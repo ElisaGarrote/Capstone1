@@ -41,8 +41,13 @@ class AssetSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, data):
+        product = data.get('product')
         name = data.get('name')
         instance = self.instance
+
+        # Check if product is deleted
+        if product.is_deleted:
+            raise serializers.ValidationError({"product": "Cannot check out a deleted product."})
 
         if name:
             normalized_name = " ".join(name.split()).strip()
@@ -105,14 +110,6 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckin
         fields = '__all__'
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Limit choices to only checkouts that don't yet have a checkin
-        self.fields['asset_checkout'].queryset = AssetCheckout.objects.filter(
-            asset_checkin__isnull=True
-        )
 
     def validate(self, data):
         checkout = data.get('asset_checkout')
@@ -178,7 +175,7 @@ class ComponentCheckoutSerializer(serializers.ModelSerializer):
         self.fields['component'].queryset = Component.objects.filter(
             id__in=[c.id for c in available_components]
         )
-        
+
     def validate(self, data):
         component = data.get('component')
         quantity = data.get('quantity')
@@ -248,6 +245,71 @@ class ComponentCheckinSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "checkin_date": "Cannot check in before the checkout date."
             })
+
+        return data
+
+class AuditScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditSchedule
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Limit dropdown to non-deleted assets only
+        self.fields['asset'].queryset = Asset.objects.filter(is_deleted=False)
+
+    def validate(self, data):
+        asset = data.get('asset')
+
+        # Ensure asset is not deleted
+        if asset and asset.is_deleted:
+            raise serializers.ValidationError({
+                "asset": "Cannot create an audit schedule for a deleted asset."
+            })
+
+        return data
+
+class CompletedAuditSerializer(serializers.ModelSerializer):
+    audit = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AuditSchedule
+        fields = '__all__'
+
+    def get_audit(self, obj):
+        """Return audit data if it exists"""
+        if hasattr(obj, 'audit') and obj.audit and not obj.audit.is_deleted:
+            return {
+                "id": obj.audit.id,
+                "location": obj.audit.location,
+                "user_id": obj.audit.user_id,
+                "audit_date": obj.audit.audit_date,
+                "notes": obj.audit.notes,
+                "created_at": obj.audit.created_at
+            }
+        return None
+
+class AuditFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AuditFile
+        fields = '__all__'
+        
+class AuditSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Audit
+        fields = '__all__'
+    
+    def validate(self, data):
+        audit_date = data.get('audit_date')
+        audit_schedule = data.get('audit_schedule')
+
+        if audit_schedule and audit_date:
+            # Audit date must be on or after schedule date
+            if audit_date < audit_schedule.date:
+                raise serializers.ValidationError({
+                    'audit_date': "Audit date cannot be before the scheduled date."
+                })
 
         return data
 

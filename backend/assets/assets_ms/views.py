@@ -101,6 +101,81 @@ class ComponentCheckinViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return ComponentCheckin.objects.select_related('component_checkout', 'component_checkout__component').order_by('-checkin_date')
 
+class AuditScheduleViewSet(viewsets.ModelViewSet):
+    serializer_class = AuditScheduleSerializer
+
+    def get_queryset(self):
+        return AuditSchedule.objects.filter(is_deleted=False).order_by('date')
+    
+    def perform_destroy(self, instance):
+        # Check if the schedule already has an audit
+        if hasattr(instance, 'audit') and instance.audit is not None and not instance.audit.is_deleted:
+            raise ValidationError({
+                "detail": "Cannot delete this audit schedule because it has already been audited."
+            })
+
+        # Otherwise, perform soft delete
+        instance.is_deleted = True
+        instance.save()
+
+    @action(detail=False, methods=['get'])
+    def scheduled(self, request):
+        """Future audits not yet completed"""
+        today = now().date()
+        qs = AuditSchedule.objects.filter(
+            is_deleted=False,
+            date__gt=today
+        ).exclude(audit__isnull=False)
+        serializer = AuditScheduleSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def due(self, request):
+        """Audits due today or earlier, not yet completed"""
+        today = now().date()
+        qs = AuditSchedule.objects.filter(
+            is_deleted=False,
+            date__lte=today,
+            audit__isnull=True
+        )
+        serializer = AuditScheduleSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def overdue(self, request):
+        """Audits past due dates, not yet completed"""
+        today = now().date()
+        qs = AuditSchedule.objects.filter(
+            is_deleted=False,
+            date__lt=today,
+            audit__isnull=True
+        )
+        serializer = AuditScheduleSerializer(qs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def completed(self, request):
+        """Return schedules with their completed audit"""
+        qs = AuditSchedule.objects.filter(
+            is_deleted=False,
+            audit__isnull=False,  # only schedules that have an audit
+            audit__is_deleted=False
+        )
+        serializer = CompletedAuditSerializer(qs, many=True)
+        return Response(serializer.data)
+
+class AuditViewSet(viewsets.ModelViewSet):
+    serializer_class = AuditSerializer
+
+    def get_queryset(self):
+        return Audit.objects.filter(is_deleted=False).order_by('-created_at')
+
+class AuditFileViewSet(viewsets.ModelViewSet):
+    serializer_class = AuditFileSerializer
+
+    def get_queryset(self):
+        return AuditFile.objects.filter(is_deleted=False)
+
 class DashboardViewSet(viewsets.ViewSet):
     
     def list(self, request):

@@ -285,7 +285,7 @@ class AuditSchedule(models.Model):
     created_at = models.DateTimeField(default=timezone.now(), editable=False)
 
     def __str__(self):
-        return f"Audit Schedule for {self.asset.displayed_id} on {self.date}"
+        return f"Audit Schedule for {self.asset.asset_id} on {self.date}"
 
 class Audit(models.Model):
     audit_schedule = models.OneToOneField(AuditSchedule, on_delete=models.CASCADE, related_name='audit')
@@ -297,7 +297,7 @@ class Audit(models.Model):
     is_deleted = models.BooleanField(default=False)
     
     def __str__(self):
-        return f"Audit on {self.audit_date} for {self.audit_schedule.asset.displayed_id}"
+        return f"Audit on {self.audit_date} for {self.audit_schedule.asset.asset_id}"
     
 class AuditFile(models.Model):
     audit = models.ForeignKey(Audit, on_delete=models.CASCADE, related_name='audit_files')
@@ -308,4 +308,4 @@ class AuditFile(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"File(s) for audit on {self.audit.created_at} for {self.audit.audit_schedule.asset.displayed_id}"
+        return f"File(s) for audit on {self.audit.created_at} for {self.audit.audit_schedule.asset.asset_id}"
