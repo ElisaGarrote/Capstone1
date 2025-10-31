@@ -132,8 +132,8 @@ class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts', limit_choices_to={'is_deleted': False})
     checkout_to = models.PositiveIntegerField()
     location = models.CharField()
-    checkout_date = models.DateTimeField()
-    return_date = models.DateTimeField()
+    checkout_date = models.DateField()
+    return_date = models.DateField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
@@ -150,7 +150,7 @@ class AssetCheckout(models.Model):
 
 class AssetCheckin(models.Model):
     asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
-    checkin_date = models.DateTimeField()
+    checkin_date = models.DateField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
@@ -212,10 +212,10 @@ class Component(models.Model):
         return self.quantity - (self.total_checked_out - self.total_checked_in)
     
 class ComponentCheckout(models.Model):
-    component = models.ForeignKey(Component, on_delete=models.CASCADE, related_name='components_checkouts')
+    component = models.ForeignKey(Component, on_delete=models.CASCADE, related_name='component_checkouts')
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='checkout_to')
     quantity = models.PositiveIntegerField(default=1)
-    checkout_date = models.DateTimeField(auto_now_add=True)
+    checkout_date = models.DateTimeField()
     notes = models.TextField(max_length=500, blank=True, null=True)
 
     def __str__(self):

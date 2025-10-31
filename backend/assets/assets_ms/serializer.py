@@ -4,7 +4,7 @@ from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 
-# Product or Asset Model
+# Product
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -12,38 +12,46 @@ class ProductSerializer(serializers.ModelSerializer):
     
     # Check for products with the same name that has is_deleted=False
     # Safe registration for API requests
+    # Case sensitive
+    # Ignore leading/trailing spaces and multiple internal spaces
     def validate(self, data):
         name = data.get('name')
         instance = self.instance
 
-        if Product.objects.filter(
-            name__exact=name,
+        if name:
+            normalized_name = " ".join(name.split()).strip()
+            data['name'] = normalized_name
+        else:
+            normalized_name = None
+
+        if normalized_name and Product.objects.filter(
+            name__iexact=normalized_name,
             is_deleted=False
         ).exclude(pk=instance.pk if instance else None).exists():
             raise serializers.ValidationError({
                 "name": "A product with this name already exists."
             })
+        
         return data
-
+    
 # Asset
 class AssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = '__all__'
-    
-    # Check for assets with the same name that has is_deleted=False
-    # Safe registration for API requests
+
     def validate(self, data):
         name = data.get('name')
         instance = self.instance
 
-        # Convert empty string to None
-        if name == "":
-            data['name'] = None
+        if name:
+            normalized_name = " ".join(name.split()).strip()
+            data['name'] = normalized_name
+        else:
+            normalized_name = None
 
-        # Check for duplicate name
-        if Asset.objects.filter(
-            name__exact=name,
+        if normalized_name and Asset.objects.filter(
+            name__iexact=normalized_name,
             is_deleted=False
         ).exclude(pk=instance.pk if instance else None).exists():
             raise serializers.ValidationError({
@@ -51,11 +59,21 @@ class AssetSerializer(serializers.ModelSerializer):
             })
         
         return data
-
+ 
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckout
         fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Limit the asset dropdown to assets that are not checked out
+        self.fields['asset'].queryset = Asset.objects.filter(
+            is_deleted=False
+        ).exclude(
+            asset_checkouts__asset_checkin__isnull=True
+        )
 
     def validate(self, data):
         asset = data.get('asset')
@@ -87,6 +105,14 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckin
         fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Limit choices to only checkouts that don't yet have a checkin
+        self.fields['asset_checkout'].queryset = AssetCheckout.objects.filter(
+            asset_checkin__isnull=True
+        )
 
     def validate(self, data):
         checkout = data.get('asset_checkout')
@@ -116,25 +142,40 @@ class ComponentSerializer(serializers.ModelSerializer):
         model = Component
         fields = '__all__'
     
-    # Check for components with the same name that has is_deleted=False
-    # Safe registration for API requests
     def validate(self, data):
         name = data.get('name')
         instance = self.instance
 
-        if Component.objects.filter(
-            name__exact=name,
+        if name:
+            normalized_name = " ".join(name.split()).strip()
+            data['name'] = normalized_name
+        else:
+            normalized_name = None
+
+        if normalized_name and Component.objects.filter(
+            name__iexact=normalized_name,
             is_deleted=False
         ).exclude(pk=instance.pk if instance else None).exists():
             raise serializers.ValidationError({
                 "name": "A component with this name already exists."
             })
+        
         return data
 
 class ComponentCheckoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComponentCheckout
         fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Limit the component dropdown to components that are not checked out
+        self.fields['component'].queryset = Component.objects.filter(
+            is_deleted=False
+        ).exclude(
+            compoponent_checkouts__component_checkins__isnull=True
+        )
 
     def validate(self, data):
         component = data.get('component')
@@ -166,6 +207,20 @@ class ComponentCheckinSerializer(serializers.ModelSerializer):
         model = ComponentCheckin
         fields = '__all__'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Fetch checkouts efficiently with related component and asset
+        available_checkouts = [
+            checkout for checkout in ComponentCheckout.objects.select_related('component', 'asset')
+            if not checkout.is_fully_returned
+        ]
+
+        # Filter queryset to include only active (not fully returned) checkouts
+        self.fields['component_checkout'].queryset = ComponentCheckout.objects.filter(
+            id__in=[c.id for c in available_checkouts]
+        )
+
     def validate(self, data):
         checkout = data.get('component_checkout')
         quantity = data.get('quantity')
@@ -194,115 +249,6 @@ class ComponentCheckinSerializer(serializers.ModelSerializer):
 
         return data
 
-
-
-
-class AllProductSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(source='category.name', read_only=True)
-    depreciation = serializers.CharField(source='depreciation.name', read_only=True)
-    class Meta:
-        model = Product
-        fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'depreciation', 'end_of_life']
-
-
-class ProductNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'name']
-    
-class ProductDefaultsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'default_purchase_cost', 'default_supplier_id']
-
-class ProductRegistrationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = '__all__'
-
-class AllAssetSerializer(serializers.ModelSerializer):
-    category = serializers.SerializerMethodField()
-    product = serializers.CharField(source='product.name', read_only=True)
-    status = serializers.CharField(source='status.name', read_only=True)
-    
-    class Meta:
-        model = Asset
-        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status', 'product', 'supplier_id']
-    
-    def get_category(self, obj):
-        if obj.product and obj.product.category:
-            return obj.product.category.name
-        return None
-
-class AssetRegistrationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Asset
-        fields = '__all__'
-
-class AuditScheduleSerializer(serializers.ModelSerializer):
-    asset_info = AssetSerializer(source='asset', read_only=True)
-    audit_info = serializers.SerializerMethodField()
-
-    class Meta:
-        model = AuditSchedule
-        fields = '__all__'
-    
-    def get_audit_info(self, obj):
-        # Retrieve all audits that are not deleted and the audit schedule matches the current audit schedule instance.
-        try:
-            audit = obj.asset_audits.get(is_deleted=False, audit_schedule=obj.id)
-            return AuditSerializer(audit).data
-        except Audit.DoesNotExist:
-            return None
-
-class AuditScheduleOnlySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AuditSchedule
-        fields = '__all__'
-
-class AuditSerializer(serializers.ModelSerializer):
-    audit_files = serializers.SerializerMethodField()
-    asset_info = AssetSerializer(source='audit_schedule.asset', read_only=True)
-    audit_schedule_info = AuditScheduleOnlySerializer(source='audit_schedule', read_only=True)
-
-    class Meta:
-        model = Audit
-        fields = '__all__'
-
-    def get_audit_files(self, obj):
-        # Retrieve all files that are not deleted and the audit matches the current audit instance.
-        files = obj.files.filter(is_deleted=False, audit=obj.id)
-        return AuditFileSerializer(files, many=True).data
-
-class AuditFileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AuditFile
-        fields = "__all__"
-
-        
-class AssetNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Asset
-        fields = ['id', 'displayed_id', 'name']
-
-class RepairSerializer(serializers.ModelSerializer):
-    asset_info = AllAssetSerializer(source='asset', read_only=True)
-    repair_files = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Repair
-        fields = "__all__"
-    
-    def get_repair_files(self, obj):
-        # Retrieve all files that are not deleted and the repair matches the current repair instance.
-        files = obj.files.filter(is_deleted=False, repair=obj.id)
-        return RepairFileSerializer(files, many=True).data
-
-class RepairFileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RepairFile
-        fields = "__all__"
-
 class DashboardStatsSerializer(serializers.Serializer):
     due_for_return = serializers.IntegerField()
     overdue_for_return = serializers.IntegerField()
@@ -312,5 +258,4 @@ class DashboardStatsSerializer(serializers.Serializer):
     upcoming_end_of_life = serializers.IntegerField()
     expired_warranties = serializers.IntegerField()
     expiring_warranties = serializers.IntegerField()
-    total_asset_costs = serializers.DecimalField(max_digits=12, decimal_places=2)
-    asset_utilization = serializers.IntegerField()
+    low_stock = serializers.IntegerField()
