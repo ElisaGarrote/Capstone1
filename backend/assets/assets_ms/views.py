@@ -95,7 +95,6 @@ class ComponentCheckoutViewSet(viewsets.ModelViewSet):
             component_checkins__isnull=True
         ).order_by('-checkout_date')
 
-
 class ComponentCheckinViewSet(viewsets.ModelViewSet):
     serializer_class = ComponentCheckinSerializer
 

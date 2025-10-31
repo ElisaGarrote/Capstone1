@@ -277,33 +277,34 @@ class RepairFile(models.Model):
     def __str__(self):
         return f"File for repair: {self.repair.name}"
     
-
 class AuditSchedule(models.Model):
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='audits')
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='audit_schedules')
     date = models.DateField()
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now(), editable=False)
 
     def __str__(self):
-        return f"Auditf Schedule for {self.asset.displayed_id} on {self.date}"
+        return f"Audit Schedule for {self.asset.displayed_id} on {self.date}"
 
 class Audit(models.Model):
-    location = models.CharField(max_length=50)
-    user_id = models.IntegerField()
-    audit_date = models.DateField(default=timezone.now)
-    next_audit_date = models.DateField(default=timezone.now)
+    audit_schedule = models.OneToOneField(AuditSchedule, on_delete=models.CASCADE, related_name='audit')
+    location = models.PositiveIntegerField()
+    user_id = models.PositiveIntegerField()
+    audit_date = models.DateField()
     notes = models.TextField(blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-    audit_schedule = models.OneToOneField(AuditSchedule, on_delete=models.CASCADE, related_name='schedule_audit')
     created_at = models.DateTimeField(default=timezone.now, editable=False)
-
+    is_deleted = models.BooleanField(default=False)
+    
     def __str__(self):
         return f"Audit on {self.audit_date} for {self.audit_schedule.asset.displayed_id}"
     
 class AuditFile(models.Model):
-    audit = models.ForeignKey(Audit, on_delete=models.CASCADE, related_name='files')
-    file = models.FileField(upload_to='audit_files/')
+    audit = models.ForeignKey(Audit, on_delete=models.CASCADE, related_name='audit_files')
+    file = models.FileField(
+        upload_to='audit_files/',
+        validators=[validate_file]
+    )
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
