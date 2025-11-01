@@ -314,24 +314,24 @@ export default function ProductsRegistration() {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="Products"
-            currentPage={id ? "Edit Product" : "New Product"}
+            root="Asset Models"
+            currentPage={id ? "Edit Asset Model" : "New Asset Model"}
             rootNavigatePage="/products"
-            title={id ? 'Edit' + ' ' + (product?.name || 'Product') : 'New Product'}
+            title={id ? 'Edit' + ' ' + (product?.name || 'Asset Model') : 'New Asset Model'}
           />
         </section>
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
 
-            {/* Product Name */}
+            {/* Asset Model Name */}
             <fieldset>
-              <label htmlFor='product-name'>Product Name <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor='product-name'>Asset Model Name <span style={{color: 'red'}}>*</span></label>
               <input
                 type='text'
                 className={errors.productName ? 'input-error' : ''}
-                {...register('productName', { required: 'Product Name is required' })}
+                {...register('productName', { required: 'Asset Model Name is required' })}
                 maxLength='100'
-                placeholder='Product Name'
+                placeholder='Asset Model Name'
               />
               {errors.productName && <span className='error-message'>{errors.productName.message}</span>}
             </fieldset>

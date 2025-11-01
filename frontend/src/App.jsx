@@ -55,7 +55,6 @@ import ManageProfile from "./pages/ManageProfile";
 import UserManagement from "./pages/UserManagement";
 import ViewCategories from "./pages/More/ViewCategories";
 import CategoryRegistration from "./pages/More/CategoryRegistration";
-import CategoryEdit from "./pages/More/CategoryEdit";
 import ViewManufacturer from "./pages/More/ViewManufacturer";
 import ManufacturerRegistration from "./pages/More/ManufacturerRegistration";
 import ManufacturerEdit from "./pages/More/ManufacturerEdit";
@@ -136,7 +135,7 @@ function App() {
             path="/More/CategoryRegistration"
             element={<CategoryRegistration />}
           />
-          <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
+          <Route path="/More/CategoryEdit/:id" element={<CategoryRegistration />} />
           <Route path="/More/ViewManufacturer" element={<ViewManufacturer />} />
           <Route
             path="/More/ManufacturerRegistration"

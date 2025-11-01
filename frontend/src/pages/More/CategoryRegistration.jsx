@@ -1,70 +1,99 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import MediumButtons from "../../components/buttons/MediumButtons";
+import Alert from "../../components/Alert";
 import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
 
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
 
+import { createCategory, updateCategory, } from "../../services/contexts-service";
+
+
 const CategoryRegistration = () => {
   const navigate = useNavigate();
-  const [attachmentFile, setAttachmentFile] = useState(null);
+  const location = useLocation();
+  const editState = location.state?.category || null;
+  const isEdit = !!editState;
+
+  console.log("Edit state:", editState);
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [attachmentFile, setAttachmentFile] = useState();
+  const [existingImage, setExistingImage] = useState(() => editState?.logo || null);
+  const [removeExistingLogo, setRemoveExistingLogo] = useState(false);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
-    defaultValues: {
-      categoryName: "",
-      categoryType: "",
-      customFields: "",
-      skipCheckoutConfirmation: false,
-    },
     mode: "all",
+    defaultValues: {
+      categoryName: editState?.name || "",
+      categoryType: editState?.type || "",
+    },
   });
 
-  const categoryTypes = [
-    "Asset",
-    "Accessory",
-    "Consumable",
-    "Component",
-    "License",
-  ];
-  const customFieldOptions = [
-    "Serial Number",
-    "MAC Address",
-    "Asset Tag",
-    "Purchase Date",
-    "Warranty",
-  ];
+  console.log("editState:", editState);
 
   const handleFileSelection = (e) => {
     if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+
       // Check file size (max 5MB)
-      if (e.target.files[0].size > 5 * 1024 * 1024) {
-        alert("File size must be less than 5MB");
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage("File size must be less than 5MB");
+        setTimeout(() => setErrorMessage(""), 5000);
         e.target.value = "";
         return;
       }
-      setAttachmentFile(e.target.files[0]);
+
+      setAttachmentFile(file);
+      setExistingImage(null);
     }
   };
 
-  const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log("Form submitted:", data, attachmentFile);
+  const onSubmit = async (data) => {
+    setErrorMessage("");
+    const formData = new FormData();
+    formData.append("name", data.categoryName);
+    formData.append("type", data.categoryType);
 
-    // Optional: navigate back to categories view after successful submission
-    navigate("/More/ViewCategories");
+    if (attachmentFile) {
+      formData.append("logo", attachmentFile);
+    } else if (removeExistingLogo) {
+      formData.append("remove_logo", true);
+    }
+
+    try {
+      if (isEdit) {
+        await updateCategory(editState.id, formData);
+        navigate("/More/ViewCategories", { state: { success: "Category updated successfully!" } });
+      } else {
+        await createCategory(formData);
+        navigate("/More/ViewCategories", { state: { success: "Category created successfully!" } });
+      }
+    } catch (err) {
+      console.error("Submit error:", err);
+
+      // Check for backend validation error
+      if (err.response?.data?.name) {
+        setErrorMessage(err.response.data.name[0]);
+      } else {
+        setErrorMessage("Something went wrong.");
+      }
+    }
   };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
@@ -105,31 +134,32 @@ const CategoryRegistration = () => {
                   })}
                 >
                   <option value="">Select Category Type</option>
-                  {categoryTypes.map((type, idx) => (
-                    <option key={idx} value={type.toLowerCase()}>
-                      {type}
-                    </option>
-                  ))}
+                  <option value="asset">Asset</option>
+                  <option value="component">Component</option>
                 </select>
-                {errors.categoryType && (
-                  <span className="error-message">
-                    {errors.categoryType.message}
-                  </span>
-                )}
               </fieldset>
 
               <fieldset>
                 <label>Icon</label>
-                {attachmentFile ? (
+
+                {existingImage && !attachmentFile && !removeExistingLogo ? (
                   <div className="image-selected">
-                    <img
-                      src={URL.createObjectURL(attachmentFile)}
-                      alt="Selected icon"
-                    />
+                    <img src={existingImage} alt="Current logo" />
                     <button
                       type="button"
-                      onClick={() => setAttachmentFile(null)}
-                    >
+                      onClick={() => {
+                        setRemoveExistingLogo(true);
+                        setExistingImage(null);
+                      }}>
+                      <img src={CloseIcon} alt="Remove" />
+                    </button>
+                  </div>
+                ) : attachmentFile ? (
+                  <div className="image-selected">
+                    <img src={URL.createObjectURL(attachmentFile)} alt="Selected icon" />
+                    <button
+                      type="button"
+                      onClick={() => setAttachmentFile(null)}>
                       <img src={CloseIcon} alt="Remove" />
                     </button>
                   </div>
@@ -144,9 +174,8 @@ const CategoryRegistration = () => {
                     />
                   </label>
                 )}
-                <small className="file-size-info">
-                  Maximum file size must be 5MB
-                </small>
+
+                <small className="file-size-info">Maximum file size must be 5MB</small>
               </fieldset>
 
               <button

@@ -3,159 +3,221 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.core.exceptions import ValidationError
+from django.db.models import Sum, Value
+from django.db.models.functions import Coalesce
+from PIL import Image
 import uuid
-import datetime
+import magic
 
-class Product(models.Model):
-    OS_CHOICES = [
-        ('linux', 'Linux'),
-        ('windows', 'Windows'),
-        ('macos', 'macOS'),
-        ('ubuntu', 'Ubuntu'),
-        ('centos', 'CentOS'),
-        ('debian', 'Debian'),
-        ('fedora', 'Fedora'),
-        ('other', 'Other'),
+
+def validate_image(image):
+    max_size = 5 * 1024 * 1024
+    valid_formats = ['JPEG', 'JPG', 'PNG']
+
+    # Check file size
+    if image.size > max_size:
+        raise ValidationError(f"Image size exceeds 5 MB limit.")
+    
+    # Check file format
+    try:
+        img = Image.open(image)
+        if img.upper() not in valid_formats:
+            raise ValidationError(f"Invalid image format. Only JPEG and PNG formats are allowed.")
+    except Exception as e:
+        raise ValidationError(f"Error processing image: {e}")
+
+def validate_file(file):
+    max_size = 300 * 1024 * 1024
+    allowed_mime_types = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/zip',
+        'text/plain',
+        'text/csv',
+        'application/json',
     ]
 
+    # Check file size
+    if file.size > max_size:
+        raise ValidationError("File size exceeds 300 MB limit.")
+    
+    # Check file format
+    try:
+        file_mime = magic.from_buffer(file.read(1024), mime=True)
+        file.seek(0)
+        if file_mime not in allowed_mime_types:
+            raise ValidationError(f"Invalid file format. Only PDF, Word, Excel, ZIP, TXT, CSV, and JSON formats are allowed.")
+    except Exception as e:
+        raise ValidationError(f"Error processing file: {e}")
+
+class Product(models.Model):
     name = models.CharField(max_length=100)
-    category_id = models.PositiveIntegerField()
-    manufacturer_id = models.PositiveIntegerField()
-    depreciation_id = models.PositiveIntegerField()
+    category = models.PositiveIntegerField()
+    manufacturer = models.PositiveIntegerField(blank=True, null=True)
+    depreciation = models.PositiveIntegerField(blank=True, null=True)
     model_number = models.CharField(max_length=50, blank=True, null=True)
     end_of_life = models.DateField(blank=True, null=True)
     default_purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    default_supplier_id = models.PositiveIntegerField(blank=True, null=True)
     minimum_quantity = models.PositiveIntegerField(default=1)
-    operating_system = models.CharField(max_length=7, choices=OS_CHOICES, blank=True, null=True)
-    notes = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='product_images/', blank=True, null=True)
+    cpu = models.CharField(max_length=100, blank=True, null=True)
+    gpu = models.CharField(max_length=100, blank=True, null=True)
+    os = models.CharField(max_length=100, blank=True, null=True)
+    ram = models.CharField(max_length=100, blank=True, null=True)
+
+    size = models.CharField(max_length=50, blank=True, null=True)
+    storage = models.CharField(max_length=50, blank=True, null=True)
+    notes = models.TextField(max_length=500, blank=True, null=True)
+    image = models.ImageField(
+        upload_to='product_images/',
+        blank=True,
+        null=True,
+        validators=[validate_image]
+    )
     is_deleted = models.BooleanField(default=False)
     
     def __str__(self):
         return self.name
-    
+
 class Asset(models.Model):
-    displayed_id = models.CharField(max_length=20, unique=True)
+    asset_id = models.CharField(max_length=23, unique=True, blank=True, editable=False)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets', limit_choices_to={'is_deleted': False})
-    status_id = models.PositiveIntegerField()
-    supplier_id = models.PositiveIntegerField()
-    location = models.PositiveIntegerField()
-    name = models.CharField(max_length=100)
+    status = models.PositiveIntegerField()
+    supplier = models.PositiveIntegerField(blank=True, null=True)
+    location = models.PositiveIntegerField(blank=True, null=True)
+    name = models.CharField(max_length=100, blank=True, null=True)
     serial_number = models.CharField(max_length=50, blank=True, null=True)
     warranty_expiration = models.DateField(blank=True, null=True)
     order_number = models.CharField(max_length=50, blank=True, null=True)
     purchase_date = models.DateField(blank=True, null=True)
     purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    notes = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='asset_images/', blank=True, null=True)
+    notes = models.TextField(max_length=500, blank=True, null=True)
+    image = models.ImageField(
+        upload_to='asset_images/',
+        blank=True,
+        null=True,
+        validators=[validate_image]
+    )
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.displayed_id
+        return self.asset_id
 
 @receiver(pre_save, sender=Asset)
-def generate_displayed_id(sender, instance, **kwargs):
-    # Only generate displayed_id if it's not already set
-    if not instance.displayed_id:
-        # Format: AST-YYYYMMDD-XXXXX-RRRR
-        # AST: Prefix for Asset
-        # YYYYMMDD: Current date
-        # XXXXX: Sequential number (padded to 5 digits)
-        # RRRR: Random suffix for additional uniqueness
-        
-        today = datetime.date.today().strftime('%Y%m%d')
-        
-        # Get the highest sequential number for today
+def generate_asset_id(sender, instance, **kwargs):
+    # If no asset_id and is an empty string, None
+    if not instance.asset_id or instance.asset_id.strip() == "":
+        today = timezone.now().strftime('%Y%m%d')
         prefix = f"AST-{today}-"
-        existing_assets = Asset.objects.filter(
-            displayed_id__startswith=prefix
-        ).order_by('-displayed_id')
-        
-        if existing_assets.exists():
-            # Extract the sequential number from the last asset
-            last_asset = existing_assets.first()
+        last_asset = sender.objects.filter(asset_id__startswith=prefix).order_by('-asset_id').first()
+
+        if last_asset:
             try:
-                # Format is AST-YYYYMMDD-XXXXX-RRRR
-                parts = last_asset.displayed_id.split('-')
-                if len(parts) >= 3:
-                    seq_num = int(parts[2])
-                    new_seq_num = seq_num + 1
-                else:
-                    new_seq_num = 1
+                seq_num = int(last_asset.asset_id.split('-')[2])
+                new_seq_num = seq_num + 1
             except (ValueError, IndexError):
                 new_seq_num = 1
         else:
             new_seq_num = 1
-        
-        # Generate random suffix (4 characters)
+
         random_suffix = uuid.uuid4().hex[:4].upper()
-        
-        # Combine all parts to create the displayed_id
-        instance.displayed_id = f"AST-{today}-{new_seq_num:05d}-{random_suffix}"
-        
-        # Ensure it's exactly 20 characters by truncating or padding if necessary
-        if len(instance.displayed_id) > 20:
-            instance.displayed_id = instance.displayed_id[:20]
-        elif len(instance.displayed_id) < 20:
-            instance.displayed_id = instance.displayed_id.ljust(20, '0')
+        instance.asset_id = f"{prefix}{new_seq_num:05d}-{random_suffix}"
 
 class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts', limit_choices_to={'is_deleted': False})
-    to_user_id = models.PositiveIntegerField()
-    to_location = models.CharField()
-    checkout_date = models.DateTimeField(auto_now_add=True)
-    return_date = models.DateTimeField()
+    checkout_to = models.PositiveIntegerField()
+    location = models.CharField()
+    checkout_date = models.DateField()
+    return_date = models.DateField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
-    notes = models.TextField(blank=True, null=True)
-    confirmation_notes= models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='asset_checkout_images/', blank=True, null=True)
+    notes = models.TextField(max_length=500, blank=True, null=True)
+    image = models.ImageField(
+        upload_to='asset_checkout_images/',
+        blank=True,
+        null=True,
+        validators=[validate_image]
+    )
     
     def __str__(self):
-        return f"Checkout of {self.asset.displayed_id} by user {self.to_user_id}"
+        return f"Checkout of {self.asset.asset_id} by user {self.checkout_to}"
 
 class AssetCheckin(models.Model):
     asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
-    checkin_date = models.DateTimeField()
+    checkin_date = models.DateField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
-    notes = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to='asset_checkin_images/', blank=True, null=True)
+    notes = models.TextField(max_length=500, blank=True, null=True)
+    image = models.ImageField(
+        upload_to='asset_checkin_images/',
+        blank=True,
+        null=True,
+        validators=[validate_image]
+    )
 
     def __str__(self):
-        return f"Checkin of {self.asset_checkout.asset.displayed_id} by user {self.asset_checkout.to_user_id}" 
+        return f"Checkin of {self.asset_checkout.asset.asset_id} by user {self.asset_checkout.checkout_to}" 
     
 class Component(models.Model):
     name = models.CharField(max_length=100)
-    category_id = models.PositiveIntegerField()
-    manufacturer = models.IntegerField()
-    supplier = models.PositiveIntegerField()
-    location = models.PositiveIntegerField()
+    category = models.PositiveIntegerField()
+    manufacturer = models.IntegerField(blank=True, null=True)
+    supplier = models.PositiveIntegerField(blank=True, null=True)
+    location = models.PositiveIntegerField(blank=True, null=True)
     model_number = models.CharField(max_length=50, blank=True, null=True)
     order_number = models.CharField(max_length=30, blank=True, null=True)
-    purchase_date = models.DateField(auto_now_add=True)
-    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    purchase_date = models.DateField(blank=True, null=True)
+    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     quantity = models.PositiveIntegerField(default=1)
-    minimum_quantity = models.PositiveIntegerField(default=0)
-    notes = models.TextField(blank=True, null=True)  
-    image = models.ImageField(upload_to='component_images/', blank=True, null=True)
+    minimum_quantity = models.PositiveIntegerField(default=1)
+    notes = models.TextField(blank=True, null=True)
+    image = models.ImageField(
+        upload_to='component_images/',
+        blank=True,
+        null=True,
+        validators=[validate_image]
+    )
     is_deleted = models.BooleanField(default=False)
     
     def __str__(self):
         return self.name
     
+    @property
+    def total_checked_out(self):
+        total_out = (
+            ComponentCheckout.objects.filter(
+                component=self
+            ).aggregate(total=Coalesce(Sum('quantity'), Value(0)))['total']
+        )
+        return total_out
+    
+    @property
+    def total_checked_in(self):
+        total_in = (
+            ComponentCheckin.objects.filter(
+                component_checkout__component=self
+            ).aggregate(total=Coalesce(Sum('quantity'), Value(0)))['total']
+        )
+        return total_in
+    
+    @property
+    def available_quantity(self):
+        return self.quantity - (self.total_checked_out - self.total_checked_in)
+    
 class ComponentCheckout(models.Model):
-    component = models.ForeignKey(Component, on_delete=models.CASCADE, related_name='components_checkouts')
-    to_asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='checkout_to')
+    component = models.ForeignKey(Component, on_delete=models.CASCADE, related_name='component_checkouts')
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='checkout_to')
     quantity = models.PositiveIntegerField(default=1)
-    checkout_date = models.DateTimeField(auto_now_add=True)
-    notes = models.TextField(blank=True, null=True)
+    checkout_date = models.DateField()
+    notes = models.TextField(max_length=500, blank=True, null=True)
 
     def __str__(self):
-        return f"Checkout of {self.component.name} to {self.to_asset.displayed_id}"
+        return f"Checkout of {self.component.name} to {self.asset.asset_id}"
     
     @property
     def total_checked_in(self):
@@ -171,12 +233,12 @@ class ComponentCheckout(models.Model):
 
 class ComponentCheckin(models.Model):
     component_checkout = models.ForeignKey(ComponentCheckout, on_delete=models.CASCADE, related_name='component_checkins')
-    checkin_date = models.DateTimeField(auto_now_add=True)
+    checkin_date = models.DateField()
     quantity = models.PositiveIntegerField(default=1)
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.to_asset.displayed_id}"  
+        return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.asset.asset_id}"
     
     def save(self, *args, **kwargs):
         # Prevent over-returning
@@ -219,34 +281,35 @@ class RepairFile(models.Model):
     def __str__(self):
         return f"File for repair: {self.repair.name}"
     
-
 class AuditSchedule(models.Model):
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='audits')
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='audit_schedules')
     date = models.DateField()
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now(), editable=False)
 
     def __str__(self):
-        return f"Auditf Schedule for {self.asset.displayed_id} on {self.date}"
+        return f"Audit Schedule for {self.asset.asset_id} on {self.date}"
 
 class Audit(models.Model):
-    location = models.CharField(max_length=50)
-    user_id = models.IntegerField()
-    audit_date = models.DateField(default=timezone.now)
-    next_audit_date = models.DateField(default=timezone.now)
+    audit_schedule = models.OneToOneField(AuditSchedule, on_delete=models.CASCADE, related_name='audit')
+    location = models.PositiveIntegerField()
+    user_id = models.PositiveIntegerField()
+    audit_date = models.DateField()
     notes = models.TextField(blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-    audit_schedule = models.OneToOneField(AuditSchedule, on_delete=models.CASCADE, related_name='schedule_audit')
     created_at = models.DateTimeField(default=timezone.now, editable=False)
-
+    is_deleted = models.BooleanField(default=False)
+    
     def __str__(self):
-        return f"Audit on {self.audit_date} for {self.audit_schedule.asset.displayed_id}"
+        return f"Audit on {self.audit_date} for {self.audit_schedule.asset.asset_id}"
     
 class AuditFile(models.Model):
-    audit = models.ForeignKey(Audit, on_delete=models.CASCADE, related_name='files')
-    file = models.FileField(upload_to='audit_files/')
+    audit = models.ForeignKey(Audit, on_delete=models.CASCADE, related_name='audit_files')
+    file = models.FileField(
+        upload_to='audit_files/',
+        validators=[validate_file]
+    )
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"File(s) for audit on {self.audit.created_at} for {self.audit.audit_schedule.asset.displayed_id}"
+        return f"File(s) for audit on {self.audit.created_at} for {self.audit.audit_schedule.asset.asset_id}"

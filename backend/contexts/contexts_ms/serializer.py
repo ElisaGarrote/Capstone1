@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import *
 
 class CategorySerializer(serializers.ModelSerializer):
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
     class Meta:
         model = Category
         fields = '__all__'

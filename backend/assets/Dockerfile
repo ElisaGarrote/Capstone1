@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     libjpeg-dev \
     zlib1g-dev \
     libpq-dev \
+    libmagic1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache
@@ -29,6 +30,9 @@ CMD ["./entrypoint.sh"]
 
 # Production stage
 FROM base as production
+RUN apt-get update && apt-get install -y \
+    libpq-dev gcc python3-dev musl-dev libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p static staticfiles media

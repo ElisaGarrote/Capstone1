@@ -36,8 +36,10 @@ SECRET_KEY = os.getenv("CONTEXTS_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("CONTEXTS_DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = get_list("CONTEXTS_ALLOWED_HOSTS", "localhost,127.0.0.1")
+ALLOWED_HOSTS = get_list("CONTEXTS_ALLOWED_HOSTS","localhost,127.0.0.1",)
 
+if DEBUG:
+    ALLOWED_HOSTS += ["contexts-service", "contexts-service:8003", "0.0.0.0"]
 # Application definition
 
 INSTALLED_APPS = [

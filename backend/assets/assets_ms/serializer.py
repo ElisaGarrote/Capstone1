@@ -1,182 +1,376 @@
 from rest_framework import serializers
+from assets_ms.services.supplier import get_supplier_by_id
 from .models import *
-from django.db.models import Sum
+from django.db.models import Sum, Value
+from django.db.models.functions import Coalesce
+from django.utils import timezone
+
+# Product
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+    
+    # Check for products with the same name that has is_deleted=False
+    # Safe registration for API requests
+    # Case sensitive
+    # Ignore leading/trailing spaces and multiple internal spaces
+    def validate(self, data):
+        name = data.get('name')
+        instance = self.instance
+
+        if name:
+            normalized_name = " ".join(name.split()).strip()
+            data['name'] = normalized_name
+        else:
+            normalized_name = None
+
+        if normalized_name and Product.objects.filter(
+            name__iexact=normalized_name,
+            is_deleted=False
+        ).exclude(pk=instance.pk if instance else None).exists():
+            raise serializers.ValidationError({
+                "name": "A product with this name already exists."
+            })
         
-class AllProductSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(source='category.name', read_only=True)
-    depreciation = serializers.CharField(source='depreciation.name', read_only=True)
-    class Meta:
-        model = Product
-        fields = ['id', 'image', 'name', 'category', 'manufacturer_id', 'depreciation', 'end_of_life']
-
-
-class ProductNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'name']
+        return data
     
-class ProductDefaultsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'default_purchase_cost', 'default_supplier_id']
-
-class ProductSerializer(serializers.ModelSerializer):    
-    class Meta:
-        model = Product
-        fields = '__all__'
-
-class ProductRegistrationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = '__all__'
-
-class AllAssetSerializer(serializers.ModelSerializer):
-    category = serializers.SerializerMethodField()
-    product = serializers.CharField(source='product.name', read_only=True)
-    status = serializers.CharField(source='status.name', read_only=True)
-    
-    class Meta:
-        model = Asset
-        fields = ['id', 'image', 'displayed_id', 'name', 'category', 'status', 'product', 'supplier_id']
-    
-    def get_category(self, obj):
-        if obj.product and obj.product.category:
-            return obj.product.category.name
-        return None
-    
-
+# Asset
 class AssetSerializer(serializers.ModelSerializer):
-    category = serializers.SerializerMethodField()
-    product_info = ProductNameSerializer(source='product', read_only=True)
-
     class Meta:
         model = Asset
+        fields = '__all__'
+
+    def validate(self, data):
+        product = data.get('product')
+        name = data.get('name')
+        instance = self.instance
+
+        # Check if product is deleted
+        if product.is_deleted:
+            raise serializers.ValidationError({"product": "Cannot check out a deleted product."})
+
+        if name:
+            normalized_name = " ".join(name.split()).strip()
+            data['name'] = normalized_name
+        else:
+            normalized_name = None
+
+        if normalized_name and Asset.objects.filter(
+            name__iexact=normalized_name,
+            is_deleted=False
+        ).exclude(pk=instance.pk if instance else None).exists():
+            raise serializers.ValidationError({
+                "name": "An asset with this name already exists."
+            })
+        
+        return data
+ 
+class AssetCheckoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetCheckout
         fields = '__all__'
     
-    def get_category(self, obj):
-        if obj.product and obj.product.category:
-            return obj.product.category.name
-        return None
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-class AssetRegistrationSerializer(serializers.ModelSerializer):
+        # Limit the asset dropdown to assets that are not checked out
+        self.fields['asset'].queryset = Asset.objects.filter(
+            is_deleted=False
+        ).exclude(
+            id__in=AssetCheckout.objects.filter(asset_checkin__isnull=True).values_list('asset_id', flat=True)
+        )
+
+    def validate(self, data):
+        asset = data.get('asset')
+
+        if asset is None:
+            raise serializers.ValidationError({"asset": "Asset is required."})
+
+        # Check if asset is deleted
+        if asset.is_deleted:
+            raise serializers.ValidationError({"asset": "Cannot check out a deleted asset."})
+
+        # Check for existing active checkouts (without select_for_update)
+        if AssetCheckout.objects.filter(asset=asset, asset_checkin__isnull=True).exists():
+            raise serializers.ValidationError({
+                "asset": "This asset is already checked out and not yet checked in."
+            })
+
+        # Validate return date
+        checkout_date = data.get('checkout_date', timezone.now())
+        return_date = data.get('return_date')
+        if return_date and return_date < checkout_date:
+            raise serializers.ValidationError({
+                "return_date": "Return date cannot be before checkout date."
+            })
+
+        return data
+    
+class AssetCheckinSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Asset
+        model = AssetCheckin
         fields = '__all__'
+
+    def validate(self, data):
+        checkout = data.get('asset_checkout')
+        checkin_date = data.get('checkin_date', timezone.now())
+
+        # Check if checkout exists
+        if not checkout:
+            raise serializers.ValidationError({"asset_checkout": "Checkout record is required."})
+
+        # Prevent multiple checkins
+        if checkout and AssetCheckin.objects.filter(asset_checkout=checkout).exists():
+            raise serializers.ValidationError({
+                "asset_checkout": "This asset has already been checked in."
+            })
+        
+        # Make sure checkin happens after checkout
+        if checkin_date < checkout.checkout_date:
+            raise serializers.ValidationError({
+                "checkin_date": "Cannot check in before checkout date."
+            })
+
+        return data
+
+# Component
+class ComponentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Component
+        fields = '__all__'
+    
+    def validate(self, data):
+        name = data.get('name')
+        instance = self.instance
+
+        if name:
+            normalized_name = " ".join(name.split()).strip()
+            data['name'] = normalized_name
+        else:
+            normalized_name = None
+
+        if normalized_name and Component.objects.filter(
+            name__iexact=normalized_name,
+            is_deleted=False
+        ).exclude(pk=instance.pk if instance else None).exists():
+            raise serializers.ValidationError({
+                "name": "A component with this name already exists."
+            })
+        
+        return data
+
+class ComponentCheckoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComponentCheckout
+        fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Allow checkout only if component still has stock
+        available_components = [
+            c for c in Component.objects.filter(is_deleted=False)
+            if c.available_quantity > 0
+        ]
+        self.fields['component'].queryset = Component.objects.filter(
+            id__in=[c.id for c in available_components]
+        )
+
+    def validate(self, data):
+        component = data.get('component')
+        quantity = data.get('quantity')
+
+        # Check if component is deleted
+        if component and component.is_deleted:
+            raise serializers.ValidationError({
+                "component": "Cannot check out a deleted component."
+            })
+        
+        # Quantity validation
+        if quantity <= 0:
+            raise serializers.ValidationError({
+                "quantity": "Quantity must be greater than zero."
+            })
+
+        # Check stock availability using the model property
+        if quantity > component.available_quantity:
+            raise serializers.ValidationError({
+                "quantity": f"Not enough quantity available for {component.name}. "
+                            f"Only {component.available_quantity} left in stock."
+            })
+
+        return data
+
+class ComponentCheckinSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ComponentCheckin
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Fetch checkouts efficiently with related component and asset
+        available_checkouts = [
+            checkout for checkout in ComponentCheckout.objects.select_related('component', 'asset')
+            if not checkout.is_fully_returned
+        ]
+
+        # Filter queryset to include only active (not fully returned) checkouts
+        self.fields['component_checkout'].queryset = ComponentCheckout.objects.filter(
+            id__in=[c.id for c in available_checkouts]
+        )
+
+    def validate(self, data):
+        checkout = data.get('component_checkout')
+        quantity = data.get('quantity')
+        checkin_date = data.get('checkin_date', timezone.now())
+
+        # Check if checkout exists
+        if not checkout:
+            raise serializers.ValidationError({"component_checkout": "Checkout record is required."})
+        
+        # Quantity validation
+        if quantity <= 0:
+            raise serializers.ValidationError({"quantity": "Quantity must be greater than zero."})
+        
+        # Cannot check in more than remaining quantity
+        if checkout and quantity > checkout.remaining_quantity:
+            raise serializers.ValidationError({
+                "quantity": f"Cannot check in more than remaining quantity "
+                            f"({checkout.remaining_quantity})."
+            })
+        
+        # Cannot check in before checkout date
+        if checkin_date < checkout.checkout_date:
+            raise serializers.ValidationError({
+                "checkin_date": "Cannot check in before the checkout date."
+            })
+
+        return data
 
 class AuditScheduleSerializer(serializers.ModelSerializer):
-    asset_info = AssetSerializer(source='asset', read_only=True)
-    audit_info = serializers.SerializerMethodField()
-
-    class Meta:
-        model = AuditSchedule
-        fields = '__all__'
-    
-    def get_audit_info(self, obj):
-        # Retrieve all audits that are not deleted and the audit schedule matches the current audit schedule instance.
-        try:
-            audit = obj.asset_audits.get(is_deleted=False, audit_schedule=obj.id)
-            return AuditSerializer(audit).data
-        except Audit.DoesNotExist:
-            return None
-
-class AuditScheduleOnlySerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditSchedule
         fields = '__all__'
 
-class AuditSerializer(serializers.ModelSerializer):
-    audit_files = serializers.SerializerMethodField()
-    asset_info = AssetSerializer(source='audit_schedule.asset', read_only=True)
-    audit_schedule_info = AuditScheduleOnlySerializer(source='audit_schedule', read_only=True)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Limit dropdown to non-deleted assets only
+        self.fields['asset'].queryset = Asset.objects.filter(is_deleted=False)
+
+    def validate(self, data):
+        asset = data.get('asset')
+
+        # Ensure asset is not deleted
+        if asset and asset.is_deleted:
+            raise serializers.ValidationError({
+                "asset": "Cannot create an audit schedule for a deleted asset."
+            })
+
+        return data
+
+class CompletedAuditSerializer(serializers.ModelSerializer):
+    audit = serializers.SerializerMethodField()
 
     class Meta:
-        model = Audit
+        model = AuditSchedule
         fields = '__all__'
 
-    def get_audit_files(self, obj):
-        # Retrieve all files that are not deleted and the audit matches the current audit instance.
-        files = obj.files.filter(is_deleted=False, audit=obj.id)
-        return AuditFileSerializer(files, many=True).data
+    def get_audit(self, obj):
+        """Return audit data if it exists"""
+        if hasattr(obj, 'audit') and obj.audit and not obj.audit.is_deleted:
+            return {
+                "id": obj.audit.id,
+                "location": obj.audit.location,
+                "user_id": obj.audit.user_id,
+                "audit_date": obj.audit.audit_date,
+                "notes": obj.audit.notes,
+                "created_at": obj.audit.created_at
+            }
+        return None
 
 class AuditFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditFile
-        fields = "__all__"
-
-class AllComponentSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(source='category.name', read_only=True)
-    checked_out = serializers.SerializerMethodField()
-    class Meta:
-        model = Component
-        fields = ['id', 'image', 'name', 'category', 'quantity', 'checked_out']
-
-    def get_checked_out(self, obj):
-        total_checked_out = obj.components_checkouts.filter(
-            component_checkins__isnull=True
-        ).aggregate(total=Sum('quantity'))['total'] or 0
-        return total_checked_out
-
-class ComponentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Component
-        fields = "__all__"
-
-class ComponentCheckoutSerializer(serializers.ModelSerializer):
-    asset_displayed_id = serializers.CharField(source='to_asset.displayed_id', read_only=True)
-    asset_name = serializers.CharField(source='to_asset.name', read_only=True)
-    class Meta:
-        model = ComponentCheckout
-        fields = "__all__"
-        extra_fields = ['asset_name', 'asset_displayed_id']
-
-class ComponentCheckinSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = ComponentCheckin
-        fields = "__all__"
+        fields = '__all__'
         
-class AssetNameSerializer(serializers.ModelSerializer):
+class AuditSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Asset
-        fields = ['id', 'displayed_id', 'name']
+        model = Audit
+        fields = '__all__'
+    
+    def validate(self, data):
+        audit_date = data.get('audit_date')
+        audit_schedule = data.get('audit_schedule')
 
-class AssetCheckoutSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AssetCheckout
-        fields = "__all__"
+        if audit_schedule and audit_date:
+            # Audit date must be on or after schedule date
+            if audit_date < audit_schedule.date:
+                raise serializers.ValidationError({
+                    'audit_date': "Audit date cannot be before the scheduled date."
+                })
 
-class AssetCheckinSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AssetCheckin
-        fields = "__all__"
-
+        return data
+    
 class RepairSerializer(serializers.ModelSerializer):
     supplier_details = serializers.SerializerMethodField()
-    supplier_choices = serializers.SerializerMethodField()  # Add a field for dropdown choices
 
     class Meta:
         model = Repair
         fields = '__all__'
 
     def get_supplier_details(self, obj):
+        """Fetch supplier details from the Contexts service."""
         try:
-            base_url = os.getenv('CONTEXTS_API_URL', 'http://contexts-service:8003')
-            response = requests.get(f"{base_url}/api/suppliers/{obj.supplier_id}/")
-            if response.status_code == 200:
-                return response.json()
-            return None
-        except Exception as e:
-            return {'error': str(e)}
+            if not obj.supplier_id:
+                return None
+            supplier = get_supplier_by_id(obj.supplier_id)
+            return supplier
+        except Exception:
+            return {
+                "warning": "Supplier service unreachable. Make sure 'contexts-service' is running and accessible."
+            }
 
-    def get_supplier_choices(self, obj):
-        try:
-            base_url = os.getenv('CONTEXTS_API_URL', 'http://contexts-service:8003')
-            response = requests.get(f"{base_url}/api/suppliers/")
-            if response.status_code == 200:
-                return response.json()  # Return the list of suppliers
-            return []
-        except Exception as e:
-            return [{'error': str(e)}]
+    def validate(self, attrs):
+        """Prevent duplicate repairs on the same asset with same name/date."""
+        asset = attrs.get('asset') or getattr(self.instance, 'asset', None)
+        name = attrs.get('name') or getattr(self.instance, 'name', None)
+        start_date = attrs.get('start_date') or getattr(self.instance, 'start_date', timezone.localdate())
+
+        # Ensure date-only (no datetime)
+        if isinstance(start_date, timezone.datetime):
+            start_date = start_date.date()
+
+        # 🔍 Check for existing repair with same asset, name, and date
+        duplicate = (
+            Repair.objects.filter(
+                asset=asset,
+                name__iexact=name.strip(),
+                start_date=start_date,
+                is_deleted=False
+            )
+            .exclude(pk=self.instance.pk if self.instance else None)
+            .exists()
+        )
+
+        if duplicate:
+            raise serializers.ValidationError({
+                "non_field_errors": [
+                    "A repair record with the same asset, name, and start date already exists."
+                ]
+            })
+
+        attrs['start_date'] = start_date
+        return attrs
+
+    def create(self, validated_data):
+        start_date = validated_data.get('start_date', timezone.localdate())
+        if isinstance(start_date, timezone.datetime):
+            start_date = start_date.date()
+        validated_data['start_date'] = start_date
+        return super().create(validated_data)
 
 class DashboardStatsSerializer(serializers.Serializer):
     due_for_return = serializers.IntegerField()
@@ -188,7 +382,3 @@ class DashboardStatsSerializer(serializers.Serializer):
     expired_warranties = serializers.IntegerField()
     expiring_warranties = serializers.IntegerField()
     low_stock = serializers.IntegerField()
-    total_asset_costs = serializers.DecimalField(max_digits=12, decimal_places=2)
-    asset_utilization = serializers.IntegerField()
-    asset_categories = serializers.ListField(child=serializers.DictField())
-    asset_statuses = serializers.ListField(child=serializers.DictField())
