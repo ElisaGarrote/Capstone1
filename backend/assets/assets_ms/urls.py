@@ -18,7 +18,10 @@ router.register('audit-files', AuditFileViewSet, basename='audit-files')
 router.register('dashboard', DashboardViewSet, basename='dashboard')
 
 urlpatterns = [
-    path("api/supplier/", SupplierListProxy.as_view(), name="suppliers-proxy"),
-    path("api/supplier/<int:pk>/", SupplierDetailProxy.as_view(), name="supplier-detail-proxy"),
-    path("", include(router.urls)),  # 👈 this includes all router URLs
+    # Internal cross-service usage checks
+    path("suppliers/<int:pk>/check-usage/", check_supplier_usage, name="check-supplier-usage"),
+    path("manufacturers/<int:pk>/check-usage/", check_manufacturer_usage, name="check-manufacturer-usage"),
+    path("depreciations/<int:pk>/check-usage/", check_depreciation_usage, name="check-depreciation-usage"),
+
+    path("", include(router.urls)),
 ]

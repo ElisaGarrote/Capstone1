@@ -8,6 +8,8 @@ from django.utils.timezone import now
 from datetime import timedelta
 from django.db.models import Sum, Count
 from rest_framework.exceptions import ValidationError
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
@@ -33,6 +35,34 @@ class AssetViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Asset.objects.filter(is_deleted=False).order_by('name')
+    def get_queryset(self):
+        queryset = Asset.objects.filter(is_deleted=False).order_by('name')
+     # Optional: allow query param ?show_deleted=true
+        if self.request.query_params.get('show_deleted') == 'true':
+            queryset = Asset.objects.filter(is_deleted=True).order_by('name')
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def deleted(self, request):
+        """List all soft-deleted assets"""
+        assets = Asset.objects.filter(is_deleted=True).order_by('name')
+        serializer = self.get_serializer(assets, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def recover(self, request, pk=None):
+        """Recover a soft-deleted asset"""
+        try:
+            asset = Asset.objects.get(pk=pk, is_deleted=True)
+            asset.is_deleted = False
+            asset.save()
+            serializer = self.get_serializer(asset)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Asset.DoesNotExist:
+            return Response(
+                {"detail": "Asset not found or already active."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
     def perform_destroy(self, instance):
         errors = []
@@ -76,6 +106,33 @@ class ComponentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Component.objects.filter(is_deleted=False).order_by('name')
+    def get_queryset(self):
+        queryset = Component.objects.filter(is_deleted=False).order_by('name')
+        if self.request.query_params.get('show_deleted') == 'true':
+            queryset = Component.objects.filter(is_deleted=True).order_by('name')
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def deleted(self, request):
+        """List all soft-deleted components"""
+        components = Component.objects.filter(is_deleted=True).order_by('name')
+        serializer = self.get_serializer(components, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def recover(self, request, pk=None):
+        """Recover a soft-deleted component"""
+        try:
+            component = Component.objects.get(pk=pk, is_deleted=True)
+            component.is_deleted = False
+            component.save()
+            serializer = self.get_serializer(component)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Component.DoesNotExist:
+            return Response(
+                {"detail": "Component not found or already active."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
     def perform_destroy(self, instance): 
         # Check if the component has an active checkout (no checkin yet) 
@@ -227,7 +284,50 @@ class RepairViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'Repair files soft-deleted'}, status=status.HTTP_200_OK)
 # END REPAIR
 
+#USAGE CHECK
+@api_view(['GET'])
+def check_supplier_usage(request, pk):
+    """
+    Check if supplier is referenced by any active asset, product, component, or repair.
+    """
+    in_use = (
+        Asset.objects.filter(supplier=pk, is_deleted=False).exists()
+        or Component.objects.filter(supplier=pk, is_deleted=False).exists()
+        or Product.objects.filter(is_deleted=False).filter(
+            manufacturer=pk
+        ).exists()  # some products may use manufacturer ID equal to supplier if reused
+        or Repair.objects.filter(supplier_id=pk, is_deleted=False).exists()
+    )
+    return Response({"in_use": in_use})
 
+
+@api_view(['GET'])
+def check_manufacturer_usage(request, pk):
+    """
+    Check if manufacturer is referenced by any active asset, product, or component.
+    """
+    in_use = (
+        Asset.objects.filter(product__manufacturer=pk, is_deleted=False).exists()
+        or Component.objects.filter(manufacturer=pk, is_deleted=False).exists()
+        or Product.objects.filter(manufacturer=pk, is_deleted=False).exists()
+    )
+    return Response({"in_use": in_use})
+
+
+@api_view(['GET'])
+def check_depreciation_usage(request, pk):
+    """
+    Check if depreciation is referenced by any active product or asset.
+    """
+    in_use = (
+        Product.objects.filter(depreciation=pk, is_deleted=False).exists()
+        or Asset.objects.filter(product__depreciation=pk, is_deleted=False).exists()
+    )
+    return Response({"in_use": in_use})
+#END
+
+
+#DASHBOARD
 class DashboardViewSet(viewsets.ViewSet):
     
     def list(self, request):

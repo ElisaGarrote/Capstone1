@@ -5,6 +5,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from contexts.services.assets import *
+from rest_framework import status
+from contexts.services.usage_check import is_item_in_use
 
 
 @api_view(['GET'])
@@ -35,6 +38,11 @@ class SupplierViewSet(viewsets.ModelViewSet):
         return Supplier.objects.filter(is_deleted=False).order_by('name')
 
     def perform_destroy(self, instance):
+        # Check if supplier is still used in assets-service
+        if is_item_in_use("supplier", instance.id):
+            raise serializers.ValidationError(
+                {"error": "Cannot delete supplier. It is still used in assets or components."}
+            )
         instance.is_deleted = True
         instance.save()
 #END
@@ -48,6 +56,10 @@ class DepreciationViewSet(viewsets.ModelViewSet):
         return Depreciation.objects.filter(is_deleted=False).order_by('name')
 
     def perform_destroy(self, instance):
+        if is_item_in_use("depreciation", instance.id):
+            raise serializers.ValidationError(
+                {"error": "Cannot delete depreciation. It is still used in assets."}
+            )
         instance.is_deleted = True
         instance.save()
 #END
@@ -61,6 +73,10 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
         return Manufacturer.objects.filter(is_deleted=False).order_by('name')
 
     def perform_destroy(self, instance):
+        if is_item_in_use("manufacturer", instance.id):
+            raise serializers.ValidationError(
+                {"error": "Cannot delete manufacturer. It is still used in assets or components."}
+            )
         instance.is_deleted = True
         instance.save()
 
@@ -120,3 +136,28 @@ class TicketViewSet(viewsets.ModelViewSet):
         tickets = self.queryset.filter(is_resolved=False)
         serializer = self.get_serializer(tickets, many=True)
         return Response(serializer.data)
+
+class RecycleBinViewSet(viewsets.ViewSet):
+    """Handles viewing and recovering deleted items from the Assets service"""
+
+    def list(self, request):
+        """List all deleted assets and components"""
+        assets = get_deleted_assets()
+        components = get_deleted_components()
+        return Response({
+            "deleted_assets": assets,
+            "deleted_components": components
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'])
+    def recover_asset(self, request, pk=None):
+        """Recover asset"""
+        data = recover_asset(pk)
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'])
+    def recover_component(self, request, pk=None):
+        """Recover component"""
+        data = recover_component(pk)
+        return Response(data, status=status.HTTP_200_OK)
+

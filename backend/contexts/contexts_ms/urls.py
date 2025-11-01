@@ -9,4 +9,9 @@ router.register('suppliers', SupplierViewSet, basename='supplier')
 router.register('depreciations', DepreciationViewSet, basename='depreciation')
 router.register('manufacturers', ManufacturerViewSet, basename='manufacturer')
 router.register('tickets', TicketViewSet, basename='tickets')
+router.register('recycle-bin', RecycleBinViewSet, basename='recycle-bin')
 urlpatterns = router.urls
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
