@@ -9,6 +9,7 @@ import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
 
@@ -35,14 +36,9 @@ const filterConfig = [
     name: "category",
     label: "Category",
   },
-  {
-    type: "text",
-    name: "location",
-    label: "Location",
-  },
 ];
 
-// TableHeader
+// TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
@@ -58,14 +54,13 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>NAME</th>
       <th>CATEGORY</th>
       <th>STATUS</th>
-      <th>LOCATION</th>
       <th>CHECK-IN / CHECK-OUT</th>
       <th>ACTION</th>
     </tr>
   );
 }
 
-// TableItem
+// TableItem component to render each asset row
 function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
   const baseImage = asset.image
     ? `https://assets-service-production.up.railway.app${asset.image}`
@@ -96,21 +91,16 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       <td>
         <Status type={asset.status.toLowerCase()} name={asset.status} />
       </td>
-      <td>{asset.location || "-"}</td>
 
       {/* CHECK-IN / CHECK-OUT Column */}
       <td>
         {asset.hasCheckoutRecord && asset.isCheckInOrOut && (
-          <button
-            className={
-              asset.isCheckInOrOut === "Check-In"
-                ? "check-in-btn"
-                : "check-out-btn"
-            }
-            onClick={() => onCheckInOut(asset)}
-          >
-            {asset.isCheckInOrOut}
-          </button>
+          <ActionButtons
+            showCheckout={asset.isCheckInOrOut === "Check-Out"}
+            showCheckin={asset.isCheckInOrOut === "Check-In"}
+            onCheckoutClick={() => onCheckInOut(asset)}
+            onCheckinClick={() => onCheckInOut(asset)}
+          />
         )}
       </td>
 
@@ -119,7 +109,7 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
           showEdit
           showDelete
           showView
-          editPath={`/assets/registration/${asset.id}`}
+          editPath={`/assets/edit/${asset.id}`}
           editState={{ asset }}
           onDeleteClick={() => onDeleteClick(asset.id)}
           onViewClick={() => onViewClick(asset)}
@@ -136,16 +126,19 @@ export default function Assets() {
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
 
-  // pagination
+  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+
+  // selection state
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedAssets = MockupData.slice(startIndex, endIndex);
 
-  // selection
-  const [selectedIds, setSelectedIds] = useState([]);
-
+  // selection logic
   const allSelected =
     paginatedAssets.length > 0 &&
     paginatedAssets.every((item) => selectedIds.includes(item.id));
@@ -171,8 +164,9 @@ export default function Assets() {
     }
   };
 
-  // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // delete modal state
   const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
 
   const openDeleteModal = (id = null) => {
@@ -191,8 +185,8 @@ export default function Assets() {
       // remove from mock data / API call
     } else {
       console.log("Deleting multiple ids:", selectedIds);
-    
-      setSelectedIds([]); 
+      // remove multiple
+      setSelectedIds([]); // clear selection
     }
     closeDeleteModal();
   };
@@ -293,19 +287,20 @@ export default function Assets() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout assets-page">
+        <main className="main-with-table">
+          {/* Title of the Page */}
           <section className="title-page-section">
             <h1>Assets</h1>
           </section>
 
+          {/* Table Filter */}
           <AssetFilter filters={filterConfig} />
 
           <section className="table-layout">
+            {/* Table Header */}
             <section className="table-header">
               <h2 className="h2">Assets ({MockupData.length})</h2>
               <section className="table-actions">
@@ -332,15 +327,15 @@ export default function Assets() {
               </section>
             </section>
 
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="table-section">
+            {/* Table Structure */}
+            <section className="assets-table-section">
+              {exportToggle && (
+                <section className="export-button-section" ref={exportRef}>
+                  <button>Download as Excel</button>
+                  <button>Download as PDF</button>
+                  <button>Download as CSV</button>
+                </section>
+              )}
               <table>
                 <thead>
                   <TableHeader
@@ -363,7 +358,7 @@ export default function Assets() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="no-data-message">
+                      <td colSpan={8} className="no-data-message">
                         No Assets Found.
                       </td>
                     </tr>
@@ -372,6 +367,7 @@ export default function Assets() {
               </table>
             </section>
 
+            {/* Table pagination */}
             <section className="table-pagination">
               <Pagination
                 currentPage={currentPage}
@@ -383,6 +379,7 @@ export default function Assets() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

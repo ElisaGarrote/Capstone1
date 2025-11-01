@@ -5,7 +5,7 @@ import ViewPage from "../../components/View/Viewpage";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
-import "../../styles/ProductViewPage.css";
+import "../../styles/Products/ProductViewPage.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 
@@ -125,19 +125,19 @@ function ProductViewPage() {
         />
       )}
       <ViewPage
-        breadcrumbRoot="Products"
-        breadcrumbCurrent="Show Product"
+        breadcrumbRoot="Asset Models"
+        breadcrumbCurrent="Show Asset Model"
         breadcrumbRootPath="/products"
         title={`${product.name}`}
         sidebarContent={sidebarContent}
         actionButtons={actionButtons}
       >
-        {/* Main Content - Product Table */}
+        {/* Main Content - Asset Model Table */}
         <div className="product-view-content">
           {/* Top Actions */}
           <div className="product-view-header">
             <div className="product-view-tabs">
-              <span className="product-tab-text">Products (1)</span>
+              <span className="product-tab-text">Asset Models (1)</span>
             </div>
             <div className="product-view-actions">
               <input type="search" placeholder="Search..." className="product-search" />

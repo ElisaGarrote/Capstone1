@@ -11,15 +11,11 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MockupData from "../../data/mockData/more/supplier-mockup-data.json";
 import { fetchAllCategories } from "../../services/contexts-service";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/ViewSupplier.css";
 
 const filterConfig = [
-  {
-    type: "text",
-    name: "supplierName",
-    label: "Supplier Name",
-  },
   {
     type: "select",
     name: "city",
@@ -31,9 +27,29 @@ const filterConfig = [
     ],
   },
   {
+    type: "select",
+    name: "state",
+    label: "State",
+    options: [
+      { value: "washington", label: "Washington" },
+      { value: "california", label: "California" },
+      { value: "new york", label: "New York" },
+    ],
+  },
+  {
+    type: "select",
+    name: "country",
+    label: "Country",
+    options: [
+      { value: "philippines", label: "Philippines" },
+      { value: "united states	", label: "United States" },
+      { value: "united kingdom", label: "United Kingdom" },
+    ],
+  },
+  {
     type: "text",
     name: "contactPerson",
-    label: "Contat Person",
+    label: "Contact Person",
   },
 ];
 
@@ -51,10 +67,11 @@ function TableHeader() {
       <th>NAME</th>
       <th>ADDRESS</th>
       <th>CITY</th>
+      <th>STATE</th>
       <th>ZIP</th>
+      <th>COUNTRY</th>
       <th>CONTACT PERSON</th>
       <th>PHONE</th>
-      <th>EMAIL</th>
       <th>URL</th>
       <th>ACTIONS</th>
     </tr>
@@ -99,10 +116,11 @@ function TableItem({ supplier, onDeleteClick }) {
       </td>
       <td>{supplier.address || "-"}</td>
       <td>{supplier.city || "-"}</td>
+      <td>{supplier.state || "-"}</td>
       <td>{supplier.zip || "-"}</td>
+      <td>{supplier.country || "-"}</td>
       <td>{supplier.contactName || "-"}</td>
       <td>{supplier.phoneNumber || "-"}</td>
-      <td>{supplier.email || "-"}</td>
       <td>{supplier.url || "-"}</td>
       <td>
         <section className="action-button-section">
@@ -296,6 +314,11 @@ export default function ViewSupplier() {
     return null;
   };
 
+  const handleExport = () => {
+    const dataToExport = suppliers.length > 0 ? suppliers : MockupData;
+    exportToExcel(dataToExport, "Supplier_Records.xlsx");
+  };
+
   // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
   useEffect(() => {
     let timeoutId;
@@ -360,6 +383,7 @@ export default function ViewSupplier() {
                   onChange={handleSearchChange}
                   className="search"
                 />
+                <MediumButtons type="export" onClick={handleExport} />
                 <MediumButtons
                   type="new"
                   navigatePage="/More/SupplierRegistration"

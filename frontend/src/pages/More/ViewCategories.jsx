@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import Alert from "../../components/Alert";
 
 import Footer from "../../components/Footer";
 
@@ -183,7 +184,15 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
 }
 
 export default function Category() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isAddRecordSuccess, setAddRecordSuccess] = useState(false);
+  const [isUpdateRecordSuccess, setUpdateRecordSuccess] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -194,8 +203,72 @@ export default function Category() {
   const endIndex = startIndex + pageSize;
   const paginatedCategories = categories.slice(startIndex, endIndex);
 
+  // Retrieve the "addCategory" value passed from the navigation state.
+  // If the "addCategory" is not exist, the default value for this is "undifiend".
+  const addedCategory = location.state?.addedCategory;
+  const updatedCategory = location.state?.updatedCategory;
+
+  const actionStatus = (action, status) => {
+    let timeoutId;
+
+    if (action === "create" && status === true) {
+      setAddRecordSuccess(true);
+    }
+
+    if (action === "update" && status === true) {
+      setUpdateRecordSuccess(true);
+    }
+
+    // clear the navigation/history state so a full page refresh won't re-show the alert
+    // replace the current history entry with an empty state
+    navigate(location.pathname, { replace: true, state: {} });
+
+    return (timeoutId = setTimeout(() => {
+      if (action === "create") {
+        setAddRecordSuccess(false);
+      } else {
+        setUpdateRecordSuccess(false);
+      }
+    }, 5000));
+  };
+
+  const getAction = () => {
+    if (addedCategory == true) {
+      return "create";
+    }
+
+    if (updatedCategory == true) {
+      return "update";
+    }
+
+    return null;
+  };
+
+  // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
+  useEffect(() => {
+    let timeoutId;
+
+    timeoutId = actionStatus(getAction(), true);
+
+    // cleanup the timeout on unmount or when addedCategory or updatedCategory changes
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [addedCategory, updatedCategory, navigate, location.pathname]);
+
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
+      {isAddRecordSuccess && (
+        <Alert message="Category added successfully!" type="success" />
+      )}
+
+      {isUpdateRecordSuccess && (
+        <Alert message="Category updated successfully!" type="success" />
+      )}
+
       {isDeleteModalOpen && (
         <DeleteModal
           closeModal={() => setDeleteModalOpen(false)}

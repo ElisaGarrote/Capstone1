@@ -1,93 +1,79 @@
-.products-page .table-section {
-  overflow-x: auto !important;
-  max-height: 55vh !important;
-  overflow-y: auto !important;
-
-  /* Prevent affecting the parent when scrolling. */
+.products-table-section {
+  overflow-x: auto;
+  max-height: 55vh;
+  overflow-y: auto;
   overscroll-behavior: contain;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      padding: 0.75rem !important;
+      text-align: left !important;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-color);
+      border-top: 1px solid #cccccc;
+      border-bottom: 1px solid #cccccc;
+      background-color: #f0f1f2;
+      height: 50px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    /* table header for 'Checkbox' */
+    th:first-child {
+      width: 50px;
+    }
+
+    /* table header for 'Image'*/
+    th:nth-child(2) {
+      min-width: 50px;
+      max-width: fit-content;
+    }
+
+    td {
+      text-align: left !important;
+      padding: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-color);
+      border-bottom: 1px solid #cccccc;
+      height: 50px;
+    }
+
+    td.no-data-message {
+      display: table-cell !important;
+      width: 100% !important;
+      white-space: normal !important;
+      padding: 0.75rem !important;
+      text-align: center !important;
+      font-style: italic;
+      color: var(--secondary-text-color);
+      background: transparent;
+    }
+
+    tr:hover {
+      background-color: #fcfcfc;
+    }
+  }
 }
 
-.products-page .table-section table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-}
-
-.products-page .table-section table th {
-  padding: 0.75rem !important;
-  text-align: left !important;
-  font-size: 0.75rem !important;
-  font-weight: 600 !important;
-  color: var(--text-color) !important;
-  border-top: 1px solid #cccccc !important;
-  border-bottom: 1px solid #cccccc !important;
-  background-color: #f0f1f2 !important;
-  height: 50px !important;
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 1 !important;
-}
-
-.products-page .table-section table th:first-child {
-  width: 50px !important;
-}
-
-.products-page .table-section table th:nth-child(2) {
-  min-width: 50px !important;
-  max-width: fit-content !important;
-}
-
-.products-page .table-section table td {
-  text-align: left !important;
-  padding: 0.75rem !important;
-  font-size: 0.8125rem !important;
-  color: var(--text-color) !important;
-  border-bottom: 1px solid #cccccc !important;
-  height: 50px !important;
-  vertical-align: middle !important;
-}
-
-.products-page .table-section table td.no-data-message {
-  display: table-cell !important;
-  width: 100% !important;
-  white-space: normal !important;
-  padding: 0.75rem !important;
-  text-align: center !important;
-  font-style: italic !important;
-  color: var(--secondary-text-color) !important;
-  background: transparent !important;
-}
-
-.products-page .table-section table tr:hover {
-  background-color: #fcfcfc !important;
-}
-
-.products-page .table-section table {
-  background-color: white !important;
-  border-radius: 0 !important;
-}
-
-.products-page .table-section table th {
-  background-color: #f0f1f2 !important;
-  color: #333 !important;
-}
-
-/* Make table images smaller */
-.products-page .table-section .table-img {
-  width: 40px !important;
-  height: 40px !important;
-  object-fit: cover !important;
-  border-radius: 4px !important;
-}
-
-/* Left-align Action buttons container */
-.products-page .table-section .action-button-section {
+.products-table-section .action-button-section {
   justify-content: flex-start !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
-/* Individual action buttons alignment */
-.products-page .table-section .action-button {
+.products-table-section .action-button {
   margin: 0 2px 0 0 !important;
   display: inline-flex !important;
+}
+
+.products-table-section .table-img {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: cover !important;
+  border-radius: 4px !important;
 }

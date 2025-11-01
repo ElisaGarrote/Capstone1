@@ -59,7 +59,7 @@ const CategoryEdit = () => {
     console.log("Form submitted:", data, attachmentFile);
 
     // Optional: navigate back to categories view after successful submission
-    navigate("/More/ViewCategories");
+    navigate("/More/ViewCategories", { state: { updatedCategory: true } });
   };
 
   console.log("initial:", initialAttachment);
@@ -100,6 +100,8 @@ const CategoryEdit = () => {
               <fieldset>
                 <label htmlFor="categoryType">Category Type *</label>
                 <select
+                  disabled
+                  title="Cannot change category type"
                   className={errors.categoryType ? "input-error" : ""}
                   {...register("categoryType", {
                     required: "Category Type is required",
