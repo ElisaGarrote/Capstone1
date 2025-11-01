@@ -26,6 +26,7 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    
 class Supplier(models.Model):
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=100, blank=True, null=True)
@@ -35,7 +36,7 @@ class Supplier(models.Model):
     contact_name = models.CharField(max_length=100, blank=True, null=True)
     phone_number = models.CharField(max_length=13, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
-    URL = models.URLField(blank=True, null=True)
+    url = models.URLField(blank=True, null=True)
 
     notes = models.TextField(blank=True, null=True)
     logo = models.ImageField(upload_to='supplier_logos/', blank=True, null=True)
@@ -85,6 +86,7 @@ class Depreciation(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Location(models.Model):
     city = models.CharField(max_length=50, blank=True, null=True)

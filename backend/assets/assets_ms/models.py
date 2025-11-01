@@ -254,10 +254,16 @@ class ComponentCheckin(models.Model):
 
 class Repair(models.Model):
     REPAIR_CHOICES = [
-        ('maintenance', 'Maintenance'), ('repair', 'Repair'), ('upgrade', 'Upgrade'), ('test', 'Test'), ('hardware', 'Hardware'), ('software', 'Software'),
+        ('maintenance', 'Maintenance'),
+        ('repair', 'Repair'),
+        ('upgrade', 'Upgrade'),
+        ('test', 'Test'),
+        ('hardware', 'Hardware'),
+        ('software', 'Software'),
     ]
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='repair_assets')
-    type = models.CharField(max_length=20, choices=REPAIR_CHOICES) 
+    supplier_id = models.PositiveIntegerField()  # Store the Supplier ID
+    type = models.CharField(max_length=20, choices=REPAIR_CHOICES)
     name = models.CharField(max_length=100)
     start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(blank=True, null=True)
@@ -267,7 +273,7 @@ class Repair(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Repairs on {self.asset.serial_number} at {self.start_date}"
+        return f"Repairs on {self.asset.displayed_id} at {self.start_date}"
 
 class RepairFile(models.Model):
     repair = models.ForeignKey(Repair, on_delete=models.CASCADE, related_name='files')

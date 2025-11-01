@@ -3,6 +3,9 @@ from rest_framework.routers import DefaultRouter
 from .views import *
 
 router = DefaultRouter()
+router.register('repairs', RepairViewSet, basename='repair')
+
+router = DefaultRouter()
 router.register('products', ProductViewSet, basename='categories')
 router.register('assets', AssetViewSet, basename='assets')
 router.register('asset-checkout', AssetCheckoutViewSet, basename='asset-checkout')
