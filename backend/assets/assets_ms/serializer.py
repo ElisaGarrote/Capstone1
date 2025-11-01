@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from assets_ms.services.supplier import get_supplier_by_id
 from .models import *
 from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
@@ -312,6 +313,64 @@ class AuditSerializer(serializers.ModelSerializer):
                 })
 
         return data
+    
+class RepairSerializer(serializers.ModelSerializer):
+    supplier_details = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Repair
+        fields = '__all__'
+
+    def get_supplier_details(self, obj):
+        """Fetch supplier details from the Contexts service."""
+        try:
+            if not obj.supplier_id:
+                return None
+            supplier = get_supplier_by_id(obj.supplier_id)
+            return supplier
+        except Exception:
+            return {
+                "warning": "Supplier service unreachable. Make sure 'contexts-service' is running and accessible."
+            }
+
+    def validate(self, attrs):
+        """Prevent duplicate repairs on the same asset with same name/date."""
+        asset = attrs.get('asset') or getattr(self.instance, 'asset', None)
+        name = attrs.get('name') or getattr(self.instance, 'name', None)
+        start_date = attrs.get('start_date') or getattr(self.instance, 'start_date', timezone.localdate())
+
+        # Ensure date-only (no datetime)
+        if isinstance(start_date, timezone.datetime):
+            start_date = start_date.date()
+
+        # 🔍 Check for existing repair with same asset, name, and date
+        duplicate = (
+            Repair.objects.filter(
+                asset=asset,
+                name__iexact=name.strip(),
+                start_date=start_date,
+                is_deleted=False
+            )
+            .exclude(pk=self.instance.pk if self.instance else None)
+            .exists()
+        )
+
+        if duplicate:
+            raise serializers.ValidationError({
+                "non_field_errors": [
+                    "A repair record with the same asset, name, and start date already exists."
+                ]
+            })
+
+        attrs['start_date'] = start_date
+        return attrs
+
+    def create(self, validated_data):
+        start_date = validated_data.get('start_date', timezone.localdate())
+        if isinstance(start_date, timezone.datetime):
+            start_date = start_date.date()
+        validated_data['start_date'] = start_date
+        return super().create(validated_data)
 
 class DashboardStatsSerializer(serializers.Serializer):
     due_for_return = serializers.IntegerField()

@@ -1,5 +1,6 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .api.supplier import SupplierDetailProxy, SupplierListProxy
 from .views import *
 
 router = DefaultRouter()
@@ -12,7 +13,12 @@ router.register('component-checkout', ComponentCheckoutViewSet, basename='compon
 router.register('component-checkin', ComponentCheckinViewSet, basename='component-checkin')
 router.register('audit-schedule', AuditScheduleViewSet, basename='audit-schedule')
 router.register('audits', AuditViewSet, basename='audits')
+router.register('repairs', RepairViewSet, basename='repair')
 router.register('audit-files', AuditFileViewSet, basename='audit-files')
 router.register('dashboard', DashboardViewSet, basename='dashboard')
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("api/supplier/", SupplierListProxy.as_view(), name="suppliers-proxy"),
+    path("api/supplier/<int:pk>/", SupplierDetailProxy.as_view(), name="supplier-detail-proxy"),
+    path("", include(router.urls)),  # 👈 this includes all router URLs
+]

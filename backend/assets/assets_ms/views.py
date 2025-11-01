@@ -176,6 +176,58 @@ class AuditFileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return AuditFile.objects.filter(is_deleted=False)
 
+class RepairViewSet(viewsets.ModelViewSet):
+    serializer_class = RepairSerializer
+
+    def get_queryset(self):
+        return Repair.objects.filter(is_deleted=False).order_by('-id')
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save()
+
+    @action(detail=True, methods=['patch'])
+    def soft_delete(self, request, pk=None):
+        """Soft delete a repair."""
+        try:
+            repair = self.get_object()
+            repair.is_deleted = True
+            repair.save()
+            return Response({'detail': 'Repair soft-deleted'}, status=status.HTTP_200_OK)
+        except Repair.DoesNotExist:
+            return Response({'detail': 'Repair not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['post'])
+    def create_repair_file(self, request):
+        """Create a repair file."""
+        serializer = RepairFileSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['patch'])
+    def soft_delete_repair_file(self, request, pk=None):
+        """Soft delete a repair file by ID."""
+        try:
+            repair_file = RepairFile.objects.get(pk=pk, is_deleted=False)
+            repair_file.is_deleted = True
+            repair_file.save()
+            return Response({'detail': 'Repair file soft-deleted'}, status=status.HTTP_200_OK)
+        except RepairFile.DoesNotExist:
+            return Response({'detail': 'Repair file not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['patch'])
+    def soft_delete_repair_files_by_repair(self, request, pk=None):
+        """Soft delete all repair files by repair ID."""
+        repair_files = RepairFile.objects.filter(repair=pk, is_deleted=False)
+        if not repair_files.exists():
+            return Response({'detail': 'Repair files not found'}, status=status.HTTP_404_NOT_FOUND)
+        repair_files.update(is_deleted=True)
+        return Response({'detail': 'Repair files soft-deleted'}, status=status.HTTP_200_OK)
+# END REPAIR
+
+
 class DashboardViewSet(viewsets.ViewSet):
     
     def list(self, request):

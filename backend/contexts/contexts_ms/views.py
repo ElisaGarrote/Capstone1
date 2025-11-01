@@ -2,6 +2,10 @@ from rest_framework import viewsets
 from .models import *
 from .serializer import *
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.decorators import action
+
 
 @api_view(['GET'])
 def get_all_location(request):
@@ -101,7 +105,7 @@ def get_manu_name_by_id(request, id):
 
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all().order_by('-created_at')
-    serializer_class = TicketSerializer
+    serializer_class = TicketResolveSerializer
 
     # GET /tickets/resolved/
     @action(detail=False, methods=['get'])

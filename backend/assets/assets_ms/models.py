@@ -63,7 +63,6 @@ class Product(models.Model):
     end_of_life = models.DateField(blank=True, null=True)
     default_purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     minimum_quantity = models.PositiveIntegerField(default=1)
-
     cpu = models.CharField(max_length=100, blank=True, null=True)
     gpu = models.CharField(max_length=100, blank=True, null=True)
     os = models.CharField(max_length=100, blank=True, null=True)
@@ -71,7 +70,6 @@ class Product(models.Model):
 
     size = models.CharField(max_length=50, blank=True, null=True)
     storage = models.CharField(max_length=50, blank=True, null=True)
-
     notes = models.TextField(max_length=500, blank=True, null=True)
     image = models.ImageField(
         upload_to='product_images/',
