@@ -33,11 +33,7 @@ function ComponentView() {
   }
 
   // Define tabs for the detailed view
-  const tabs = [
-    { label: "Info" },
-    { label: "History" },
-    { label: "Files" },
-  ];
+  const tabs = [{ label: "Info" }, { label: "History" }, { label: "Files" }];
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
@@ -51,11 +47,13 @@ function ComponentView() {
   };
 
   // Checked out to information
-  const checkedOutTo = asset.checkoutRecord ? {
-    name: "Elias Gamboa",
-    email: "garciamariaeliasgarcia@gmail.com",
-    checkoutDate: "2025-08-15"
-  } : null;
+  const checkedOutTo = asset.checkoutRecord
+    ? {
+        name: "Elias Gamboa",
+        email: "garciamariaeliasgarcia@gmail.com",
+        checkoutDate: "2025-08-15",
+      }
+    : null;
 
   // Button action handlers
   const handleEditClick = () => {

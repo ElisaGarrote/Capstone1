@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
 
   frontend:
@@ -51,6 +53,3 @@ services:
 networks:
   app-network:
     driver: bridge
-
-
-

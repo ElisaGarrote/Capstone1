@@ -24,7 +24,7 @@
   list-style: none;
 }
 
-.detailed-breadcrumb li + li::before {
+.detailed-breadcrumb li+li::before {
   padding: 0px 6px 0px 8px;
   color: #666;
   content: "/\00a0";

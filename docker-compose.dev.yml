@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   frontend:
     build:
@@ -21,12 +23,12 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: capstone
-      POSTGRES_DB: postgres
+      POSTGRES_MULTIPLE_DATABASES: ams_authentication,ams_assets,ams_contexts
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     networks:
       - app-network
 

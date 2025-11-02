@@ -13,7 +13,6 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 
 import "../../styles/Tickets/Tickets.css";
 
-
 const filterConfig = [
   {
     type: "select",
@@ -67,7 +66,14 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+function TableItem({
+  ticket,
+  isSelected,
+  onRowChange,
+  onDeleteClick,
+  onViewClick,
+  onCheckInOut,
+}) {
   return (
     <tr>
       <td>
@@ -134,9 +140,11 @@ const Tickets = () => {
       setIsLoading(true);
       try {
         // Use mockup data instead of API call
-        const mappedTickets = TicketsMockupData.map(ticket => {
+        const mappedTickets = TicketsMockupData.map((ticket) => {
           const isCheckInOrOut = !ticket.is_resolved
-            ? (ticket.checkin_date ? "Check-In" : "Check-Out")
+            ? ticket.checkin_date
+              ? "Check-In"
+              : "Check-Out"
             : null;
 
           return {
@@ -239,11 +247,12 @@ const Tickets = () => {
   };
 
   // Filter tickets based on search query
-  const filteredTickets = ticketItems.filter(ticket =>
-    ticket.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ticket.requestor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ticket.assetName?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTickets = ticketItems.filter(
+    (ticket) =>
+      ticket.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.requestor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.assetName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Pagination logic
@@ -258,7 +267,10 @@ const Tickets = () => {
 
   const handleHeaderChange = (e) => {
     if (e.target.checked) {
-      const newSelectedIds = [...selectedIds, ...paginatedTickets.map((ticket) => ticket.id)];
+      const newSelectedIds = [
+        ...selectedIds,
+        ...paginatedTickets.map((ticket) => ticket.id),
+      ];
       setSelectedIds([...new Set(newSelectedIds)]);
     } else {
       const paginatedIds = paginatedTickets.map((ticket) => ticket.id);
@@ -287,12 +299,16 @@ const Tickets = () => {
   const confirmDelete = () => {
     if (deleteTargetId) {
       // Delete single ticket
-      const updatedTickets = ticketItems.filter(ticket => ticket.id !== deleteTargetId);
+      const updatedTickets = ticketItems.filter(
+        (ticket) => ticket.id !== deleteTargetId
+      );
       setTicketItems(updatedTickets);
       setSuccessMessage("Ticket deleted successfully");
     } else {
       // Bulk delete
-      const updatedTickets = ticketItems.filter(ticket => !selectedIds.includes(ticket.id));
+      const updatedTickets = ticketItems.filter(
+        (ticket) => !selectedIds.includes(ticket.id)
+      );
       setTicketItems(updatedTickets);
       setSelectedIds([]);
       setSuccessMessage(`${selectedIds.length} ticket(s) deleted successfully`);

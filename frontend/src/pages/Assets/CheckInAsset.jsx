@@ -9,7 +9,6 @@ import assetsService from "../../services/assets-service";
 import dtsService from "../../services/dts-integration-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 
-
 export default function CheckInAsset() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -24,12 +23,11 @@ export default function CheckInAsset() {
     { value: "7", label: "7 - Very Good" },
     { value: "8", label: "8 - Excellent" },
     { value: "9", label: "9 - Like New" },
-    { value: "10", label: "10 - Brand New" }
+    { value: "10", label: "10 - Brand New" },
   ];
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
 
   const {
     id,
@@ -44,24 +42,22 @@ export default function CheckInAsset() {
     checkoutId,
     checkinDate,
     ticketId,
-    fromAsset
+    fromAsset,
   } = location.state || {};
 
   const {
     register,
     handleSubmit,
     setValue,
-    formState: { errors, isValid }
+    formState: { errors, isValid },
   } = useForm({
     mode: "all",
     defaultValues: {
       checkinDate: checkinDate || currentDate,
-      condition: '',
-      notes: ''
-    }
+      condition: "",
+      notes: "",
+    },
   });
-
-
 
   const onSubmit = async (data) => {
     try {
@@ -75,7 +71,7 @@ export default function CheckInAsset() {
       await dtsService.resolveCheckoutTicket(ticketId);
 
       navigate("/assets", {
-        state: { successMessage: "Asset has been checked in successfully!" }
+        state: { successMessage: "Asset has been checked in successfully!" },
       });
     } catch (error) {
       console.error("Error checking in asset:", error);
@@ -91,7 +87,9 @@ export default function CheckInAsset() {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      <nav><NavBar /></nav>
+      <nav>
+        <NavBar />
+      </nav>
       <main className="registration">
         <section className="top">
           <TopSecFormPage
@@ -105,26 +103,36 @@ export default function CheckInAsset() {
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Checkin Date */}
             <fieldset>
-              <label htmlFor="checkinDate">Checkin Date <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor="checkinDate">
+                Checkin Date <span style={{ color: "red" }}>*</span>
+              </label>
               <input
                 type="date"
                 id="checkinDate"
-                className={errors.checkinDate ? 'input-error' : ''}
-                {...register("checkinDate", { required: "Checkin date is required" })}
+                className={errors.checkinDate ? "input-error" : ""}
+                {...register("checkinDate", {
+                  required: "Checkin date is required",
+                })}
                 defaultValue={checkinDate || currentDate}
               />
               {errors.checkinDate && (
-                <span className="error-message">{errors.checkinDate.message}</span>
+                <span className="error-message">
+                  {errors.checkinDate.message}
+                </span>
               )}
             </fieldset>
 
             {/* Condition */}
             <fieldset>
-              <label htmlFor="condition">Condition <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor="condition">
+                Condition <span style={{ color: "red" }}>*</span>
+              </label>
               <select
                 id="condition"
-                {...register("condition", {required: "Condition is required"})}
-                className={errors.condition ? 'input-error' : ''}
+                {...register("condition", {
+                  required: "Condition is required",
+                })}
+                className={errors.condition ? "input-error" : ""}
               >
                 <option value="">Select Condition</option>
                 {conditionOptions.map((option) => (
@@ -133,7 +141,11 @@ export default function CheckInAsset() {
                   </option>
                 ))}
               </select>
-              {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
+              {errors.condition && (
+                <span className="error-message">
+                  {errors.condition.message}
+                </span>
+              )}
             </fieldset>
 
             {/* Notes */}
@@ -149,7 +161,11 @@ export default function CheckInAsset() {
             </fieldset>
 
             {/* Submit */}
-            <button type="submit" className="primary-button" disabled={!isValid}>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid}
+            >
               Save
             </button>
           </form>

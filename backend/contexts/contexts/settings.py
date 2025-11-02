@@ -36,8 +36,10 @@ SECRET_KEY = os.getenv("CONTEXTS_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("CONTEXTS_DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = get_list("CONTEXTS_ALLOWED_HOSTS", "localhost,127.0.0.1")
+ALLOWED_HOSTS = get_list("CONTEXTS_ALLOWED_HOSTS","localhost,127.0.0.1",)
 
+if DEBUG:
+    ALLOWED_HOSTS += ["contexts-service", "contexts-service:8003", "0.0.0.0"]
 # Application definition
 
 INSTALLED_APPS = [
@@ -147,9 +149,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Extra places for collectstatic to find static files
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+# Only include the project-level `static/` directory if it exists to
+# avoid warnings when the directory is not present (common in local dev).
+STATICFILES_DIRS = []
+_static_dir = os.path.join(BASE_DIR, 'static')
+if os.path.isdir(_static_dir):
+    STATICFILES_DIRS.append(_static_dir)
 
 # WhiteNoise settings
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds

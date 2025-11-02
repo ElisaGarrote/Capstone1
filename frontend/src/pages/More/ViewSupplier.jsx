@@ -82,6 +82,7 @@ function TableHeader() {
 function TableItem({ supplier, onDeleteClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [endPoint, setEndPoint] = useState("");
 
   return (
     <tr>
@@ -199,7 +200,7 @@ export default function ViewSupplier() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const suppRes = await fetchAllCategories();
+        const suppRes = await getSuppliers();
         const mapped = (suppRes || []).map((supp) => ({
           id: supp.id,
           name: supp.name,
@@ -209,7 +210,7 @@ export default function ViewSupplier() {
           contactName: supp.contact_name,
           phoneNumber: supp.phone_number,
           email: supp.email,
-          url: supp.URL,
+          URL: supp.url, 
           notes: supp.notes,
           logo: supp.logo,
         }));
@@ -224,6 +225,17 @@ export default function ViewSupplier() {
       }
     };
 
+    const handleDeleteSuccess = async () => {
+      try {
+        const updatedSuppliers = await getSuppliers();
+        setSuppliers(updatedSuppliers); // refresh list
+        setDeleteModalOpen(false); // close modal
+      } catch (error) {
+        console.error("Failed to refresh suppliers after delete:", error);
+      }
+    };
+
+
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
       setTimeout(() => {
@@ -234,6 +246,7 @@ export default function ViewSupplier() {
 
     fetchData();
   }, [location]);
+
 
   const toggleSelectAll = () => {
     setCheckedItems(allChecked ? [] : suppliers.map((item) => item.id));
@@ -258,7 +271,7 @@ export default function ViewSupplier() {
         contactName: supp.contact_name,
         phoneNumber: supp.phone_number,
         email: supp.email,
-        url: supp.URL,
+        URL: supp.URL,
         notes: supp.notes,
       }));
       setSuppliers(mapped);
@@ -404,10 +417,11 @@ export default function ViewSupplier() {
                         key={index}
                         supplier={supplier}
                         onDeleteClick={() => {
-                          /* BACKEND INTEGRATION HERE
                           setEndPoint(
-                            `${contextServiceUrl}/contexts/suppliers/${supplier.id}/delete/`
-                          ); */
+                            `${
+                              import.meta.env.VITE_CONTEXTS_API_URL
+                            }suppliers/${supplier.id}/`
+                          );
                           setDeleteModalOpen(true);
                         }}
                       />

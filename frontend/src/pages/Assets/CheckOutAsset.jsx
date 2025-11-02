@@ -9,7 +9,6 @@ import assetsService from "../../services/assets-service";
 import dtsService from "../../services/dts-integration-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 
-
 export default function CheckOutAsset() {
   const location = useLocation();
   const passedState = location.state;
@@ -24,11 +23,11 @@ export default function CheckOutAsset() {
     { value: "7", label: "7 - Very Good" },
     { value: "8", label: "8 - Excellent" },
     { value: "9", label: "9 - Like New" },
-    { value: "10", label: "10 - Brand New" }
+    { value: "10", label: "10 - Brand New" },
   ];
 
   const navigate = useNavigate();
-  
+
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -65,9 +64,8 @@ export default function CheckOutAsset() {
     checkoutDate,
     returnDate,
     ticketId,
-    fromAsset
+    fromAsset,
   });
-
 
   const {
     register,
@@ -83,7 +81,7 @@ export default function CheckOutAsset() {
       expectedReturnDate: returnDate || "",
       condition: "",
       notes: "",
-      photos: []
+      photos: [],
     },
   });
 
@@ -100,35 +98,32 @@ export default function CheckOutAsset() {
         setErrorMessage("Failed to initialize data");
       } finally {
         setIsLoading(false);
-      } 
+      }
     };
 
     initialize();
   }, [passedState, setValue]);
 
-
-
-
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
 
-      formData.append('asset', id);
-      formData.append('to_user_id', empId);
-      formData.append('to_location', data.empLocation);
-      formData.append('checkout_date', data.checkoutDate);
-      formData.append('return_date', data.returnDate);
+      formData.append("asset", id);
+      formData.append("to_user_id", empId);
+      formData.append("to_location", data.empLocation);
+      formData.append("checkout_date", data.checkoutDate);
+      formData.append("return_date", data.returnDate);
 
       const conditionValue = parseInt(data.condition, 10);
-        if (!isNaN(conditionValue)) {
-          formData.append('condition', conditionValue);
-        }
+      if (!isNaN(conditionValue)) {
+        formData.append("condition", conditionValue);
+      }
 
-      formData.append('notes', data.notes || '');
-      formData.append('confirmation_notes', data.confirmationNotes || '');
+      formData.append("notes", data.notes || "");
+      formData.append("confirmation_notes", data.confirmationNotes || "");
 
       for (let pair of formData.entries()) {
-        console.log(pair[0]+ ': ' + pair[1]);
+        console.log(pair[0] + ": " + pair[1]);
       }
 
       await assetsService.createAssetCheckout(formData);
@@ -137,19 +132,18 @@ export default function CheckOutAsset() {
       if (fromAsset) {
         console.log("Ticket Information:", { ticketId });
 
-        navigate('/assets', { 
-          state: { 
-            successMessage: "Asset has been checked out successfully!"
-          } 
+        navigate("/assets", {
+          state: {
+            successMessage: "Asset has been checked out successfully!",
+          },
         });
       } else {
-        navigate('/approved-tickets', {
+        navigate("/approved-tickets", {
           state: {
-            successMessage: "Asset has been checked out successfully!"
-          }
+            successMessage: "Asset has been checked out successfully!",
+          },
         });
       }
-
     } catch (error) {
       console.error("Error occured while checking out the asset:", error);
       setErrorMessage(
@@ -166,13 +160,17 @@ export default function CheckOutAsset() {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      <nav><NavBar /></nav>
+      <nav>
+        <NavBar />
+      </nav>
       <main className="registration">
         <section className="top">
           <TopSecFormPage
             root={passedState?.fromAsset ? "Assets" : "Approved Tickets"}
             currentPage="Check-Out Asset"
-            rootNavigatePage={passedState?.fromAsset ? "/assets" : "/approved-tickets"}
+            rootNavigatePage={
+              passedState?.fromAsset ? "/assets" : "/approved-tickets"
+            }
             title={assetId}
           />
         </section>
@@ -180,7 +178,9 @@ export default function CheckOutAsset() {
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Employee */}
             <fieldset>
-              <label htmlFor="employee">Employee <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor="employee">
+                Employee <span style={{ color: "red" }}>*</span>
+              </label>
               <input
                 type="text"
                 id="employee"
@@ -191,7 +191,9 @@ export default function CheckOutAsset() {
 
             {/* Location */}
             <fieldset>
-              <label htmlFor="empLocation">Location <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor="empLocation">
+                Location <span style={{ color: "red" }}>*</span>
+              </label>
               <input
                 type="text"
                 id="empLocation"
@@ -202,7 +204,9 @@ export default function CheckOutAsset() {
 
             {/* Check-Out Date */}
             <fieldset>
-              <label htmlFor="checkoutDate">Check-Out Date <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor="checkoutDate">
+                Check-Out Date <span style={{ color: "red" }}>*</span>
+              </label>
               <input
                 type="text"
                 id="checkoutDate"
@@ -213,27 +217,37 @@ export default function CheckOutAsset() {
 
             {/* Expected Return Date */}
             <fieldset>
-              <label htmlFor="returnDate">Expected Return Date <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor="returnDate">
+                Expected Return Date <span style={{ color: "red" }}>*</span>
+              </label>
               <input
                 type="date"
                 id="returnDate"
-                className={errors.returnDate ? 'input-error' : ''}
-                {...register("returnDate", { required: "Expected return date is required" })}
+                className={errors.returnDate ? "input-error" : ""}
+                {...register("returnDate", {
+                  required: "Expected return date is required",
+                })}
                 defaultValue={passedState?.returnDate || ""}
                 min={currentDate}
               />
               {errors.returnDate && (
-                <span className="error-message">{errors.returnDate.message}</span>
+                <span className="error-message">
+                  {errors.returnDate.message}
+                </span>
               )}
             </fieldset>
 
             {/* Condition */}
             <fieldset>
-              <label htmlFor="condition">Condition <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor="condition">
+                Condition <span style={{ color: "red" }}>*</span>
+              </label>
               <select
                 id="condition"
-                {...register("condition", {required: "Condition is required"})}
-                className={errors.condition ? 'input-error' : ''}
+                {...register("condition", {
+                  required: "Condition is required",
+                })}
+                className={errors.condition ? "input-error" : ""}
               >
                 <option value="">Select Condition</option>
                 {conditionOptions.map((option) => (
@@ -242,7 +256,11 @@ export default function CheckOutAsset() {
                   </option>
                 ))}
               </select>
-              {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
+              {errors.condition && (
+                <span className="error-message">
+                  {errors.condition.message}
+                </span>
+              )}
             </fieldset>
 
             {/* Notes */}
@@ -258,7 +276,11 @@ export default function CheckOutAsset() {
             </fieldset>
 
             {/* Submit */}
-            <button type="submit" className="primary-button" disabled={!isValid}>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid}
+            >
               Save
             </button>
           </form>

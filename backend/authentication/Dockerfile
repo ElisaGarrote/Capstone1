@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    gcc \
+    gcc bash \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache
@@ -20,8 +20,10 @@ FROM base as development
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN mkdir -p staticfiles
-# Make entrypoint executable
-RUN chmod +x entrypoint.sh
+
+# Ensure entrypoint.sh uses LF and is executable
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
+
 EXPOSE 8001
 CMD ["./entrypoint.sh"]
 

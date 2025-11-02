@@ -33,7 +33,7 @@ export default function DetailedViewPage({
   onAuditClick,
   onDeleteClick,
   onUploadClick,
-  children
+  children,
 }) {
   return (
     <main className="detailed-view-layout">
@@ -58,7 +58,7 @@ export default function DetailedViewPage({
         {tabs.map((tab, index) => (
           <button
             key={index}
-            className={`tab-button ${index === activeTab ? 'active' : ''}`}
+            className={`tab-button ${index === activeTab ? "active" : ""}`}
             onClick={() => onTabChange && onTabChange(index)}
           >
             {tab.label}
@@ -86,7 +86,9 @@ export default function DetailedViewPage({
               <label>Status</label>
               <div className="status-with-actions">
                 <Status
-                  type={statusType === "ready-to-deploy" ? "deployable" : statusType}
+                  type={
+                    statusType === "ready-to-deploy" ? "deployable" : statusType
+                  }
                   name={status}
                 />
               </div>
@@ -114,12 +116,21 @@ export default function DetailedViewPage({
                   <span>{manufacturer}</span>
                 </div>
                 <div>
-                  <a href={manufacturerUrl} target="_blank" rel="noopener noreferrer">
-                    <i className="fas fa-external-link-alt"></i> {manufacturerUrl}
+                  <a
+                    href={manufacturerUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <i className="fas fa-external-link-alt"></i>{" "}
+                    {manufacturerUrl}
                   </a>
                 </div>
                 <div>
-                  <a href={supportUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={supportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <i className="fas fa-external-link-alt"></i> {supportUrl}
                   </a>
                 </div>
@@ -163,14 +174,18 @@ export default function DetailedViewPage({
 
             <button
               className="action-btn blue-btn"
-              onClick={onCheckInClick || (() => console.log("Check-in clicked"))}
+              onClick={
+                onCheckInClick || (() => console.log("Check-in clicked"))
+              }
             >
               Check-in Asset
             </button>
 
             <button
               className="action-btn blue-btn"
-              onClick={onAddNoteClick || (() => console.log("Add note clicked"))}
+              onClick={
+                onAddNoteClick || (() => console.log("Add note clicked"))
+              }
             >
               Add Note
             </button>
@@ -205,7 +220,9 @@ export default function DetailedViewPage({
                 <div className="user-details">
                   <div className="user-name">{checkedOutTo.name}</div>
                   <div className="user-email">{checkedOutTo.email}</div>
-                  <div className="checkout-date">Checkout Date: {checkedOutTo.checkoutDate}</div>
+                  <div className="checkout-date">
+                    Checkout Date: {checkedOutTo.checkoutDate}
+                  </div>
                 </div>
               </div>
             </div>
@@ -213,9 +230,7 @@ export default function DetailedViewPage({
 
           {/* Custom Action Buttons */}
           {actionButtons && (
-            <div className="custom-action-buttons">
-              {actionButtons}
-            </div>
+            <div className="custom-action-buttons">{actionButtons}</div>
           )}
         </aside>
       </section>
