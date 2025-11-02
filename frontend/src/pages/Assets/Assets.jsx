@@ -61,7 +61,14 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each asset row
-function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+function TableItem({
+  asset,
+  isSelected,
+  onRowChange,
+  onDeleteClick,
+  onViewClick,
+  onCheckInOut,
+}) {
   const baseImage = asset.image
     ? `https://assets-service-production.up.railway.app${asset.image}`
     : DefaultImage;
@@ -147,11 +154,15 @@ export default function Assets() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedAssets.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedAssets
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedAssets.map((item) => item.id).includes(id))
+        prev.filter(
+          (id) => !paginatedAssets.map((item) => item.id).includes(id)
+        )
       );
     }
   };
@@ -190,7 +201,6 @@ export default function Assets() {
     }
     closeDeleteModal();
   };
-
 
   const handleViewClick = (asset) => {
     navigate(`/assets/view/${asset.id}`);
@@ -272,8 +282,6 @@ export default function Assets() {
     }
   };
 
-
-
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -311,7 +319,11 @@ export default function Assets() {
                     onClick={() => openDeleteModal(null)}
                   />
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                />
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"
