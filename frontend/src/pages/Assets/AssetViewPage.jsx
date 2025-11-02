@@ -41,7 +41,7 @@ function AssetViewPage() {
     { label: "Maintenance" },
     { label: "History" },
     { label: "Files" },
-    { label: "Additional Info" }
+    { label: "Additional Info" },
   ];
 
   const closeDeleteModal = () => {
@@ -56,11 +56,13 @@ function AssetViewPage() {
   };
 
   // Checked out to information
-  const checkedOutTo = asset.checkoutRecord ? {
-    name: "Elias Gamboa",
-    email: "garciamariaeliasgarcia@gmail.com",
-    checkoutDate: "2025-08-15"
-  } : null;
+  const checkedOutTo = asset.checkoutRecord
+    ? {
+        name: "Elias Gamboa",
+        email: "garciamariaeliasgarcia@gmail.com",
+        checkoutDate: "2025-08-15",
+      }
+    : null;
 
   // Button action handlers
   const handleEditClick = () => {

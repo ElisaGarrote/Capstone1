@@ -27,22 +27,22 @@ export default function Status({
   */
 
   return (
-    <span className={`status-${type.split(" ").join("-")}`}>
-      <span className="circle" aria-hidden="true"></span>
+    <div className={`status-${type.split(" ").join("-")}`}>
+      <div className="circle"></div>
       {name}
       {/* Below will be rendered when any of these (i.e personName or location)
       is not equal to null*/}
       {(personName != null || location != null) && (
         <span className="status-details">
           <span className="status-to">to</span>
-          <span className="icon">
+          <div className="icon">
             <img src={personName != null ? personIcon : locationIcon} alt="" />
-          </span>
+          </div>
           <span className="status-target">
             {personName != null ? personName : location}
           </span>
         </span>
       )}
-    </span>
+    </div>
   );
 }
