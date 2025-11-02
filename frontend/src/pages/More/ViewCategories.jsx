@@ -7,7 +7,6 @@ import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
-import Alert from "../../components/Alert";
 
 import Footer from "../../components/Footer";
 
@@ -158,7 +157,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
           {category.name}
         </div>
       </td>
-      <td>{category.type_display}</td>
+      <td>{category.type}</td>
       <td>{category.quantity}</td>
       <td>
         <section className="action-button-section">
@@ -166,9 +165,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
             title="Edit"
             className="action-button"
             onClick={() =>
-              navigate(`/More/CategoryEdit/${category.id}`, {
-                state: { category },
-              })
+              navigate("/More/CategoryEdit", { state: { category } })
             }
           >
             <i className="fas fa-edit"></i>
@@ -291,16 +288,6 @@ export default function Category() {
             <section className="table-header">
               <h2 className="h2">Categories ({categories.length})</h2>
               <section className="table-actions">
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => {
-                      if (selectedIds.length > 0) {
-                        setDeleteModalOpen(true);
-                      }
-                    }}
-                  />
-                )}
                 <input
                   type="search"
                   placeholder="Search..."
@@ -325,12 +312,7 @@ export default function Category() {
                       <TableItem
                         key={index}
                         category={category}
-                        onDeleteClick={(id) => {
-                          setSelectedIds([id]);
-                          setDeleteModalOpen(true);
-                        }}
-                        onCheckboxChange={handleCheckboxChange}
-                        isChecked={selectedIds.includes(category.id)}
+                        onDeleteClick={() => setDeleteModalOpen(true)}
                       />
                     ))
                   ) : (

@@ -56,6 +56,7 @@ import ManageProfile from "./pages/ManageProfile";
 import UserManagement from "./pages/UserManagement";
 import ViewCategories from "./pages/More/ViewCategories";
 import CategoryRegistration from "./pages/More/CategoryRegistration";
+import CategoryEdit from "./pages/More/CategoryEdit";
 import ViewManufacturer from "./pages/More/ViewManufacturer";
 import ManufacturerRegistration from "./pages/More/ManufacturerRegistration";
 import ManufacturerEdit from "./pages/More/ManufacturerEdit";
@@ -102,14 +103,8 @@ function App() {
             path="/assets/registration/:id"
             element={<AssetsRegistration />}
           />
-          <Route
-            path="/assets/edit/:id"
-            element={<AssetEditPage />}
-          />
-          <Route
-            path="/components"
-            element={<Components />}
-          />
+          <Route path="/assets/edit/:id" element={<AssetEditPage />} />
+          <Route path="/components" element={<Components />} />
           <Route
             path="/components/registration"
             element={<ComponentRegistration />}
@@ -130,17 +125,14 @@ function App() {
             path="/components/check-in/:id"
             element={<ComponentCheckin />}
           />
-          <Route
-            path="/components/view/:id"
-            element={<ComponentView />}
-          />
+          <Route path="/components/view/:id" element={<ComponentView />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
           <Route
             path="/More/CategoryRegistration"
             element={<CategoryRegistration />}
           />
-          <Route path="/More/CategoryEdit/:id" element={<CategoryRegistration />} />
+          <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
           <Route path="/More/ViewManufacturer" element={<ViewManufacturer />} />
           <Route
             path="/More/ManufacturerRegistration"
@@ -187,10 +179,7 @@ function App() {
           />
           <Route path="/More/StatusEdit/:id" element={<StatusEdit />} />
           <Route path="/More/StatusDetails/:id" element={<StatusDetails />} />
-          <Route
-            path="/More/Depreciations"
-            element={<Depreciations />}
-          />
+          <Route path="/More/Depreciations" element={<Depreciations />} />
           <Route
             path="/More/Depreciations/Registration"
             element={<DepreciationRegistration />}
@@ -199,10 +188,7 @@ function App() {
             path="/More/Depreciations/Edit/:id"
             element={<DepreciationRegistration />}
           />
-          <Route
-            path="/More/RecycleBin"
-            element={<RecycleBin />}
-          />
+          <Route path="/More/RecycleBin" element={<RecycleBin />} />
         </Route>
 
         {/* Place here all the routes that accessible only for admin and operator */}
@@ -235,22 +221,13 @@ function App() {
             path="/components/check-in/:id"
             element={<ComponentCheckin />}
           />
-          <Route
-            path="/components/view/:id"
-            element={<ComponentView />}
-          />
-          <Route
-            path="/Repairs/"
-            element={<Repairs />}
-          />
+          <Route path="/components/view/:id" element={<ComponentView />} />
+          <Route path="/Repairs/" element={<Repairs />} />
           <Route
             path="/repairs/registration"
             element={<RepairRegistration />}
           />
-          <Route
-            path="/repairs/edit/:id"
-            element={<RepairRegistration />}
-          />
+          <Route path="/repairs/edit/:id" element={<RepairRegistration />} />
           <Route path="/audits/" element={<AssetAudits />} />
           <Route path="/audits/overdue" element={<OverdueAudits />} />
           <Route path="/audits/scheduled" element={<ScheduledAudits />} />
@@ -258,8 +235,14 @@ function App() {
           <Route path="/audits/new" element={<PerformAudits />} />
           <Route path="/audits/schedule" element={<ScheduleRegistration />} />
           <Route path="/audits/edit/:id" element={<ScheduleRegistration />} />
-          <Route path="/audits/scheduled/edit/:id" element={<ScheduleRegistration />} />
-          <Route path="/audits/overdue/edit/:id" element={<ScheduleRegistration />} />
+          <Route
+            path="/audits/scheduled/edit/:id"
+            element={<ScheduleRegistration />}
+          />
+          <Route
+            path="/audits/overdue/edit/:id"
+            element={<ScheduleRegistration />}
+          />
           <Route path="/audits/view" element={<ViewAudits />} />
           <Route path="/approved-tickets" element={<Tickets />} />
           <Route path="/tickets/view/:id" element={<TicketViewPage />} />
