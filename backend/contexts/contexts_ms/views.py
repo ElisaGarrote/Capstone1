@@ -80,6 +80,35 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
         instance.is_deleted = True
         instance.save()
 
+# STATUS
+class StatusViewSet(viewsets.ModelViewSet):
+    serializer_class = StatusSerializer
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        return Status.objects.filter(is_deleted=False).order_by('name')
+
+    def perform_destroy(self, instance):
+        # prevent deleting statuses that are in use
+        if is_item_in_use("status", instance.id):
+            raise serializers.ValidationError({"error": "Cannot delete status. It is still used in assets."})
+        instance.is_deleted = True
+        instance.save()
+
+# LOCATION
+class LocationViewSet(viewsets.ModelViewSet):
+    serializer_class = LocationSerializer
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        return Location.objects.all().order_by('city')
+
+    def perform_destroy(self, instance):
+        # Location has no is_deleted flag; perform hard delete only if not referenced.
+        if is_item_in_use("location", instance.id):
+            raise serializers.ValidationError({"error": "Cannot delete location. It is still referenced."})
+        instance.delete()
+
 # Get all manufacturer's names
 @api_view(['GET'])
 def get_manaufacturers_names(request):

@@ -20,7 +20,8 @@ class ProductSerializer(serializers.ModelSerializer):
         instance = self.instance
 
         if name:
-            normalized_name = " ".join(name.split()).strip()
+            # Normalize spacing and apply Title Case for consistent storage and comparisons
+            normalized_name = " ".join(name.split()).strip().title()
             data['name'] = normalized_name
         else:
             normalized_name = None
@@ -51,7 +52,8 @@ class AssetSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"product": "Cannot check out a deleted product."})
 
         if name:
-            normalized_name = " ".join(name.split()).strip()
+            # Normalize spacing and apply Title Case
+            normalized_name = " ".join(name.split()).strip().title()
             data['name'] = normalized_name
         else:
             normalized_name = None
@@ -145,7 +147,8 @@ class ComponentSerializer(serializers.ModelSerializer):
         instance = self.instance
 
         if name:
-            normalized_name = " ".join(name.split()).strip()
+            # Normalize spacing and apply Title Case
+            normalized_name = " ".join(name.split()).strip().title()
             data['name'] = normalized_name
         else:
             normalized_name = None
@@ -344,16 +347,25 @@ class RepairSerializer(serializers.ModelSerializer):
             start_date = start_date.date()
 
         # 🔍 Check for existing repair with same asset, name, and date
-        duplicate = (
-            Repair.objects.filter(
-                asset=asset,
-                name__iexact=name.strip(),
-                start_date=start_date,
-                is_deleted=False
+        # Normalize the repair name for comparison/storage (Title Case)
+        if name:
+            normalized_name = " ".join(name.split()).strip().title()
+            attrs['name'] = normalized_name
+        else:
+            normalized_name = None
+
+        duplicate = False
+        if normalized_name:
+            duplicate = (
+                Repair.objects.filter(
+                    asset=asset,
+                    name__iexact=normalized_name,
+                    start_date=start_date,
+                    is_deleted=False
+                )
+                .exclude(pk=self.instance.pk if self.instance else None)
+                .exists()
             )
-            .exclude(pk=self.instance.pk if self.instance else None)
-            .exists()
-        )
 
         if duplicate:
             raise serializers.ValidationError({
