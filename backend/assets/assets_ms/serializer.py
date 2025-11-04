@@ -1,10 +1,5 @@
 from rest_framework import serializers
-from assets_ms.services.contexts import (
-    get_supplier_by_id,
-    get_category_by_id,
-    get_manufacturer_by_id,
-    get_depreciation_by_id,
-)
+from assets_ms.services.contexts import *
 from .models import *
 from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
@@ -72,6 +67,11 @@ class ProductSerializer(serializers.ModelSerializer):
     
 # Asset
 class AssetSerializer(serializers.ModelSerializer):
+    # Include context details for frontend convenience
+    status_details = serializers.SerializerMethodField()
+    location_details = serializers.SerializerMethodField()
+    supplier_details = serializers.SerializerMethodField()
+
     class Meta:
         model = Asset
         fields = '__all__'
@@ -101,6 +101,37 @@ class AssetSerializer(serializers.ModelSerializer):
             })
         
         return data
+
+    def get_status_details(self, obj):
+        """Return status details fetched from Contexts service."""
+        try:
+            if not getattr(obj, 'status', None):
+                return None
+            # import here to avoid circular import at module import time
+            from assets_ms.services.contexts import get_status_by_id
+            return get_status_by_id(obj.status)
+        except Exception:
+            return {"warning": "Contexts service unreachable for statuses."}
+
+    def get_location_details(self, obj):
+        """Return location details fetched from Contexts service."""
+        try:
+            if not getattr(obj, 'location', None):
+                return None
+            from assets_ms.services.contexts import get_location_by_id
+            return get_location_by_id(obj.location)
+        except Exception:
+            return {"warning": "Contexts service unreachable for locations."}
+
+    def get_supplier_details(self, obj):
+        """Return supplier details fetched from Contexts service."""
+        try:
+            if not getattr(obj, 'supplier', None):
+                return None
+            from assets_ms.services.contexts import get_supplier_by_id
+            return get_supplier_by_id(obj.supplier)
+        except Exception:
+            return {"warning": "Contexts service unreachable for suppliers."}
  
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     class Meta:
