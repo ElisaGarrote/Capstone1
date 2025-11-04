@@ -10,7 +10,7 @@ BASE_URL = getattr(settings, "CONTEXTS_API_URL", os.getenv("CONTEXTS_API_URL", "
 
 # Cache settings
 SUPPLIERS_LIST_CACHE_KEY = "external_suppliers_list"
-SUPPLIERS_CACHE_TTL = 300  # 5 minutes
+SUPPLIERS_CACHE_TTL = 300  
 LOCATION_CACHE_TTL = 300
 STATUS_CACHE_TTL = 300
 LOCATION_WARNING_TTL = 60
@@ -23,6 +23,9 @@ SUPPLIER_WARNING_TTL = 60
 CATEGORY_WARNING_TTL = 60
 MANUFACTURER_WARNING_TTL = 60
 DEPRECIATION_WARNING_TTL = 60
+LIST_CACHE_TTL = 300
+LIST_WARNING_TTL = 60
+
 
 def _build_url(path):
     return f"{BASE_URL.rstrip('/')}/{path.lstrip('/')}"
@@ -169,4 +172,137 @@ def get_status_by_id(status_id):
         cache.set(key, result, STATUS_WARNING_TTL)
     else:
         cache.set(key, result, STATUS_CACHE_TTL)
+    return result
+
+
+def fetch_resource_list(resource_name, params=None):
+    """Fetch a list endpoint from the Contexts service.
+
+    Tries both api/... and bare endpoints. Returns list or pagination dict or
+    a warning dict on failure.
+    """
+    params = params or {}
+    for path in (f"api/{resource_name}/", f"{resource_name}/"):
+        url = _build_url(path)
+        try:
+            resp = requests.get(url, params=params, timeout=8)
+            if resp.status_code == 404:
+                return []
+            resp.raise_for_status()
+            data = resp.json()
+            # If remote returns pagination object with results, return as-is
+            if isinstance(data, dict) and 'results' in data:
+                return data
+            return data
+        except RequestException:
+            continue
+    return {"warning": "Contexts service unreachable. Make sure 'contexts-service' is running and accessible."}
+
+def get_suppliers_list(q=None, limit=50):
+    key = f"contexts:list:suppliers:{q}:{limit}"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    params = {}
+    if q:
+        params['q'] = q
+    if limit:
+        params['limit'] = limit
+    result = fetch_resource_list('suppliers', params=params)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+
+def get_categories_list(q=None, type=None, limit=50):
+    key = f"contexts:list:categories:{q}:{type}:{limit}"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    params = {}
+    if q:
+        params['q'] = q
+    if type:
+        params['type'] = type
+    if limit:
+        params['limit'] = limit
+    result = fetch_resource_list('categories', params=params)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+
+def get_manufacturers_list(q=None, limit=50):
+    key = f"contexts:list:manufacturers:{q}:{limit}"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    params = {}
+    if q:
+        params['q'] = q
+    if limit:
+        params['limit'] = limit
+    result = fetch_resource_list('manufacturers', params=params)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+
+def get_depreciations_list(q=None, limit=50):
+    key = f"contexts:list:depreciations:{q}:{limit}"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    params = {}
+    if q:
+        params['q'] = q
+    if limit:
+        params['limit'] = limit
+    result = fetch_resource_list('depreciations', params=params)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+
+def get_locations_list(q=None, limit=50):
+    key = f"contexts:list:locations:{q}:{limit}"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    params = {}
+    if q:
+        params['q'] = q
+    if limit:
+        params['limit'] = limit
+    result = fetch_resource_list('locations', params=params)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+
+def get_statuses_list(q=None, limit=50):
+    key = f"contexts:list:statuses:{q}:{limit}"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    params = {}
+    if q:
+        params['q'] = q
+    if limit:
+        params['limit'] = limit
+    result = fetch_resource_list('statuses', params=params)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
     return result
