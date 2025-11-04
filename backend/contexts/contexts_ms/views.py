@@ -5,9 +5,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from contexts.services.assets import *
+from contexts_ms.services.assets import *
 from rest_framework import status
-from contexts.services.usage_check import is_item_in_use
+from contexts_ms.services.usage_check import is_item_in_use
 
 
 @api_view(['GET'])
@@ -181,12 +181,36 @@ class RecycleBinViewSet(viewsets.ViewSet):
     @action(detail=True, methods=['patch'])
     def recover_asset(self, request, pk=None):
         """Recover asset"""
-        data = recover_asset(pk)
-        return Response(data, status=status.HTTP_200_OK)
+        try:
+            data = recover_asset(pk)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            # If the upstream response is present, forward its status and content
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            # Unknown HTTP error
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
     @action(detail=True, methods=['patch'])
     def recover_component(self, request, pk=None):
         """Recover component"""
-        data = recover_component(pk)
-        return Response(data, status=status.HTTP_200_OK)
+        try:
+            data = recover_component(pk)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
