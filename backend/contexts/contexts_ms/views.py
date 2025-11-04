@@ -5,9 +5,71 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from contexts_ms.services.assets import *
 from rest_framework import status
 from contexts_ms.services.usage_check import is_item_in_use
+from rest_framework import serializers as drf_serializers
+from contexts_ms.services.assets import *
+import requests
+
+
+def _build_cant_delete_message(instance, usage):
+    """Build user-facing deletion-blocking message per your spec.
+
+    Rules:
+    - If assets reference the context, show Asset(s) and include up to 3 sample asset identifiers.
+    - If no assets but components and/or repairs reference it, list component(s) and/or repair(s).
+    - Message format:
+      "This context (supplier) can't be deleted. Currently used by Asset(s): AST-..."
+      or
+      "This context (category) can't be deleted. Currently used by component(s) and repair(s)."
+    """
+    # context label: use lowercase model name
+    label = instance.__class__.__name__.lower()
+    asset_ids = usage.get('asset_ids') or []
+    comp_ids = usage.get('component_ids') or []
+    repair_ids = usage.get('repair_ids') or []
+
+    # Try to present a human-friendly name for the context when available.
+    display = None
+    for attr in ('name', 'city', 'title'):
+        val = getattr(instance, attr, None)
+        if val:
+            display = str(val)
+            break
+
+    def label_with_display():
+        # Present a human-friendly label without numeric ids.
+        if display:
+            return f"{label} '{display}'"
+        return label
+
+    if asset_ids:
+        # If there are few assets, show their identifiers. If many (>5), avoid long messages
+        # and present a generic statement to keep the error concise.
+        total = len(asset_ids)
+        if total <= 5:
+            samples = ', '.join(map(str, asset_ids))
+            return f"Cannot delete {label_with_display()}. Currently used by Asset(s): {samples}."
+        else:
+            return f"Cannot delete {label_with_display()}. Currently used by assets."
+
+    parts = []
+    if comp_ids:
+        parts.append('component(s)')
+    if repair_ids:
+        parts.append('repair(s)')
+
+    if parts:
+        if len(parts) == 1:
+            body = parts[0]
+        elif len(parts) == 2:
+            body = f"{parts[0]} and {parts[1]}"
+        else:
+            body = ', '.join(parts[:-1]) + f", and {parts[-1]}"
+        return f"Cannot delete {label_with_display()}. Currently used by {body}."
+
+    # fallback generic message
+    return f"Cannot delete {label_with_display()}. It is referenced by other records."
 
 
 @api_view(['GET'])
@@ -25,6 +87,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Category.objects.filter(is_deleted=False).order_by('name')
 
     def perform_destroy(self, instance):
+        usage = is_item_in_use("category", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
         instance.is_deleted = True
         instance.save()
 #END
@@ -39,10 +105,10 @@ class SupplierViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         # Check if supplier is still used in assets-service
-        if is_item_in_use("supplier", instance.id):
-            raise serializers.ValidationError(
-                {"error": "Cannot delete supplier. It is still used in assets or components."}
-            )
+        usage = is_item_in_use("supplier", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
         instance.is_deleted = True
         instance.save()
 #END
@@ -56,10 +122,10 @@ class DepreciationViewSet(viewsets.ModelViewSet):
         return Depreciation.objects.filter(is_deleted=False).order_by('name')
 
     def perform_destroy(self, instance):
-        if is_item_in_use("depreciation", instance.id):
-            raise serializers.ValidationError(
-                {"error": "Cannot delete depreciation. It is still used in assets."}
-            )
+        usage = is_item_in_use("depreciation", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
         instance.is_deleted = True
         instance.save()
 #END
@@ -73,10 +139,10 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
         return Manufacturer.objects.filter(is_deleted=False).order_by('name')
 
     def perform_destroy(self, instance):
-        if is_item_in_use("manufacturer", instance.id):
-            raise serializers.ValidationError(
-                {"error": "Cannot delete manufacturer. It is still used in assets or components."}
-            )
+        usage = is_item_in_use("manufacturer", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -90,8 +156,10 @@ class StatusViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         # prevent deleting statuses that are in use
-        if is_item_in_use("status", instance.id):
-            raise serializers.ValidationError({"error": "Cannot delete status. It is still used in assets."})
+        usage = is_item_in_use("status", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -105,8 +173,10 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         # Location has no is_deleted flag; perform hard delete only if not referenced.
-        if is_item_in_use("location", instance.id):
-            raise serializers.ValidationError({"error": "Cannot delete location. It is still referenced."})
+        usage = is_item_in_use("location", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
         instance.delete()
 
 # Get all manufacturer's names
