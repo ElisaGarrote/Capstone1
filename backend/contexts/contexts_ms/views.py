@@ -5,9 +5,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from contexts.services.assets import *
+from contexts_ms.services.assets import *
 from rest_framework import status
-from contexts.services.usage_check import is_item_in_use
+from contexts_ms.services.usage_check import is_item_in_use
 
 
 @api_view(['GET'])
