@@ -203,6 +203,12 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
 
 # Component
 class ComponentSerializer(serializers.ModelSerializer):
+    # Include context details for frontend convenience
+    category_details = serializers.SerializerMethodField()
+    manufacturer_details = serializers.SerializerMethodField()
+    supplier_details = serializers.SerializerMethodField()
+    location_details = serializers.SerializerMethodField()
+
     class Meta:
         model = Component
         fields = '__all__'
@@ -227,6 +233,42 @@ class ComponentSerializer(serializers.ModelSerializer):
             })
         
         return data
+
+    def get_category_details(self, obj):
+        try:
+            if not getattr(obj, 'category', None):
+                return None
+            from assets_ms.services.contexts import get_category_by_id
+            return get_category_by_id(obj.category)
+        except Exception:
+            return {"warning": "Contexts service unreachable for categories."}
+
+    def get_manufacturer_details(self, obj):
+        try:
+            if not getattr(obj, 'manufacturer', None):
+                return None
+            from assets_ms.services.contexts import get_manufacturer_by_id
+            return get_manufacturer_by_id(obj.manufacturer)
+        except Exception:
+            return {"warning": "Contexts service unreachable for manufacturers."}
+
+    def get_supplier_details(self, obj):
+        try:
+            if not getattr(obj, 'supplier', None):
+                return None
+            from assets_ms.services.contexts import get_supplier_by_id
+            return get_supplier_by_id(obj.supplier)
+        except Exception:
+            return {"warning": "Contexts service unreachable for suppliers."}
+
+    def get_location_details(self, obj):
+        try:
+            if not getattr(obj, 'location', None):
+                return None
+            from assets_ms.services.contexts import get_location_by_id
+            return get_location_by_id(obj.location)
+        except Exception:
+            return {"warning": "Contexts service unreachable for locations."}
 
 class ComponentCheckoutSerializer(serializers.ModelSerializer):
     class Meta:
@@ -384,6 +426,7 @@ class AuditSerializer(serializers.ModelSerializer):
     
 class RepairSerializer(serializers.ModelSerializer):
     supplier_details = serializers.SerializerMethodField()
+    status_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Repair
@@ -399,6 +442,18 @@ class RepairSerializer(serializers.ModelSerializer):
         except Exception:
             return {
                 "warning": "Supplier service unreachable. Make sure 'contexts-service' is running and accessible."
+            }
+
+    def get_status_details(self, obj):
+        """Fetch status details from the Contexts service."""
+        try:
+            if not getattr(obj, 'status_id', None):
+                return None
+            status = get_status_by_id(obj.status_id)
+            return status
+        except Exception:
+            return {
+                "warning": "Statuses service unreachable. Make sure 'contexts-service' is running and accessible."
             }
 
     def validate(self, attrs):
