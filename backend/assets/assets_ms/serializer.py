@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from assets_ms.services.supplier import get_supplier_by_id
+from assets_ms.services.contexts import (
+    get_supplier_by_id,
+    get_category_by_id,
+    get_manufacturer_by_id,
+    get_depreciation_by_id,
+)
 from .models import *
 from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
@@ -7,6 +12,11 @@ from django.utils import timezone
 
 # Product
 class ProductSerializer(serializers.ModelSerializer):
+    # Include handy context details from the Contexts service for the frontend
+    category_details = serializers.SerializerMethodField()
+    manufacturer_details = serializers.SerializerMethodField()
+    depreciation_details = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = '__all__'
@@ -35,6 +45,30 @@ class ProductSerializer(serializers.ModelSerializer):
             })
         
         return data
+
+    def get_category_details(self, obj):
+        try:
+            if not getattr(obj, 'category', None):
+                return None
+            return get_category_by_id(obj.category)
+        except Exception:
+            return {"warning": "Contexts service unreachable for categories."}
+
+    def get_manufacturer_details(self, obj):
+        try:
+            if not getattr(obj, 'manufacturer', None):
+                return None
+            return get_manufacturer_by_id(obj.manufacturer)
+        except Exception:
+            return {"warning": "Contexts service unreachable for manufacturers."}
+
+    def get_depreciation_details(self, obj):
+        try:
+            if not getattr(obj, 'depreciation', None):
+                return None
+            return get_depreciation_by_id(obj.depreciation)
+        except Exception:
+            return {"warning": "Contexts service unreachable for depreciations."}
     
 # Asset
 class AssetSerializer(serializers.ModelSerializer):

@@ -1,20 +1,19 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from ..services.supplier import get_suppliers, get_supplier_by_id
+"""Compatibility wrapper for legacy API module `api.supplier`.
 
-class SupplierListProxy(APIView):
-    """Proxy endpoint to fetch supplier list from Contexts API."""
-    def get(self, request):
-        suppliers = get_suppliers()
-        if suppliers is None:
-            return Response({"detail": "Unable to fetch suppliers."}, status=status.HTTP_502_BAD_GATEWAY)
-        return Response(suppliers)
+This module previously contained proxy views for the Contexts service. The
+project now consolidates all Contexts-related proxy views in
+`assets_ms.api.contexts`. To remain backward compatible for imports, this
+file re-exports the classes and emits a DeprecationWarning when imported.
+"""
+from __future__ import annotations
 
-class SupplierDetailProxy(APIView):
-    """Proxy endpoint to fetch a single supplier by ID."""
-    def get(self, request, pk):
-        supplier = get_supplier_by_id(pk)
-        if supplier is None:
-            return Response({"detail": "Supplier not found or external service unavailable."}, status=status.HTTP_404_NOT_FOUND)
-        return Response(supplier)
+import warnings
+
+from .contexts import SupplierListProxy, SupplierDetailProxy
+
+warnings.warn(
+    "assets_ms.api.supplier is deprecated; import from assets_ms.api.contexts instead",
+    DeprecationWarning,
+)
+
+__all__ = ["SupplierListProxy", "SupplierDetailProxy"]
