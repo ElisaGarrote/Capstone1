@@ -5,15 +5,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from contexts_ms.services.assets import (
-    get_deleted_assets,
-    get_deleted_components,
-    recover_asset,
-    recover_component,
-)
+from contexts_ms.services.assets import *
 from rest_framework import status
 from contexts_ms.services.usage_check import is_item_in_use
-import requests
 
 
 @api_view(['GET'])
@@ -191,12 +185,14 @@ class RecycleBinViewSet(viewsets.ViewSet):
             data = recover_asset(pk)
             return Response(data, status=status.HTTP_200_OK)
         except requests.exceptions.HTTPError as exc:
+            # If the upstream response is present, forward its status and content
             resp = getattr(exc, 'response', None)
             if resp is not None:
                 try:
                     return Response(resp.json(), status=resp.status_code)
                 except Exception:
                     return Response({'detail': resp.text}, status=resp.status_code)
+            # Unknown HTTP error
             return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
         except Exception as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
