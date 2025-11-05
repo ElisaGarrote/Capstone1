@@ -1,16 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .api.supplier import SupplierDetailProxy, SupplierListProxy
-from .api.contexts import (
-    CategoryDetailProxy,
-    ManufacturerDetailProxy,
-    DepreciationDetailProxy,
-    CategoryListProxy,
-    ManufacturerListProxy,
-    DepreciationListProxy,
-    LocationListProxy,
-    StatusListProxy,
-)
+from .api.contexts import *
 from .views import *
 
 router = DefaultRouter()
@@ -32,6 +23,9 @@ urlpatterns = [
     path("suppliers/<int:pk>/check-usage/", check_supplier_usage, name="check-supplier-usage"),
     path("manufacturers/<int:pk>/check-usage/", check_manufacturer_usage, name="check-manufacturer-usage"),
     path("depreciations/<int:pk>/check-usage/", check_depreciation_usage, name="check-depreciation-usage"),
+
+    # Bulk usage check endpoint
+    path("usage/check_bulk/", check_bulk_usage, name="check-bulk-usage"),
 
     # Proxy endpoints for external Contexts resources
     path("contexts/suppliers/", SupplierListProxy.as_view(), name="proxy-supplier-list"),
