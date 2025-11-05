@@ -47,6 +47,7 @@ def check_bulk_usage(request):
 
     # Handle direct-attribute contexts
     if item_type in ('supplier', 'location', 'status'):
+        # Assets can be filtered by these fields directly
         assets_qs = Asset.objects.filter(is_deleted=False).filter(**{f"{item_type}__in": ids})
         for row in assets_qs.values(f"{item_type}", 'asset_id', 'id'):
             key = row.get(item_type)
@@ -59,16 +60,19 @@ def check_bulk_usage(request):
             add_asset_sample(key, aid)
             results[key]['in_use'] = True
 
-        comps_qs = Component.objects.filter(is_deleted=False).filter(**{f"{item_type}__in": ids})
-        for row in comps_qs.values(f"{item_type}", 'id'):
-            key = row.get(item_type)
-            if key is None:
-                continue
-            key = int(key)
-            results.setdefault(key, {"id": key, "in_use": False, "asset_count": 0, "asset_ids": [], "component_ids": [], "repair_ids": []})
-            results[key]['component_ids'].append(row.get('id'))
-            results[key]['in_use'] = True
+        # Components do not have a 'status' field on the Component model; only supplier/location apply
+        if item_type in ('supplier', 'location'):
+            comps_qs = Component.objects.filter(is_deleted=False).filter(**{f"{item_type}__in": ids})
+            for row in comps_qs.values(f"{item_type}", 'id'):
+                key = row.get(item_type)
+                if key is None:
+                    continue
+                key = int(key)
+                results.setdefault(key, {"id": key, "in_use": False, "asset_count": 0, "asset_ids": [], "component_ids": [], "repair_ids": []})
+                results[key]['component_ids'].append(row.get('id'))
+                results[key]['in_use'] = True
 
+        # Repairs: supplier uses supplier_id, status uses status_id
         if item_type == 'supplier':
             repairs_qs = Repair.objects.filter(is_deleted=False, supplier_id__in=ids)
             for row in repairs_qs.values('supplier_id', 'id'):

@@ -1,6 +1,7 @@
 from rest_framework.routers import DefaultRouter
 from .views import *
 from django.urls import path, include
+from contexts_ms.api.supplier_usage_api import *
 
 
 router = DefaultRouter()
@@ -16,4 +17,8 @@ urlpatterns = router.urls
 
 urlpatterns = [
     path('', include(router.urls)),
+    
+    # supplier usage endpoints (assets/components lists by supplier)
+    path('suppliers/<int:pk>/assets/', SupplierAssetListAPIView.as_view()),
+    path('suppliers/<int:pk>/components/', SupplierComponentListAPIView.as_view()),
 ]
