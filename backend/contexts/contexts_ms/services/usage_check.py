@@ -1,7 +1,5 @@
 import requests
-from urllib.parse import urlencode
-
-ASSETS_SERVICE_URL = "http://assets-service:8002/"  # adjust to your internal service name + port
+from .http_client import get as client_get
 
 
 def _extract_ids_from_response(resp_json):
@@ -78,18 +76,24 @@ def is_item_in_use(item_type, item_id):
 
     result = {'in_use': False, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}
 
-    # Known check-usage endpoints on the assets service
+    # Known check-usage endpoints on the assets service (relative paths)
     endpoint_map = {
-        'supplier': f"{ASSETS_SERVICE_URL}suppliers/{item_id}/check-usage/",
-        'manufacturer': f"{ASSETS_SERVICE_URL}manufacturers/{item_id}/check-usage/",
-        'depreciation': f"{ASSETS_SERVICE_URL}depreciations/{item_id}/check-usage/",
+        'supplier': f"suppliers/{item_id}/check-usage/",
+        'manufacturer': f"manufacturers/{item_id}/check-usage/",
+        'depreciation': f"depreciations/{item_id}/check-usage/",
     }
 
     try:
-        check_url = endpoint_map.get(item_type)
-        if check_url:
-            resp = requests.get(check_url, timeout=5)
-            if resp.status_code == 200:
+        had_network_error = False
+        check_path = endpoint_map.get(item_type)
+        if check_path:
+            try:
+                resp = client_get(check_path, timeout=5)
+            except requests.RequestException:
+                resp = None
+                had_network_error = True
+
+            if resp is not None and resp.status_code == 200:
                 if resp.json().get('in_use'):
                     result['in_use'] = True
                 else:
@@ -100,16 +104,16 @@ def is_item_in_use(item_type, item_id):
 
         # Map item_type to query param used by assets endpoints.
         param_name = item_type
-        # Common endpoints to search
+        # Common endpoints to search (relative paths)
         searches = [
-            ('asset_ids', f"{ASSETS_SERVICE_URL}assets/?{param_name}={item_id}"),
-            ('component_ids', f"{ASSETS_SERVICE_URL}components/?{param_name}={item_id}"),
-            ('repair_ids', f"{ASSETS_SERVICE_URL}repairs/?{param_name}={item_id}"),
+            ('asset_ids', 'assets/'),
+            ('component_ids', 'components/'),
+            ('repair_ids', 'repairs/'),
         ]
 
-        for key, url in searches:
+        for key, path in searches:
             try:
-                r = requests.get(url, timeout=5)
+                r = client_get(path, params={param_name: item_id}, timeout=5)
                 if r.status_code == 200:
                     resp_json = r.json()
                     items = _get_results_list(resp_json)
@@ -129,16 +133,15 @@ def is_item_in_use(item_type, item_id):
                             result[key] = ids
                             result['in_use'] = True
             except requests.RequestException:
-                # ignore this particular failure and continue; we'll treat unreachable
-                # overall as in_use=True later
+                # record network issue and continue; we'll be conservative later
+                had_network_error = True
                 continue
 
         # Special handling: some contexts (category, manufacturer, depreciation)
         if item_type in ('category', 'manufacturer', 'depreciation'):
             try:
                 prod_param = item_type
-                prod_url = f"{ASSETS_SERVICE_URL}products/?{prod_param}={item_id}"
-                pr = requests.get(prod_url, timeout=5)
+                pr = client_get('products/', params={prod_param: item_id}, timeout=5)
                 if pr.status_code == 200:
                     prod_json = pr.json()
                     prods = _get_results_list(prod_json)
@@ -156,11 +159,12 @@ def is_item_in_use(item_type, item_id):
                         if not prod_obj or prod_obj.get(item_type) is None:
                             # Try to fetch full product detail as a fallback
                             try:
-                                pdetail = requests.get(f"{ASSETS_SERVICE_URL}products/{pid}/", timeout=5)
+                                pdetail = client_get(f'products/{pid}/', timeout=5)
                                 if pdetail.status_code == 200:
                                     prod_obj = pdetail.json()
                             except requests.RequestException:
-                                # If we can't fetch product detail, conservatively keep prod_obj as-is
+                                # If we can't fetch product detail, record network error and keep prod_obj as-is
+                                had_network_error = True
                                 prod_obj = prod_obj
 
                         # If product object is present and has the context field, ensure it matches
@@ -170,7 +174,7 @@ def is_item_in_use(item_type, item_id):
                                 # product doesn't actually reference this context value
                                 continue
                         try:
-                            ar = requests.get(f"{ASSETS_SERVICE_URL}assets/?product={pid}", timeout=5)
+                            ar = client_get('assets/', params={'product': pid}, timeout=5)
                             if ar.status_code != 200:
                                 continue
                             ajson = ar.json()
@@ -181,10 +185,10 @@ def is_item_in_use(item_type, item_id):
                                 # may be an int, string, or nested dict.
                                 prod_field = a.get('product')
                                 pid_in_asset = None
-                                prod_obj = None
+                                prod_obj_nested = None
                                 if isinstance(prod_field, dict):
                                     pid_in_asset = prod_field.get('id') or prod_field.get('pk')
-                                    prod_obj = prod_field
+                                    prod_obj_nested = prod_field
                                 else:
                                     pid_in_asset = prod_field
 
@@ -197,20 +201,20 @@ def is_item_in_use(item_type, item_id):
                                     continue
 
                                 # If the asset includes nested product info, prefer that
-                                if prod_obj and isinstance(prod_obj, dict):
+                                if prod_obj_nested and isinstance(prod_obj_nested, dict):
                                     # For depreciation/manufacturer/category checks
                                     # validate the product's field if present.
                                     if item_type == 'depreciation':
-                                        dep_field = prod_obj.get('depreciation')
+                                        dep_field = prod_obj_nested.get('depreciation')
                                         if dep_field is not None and str(dep_field) != str(item_id):
                                             # product's depreciation doesn't match; skip
                                             continue
                                     if item_type == 'manufacturer':
-                                        man_field = prod_obj.get('manufacturer')
+                                        man_field = prod_obj_nested.get('manufacturer')
                                         if man_field is not None and str(man_field) != str(item_id):
                                             continue
                                     if item_type == 'category':
-                                        cat_field = prod_obj.get('category')
+                                        cat_field = prod_obj_nested.get('category')
                                         if cat_field is not None and str(cat_field) != str(item_id):
                                             continue
 
@@ -225,6 +229,7 @@ def is_item_in_use(item_type, item_id):
                                 if idval:
                                     asset_identifiers.append(idval)
                         except requests.RequestException:
+                            had_network_error = True
                             continue
 
                     # deduplicate while preserving order
@@ -241,6 +246,10 @@ def is_item_in_use(item_type, item_id):
             except requests.RequestException:
                 # conservative behavior on network problems
                 result['in_use'] = True
+
+        # If we encountered network errors but found no explicit references, be conservative
+        if not result['in_use'] and had_network_error:
+            return {'in_use': True, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}
 
         return result
     except requests.RequestException:

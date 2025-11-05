@@ -1,25 +1,22 @@
-import os
-import requests
-
-ASSETS_API_URL = os.getenv("ASSETS_API_URL", "http://assets:8002/")
+from .http_client import get as client_get, post as client_post, patch as client_patch, ASSETS_API_URL
 
 def get_deleted_assets():
-    response = requests.get(f"{ASSETS_API_URL}assets/deleted/")
+    response = client_get("assets/deleted/")
     response.raise_for_status()
     return response.json()
 
 def get_deleted_components():
-    response = requests.get(f"{ASSETS_API_URL}components/deleted/")
+    response = client_get("components/deleted/")
     response.raise_for_status()
     return response.json()
 
 def recover_asset(asset_id):
-    response = requests.patch(f"{ASSETS_API_URL}assets/{asset_id}/recover/")
+    response = client_patch(f"assets/{asset_id}/recover/")
     response.raise_for_status()
     return response.json()
 
 def recover_component(component_id):
-    response = requests.patch(f"{ASSETS_API_URL}components/{component_id}/recover/")
+    response = client_patch(f"components/{component_id}/recover/")
     response.raise_for_status()
     return response.json()
 
@@ -33,7 +30,7 @@ def count_assets_by_category(category_id, timeout=5):
     try:
         # Ask for a small page to reduce payload; if service supports pagination it will return 'count'
         params = {'category': category_id, 'page_size': 1}
-        r = requests.get(f"{ASSETS_API_URL}assets/", params=params, timeout=timeout)
+        r = client_get('assets/', params=params, timeout=timeout)
         r.raise_for_status()
         j = r.json()
         if isinstance(j, dict) and 'count' in j:
@@ -43,7 +40,7 @@ def count_assets_by_category(category_id, timeout=5):
         if isinstance(results, list):
             return len(results)
         return 0
-    except requests.RequestException:
+    except Exception:
         # On error, return None to signal unknown count
         return None
 
@@ -52,7 +49,7 @@ def count_components_by_category(category_id, timeout=5):
     """Return number of components referencing a given category id."""
     try:
         params = {'category': category_id, 'page_size': 1}
-        r = requests.get(f"{ASSETS_API_URL}components/", params=params, timeout=timeout)
+        r = client_get('components/', params=params, timeout=timeout)
         r.raise_for_status()
         j = r.json()
         if isinstance(j, dict) and 'count' in j:
@@ -61,7 +58,7 @@ def count_components_by_category(category_id, timeout=5):
         if isinstance(results, list):
             return len(results)
         return 0
-    except requests.RequestException:
+    except Exception:
         return None
 
 
@@ -79,7 +76,7 @@ def bulk_check_usage(item_type, ids, sample_limit=0, timeout=8):
             'ids': ids,
             'options': {'sample_limit': sample_limit}
         }
-        r = requests.post(f"{ASSETS_API_URL}usage/check_bulk/", json=payload, timeout=timeout)
+        r = client_post('usage/check_bulk/', json=payload, timeout=timeout)
         r.raise_for_status()
         j = r.json() or {}
         results = j.get('results') if isinstance(j, dict) else None
@@ -92,5 +89,5 @@ def bulk_check_usage(item_type, ids, sample_limit=0, timeout=8):
                     continue
                 out[key] = entry
         return out
-    except requests.RequestException:
+    except Exception:
         return {}

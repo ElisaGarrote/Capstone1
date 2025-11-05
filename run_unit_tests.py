@@ -1,4 +1,17 @@
 import unittest
+from unittest.mock import patch, MagicMock
+
+import os
+import sys
+import requests
+
+# Make local apps importable when running this script from repository root
+ROOT = os.path.dirname(__file__)
+CONTEXTS_PKG = os.path.join(ROOT, 'backend', 'contexts')
+if CONTEXTS_PKG not in sys.path:
+    sys.path.insert(0, CONTEXTS_PKG)
+
+from contexts_ms.services.usage_check import is_item_in_use
 
 
 def _build_cant_delete_message_for_test(instance, usage):
@@ -75,6 +88,34 @@ class LocalTests(unittest.TestCase):
         usage = {'component_ids': [1], 'repair_ids': [2]}
         msg = _build_cant_delete_message_for_test(inst, usage)
         self.assertIn('component(s) and repair(s)', msg)
+
+
+class UsageCheckTests(unittest.TestCase):
+    def test_check_usage_endpoint_reports_in_use(self):
+        # Mock the client_get to return a response with in_use True for the check-usage endpoint
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {'in_use': True}
+
+        with patch('contexts_ms.services.usage_check.client_get', return_value=mock_resp):
+            res = is_item_in_use('supplier', 42)
+            self.assertTrue(res['in_use'])
+
+    def test_network_error_conservative_true(self):
+        # Simulate network error for all client_get calls
+        with patch('contexts_ms.services.usage_check.client_get', side_effect=requests.RequestException()):
+            res = is_item_in_use('supplier', 99)
+            self.assertTrue(res['in_use'])
+
+    def test_not_in_use_when_check_endpoint_returns_false(self):
+        # check-usage returns in_use False -> should return not in use
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {'in_use': False}
+
+        with patch('contexts_ms.services.usage_check.client_get', return_value=mock_resp):
+            res = is_item_in_use('supplier', 7)
+            self.assertFalse(res['in_use'])
 
 
 if __name__ == '__main__':
