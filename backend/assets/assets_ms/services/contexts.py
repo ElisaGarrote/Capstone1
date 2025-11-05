@@ -1,6 +1,6 @@
 import os
-import requests
 from requests.exceptions import RequestException
+from .http_client import get as client_get
 from django.core.cache import cache
 from django.conf import settings
 
@@ -36,7 +36,7 @@ def fetch_suppliers_from_remote():
     for path in ("api/suppliers/", "suppliers/"):
         url = _build_url(path)
         try:
-            resp = requests.get(url, timeout=8)
+            resp = client_get(url, timeout=8)
             resp.raise_for_status()
             return resp.json()
         except RequestException:
@@ -49,7 +49,7 @@ def fetch_resource_by_id(resource_name, resource_id):
         return None
     url = _build_url(f"{resource_name}/{resource_id}/")
     try:
-        resp = requests.get(url, timeout=6)
+        resp = client_get(url, timeout=6)
         if resp.status_code == 404:
             return {"warning": f"{resource_name[:-1].capitalize()} {resource_id} not found or deleted."}
         resp.raise_for_status()
@@ -185,7 +185,7 @@ def fetch_resource_list(resource_name, params=None):
     for path in (f"api/{resource_name}/", f"{resource_name}/"):
         url = _build_url(path)
         try:
-            resp = requests.get(url, params=params, timeout=8)
+            resp = client_get(url, params=params, timeout=8)
             if resp.status_code == 404:
                 return []
             resp.raise_for_status()

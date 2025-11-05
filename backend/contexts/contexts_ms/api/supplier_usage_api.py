@@ -1,4 +1,5 @@
-import requests
+from contexts_ms.services.http_client import get as client_get
+from requests.exceptions import RequestException
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -23,7 +24,7 @@ class SupplierAssetListAPIView(APIView):
             params['page_size'] = page_size
 
         try:
-            resp = requests.get(urljoin(ASSETS_API_URL, 'assets/'), params=params, timeout=10)
+            resp = client_get('assets/', params=params, timeout=10)
             # If upstream returned non-JSON (rare) fall back to text
             try:
                 body = resp.json()
@@ -31,7 +32,7 @@ class SupplierAssetListAPIView(APIView):
                 body = {'detail': resp.text}
 
             return Response(body, status=resp.status_code)
-        except requests.RequestException as exc:
+        except RequestException as exc:
             return Response({'detail': f'Error contacting assets service: {str(exc)}'}, status=status.HTTP_502_BAD_GATEWAY)
 
 
@@ -48,12 +49,12 @@ class SupplierComponentListAPIView(APIView):
             params['page_size'] = page_size
 
         try:
-            resp = requests.get(urljoin(ASSETS_API_URL, 'components/'), params=params, timeout=10)
+            resp = client_get('components/', params=params, timeout=10)
             try:
                 body = resp.json()
             except Exception:
                 body = {'detail': resp.text}
 
             return Response(body, status=resp.status_code)
-        except requests.RequestException as exc:
+        except RequestException as exc:
             return Response({'detail': f'Error contacting assets service: {str(exc)}'}, status=status.HTTP_502_BAD_GATEWAY)
