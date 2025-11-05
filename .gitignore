@@ -1,0 +1,36 @@
+node_modules
+node_modules
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+env/
+venv/
+.venv/
+
+# Pytest cache
+.pytest_cache/
+
+# Django
+*.sqlite3
+media/
+staticfiles/
+
+# IDEs
+.vscode/
+.idea/
+
+# Misc
+.DS_Store
+Thumbs.db
