@@ -11,6 +11,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+# If will add more views later or functionality, please create file on api folder or services folder
+# Only viewsets here
+
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     parser_classes = [MultiPartParser, FormParser]
