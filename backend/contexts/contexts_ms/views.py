@@ -31,6 +31,31 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Category.objects.filter(is_deleted=False).order_by('name')
 
+    def list(self, request, *args, **kwargs):
+        """Override list to fetch batched usage counts from assets service and pass into serializer context."""
+        qs = self.filter_queryset(self.get_queryset())
+        ids = list(qs.values_list('id', flat=True))
+        usage_map = {}
+        if ids:
+            try:
+                usage_map = bulk_check_usage('category', ids, sample_limit=0)
+            except Exception:
+                usage_map = {}
+
+        serializer = self.get_serializer(qs, many=True, context={'category_usage': usage_map})
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        """Override retrieve to include usage for a single category."""
+        instance = self.get_object()
+        usage_map = {}
+        try:
+            usage_map = bulk_check_usage('category', [instance.id], sample_limit=0)
+        except Exception:
+            usage_map = {}
+        serializer = self.get_serializer(instance, context={'category_usage': usage_map})
+        return Response(serializer.data)
+
     def perform_destroy(self, instance):
         usage = is_item_in_use("category", instance.id)
         if usage.get('in_use'):
@@ -114,6 +139,29 @@ class StatusViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Status.objects.filter(is_deleted=False).order_by('name')
+
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+        ids = list(qs.values_list('id', flat=True))
+        usage_map = {}
+        if ids:
+            try:
+                usage_map = bulk_check_usage('status', ids, sample_limit=0)
+            except Exception:
+                usage_map = {}
+
+        serializer = self.get_serializer(qs, many=True, context={'status_usage': usage_map})
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        usage_map = {}
+        try:
+            usage_map = bulk_check_usage('status', [instance.id], sample_limit=0)
+        except Exception:
+            usage_map = {}
+        serializer = self.get_serializer(instance, context={'status_usage': usage_map})
+        return Response(serializer.data)
 
     def perform_destroy(self, instance):
         # prevent deleting statuses that are in use

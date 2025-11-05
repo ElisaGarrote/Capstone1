@@ -1,9 +1,12 @@
 from rest_framework import serializers
 from .models import *
 from .utils import normalize_name_smart
+from .services.assets import *
 
 class CategorySerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source='get_type_display', read_only=True)
+    asset_count = serializers.SerializerMethodField(read_only=True)
+    component_count = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Category
         fields = '__all__'
@@ -27,6 +30,38 @@ class CategorySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'name': 'A category with this name and type already exists.'})
 
         return attrs
+
+    def get_asset_count(self, obj):
+        """Return number of assets referencing this category, or None if unknown."""
+        # Prefer batched counts supplied by the view via serializer context
+        try:
+            if getattr(obj, 'type', None) != 'asset':
+                return None
+            usage_map = self.context.get('category_usage') if isinstance(self.context, dict) else None
+            if isinstance(usage_map, dict) and obj.id in usage_map:
+                val = usage_map.get(obj.id)
+                # asset_count expected in the assets service response
+                return val.get('asset_count') if isinstance(val, dict) else None
+            # Fallback to per-item call
+            return count_assets_by_category(obj.id)
+        except Exception:
+            return None
+
+    def get_component_count(self, obj):
+        """Return number of components referencing this category, or None if unknown."""
+        try:
+            if getattr(obj, 'type', None) != 'component':
+                return None
+            usage_map = self.context.get('category_usage') if isinstance(self.context, dict) else None
+            if isinstance(usage_map, dict) and obj.id in usage_map:
+                val = usage_map.get(obj.id)
+                # component_ids is an array in the assets response
+                if isinstance(val, dict) and 'component_ids' in val:
+                    return len(val.get('component_ids') or [])
+                return None
+            return count_components_by_category(obj.id)
+        except Exception:
+            return None
 
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
@@ -109,6 +144,8 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class StatusSerializer(serializers.ModelSerializer):
+    asset_count = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Status
         fields = '__all__'
@@ -132,6 +169,17 @@ class StatusSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'name': 'A Status with this name and type already exists.'})
 
         return attrs
+
+    def get_asset_count(self, obj):
+        """Return number of assets referencing this status id, preferring batched mapping from view context."""
+        try:
+            usage_map = self.context.get('status_usage') if isinstance(self.context, dict) else None
+            if isinstance(usage_map, dict) and obj.id in usage_map:
+                val = usage_map.get(obj.id)
+                return val.get('asset_count') if isinstance(val, dict) else None
+            return None
+        except Exception:
+            return None
 
 
 class TicketResolveSerializer(serializers.ModelSerializer):
