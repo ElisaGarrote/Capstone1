@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
-import MediumButtons from '../Buttons/MediumButtons';
+import MediumButtons from '../buttons/MediumButtons';
 import '../../styles/dashboard/AssetForecastTable.css';
 
 function AssetForecastTable({ data }) {
