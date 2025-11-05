@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from .models import *
 from .serializer import *
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -10,6 +10,21 @@ from contexts_ms.services.usage_check import is_item_in_use
 from rest_framework import serializers as drf_serializers
 from contexts_ms.services.assets import *
 import requests
+from django.db import transaction
+
+# Bulk delete safety limits
+MAX_BULK_DELETE = 500
+CHUNK_SIZE = 50
+
+# Map context item type to model class for bulk operations
+MODEL_BY_TYPE = {
+    'category': Category,
+    'supplier': Supplier,
+    'depreciation': Depreciation,
+    'manufacturer': Manufacturer,
+    'status': Status,
+    'location': Location,
+}
 
 
 def _build_cant_delete_message(instance, usage):
@@ -72,6 +87,105 @@ def _build_cant_delete_message(instance, usage):
     return f"Cannot delete {label_with_display()}. It is referenced by other records."
 
 
+def _bulk_delete_handler(request, item_type, hard_delete=False):
+    """Handle bulk delete for a given context item type.
+
+    Request body: { "ids": [1,2,3,...] }
+
+    Response: {
+      "deleted": [ids],
+      "skipped": { id: "reason" }
+    }
+    """
+    ids = request.data.get('ids')
+    if not isinstance(ids, list):
+        return Response({"detail": "Request body must include 'ids' as a list."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # sanitize and dedupe
+    try:
+        ids = [int(x) for x in ids]
+    except Exception:
+        return Response({"detail": "All ids must be integers."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if len(ids) == 0:
+        return Response({"deleted": [], "skipped": {}}, status=status.HTTP_200_OK)
+
+    if len(ids) > MAX_BULK_DELETE:
+        return Response({"detail": f"Too many ids: limit is {MAX_BULK_DELETE}."}, status=status.HTTP_400_BAD_REQUEST)
+
+    ids = list(dict.fromkeys(ids))
+
+    Model = MODEL_BY_TYPE.get(item_type)
+    if Model is None:
+        return Response({"detail": f"Unsupported item type: {item_type}"}, status=status.HTTP_400_BAD_REQUEST)
+
+    deleted = []
+    skipped = {}
+
+    # process in chunks to limit per-request work and allow partial progress
+    for i in range(0, len(ids), CHUNK_SIZE):
+        chunk = ids[i:i+CHUNK_SIZE]
+
+        # load instances for this chunk
+        instances = {obj.pk: obj for obj in Model.objects.filter(pk__in=chunk)}
+
+        # check usage for each id in chunk
+        for pk in chunk:
+            inst = instances.get(pk)
+            if not inst:
+                skipped[pk] = "Not found"
+                continue
+
+            try:
+                usage = is_item_in_use(item_type, pk)
+            except Exception as exc:
+                # be conservative: skip deletion if we can't determine usage
+                skipped[pk] = "Could not verify usage (service error)"
+                continue
+
+            if usage.get('in_use'):
+                # build a helpful reason message
+                msg = _build_cant_delete_message(inst, usage)
+                skipped[pk] = msg
+                continue
+
+            # safe to delete
+            deleted.append(pk)
+
+    # perform actual deletes/soft-deletes in DB
+    if deleted:
+        if hard_delete:
+            # hard deletes: delete in chunks to avoid long transactions
+            for i in range(0, len(deleted), CHUNK_SIZE):
+                chunk = deleted[i:i+CHUNK_SIZE]
+                try:
+                    with transaction.atomic():
+                        Model.objects.filter(pk__in=chunk).delete()
+                except Exception as exc:
+                    # if a DB error occurs, move those ids to skipped with reason
+                    for pk in chunk:
+                        if pk in deleted:
+                            deleted.remove(pk)
+                            skipped[pk] = f"Delete failed: {str(exc)}"
+        else:
+            # soft delete (set is_deleted=True) with bulk update
+            try:
+                with transaction.atomic():
+                    Model.objects.filter(pk__in=deleted).update(is_deleted=True)
+            except Exception as exc:
+                # fallback: try deleting one by one
+                for pk in list(deleted):
+                    try:
+                        obj = Model.objects.get(pk=pk)
+                        obj.is_deleted = True
+                        obj.save()
+                    except Exception as exc2:
+                        deleted.remove(pk)
+                        skipped[pk] = f"Soft-delete failed: {str(exc2)}"
+
+    return Response({"deleted": deleted, "skipped": skipped}, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 def get_all_location(request):
     locations = Location.objects.all()
@@ -81,7 +195,7 @@ def get_all_location(request):
 #CATEGORY
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Category.objects.filter(is_deleted=False).order_by('name')
@@ -93,12 +207,16 @@ class CategoryViewSet(viewsets.ModelViewSet):
             raise drf_serializers.ValidationError({"error": msg})
         instance.is_deleted = True
         instance.save()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'category', hard_delete=False)
 #END
 
 #SUPPLIER 
 class SupplierViewSet(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Supplier.objects.filter(is_deleted=False).order_by('name')
@@ -111,12 +229,16 @@ class SupplierViewSet(viewsets.ModelViewSet):
             raise drf_serializers.ValidationError({"error": msg})
         instance.is_deleted = True
         instance.save()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'supplier', hard_delete=False)
 #END
 
 #DEPRECIATION
 class DepreciationViewSet(viewsets.ModelViewSet):
     serializer_class = DepreciationSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Depreciation.objects.filter(is_deleted=False).order_by('name')
@@ -128,12 +250,16 @@ class DepreciationViewSet(viewsets.ModelViewSet):
             raise drf_serializers.ValidationError({"error": msg})
         instance.is_deleted = True
         instance.save()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'depreciation', hard_delete=False)
 #END
 
 #MANUFACTURER
 class ManufacturerViewSet(viewsets.ModelViewSet):
     serializer_class = ManufacturerSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Manufacturer.objects.filter(is_deleted=False).order_by('name')
@@ -146,10 +272,14 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
         instance.is_deleted = True
         instance.save()
 
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'manufacturer', hard_delete=False)
+
 # STATUS
 class StatusViewSet(viewsets.ModelViewSet):
     serializer_class = StatusSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Status.objects.filter(is_deleted=False).order_by('name')
@@ -163,10 +293,14 @@ class StatusViewSet(viewsets.ModelViewSet):
         instance.is_deleted = True
         instance.save()
 
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'status', hard_delete=False)
+
 # LOCATION
 class LocationViewSet(viewsets.ModelViewSet):
     serializer_class = LocationSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Location.objects.all().order_by('city')
@@ -178,6 +312,10 @@ class LocationViewSet(viewsets.ModelViewSet):
             msg = _build_cant_delete_message(instance, usage)
             raise drf_serializers.ValidationError({"error": msg})
         instance.delete()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'location', hard_delete=True)
 
 # Get all manufacturer's names
 @api_view(['GET'])
