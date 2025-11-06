@@ -180,3 +180,6 @@ CORS_ALLOWED_ORIGINS = get_list("CONTEXTS_CORS_ALLOWED_ORIGINS")
 CSRF_TRUSTED_ORIGINS = get_list("CONTEXTS_CSRF_TRUSTED_ORIGINS")
 
 print("Loaded DB host:", os.getenv("CONTEXTS_DB_HOST"))
+
+# Import API key for protecting update-enabled imports. If not set, updates are disabled.
+IMPORT_API_KEY = os.getenv('IMPORT_API_KEY', None)
