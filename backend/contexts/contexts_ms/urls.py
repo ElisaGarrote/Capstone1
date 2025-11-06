@@ -2,6 +2,20 @@ from rest_framework.routers import DefaultRouter
 from .views import *
 from django.urls import path, include
 from contexts_ms.api.supplier_usage_api import *
+from contexts_ms.api.import_export_api import (
+    SupplierImportAPIView,
+    SupplierExportAPIView,
+    CategoryImportAPIView,
+    CategoryExportAPIView,
+    DepreciationImportAPIView,
+    DepreciationExportAPIView,
+)
+from contexts_ms.api.import_export_api import (
+    ManufacturerImportAPIView,
+    ManufacturerExportAPIView,
+    StatusImportAPIView,
+    StatusExportAPIView,
+)
 
 
 router = DefaultRouter()
@@ -21,4 +35,15 @@ urlpatterns = [
     # supplier usage endpoints (assets/components lists by supplier)
     path('suppliers/<int:pk>/assets/', SupplierAssetListAPIView.as_view()),
     path('suppliers/<int:pk>/components/', SupplierComponentListAPIView.as_view()),
+    # backend import/export endpoints (XLSX)
+    path('import/suppliers/', SupplierImportAPIView.as_view()),
+    path('export/suppliers/', SupplierExportAPIView.as_view()),
+    path('import/categories/', CategoryImportAPIView.as_view()),
+    path('export/categories/', CategoryExportAPIView.as_view()),
+    path('import/depreciations/', DepreciationImportAPIView.as_view()),
+    path('export/depreciations/', DepreciationExportAPIView.as_view()),
+    path('import/manufacturers/', ManufacturerImportAPIView.as_view()),
+    path('export/manufacturers/', ManufacturerExportAPIView.as_view()),
+    path('import/statuses/', StatusImportAPIView.as_view()),
+    path('export/statuses/', StatusExportAPIView.as_view()),
 ]

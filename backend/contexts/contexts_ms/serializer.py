@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from .utils import normalize_name_smart
+import logging
 from .services.assets import *
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -22,11 +23,19 @@ class CategorySerializer(serializers.ModelSerializer):
         normalized_name = normalize_name_smart(name)
         attrs['name'] = normalized_name
 
+        seen = None
+        try:
+            seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
+        except Exception:
+            seen = None
+
         qs = Category.objects.filter(name__iexact=normalized_name, type=type_val, is_deleted=False)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
+            if seen and normalized_name in seen:
+                return attrs
             raise serializers.ValidationError({'name': 'A category with this name and type already exists.'})
 
         return attrs
@@ -73,15 +82,34 @@ class SupplierSerializer(serializers.ModelSerializer):
         name = attrs.get('name') if 'name' in attrs else (self.instance.name if self.instance else None)
         if not name:
             return attrs
-
         normalized_name = normalize_name_smart(name)
         attrs['name'] = normalized_name
+
+        # Allow import-time bypass when the import flow provides a set of names
+        # already created/updated in this run (to avoid false-positive conflicts
+        # when a single sheet contains related rows). The import handler sets
+        # `context['import_seen_names']` to a set of normalized names.
+        seen = None
+        try:
+            seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
+        except Exception:
+            seen = None
 
         qs = Supplier.objects.filter(name__iexact=normalized_name, is_deleted=False)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
+            # If the name is already in the seen set for this import run, allow it
+            # to proceed (it was created earlier in this same upload).
+            if seen and normalized_name in seen:
+                return attrs
+            # Debug log existing supplier names when a duplicate is detected
+            try:
+                existing = list(Supplier.objects.filter(is_deleted=False).values_list('name', flat=True))
+                logging.getLogger('import_export').debug('supplier duplicate check failed for %s existing=%s', normalized_name, existing)
+            except Exception:
+                pass
             raise serializers.ValidationError({'name': 'A Supplier with this name already exists.'})
 
         return attrs
@@ -105,11 +133,19 @@ class DepreciationSerializer(serializers.ModelSerializer):
         normalized_name = normalize_name_smart(name)
         attrs['name'] = normalized_name
 
+        seen = None
+        try:
+            seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
+        except Exception:
+            seen = None
+
         qs = Depreciation.objects.filter(name__iexact=normalized_name, is_deleted=False)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
+            if seen and normalized_name in seen:
+                return attrs
             raise serializers.ValidationError({'name': 'A Depreciation with this name already exists.'})
 
         return attrs
@@ -127,11 +163,19 @@ class ManufacturerSerializer(serializers.ModelSerializer):
         normalized_name = normalize_name_smart(name)
         attrs['name'] = normalized_name
 
+        seen = None
+        try:
+            seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
+        except Exception:
+            seen = None
+
         qs = Manufacturer.objects.filter(name__iexact=normalized_name, is_deleted=False)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
+            if seen and normalized_name in seen:
+                return attrs
             raise serializers.ValidationError({'name': 'A Manufacturer with this name already exists.'})
 
         return attrs
@@ -161,11 +205,19 @@ class StatusSerializer(serializers.ModelSerializer):
         normalized_name = normalize_name_smart(name)
         attrs['name'] = normalized_name
 
+        seen = None
+        try:
+            seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
+        except Exception:
+            seen = None
+
         qs = Status.objects.filter(name__iexact=normalized_name, type=type_val, is_deleted=False)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
+            if seen and normalized_name in seen:
+                return attrs
             raise serializers.ValidationError({'name': 'A Status with this name and type already exists.'})
 
         return attrs
