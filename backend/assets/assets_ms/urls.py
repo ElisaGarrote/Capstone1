@@ -14,8 +14,8 @@ router.register('component-checkout', ComponentCheckoutViewSet, basename='compon
 router.register('component-checkin', ComponentCheckinViewSet, basename='component-checkin')
 router.register('audit-schedule', AuditScheduleViewSet, basename='audit-schedule')
 router.register('audits', AuditViewSet, basename='audits')
-router.register('repairs', RepairViewSet, basename='repair')
 router.register('audit-files', AuditFileViewSet, basename='audit-files')
+router.register('repairs', RepairViewSet, basename='repair')
 router.register('dashboard', DashboardViewSet, basename='dashboard')
 
 urlpatterns = [

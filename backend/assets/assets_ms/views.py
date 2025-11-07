@@ -66,7 +66,26 @@ class AssetViewSet(viewsets.ModelViewSet):
                 {"detail": "Asset not found or already active."},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+    @action(detail=False, methods=['get'], url_path='generate-asset-id')
+    def generate_asset_id(self, request):
+        today = timezone.now().strftime('%Y%m%d')
+        prefix = f"AST-{today}-"
+        last_asset = Asset.objects.filter(asset_id__startswith=prefix).order_by('-asset_id').first()
 
+        if last_asset:
+            try:
+                seq = int(last_asset.asset_id.split('-')[2]) + 1
+            except:
+                seq = 1
+        else:
+            seq = 1
+
+        random_suffix = uuid.uuid4().hex[:4].upper()
+        new_id = f"{prefix}{seq:05d}-{random_suffix}"
+
+        return Response({"asset_id": new_id})
+    
     def perform_destroy(self, instance):
         errors = []
 
