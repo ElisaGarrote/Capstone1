@@ -252,6 +252,12 @@ class TicketViewSet(viewsets.ModelViewSet):
         tickets = self.queryset.filter(is_resolved=False)
         serializer = self.get_serializer(tickets, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='by-asset/(?P<asset_id>\d+)')
+    def by_asset(self, request, asset_id=None):
+        tickets = self.queryset.filter(asset=asset_id)
+        serializer = self.get_serializer(tickets, many=True)
+        return Response(serializer.data)
 
 class RecycleBinViewSet(viewsets.ViewSet):
     """Handles viewing and recovering deleted items from the Assets service"""

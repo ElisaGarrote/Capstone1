@@ -35,7 +35,22 @@ def _make_url(path: str) -> str:
         return path
     return urljoin(BASE_URL, path)
 
-
 def get(path: str, params=None, timeout: float = 5, **kwargs):
     url = _make_url(path)
     return _SESSION.get(url, params=params, timeout=timeout, **kwargs)
+
+def post(path: str, data=None, json=None, timeout: float = 5, **kwargs):
+    url = _make_url(path)
+    return _SESSION.post(url, data=data, json=json, timeout=timeout, **kwargs)
+
+def patch(path: str, data=None, json=None, timeout: float = 5, **kwargs):
+    url = _make_url(path)
+    return _SESSION.patch(url, data=data, json=json, timeout=timeout, **kwargs)
+
+def put(path: str, data=None, json=None, timeout: float = 5, **kwargs):
+    url = _make_url(path)
+    return _SESSION.put(url, data=data, json=json, timeout=timeout, **kwargs)
+
+def delete(path: str, timeout: float = 5, **kwargs):
+    url = _make_url(path)
+    return _SESSION.delete(url, timeout=timeout, **kwargs)

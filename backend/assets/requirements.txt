@@ -23,7 +23,6 @@ python-dotenv==1.1.0
 python-magic==0.4.27
 python3-openid==3.2.0
 pytz==2025.2
-requests==2.32.3
 requests-oauthlib==2.0.0
 social-auth-app-django==5.4.3
 social-auth-core==4.6.1
@@ -32,3 +31,4 @@ typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.4.0
 whitenoise==6.9.0
+requests==2.32.5

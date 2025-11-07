@@ -1,8 +1,9 @@
 import os
 from requests.exceptions import RequestException
-from .http_client import get as client_get
+from .http_client import get as client_get, patch as client_patch
 from django.core.cache import cache
 from django.conf import settings
+
 
 # Centralized Contexts service helper module
 # Use settings.CONTEXTS_API_URL or fallback to the default service host
@@ -175,19 +176,19 @@ def get_status_by_id(status_id):
     return result
 
 
-def fetch_resource_list(resource_name, params=None):
-    """Fetch a list endpoint from the Contexts service.
-
-    Tries both api/... and bare endpoints. Returns list or pagination dict or
-    a warning dict on failure.
-    """
+def fetch_resource_list(resource_name, params=None, skip_api_prefix=False):
+    """Fetch a list endpoint from the Contexts service."""
     params = params or {}
-    for path in (f"api/{resource_name}/", f"{resource_name}/"):
+    paths = [resource_name + '/']
+    if not skip_api_prefix:
+        paths.insert(0, 'api/' + resource_name + '/')
+
+    for path in paths:
         url = _build_url(path)
         try:
             resp = client_get(url, params=params, timeout=8)
             if resp.status_code == 404:
-                return []
+                continue  # try next path
             resp.raise_for_status()
             data = resp.json()
             # If remote returns pagination object with results, return as-is
@@ -306,3 +307,38 @@ def get_statuses_list(q=None, limit=50):
     else:
         cache.set(key, result, LIST_CACHE_TTL)
     return result
+
+def get_ticket_by_id(ticket_id):
+    """Fetch a ticket from the Contexts service by ID with caching."""
+    if not ticket_id:
+        return None
+
+    key = f"contexts:ticket:{ticket_id}"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+
+    # Tries /api/tickets/<id>/ then /tickets/<id>/
+    result = fetch_resource_by_id("tickets", ticket_id)
+
+    # Cache warnings short, successful fetch longer
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+
+    return result
+
+def resolve_ticket(ticket_id):
+    if not ticket_id:
+        return None
+
+    url = _build_url(f"tickets/{ticket_id}/")
+    try:
+        resp = client_patch(url, json={"is_resolved": True}, timeout=6, headers={"Content-Type": "application/json"})
+        resp.raise_for_status()
+    except RequestException as e:
+        raise Exception(f"Failed to resolve ticket {ticket_id}") from e
+
+    cache.delete(f"contexts:ticket:{ticket_id}")
+    return resp.json()

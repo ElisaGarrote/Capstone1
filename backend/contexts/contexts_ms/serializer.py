@@ -235,6 +235,41 @@ class StatusSerializer(serializers.ModelSerializer):
 
 
 class TicketSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Ticket
         fields = '__all__'
+    
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    def validate(self, data):
+        ticket_type = data.get("ticket_type") or (self.instance and self.instance.ticket_type)
+
+        if ticket_type == Ticket.TicketType.CHECKOUT:
+            if not self.partial:  # only enforce on creation
+                if not data.get("checkout_date"):
+                    raise serializers.ValidationError({"checkout_date": "This field is required for checkout ticket."})
+                if not data.get("return_date"):
+                    raise serializers.ValidationError({"return_date": "This field is required for checkout ticket."})
+
+            # Disallow checkin-only fields even on partial update
+            if data.get("asset_checkout"):
+                raise serializers.ValidationError({"asset_checkout": "Not allowed for checkout ticket."})
+            if data.get("checkin_date"):
+                raise serializers.ValidationError({"checkin_date": "Not allowed for checkout ticket."})
+
+        elif ticket_type == Ticket.TicketType.CHECKIN:
+            if not self.partial:  # only enforce on creation
+                if not data.get("asset_checkout"):
+                    raise serializers.ValidationError({"asset_checkout": "This field is required for checkin ticket."})
+                if not data.get("checkin_date"):
+                    raise serializers.ValidationError({"checkin_date": "This field is required for checkin ticket."})
+
+            # Disallow checkout-only fields even on partial update
+            if data.get("checkout_date"):
+                raise serializers.ValidationError({"checkout_date": "Not allowed for checkin ticket."})
+            if data.get("return_date"):
+                raise serializers.ValidationError({"return_date": "Not allowed for checkin ticket."})
+
+        return data

@@ -123,8 +123,8 @@ class Ticket(models.Model):
     # CHECKOUT
     checkout_date = models.DateField(null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
-    # CHECKIN
     asset_checkout = models.PositiveIntegerField(null=True, blank=True)
+    # CHECKIN
     checkin_date = models.DateField(null=True, blank=True)
 
     def __str__(self):

@@ -8,14 +8,17 @@ __pycache__/
 *.egg-info/
 *.egg
 *.log
+*.py[cod]
+*$py.class
 
 # =========================
 # Virtual environments
 # =========================
-assets_venv/
-env/
-venv/
 site-packages/
+venv/
+*.venv/
+env/
+*env/
 
 # =========================
 # Django

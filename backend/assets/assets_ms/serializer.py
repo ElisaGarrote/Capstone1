@@ -134,6 +134,10 @@ class AssetSerializer(serializers.ModelSerializer):
             return {"warning": "Contexts service unreachable for suppliers."}
  
 class AssetCheckoutSerializer(serializers.ModelSerializer):
+    checkout_to = serializers.IntegerField(read_only=True)
+    location = serializers.IntegerField(read_only=True)
+    checkout_date = serializers.DateField(read_only=True)
+    return_date = serializers.DateField(read_only=True)
     class Meta:
         model = AssetCheckout
         fields = '__all__'
@@ -147,9 +151,25 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         ).exclude(
             id__in=AssetCheckout.objects.filter(asset_checkin__isnull=True).values_list('asset_id', flat=True)
         )
-
+    
     def validate(self, data):
         asset = data.get('asset')
+        ticket_id = data.get('ticket_id')
+
+        if not ticket_id:
+            raise serializers.ValidationError({"ticket_id": "A ticket is required to check out this asset."})
+
+        ticket = get_ticket_by_id(ticket_id)
+        if not ticket or ticket.get("warning"):
+            raise serializers.ValidationError({"ticket_id": "Ticket not found."})
+
+        if ticket.get("is_resolved", False):
+            raise serializers.ValidationError({"ticket_id": "Ticket is already resolved."})
+
+        if ticket.get("asset") != asset.id:
+            raise serializers.ValidationError({
+                "ticket_id": "This ticket does not correspond to the selected asset."
+            })
 
         if asset is None:
             raise serializers.ValidationError({"asset": "Asset is required."})
@@ -163,7 +183,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "asset": "This asset is already checked out and not yet checked in."
             })
-
+        
         # Validate return date
         checkout_date = data.get('checkout_date', timezone.now())
         return_date = data.get('return_date')
@@ -174,6 +194,23 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
 
         return data
     
+    def create(self, validated_data):
+        ticket_id = validated_data.get('ticket_id')
+        ticket = get_ticket_by_id(ticket_id)
+        if not ticket or ticket.get("warning"):
+            raise serializers.ValidationError({"ticket_id": "Invalid ticket"})
+
+        # Preserve ticket_id
+        validated_data['ticket_id'] = ticket_id
+
+        # Populate fields from ticket
+        validated_data['checkout_to'] = ticket.get('employee')
+        validated_data['location'] = ticket.get('location')
+        validated_data['checkout_date'] = ticket.get('checkout_date')
+        validated_data['return_date'] = ticket.get('return_date')
+
+        return super().create(validated_data)
+        
 class AssetCheckinSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckin
@@ -182,6 +219,7 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
     def validate(self, data):
         checkout = data.get('asset_checkout')
         checkin_date = data.get('checkin_date', timezone.now())
+        ticket_id = data.get('ticket_id')
 
         # Check if checkout exists
         if not checkout:
@@ -198,7 +236,18 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "checkin_date": "Cannot check in before checkout date."
             })
+        
+        # Optional ticket validation
+        if ticket_id:
+            ticket = get_ticket_by_id(ticket_id)
+            if not ticket or ticket.get("warning"):
+                raise serializers.ValidationError({"ticket_id": "Ticket not found."})
 
+            if ticket.get("asset") != checkout.asset_id:
+                raise serializers.ValidationError({
+                    "ticket_id": "Ticket does not match this asset."
+                })
+            
         return data
 
 # Component
@@ -503,7 +552,12 @@ class RepairSerializer(serializers.ModelSerializer):
             start_date = start_date.date()
         validated_data['start_date'] = start_date
         return super().create(validated_data)
-
+    
+class RepairFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RepairFile
+        fields = '__all__'
+        
 class DashboardStatsSerializer(serializers.Serializer):
     due_for_return = serializers.IntegerField()
     overdue_for_return = serializers.IntegerField()

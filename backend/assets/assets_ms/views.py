@@ -6,14 +6,19 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils.timezone import now
 from datetime import timedelta
-from django.db.models import Sum, Count, F
+from django.db.models import Sum, Value, F
+from django.db.models.functions import Coalesce
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from datetime import datetime
+from django.db import transaction
+import logging
+
+logger = logging.getLogger(__name__)
 
 # If will add more views later or functionality, please create file on api folder or services folder
 # Only viewsets here
-
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     parser_classes = [MultiPartParser, FormParser]
@@ -112,11 +117,67 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
             asset_checkin__isnull=True
         ).order_by('-checkout_date')
     
+    def perform_create(self, serializer):
+        checkout = serializer.save()
+        ticket_id = checkout.ticket_id
+
+        # Resolve the ticket that triggered this checkout
+        resolve_ticket(ticket_id)
+
+        asset_id = checkout.asset.id
+        unresolved_tickets = fetch_resource_list(
+            f"tickets/by-asset/{asset_id}",
+            params={"is_resolved": False}
+        )
+
+        # Handle both list and dict with 'results'
+        if isinstance(unresolved_tickets, dict):
+            tickets = unresolved_tickets.get('results', [])
+        elif isinstance(unresolved_tickets, list):
+            tickets = unresolved_tickets
+        else:
+            tickets = []
+
+        current_start = checkout.checkout_date
+        current_end = checkout.return_date
+
+        # Convert to date if strings
+        if isinstance(current_start, str):
+            current_start = datetime.strptime(current_start, "%Y-%m-%d").date()
+        if isinstance(current_end, str):
+            current_end = datetime.strptime(current_end, "%Y-%m-%d").date()
+
+        for t in tickets:
+            if t["id"] == ticket_id:
+                continue
+
+            if not t.get("checkout_date") or not t.get("return_date"):
+                continue
+
+            ticket_start = datetime.strptime(t["checkout_date"], "%Y-%m-%d").date()
+            ticket_end = datetime.strptime(t["return_date"], "%Y-%m-%d").date()
+
+            # Resolve overlapping tickets
+            if ticket_start <= current_end and current_start <= ticket_end:
+                resolve_ticket(t["id"])
+
 class AssetCheckinViewSet(viewsets.ModelViewSet):
     serializer_class = AssetCheckinSerializer
 
     def get_queryset(self):
         return AssetCheckin.objects.select_related('asset_checkout', 'asset_checkout__asset').order_by('-checkin_date')
+    
+    def perform_create(self, serializer):
+        checkin = serializer.save()
+        ticket_id = checkin.ticket_id or checkin.asset_checkout.ticket_id
+
+        # Resolve the ticket if it exists
+        if ticket_id:
+            try:
+                from assets_ms.services.contexts import resolve_ticket
+                resolve_ticket(ticket_id)
+            except Exception:
+                pass
 
 class ComponentViewSet(viewsets.ModelViewSet):
     serializer_class = ComponentSerializer
@@ -383,7 +444,13 @@ class DashboardViewSet(viewsets.ViewSet):
         expiring_warranties = Asset.objects.filter(warranty_expiration__gt=today, warranty_expiration__lte=next_30_days).count()
 
         # Low stock
-        low_stock = Component.objects.filter(available_quantity__lt=F('minimum_quantity')).count()
+        low_stock = Component.objects.annotate(
+            total_checked_out=Coalesce(Sum('component_checkouts__quantity'), Value(0)),
+            total_checked_in=Coalesce(Sum('component_checkouts__component_checkins__quantity'), Value(0)),
+            available_quantity=F('quantity') - (F('total_checked_out') - F('total_checked_in'))
+        ).filter(
+            available_quantity__lt=F('minimum_quantity')
+        ).count()
 
         data = {
             "due_for_return": due_for_return,
