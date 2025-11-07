@@ -91,11 +91,7 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         # Check for active checkouts (no checkin yet)
         if instance.asset_checkouts.filter(asset_checkin__isnull=True).exists():
-            errors.append("This asset has an active checkout.")
-
-        # Check for component checkouts referencing this asset that are not yet checked in
-        if instance.checkout_to.filter(component_checkins__isnull=True).exists():
-            errors.append("This asset has a component checked out.")
+            errors.append("This asset is currently checked out and not yet checked in. Please check in the asset before deleting it or perform a check-in and delete checkout.")
 
         # If any blocking relationships exist, raise error
         if errors:

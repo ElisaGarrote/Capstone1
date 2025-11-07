@@ -97,22 +97,36 @@ class Location(models.Model):
 
     def __str__(self):
         return self.city
-
+     
 class Ticket(models.Model):
+    class TicketType(models.TextChoices):
+        CHECKOUT = 'checkout', 'Checkout'
+        CHECKIN = 'checkin', 'Checkin'
+
+    # Details
     ticket_number = models.CharField(max_length=6, unique=True)
+    ticket_type = models.CharField(max_length=10, choices=TicketType.choices)
+    
+    # Relations
     employee = models.CharField(max_length=100)
+    asset = models.PositiveIntegerField()
+    # Requestor details
     subject = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
-    asset = models.PositiveIntegerField()
-    checkout_date = models.DateField(null=True, blank=True)
-    return_date = models.DateField(null=True, blank=True)
-    asset_checkout = models.PositiveIntegerField(null=True, blank=True)
-    checkin_date = models.DateField(null=True, blank=True)
+    
+    # Status
     is_resolved = models.BooleanField(default=False)
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Optional fields depending on type
+    # CHECKOUT
+    checkout_date = models.DateField(null=True, blank=True)
+    return_date = models.DateField(null=True, blank=True)
+    # CHECKIN
+    asset_checkout = models.PositiveIntegerField(null=True, blank=True)
+    checkin_date = models.DateField(null=True, blank=True)
+
     def __str__(self):
-        status = "Check Out Request" if self.asset_checkout is None else "Checked In Request"
-        return f"[{self.ticket_number}] {self.asset} - {self.is_resolved}"
+        type = "Check Out Request" if self.asset_checkout is None else "Checked In Request"
+        return f"[{self.ticket_number}] {self.asset} - {type} - {self.is_resolved}"

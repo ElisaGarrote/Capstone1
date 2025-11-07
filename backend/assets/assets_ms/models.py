@@ -128,8 +128,9 @@ def generate_asset_id(sender, instance, **kwargs):
 
 class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts', limit_choices_to={'is_deleted': False})
+    ticket_id = models.PositiveIntegerField()
     checkout_to = models.PositiveIntegerField()
-    location = models.CharField()
+    location = models.PositiveIntegerField()
     checkout_date = models.DateField()
     return_date = models.DateField()
     condition = models.PositiveSmallIntegerField(
@@ -148,6 +149,7 @@ class AssetCheckout(models.Model):
 
 class AssetCheckin(models.Model):
     asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
+    ticket_id = models.PositiveIntegerField(blank=True, null=True)
     checkin_date = models.DateField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]

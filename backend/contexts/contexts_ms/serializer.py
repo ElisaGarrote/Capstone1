@@ -234,7 +234,7 @@ class StatusSerializer(serializers.ModelSerializer):
             return None
 
 
-class TicketResolveSerializer(serializers.ModelSerializer):
+class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
-        fields = ['is_resolved']
+        fields = '__all__'

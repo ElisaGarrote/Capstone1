@@ -237,7 +237,7 @@ def get_manu_name_by_id(request, id):
 
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all().order_by('-created_at')
-    serializer_class = TicketResolveSerializer
+    serializer_class = TicketSerializer
 
     # GET /tickets/resolved/
     @action(detail=False, methods=['get'])
