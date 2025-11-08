@@ -1,16 +1,104 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilter from "../../components/FilterPanel";
 import DeleteModal from "../../components/Modals/DeleteModal";
-import { fetchAllCategories, deleteCategory, } from "../../services/contexts-service";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import Alert from "../../components/Alert";
 
 import Footer from "../../components/Footer";
 
 import "../../styles/Category.css";
+
+// icons
+import keyboardIcon from "../../assets/img/keyboard_Icon.png";
+import chargerIcon from "../../assets/img/charger_Icon.png";
+import cablesIcon from "../../assets/img/cables_Icon.png";
+import paperprinterIcon from "../../assets/img/paperprinter_Icon.png";
+import printerinkIcon from "../../assets/img/printerink_Icon.png";
+
+// mock data
+const categories = [
+  {
+    id: 1,
+    icon: cablesIcon,
+    name: "Cables",
+    type: "Accessory",
+    quantity: 2,
+  },
+  {
+    id: 2,
+    icon: chargerIcon,
+    name: "Charger",
+    type: "Accessory",
+    quantity: 1,
+  },
+  {
+    id: 3,
+    icon: keyboardIcon,
+    name: "Keyboards",
+    type: "Accessory",
+    quantity: 2,
+  },
+  {
+    id: 4,
+    icon: paperprinterIcon,
+    name: "Printer Paper",
+    type: "Consumable",
+    quantity: 262,
+  },
+  {
+    id: 5,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 6,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 7,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 8,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 9,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 10,
+    icon: printerinkIcon,
+    name: "Printer Ink",
+    type: "Consumable",
+    quantity: 95,
+  },
+  {
+    id: 11,
+    icon: printerinkIcon,
+    name: "Printer",
+    type: "Consumable",
+    quantity: 95,
+  },
+];
 
 const filterConfig = [
   {
@@ -31,7 +119,7 @@ const filterConfig = [
 ];
 
 // TableHeader component to render the table header
-function TableHeader( { allSelected, onSelectAll }) {
+function TableHeader({ allSelected, onSelectAll }) {
   return (
     <tr>
       <th>
@@ -52,6 +140,7 @@ function TableHeader( { allSelected, onSelectAll }) {
 // TableItem component to render each ticket row
 function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
   const navigate = useNavigate();
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   return (
     <tr>
@@ -64,11 +153,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
       </td>
       <td>
         <div className="category-name">
-          <img
-            src={category.logo || DefaultImage}
-            alt={category.name}
-            className="category-logo"
-          />
+          <img src={category.icon} alt={category.name} />
           {category.name}
         </div>
       </td>
@@ -88,7 +173,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
           <button
             title="Delete"
             className="action-button"
-            onClick={() => onDeleteClick(category.id)}
+            onClick={onDeleteClick}
           >
             <i className="fas fa-trash-alt"></i>
           </button>
@@ -99,28 +184,15 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
 }
 
 export default function Category() {
-  const [categories, setCategories] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
-
-  const allSelected = selectedIds.length === categories.length && categories.length > 0;
-
-  const handleCheckboxChange = (id, checked) => {
-    setSelectedIds((prev) =>
-      checked ? [...prev, id] : prev.filter((item) => item !== id)
-    );
-  };
-
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedIds(categories.map((c) => c.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isAddRecordSuccess, setAddRecordSuccess] = useState(false);
+  const [isUpdateRecordSuccess, setUpdateRecordSuccess] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -131,46 +203,76 @@ export default function Category() {
   const endIndex = startIndex + pageSize;
   const paginatedCategories = categories.slice(startIndex, endIndex);
 
-  // Fetch categories
-  const fetchCategories = async () => {
-    try {
-      const data = await fetchAllCategories();
-      setCategories(data);
-      console.log("Categories:", data);
-    } catch (error) {
-      console.log("Failed to load categories:", error);
+  // Retrieve the "addCategory" value passed from the navigation state.
+  // If the "addCategory" is not exist, the default value for this is "undifiend".
+  const addedCategory = location.state?.addedCategory;
+  const updatedCategory = location.state?.updatedCategory;
+
+  const actionStatus = (action, status) => {
+    let timeoutId;
+
+    if (action === "create" && status === true) {
+      setAddRecordSuccess(true);
     }
-  };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (action === "update" && status === true) {
+      setUpdateRecordSuccess(true);
+    }
 
-  // Handel Delete
-  const handleDelete = async () => {
-    try {
-      if (selectedCategoryId) {
-        // Single delete
-        await deleteCategory(selectedCategoryId);
-      } else if (selectedIds.length > 0) {
-        // Bulk delete
-        await Promise.all(selectedIds.map((id) => deleteCategory(id)));
-        setSelectedIds([]);
+    // clear the navigation/history state so a full page refresh won't re-show the alert
+    // replace the current history entry with an empty state
+    navigate(location.pathname, { replace: true, state: {} });
+
+    return (timeoutId = setTimeout(() => {
+      if (action === "create") {
+        setAddRecordSuccess(false);
+      } else {
+        setUpdateRecordSuccess(false);
       }
-      setDeleteModalOpen(false);
-      fetchCategories();
-    } catch (error) {
-      console.log("Failed to delete category:", error);
-    }
+    }, 5000));
   };
+
+  const getAction = () => {
+    if (addedCategory == true) {
+      return "create";
+    }
+
+    if (updatedCategory == true) {
+      return "update";
+    }
+
+    return null;
+  };
+
+  // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
+  useEffect(() => {
+    let timeoutId;
+
+    timeoutId = actionStatus(getAction(), true);
+
+    // cleanup the timeout on unmount or when addedCategory or updatedCategory changes
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [addedCategory, updatedCategory, navigate, location.pathname]);
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
+      {isAddRecordSuccess && (
+        <Alert message="Category added successfully!" type="success" />
+      )}
+
+      {isUpdateRecordSuccess && (
+        <Alert message="Category updated successfully!" type="success" />
+      )}
+
       {isDeleteModalOpen && (
         <DeleteModal
           closeModal={() => setDeleteModalOpen(false)}
           actionType="delete"
-          onConfirm={handleDelete}
         />
       )}
 
@@ -186,12 +288,6 @@ export default function Category() {
             <section className="table-header">
               <h2 className="h2">Categories ({categories.length})</h2>
               <section className="table-actions">
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => setDeleteModalOpen(true)}
-                  />
-                )}
                 <input
                   type="search"
                   placeholder="Search..."
@@ -208,7 +304,7 @@ export default function Category() {
             <section className="table-section">
               <table>
                 <thead>
-                  <TableHeader allSelected={allSelected} onSelectAll={handleSelectAll} />
+                  <TableHeader />
                 </thead>
                 <tbody>
                   {paginatedCategories.length > 0 ? (
@@ -216,12 +312,7 @@ export default function Category() {
                       <TableItem
                         key={index}
                         category={category}
-                        onDeleteClick={(id) => {
-                          setSelectedCategoryId(id);
-                          setDeleteModalOpen(true);
-                        }}
-                        onCheckboxChange={handleCheckboxChange}
-                        isChecked={selectedIds.includes(category.id)}
+                        onDeleteClick={() => setDeleteModalOpen(true)}
                       />
                     ))
                   ) : (

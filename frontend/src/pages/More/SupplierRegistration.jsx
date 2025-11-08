@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Footer from "../../components/Footer";
+import PlusIcon from "../../assets/icons/plus.svg";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -13,32 +16,47 @@ import "../../styles/SupplierRegistration.css";
 const SupplierRegistration = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [previewImage, setPreviewImage] = useState(null);
+
+  // Delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // Retrieve the "supplier" data value passed from the navigation state.
+  // If the "supplier" data is not exist, the default value for this is "undifiend".
+  const supplier = location.state?.supplier;
+
+  const [previewImage, setPreviewImage] = useState(
+    supplier ? supplier.logo : null
+  );
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
+
+  // Import file state
+  const [importFile, setImportFile] = useState(null);
 
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
-      name: "",
-      address: "",
-      city: "",
-      zip: "",
-      contact_name: "",
-      phone_number: "",
-      email: "",
-      URL: "",
-      notes: "",
+      name: supplier ? supplier.name : "",
+      address: supplier ? supplier.address : "",
+      city: supplier ? supplier.city : "",
+      zip: supplier ? supplier.zip : "",
+      contact_name: supplier ? supplier.contact_name : "",
+      phone_number: supplier ? supplier.contact_phone : "",
+      email: supplier ? supplier.contact_email : "",
+      URL: supplier ? supplier.url : "",
+      notes: supplier ? supplier.notes : "",
+      logo: supplier ? supplier.logo : "",
     },
     mode: "all",
   });
 
+  /* BACKEND INTEGRATION HERE
   const contextServiceUrl =
     "https://contexts-service-production.up.railway.app";
 
@@ -47,7 +65,8 @@ const SupplierRegistration = () => {
       try {
         if (id) {
           const supplierData = await fetchAllCategories();
-          if (!supplierData) throw new Error('Failed to fetch supplier details');
+          if (!supplierData)
+            throw new Error("Failed to fetch supplier details");
 
           setValue("name", supplierData.name || "");
           setValue("address", supplierData.address || "");
@@ -71,6 +90,7 @@ const SupplierRegistration = () => {
     };
     initialize();
   }, [id, setValue]);
+  */
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -95,7 +115,10 @@ const SupplierRegistration = () => {
     }
   };
 
+  const state = supplier ? { updatedSupplier: true } : { addedSupplier: true };
+
   const onSubmit = async (data) => {
+    /* BACKEND INTEGRATION HERE
     try {
       if (!id) {
         const existingSuppliers = await contextsService.fetchAllSupplierNames();
@@ -151,27 +174,75 @@ const SupplierRegistration = () => {
       setErrorMessage(message);
       setTimeout(() => setErrorMessage(""), 5000);
     }
+    */
+    navigate("/More/ViewSupplier", { state });
   };
 
-  if (isLoading) return <SystemLoading />;
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (
+        file.type !==
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ) {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+      setImportFile(file);
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
+    }
+  };
 
   return (
     <>
+      {isDeleteModalOpen && (
+        <ConfirmationModal
+          closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
+        />
+      )}
+
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
           <section className="top">
             <TopSecFormPage
               root="Suppliers"
-              currentPage={id ? "Edit Supplier" : "New Supplier"}
+              currentPage={id ? "Update Supplier" : "New Supplier"}
               rootNavigatePage="/More/ViewSupplier"
-              title={id ? "Edit Supplier" : "New Supplier"}
+              title={id ? supplier.name : "New Supplier"}
+              rightComponent={
+                !id ? (
+                  <div className="import-section">
+                    <label htmlFor="import-file" className="import-btn">
+                      <img src={PlusIcon} alt="Import" />
+                      Import
+                      <input
+                        type="file"
+                        id="import-file"
+                        accept=".xlsx"
+                        onChange={handleImportFile}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => setDeleteModalOpen(true)}
+                  />
+                )
+              }
             />
           </section>
+
           {errorMessage && <Alert type="danger" message={errorMessage} />}
+
           <form onSubmit={handleSubmit(onSubmit)} className="registration-form">
             <fieldset>
-              <label>Supplier Name *</label>
+              <label htmlFor="name">Supplier Name *</label>
               <input
                 type="text"
                 placeholder="Supplier Name"
@@ -185,13 +256,13 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label>Address *</label>
+              <label htmlFor="address">Address</label>
               <input
                 type="text"
                 placeholder="Address"
                 maxLength={200}
                 className={errors.address ? "input-error" : ""}
-                {...register("address", { required: "Address is required" })}
+                {...register("address")}
               />
               {errors.address && (
                 <span className="error-message">{errors.address.message}</span>
@@ -199,12 +270,12 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label>City</label>
+              <label htmlFor="city">City</label>
               <input placeholder="City" {...register("city")} maxLength={50} />
             </fieldset>
 
             <fieldset>
-              <label>Zip Code</label>
+              <label htmlFor="zip">Zip Code</label>
               <input
                 type="number"
                 placeholder="ZIP"
@@ -227,14 +298,34 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label>Contact Person *</label>
+              <label htmlFor="state">State</label>
+              <input
+                type="text"
+                placeholder="State"
+                maxLength={50}
+                className={errors.state ? "input-error" : ""}
+                {...register("state")}
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="country">Country</label>
+              <input
+                type="text"
+                placeholder="Country"
+                maxLength={50}
+                className={errors.state ? "input-error" : ""}
+                {...register("country")}
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="contact_name">Contact Person</label>
               <input
                 type="text"
                 placeholder="Supplier's Contact Name"
                 maxLength={100}
-                {...register("contact_name", {
-                  required: "Contact Person is required",
-                })}
+                {...register("contact_name")}
               />
               {errors.contact_name && (
                 <span className="error-message">
@@ -244,7 +335,7 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label>Phone Number</label>
+              <label htmlFor="phone_number">Phone Number</label>
               <input
                 type="number"
                 placeholder="Contact's Phone Number"
@@ -254,7 +345,21 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label>Email</label>
+              <label htmlFor="fax">Fax</label>
+              <input
+                type="text"
+                placeholder="Fax"
+                maxLength={50}
+                className={errors.state ? "input-error" : ""}
+                {...register("fax")}
+              />
+              {errors.fax && (
+                <span className="error-message">{errors.fax.message}</span>
+              )}
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="email">Email</label>
               <input
                 type="email"
                 placeholder="Contact's Email"
@@ -263,7 +368,7 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label>URL</label>
+              <label htmlFor="URL">URL</label>
               <input
                 type="url"
                 placeholder="URL"
@@ -280,7 +385,7 @@ const SupplierRegistration = () => {
               )}
             </fieldset>
 
-            <fieldset>
+            <fieldset className="notes">
               <label>Notes</label>
               <textarea
                 placeholder="Notes..."
@@ -290,7 +395,7 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label>Logo</label>
+              <label htmlFor="logo">Logo</label>
               {previewImage ? (
                 <div className="image-selected">
                   <img src={previewImage} alt="Logo preview" />

@@ -74,7 +74,9 @@ function TableItem({ asset, onDeleteClick }) {
           <button
             title="Edit"
             className="action-button"
-            onClick={() => navigate("/More/CategoryEdit", { state: { asset } })}
+            onClick={() =>
+              navigate(`/assets/registration/${asset.id}`, { state: { asset } })
+            }
           >
             <i className="fas fa-edit"></i>
           </button>
