@@ -65,9 +65,7 @@ export default function AssetsRegistration() {
     }
   });
 
-  const [previewImage, setPreviewImage] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [removeImage, setRemoveImage] = useState(false);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -182,33 +180,23 @@ export default function AssetsRegistration() {
     }
   }, [location.state, setValue, id]);
 
-  const handleImageSelection = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-      if (!allowedTypes.includes(file.type)) {
-        setErrorMessage("Please select a valid JPEG or PNG image file");
-        setTimeout(() => setErrorMessage(""), 5000);
-        return;
+  const handleFileSelection = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 5 * 1024 * 1024;
+
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 5MB and was not added.`);
+        return false;
       }
+      return true;
+    });
 
-      // Check file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage("Image size exceeds 5MB. Please choose a smaller file.");
-        setTimeout(() => setErrorMessage(""), 5000);
-        return;
-      }
+    setAttachmentFiles(prev => [...prev, ...validFiles]);
+  };
 
-      setSelectedImage(file); // store the actual file
-      setValue('image', file); // optional: sync with react-hook-form
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result); // for display only
-      };
-      reader.readAsDataURL(file);
-    }
+  const removeFile = (index) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleImportFile = (e) => {
@@ -701,42 +689,40 @@ export default function AssetsRegistration() {
               />
             </fieldset>
 
-            {/* Image Upload */}
+            {/* Attachments */}
             <fieldset>
-              <label>Image Upload</label>
-              {previewImage ? (
-                <div className="image-selected">
-                  <img src={previewImage} alt="Selected image" />
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      setPreviewImage(null);
-                      setSelectedImage(null);
-                      setValue('image', null);
-                      document.getElementById('image').value = '';
-                      setRemoveImage(true);
-                      console.log("Remove image flag set to:", true);
-                    }}
-                  >
-                    <img src={CloseIcon} alt="Remove" />
-                  </button>
+              <label>Attachments</label>
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="attachments" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="attachments"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                      multiple
+                    />
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
                 </div>
-              ) : (
-                <label className="upload-image-btn">
-                  Choose File
-                  <input
-                    type="file"
-                    id="image"
-                    accept=".jpeg,.jpg,.png"
-                    onChange={handleImageSelection}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              )}
-              <small className="file-size-info">
-                Maximum file size must be 5MB
-              </small>
+
+                {/* Right column: Uploaded files */}
+                <div className="upload-right">
+                  {attachmentFiles.map((file, index) => (
+                    <div className="file-uploaded" key={index}>
+                      <span title={file.name}>{file.name}</span>
+                      <button type="button" onClick={() => removeFile(index)}>
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </fieldset>
 
             <button type="submit" className="primary-button" disabled={!isValid}>Save</button>

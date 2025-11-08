@@ -67,6 +67,14 @@ export default function MediumButtons({
       onClick();
     }
 
+    if (type.toLowerCase() === "edit" && onClick) {
+      onClick();
+    }
+
+    if (type.toLowerCase() === "clone" && onClick) {
+      onClick();
+    }
+
     if (navigatePage) {
       navigate(navigatePage, { state: { previousPage } });
     }

@@ -53,6 +53,9 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>ASSET ID</th>
       <th>NAME</th>
       <th>CATEGORY</th>
+      <th>SERIAL NUMBER</th>
+      <th>SUPPLIER</th>
+      <th>LOCATION</th>
       <th>STATUS</th>
       <th>CHECK-IN / CHECK-OUT</th>
       <th>ACTION</th>
@@ -88,6 +91,9 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       <td>{asset.displayed_id}</td>
       <td>{asset.name}</td>
       <td>{asset.category}</td>
+      <td>{asset.serial_number || 'N/A'}</td>
+      <td>{asset.supplier || 'N/A'}</td>
+      <td>{asset.location || 'N/A'}</td>
       <td>
         <Status type={asset.status.toLowerCase()} name={asset.status} />
       </td>
@@ -304,12 +310,18 @@ export default function Assets() {
             <section className="table-header">
               <h2 className="h2">Assets ({MockupData.length})</h2>
               <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
+                {/* Bulk edit and delete buttons only when checkboxes selected */}
                 {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
+                  <>
+                    <MediumButtons
+                      type="edit"
+                      onClick={() => navigate('/assets/bulk-edit', { state: { selectedIds } })}
+                    />
+                    <MediumButtons
+                      type="delete"
+                      onClick={() => openDeleteModal(null)}
+                    />
+                  </>
                 )}
                 <input type="search" placeholder="Search..." className="search" />
                 <div ref={toggleRef}>
@@ -358,7 +370,7 @@ export default function Assets() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="no-data-message">
+                      <td colSpan={11} className="no-data-message">
                         No Assets Found.
                       </td>
                     </tr>

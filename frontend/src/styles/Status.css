@@ -15,7 +15,6 @@
 .status-repair {
   display: inline-flex;
   height: auto;
-  min-height: 4vh;
   width: fit-content;
   flex-direction: row;
   align-items: center;
@@ -23,8 +22,8 @@
   border-radius: 40px;
   gap: 5px;
   font-size: 0.75rem;
-  overflow: visible;
-  white-space: normal;
+  overflow: hidden;
+  white-space: nowrap;
   max-width: 100%;
 }
 
@@ -70,11 +69,13 @@
   gap: 5px;
   flex-wrap: nowrap;
   max-width: 100%;
+  overflow: hidden;
 }
 
 .status-to {
   margin: 0 2px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-deployed .status-to {
@@ -82,9 +83,11 @@
 }
 
 .status-target {
-  white-space: normal;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   max-width: 100%;
+  flex-shrink: 1;
 }
 
 .status-deployed .status-target {

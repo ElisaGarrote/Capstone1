@@ -6,7 +6,9 @@
 .medium-button-sort,
 .medium-button-filter,
 .medium-button-recover,
-.medium-button-bulk {
+.medium-button-bulk,
+.medium-button-clone,
+.medium-button-edit {
   display: flex;
   height: 40px;
   justify-content: center;
@@ -26,12 +28,32 @@
 
 .medium-button-new img,
 .medium-button-delete img,
-.medium-button-recover img {
+.medium-button-recover img,
+.medium-button-clone img,
+.medium-button-edit img {
   height: 16px !important;
   width: 16px !important;
 }
 
 .medium-button-new:hover {
+  background-color: var(--primary-color-hover);
+}
+
+.medium-button-clone {
+  background-color: var(--primary-color);
+  color: var(--bg-color);
+}
+
+.medium-button-clone:hover {
+  background-color: var(--primary-color-hover);
+}
+
+.medium-button-edit {
+  background-color: var(--primary-color);
+  color: var(--bg-color);
+}
+
+.medium-button-edit:hover {
   background-color: var(--primary-color-hover);
 }
 

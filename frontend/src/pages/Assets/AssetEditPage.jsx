@@ -63,9 +63,7 @@ export default function AssetEditPage() {
     }
   });
 
-  const [previewImage, setPreviewImage] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [removeImage, setRemoveImage] = useState(false);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -179,43 +177,24 @@ export default function AssetEditPage() {
     }
   };
 
-  // Handle image selection - copied from AssetRegistration
-  const handleImageSelection = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-      if (!allowedTypes.includes(file.type)) {
-        setErrorMessage("Please select a valid JPEG or PNG image file");
-        setTimeout(() => setErrorMessage(""), 5000);
-        return;
+  // Handle file selection
+  const handleFileSelection = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 5 * 1024 * 1024;
+
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 5MB and was not added.`);
+        return false;
       }
+      return true;
+    });
 
-      // Check file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage("Image size exceeds 5MB. Please choose a smaller file.");
-        setTimeout(() => setErrorMessage(""), 5000);
-        return;
-      }
-
-      setSelectedImage(file); // store the actual file
-      setValue('image', file); // optional: sync with react-hook-form
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result); // for display only
-      };
-      reader.readAsDataURL(file);
-    }
+    setAttachmentFiles(prev => [...prev, ...validFiles]);
   };
 
-  // Remove selected image
-  const handleRemoveImage = () => {
-    setSelectedImage(null);
-    setPreviewImage(null);
-    setValue('image', null);
-    setRemoveImage(true);
-    document.getElementById('image-upload').value = '';
+  const removeFile = (index) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   // Handle form submission - copied from AssetRegistration
@@ -341,9 +320,9 @@ export default function AssetEditPage() {
         <section className="top">
           <TopSecFormPage
             root="Assets"
-            currentPage="Edit Asset"
+            currentPage="Update Asset"
             rootNavigatePage="/assets"
-            title={'Edit' + ' ' + (asset?.name || 'Asset')}
+            title={asset?.name || 'Asset'}
             rightComponent={
               <div className="import-section">
                 <button
@@ -608,30 +587,40 @@ export default function AssetEditPage() {
               {errors.notes && <span className='error-message'>{errors.notes.message}</span>}
             </fieldset>
 
-            {/* Image Upload */}
+            {/* Attachments */}
             <fieldset>
-              <label htmlFor='image'>Image Upload</label>
-              {previewImage && (
-                <div className="image-selected">
-                  <img src={previewImage} alt="Asset preview" />
-                  <button type="button" onClick={handleRemoveImage}>
-                    <img src={CloseIcon} alt="Remove" />
-                  </button>
+              <label>Attachments</label>
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="attachments" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="attachments"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                      multiple
+                    />
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
                 </div>
-              )}
-              <label htmlFor="image-upload" className="upload-image-btn">
-                Choose File
-              </label>
-              <input
-                type="file"
-                id="image-upload"
-                accept="image/jpeg,image/jpg,image/png"
-                onChange={handleImageSelection}
-                style={{ display: 'none' }}
-              />
-              <small className="file-size-info">
-                Maximum file size must be 5MB
-              </small>
+
+                {/* Right column: Uploaded files */}
+                <div className="upload-right">
+                  {attachmentFiles.map((file, index) => (
+                    <div className="file-uploaded" key={index}>
+                      <span title={file.name}>{file.name}</span>
+                      <button type="button" onClick={() => removeFile(index)}>
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </fieldset>
 
             {/* Save Button */}

@@ -202,6 +202,57 @@ body.modal-open {
   overflow: hidden;
 }
 
+/* File Upload Styles */
+.file-upload-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-upload-label {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: var(--primary-color);
+  color: white !important;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.file-upload-label:hover {
+  background-color: var(--primary-color-hover);
+}
+
+.file-name {
+  font-size: 0.875rem;
+  color: #666;
+  word-break: break-word;
+  flex: 1;
+}
+
+.file-size-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 4px;
+}
+
+.char-count {
+  display: block;
+  font-size: 0.75rem;
+  color: #999;
+  text-align: right;
+  margin-top: 4px;
+}
+
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 10px;
