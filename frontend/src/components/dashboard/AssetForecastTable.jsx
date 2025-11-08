@@ -31,41 +31,38 @@ function AssetForecastTable({ data }) {
   };
 
   return (
-    <div className="forecast-audit-wrapper">
-      <div className="forecast-audit-header">
-        <h3 className="forecast-audit-title">Asset Status Summary</h3>
-        <MediumButtons type="export" onClick={handleExportExcel} />
-      </div>
-      <div className="forecast-audit-table-section">
-        <table className="forecast-audit-table">
-          <thead>
-            <tr>
-              <th>STATUS</th>
-              <th>CURRENT COUNT</th>
-              <th>FORECAST COUNT</th>
-              <th>TREND</th>
+    <div className="forecast-table-wrapper">
+      <table className="forecast-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Current Count</th>
+            <th>Forecast Count</th>
+            <th>Trend</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((item, index) => (
+            <tr key={index}>
+              <td>{item.status}</td>
+              <td>{item.currentCount}</td>
+              <td>{item.forecastCount}</td>
+              <td>
+                <div className={`trend-cell ${item.trend}`}>
+                  {item.trend === 'up' ? (
+                    <FiTrendingUp className="trend-icon" />
+                  ) : (
+                    <FiTrendingDown className="trend-icon" />
+                  )}
+                  <span>{item.trend === 'up' ? 'Increasing' : 'Decreasing'}</span>
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {data.map((item, index) => (
-              <tr key={index}>
-                <td>{item.status}</td>
-                <td>{item.currentCount}</td>
-                <td>{item.forecastCount}</td>
-                <td>
-                  <div className={`forecast-trend-cell ${item.trend}`}>
-                    {item.trend === 'up' ? (
-                      <FiTrendingUp className="forecast-trend-icon" />
-                    ) : (
-                      <FiTrendingDown className="forecast-trend-icon" />
-                    )}
-                    <span>{item.trend === 'up' ? 'Increasing' : 'Decreasing'}</span>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          ))}
+        </tbody>
+      </table>
+      <div className="table-footer">
+        <MediumButtons type="export" onClick={handleExportExcel} />
       </div>
     </div>
   );
