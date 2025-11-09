@@ -12,6 +12,7 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
+import { getUserRole } from "../../utils/user";
 
 import "../../styles/Products/Products.css";
 
@@ -59,7 +60,14 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each product row
-function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+function TableItem({
+  product,
+  manufacturer,
+  isSelected,
+  onRowChange,
+  onDeleteClick,
+  onViewClick,
+}) {
   const baseImage = product.image
     ? `https://assets-service-production.up.railway.app${product.image}`
     : DefaultImage;
@@ -136,11 +144,15 @@ export default function Products() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedProducts.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedProducts
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedProducts.map((item) => item.id).includes(id))
+        prev.filter(
+          (id) => !paginatedProducts.map((item) => item.id).includes(id)
+        )
       );
     }
   };
@@ -236,8 +248,6 @@ export default function Products() {
     return found ? found.name : "-";
   };
 
-
-
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -275,14 +285,18 @@ export default function Products() {
                     onClick={() => openDeleteModal(null)}
                   />
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                />
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"
                     onClick={() => setExportToggle(!exportToggle)}
                   />
                 </div>
-                {authService.getUserInfo().role === "Admin" && (
+                {getUserRole() === "admin" && (
                   <MediumButtons
                     type="new"
                     navigatePage="/products/registration"

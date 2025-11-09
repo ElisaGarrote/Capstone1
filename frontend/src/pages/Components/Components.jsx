@@ -9,6 +9,7 @@ import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import { getUserRole } from "../../utils/user";
 
 const filterConfig = [
   {
@@ -65,7 +66,14 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem
-function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick, navigate }) {
+function TableItem({
+  item,
+  isSelected,
+  onRowChange,
+  onDeleteClick,
+  onViewClick,
+  navigate,
+}) {
   return (
     <tr>
       <td>
@@ -102,7 +110,9 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick, 
             navigate(`/components/check-out/${item.id}`, { state: { item } })
           }
           onCheckinClick={() =>
-            navigate(`/components/checked-out-list/${item.id}`, { state: { item } })
+            navigate(`/components/checked-out-list/${item.id}`, {
+              state: { item },
+            })
           }
         />
       </td>
@@ -145,11 +155,15 @@ export default function Components() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedActivity.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedActivity
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedActivity.map((item) => item.id).includes(id))
+        prev.filter(
+          (id) => !paginatedActivity.map((item) => item.id).includes(id)
+        )
       );
     }
   };
@@ -239,17 +253,23 @@ export default function Components() {
                     onClick={() => openDeleteModal(null)}
                   />
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                />
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"
                     onClick={() => setExportToggle(!exportToggle)}
                   />
                 </div>
-                <MediumButtons
-                  type="new"
-                  navigatePage="/components/registration"
-                />
+                {getUserRole() === "admin" && (
+                  <MediumButtons
+                    type="new"
+                    navigatePage="/components/registration"
+                  />
+                )}
               </section>
             </section>
 
@@ -278,7 +298,9 @@ export default function Components() {
                         isSelected={selectedIds.includes(item.id)}
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
-                        onViewClick={() => navigate(`/components/view/${item.id}`)}
+                        onViewClick={() =>
+                          navigate(`/components/view/${item.id}`)
+                        }
                         navigate={navigate}
                       />
                     ))

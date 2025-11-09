@@ -12,6 +12,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
+import { getUserRole } from "../../utils/user";
 
 import "../../styles/Assets/Assets.css";
 
@@ -330,7 +331,7 @@ export default function Assets() {
                     onClick={() => setExportToggle(!exportToggle)}
                   />
                 </div>
-                {authService.getUserInfo().role === "Admin" && (
+                {getUserRole() === "admin" && (
                   <MediumButtons
                     type="new"
                     navigatePage="/assets/registration"
