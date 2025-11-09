@@ -7,11 +7,13 @@ import SystemLoading from "./Loading/SystemLoading";
 
 function ProtectedRoute({ roles }) {
   const navigate = useNavigate();
-  const token = sessionStorage.getItem(ACCESS_TOKEN);
+  // const token = sessionStorage.getItem(ACCESS_TOKEN);
   const currentUser = JSON.parse(sessionStorage.getItem("user"));
+  // console.log("currentUser:", currentUser);
 
-  const role = currentUser?.role?.toLowerCase() || "";
-  const isAuthenticated = token ? true : false;
+  const role = currentUser?.system_roles[0].role_name?.toLowerCase() || "";
+  const isAuthenticated = currentUser ? true : false;
+  // const isAuthenticated = token ? true : false;
 
   // Redirect the user back to the previous page.
   useEffect(() => {
