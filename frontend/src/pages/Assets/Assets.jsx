@@ -325,17 +325,19 @@ export default function Assets() {
                   placeholder="Search..."
                   className="search"
                 />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
                 {getUserRole() === "admin" && (
-                  <MediumButtons
-                    type="new"
-                    navigatePage="/assets/registration"
-                  />
+                  <>
+                    <div ref={toggleRef}>
+                      <MediumButtons
+                        type="export"
+                        onClick={() => setExportToggle(!exportToggle)}
+                      />
+                    </div>
+                    <MediumButtons
+                      type="new"
+                      navigatePage="/assets/registration"
+                    />
+                  </>
                 )}
               </section>
             </section>

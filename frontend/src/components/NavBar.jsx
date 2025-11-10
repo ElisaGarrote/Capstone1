@@ -496,7 +496,8 @@ export default function NavBar() {
                 <button onClick={() => navigate("/manage-profile")}>
                   Manage Profile
                 </button>
-                {authService.getUserInfo().role === "Admin" && (
+                {authService.getUserInfo().system_roles[0].role_name ===
+                  "Admin" && (
                   <button onClick={() => navigate("/user-management")}>
                     User Management
                   </button>

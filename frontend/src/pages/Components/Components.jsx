@@ -258,17 +258,19 @@ export default function Components() {
                   placeholder="Search..."
                   className="search"
                 />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
                 {getUserRole() === "admin" && (
-                  <MediumButtons
-                    type="new"
-                    navigatePage="/components/registration"
-                  />
+                  <>
+                    <div ref={toggleRef}>
+                      <MediumButtons
+                        type="export"
+                        onClick={() => setExportToggle(!exportToggle)}
+                      />
+                    </div>
+                    <MediumButtons
+                      type="new"
+                      navigatePage="/components/registration"
+                    />
+                  </>
                 )}
               </section>
             </section>

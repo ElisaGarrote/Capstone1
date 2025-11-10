@@ -9,6 +9,7 @@ import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
 import View from "../../components/Modals/View";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import { getUserRole } from "../../utils/user";
 
 const filterConfig = [
   {
@@ -80,7 +81,13 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem
-function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+function TableItem({
+  repair,
+  isSelected,
+  onRowChange,
+  onDeleteClick,
+  onViewClick,
+}) {
   return (
     <tr>
       <td>
@@ -141,11 +148,15 @@ export default function AssetRepairs() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedActivity.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedActivity
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedActivity.map((item) => item.id).includes(id))
+        prev.filter(
+          (id) => !paginatedActivity.map((item) => item.id).includes(id)
+        )
       );
     }
   };
@@ -239,7 +250,7 @@ export default function AssetRepairs() {
             { label: "End Date", value: selectedRepair.end_date || "Ongoing" },
             { label: "Cost", value: selectedRepair.cost },
             { label: "Status", value: selectedRepair.status_name },
-            { label: "Notes", value: selectedRepair.notes || "No notes" }
+            { label: "Notes", value: selectedRepair.notes || "No notes" },
           ]}
           closeModal={closeViewModal}
         />
@@ -268,17 +279,26 @@ export default function AssetRepairs() {
                     onClick={() => openDeleteModal(null)}
                   />
                 )}
-                <input type="search" placeholder="Search..." className="search" />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
-                <MediumButtons
-                  type="new"
-                  navigatePage="/repairs/registration"
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
                 />
+
+                {getUserRole() === "admin" && (
+                  <>
+                    <div ref={toggleRef}>
+                      <MediumButtons
+                        type="export"
+                        onClick={() => setExportToggle(!exportToggle)}
+                      />
+                    </div>
+                    <MediumButtons
+                      type="new"
+                      navigatePage="/repairs/registration"
+                    />
+                  </>
+                )}
               </section>
             </section>
 
@@ -336,4 +356,3 @@ export default function AssetRepairs() {
     </>
   );
 }
-

@@ -10,6 +10,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import TicketsMockupData from "../../data/mockData/tickets/tickets-mockup-data.json";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import { getUserRole } from "../../utils/user";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -360,12 +361,15 @@ const Tickets = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+
+                {getUserRole() === "admin" && (
+                  <div ref={toggleRef}>
+                    <MediumButtons
+                      type="export"
+                      onClick={() => setExportToggle(!exportToggle)}
+                    />
+                  </div>
+                )}
               </section>
             </section>
 
