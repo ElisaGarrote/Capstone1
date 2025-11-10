@@ -6,10 +6,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils.timezone import now
 from datetime import timedelta
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
+# If will add more views later or functionality, please create file on api folder or services folder
+# Only viewsets here
 
 class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
@@ -325,6 +328,7 @@ def check_depreciation_usage(request, pk):
     )
     return Response({"in_use": in_use})
 #END
+from .api.usage import check_bulk_usage
 
 
 #DASHBOARD

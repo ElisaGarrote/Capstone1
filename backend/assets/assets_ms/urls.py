@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .api.supplier import SupplierDetailProxy, SupplierListProxy
+from .api.contexts import *
 from .views import *
 
 router = DefaultRouter()
@@ -22,6 +23,21 @@ urlpatterns = [
     path("suppliers/<int:pk>/check-usage/", check_supplier_usage, name="check-supplier-usage"),
     path("manufacturers/<int:pk>/check-usage/", check_manufacturer_usage, name="check-manufacturer-usage"),
     path("depreciations/<int:pk>/check-usage/", check_depreciation_usage, name="check-depreciation-usage"),
+
+    # Bulk usage check endpoint
+    path("usage/check_bulk/", check_bulk_usage, name="check-bulk-usage"),
+
+    # Proxy endpoints for external Contexts resources
+    path("contexts/suppliers/", SupplierListProxy.as_view(), name="proxy-supplier-list"),
+    path("contexts/suppliers/<int:pk>/", SupplierDetailProxy.as_view(), name="proxy-supplier-detail"),
+    path("contexts/categories/", CategoryListProxy.as_view(), name="proxy-category-list"),
+    path("contexts/categories/<int:pk>/", CategoryDetailProxy.as_view(), name="proxy-category-detail"),
+    path("contexts/manufacturers/", ManufacturerListProxy.as_view(), name="proxy-manufacturer-list"),
+    path("contexts/manufacturers/<int:pk>/", ManufacturerDetailProxy.as_view(), name="proxy-manufacturer-detail"),
+    path("contexts/depreciations/", DepreciationListProxy.as_view(), name="proxy-depreciation-list"),
+    path("contexts/depreciations/<int:pk>/", DepreciationDetailProxy.as_view(), name="proxy-depreciation-detail"),
+    path("contexts/locations/", LocationListProxy.as_view(), name="proxy-location-list"),
+    path("contexts/statuses/", StatusListProxy.as_view(), name="proxy-status-list"),
 
     path("", include(router.urls)),
 ]

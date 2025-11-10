@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from assets_ms.services.supplier import get_supplier_by_id
+from assets_ms.services.contexts import *
 from .models import *
 from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
@@ -7,6 +7,11 @@ from django.utils import timezone
 
 # Product
 class ProductSerializer(serializers.ModelSerializer):
+    # Include handy context details from the Contexts service for the frontend
+    category_details = serializers.SerializerMethodField()
+    manufacturer_details = serializers.SerializerMethodField()
+    depreciation_details = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = '__all__'
@@ -20,7 +25,8 @@ class ProductSerializer(serializers.ModelSerializer):
         instance = self.instance
 
         if name:
-            normalized_name = " ".join(name.split()).strip()
+            # Normalize spacing and apply Title Case for consistent storage and comparisons
+            normalized_name = " ".join(name.split()).strip().title()
             data['name'] = normalized_name
         else:
             normalized_name = None
@@ -34,9 +40,38 @@ class ProductSerializer(serializers.ModelSerializer):
             })
         
         return data
+
+    def get_category_details(self, obj):
+        try:
+            if not getattr(obj, 'category', None):
+                return None
+            return get_category_by_id(obj.category)
+        except Exception:
+            return {"warning": "Contexts service unreachable for categories."}
+
+    def get_manufacturer_details(self, obj):
+        try:
+            if not getattr(obj, 'manufacturer', None):
+                return None
+            return get_manufacturer_by_id(obj.manufacturer)
+        except Exception:
+            return {"warning": "Contexts service unreachable for manufacturers."}
+
+    def get_depreciation_details(self, obj):
+        try:
+            if not getattr(obj, 'depreciation', None):
+                return None
+            return get_depreciation_by_id(obj.depreciation)
+        except Exception:
+            return {"warning": "Contexts service unreachable for depreciations."}
     
 # Asset
 class AssetSerializer(serializers.ModelSerializer):
+    # Include context details for frontend convenience
+    status_details = serializers.SerializerMethodField()
+    location_details = serializers.SerializerMethodField()
+    supplier_details = serializers.SerializerMethodField()
+
     class Meta:
         model = Asset
         fields = '__all__'
@@ -51,7 +86,8 @@ class AssetSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"product": "Cannot check out a deleted product."})
 
         if name:
-            normalized_name = " ".join(name.split()).strip()
+            # Normalize spacing and apply Title Case
+            normalized_name = " ".join(name.split()).strip().title()
             data['name'] = normalized_name
         else:
             normalized_name = None
@@ -65,6 +101,37 @@ class AssetSerializer(serializers.ModelSerializer):
             })
         
         return data
+
+    def get_status_details(self, obj):
+        """Return status details fetched from Contexts service."""
+        try:
+            if not getattr(obj, 'status', None):
+                return None
+            # import here to avoid circular import at module import time
+            from assets_ms.services.contexts import get_status_by_id
+            return get_status_by_id(obj.status)
+        except Exception:
+            return {"warning": "Contexts service unreachable for statuses."}
+
+    def get_location_details(self, obj):
+        """Return location details fetched from Contexts service."""
+        try:
+            if not getattr(obj, 'location', None):
+                return None
+            from assets_ms.services.contexts import get_location_by_id
+            return get_location_by_id(obj.location)
+        except Exception:
+            return {"warning": "Contexts service unreachable for locations."}
+
+    def get_supplier_details(self, obj):
+        """Return supplier details fetched from Contexts service."""
+        try:
+            if not getattr(obj, 'supplier', None):
+                return None
+            from assets_ms.services.contexts import get_supplier_by_id
+            return get_supplier_by_id(obj.supplier)
+        except Exception:
+            return {"warning": "Contexts service unreachable for suppliers."}
  
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     class Meta:
@@ -136,6 +203,12 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
 
 # Component
 class ComponentSerializer(serializers.ModelSerializer):
+    # Include context details for frontend convenience
+    category_details = serializers.SerializerMethodField()
+    manufacturer_details = serializers.SerializerMethodField()
+    supplier_details = serializers.SerializerMethodField()
+    location_details = serializers.SerializerMethodField()
+
     class Meta:
         model = Component
         fields = '__all__'
@@ -145,7 +218,8 @@ class ComponentSerializer(serializers.ModelSerializer):
         instance = self.instance
 
         if name:
-            normalized_name = " ".join(name.split()).strip()
+            # Normalize spacing and apply Title Case
+            normalized_name = " ".join(name.split()).strip().title()
             data['name'] = normalized_name
         else:
             normalized_name = None
@@ -159,6 +233,42 @@ class ComponentSerializer(serializers.ModelSerializer):
             })
         
         return data
+
+    def get_category_details(self, obj):
+        try:
+            if not getattr(obj, 'category', None):
+                return None
+            from assets_ms.services.contexts import get_category_by_id
+            return get_category_by_id(obj.category)
+        except Exception:
+            return {"warning": "Contexts service unreachable for categories."}
+
+    def get_manufacturer_details(self, obj):
+        try:
+            if not getattr(obj, 'manufacturer', None):
+                return None
+            from assets_ms.services.contexts import get_manufacturer_by_id
+            return get_manufacturer_by_id(obj.manufacturer)
+        except Exception:
+            return {"warning": "Contexts service unreachable for manufacturers."}
+
+    def get_supplier_details(self, obj):
+        try:
+            if not getattr(obj, 'supplier', None):
+                return None
+            from assets_ms.services.contexts import get_supplier_by_id
+            return get_supplier_by_id(obj.supplier)
+        except Exception:
+            return {"warning": "Contexts service unreachable for suppliers."}
+
+    def get_location_details(self, obj):
+        try:
+            if not getattr(obj, 'location', None):
+                return None
+            from assets_ms.services.contexts import get_location_by_id
+            return get_location_by_id(obj.location)
+        except Exception:
+            return {"warning": "Contexts service unreachable for locations."}
 
 class ComponentCheckoutSerializer(serializers.ModelSerializer):
     class Meta:
@@ -316,6 +426,7 @@ class AuditSerializer(serializers.ModelSerializer):
     
 class RepairSerializer(serializers.ModelSerializer):
     supplier_details = serializers.SerializerMethodField()
+    status_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Repair
@@ -333,6 +444,18 @@ class RepairSerializer(serializers.ModelSerializer):
                 "warning": "Supplier service unreachable. Make sure 'contexts-service' is running and accessible."
             }
 
+    def get_status_details(self, obj):
+        """Fetch status details from the Contexts service."""
+        try:
+            if not getattr(obj, 'status_id', None):
+                return None
+            status = get_status_by_id(obj.status_id)
+            return status
+        except Exception:
+            return {
+                "warning": "Statuses service unreachable. Make sure 'contexts-service' is running and accessible."
+            }
+
     def validate(self, attrs):
         """Prevent duplicate repairs on the same asset with same name/date."""
         asset = attrs.get('asset') or getattr(self.instance, 'asset', None)
@@ -344,16 +467,25 @@ class RepairSerializer(serializers.ModelSerializer):
             start_date = start_date.date()
 
         # 🔍 Check for existing repair with same asset, name, and date
-        duplicate = (
-            Repair.objects.filter(
-                asset=asset,
-                name__iexact=name.strip(),
-                start_date=start_date,
-                is_deleted=False
+        # Normalize the repair name for comparison/storage (Title Case)
+        if name:
+            normalized_name = " ".join(name.split()).strip().title()
+            attrs['name'] = normalized_name
+        else:
+            normalized_name = None
+
+        duplicate = False
+        if normalized_name:
+            duplicate = (
+                Repair.objects.filter(
+                    asset=asset,
+                    name__iexact=normalized_name,
+                    start_date=start_date,
+                    is_deleted=False
+                )
+                .exclude(pk=self.instance.pk if self.instance else None)
+                .exists()
             )
-            .exclude(pk=self.instance.pk if self.instance else None)
-            .exists()
-        )
 
         if duplicate:
             raise serializers.ValidationError({

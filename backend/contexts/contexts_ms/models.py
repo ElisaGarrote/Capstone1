@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from .utils import normalize_name_smart
 
 # Create your models here.
 class Category(models.Model):
@@ -12,10 +13,12 @@ class Category(models.Model):
     is_deleted = models.BooleanField(default=False)
 
     def clean(self):
-        # Check for categories with the same name and type that has is_deleted=False
-        # Safe registration for django admin
+        if self.name:
+            # Use smart normalizer to preserve acronyms/possessives (e.g. "SSD's")
+            self.name = normalize_name_smart(self.name)
+
         if Category.objects.filter(
-            name__exact=self.name,
+            name__iexact=self.name,
             type=self.type,
             is_deleted=False
         ).exclude(pk=self.pk).exists():
