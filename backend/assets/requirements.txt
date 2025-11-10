@@ -15,7 +15,7 @@ gunicorn==21.2.0
 idna==3.10
 oauthlib==3.2.2
 packaging==25.0
-pillow==11.2.1
+pillow
 psycopg2-binary==2.9.10
 pycparser==2.22
 PyJWT==2.9.0
@@ -32,3 +32,5 @@ typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.4.0
 whitenoise==6.9.0
+openpyxl==3.1.2
+
