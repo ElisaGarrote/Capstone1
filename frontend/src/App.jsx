@@ -104,7 +104,30 @@ function App() {
             element={<AssetsRegistration />}
           />
           <Route path="/assets/edit/:id" element={<AssetEditPage />} />
+          <Route
+            path="/components/registration"
+            element={<ComponentRegistration />}
+          />
+          <Route
+            path="/components/edit/:id"
+            element={<ComponentRegistration />}
+          />
           <Route path="/user-management" element={<UserManagement />} />
+
+          {/* Reports */}
+          <Route path="/reports/asset" element={<AssetReport />} />
+          <Route
+            path="/reports/depreciation"
+            element={<DepreciationReport />}
+          />
+          <Route path="/reports/due-back" element={<DueBackReport />} />
+          <Route
+            path="/reports/eol-warranty"
+            element={<EndOfLifeWarrantyReport />}
+          />
+          <Route path="/reports/activity" element={<ActivityReport />} />
+
+          {/* More */}
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
           <Route
             path="/More/CategoryRegistration"
@@ -180,14 +203,6 @@ function App() {
           <Route path="/assets/check-out/:id" element={<CheckOutAsset />} />
           <Route path="/components" element={<Components />} />
           <Route
-            path="/components/registration"
-            element={<ComponentRegistration />}
-          />
-          <Route
-            path="/components/edit/:id"
-            element={<ComponentRegistration />}
-          />
-          <Route
             path="/components/check-out/:id"
             element={<ComponentCheckout />}
           />
@@ -228,17 +243,6 @@ function App() {
           <Route path="/warranties" element={<ExpiringWarranties />} />
           <Route path="/reached-end-of-life" element={<ReachedEndOfLife />} />
           <Route path="/expired-warranties" element={<ExpiredWarranties />} />
-          <Route path="/reports/asset" element={<AssetReport />} />
-          <Route
-            path="/reports/depreciation"
-            element={<DepreciationReport />}
-          />
-          <Route path="/reports/due-back" element={<DueBackReport />} />
-          <Route
-            path="/reports/eol-warranty"
-            element={<EndOfLifeWarrantyReport />}
-          />
-          <Route path="/reports/activity" element={<ActivityReport />} />
           <Route path="/manage-profile" element={<ManageProfile />} />
 
           <Route path="*" element={<NotFound />}></Route>
