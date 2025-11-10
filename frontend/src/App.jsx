@@ -104,28 +104,6 @@ function App() {
             element={<AssetsRegistration />}
           />
           <Route path="/assets/edit/:id" element={<AssetEditPage />} />
-          <Route path="/components" element={<Components />} />
-          <Route
-            path="/components/registration"
-            element={<ComponentRegistration />}
-          />
-          <Route
-            path="/components/edit/:id"
-            element={<ComponentRegistration />}
-          />
-          <Route
-            path="/components/check-out/:id"
-            element={<ComponentCheckout />}
-          />
-          <Route
-            path="/components/checked-out-list/:id"
-            element={<ComponentCheckedoutList />}
-          />
-          <Route
-            path="/components/check-in/:id"
-            element={<ComponentCheckin />}
-          />
-          <Route path="/components/view/:id" element={<ComponentView />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
           <Route
