@@ -286,19 +286,18 @@ export default function AssetRepairs() {
                 />
 
                 {getUserRole() === "admin" && (
-                  <>
-                    <div ref={toggleRef}>
-                      <MediumButtons
-                        type="export"
-                        onClick={() => setExportToggle(!exportToggle)}
-                      />
-                    </div>
+                  <div ref={toggleRef}>
                     <MediumButtons
-                      type="new"
-                      navigatePage="/repairs/registration"
+                      type="export"
+                      onClick={() => setExportToggle(!exportToggle)}
                     />
-                  </>
+                  </div>
                 )}
+
+                <MediumButtons
+                  type="new"
+                  navigatePage="/repairs/registration"
+                />
               </section>
             </section>
 
