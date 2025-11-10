@@ -203,6 +203,99 @@ body.modal-open {
 }
 
 /* File Upload Styles */
+.modal-form .attachments-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+  align-items: flex-start;
+  margin-top: 8px;
+}
+
+.modal-form .upload-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.modal-form .upload-image-btn {
+  display: flex;
+  width: fit-content;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--primary-color);
+  border-radius: 25px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  color: var(--bg-color);
+  cursor: pointer;
+  transition: 0.5s ease;
+  border: none;
+  font-weight: 500;
+}
+
+.modal-form .upload-image-btn:hover {
+  background-color: var(--primary-color-hover);
+}
+
+.modal-form .file-size-info {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--secondary-text-color);
+}
+
+.modal-form .upload-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 100%;
+}
+
+.modal-form .file-uploaded {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  gap: 8px;
+}
+
+.modal-form .file-uploaded span {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-form .file-uploaded button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+}
+
+.modal-form .file-uploaded button:hover {
+  opacity: 0.7;
+}
+
+.modal-form .file-uploaded button img {
+  width: 16px;
+  height: 16px;
+}
+
 .file-upload-wrapper {
   display: flex;
   align-items: center;

@@ -5,6 +5,7 @@ import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import { getAssetDetails, getCheckedOutToInfo, getTabs } from "../../data/mockData/assets/assetDetailsData";
 import "../../styles/Assets/AssetViewPage.css";
 import "../../styles/Assets/AssetEditPage.css";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
@@ -13,6 +14,7 @@ function AssetViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [asset, setAsset] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
@@ -22,7 +24,12 @@ function AssetViewPage() {
     if (foundAsset) {
       setAsset(foundAsset);
     }
+    setIsLoading(false);
   }, [id]);
+
+  if (isLoading) {
+    return null; // Don't render anything while loading
+  }
 
   if (!asset) {
     return (
@@ -35,15 +42,8 @@ function AssetViewPage() {
     );
   }
 
-  // Define tabs for the detailed view
-  const tabs = [
-    { label: "About" },
-    { label: "History" },
-    { label: "Components ()" },
-    { label: "Repair ()" },
-    { label: "Audits ()" },
-    { label: "Attachments ()" }
-  ];
+  // Get tabs configuration from data
+  const tabs = getTabs();
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
@@ -56,12 +56,8 @@ function AssetViewPage() {
     navigate("/assets");
   };
 
-  // Checked out to information
-  const checkedOutTo = asset.checkoutRecord ? {
-    name: "Elias Gamboa",
-    email: "garciamariaeliasgarcia@gmail.com",
-    checkoutDate: "2025-08-15"
-  } : null;
+  // Get checked out to information from data
+  const checkedOutTo = getCheckedOutToInfo(asset);
 
   // Button action handlers
   const handleCloneClick = () => {
@@ -137,52 +133,8 @@ function AssetViewPage() {
         />
       )}
       <DetailedViewPage
-        breadcrumbRoot="Assets"
-        breadcrumbCurrent="Show Asset"
-        breadcrumbRootPath="/assets"
-        title={asset.name}
-        subtitle={`Asset ID: ${asset.displayed_id}`}
+        {...getAssetDetails(asset)}
         assetImage={asset.image ? `https://assets-service-production.up.railway.app${asset.image}` : DefaultImage}
-        assetTag={asset.displayed_id}
-        status="Ready to Deploy"
-        statusType="ready-to-deploy"
-        company="Zip Technology Corp."
-        checkoutDate="2025-08-15 12:00 AM"
-        nextAuditDate="2025-08-19"
-        manufacturer="Apple"
-        manufacturerUrl="https://www.apple.com"
-        supportUrl="https://support.apple.com"
-        supportPhone="+1 800 136 900"
-        category="Mobile Phones"
-        model={asset.name || "iPhone 16 Pro Max"}
-        modelNo="2129GH3221"
-        // About section props
-        productName={asset.name || "iPhone 16 Pro Max"}
-        serialNumber="SN123456789"
-        assetType="Smartphone"
-        supplier="Apple Authorized Reseller"
-        depreciationType="Straight Line"
-        fullyDepreciatedDate="2029-01-15 (4 years, 2 months, 2 weeks remaining)"
-        location="Manila Office - IT Department"
-        warrantyDate="2026-01-15 (1 year, 2 months, 2 weeks remaining)"
-        endOfLife="2029-12-31 (5 years, 1 month, 4 weeks remaining)"
-        orderNumber="PO-2024-001234"
-        purchaseDate="2024-01-15"
-        purchaseCost="₱65,990.00"
-        // Smartphone specific
-        imeiNumber="123456789012345"
-        connectivity="5G, Wi-Fi 6E, Bluetooth 5.3"
-        // Laptop specific (not used for smartphone)
-        ssdEncryptionStatus="N/A"
-        cpu="A18 Pro chip"
-        gpu="6-core GPU"
-        operatingSystem="iOS 18"
-        ram="8GB"
-        screenSize="6.9 inches"
-        storageSize="256GB"
-        notes="Latest flagship model with advanced camera system and titanium design. Assigned to senior developer for mobile app testing."
-        createdAt="2024-01-15 10:30:00"
-        updatedAt="2024-11-01 14:45:00"
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}

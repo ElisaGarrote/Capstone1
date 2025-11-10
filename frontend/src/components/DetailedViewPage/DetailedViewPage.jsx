@@ -12,7 +12,10 @@ import UploadModal from "../Modals/UploadModal";
 import View from "../Modals/View";
 import Footer from "../Footer";
 import { useState, useEffect } from "react";
-import { historyData, componentsData, repairsData, auditsDuplicateData, attachmentsData } from "../../data/detailedviewpage/mockData";
+import { useNavigate } from "react-router-dom";
+import mockData from "../../data/mockData/detailedviewpage/asset-view-page.json";
+
+const { historyData, componentsData, repairsData, auditsDuplicateData, attachmentsData } = mockData;
 
 export default function DetailedViewPage({
   breadcrumbRoot,
@@ -67,6 +70,7 @@ export default function DetailedViewPage({
   onTabChange,
   children
 }) {
+  const navigate = useNavigate();
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
   const [historyPageSize, setHistoryPageSize] = useState(5);
@@ -535,8 +539,13 @@ Updated At: ${updatedAt || 'N/A'}`;
                           <ActionButtons
                             showCheckin
                             onCheckinClick={() => {
-                              // Navigate to check-in page
-                              window.location.href = '/components/check-in/1';
+                              // Navigate to component check-in page
+                              navigate(`/components/check-in/${item.id}`, {
+                                state: {
+                                  item,
+                                  componentName: item.componentName || item.component
+                                }
+                              });
                             }}
                           />
                         </td>

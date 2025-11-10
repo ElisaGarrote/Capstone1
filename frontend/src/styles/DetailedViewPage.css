@@ -1608,7 +1608,7 @@
 
 .audits-duplicate-table-section table th:last-child {
   width: 20%;
-  text-align: center !important;
+  text-align: left !important;
 }
 
 .audits-duplicate-table-section table td {
@@ -1622,7 +1622,11 @@
 }
 
 .audits-duplicate-table-section table td:last-child {
-  text-align: center !important;
+  text-align: left !important;
+}
+
+.audits-duplicate-table-section .action-button-section {
+  justify-content: flex-start !important;
 }
 
 .audits-duplicate-table-section table tr:hover {
@@ -2037,12 +2041,12 @@
 
   .audits-duplicate-table-section table th:last-child {
     width: 20%;
-    text-align: center !important;
+    text-align: left !important;
   }
 
   .audits-duplicate-table-section table td:last-child {
     width: 20%;
-    text-align: center !important;
+    text-align: left !important;
   }
 
   .audits-duplicate-pagination-section {

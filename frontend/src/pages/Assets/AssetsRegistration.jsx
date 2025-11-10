@@ -689,9 +689,9 @@ export default function AssetsRegistration() {
               />
             </fieldset>
 
-            {/* Attachments */}
+            {/* Image Upload */}
             <fieldset>
-              <label>Attachments</label>
+              <label>Image Upload</label>
               <div className="attachments-wrapper">
                 {/* Left column: Upload button & info */}
                 <div className="upload-left">

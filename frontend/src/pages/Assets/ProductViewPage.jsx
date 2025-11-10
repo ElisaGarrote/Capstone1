@@ -15,6 +15,7 @@ function ProductViewPage() {
   const location = useLocation();
   const [product, setProduct] = useState(null);
   const [manufacturer, setManufacturer] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   useEffect(() => {
@@ -29,7 +30,12 @@ function ProductViewPage() {
       );
       setManufacturer(foundManufacturer);
     }
+    setIsLoading(false);
   }, [id]);
+
+  if (isLoading) {
+    return null; // Don't render anything while loading
+  }
 
   if (!product) {
     return (

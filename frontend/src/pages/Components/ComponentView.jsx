@@ -10,6 +10,7 @@ function ComponentView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [asset, setAsset] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
@@ -19,7 +20,12 @@ function ComponentView() {
     if (foundAsset) {
       setAsset(foundAsset);
     }
+    setIsLoading(false);
   }, [id]);
+
+  if (isLoading) {
+    return null; // Don't render anything while loading
+  }
 
   if (!asset) {
     return (

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
@@ -8,6 +9,7 @@ import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import dtsService from "../../services/dts-integration-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import CloseIcon from "../../assets/icons/close.svg";
 
 
 export default function CheckOutAsset() {
@@ -28,9 +30,10 @@ export default function CheckOutAsset() {
   ];
 
   const navigate = useNavigate();
-  
+
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   useEffect(() => {
     if (passedState) {
@@ -82,8 +85,7 @@ export default function CheckOutAsset() {
       checkoutDate: checkoutDate || "",
       expectedReturnDate: returnDate || "",
       condition: "",
-      notes: "",
-      photos: []
+      notes: ""
     },
   });
 
@@ -100,11 +102,37 @@ export default function CheckOutAsset() {
         setErrorMessage("Failed to initialize data");
       } finally {
         setIsLoading(false);
-      } 
+      }
     };
 
     initialize();
   }, [passedState, setValue]);
+
+  // Handle file selection
+  const handleFileSelection = (e) => {
+    const files = Array.from(e.target.files || []);
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const validFiles = [];
+
+    files.forEach(file => {
+      if (file.size > maxSize) {
+        setErrorMessage(`${file.name} exceeds 5MB and was not added.`);
+        setTimeout(() => setErrorMessage(""), 5000);
+      } else if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        setErrorMessage(`${file.name} is not a valid image format. Only .jpeg and .png are allowed.`);
+        setTimeout(() => setErrorMessage(""), 5000);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  // Remove file from selection
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
 
 
@@ -127,6 +155,11 @@ export default function CheckOutAsset() {
       formData.append('notes', data.notes || '');
       formData.append('confirmation_notes', data.confirmationNotes || '');
 
+      // Append image files
+      selectedFiles.forEach((file, index) => {
+        formData.append(`image_${index}`, file);
+      });
+
       for (let pair of formData.entries()) {
         console.log(pair[0]+ ': ' + pair[1]);
       }
@@ -134,24 +167,15 @@ export default function CheckOutAsset() {
       await assetsService.createAssetCheckout(formData);
       await dtsService.resolveCheckoutTicket(ticketId);
 
-      if (fromAsset) {
-        console.log("Ticket Information:", { ticketId });
-
-        navigate('/assets', { 
-          state: { 
-            successMessage: "Asset has been checked out successfully!"
-          } 
-        });
-      } else {
-        navigate('/approved-tickets', {
-          state: {
-            successMessage: "Asset has been checked out successfully!"
-          }
-        });
-      }
+      // Navigate to asset view page after successful checkout
+      navigate(`/assets/view/${id}`, {
+        state: {
+          successMessage: "Asset has been checked out successfully!"
+        }
+      });
 
     } catch (error) {
-      console.error("Error occured while checking out the asset:", error);
+      console.error("Error occurred while checking out the asset:", error);
       setErrorMessage(
         error.message || "An error occurred while checking out the asset"
       );
@@ -178,6 +202,18 @@ export default function CheckOutAsset() {
         </section>
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Form Header */}
+            <h2 style={{
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: 'var(--secondary-text-color)',
+              marginBottom: '10px',
+              borderBottom: '1px solid #d3d3d3',
+              paddingBottom: '10px'
+            }}>
+              Checkout To
+            </h2>
+
             {/* Employee */}
             <fieldset>
               <label htmlFor="employee">Employee <span style={{color: 'red'}}>*</span></label>
@@ -257,6 +293,42 @@ export default function CheckOutAsset() {
               ></textarea>
             </fieldset>
 
+            {/* Image Upload */}
+            <fieldset>
+              <label>Image Upload</label>
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="images" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="images"
+                      accept=".jpeg,.jpg,.png"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                      multiple
+                    />
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
+                </div>
+
+                {/* Right column: Uploaded files */}
+                <div className="upload-right">
+                  {selectedFiles.map((file, index) => (
+                    <div className="file-uploaded" key={index}>
+                      <span title={file.name}>{file.name}</span>
+                      <button type="button" onClick={() => removeFile(index)}>
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </fieldset>
+
             {/* Submit */}
             <button type="submit" className="primary-button" disabled={!isValid}>
               Save
@@ -264,6 +336,7 @@ export default function CheckOutAsset() {
           </form>
         </section>
       </main>
+      <Footer />
     </>
   );
 }
