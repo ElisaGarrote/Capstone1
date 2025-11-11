@@ -228,8 +228,8 @@ Updated At: ${updatedAt || 'N/A'}`;
       <section className={`detailed-content-wrapper ${activeTab === 3 || activeTab === 4 || activeTab === 5 ? 'full-width' : ''}`}>
         {/* Left Content - Asset Details */}
         <section className={`detailed-main-content ${activeTab === 3 || activeTab === 4 || activeTab === 5 ? 'hidden' : ''}`}>
-          {/* About Asset Section */}
-          {activeTab === 0 && (
+          {/* About Asset Section - Only render default if no children provided */}
+          {activeTab === 0 && !children && (
             <div className="about-section">
               {/* QR Section */}
               <div className="qr-section">
@@ -266,192 +266,194 @@ Updated At: ${updatedAt || 'N/A'}`;
 
               {/* Details Section */}
               <div className="asset-details-section">
-                <h3 className="section-header">Details</h3>
-                <div className="asset-details-grid">
-                  <div className="detail-row">
-                    <label>Asset ID</label>
-                    <span>{assetTag}</span>
-                  </div>
+                  <h3 className="section-header">Details</h3>
+                  <div className="asset-details-grid">
+                    <div className="detail-row">
+                      <label>Asset ID</label>
+                      <span>{assetTag}</span>
+                    </div>
 
-                  <div className="detail-row">
-                    <label>Asset Serial Number</label>
-                    <span>{serialNumber || 'N/A'}</span>
-                  </div>
+                    <div className="detail-row">
+                      <label>Asset Serial Number</label>
+                      <span>{serialNumber || 'N/A'}</span>
+                    </div>
 
-                  <div className="detail-row">
-                    <label>Asset Model / Product Name</label>
-                    <span>{productName || model}</span>
-                  </div>
+                    <div className="detail-row">
+                      <label>Asset Model / Product Name</label>
+                      <span>{productName || model}</span>
+                    </div>
 
-                  <div className="detail-row">
-                    <label>Category</label>
-                    <span>{category}</span>
-                  </div>
+                    <div className="detail-row">
+                      <label>Category</label>
+                      <span>{category}</span>
+                    </div>
 
-                  <div className="detail-row">
-                    <label>Supplier</label>
-                    <span>{supplier || 'N/A'}</span>
-                  </div>
+                    <div className="detail-row">
+                      <label>Supplier</label>
+                      <span>{supplier || 'N/A'}</span>
+                    </div>
 
-                  <div className="detail-row">
-                    <label>Manufacturer</label>
-                    <div className="manufacturer-links">
-                      <div>
-                        <span>{manufacturer}</span>
+                    <div className="detail-row">
+                      <label>Manufacturer</label>
+                      <div className="manufacturer-links">
+                        <div>
+                          <span>{manufacturer}</span>
+                        </div>
+                        {manufacturerUrl && (
+                          <div>
+                            <a href={manufacturerUrl} target="_blank" rel="noopener noreferrer">
+                              <i className="fas fa-external-link-alt"></i> {manufacturerUrl}
+                            </a>
+                          </div>
+                        )}
+                        {supportUrl && (
+                          <div>
+                            <a href={supportUrl} target="_blank" rel="noopener noreferrer">
+                              <i className="fas fa-external-link-alt"></i> {supportUrl}
+                            </a>
+                          </div>
+                        )}
+                        {supportPhone && (
+                          <div>
+                            <a href={`tel:${supportPhone}`}>
+                              <i className="fas fa-phone"></i> {supportPhone}
+                            </a>
+                          </div>
+                        )}
                       </div>
-                      {manufacturerUrl && (
-                        <div>
-                          <a href={manufacturerUrl} target="_blank" rel="noopener noreferrer">
-                            <i className="fas fa-external-link-alt"></i> {manufacturerUrl}
-                          </a>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Depreciation Type</label>
+                      <span>{depreciationType || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Fully Depreciated</label>
+                      <span>{fullyDepreciatedDate || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Location</label>
+                      <span>{location || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Warranty</label>
+                      <span>{warrantyDate || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>End of Life</label>
+                      <span>{endOfLife || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Order Number</label>
+                      <span>{orderNumber || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Purchase Date</label>
+                      <span>{purchaseDate || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Purchase Cost</label>
+                      <span>{purchaseCost || 'N/A'}</span>
+                    </div>
+
+                    {/* Smartphone specific fields */}
+                    {assetType === 'Smartphone' && (
+                      <>
+                        <div className="detail-row">
+                          <label>IMEI Number</label>
+                          <span>{imeiNumber || 'N/A'}</span>
                         </div>
-                      )}
-                      {supportUrl && (
-                        <div>
-                          <a href={supportUrl} target="_blank" rel="noopener noreferrer">
-                            <i className="fas fa-external-link-alt"></i> {supportUrl}
-                          </a>
+
+                        <div className="detail-row">
+                          <label>Connectivity</label>
+                          <span>{connectivity || 'N/A'}</span>
                         </div>
-                      )}
-                      {supportPhone && (
-                        <div>
-                          <a href={`tel:${supportPhone}`}>
-                            <i className="fas fa-phone"></i> {supportPhone}
-                          </a>
+
+                        <div className="detail-row">
+                          <label>Operating System</label>
+                          <span>{operatingSystem || 'N/A'}</span>
                         </div>
-                      )}
+
+                        <div className="detail-row">
+                          <label>Storage Size</label>
+                          <span>{storageSize || 'N/A'}</span>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Laptop specific fields */}
+                    {assetType === 'Laptop' && (
+                      <>
+                        <div className="detail-row">
+                          <label>SSD Encryption Status</label>
+                          <span>{ssdEncryptionStatus || 'N/A'}</span>
+                        </div>
+
+                        <div className="detail-row">
+                          <label>CPU</label>
+                          <span>{cpu || 'N/A'}</span>
+                        </div>
+
+                        <div className="detail-row">
+                          <label>GPU</label>
+                          <span>{gpu || 'N/A'}</span>
+                        </div>
+
+                        <div className="detail-row">
+                          <label>Operating System</label>
+                          <span>{operatingSystem || 'N/A'}</span>
+                        </div>
+
+                        <div className="detail-row">
+                          <label>RAM</label>
+                          <span>{ram || 'N/A'}</span>
+                        </div>
+
+                        <div className="detail-row">
+                          <label>Screen Size</label>
+                          <span>{screenSize || 'N/A'}</span>
+                        </div>
+
+                        <div className="detail-row">
+                          <label>Storage Size</label>
+                          <span>{storageSize || 'N/A'}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Additional Fields Section */}
+                <div className="additional-fields-section">
+                  <h3 className="section-header">Additional Fields</h3>
+                  <div className="asset-details-grid">
+                    <div className="detail-row">
+                      <label>Notes</label>
+                      <span>{notes || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Created At</label>
+                      <span>{createdAt || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Updated At</label>
+                      <span>{updatedAt || 'N/A'}</span>
                     </div>
                   </div>
-
-                  <div className="detail-row">
-                    <label>Depreciation Type</label>
-                    <span>{depreciationType || 'N/A'}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <label>Fully Depreciated</label>
-                    <span>{fullyDepreciatedDate || 'N/A'}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <label>Location</label>
-                    <span>{location || 'N/A'}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <label>Warranty</label>
-                    <span>{warrantyDate || 'N/A'}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <label>End of Life</label>
-                    <span>{endOfLife || 'N/A'}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <label>Order Number</label>
-                    <span>{orderNumber || 'N/A'}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <label>Purchase Date</label>
-                    <span>{purchaseDate || 'N/A'}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <label>Purchase Cost</label>
-                    <span>{purchaseCost || 'N/A'}</span>
-                  </div>
-
-                  {/* Smartphone specific fields */}
-                  {assetType === 'Smartphone' && (
-                    <>
-                      <div className="detail-row">
-                        <label>IMEI Number</label>
-                        <span>{imeiNumber || 'N/A'}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <label>Connectivity</label>
-                        <span>{connectivity || 'N/A'}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <label>Operating System</label>
-                        <span>{operatingSystem || 'N/A'}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <label>Storage Size</label>
-                        <span>{storageSize || 'N/A'}</span>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Laptop specific fields */}
-                  {assetType === 'Laptop' && (
-                    <>
-                      <div className="detail-row">
-                        <label>SSD Encryption Status</label>
-                        <span>{ssdEncryptionStatus || 'N/A'}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <label>CPU</label>
-                        <span>{cpu || 'N/A'}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <label>GPU</label>
-                        <span>{gpu || 'N/A'}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <label>Operating System</label>
-                        <span>{operatingSystem || 'N/A'}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <label>RAM</label>
-                        <span>{ram || 'N/A'}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <label>Screen Size</label>
-                        <span>{screenSize || 'N/A'}</span>
-                      </div>
-
-                      <div className="detail-row">
-                        <label>Storage Size</label>
-                        <span>{storageSize || 'N/A'}</span>
-                      </div>
-                    </>
-                  )}
                 </div>
-              </div>
-
-              {/* Additional Fields Section */}
-              <div className="additional-fields-section">
-                <h3 className="section-header">Additional Fields</h3>
-                <div className="asset-details-grid">
-                  <div className="detail-row">
-                    <label>Notes</label>
-                    <span>{notes || 'N/A'}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <label>Created At</label>
-                    <span>{createdAt || 'N/A'}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <label>Updated At</label>
-                    <span>{updatedAt || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
+          {/* Custom Children Content */}
+          {children}
 
           {/* Other tab content will go here */}
           {activeTab !== 0 && activeTab !== 1 && activeTab !== 2 && activeTab !== 3 && activeTab !== 4 && activeTab !== 5 && (
@@ -459,9 +461,6 @@ Updated At: ${updatedAt || 'N/A'}`;
               <p>No data available.</p>
             </div>
           )}
-
-          {/* Custom Children Content */}
-          {children}
         </section>
 
         {/* History Tab - Outside of detailed-main-content */}

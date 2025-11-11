@@ -114,6 +114,134 @@
   border-radius: 0 0 8px 8px;
 }
 
+/* Assets Tab Styles */
+.assets-tab-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #cccccc;
+  padding: 0;
+  overflow: visible;
+  width: 100%;
+  height: auto;
+  flex: none;
+}
+
+.assets-table-section {
+  overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior: contain;
+  width: 100%;
+  height: auto;
+}
+
+.assets-table {
+  width: 100%;
+  height: auto;
+  border-collapse: collapse;
+}
+
+.assets-table thead {
+  background-color: #f0f1f2;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.assets-table th {
+  padding: 0.75rem !important;
+  text-align: left !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-top: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+  white-space: nowrap;
+}
+
+.assets-table td {
+  padding: 0.75rem;
+  text-align: left !important;
+  font-size: 0.8125rem;
+  color: var(--text-color);
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+  vertical-align: middle;
+}
+
+.assets-table tbody tr:hover {
+  background-color: #fcfcfc;
+}
+
+/* Products Tab Styles */
+.products-tab-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #cccccc;
+  padding: 0;
+  overflow: visible;
+  width: 100%;
+  height: auto;
+  flex: none;
+}
+
+.products-table-section {
+  overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior: contain;
+  width: 100%;
+  height: auto;
+}
+
+.products-table {
+  width: 100%;
+  height: auto;
+  border-collapse: collapse;
+}
+
+.products-table thead {
+  background-color: #f0f1f2;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.products-table th {
+  padding: 0.75rem !important;
+  text-align: left !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-top: 1px solid #cccccc;
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+  white-space: nowrap;
+}
+
+.products-table td {
+  padding: 0.75rem;
+  text-align: left !important;
+  font-size: 0.8125rem;
+  color: var(--text-color);
+  border-bottom: 1px solid #cccccc;
+  height: 50px;
+  vertical-align: middle;
+}
+
+.products-table tbody tr:hover {
+  background-color: #fcfcfc;
+}
+
 @media (max-width: 768px) {
   .product-view-header {
     flex-direction: column;

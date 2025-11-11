@@ -28,20 +28,10 @@ function TableHeader({ allSelected, onHeaderChange }) {
         />
       </th>
       <th>IMAGE</th>
-      <th>ASSET ID</th>
-      <th>PRODUCT</th>
+      <th>ID</th>
+      <th>NAME</th>
+      <th>CATEGORY</th>
       <th>STATUS</th>
-      <th>SUPPLIER</th>
-      <th>LOCATION</th>
-      <th>ASSET NAME</th>
-      <th>SERIAL NUMBER</th>
-      <th>WARRANTY EXPIRATION DATE</th>
-      <th>ORDER NUMBER</th>
-      <th>PURCHASE DATE</th>
-      <th>PURCHASE COST</th>
-      <th>DISPOSAL STATUS</th>
-      <th>SCHEDULE AUDIT</th>
-      <th>NOTES</th>
       <th>CHECK-IN / CHECK-OUT</th>
       <th>ACTION</th>
     </tr>
@@ -74,21 +64,11 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
         />
       </td>
       <td>{asset.displayed_id}</td>
-      <td>{asset.product || 'N/A'}</td>
+      <td>{asset.name}</td>
+      <td>{asset.category || 'N/A'}</td>
       <td>
         <Status type={asset.status.toLowerCase()} name={asset.status} />
       </td>
-      <td>{asset.supplier || 'N/A'}</td>
-      <td>{asset.location || 'N/A'}</td>
-      <td>{asset.name}</td>
-      <td>{asset.serial_number || 'N/A'}</td>
-      <td>{asset.warranty_expiration_date || 'N/A'}</td>
-      <td>{asset.order_number || 'N/A'}</td>
-      <td>{asset.purchase_date || 'N/A'}</td>
-      <td>{asset.purchase_cost ? `₱${asset.purchase_cost.toLocaleString()}` : 'N/A'}</td>
-      <td>{asset.disposal_status || 'N/A'}</td>
-      <td>{asset.schedule_audit || 'N/A'}</td>
-      <td>{asset.notes || 'N/A'}</td>
 
       {/* Check-in/Check-out Column */}
       <td>
@@ -459,7 +439,7 @@ export default function Assets() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={19} className="no-data-message">
+                      <td colSpan={8} className="no-data-message">
                         No Assets Found.
                       </td>
                     </tr>
