@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import ManufacturerFilterModal from "../../components/Modals/ManufacturerFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
@@ -107,10 +108,51 @@ export default function ViewManuDraft() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
+  // filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filteredData, setFilteredData] = useState(MockupData);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((manufacturer) =>
+        manufacturer.name?.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    // Filter by URL
+    if (filters.url && filters.url.trim() !== "") {
+      filtered = filtered.filter((manufacturer) =>
+        manufacturer.url?.toLowerCase().includes(filters.url.toLowerCase())
+      );
+    }
+
+    // Filter by Email
+    if (filters.email && filters.email.trim() !== "") {
+      filtered = filtered.filter((manufacturer) =>
+        manufacturer.email?.toLowerCase().includes(filters.email.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedManufacturer = MockupData.slice(startIndex, endIndex);
+  const paginatedManufacturer = filteredData.slice(startIndex, endIndex);
 
   // Retrieve the "addManufacturer" value passed from the navigation state.
   // If the "addManufacturer" is not exist, the default value for this is "undifiend".
@@ -282,6 +324,13 @@ export default function ViewManuDraft() {
         />
       )}
 
+      <ManufacturerFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
+
       <section className="page-layout-with-table">
         <NavBar />
 
@@ -289,7 +338,7 @@ export default function ViewManuDraft() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Manufacturers ({MockupData.length})</h2>
+              <h2 className="h2">Manufacturers ({filteredData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
@@ -298,6 +347,15 @@ export default function ViewManuDraft() {
                   onChange={handleSearchChange}
                   className="search"
                 />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
                 <MediumButtons
                   type="new"
                   navigatePage="/More/ManufacturerRegistration"
@@ -342,7 +400,7 @@ export default function ViewManuDraft() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={paginatedManufacturer.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

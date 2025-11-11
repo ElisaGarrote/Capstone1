@@ -2,8 +2,6 @@
     overflow-x: auto;
     max-height: 55vh;
     overflow-y: auto;
-
-    /* Prevent affecting the parent when scrolling. */
     overscroll-behavior: contain;
 
     table {
@@ -106,8 +104,7 @@
 
             height: 50px;
         }
-
-        /* Ensure empty-state row spans correctly across all columns */
+        
         td.no-data-message {
             display: table-cell !important;
             width: 100% !important;
@@ -179,4 +176,21 @@
 
 .table-pagination {
     padding: 0 20px;
+}
+
+.search {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 25px;
+    border: 1px solid #d3d3d3;
+    font-size: 0.875rem;
+    background-color: white;
+    outline: none;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.search:focus {
+    outline: none;
+    border-color: var(--primary-color);
 }

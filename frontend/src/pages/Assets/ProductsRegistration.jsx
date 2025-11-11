@@ -5,9 +5,12 @@ import TopSecFormPage from '../../components/TopSecFormPage';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
+import PlusIcon from '../../assets/icons/plus.svg';
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import { fetchAllCategories } from "../../services/contexts-service";
+import AddEntryModal from "../../components/Modals/AddEntryModal";
 
 
 export default function ProductsRegistration() {
@@ -17,7 +20,13 @@ export default function ProductsRegistration() {
   const [depreciations, setDepreciations] = useState([]);
   const [product, setProduct] = useState(null);
 
+  // Modal states for adding new entries
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showManufacturerModal, setShowManufacturerModal] = useState(false);
+  const [showDepreciationModal, setShowDepreciationModal] = useState(false);
 
+  // Import file state
+  const [importFile, setImportFile] = useState(null);
 
   const { id } = useParams();
   const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
@@ -32,7 +41,13 @@ export default function ProductsRegistration() {
       defaultPurchaseCost: '',
       supplier: '',
       minimumQuantity: '',
+      cpu: '',
+      gpu: '',
       operatingSystem: '',
+      ram: '',
+      screenSize: '',
+      storageSize: '',
+      archiveModel: false,
       notes: ''
     }
   });
@@ -122,17 +137,133 @@ export default function ProductsRegistration() {
         setTimeout(() => setErrorMessage(""), 5000);
         return;
       }
-      
+
       setSelectedImage(file); // store the actual file
       setValue('image', file); // optional: sync with react-hook-form
-  
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result); // for display only
       };
       reader.readAsDataURL(file);
     }
-  };  
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+      setImportFile(file);
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
+    }
+  };
+
+  // Modal field configurations
+  const categoryFields = [
+    {
+      name: 'name',
+      label: 'Category Name',
+      type: 'text',
+      placeholder: 'Category Name',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Category Name is required' }
+    }
+  ];
+
+  const manufacturerFields = [
+    {
+      name: 'name',
+      label: 'Manufacturer Name',
+      type: 'text',
+      placeholder: 'Manufacturer Name',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Manufacturer Name is required' }
+    }
+  ];
+
+  const depreciationFields = [
+    {
+      name: 'name',
+      label: 'Name',
+      type: 'text',
+      placeholder: 'Depreciation Method Name',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Name is required' }
+    },
+    {
+      name: 'duration',
+      label: 'Duration',
+      type: 'number',
+      placeholder: '0',
+      required: true,
+      validation: {
+        required: 'Duration is required',
+        min: { value: 1, message: 'Duration must be at least 1' }
+      },
+      suffix: 'months'
+    },
+    {
+      name: 'minimum_value',
+      label: 'Minimum Value',
+      type: 'number',
+      placeholder: '0.00',
+      required: true,
+      validation: {
+        required: 'Minimum Value is required',
+        min: { value: 0, message: 'Minimum Value must be at least 0' }
+      },
+      prefix: 'PHP',
+      step: '0.01'
+    }
+  ];
+
+  // Handle save for each modal
+  const handleSaveCategory = async (data) => {
+    try {
+      const newCategory = await assetsService.createCategory(data);
+      setCategories([...categories, newCategory]);
+      setShowCategoryModal(false);
+      setErrorMessage("");
+    } catch (error) {
+      console.error("Error creating category:", error);
+      setErrorMessage("Failed to create category");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
+  const handleSaveManufacturer = async (data) => {
+    try {
+      const newManufacturer = await assetsService.createManufacturer(data);
+      setManufacturers([...manufacturers, newManufacturer]);
+      setShowManufacturerModal(false);
+      setErrorMessage("");
+    } catch (error) {
+      console.error("Error creating manufacturer:", error);
+      setErrorMessage("Failed to create manufacturer");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
+  const handleSaveDepreciation = async (data) => {
+    try {
+      const newDepreciation = await assetsService.createDepreciation(data);
+      setDepreciations([...depreciations, newDepreciation]);
+      setShowDepreciationModal(false);
+      setErrorMessage("");
+    } catch (error) {
+      console.error("Error creating depreciation:", error);
+      setErrorMessage("Failed to create depreciation method");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
   
   const onSubmit = async (data) => {
     try {
@@ -167,7 +298,13 @@ export default function ProductsRegistration() {
       formData.append('default_purchase_cost', data.defaultPurchaseCost || '');
       formData.append('default_supplier_id', data.supplier || '');
       formData.append('minimum_quantity', data.minimumQuantity);
+      formData.append('cpu', data.cpu || '');
+      formData.append('gpu', data.gpu || '');
       formData.append('operating_system', data.operatingSystem || '');
+      formData.append('ram', data.ram || '');
+      formData.append('screen_size', data.screenSize || '');
+      formData.append('storage_size', data.storageSize || '');
+      formData.append('archive_model', data.archiveModel || false);
       formData.append('notes', data.notes || '');
       
       // Handle image upload
@@ -231,6 +368,23 @@ export default function ProductsRegistration() {
             currentPage={id ? "Edit Asset Model" : "New Asset Model"}
             rootNavigatePage="/products"
             title={id ? 'Edit' + ' ' + (product?.name || 'Asset Model') : 'New Asset Model'}
+            rightComponent={
+              !id && (
+                <div className="import-section">
+                  <label htmlFor="import-file" className="import-btn">
+                    <img src={PlusIcon} alt="Import" />
+                    Import
+                    <input
+                      type="file"
+                      id="import-file"
+                      accept=".xlsx"
+                      onChange={handleImportFile}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                </div>
+              )
+            }
           />
         </section>
         <section className="registration-form">
@@ -251,52 +405,82 @@ export default function ProductsRegistration() {
 
             <fieldset>
               <label htmlFor='category'>Category <span style={{color: 'red'}}>*</span></label>
-              <select
-                id="category"
-                {...register("category", { required: "Category is required" })}
-                className={errors.category ? 'input-error' : ''}
-              >
-                <option value="">Select Category</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
+              <div className="select-with-button">
+                <select
+                  id="category"
+                  {...register("category", { required: "Category is required" })}
+                  className={errors.category ? 'input-error' : ''}
+                >
+                  <option value="">Select Category</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-entry-btn"
+                  onClick={() => setShowCategoryModal(true)}
+                  title="Add new category"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
               {errors.category && <span className='error-message'>{errors.category.message}</span>}
             </fieldset>
 
             <fieldset>
               <label htmlFor='manufacturer'>Manufacturer <span style={{color: 'red'}}>*</span></label>
-              <select
-                id="manufacturer"
-                {...register("manufacturer", { required: "Manufacturer is required" })}
-                className={errors.manufacturer ? 'input-error' : ''}
-              >
-                <option value="">Select Manufacturer</option>
-                {manufacturers.map(manufacturer => (
-                  <option key={manufacturer.id} value={manufacturer.id}>
-                    {manufacturer.name}
-                  </option>
-                ))}
-              </select>
+              <div className="select-with-button">
+                <select
+                  id="manufacturer"
+                  {...register("manufacturer", { required: "Manufacturer is required" })}
+                  className={errors.manufacturer ? 'input-error' : ''}
+                >
+                  <option value="">Select Manufacturer</option>
+                  {manufacturers.map(manufacturer => (
+                    <option key={manufacturer.id} value={manufacturer.id}>
+                      {manufacturer.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-entry-btn"
+                  onClick={() => setShowManufacturerModal(true)}
+                  title="Add new manufacturer"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
               {errors.manufacturer && <span className='error-message'>{errors.manufacturer.message}</span>}
             </fieldset>
 
             <fieldset>
               <label htmlFor='depreciation'>Depreciation <span style={{color: 'red'}}>*</span></label>
-              <select
-                id="depreciation"
-                {...register("depreciation", { required: "Depreciation is required" })}
-                className={errors.depreciation ? 'input-error' : ''}
-              >
-                <option value="">Select Depreciation Method</option>
-                {depreciations.map(depreciation => (
-                  <option key={depreciation.id} value={depreciation.id}>
-                    {depreciation.name}
-                  </option>
-                ))}
-              </select>
+              <div className="select-with-button">
+                <select
+                  id="depreciation"
+                  {...register("depreciation", { required: "Depreciation is required" })}
+                  className={errors.depreciation ? 'input-error' : ''}
+                >
+                  <option value="">Select Depreciation Method</option>
+                  {depreciations.map(depreciation => (
+                    <option key={depreciation.id} value={depreciation.id}>
+                      {depreciation.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-entry-btn"
+                  onClick={() => setShowDepreciationModal(true)}
+                  title="Add new depreciation method"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
               {errors.depreciation && <span className='error-message'>{errors.depreciation.message}</span>}
             </fieldset>
 
@@ -368,6 +552,99 @@ export default function ProductsRegistration() {
               {errors.minimumQuantity && <span className='error-message'>{errors.minimumQuantity.message}</span>}
             </fieldset>
 
+            {/* CPU */}
+            <fieldset>
+              <label htmlFor='cpu'>CPU</label>
+              <select
+                id="cpu"
+                {...register("cpu")}
+              >
+                <option value="">Select CPU</option>
+                <option value="intel-i3">Intel Core i3</option>
+                <option value="intel-i5">Intel Core i5</option>
+                <option value="intel-i7">Intel Core i7</option>
+                <option value="intel-i9">Intel Core i9</option>
+                <option value="amd-ryzen-5">AMD Ryzen 5</option>
+                <option value="amd-ryzen-7">AMD Ryzen 7</option>
+                <option value="amd-ryzen-9">AMD Ryzen 9</option>
+                <option value="apple-m1">Apple M1</option>
+                <option value="apple-m2">Apple M2</option>
+                <option value="other">Other</option>
+              </select>
+            </fieldset>
+
+            {/* GPU */}
+            <fieldset>
+              <label htmlFor='gpu'>GPU</label>
+              <select
+                id="gpu"
+                {...register("gpu")}
+              >
+                <option value="">Select GPU</option>
+                <option value="nvidia-gtx-1050">NVIDIA GTX 1050</option>
+                <option value="nvidia-gtx-1650">NVIDIA GTX 1650</option>
+                <option value="nvidia-rtx-2060">NVIDIA RTX 2060</option>
+                <option value="nvidia-rtx-3060">NVIDIA RTX 3060</option>
+                <option value="amd-radeon-rx-5500">AMD Radeon RX 5500</option>
+                <option value="amd-radeon-rx-6600">AMD Radeon RX 6600</option>
+                <option value="integrated">Integrated Graphics</option>
+                <option value="other">Other</option>
+              </select>
+            </fieldset>
+
+            {/* RAM */}
+            <fieldset>
+              <label htmlFor='ram'>RAM</label>
+              <select
+                id="ram"
+                {...register("ram")}
+              >
+                <option value="">Select RAM</option>
+                <option value="4gb">4 GB</option>
+                <option value="8gb">8 GB</option>
+                <option value="16gb">16 GB</option>
+                <option value="32gb">32 GB</option>
+                <option value="64gb">64 GB</option>
+                <option value="other">Other</option>
+              </select>
+            </fieldset>
+
+            {/* Screen Size */}
+            <fieldset>
+              <label htmlFor='screenSize'>Screen Size</label>
+              <select
+                id="screenSize"
+                {...register("screenSize")}
+              >
+                <option value="">Select Screen Size</option>
+                <option value="13-inch">13 inches</option>
+                <option value="14-inch">14 inches</option>
+                <option value="15-inch">15 inches</option>
+                <option value="17-inch">17 inches</option>
+                <option value="21-inch">21 inches</option>
+                <option value="24-inch">24 inches</option>
+                <option value="27-inch">27 inches</option>
+                <option value="other">Other</option>
+              </select>
+            </fieldset>
+
+            {/* Storage Size */}
+            <fieldset>
+              <label htmlFor='storageSize'>Storage Size</label>
+              <select
+                id="storageSize"
+                {...register("storageSize")}
+              >
+                <option value="">Select Storage Size</option>
+                <option value="128gb">128 GB</option>
+                <option value="256gb">256 GB</option>
+                <option value="512gb">512 GB</option>
+                <option value="1tb">1 TB</option>
+                <option value="2tb">2 TB</option>
+                <option value="other">Other</option>
+              </select>
+            </fieldset>
+
             <fieldset>
               <label htmlFor='operatingSystem'>Operating System</label>
               <select
@@ -386,10 +663,23 @@ export default function ProductsRegistration() {
               </select>
             </fieldset>
 
+            {/* Archive Model Toggle */}
+            <fieldset>
+              <label htmlFor='archiveModel'>Archive Model</label>
+              <div className="toggle-switch">
+                <input
+                  type='checkbox'
+                  id='archiveModel'
+                  {...register('archiveModel')}
+                />
+                <label htmlFor='archiveModel' className="toggle-label"></label>
+              </div>
+            </fieldset>
+
             <fieldset>
               <label htmlFor='notes'>Notes</label>
-              <textarea 
-                {...register('notes')} 
+              <textarea
+                {...register('notes')}
                 maxLength='500'
                 placeholder='Notes...'
               />
@@ -437,6 +727,36 @@ export default function ProductsRegistration() {
             </button>
           </form>
         </section>
+
+        {/* Add Category Modal */}
+        <AddEntryModal
+          isOpen={showCategoryModal}
+          onClose={() => setShowCategoryModal(false)}
+          onSave={handleSaveCategory}
+          title="New Category"
+          fields={categoryFields}
+          type="category"
+        />
+
+        {/* Add Manufacturer Modal */}
+        <AddEntryModal
+          isOpen={showManufacturerModal}
+          onClose={() => setShowManufacturerModal(false)}
+          onSave={handleSaveManufacturer}
+          title="New Manufacturer"
+          fields={manufacturerFields}
+          type="manufacturer"
+        />
+
+        {/* Add Depreciation Modal */}
+        <AddEntryModal
+          isOpen={showDepreciationModal}
+          onClose={() => setShowDepreciationModal(false)}
+          onSave={handleSaveDepreciation}
+          title="New Depreciation"
+          fields={depreciationFields}
+          type="depreciation"
+        />
       </main>
     </>
   );

@@ -3,10 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import FilterPanel from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import ProductFilterModal from "../../components/Modals/ProductFilterModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
@@ -14,27 +14,7 @@ import ProductsMockupData from "../../data/mockData/products/products-mockup-dat
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
 
 import "../../styles/Products/Products.css";
-
-// Filter configuration for products
-const filterConfig = [
-  {
-    type: "select",
-    name: "category",
-    label: "Category",
-    options: [
-      { value: "laptop", label: "Laptop" },
-      { value: "desktop", label: "Desktop" },
-      { value: "mobile", label: "Mobile Phone" },
-      { value: "tablet", label: "Tablet" },
-      { value: "accessory", label: "Accessory" },
-    ],
-  },
-  {
-    type: "text",
-    name: "manufacturer",
-    label: "Manufacturer",
-  },
-];
+import "../../styles/ProductFilterModal.css";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -50,9 +30,13 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>IMAGE</th>
       <th>NAME</th>
       <th>CATEGORY</th>
+      <th>MODEL NUMBER</th>
+      <th>END OF LIFE</th>
       <th>MANUFACTURER</th>
       <th>DEPRECIATION</th>
-      <th>END OF LIFE</th>
+      <th>DEFAULT COST</th>
+      <th>DEFAULT SUPPLIER</th>
+      <th>MINIMUM QUANTITY</th>
       <th>ACTION</th>
     </tr>
   );
@@ -85,9 +69,13 @@ function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteCli
       </td>
       <td>{product.name}</td>
       <td>{product.category}</td>
+      <td>{product.model || 'N/A'}</td>
+      <td>{product.end_of_life || 'N/A'}</td>
       <td>{manufacturer}</td>
       <td>{product.depreciation}</td>
-      <td>{product.end_of_life}</td>
+      <td>{product.purchase_cost ? `₱${product.purchase_cost.toLocaleString()}` : 'N/A'}</td>
+      <td>{product.default_supplier || 'N/A'}</td>
+      <td>{product.minimum_quantity || 'N/A'}</td>
       <td>
         <ActionButtons
           showEdit
@@ -109,11 +97,16 @@ export default function Products() {
   const [products] = useState(ProductsMockupData);
   const [manufacturers] = useState(ManufacturersMockupData);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [exportToggle, setExportToggle] = useState(false);
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
+
+  // Filter state
+  const [filteredData, setFilteredData] = useState(ProductsMockupData);
+  const [appliedFilters, setAppliedFilters] = useState({});
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -125,7 +118,7 @@ export default function Products() {
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedProducts = products.slice(startIndex, endIndex);
+  const paginatedProducts = filteredData.slice(startIndex, endIndex);
 
   // selection logic
   const allSelected =
@@ -236,6 +229,99 @@ export default function Products() {
     return found ? found.name : "-";
   };
 
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...products];
+
+    // Filter by Asset ID
+    if (filters.assetId && filters.assetId.toString().trim() !== "") {
+      filtered = filtered.filter((product) =>
+        product.id.toString().includes(filters.assetId.toString())
+      );
+    }
+
+    // Filter by Asset Model
+    if (filters.assetModel && filters.assetModel.trim() !== "") {
+      filtered = filtered.filter((product) =>
+        product.name?.toLowerCase().includes(filters.assetModel.toLowerCase())
+      );
+    }
+
+    // Filter by Status
+    if (filters.status) {
+      filtered = filtered.filter((product) =>
+        product.status?.toLowerCase() === filters.status.value?.toLowerCase()
+      );
+    }
+
+    // Filter by Supplier
+    if (filters.supplier) {
+      filtered = filtered.filter((product) =>
+        product.default_supplier?.toLowerCase().includes(filters.supplier.label?.toLowerCase())
+      );
+    }
+
+    // Filter by Location
+    if (filters.location) {
+      filtered = filtered.filter((product) =>
+        product.location?.toLowerCase().includes(filters.location.label?.toLowerCase())
+      );
+    }
+
+    // Filter by Asset Name
+    if (filters.assetName && filters.assetName.trim() !== "") {
+      filtered = filtered.filter((product) =>
+        product.name?.toLowerCase().includes(filters.assetName.toLowerCase())
+      );
+    }
+
+    // Filter by Serial Number
+    if (filters.serialNumber && filters.serialNumber.toString().trim() !== "") {
+      filtered = filtered.filter((product) =>
+        product.serial_number?.toString().includes(filters.serialNumber.toString())
+      );
+    }
+
+    // Filter by Warranty Expiration
+    if (filters.warrantyExpiration && filters.warrantyExpiration.trim() !== "") {
+      filtered = filtered.filter((product) =>
+        product.warranty_expiration_date === filters.warrantyExpiration
+      );
+    }
+
+    // Filter by Order Number
+    if (filters.orderNumber && filters.orderNumber.toString().trim() !== "") {
+      filtered = filtered.filter((product) =>
+        product.order_number?.toString().includes(filters.orderNumber.toString())
+      );
+    }
+
+    // Filter by Purchase Date
+    if (filters.purchaseDate && filters.purchaseDate.trim() !== "") {
+      filtered = filtered.filter((product) =>
+        product.purchase_date === filters.purchaseDate
+      );
+    }
+
+    // Filter by Purchase Cost
+    if (filters.purchaseCost && filters.purchaseCost.toString().trim() !== "") {
+      const cost = parseFloat(filters.purchaseCost);
+      filtered = filtered.filter((product) =>
+        product.purchase_cost === cost
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
 
 
   return (
@@ -251,22 +337,22 @@ export default function Products() {
         />
       )}
 
+      {/* Product Filter Modal */}
+      <ProductFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
+
       <section className="page-layout-with-table">
         <NavBar />
 
         <main className="main-with-table">
-          {/* Title of the Page */}
-          <section className="title-page-section">
-            <h1>Asset Models</h1>
-          </section>
-
-          {/* Table Filter */}
-          <FilterPanel filters={filterConfig} />
-
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Asset Models ({products.length})</h2>
+              <h2 className="h2">Asset Models ({filteredData.length})</h2>
               <section className="table-actions">
                 {/* Bulk delete button only when checkboxes selected */}
                 {selectedIds.length > 0 && (
@@ -276,6 +362,15 @@ export default function Products() {
                   />
                 )}
                 <input type="search" placeholder="Search..." className="search" />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"
@@ -324,7 +419,7 @@ export default function Products() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="no-data-message">
+                      <td colSpan={12} className="no-data-message">
                         No Asset Models Found.
                       </td>
                     </tr>
@@ -338,7 +433,7 @@ export default function Products() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={products.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

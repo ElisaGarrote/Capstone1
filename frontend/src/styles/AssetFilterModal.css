@@ -128,6 +128,7 @@
     padding: 13px 16px;
     border-right: 1px solid #d3d3d3;
     font-size: 0.875rem;
+    font-weight: 600;
     color: var(--secondary-text-color);
     white-space: nowrap;
     min-width: 50px;

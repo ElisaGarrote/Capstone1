@@ -14,11 +14,19 @@
     input[type="search"] {
       display: flex;
       align-items: center;
-      background-color: #f9f9f9;
-      border-radius: 4px;
-      padding: 10px 12px;
-      border: none;
-      border: 1px solid #cccccc;
+      background-color: white;
+      border-radius: 25px;
+      padding: 13px 16px;
+      border: 1px solid #d3d3d3;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    input[type="search"]:focus {
+      outline: none;
+      border-color: var(--primary-color);
     }
   }
 
@@ -123,7 +131,6 @@
         }
       }
 
-      /* Ensure empty-state row spans correctly across all columns */
       td.no-data-message {
         display: table-cell !important;
         width: 100% !important;

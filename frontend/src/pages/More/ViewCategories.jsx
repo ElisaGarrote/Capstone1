@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import CategoryFilter from "../../components/FilterPanel";
+import CategoryFilterModal from "../../components/Modals/CategoryFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
@@ -198,10 +198,37 @@ export default function Category() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
+  // filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filteredData, setFilteredData] = useState(categories);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...categories];
+
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((category) =>
+        category.name?.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCategories = categories.slice(startIndex, endIndex);
+  const paginatedCategories = filteredData.slice(startIndex, endIndex);
 
   // Retrieve the "addCategory" value passed from the navigation state.
   // If the "addCategory" is not exist, the default value for this is "undifiend".
@@ -276,23 +303,36 @@ export default function Category() {
         />
       )}
 
+      <CategoryFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
+
       <section className="page-layout-with-table">
         <NavBar />
 
         <main className="main-with-table">
-          {/* Table Filter */}
-          <CategoryFilter filters={filterConfig} />
-
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Categories ({categories.length})</h2>
+              <h2 className="h2">Categories ({filteredData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
                   placeholder="Search..."
                   className="search"
                 />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
                 <MediumButtons
                   type="new"
                   navigatePage="/More/CategoryRegistration"
@@ -331,7 +371,7 @@ export default function Category() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={categories.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

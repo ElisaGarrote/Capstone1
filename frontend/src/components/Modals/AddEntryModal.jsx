@@ -75,7 +75,7 @@ const AddEntryModal = ({
                 <label htmlFor={field.name}>
                   {field.label} {field.required && <span style={{color: 'red'}}>*</span>}
                 </label>
-                
+
                 {field.type === 'select' ? (
                   <select
                     id={field.name}
@@ -97,17 +97,32 @@ const AddEntryModal = ({
                     {...register(field.name, field.validation)}
                     className={errors[field.name] ? 'input-error' : ''}
                   />
+                ) : field.prefix || field.suffix ? (
+                  <div className="input-with-affix">
+                    {field.prefix && <span className="input-prefix">{field.prefix}</span>}
+                    <input
+                      type={field.type || 'text'}
+                      id={field.name}
+                      placeholder={field.placeholder}
+                      maxLength={field.maxLength}
+                      step={field.step}
+                      {...register(field.name, field.validation)}
+                      className={errors[field.name] ? 'input-error' : ''}
+                    />
+                    {field.suffix && <span className="input-suffix">{field.suffix}</span>}
+                  </div>
                 ) : (
                   <input
                     type={field.type || 'text'}
                     id={field.name}
                     placeholder={field.placeholder}
                     maxLength={field.maxLength}
+                    step={field.step}
                     {...register(field.name, field.validation)}
                     className={errors[field.name] ? 'input-error' : ''}
                   />
                 )}
-                
+
                 {errors[field.name] && (
                   <span className="error-message">
                     {errors[field.name].message}
