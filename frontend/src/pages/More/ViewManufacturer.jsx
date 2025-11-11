@@ -5,6 +5,7 @@ import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ManufacturerFilterModal from "../../components/Modals/ManufacturerFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import View from "../../components/Modals/View";
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Footer from "../../components/Footer";
@@ -35,7 +36,7 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ manufacturer, onDeleteClick }) {
+function TableItem({ manufacturer, onDeleteClick, onViewClick }) {
   const navigate = useNavigate();
 
   return (
@@ -61,6 +62,13 @@ function TableItem({ manufacturer, onDeleteClick }) {
       <td>{manufacturer.notes || "-"}</td>
       <td>
         <section className="action-button-section">
+          <button
+            title="View"
+            className="action-button"
+            onClick={() => onViewClick(manufacturer)}
+          >
+            <i className="fas fa-eye"></i>
+          </button>
           <button
             title="Edit"
             className="action-button"
@@ -112,6 +120,10 @@ export default function ViewManuDraft() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(MockupData);
   const [appliedFilters, setAppliedFilters] = useState({});
+
+  // View modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedManufacturer, setSelectedManufacturer] = useState(null);
 
   // Apply filters to data
   const applyFilters = (filters) => {
@@ -292,6 +304,12 @@ export default function ViewManuDraft() {
     };
   }, [addedManufacturer, updatedManufacturer, navigate, location.pathname]);
 
+  // Handle View button click
+  const handleViewClick = (manufacturer) => {
+    setSelectedManufacturer(manufacturer);
+    setIsViewModalOpen(true);
+  };
+
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -321,6 +339,21 @@ export default function ViewManuDraft() {
             setTimeout(() => setErrorMessage(""), 5000);
           }}
             */
+        />
+      )}
+
+      {isViewModalOpen && selectedManufacturer && (
+        <View
+          title={selectedManufacturer.name}
+          data={[
+            { label: "URL", value: selectedManufacturer.url },
+            { label: "Support URL", value: selectedManufacturer.support_url },
+            { label: "Phone Number", value: selectedManufacturer.phone_number },
+            { label: "Email", value: selectedManufacturer.email },
+            { label: "Notes", value: selectedManufacturer.notes },
+          ]}
+          closeModal={() => setIsViewModalOpen(false)}
+          imageSrc={selectedManufacturer.logo}
         />
       )}
 
@@ -382,6 +415,7 @@ export default function ViewManuDraft() {
                           ); */
                           setDeleteModalOpen(true);
                         }}
+                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (

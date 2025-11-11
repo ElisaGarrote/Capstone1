@@ -99,10 +99,13 @@
             text-align: left !important;
             padding: 0.75rem;
             font-size: 0.8125rem;
+            font-weight: 400;
             color: var(--text-color);
             border-bottom: 1px solid #cccccc;
-
             height: 50px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         td.no-data-message {

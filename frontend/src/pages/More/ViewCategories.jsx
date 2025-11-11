@@ -5,6 +5,7 @@ import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilterModal from "../../components/Modals/CategoryFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import View from "../../components/Modals/View";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
 
@@ -138,7 +139,7 @@ function TableHeader({ allSelected, onSelectAll }) {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
+function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked, onViewClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -161,6 +162,13 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
       <td>{category.quantity}</td>
       <td>
         <section className="action-button-section">
+          <button
+            title="View"
+            className="action-button"
+            onClick={() => onViewClick(category)}
+          >
+            <i className="fas fa-eye"></i>
+          </button>
           <button
             title="Edit"
             className="action-button"
@@ -202,6 +210,10 @@ export default function Category() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(categories);
   const [appliedFilters, setAppliedFilters] = useState({});
+
+  // View modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Apply filters to data
   const applyFilters = (filters) => {
@@ -283,6 +295,12 @@ export default function Category() {
     };
   }, [addedCategory, updatedCategory, navigate, location.pathname]);
 
+  // Handle View button click
+  const handleViewClick = (category) => {
+    setSelectedCategory(category);
+    setIsViewModalOpen(true);
+  };
+
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -300,6 +318,18 @@ export default function Category() {
         <DeleteModal
           closeModal={() => setDeleteModalOpen(false)}
           actionType="delete"
+        />
+      )}
+
+      {isViewModalOpen && selectedCategory && (
+        <View
+          title={selectedCategory.name}
+          data={[
+            { label: "Type", value: selectedCategory.type },
+            { label: "Quantity", value: selectedCategory.quantity },
+          ]}
+          closeModal={() => setIsViewModalOpen(false)}
+          imageSrc={selectedCategory.icon}
         />
       )}
 
@@ -353,6 +383,7 @@ export default function Category() {
                         key={index}
                         category={category}
                         onDeleteClick={() => setDeleteModalOpen(true)}
+                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (

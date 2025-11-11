@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import NavBar from "../../components/NavBar";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import View from "../../components/Modals/View";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import SupplierFilterModal from "../../components/Modals/SupplierFilterModal";
 import Alert from "../../components/Alert";
@@ -41,7 +42,7 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ supplier, onDeleteClick }) {
+function TableItem({ supplier, onDeleteClick, onViewClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -89,11 +90,7 @@ function TableItem({ supplier, onDeleteClick }) {
           <button
             title="View"
             className="action-button"
-            onClick={() =>
-              navigate(`/More/SupplierDetails/${supplier.id}`, {
-                state: { supplier },
-              })
-            }
+            onClick={() => onViewClick(supplier)}
           >
             <i className="fas fa-eye"></i>
           </button>
@@ -147,6 +144,10 @@ export default function ViewSupplier() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(MockupData);
   const [appliedFilters, setAppliedFilters] = useState({});
+
+  // View modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
 
   // Apply filters to data
   const applyFilters = (filters) => {
@@ -341,6 +342,12 @@ export default function ViewSupplier() {
     };
   }, [addedSupplier, updatedSupplier, navigate, location.pathname]);
 
+  // Handle View button click
+  const handleViewClick = (supplier) => {
+    setSelectedSupplier(supplier);
+    setIsViewModalOpen(true);
+  };
+
   // ----------------- Render -----------------
   return (
     <>
@@ -371,6 +378,24 @@ export default function ViewSupplier() {
             setTimeout(() => setErrorMessage(""), 5000);
           }}
           */
+        />
+      )}
+
+      {isViewModalOpen && selectedSupplier && (
+        <View
+          title={selectedSupplier.name}
+          data={[
+            { label: "Address", value: selectedSupplier.address },
+            { label: "City", value: selectedSupplier.city },
+            { label: "State", value: selectedSupplier.state },
+            { label: "ZIP", value: selectedSupplier.zip },
+            { label: "Country", value: selectedSupplier.country },
+            { label: "Contact Person", value: selectedSupplier.contactName },
+            { label: "Phone", value: selectedSupplier.phoneNumber },
+            { label: "URL", value: selectedSupplier.url },
+          ]}
+          closeModal={() => setIsViewModalOpen(false)}
+          imageSrc={selectedSupplier.logo}
         />
       )}
 
@@ -433,6 +458,7 @@ export default function ViewSupplier() {
                           ); */
                           setDeleteModalOpen(true);
                         }}
+                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (

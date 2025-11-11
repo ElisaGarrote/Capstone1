@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import RecycleBinFilterModal from "../../components/Modals/RecycleBinFilterModal";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import "../../styles/TabNavBar.css";
+import "../../styles/RecycleBin.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 
@@ -28,8 +30,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>MANUFACTURER</th>
       <th>SUPPLIER</th>
       <th>LOCATION</th>
-      <th>RECOVER</th>
-      <th>DELETE</th>
+      <th>ACTION</th>
     </tr>
   );
 }
@@ -53,12 +54,8 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
       <td>
         <ActionButtons
           showRecover
-          onRecoverClick={() => onRecoverClick(item.id)}
-        />
-      </td>
-      <td>
-        <ActionButtons
           showDelete
+          onRecoverClick={() => onRecoverClick(item.id)}
           onDeleteClick={() => onDeleteClick(item.id)}
         />
       </td>
@@ -269,12 +266,10 @@ export default function RecycleBin() {
         initialFilters={appliedFilters}
       />
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
+        <main className="main-with-table">
           { /* Tab Navigation */}
           <div className="tab-nav">
             <ul>
@@ -331,16 +326,6 @@ export default function RecycleBin() {
 
                 <input type="search" placeholder="Search..." className="search" />
 
-                <button
-                  type="button"
-                  className="medium-button-filter"
-                  onClick={() => {
-                    setIsFilterModalOpen(true);
-                  }}
-                >
-                  Filter
-                </button>
-
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"
@@ -358,7 +343,7 @@ export default function RecycleBin() {
               </section>
             )}
 
-            <section className="table-section">
+            <section className="recycle-bin-table-section">
               <table>
                 <thead>
                   <TableHeader
@@ -380,7 +365,7 @@ export default function RecycleBin() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="no-data-message">
+                      <td colSpan={8} className="no-data-message">
                         No Deleted Items Found.
                       </td>
                     </tr>
@@ -400,6 +385,7 @@ export default function RecycleBin() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

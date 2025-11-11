@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
 import DepreciationFilterModal from "../../components/Modals/DepreciationFilterModal";
 import Pagination from "../../components/Pagination";
-import "../../styles/Table.css";
+import "../../styles/Depreciations.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 
@@ -198,23 +199,15 @@ export default function Depreciations() {
         initialFilters={appliedFilters}
       />
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
+        <main className="main-with-table">
           <section className="table-layout">
+            {/* Table Header */}
             <section className="table-header">
               <h2 className="h2">Asset Depreciations ({filteredData.length})</h2>
               <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
-                )}
                 <input type="search" placeholder="Search..." className="search" />
                 <button
                   type="button"
@@ -225,12 +218,7 @@ export default function Depreciations() {
                 >
                   Filter
                 </button>
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+                <MediumButtons type="export" onClick={() => setExportToggle(!exportToggle)} />
                 <MediumButtons
                   type="new"
                   navigatePage="/More/Depreciations/Registration"
@@ -238,15 +226,8 @@ export default function Depreciations() {
               </section>
             </section>
 
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="table-section">
+            {/* Table Structure */}
+            <section className="depreciation-page-table-section">
               <table>
                 <thead>
                   <TableHeader
@@ -267,7 +248,7 @@ export default function Depreciations() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="no-data-message">
+                      <td colSpan={5} className="no-data-message">
                         No Depreciations Found.
                       </td>
                     </tr>
@@ -276,6 +257,7 @@ export default function Depreciations() {
               </table>
             </section>
 
+            {/* Table pagination */}
             <section className="table-pagination">
               <Pagination
                 currentPage={currentPage}
@@ -287,6 +269,7 @@ export default function Depreciations() {
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );
