@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import FilterPanel from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import TicketFilterModal from "../../components/Modals/TicketFilterModal";
 import ActionButtons from "../../components/ActionButtons";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
@@ -12,37 +12,6 @@ import TicketsMockupData from "../../data/mockData/tickets/tickets-mockup-data.j
 import DefaultImage from "../../assets/img/default-image.jpg";
 
 import "../../styles/Tickets/Tickets.css";
-
-
-const filterConfig = [
-  {
-    type: "select",
-    name: "status",
-    label: "Status",
-    options: [
-      { value: "open", label: "Open" },
-      { value: "in-progress", label: "In Progress" },
-      { value: "resolved", label: "Resolved" },
-      { value: "closed", label: "Closed" },
-    ],
-  },
-  {
-    type: "select",
-    name: "priority",
-    label: "Priority",
-    options: [
-      { value: "low", label: "Low" },
-      { value: "medium", label: "Medium" },
-      { value: "high", label: "High" },
-      { value: "urgent", label: "Urgent" },
-    ],
-  },
-  {
-    type: "text",
-    name: "category",
-    label: "Category",
-  },
-];
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -117,12 +86,16 @@ const Tickets = () => {
 
   const [ticketItems, setTicketItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [exportToggle, setExportToggle] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState([]);
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState([]);
@@ -133,7 +106,6 @@ const Tickets = () => {
 
   useEffect(() => {
     const loadTickets = () => {
-      setIsLoading(true);
       try {
         // Use mockup data instead of API call
         const mappedTickets = TicketsMockupData.map(ticket => {
@@ -158,17 +130,73 @@ const Tickets = () => {
         });
 
         setTicketItems(mappedTickets);
+        setFilteredData(mappedTickets);
       } catch (error) {
         console.error("Error loading tickets:", error);
         setErrorMessage("Failed to load tickets.");
         setTicketItems([]);
-      } finally {
-        setIsLoading(false);
       }
     };
 
     loadTickets();
   }, []);
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...ticketItems];
+
+    // Filter by Ticket Number
+    if (filters.ticketNumber && filters.ticketNumber.trim() !== "") {
+      filtered = filtered.filter((ticket) =>
+        ticket.id?.toLowerCase().includes(filters.ticketNumber.toLowerCase())
+      );
+    }
+
+    // Filter by Asset
+    if (filters.asset && filters.asset.trim() !== "") {
+      filtered = filtered.filter((ticket) =>
+        ticket.assetName?.toLowerCase().includes(filters.asset.toLowerCase())
+      );
+    }
+
+    // Filter by Requestor
+    if (filters.requestor && filters.requestor.trim() !== "") {
+      filtered = filtered.filter((ticket) =>
+        ticket.requestor?.toLowerCase().includes(filters.requestor.toLowerCase())
+      );
+    }
+
+    // Filter by Subject
+    if (filters.subject && filters.subject.trim() !== "") {
+      filtered = filtered.filter((ticket) =>
+        ticket.subject?.toLowerCase().includes(filters.subject.toLowerCase())
+      );
+    }
+
+    // Filter by Location
+    if (filters.location && filters.location.trim() !== "") {
+      filtered = filtered.filter((ticket) =>
+        ticket.requestorLocation?.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+
+    // Filter by Check-In / Check-Out
+    if (filters.checkInOut && filters.checkInOut.value !== "All") {
+      filtered = filtered.filter((ticket) =>
+        ticket.isCheckInOrOut === filters.checkInOut.value
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
 
   const handleViewClick = (ticket) => {
     navigate(`/tickets/view/${ticket.id}`);
@@ -240,8 +268,8 @@ const Tickets = () => {
     }
   };
 
-  // Filter tickets based on search query
-  let filteredTickets = ticketItems.filter(ticket =>
+  // Filter tickets based on search query and applied filters
+  let filteredTickets = filteredData.filter(ticket =>
     ticket.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     ticket.requestor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -317,20 +345,18 @@ const Tickets = () => {
         />
       )}
 
-
+      {/* Ticket Filter Modal */}
+      <TicketFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
       <section className="page-layout-with-table">
         <NavBar />
 
         <main className="main-with-table">
-          {/* Title of the Page */}
-          <section className="title-page-section">
-            <h1>Approved Tickets</h1>
-          </section>
-
-          {/* Table Filter */}
-          <FilterPanel filters={filterConfig} />
-
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
@@ -350,6 +376,13 @@ const Tickets = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"

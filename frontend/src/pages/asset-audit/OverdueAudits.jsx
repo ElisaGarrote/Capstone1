@@ -13,6 +13,7 @@ import "../../styles/AuditsOverdue.css";
 import overdueAudit from "../../data/mockData/audits/overdue-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
+import OverdueAuditFilterModal from "../../components/Modals/OverdueAuditFilterModal";
 
 const filterConfig = [
   {
@@ -79,12 +80,17 @@ export default function OverdueAudits() {
 
   const data = overdueAudit;
 
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState([]);
+
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = data.slice(startIndex, endIndex);
+  const paginatedActivity = filteredData.length > 0 ? filteredData.slice(startIndex, endIndex) : data.slice(startIndex, endIndex);
 
   // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -121,6 +127,61 @@ export default function OverdueAudits() {
     setSelectedItem(null);
   };
 
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...data];
+
+    // Filter by Due Date
+    if (filters.dueDate && filters.dueDate.trim() !== "") {
+      filtered = filtered.filter((audit) => {
+        const auditDate = new Date(audit.date);
+        const filterDate = new Date(filters.dueDate);
+        return auditDate.toDateString() === filterDate.toDateString();
+      });
+    }
+
+    // Filter by Overdue By
+    if (filters.overdueBy && filters.overdueBy.trim() !== "") {
+      const overdueByValue = parseInt(filters.overdueBy);
+      filtered = filtered.filter((audit) =>
+        audit.overdue_by === overdueByValue
+      );
+    }
+
+    // Filter by Asset
+    if (filters.asset && filters.asset.trim() !== "") {
+      filtered = filtered.filter((audit) =>
+        audit.asset?.name?.toLowerCase().includes(filters.asset.toLowerCase())
+      );
+    }
+
+    // Filter by Created
+    if (filters.created && filters.created.trim() !== "") {
+      filtered = filtered.filter((audit) => {
+        const createdDate = new Date(audit.created_at);
+        const filterDate = new Date(filters.created);
+        return createdDate.toDateString() === filterDate.toDateString();
+      });
+    }
+
+    // Filter by Audit
+    if (filters.audit && filters.audit.trim() !== "") {
+      filtered = filtered.filter((audit) =>
+        audit.notes?.toLowerCase().includes(filters.audit.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   return (
     <>
       {isDeleteModalOpen && (
@@ -144,6 +205,14 @@ export default function OverdueAudits() {
           closeModal={closeViewModal}
         />
       )}
+
+      {/* Overdue Audit Filter Modal */}
+      <OverdueAuditFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
       <section className="page-layout-with-table">
         <NavBar />
@@ -174,9 +243,16 @@ export default function OverdueAudits() {
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Overdue for Audits ({data.length})</h2>
+              <h2 className="h2">Overdue for Audits ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
               <section className="table-actions">
                 <input type="search" placeholder="Search..." className="search" />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
               </section>
             </section>
 

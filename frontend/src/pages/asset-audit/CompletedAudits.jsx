@@ -11,6 +11,7 @@ import "../../styles/AuditsCompleted.css";
 import completedAudit from "../../data/mockData/audits/completed-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
+import CompletedAuditFilterModal from "../../components/Modals/CompletedAuditFilterModal";
 
 const filterConfig = [
   {
@@ -61,12 +62,17 @@ function TableItem({ item, onViewClick }) {
 export default function CompletedAudits() {
   const data = completedAudit;
 
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState([]);
+
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = data.slice(startIndex, endIndex);
+  const paginatedActivity = filteredData.length > 0 ? filteredData.slice(startIndex, endIndex) : data.slice(startIndex, endIndex);
 
   // Add state for view modal
   const [isViewModalOpen, setViewModalOpen] = useState(false);
@@ -81,6 +87,51 @@ export default function CompletedAudits() {
   const closeViewModal = () => {
     setViewModalOpen(false);
     setSelectedItem(null);
+  };
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...data];
+
+    // Filter by Audit Date
+    if (filters.auditDate && filters.auditDate.trim() !== "") {
+      filtered = filtered.filter((audit) => {
+        const auditDate = new Date(audit.audit_date);
+        const filterDate = new Date(filters.auditDate);
+        return auditDate.toDateString() === filterDate.toDateString();
+      });
+    }
+
+    // Filter by Asset
+    if (filters.asset && filters.asset.trim() !== "") {
+      filtered = filtered.filter((audit) =>
+        audit.audit_schedule?.asset?.name?.toLowerCase().includes(filters.asset.toLowerCase())
+      );
+    }
+
+    // Filter by Location
+    if (filters.location && filters.location.trim() !== "") {
+      filtered = filtered.filter((audit) =>
+        audit.location?.toLowerCase().includes(filters.location.toLowerCase())
+      );
+    }
+
+    // Filter by Performed By
+    if (filters.performedBy && filters.performedBy.trim() !== "") {
+      filtered = filtered.filter((audit) =>
+        audit.performed_by?.toLowerCase().includes(filters.performedBy.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   return (
@@ -101,6 +152,14 @@ export default function CompletedAudits() {
           closeModal={closeViewModal}
         />
       )}
+
+      {/* Completed Audit Filter Modal */}
+      <CompletedAuditFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
       <section className="page-layout-with-table">
         <NavBar />
@@ -131,9 +190,16 @@ export default function CompletedAudits() {
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Completed Audits ({data.length})</h2>
+              <h2 className="h2">Completed Audits ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
               <section className="table-actions">
                 <input type="search" placeholder="Search..." className="search" />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
               </section>
             </section>
 

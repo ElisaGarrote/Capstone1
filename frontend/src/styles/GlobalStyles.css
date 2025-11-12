@@ -194,7 +194,6 @@ button:disabled {
   width: 200px;
   box-shadow: 0 0 20px 0 rgb(218, 215, 215);
   border-radius: 6px;
-
   position: absolute;
   z-index: 2;
   right: 50px;
@@ -257,7 +256,7 @@ button:disabled {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 40px 20px;
+    padding: 65px 20px 40px 20px;
     overflow: auto;
   }
 
