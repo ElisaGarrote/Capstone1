@@ -1,19 +1,21 @@
 //const API_URL_AUTH = "https://authentication-service-production-d804.up.railway.app/auth/";
 //const API_URL_USER = "https://authentication-service-production-d804.up.railway.app/users/";
-const API_URL_AUTH = "http://127.0.0.1:8001/auth/";
+// const API_URL_AUTH = "http://127.0.0.1:8001/auth/";
 const API_URL_USER = "http://127.0.0.1:8001/users/";
+const API_URL_AUTH = "http://127.0.0.1:8000/api/v1/";
 
 class AuthService {
   // Login user and store tokens
   async login(email, password) {
     try {
-      const response = await fetch(API_URL_AUTH + "jwt/create/", {
+      const response = await fetch(API_URL_AUTH + "token/obtain/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
         body: JSON.stringify({ email, password }),
+        withCredentials: true, // Ensure cookies are sent with requests
       });
 
       if (!response.ok) {
@@ -21,9 +23,11 @@ class AuthService {
         return false;
       }
 
+      // Store the user info in session storage
       const data = await response.json();
-      // console.log("data:", data);
+      sessionStorage.setItem("user", JSON.stringify(data.user));
 
+      /*
       if (data.access) {
         sessionStorage.setItem("access", data.access);
         sessionStorage.setItem("refresh", data.refresh);
@@ -36,6 +40,7 @@ class AuthService {
       } else {
         console.log("No access token in response!");
       }
+      */
 
       return true;
     } catch (error) {
