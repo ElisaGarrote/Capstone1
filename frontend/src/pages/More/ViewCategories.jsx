@@ -5,7 +5,6 @@ import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CategoryFilterModal from "../../components/Modals/CategoryFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
-import View from "../../components/Modals/View";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
 
@@ -211,10 +210,6 @@ export default function Category() {
   const [filteredData, setFilteredData] = useState(categories);
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  // View modal state
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-
   // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...categories];
@@ -297,8 +292,9 @@ export default function Category() {
 
   // Handle View button click
   const handleViewClick = (category) => {
-    setSelectedCategory(category);
-    setIsViewModalOpen(true);
+    navigate(`/More/CategoryDetails/${category.id}`, {
+      state: { category }
+    });
   };
 
   return (
@@ -321,17 +317,7 @@ export default function Category() {
         />
       )}
 
-      {isViewModalOpen && selectedCategory && (
-        <View
-          title={selectedCategory.name}
-          data={[
-            { label: "Type", value: selectedCategory.type },
-            { label: "Quantity", value: selectedCategory.quantity },
-          ]}
-          closeModal={() => setIsViewModalOpen(false)}
-          imageSrc={selectedCategory.icon}
-        />
-      )}
+
 
       <CategoryFilterModal
         isOpen={isFilterModalOpen}

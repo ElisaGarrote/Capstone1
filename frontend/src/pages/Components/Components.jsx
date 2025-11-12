@@ -3,46 +3,18 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/components/component-mockup-data.json";
-import PageFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
-import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import ComponentFilterModal from "../../components/Modals/ComponentFilterModal";
+import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import { exportToExcel } from "../../utils/exportToExcel";
 
-const filterConfig = [
-  {
-    type: "text",
-    name: "name",
-    label: "Name",
-  },
-  {
-    type: "searchable",
-    name: "category",
-    label: "Cataegory",
-    options: [
-      { value: "1", label: "Laptops" },
-      { value: "2", label: "Mobile Phones" },
-      { value: "3", label: "Tablets" },
-      { value: "4", label: "Desktops" },
-      { value: "5", label: "Monitors" },
-    ],
-  },
-  {
-    type: "searchable",
-    name: "manufacturer",
-    label: "Manufacturer",
-    options: [
-      { value: "1", label: "Lenovo" },
-      { value: "2", label: "Apple" },
-      { value: "3", label: "Samsung" },
-      { value: "4", label: "Microsoft" },
-      { value: "5", label: "HP" },
-    ],
-  },
-];
+import "../../styles/Components/Components.css";
 
-// TableHeader
+// TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
@@ -64,57 +36,53 @@ function TableHeader({ allSelected, onHeaderChange }) {
   );
 }
 
-// TableItem
-function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick, navigate }) {
+// TableItem component to render each component row
+function TableItem({ component, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckoutClick, onCheckinClick }) {
+  const baseImage = component.image || DefaultImage;
+
   return (
     <tr>
       <td>
         <input
           type="checkbox"
           checked={isSelected}
-          onChange={(e) => onRowChange(item.id, e.target.checked)}
+          onChange={(e) => onRowChange(component.id, e.target.checked)}
         />
       </td>
       <td>
         <img
-          src={item.image || DefaultImage}
-          alt={item.name || "No Image"}
-          onError={(e) => (e.currentTarget.src = DefaultImage)}
-          style={{
-            width: "50px",
-            height: "50px",
-            objectFit: "cover",
-            borderRadius: "4px",
+          src={baseImage}
+          alt={component.name}
+          className="table-img"
+          onError={(e) => {
+            e.target.src = DefaultImage;
           }}
         />
       </td>
-      <td>{item.name}</td>
-      <td>{item.category}</td>
-      <td>{item.manufacturer}</td>
-      <td>{item.depreciation}</td>
+      <td>{component.name}</td>
+      <td>{component.category || 'N/A'}</td>
+      <td>{component.manufacturer || 'N/A'}</td>
+      <td>{component.depreciation || 'N/A'}</td>
+
+      {/* Check-out/Check-in Column */}
       <td>
         <ActionButtons
-          showCheckout
-          showCheckin
-          disableCheckout={item.available_quantity <= 0}
-          disableCheckin={item.checked_out_quantity <= 0}
-          onCheckoutClick={() =>
-            navigate(`/components/check-out/${item.id}`, { state: { item } })
-          }
-          onCheckinClick={() =>
-            navigate(`/components/checked-out-list/${item.id}`, { state: { item } })
-          }
+          showCheckout={component.available_quantity > 0}
+          showCheckin={component.checked_out_quantity > 0}
+          onCheckoutClick={() => onCheckoutClick(component)}
+          onCheckinClick={() => onCheckinClick(component)}
         />
       </td>
+
       <td>
         <ActionButtons
           showEdit
           showDelete
           showView
-          editPath={`edit/${item.id}`}
-          editState={{ item }}
-          onDeleteClick={() => onDeleteClick(item.id)}
-          onViewClick={onViewClick}
+          editPath={`/components/edit/${component.id}`}
+          editState={{ component }}
+          onDeleteClick={() => onDeleteClick(component.id)}
+          onViewClick={() => onViewClick(component)}
         />
       </td>
     </tr>
@@ -123,33 +91,48 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onViewClick, 
 
 export default function Components() {
   const navigate = useNavigate();
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
 
-  // pagination
+  // Filter and data state
+  const [filteredData, setFilteredData] = useState(MockupData);
+
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedActivity = MockupData.slice(startIndex, endIndex);
 
-  // selection
+  // Selection state
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
+  // Alert state
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedComponents = filteredData.slice(startIndex, endIndex);
+
+  // Selection logic
   const allSelected =
-    paginatedActivity.length > 0 &&
-    paginatedActivity.every((item) => selectedIds.includes(item.id));
+    paginatedComponents.length > 0 &&
+    paginatedComponents.every((item) => selectedIds.includes(item.id));
 
   const handleHeaderChange = (e) => {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedActivity.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedComponents.map((item) => item.id).filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedActivity.map((item) => item.id).includes(id))
+        prev.filter((id) => !paginatedComponents.map((item) => item.id).includes(id))
       );
     }
   };
@@ -161,10 +144,6 @@ export default function Components() {
       setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
     }
   };
-
-  // delete modal state
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
 
   const openDeleteModal = (id = null) => {
     setDeleteTarget(id);
@@ -188,27 +167,64 @@ export default function Components() {
     closeDeleteModal();
   };
 
-  // outside click for export toggle
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
+  const handleViewClick = (component) => {
+    navigate(`/components/view/${component.id}`);
+  };
+
+  const handleCheckout = (component) => {
+    navigate(`/components/check-out/${component.id}`, { state: { component } });
+  };
+
+  const handleCheckin = (component) => {
+    navigate(`/components/checked-out-list/${component.id}`, { state: { component } });
+  };
+
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "Components_Records.xlsx");
+  };
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((component) =>
+        component.name?.toLowerCase().includes(filters.name.toLowerCase())
+      );
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+
+    // Filter by Category
+    if (filters.category) {
+      filtered = filtered.filter((component) =>
+        component.category?.toLowerCase() === filters.category.value?.toLowerCase()
+      );
+    }
+
+    // Filter by Manufacturer
+    if (filters.manufacturer) {
+      filtered = filtered.filter((component) =>
+        component.manufacturer?.toLowerCase() === filters.manufacturer.value?.toLowerCase()
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}
@@ -217,35 +233,50 @@ export default function Components() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      {/* Component Filter Modal */}
+      <ComponentFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
-        <main className="page-layout">
-          <section className="title-page-section">
-            <h1>Components</h1>
-          </section>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-          <PageFilter filters={filterConfig} />
-
+        <main className="main-with-table">
           <section className="table-layout">
+            {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Components ({MockupData.length})</h2>
+              <h2 className="h2">Components ({filteredData.length})</h2>
               <section className="table-actions">
+                {/* Bulk edit and delete buttons only when checkboxes selected */}
                 {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
+                  <>
+                    <MediumButtons
+                      type="edit"
+                      onClick={() => navigate('/components/bulk-edit', { state: { selectedIds } })}
+                    />
+                    <MediumButtons
+                      type="delete"
+                      onClick={() => openDeleteModal(null)}
+                    />
+                  </>
                 )}
                 <input type="search" placeholder="Search..." className="search" />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
                 <MediumButtons
                   type="new"
                   navigatePage="/components/registration"
@@ -253,15 +284,8 @@ export default function Components() {
               </section>
             </section>
 
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="table-section">
+            {/* Table Structure */}
+            <section className="components-table-section">
               <table>
                 <thead>
                   <TableHeader
@@ -270,22 +294,23 @@ export default function Components() {
                   />
                 </thead>
                 <tbody>
-                  {paginatedActivity.length > 0 ? (
-                    paginatedActivity.map((item) => (
+                  {paginatedComponents.length > 0 ? (
+                    paginatedComponents.map((component) => (
                       <TableItem
-                        key={item.id}
-                        item={item}
-                        isSelected={selectedIds.includes(item.id)}
+                        key={component.id}
+                        component={component}
+                        isSelected={selectedIds.includes(component.id)}
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
-                        onViewClick={() => navigate(`/components/view/${item.id}`)}
-                        navigate={navigate}
+                        onViewClick={handleViewClick}
+                        onCheckoutClick={handleCheckout}
+                        onCheckinClick={handleCheckin}
                       />
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="no-data-message">
-                        No Repairs Found.
+                      <td colSpan={8} className="no-data-message">
+                        No Components Found.
                       </td>
                     </tr>
                   )}
@@ -293,17 +318,19 @@ export default function Components() {
               </table>
             </section>
 
+            {/* Table pagination */}
             <section className="table-pagination">
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={MockupData.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

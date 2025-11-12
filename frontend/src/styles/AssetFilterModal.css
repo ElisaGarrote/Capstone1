@@ -41,7 +41,7 @@
   box-sizing: border-box;
 }
 
-.filter-grid input[type="number"]:not(#purchaseCost) {
+.filter-grid input[type="number"]:not(#purchaseCost):not(#cost) {
   width: 100%;
   padding: 13px 16px;
   border: 1px solid #d3d3d3;
@@ -58,7 +58,7 @@
   border-color: var(--primary-color);
 }
 
-.filter-grid input[type="number"]:not(#purchaseCost):focus {
+.filter-grid input[type="number"]:not(#purchaseCost):not(#cost):focus {
   outline: none;
   border-color: var(--primary-color);
 }

@@ -31,6 +31,7 @@ import ComponentCheckout from "./pages/Components/ComponentCheckout";
 import ComponentCheckedoutList from "./pages/Components/ComponentCheckedoutList";
 import ComponentCheckin from "./pages/Components/ComponentCheckin";
 import ComponentView from "./pages/Components/ComponentView";
+import ComponentDetails from "./pages/Components/component-details/ComponentDetails";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
@@ -68,12 +69,14 @@ import SupplierEdit from "./pages/More/SupplierEdit";
 import SupplierDetails from "./pages/More/supplier-details/SupplierDetails";
 import SupplierAsset from "./pages/More/supplier-details/SupplierAsset";
 import SupplierComponent from "./pages/More/supplier-details/SupplierComponent";
+import CategoryDetails from "./pages/More/category-details/CategoryDetails";
 import ViewStatus from "./pages/More/ViewStatus";
 import StatusRegistration from "./pages/More/StatusRegistration";
 import StatusEdit from "./pages/More/StatusEdit";
 import StatusDetails from "./pages/More/StatusDetails";
 import Depreciations from "./pages/More/Depreciations";
 import DepreciationRegistration from "./pages/More/DepreciationRegistration";
+import DepreciationDetails from "./pages/More/depreciation-details/DepreciationDetails";
 import RecycleBin from "./pages/More/RecycleBin";
 
 function Logout() {
@@ -140,6 +143,10 @@ function App() {
             path="/components/view/:id"
             element={<ComponentView />}
           />
+          <Route
+            path="/components/details/:id"
+            element={<ComponentDetails />}
+          />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
           <Route
@@ -147,6 +154,10 @@ function App() {
             element={<CategoryRegistration />}
           />
           <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
+          <Route
+            path="/More/CategoryDetails/:id"
+            element={<CategoryDetails />}
+          />
           <Route path="/More/ViewManufacturer" element={<ViewManufacturer />} />
           <Route
             path="/More/ManufacturerRegistration"
@@ -204,6 +215,10 @@ function App() {
           <Route
             path="/More/Depreciations/Edit/:id"
             element={<DepreciationRegistration />}
+          />
+          <Route
+            path="/More/DepreciationDetails/:id"
+            element={<DepreciationDetails />}
           />
           <Route
             path="/More/RecycleBin"

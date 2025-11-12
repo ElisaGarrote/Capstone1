@@ -3,7 +3,6 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import NavBar from "../../components/NavBar";
 import DeleteModal from "../../components/Modals/DeleteModal";
-import View from "../../components/Modals/View";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import SupplierFilterModal from "../../components/Modals/SupplierFilterModal";
 import Alert from "../../components/Alert";
@@ -145,9 +144,7 @@ export default function ViewSupplier() {
   const [filteredData, setFilteredData] = useState(MockupData);
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  // View modal state
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState(null);
+
 
   // Apply filters to data
   const applyFilters = (filters) => {
@@ -344,8 +341,9 @@ export default function ViewSupplier() {
 
   // Handle View button click
   const handleViewClick = (supplier) => {
-    setSelectedSupplier(supplier);
-    setIsViewModalOpen(true);
+    navigate(`/More/SupplierDetails/${supplier.id}`, {
+      state: { supplier }
+    });
   };
 
   // ----------------- Render -----------------
@@ -381,23 +379,7 @@ export default function ViewSupplier() {
         />
       )}
 
-      {isViewModalOpen && selectedSupplier && (
-        <View
-          title={selectedSupplier.name}
-          data={[
-            { label: "Address", value: selectedSupplier.address },
-            { label: "City", value: selectedSupplier.city },
-            { label: "State", value: selectedSupplier.state },
-            { label: "ZIP", value: selectedSupplier.zip },
-            { label: "Country", value: selectedSupplier.country },
-            { label: "Contact Person", value: selectedSupplier.contactName },
-            { label: "Phone", value: selectedSupplier.phoneNumber },
-            { label: "URL", value: selectedSupplier.url },
-          ]}
-          closeModal={() => setIsViewModalOpen(false)}
-          imageSrc={selectedSupplier.logo}
-        />
-      )}
+
 
       <SupplierFilterModal
         isOpen={isFilterModalOpen}

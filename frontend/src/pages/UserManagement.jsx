@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import "../styles/custom-colors.css";
-import "../styles/UserManagement.css";
 import NavBar from "../components/NavBar";
 import MediumButtons from "../components/buttons/MediumButtons";
 import Status from "../components/Status";
@@ -9,22 +7,111 @@ import RegisterUserModal from "../components/RegisterUserModal";
 import DeleteModal from "../components/Modals/DeleteModal";
 import DefaultProfile from "../assets/img/profile.jpg";
 import Alert from "../components/Alert";
-import { SkeletonLoadingTable } from "../components/Loading/LoadingSkeleton";
 import Pagination from "../components/Pagination";
-import usePagination from "../hooks/usePagination";
-import authService from "../services/auth-service";
+import Footer from "../components/Footer";
+import { exportToExcel } from "../utils/exportToExcel";
+
+import "../styles/UserManagement/UserManagement.css";
+
+// TableHeader component to render the table header
+function TableHeader({ allSelected, onHeaderChange }) {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={onHeaderChange}
+        />
+      </th>
+      <th>PHOTO</th>
+      <th>NAME</th>
+      <th>EMAIL</th>
+      <th>ROLE</th>
+      <th>STATUS</th>
+      <th>ACTION</th>
+    </tr>
+  );
+}
+
+// TableItem component to render each user row
+function TableItem({ user, isSelected, onRowChange, onDeactivateClick, onActivateClick }) {
+  return (
+    <tr>
+      <td>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={(e) => onRowChange(user.id, e.target.checked)}
+        />
+      </td>
+      <td>
+        <img
+          src={user.photo || DefaultProfile}
+          alt={user.name}
+          className="table-img"
+          onError={(e) => {
+            e.target.src = DefaultProfile;
+          }}
+        />
+      </td>
+      <td>{user.name}</td>
+      <td>{user.email}</td>
+      <td>{user.role}</td>
+      <td>
+        <Status
+          type={user.status.type}
+          name={user.status.name}
+        />
+      </td>
+      <td>
+        {user.status.type === "archived" || user.status.name === "Inactive" ? (
+          <button
+            className="activate-agent-btn"
+            onClick={() => onActivateClick(user)}
+          >
+            Activate
+          </button>
+        ) : (
+          <button
+            className="deactivate-agent-btn"
+            onClick={() => onDeactivateClick(user)}
+          >
+            Deactivate
+          </button>
+        )}
+      </td>
+    </tr>
+  );
+}
 
 export default function UserManagement() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // User data state
   const [users, setUsers] = useState([]);
-  const [isLoading, setLoading] = useState(false);
+  const [filteredData, setFilteredData] = useState([]);
+
+  // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeactivateModalOpen, setDeactivateModalOpen] = useState(false);
   const [isActivateModalOpen, setActivateModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  // Delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Search and alert state
+  const [searchQuery, setSearchQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -106,6 +193,59 @@ export default function UserManagement() {
     }
   ];
 
+  // Paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedUsers = filteredData.slice(startIndex, endIndex);
+
+  // Selection logic
+  const allSelected =
+    paginatedUsers.length > 0 &&
+    paginatedUsers.every((item) => selectedIds.includes(item.id));
+
+  const handleHeaderChange = (e) => {
+    if (e.target.checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...paginatedUsers.map((item) => item.id).filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !paginatedUsers.map((item) => item.id).includes(id))
+      );
+    }
+  };
+
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single user id:", deleteTarget);
+      // remove from mock data / API call
+    } else {
+      console.log("Deleting multiple user ids:", selectedIds);
+      // remove multiple
+      setSelectedIds([]); // clear selection
+    }
+    closeDeleteModal();
+  };
+
   useEffect(() => {
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
@@ -117,23 +257,19 @@ export default function UserManagement() {
 
     // Initialize with mock data
     setUsers(mockUsers);
+    setFilteredData(mockUsers);
   }, [location]);
 
-  const filteredUsers = users.filter(user => {
-    return user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           user.role.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  // Pagination logic
-  const {
-    currentPage,
-    itemsPerPage,
-    paginatedData,
-    totalItems,
-    handlePageChange,
-    handleItemsPerPageChange
-  } = usePagination(filteredUsers, 20);
+  // Filter users based on search query
+  useEffect(() => {
+    const filtered = users.filter(user => {
+      return user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             user.role.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when search changes
+  }, [searchQuery, users]);
 
   const handleDeactivate = (user) => {
     setSelectedUser(user);
@@ -160,6 +296,7 @@ export default function UserManagement() {
 
       setSuccessMessage(`${user.name} has been activated successfully!`);
       setTimeout(() => setSuccessMessage(""), 5000);
+      setActivateModalOpen(false);
     } catch (error) {
       console.error("Activation failed:", error);
       throw error;
@@ -180,18 +317,16 @@ export default function UserManagement() {
 
       setSuccessMessage(`${user.name} has been deactivated successfully!`);
       setTimeout(() => setSuccessMessage(""), 5000);
+      setDeactivateModalOpen(false);
     } catch (error) {
       console.error("Deactivation failed:", error);
       throw error;
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : users;
+    exportToExcel(dataToExport, "Users_Records.xlsx");
   };
 
   return (
@@ -205,11 +340,9 @@ export default function UserManagement() {
           onConfirm={async () => {
             try {
               await confirmDeactivate(selectedUser);
-              setDeactivateModalOpen(false);
             } catch (error) {
               setErrorMessage("Deactivation failed. Please try again.");
               setTimeout(() => setErrorMessage(""), 5000);
-              setDeactivateModalOpen(false);
             }
           }}
           onCancel={() => setDeactivateModalOpen(false)}
@@ -224,11 +357,9 @@ export default function UserManagement() {
           onConfirm={async () => {
             try {
               await confirmActivate(selectedUser);
-              setActivateModalOpen(false);
             } catch (error) {
               setErrorMessage("Activation failed. Please try again.");
               setTimeout(() => setErrorMessage(""), 5000);
-              setActivateModalOpen(false);
             }
           }}
           onCancel={() => setActivateModalOpen(false)}
@@ -237,136 +368,106 @@ export default function UserManagement() {
         />
       )}
 
-      <nav>
-        <NavBar />
-      </nav>
+      {isDeleteModalOpen && (
+        <DeleteModal
+          isOpen={isDeleteModalOpen}
+          onConfirm={confirmDelete}
+          onCancel={closeDeleteModal}
+          title="Delete User"
+          message={deleteTarget ? "Are you sure you want to delete this user?" : "Are you sure you want to delete the selected users?"}
+        />
+      )}
 
-      <main className="asset-audits-page">
-        <section className="main-top">
-          <h1>Agent</h1>
-          <div>
-          </div>
-        </section>
-        <section className="main-middle">
-          <section className="container">
-            <section className="top">
-              <h2>All Agents ({totalItems})</h2>
-              <div>
-                <form>
-                  <input
-                    type="text"
-                    placeholder="Search agents..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+      <section className="page-layout-with-table">
+        <NavBar />
+
+        <main className="main-with-table">
+          <section className="table-layout">
+            {/* Table Header */}
+            <section className="table-header">
+              <h2 className="h2">All Agents ({filteredData.length})</h2>
+              <section className="table-actions">
+                {/* Bulk delete button only when checkboxes selected */}
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
                   />
-                </form>
-                <MediumButtons type="export" />
+                )}
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
                 <button
-                  className="invite-agent-btn"
-                  onClick={() => setIsModalOpen(true)}
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    console.log("🔘 FILTER BUTTON CLICKED!");
+                  }}
                 >
-                  Invite Agent
+                  Filter
                 </button>
-              </div>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
+                <MediumButtons
+                  type="new"
+                  onClick={() => setIsModalOpen(true)}
+                  label="Invite Agent"
+                />
+              </section>
             </section>
 
-            <section className="middle">
-              {isLoading ? (
-                <SkeletonLoadingTable />
-              ) : filteredUsers.length === 0 ? (
-                <table>
-                  <thead>
+            {/* Table Structure */}
+            <section className="users-table-section">
+              <table>
+                <thead>
+                  <TableHeader
+                    allSelected={allSelected}
+                    onHeaderChange={handleHeaderChange}
+                  />
+                </thead>
+                <tbody>
+                  {paginatedUsers.length > 0 ? (
+                    paginatedUsers.map((user) => (
+                      <TableItem
+                        key={user.id}
+                        user={user}
+                        isSelected={selectedIds.includes(user.id)}
+                        onRowChange={handleRowChange}
+                        onDeactivateClick={handleDeactivate}
+                        onActivateClick={handleActivate}
+                      />
+                    ))
+                  ) : (
                     <tr>
-                      <th>PHOTO</th>
-                      <th>NAME</th>
-                      <th>EMAIL</th>
-                      <th>ROLE</th>
-                      <th>STATUS</th>
-                      <th>ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colSpan="6" className="table-message">
-                        <p>No agents found.</p>
+                      <td colSpan={7} className="no-data-message">
+                        No Agents Found.
                       </td>
                     </tr>
-                  </tbody>
-                </table>
-              ) : (
-                <table>
-                  <thead>
-                    <tr>
-                      <th>PHOTO</th>
-                      <th>NAME</th>
-                      <th>EMAIL</th>
-                      <th>ROLE</th>
-                      <th>STATUS</th>
-                      <th>ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedData.map((user) => (
-                      <tr key={user.id}>
-                        <td>
-                          <img
-                            src={user.photo || DefaultProfile}
-                            alt={`${user.name}`}
-                            className="user-photo"
-                            onError={(e) => {
-                              e.target.src = DefaultProfile;
-                            }}
-                          />
-                        </td>
-                        <td>{user.name}</td>
-                        <td>{user.email}</td>
-                        <td>{user.role}</td>
-                        <td>
-                          <Status
-                            type={user.status.type}
-                            name={user.status.name}
-                          />
-                        </td>
-                        <td>
-                          {user.status.type === "archived" || user.status.name === "Inactive" ? (
-                            <button
-                              className="activate-agent-btn"
-                              onClick={() => handleActivate(user)}
-                            >
-                              Activate
-                            </button>
-                          ) : (
-                            <button
-                              className="deactivate-agent-btn"
-                              onClick={() => handleDeactivate(user)}
-                            >
-                              Deactivate
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                  )}
+                </tbody>
+              </table>
             </section>
 
-            {/* Pagination */}
-            {filteredUsers.length > 0 && (
+            {/* Table pagination */}
+            <section className="table-pagination">
               <Pagination
                 currentPage={currentPage}
-                totalItems={totalItems}
-                itemsPerPage={itemsPerPage}
-                onPageChange={handlePageChange}
-                onItemsPerPageChange={handleItemsPerPageChange}
-                itemsPerPageOptions={[10, 20, 50, 100]}
+                pageSize={pageSize}
+                totalItems={filteredData.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
               />
-            )}
-
-            <section></section>
+            </section>
           </section>
-        </section>
-      </main>
+        </main>
+        <Footer />
+      </section>
 
       <RegisterUserModal
         isOpen={isModalOpen}

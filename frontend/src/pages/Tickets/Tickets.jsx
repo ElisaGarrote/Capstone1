@@ -129,6 +129,8 @@ const Tickets = () => {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
+
+
   useEffect(() => {
     const loadTickets = () => {
       setIsLoading(true);
@@ -239,7 +241,7 @@ const Tickets = () => {
   };
 
   // Filter tickets based on search query
-  const filteredTickets = ticketItems.filter(ticket =>
+  let filteredTickets = ticketItems.filter(ticket =>
     ticket.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     ticket.requestor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -300,6 +302,8 @@ const Tickets = () => {
     closeDeleteModal();
   };
 
+
+
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -312,6 +316,8 @@ const Tickets = () => {
           onConfirm={confirmDelete}
         />
       )}
+
+
 
       <section className="page-layout-with-table">
         <NavBar />
