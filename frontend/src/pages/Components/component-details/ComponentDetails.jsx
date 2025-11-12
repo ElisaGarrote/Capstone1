@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import NavBar from "../../components/NavBar";
-import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
-import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/components/component-mockup-data.json";
-import { getComponentDetails, getComponentTabs } from "../../data/mockData/components/componentDetailsData";
-import ConfirmationModal from "../../components/Modals/DeleteModal";
+import NavBar from "../../../components/NavBar";
+import DetailedViewPage from "../../../components/DetailedViewPage/DetailedViewPage";
+import MediumButtons from "../../../components/buttons/MediumButtons";
+import MockupData from "../../../data/mockData/components/component-mockup-data.json";
+import { getComponentDetails, getComponentTabs } from "../../../data/mockData/components/componentDetailsData";
+import ConfirmationModal from "../../../components/Modals/DeleteModal";
 
-function ComponentView() {
+function ComponentDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,7 +30,7 @@ function ComponentView() {
   }, [id, location.state]);
 
   if (isLoading) {
-    return null; // Don't render anything while loading
+    return null;
   }
 
   if (!component) {
@@ -199,4 +199,5 @@ function ComponentView() {
   );
 }
 
-export default ComponentView;
+export default ComponentDetails;
+

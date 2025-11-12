@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -6,7 +7,6 @@ import MockupData from "../../data/mockData/more/asset-depreciation-mockup-data.
 import DepreciationFilterModal from "../../components/Modals/DepreciationFilterModal";
 import Pagination from "../../components/Pagination";
 import "../../styles/Depreciations.css";
-import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 // TableHeader
@@ -29,7 +29,9 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem
-function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick }) {
+function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+  const navigate = useNavigate();
+
   return (
     <tr>
       <td>
@@ -43,19 +45,40 @@ function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick }) {
       <td>{depreciation.duration}</td>
       <td>{depreciation.minimum_value}</td>
       <td>
-        <ActionButtons
-          showEdit
-          showDelete
-          editPath={`Edit/${depreciation.id}`}
-          editState={{ depreciation }}
-          onDeleteClick={() => onDeleteClick(depreciation.id)}
-        />
+        <section className="action-button-section">
+          <button
+            title="View"
+            className="action-button"
+            onClick={() => onViewClick(depreciation)}
+          >
+            <i className="fas fa-eye"></i>
+          </button>
+          <button
+            title="Edit"
+            className="action-button"
+            onClick={() =>
+              navigate(`/More/Depreciations/Edit/${depreciation.id}`, {
+                state: { depreciation },
+              })
+            }
+          >
+            <i className="fas fa-edit"></i>
+          </button>
+          <button
+            title="Delete"
+            className="action-button"
+            onClick={() => onDeleteClick(depreciation.id)}
+          >
+            <i className="fas fa-trash-alt"></i>
+          </button>
+        </section>
       </td>
     </tr>
   );
 }
 
 export default function Depreciations() {
+  const navigate = useNavigate();
   const [exportToggle, setExportToggle] = useState(false);
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
@@ -182,6 +205,13 @@ export default function Depreciations() {
     };
   }, [exportToggle]);
 
+  // Handle View button click
+  const handleViewClick = (depreciation) => {
+    navigate(`/More/DepreciationDetails/${depreciation.id}`, {
+      state: { depreciation }
+    });
+  };
+
   return (
     <>
       {isDeleteModalOpen && (
@@ -244,6 +274,7 @@ export default function Depreciations() {
                         isSelected={selectedIds.includes(depreciation.id)}
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
+                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (

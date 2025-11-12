@@ -42,6 +42,8 @@
   background-color: #c82333;
   transform: translateY(-1px);
 }
+
+/* Ensure MediumButtons delete button matches other buttons */
 .vertical-action-buttons .medium-button-delete {
   background-color: red !important;
   color: white !important;
@@ -60,3 +62,4 @@
   width: 16px !important;
   margin-right: 8px !important;
 }
+

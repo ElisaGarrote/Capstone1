@@ -3,60 +3,17 @@ import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
-import RepairFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
-import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
-import View from "../../components/Modals/View";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import RepairFilterModal from "../../components/Modals/RepairFilterModal";
+import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
+import { exportToExcel } from "../../utils/exportToExcel";
 
-const filterConfig = [
-  {
-    type: "select",
-    name: "type",
-    label: "Type",
-    options: [
-      { value: "accessory", label: "Accessory" },
-      { value: "asset", label: "Asset" },
-      { value: "audit", label: "Audit" },
-      { value: "component", label: "Component" },
-      { value: "consumable", label: "Consumable" },
-    ],
-  },
-  {
-    type: "select",
-    name: "status",
-    label: "Status",
-    options: [
-      { value: "beingrepaired", label: "Being Repaired" },
-      { value: "broken", label: "Broken" },
-      { value: "deployed", label: "Deployed" },
-      { value: "lostorstolen", label: "Lost or Stolen" },
-      { value: "pending", label: "Pending" },
-      { value: "readytodeploy", label: "Ready to Deploy" },
-    ],
-  },
-  {
-    type: "dateRange",
-    name: "assetsbeingrepaired",
-    fromLabel: "Start Date",
-    toLabel: "End Date",
-  },
-  {
-    type: "searchable",
-    name: "asset",
-    label: "Asset",
-    options: [
-      { value: "1", label: "Lenovo Yoga 7" },
-      { value: "2", label: "Iphone 16 Pro Max" },
-      { value: "3", label: "Ideapad 3" },
-      { value: "4", label: "Ipad Pro" },
-      { value: "5", label: "HP Spectre x360" },
-    ],
-  },
-];
+import "../../styles/Repairs/Repairs.css";
 
-// TableHeader
+// TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
@@ -79,7 +36,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
   );
 }
 
-// TableItem
+// TableItem component to render each repair row
 function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick }) {
   return (
     <tr>
@@ -94,7 +51,7 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
       <td>{repair.type}</td>
       <td>{repair.name}</td>
       <td>{repair.start_date}</td>
-      <td>{repair.end_date}</td>
+      <td>{repair.end_date || 'N/A'}</td>
       <td>{repair.cost}</td>
       <td>
         <Status
@@ -108,7 +65,7 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
           showEdit
           showDelete
           showView
-          editPath={`edit/${repair.id}`}
+          editPath={`/repairs/edit/${repair.id}`}
           editState={{ repair }}
           onDeleteClick={() => onDeleteClick(repair.id)}
           onViewClick={() => onViewClick(repair)}
@@ -119,33 +76,47 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
 }
 
 export default function AssetRepairs() {
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
+  // Filter and data state
+  const [filteredData, setFilteredData] = useState(MockupData);
 
-  // pagination
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedActivity = MockupData.slice(startIndex, endIndex);
 
-  // selection
+  // Selection state
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
+  // Alert state
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedRepairs = filteredData.slice(startIndex, endIndex);
+
+  // Selection logic
   const allSelected =
-    paginatedActivity.length > 0 &&
-    paginatedActivity.every((item) => selectedIds.includes(item.id));
+    paginatedRepairs.length > 0 &&
+    paginatedRepairs.every((item) => selectedIds.includes(item.id));
 
   const handleHeaderChange = (e) => {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedActivity.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedRepairs.map((item) => item.id).filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedActivity.map((item) => item.id).includes(id))
+        prev.filter((id) => !paginatedRepairs.map((item) => item.id).includes(id))
       );
     }
   };
@@ -157,10 +128,6 @@ export default function AssetRepairs() {
       setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
     }
   };
-
-  // delete modal state
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
 
   const openDeleteModal = (id = null) => {
     setDeleteTarget(id);
@@ -184,42 +151,86 @@ export default function AssetRepairs() {
     closeDeleteModal();
   };
 
-  // Add state for view modal
-  const [isViewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedRepair, setSelectedRepair] = useState(null);
-
-  // Add view handler
   const handleViewClick = (repair) => {
-    setSelectedRepair(repair);
-    setViewModalOpen(true);
+    console.log("View repair:", repair);
+    // Navigate to repair details page or open modal
   };
 
-  const closeViewModal = () => {
-    setViewModalOpen(false);
-    setSelectedRepair(null);
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "Repairs_Records.xlsx");
   };
 
-  // outside click for export toggle
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    // Filter by Asset
+    if (filters.asset && filters.asset.trim() !== "") {
+      filtered = filtered.filter((repair) =>
+        repair.asset?.toLowerCase().includes(filters.asset.toLowerCase())
+      );
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+
+    // Filter by Type
+    if (filters.type) {
+      filtered = filtered.filter((repair) =>
+        repair.type?.toLowerCase() === filters.type.value?.toLowerCase()
+      );
+    }
+
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((repair) =>
+        repair.name?.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    // Filter by Start Date
+    if (filters.startDate && filters.startDate.trim() !== "") {
+      filtered = filtered.filter((repair) =>
+        repair.start_date === filters.startDate
+      );
+    }
+
+    // Filter by End Date
+    if (filters.endDate && filters.endDate.trim() !== "") {
+      filtered = filtered.filter((repair) =>
+        repair.end_date === filters.endDate
+      );
+    }
+
+    // Filter by Cost
+    if (filters.cost && filters.cost.trim() !== "") {
+      const cost = parseFloat(filters.cost);
+      filtered = filtered.filter((repair) =>
+        repair.cost === cost
+      );
+    }
+
+    // Filter by Status
+    if (filters.status) {
+      filtered = filtered.filter((repair) =>
+        repair.statusType?.toLowerCase() === filters.status.value?.toLowerCase()
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}
@@ -228,53 +239,50 @@ export default function AssetRepairs() {
         />
       )}
 
-      {isViewModalOpen && selectedRepair && (
-        <View
-          title={`${selectedRepair.asset} - ${selectedRepair.name}`}
-          data={[
-            { label: "Asset", value: selectedRepair.asset },
-            { label: "Type", value: selectedRepair.type },
-            { label: "Name", value: selectedRepair.name },
-            { label: "Start Date", value: selectedRepair.start_date },
-            { label: "End Date", value: selectedRepair.end_date || "Ongoing" },
-            { label: "Cost", value: selectedRepair.cost },
-            { label: "Status", value: selectedRepair.status_name },
-            { label: "Notes", value: selectedRepair.notes || "No notes" }
-          ]}
-          closeModal={closeViewModal}
-        />
-      )}
+      {/* Repair Filter Modal */}
+      <RepairFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <main className="page-layout">
-          <section className="title-page-section">
-            <h1>Repairs</h1>
-          </section>
-
-          <RepairFilter filters={filterConfig} />
-
+        <main className="main-with-table">
           <section className="table-layout">
+            {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Asset Repairs ({MockupData.length})</h2>
+              <h2 className="h2">Asset Repairs ({filteredData.length})</h2>
               <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
+                {/* Bulk edit and delete buttons only when checkboxes selected */}
                 {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
+                  <>
+                    <MediumButtons
+                      type="edit"
+                      onClick={() => console.log("Bulk edit repairs")}
+                    />
+                    <MediumButtons
+                      type="delete"
+                      onClick={() => openDeleteModal(null)}
+                    />
+                  </>
                 )}
                 <input type="search" placeholder="Search..." className="search" />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
                 <MediumButtons
                   type="new"
                   navigatePage="/repairs/registration"
@@ -282,15 +290,8 @@ export default function AssetRepairs() {
               </section>
             </section>
 
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="table-section">
+            {/* Table Structure */}
+            <section className="repairs-table-section">
               <table>
                 <thead>
                   <TableHeader
@@ -299,8 +300,8 @@ export default function AssetRepairs() {
                   />
                 </thead>
                 <tbody>
-                  {paginatedActivity.length > 0 ? (
-                    paginatedActivity.map((repair) => (
+                  {paginatedRepairs.length > 0 ? (
+                    paginatedRepairs.map((repair) => (
                       <TableItem
                         key={repair.id}
                         repair={repair}
@@ -321,17 +322,19 @@ export default function AssetRepairs() {
               </table>
             </section>
 
+            {/* Table pagination */}
             <section className="table-pagination">
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={MockupData.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );
