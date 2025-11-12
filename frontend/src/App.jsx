@@ -152,7 +152,7 @@ function App() {
             path="/More/CategoryRegistration"
             element={<CategoryRegistration />}
           />
-          <Route path="/More/CategoryEdit" element={<CategoryEdit />} />
+          <Route path="/More/CategoryEdit" element={<CategoryRegistration />} />
           <Route
             path="/More/CategoryDetails/:id"
             element={<CategoryDetails />}
