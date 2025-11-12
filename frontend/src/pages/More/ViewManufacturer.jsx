@@ -3,7 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import ManufacturerFilterModal from "../../components/Modals/ManufacturerFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import View from "../../components/Modals/View";
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Footer from "../../components/Footer";
@@ -34,7 +36,7 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ manufacturer, onDeleteClick }) {
+function TableItem({ manufacturer, onDeleteClick, onViewClick }) {
   const navigate = useNavigate();
 
   return (
@@ -60,6 +62,13 @@ function TableItem({ manufacturer, onDeleteClick }) {
       <td>{manufacturer.notes || "-"}</td>
       <td>
         <section className="action-button-section">
+          <button
+            title="View"
+            className="action-button"
+            onClick={() => onViewClick(manufacturer)}
+          >
+            <i className="fas fa-eye"></i>
+          </button>
           <button
             title="Edit"
             className="action-button"
@@ -107,10 +116,55 @@ export default function ViewManuDraft() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
+  // filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filteredData, setFilteredData] = useState(MockupData);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
+  // View modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedManufacturer, setSelectedManufacturer] = useState(null);
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((manufacturer) =>
+        manufacturer.name?.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    // Filter by URL
+    if (filters.url && filters.url.trim() !== "") {
+      filtered = filtered.filter((manufacturer) =>
+        manufacturer.url?.toLowerCase().includes(filters.url.toLowerCase())
+      );
+    }
+
+    // Filter by Email
+    if (filters.email && filters.email.trim() !== "") {
+      filtered = filtered.filter((manufacturer) =>
+        manufacturer.email?.toLowerCase().includes(filters.email.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedManufacturer = MockupData.slice(startIndex, endIndex);
+  const paginatedManufacturer = filteredData.slice(startIndex, endIndex);
 
   // Retrieve the "addManufacturer" value passed from the navigation state.
   // If the "addManufacturer" is not exist, the default value for this is "undifiend".
@@ -250,6 +304,12 @@ export default function ViewManuDraft() {
     };
   }, [addedManufacturer, updatedManufacturer, navigate, location.pathname]);
 
+  // Handle View button click
+  const handleViewClick = (manufacturer) => {
+    setSelectedManufacturer(manufacturer);
+    setIsViewModalOpen(true);
+  };
+
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -282,6 +342,28 @@ export default function ViewManuDraft() {
         />
       )}
 
+      {isViewModalOpen && selectedManufacturer && (
+        <View
+          title={selectedManufacturer.name}
+          data={[
+            { label: "URL", value: selectedManufacturer.url },
+            { label: "Support URL", value: selectedManufacturer.support_url },
+            { label: "Phone Number", value: selectedManufacturer.phone_number },
+            { label: "Email", value: selectedManufacturer.email },
+            { label: "Notes", value: selectedManufacturer.notes },
+          ]}
+          closeModal={() => setIsViewModalOpen(false)}
+          imageSrc={selectedManufacturer.logo}
+        />
+      )}
+
+      <ManufacturerFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
+
       <section className="page-layout-with-table">
         <NavBar />
 
@@ -289,7 +371,7 @@ export default function ViewManuDraft() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Manufacturers ({MockupData.length})</h2>
+              <h2 className="h2">Manufacturers ({filteredData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
@@ -298,6 +380,15 @@ export default function ViewManuDraft() {
                   onChange={handleSearchChange}
                   className="search"
                 />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
                 <MediumButtons
                   type="new"
                   navigatePage="/More/ManufacturerRegistration"
@@ -324,6 +415,7 @@ export default function ViewManuDraft() {
                           ); */
                           setDeleteModalOpen(true);
                         }}
+                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (
@@ -342,7 +434,7 @@ export default function ViewManuDraft() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={paginatedManufacturer.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

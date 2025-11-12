@@ -1,6 +1,3 @@
-/* ViewStatus Component Styles */
-
-/* Modern Card-like Container for Status Table */
 .status-table-wrapper {
   background-color: white;
   border-radius: 8px;
@@ -10,7 +7,6 @@
   margin-bottom: 0;
 }
 
-/* Status Table Specific Styles */
 .status-table {
   width: 100%;
   border-collapse: collapse;
@@ -223,8 +219,6 @@
   font-size: 14px;
 }
 
-/* Status Table Container - Legacy class, now using status-table-wrapper */
-
 .status-top-section-header {
   display: flex;
   justify-content: space-between;
@@ -235,4 +229,21 @@
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+.search {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 25px;
+  border: 1px solid #d3d3d3;
+  font-size: 0.875rem;
+  background-color: white;
+  outline: none;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.search:focus {
+  outline: none;
+  border-color: var(--primary-color);
 }

@@ -6,6 +6,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
+import PlusIcon from "../../assets/icons/plus.svg";
 
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
@@ -15,16 +16,10 @@ import { createCategory, updateCategory, } from "../../services/contexts-service
 
 const CategoryRegistration = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const editState = location.state?.category || null;
-  const isEdit = !!editState;
+  const [attachmentFile, setAttachmentFile] = useState(null);
 
-  console.log("Edit state:", editState);
-
-  const [errorMessage, setErrorMessage] = useState("");
-  const [attachmentFile, setAttachmentFile] = useState();
-  const [existingImage, setExistingImage] = useState(() => editState?.logo || null);
-  const [removeExistingLogo, setRemoveExistingLogo] = useState(false);
+  // Import file state
+  const [importFile, setImportFile] = useState(null);
 
   const {
     register,
@@ -58,35 +53,28 @@ const CategoryRegistration = () => {
     }
   };
 
-  const onSubmit = async (data) => {
-    setErrorMessage("");
-    const formData = new FormData();
-    formData.append("name", data.categoryName);
-    formData.append("type", data.categoryType);
+  const onSubmit = (data) => {
+    // Here you would typically send the data to your API
+    console.log("Form submitted:", data, attachmentFile);
 
-    if (attachmentFile) {
-      formData.append("logo", attachmentFile);
-    } else if (removeExistingLogo) {
-      formData.append("remove_logo", true);
-    }
+    // Optional: navigate back to categories view after successful submission
+    navigate("/More/ViewCategories", { state: { addedCategory: true } });
+  };
 
-    try {
-      if (isEdit) {
-        await updateCategory(editState.id, formData);
-        navigate("/More/ViewCategories", { state: { success: "Category updated successfully!" } });
-      } else {
-        await createCategory(formData);
-        navigate("/More/ViewCategories", { state: { success: "Category created successfully!" } });
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (
+        file.type !==
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ) {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
       }
-    } catch (err) {
-      console.error("Submit error:", err);
-
-      // Check for backend validation error
-      if (err.response?.data?.name) {
-        setErrorMessage(err.response.data.name[0]);
-      } else {
-        setErrorMessage("Something went wrong.");
-      }
+      setImportFile(file);
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
     }
   };
 
@@ -103,6 +91,21 @@ const CategoryRegistration = () => {
               currentPage="New Category"
               rootNavigatePage="/More/ViewCategories"
               title="New Category"
+              rightComponent={
+                <div className="import-section">
+                  <label htmlFor="import-file" className="import-btn">
+                    <img src={PlusIcon} alt="Import" />
+                    Import
+                    <input
+                      type="file"
+                      id="import-file"
+                      accept=".xlsx"
+                      onChange={handleImportFile}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                </div>
+              }
             />
           </section>
           <section className="registration-form">

@@ -136,7 +136,7 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
           </button>
         </div>
         <div className="popup-body">
-          <table className="audits-table">
+          <table className="status-card-table">
             {renderTableContent()}
           </table>
         </div>

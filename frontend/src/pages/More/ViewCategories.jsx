@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import CategoryFilter from "../../components/FilterPanel";
+import CategoryFilterModal from "../../components/Modals/CategoryFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import View from "../../components/Modals/View";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
 
@@ -138,7 +139,7 @@ function TableHeader({ allSelected, onSelectAll }) {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
+function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked, onViewClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -162,6 +163,13 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
       <td>
         <section className="action-button-section">
           <button
+            title="View"
+            className="action-button"
+            onClick={() => onViewClick(category)}
+          >
+            <i className="fas fa-eye"></i>
+          </button>
+          <button
             title="Edit"
             className="action-button"
             onClick={() =>
@@ -184,98 +192,127 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
 }
 
 export default function Category() {
-  const [categories, setCategories] = useState([]);
-  const [selectedIds, setSelectedIds] = useState([]);
-
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [errorMessage, setErrorMessage] = useState(location.state?.error || "");
-  const [successMessage, setSuccessMessage] = useState(location.state?.success || "");
-
-
-  const allSelected = selectedIds.length === categories.length && categories.length > 0;
-
-  const handleCheckboxChange = (id, checked) => {
-    setSelectedIds((prev) =>
-      checked ? [...prev, id] : prev.filter((item) => item !== id)
-    );
-  };
-
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedIds(categories.map((c) => c.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isAddRecordSuccess, setAddRecordSuccess] = useState(false);
+  const [isUpdateRecordSuccess, setUpdateRecordSuccess] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
+  // filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filteredData, setFilteredData] = useState(categories);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
+  // View modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...categories];
+
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((category) =>
+        category.name?.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCategories = categories.slice(startIndex, endIndex);
+  const paginatedCategories = filteredData.slice(startIndex, endIndex);
 
-  // Fetch categories
-  const fetchCategories = async () => {
-    try {
-      const data = await fetchAllCategories();
-      setCategories(data);
-      console.log("Categories:", data);
-    } catch (error) {
-      console.log("Failed to load categories:", error);
+  // Retrieve the "addCategory" value passed from the navigation state.
+  // If the "addCategory" is not exist, the default value for this is "undifiend".
+  const addedCategory = location.state?.addedCategory;
+  const updatedCategory = location.state?.updatedCategory;
+
+  const actionStatus = (action, status) => {
+    let timeoutId;
+
+    if (action === "create" && status === true) {
+      setAddRecordSuccess(true);
     }
-  };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (action === "update" && status === true) {
+      setUpdateRecordSuccess(true);
+    }
 
-  // Handel Delete
-  const handleDelete = async () => {
-    try {
-      setSuccessMessage("");
-      setErrorMessage("");
+    // clear the navigation/history state so a full page refresh won't re-show the alert
+    // replace the current history entry with an empty state
+    navigate(location.pathname, { replace: true, state: {} });
 
-      if (selectedIds.length > 0) {
-        await Promise.all(selectedIds.map(id => deleteCategory(id)));
-        setSelectedIds([]);
-        fetchCategories();
-        setSuccessMessage(
-          selectedIds.length > 1
-            ? "Categories successfully deleted."
-            : "Category successfully deleted."
-        );
+    return (timeoutId = setTimeout(() => {
+      if (action === "create") {
+        setAddRecordSuccess(false);
+      } else {
+        setUpdateRecordSuccess(false);
       }
-      setDeleteModalOpen(false);
-    } catch (error) {
-      console.log("Failed to delete category:", error);
-      setErrorMessage("Failed to delete category. Please try again.");
-    }
+    }, 5000));
   };
 
-  // Clear success/error messages after 4 seconds
-  useEffect(() => {
-    if (successMessage || errorMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage("");
-        setErrorMessage("");
-      }, 4000);
-
-      return () => clearTimeout(timer);
+  const getAction = () => {
+    if (addedCategory == true) {
+      return "create";
     }
-  }, [successMessage, errorMessage]);
+
+    if (updatedCategory == true) {
+      return "update";
+    }
+
+    return null;
+  };
+
+  // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
+  useEffect(() => {
+    let timeoutId;
+
+    timeoutId = actionStatus(getAction(), true);
+
+    // cleanup the timeout on unmount or when addedCategory or updatedCategory changes
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [addedCategory, updatedCategory, navigate, location.pathname]);
+
+  // Handle View button click
+  const handleViewClick = (category) => {
+    setSelectedCategory(category);
+    setIsViewModalOpen(true);
+  };
 
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
+
+      {isAddRecordSuccess && (
+        <Alert message="Category added successfully!" type="success" />
+      )}
+
+      {isUpdateRecordSuccess && (
+        <Alert message="Category updated successfully!" type="success" />
+      )}
 
       {isDeleteModalOpen && (
         <DeleteModal
@@ -284,17 +321,33 @@ export default function Category() {
         />
       )}
 
+      {isViewModalOpen && selectedCategory && (
+        <View
+          title={selectedCategory.name}
+          data={[
+            { label: "Type", value: selectedCategory.type },
+            { label: "Quantity", value: selectedCategory.quantity },
+          ]}
+          closeModal={() => setIsViewModalOpen(false)}
+          imageSrc={selectedCategory.icon}
+        />
+      )}
+
+      <CategoryFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
+
       <section className="page-layout-with-table">
         <NavBar />
 
         <main className="main-with-table">
-          {/* Table Filter */}
-          <CategoryFilter filters={filterConfig} />
-
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Categories ({categories.length})</h2>
+              <h2 className="h2">Categories ({filteredData.length})</h2>
               <section className="table-actions">
                 {selectedIds.length > 0 && (
                   <MediumButtons
@@ -311,6 +364,15 @@ export default function Category() {
                   placeholder="Search..."
                   className="search"
                 />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
                 <MediumButtons
                   type="new"
                   navigatePage="/More/CategoryRegistration"
@@ -330,12 +392,8 @@ export default function Category() {
                       <TableItem
                         key={index}
                         category={category}
-                        onDeleteClick={(id) => {
-                          setSelectedIds([id]);
-                          setDeleteModalOpen(true);
-                        }}
-                        onCheckboxChange={handleCheckboxChange}
-                        isChecked={selectedIds.includes(category.id)}
+                        onDeleteClick={() => setDeleteModalOpen(true)}
+                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (
@@ -354,7 +412,7 @@ export default function Category() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={categories.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

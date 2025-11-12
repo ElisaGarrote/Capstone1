@@ -70,7 +70,10 @@ const PerformAudits = () => {
 
   const onSubmit = (data) => {
     console.log("Form submitted:", data, attachmentFiles);
-    navigate(previousPage);
+
+    // Redirect to completed audits section if coming from asset view, otherwise go back to previous page
+    const redirectPage = previousPage === "/asset-view" ? "/audits/completed" : previousPage;
+    navigate(redirectPage);
   };
 
   const getRootPage = () => {
@@ -83,6 +86,10 @@ const PerformAudits = () => {
         return "Scheduled Audits";
       case "/audits/completed":
         return "Completed Audits";
+      case "/asset-view":
+        return "Audits";
+      default:
+        return "Audits";
     }
   };
 
@@ -96,7 +103,7 @@ const PerformAudits = () => {
           <TopSecFormPage
             root={getRootPage()}
             currentPage="Perform Audit"
-            rootNavigatePage={previousPage}
+            rootNavigatePage={previousPage === "/asset-view" ? "/audits/completed" : previousPage}
             title="Perform Audit"
           />
         </section>

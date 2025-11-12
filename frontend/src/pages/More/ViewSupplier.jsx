@@ -3,39 +3,18 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import NavBar from "../../components/NavBar";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import View from "../../components/Modals/View";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import SupplierFilterModal from "../../components/Modals/SupplierFilterModal";
 import Alert from "../../components/Alert";
 import Pagination from "../../components/Pagination";
-import SupplierFilter from "../../components/FilterPanel";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import { getSuppliers } from "../../services/contexts-service";
-
+import MockupData from "../../data/mockData/more/supplier-mockup-data.json";
+import { fetchAllCategories } from "../../services/contexts-service";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/ViewSupplier.css";
-
-const filterConfig = [
-  {
-    type: "text",
-    name: "supplierName",
-    label: "Supplier Name",
-  },
-  {
-    type: "select",
-    name: "city",
-    label: "City",
-    options: [
-      { value: "makati", label: "Makati" },
-      { value: "marikina", label: "Marikina" },
-      { value: "pasig", label: "Pasig" },
-    ],
-  },
-  {
-    type: "text",
-    name: "contactPerson",
-    label: "Contat Person",
-  },
-];
 
 // TableHeader component to render the table header
 function TableHeader() {
@@ -51,10 +30,11 @@ function TableHeader() {
       <th>NAME</th>
       <th>ADDRESS</th>
       <th>CITY</th>
+      <th>STATE</th>
       <th>ZIP</th>
+      <th>COUNTRY</th>
       <th>CONTACT PERSON</th>
       <th>PHONE</th>
-      <th>EMAIL</th>
       <th>URL</th>
       <th>ACTIONS</th>
     </tr>
@@ -62,7 +42,7 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ supplier, onDeleteClick }) {
+function TableItem({ supplier, onDeleteClick, onViewClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [endPoint, setEndPoint] = useState("");
@@ -101,21 +81,18 @@ function TableItem({ supplier, onDeleteClick }) {
       </td>
       <td>{supplier.address || "-"}</td>
       <td>{supplier.city || "-"}</td>
+      <td>{supplier.state || "-"}</td>
       <td>{supplier.zip || "-"}</td>
+      <td>{supplier.country || "-"}</td>
       <td>{supplier.contactName || "-"}</td>
       <td>{supplier.phoneNumber || "-"}</td>
-      <td>{supplier.email || "-"}</td>
-      <td>{supplier.URL || "-"}</td>
+      <td>{supplier.url || "-"}</td>
       <td>
         <section className="action-button-section">
           <button
             title="View"
             className="action-button"
-            onClick={() =>
-              navigate(`/More/SupplierDetails/${supplier.id}`, {
-                state: { supplier },
-              })
-            }
+            onClick={() => onViewClick(supplier)}
           >
             <i className="fas fa-eye"></i>
           </button>
@@ -165,10 +142,62 @@ export default function ViewSupplier() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
+  // filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filteredData, setFilteredData] = useState(MockupData);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
+  // View modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((supplier) =>
+        supplier.name?.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    // Filter by Country
+    if (filters.country && filters.country.trim() !== "") {
+      filtered = filtered.filter((supplier) =>
+        supplier.country?.toLowerCase().includes(filters.country.toLowerCase())
+      );
+    }
+
+    // Filter by City
+    if (filters.city && filters.city.trim() !== "") {
+      filtered = filtered.filter((supplier) =>
+        supplier.city?.toLowerCase().includes(filters.city.toLowerCase())
+      );
+    }
+
+    // Filter by Email
+    if (filters.email && filters.email.trim() !== "") {
+      filtered = filtered.filter((supplier) =>
+        supplier.email?.toLowerCase().includes(filters.email.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedSuppliers = MockupData.slice(startIndex, endIndex);
+  const paginatedSuppliers = filteredData.slice(startIndex, endIndex);
 
   // Retrieve the "addManufacturer" value passed from the navigation state.
   // If the "addManufacturer" is not exist, the default value for this is "undifiend".
@@ -310,6 +339,11 @@ export default function ViewSupplier() {
     return null;
   };
 
+  const handleExport = () => {
+    const dataToExport = suppliers.length > 0 ? suppliers : MockupData;
+    exportToExcel(dataToExport, "Supplier_Records.xlsx");
+  };
+
   // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
   useEffect(() => {
     let timeoutId;
@@ -321,6 +355,12 @@ export default function ViewSupplier() {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [addedSupplier, updatedSupplier, navigate, location.pathname]);
+
+  // Handle View button click
+  const handleViewClick = (supplier) => {
+    setSelectedSupplier(supplier);
+    setIsViewModalOpen(true);
+  };
 
   // ----------------- Render -----------------
   return (
@@ -355,17 +395,39 @@ export default function ViewSupplier() {
         />
       )}
 
+      {isViewModalOpen && selectedSupplier && (
+        <View
+          title={selectedSupplier.name}
+          data={[
+            { label: "Address", value: selectedSupplier.address },
+            { label: "City", value: selectedSupplier.city },
+            { label: "State", value: selectedSupplier.state },
+            { label: "ZIP", value: selectedSupplier.zip },
+            { label: "Country", value: selectedSupplier.country },
+            { label: "Contact Person", value: selectedSupplier.contactName },
+            { label: "Phone", value: selectedSupplier.phoneNumber },
+            { label: "URL", value: selectedSupplier.url },
+          ]}
+          closeModal={() => setIsViewModalOpen(false)}
+          imageSrc={selectedSupplier.logo}
+        />
+      )}
+
+      <SupplierFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
+
       <section className="page-layout-with-table">
         <NavBar />
 
         <main className="main-with-table">
-          {/* Table Filter */}
-          <SupplierFilter filters={filterConfig} />
-
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Suppliers ({MockupData.length})</h2>
+              <h2 className="h2">Suppliers ({filteredData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
@@ -374,6 +436,16 @@ export default function ViewSupplier() {
                   onChange={handleSearchChange}
                   className="search"
                 />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
+                <MediumButtons type="export" onClick={handleExport} />
                 <MediumButtons
                   type="new"
                   navigatePage="/More/SupplierRegistration"
@@ -397,6 +469,7 @@ export default function ViewSupplier() {
                         setEndPoint(`${import.meta.env.VITE_CONTEXTS_API_URL}suppliers/${supplier.id}/`);
                           setDeleteModalOpen(true);
                         }}
+                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (
@@ -415,7 +488,7 @@ export default function ViewSupplier() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={filteredSuppliers.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

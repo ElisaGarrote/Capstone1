@@ -4,45 +4,19 @@ import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import AssetFilter from "../../components/FilterPanel";
+import AssetFilterModal from "../../components/Modals/AssetFilterModal";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/Assets/Assets.css";
 
-// Filter configuration for assets
-const filterConfig = [
-  {
-    type: "select",
-    name: "status",
-    label: "Status",
-    options: [
-      { value: "archived", label: "Archived" },
-      { value: "beingrepaired", label: "Being Repaired" },
-      { value: "broken", label: "Broken" },
-      { value: "deployed", label: "Deployed" },
-      { value: "lostorstolen", label: "Lost or Stolen" },
-      { value: "pending", label: "Pending" },
-      { value: "readytodeploy", label: "Ready to Deploy" },
-    ],
-  },
-  {
-    type: "text",
-    name: "category",
-    label: "Category",
-  },
-  {
-    type: "text",
-    name: "location",
-    label: "Location",
-  },
-];
-
-// TableHeader
+// TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
@@ -54,18 +28,17 @@ function TableHeader({ allSelected, onHeaderChange }) {
         />
       </th>
       <th>IMAGE</th>
-      <th>ASSET ID</th>
+      <th>ID</th>
       <th>NAME</th>
       <th>CATEGORY</th>
       <th>STATUS</th>
-      <th>LOCATION</th>
       <th>CHECK-IN / CHECK-OUT</th>
       <th>ACTION</th>
     </tr>
   );
 }
 
-// TableItem
+// TableItem component to render each asset row
 function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
   const baseImage = asset.image
     ? `https://assets-service-production.up.railway.app${asset.image}`
@@ -92,26 +65,24 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       </td>
       <td>{asset.displayed_id}</td>
       <td>{asset.name}</td>
-      <td>{asset.category}</td>
+      <td>{asset.category || 'N/A'}</td>
       <td>
         <Status type={asset.status.toLowerCase()} name={asset.status} />
       </td>
-      <td>{asset.location || "-"}</td>
 
-      {/* CHECK-IN / CHECK-OUT Column */}
+      {/* Check-in/Check-out Column */}
       <td>
-        {asset.hasCheckoutRecord && asset.isCheckInOrOut && (
-          <button
-            className={
-              asset.isCheckInOrOut === "Check-In"
-                ? "check-in-btn"
-                : "check-out-btn"
-            }
-            onClick={() => onCheckInOut(asset)}
-          >
-            {asset.isCheckInOrOut}
-          </button>
-        )}
+        <ActionButtons
+          showCheckout={
+            asset.status.toLowerCase() === 'ready to deploy' ||
+            asset.status.toLowerCase() === 'readytodeploy' ||
+            asset.status.toLowerCase() === 'archived' ||
+            asset.status.toLowerCase() === 'pending'
+          }
+          showCheckin={asset.status.toLowerCase() === 'deployed'}
+          onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
+          onCheckinClick={() => onCheckInOut(asset, 'checkin')}
+        />
       </td>
 
       <td>
@@ -119,7 +90,7 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
           showEdit
           showDelete
           showView
-          editPath={`/assets/registration/${asset.id}`}
+          editPath={`/assets/edit/${asset.id}`}
           editState={{ asset }}
           onDeleteClick={() => onDeleteClick(asset.id)}
           onViewClick={() => onViewClick(asset)}
@@ -132,20 +103,123 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
 export default function Assets() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
 
-  // pagination
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState(MockupData);
+
+  // Debug: Monitor filter modal state changes
+  useEffect(() => {
+    console.log("🔍 Filter Modal State Changed:", isFilterModalOpen);
+  }, [isFilterModalOpen]);
+
+  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedAssets = MockupData.slice(startIndex, endIndex);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
-  // selection
+  // selection state
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    // Filter by Asset ID
+    if (filters.assetId && filters.assetId.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.displayed_id.toLowerCase().includes(filters.assetId.toLowerCase())
+      );
+    }
+
+    // Filter by Asset Model
+    if (filters.assetModel && filters.assetModel.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.product?.toLowerCase().includes(filters.assetModel.toLowerCase())
+      );
+    }
+
+    // Filter by Status
+    if (filters.status) {
+      filtered = filtered.filter((asset) =>
+        asset.status.toLowerCase() === filters.status.value.toLowerCase()
+      );
+    }
+
+    // Filter by Supplier
+    if (filters.supplier) {
+      filtered = filtered.filter((asset) =>
+        asset.supplier?.toLowerCase().includes(filters.supplier.label.toLowerCase())
+      );
+    }
+
+    // Filter by Location
+    if (filters.location) {
+      filtered = filtered.filter((asset) =>
+        asset.location?.toLowerCase().includes(filters.location.label.toLowerCase())
+      );
+    }
+
+    // Filter by Asset Name
+    if (filters.assetName && filters.assetName.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.name.toLowerCase().includes(filters.assetName.toLowerCase())
+      );
+    }
+
+    // Filter by Serial Number
+    if (filters.serialNumber && filters.serialNumber.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.serial_number?.toLowerCase().includes(filters.serialNumber.toLowerCase())
+      );
+    }
+
+    // Filter by Warranty Expiration
+    if (filters.warrantyExpiration && filters.warrantyExpiration.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.warranty_expiration_date === filters.warrantyExpiration
+      );
+    }
+
+    // Filter by Order Number
+    if (filters.orderNumber && filters.orderNumber.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.order_number?.toLowerCase().includes(filters.orderNumber.toLowerCase())
+      );
+    }
+
+    // Filter by Purchase Date
+    if (filters.purchaseDate && filters.purchaseDate.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.purchase_date === filters.purchaseDate
+      );
+    }
+
+    // Filter by Purchase Cost
+    if (filters.purchaseCost && filters.purchaseCost.trim() !== "") {
+      const cost = parseFloat(filters.purchaseCost);
+      filtered = filtered.filter((asset) =>
+        asset.purchase_cost === cost
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedAssets = filteredData.slice(startIndex, endIndex);
+
+  // selection logic
   const allSelected =
     paginatedAssets.length > 0 &&
     paginatedAssets.every((item) => selectedIds.includes(item.id));
@@ -171,8 +245,9 @@ export default function Assets() {
     }
   };
 
-  // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // delete modal state
   const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
 
   const openDeleteModal = (id = null) => {
@@ -191,8 +266,8 @@ export default function Assets() {
       // remove from mock data / API call
     } else {
       console.log("Deleting multiple ids:", selectedIds);
-    
-      setSelectedIds([]); 
+      // remove multiple
+      setSelectedIds([]); // clear selection
     }
     closeDeleteModal();
   };
@@ -205,23 +280,7 @@ export default function Assets() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -233,29 +292,38 @@ export default function Assets() {
     }
   }, [location]);
 
-  const handleCheckInOut = (asset) => {
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "Assets_Records.xlsx");
+  };
+
+  const handleCheckInOut = (asset, action) => {
     const baseImage = asset.image
       ? `https://assets-service-production.up.railway.app${asset.image}`
       : DefaultImage;
 
     const checkout = asset.checkoutRecord;
     console.log("checkout:", checkout);
+    console.log("action:", action);
 
-    if (asset.isCheckInOrOut === "Check-In") {
+    // Determine action: use passed parameter or asset property
+    const isCheckIn = action === 'checkin' || asset.isCheckInOrOut === "Check-In";
+
+    if (isCheckIn) {
       navigate(`/assets/check-in/${asset.id}`, {
         state: {
           id: asset.id,
           assetId: asset.displayed_id,
           product: asset.product,
           image: baseImage,
-          employee: checkout.requestor || "Not assigned",
-          empLocation: checkout.requestor_location || "Unknown",
-          checkOutDate: checkout.checkout_date || "Unknown",
-          returnDate: checkout.return_date || "Unknown",
-          checkoutId: checkout.checkout_ref_id || "Unknown",
-          checkinDate: checkout.checkin_date || "Unknown",
-          condition: checkout.condition || "Unknown",
-          ticketId: checkout.ticket_id,
+          employee: checkout?.requestor || "Not assigned",
+          empLocation: checkout?.requestor_location || "Unknown",
+          checkOutDate: checkout?.checkout_date || "Unknown",
+          returnDate: checkout?.return_date || "Unknown",
+          checkoutId: checkout?.checkout_ref_id || "Unknown",
+          checkinDate: checkout?.checkin_date || "Unknown",
+          condition: checkout?.condition || "Unknown",
+          ticketId: checkout?.ticket_id,
           fromAsset: true,
         },
       });
@@ -266,12 +334,12 @@ export default function Assets() {
           assetId: asset.displayed_id,
           product: asset.product,
           image: baseImage,
-          ticketId: checkout.ticket_id,
-          empId: checkout.requestor_id,
-          employee: checkout.requestor || "Not assigned",
-          empLocation: checkout.requestor_location || "Unknown",
-          checkoutDate: checkout.checkout_date || "Unknown",
-          returnDate: checkout.return_date || "Unknown",
+          ticketId: checkout?.ticket_id,
+          empId: checkout?.requestor_id,
+          employee: checkout?.requestor || "Not assigned",
+          empLocation: checkout?.requestor_location || "Unknown",
+          checkoutDate: checkout?.checkout_date || "Unknown",
+          returnDate: checkout?.return_date || "Unknown",
           fromAsset: true,
         },
       });
@@ -293,36 +361,51 @@ export default function Assets() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      {/* Asset Filter Modal */}
+      <AssetFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
-        <main className="page-layout assets-page">
-          <section className="title-page-section">
-            <h1>Assets</h1>
-          </section>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-          <AssetFilter filters={filterConfig} />
-
+        <main className="main-with-table">
           <section className="table-layout">
+            {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Assets ({MockupData.length})</h2>
+              <h2 className="h2">Assets ({filteredData.length})</h2>
               <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
+                {/* Bulk edit and delete buttons only when checkboxes selected */}
                 {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
+                  <>
+                    <MediumButtons
+                      type="edit"
+                      onClick={() => navigate('/assets/bulk-edit', { state: { selectedIds } })}
+                    />
+                    <MediumButtons
+                      type="delete"
+                      onClick={() => openDeleteModal(null)}
+                    />
+                  </>
                 )}
                 <input type="search" placeholder="Search..." className="search" />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    console.log("🔘 DIRECT FILTER BUTTON CLICKED!");
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
                 {authService.getUserInfo().role === "Admin" && (
                   <MediumButtons
                     type="new"
@@ -332,15 +415,8 @@ export default function Assets() {
               </section>
             </section>
 
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
-
-            <section className="table-section">
+            {/* Table Structure */}
+            <section className="assets-table-section">
               <table>
                 <thead>
                   <TableHeader
@@ -363,7 +439,7 @@ export default function Assets() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="no-data-message">
+                      <td colSpan={8} className="no-data-message">
                         No Assets Found.
                       </td>
                     </tr>
@@ -372,17 +448,19 @@ export default function Assets() {
               </table>
             </section>
 
+            {/* Table pagination */}
             <section className="table-pagination">
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={MockupData.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

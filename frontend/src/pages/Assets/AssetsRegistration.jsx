@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import "../../styles/Registration.css";
-import "../../styles/PerformAudits.css";
 import CloseIcon from "../../assets/icons/close.svg";
+import PlusIcon from "../../assets/icons/plus.svg";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import Select from "react-select";
-import makeAnimated from "react-select/animated";
+import { fetchAllCategories } from "../../services/contexts-service";
+import AddEntryModal from "../../components/Modals/AddEntryModal";
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
@@ -25,65 +25,58 @@ export default function AssetsRegistration() {
     { id: 6, name: "Taguig Office" },
     { id: 7, name: "Remote" }
   ]);
+  const [disposalStatuses] = useState([
+    { id: 1, name: "Not Disposed" },
+    { id: 2, name: "Sold" },
+    { id: 3, name: "Donated" },
+    { id: 4, name: "Recycled" },
+    { id: 5, name: "Destroyed" },
+    { id: 6, name: "Lost" },
+    { id: 7, name: "Stolen" }
+  ]);
 
-  // Animated components for react-select
-  const animatedComponents = makeAnimated();
 
-  // Custom styles for dropdowns to match Audits form
-  const customStylesDropdown = {
-    control: (provided) => ({
-      ...provided,
-      width: "100%",
-      borderRadius: "25px",
-      fontSize: "0.875rem",
-      padding: "3px 8px",
-    }),
-    container: (provided) => ({
-      ...provided,
-      width: "100%",
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      color: state.isSelected ? "white" : "grey",
-      fontSize: "0.875rem",
-    }),
-  };
   
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
+  const location = useLocation();
 
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
   const [generatedAssetId, setGeneratedAssetId] = useState('(Loading...)');
   
-  const { setValue, register, handleSubmit, control, watch, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       assetId: '',
-      product: null,
-      status: null,
-      supplier: null,
-      location: null,
+      product: '',
+      status: '',
+      supplier: '',
+      location: '',
       assetName: '',
       serialNumber: '',
       warrantyExpiration: '',
       orderNumber: '',
       purchaseDate: '',
       purchaseCost: '',
-      auditSchedule: '',
+      disposalStatus: '',
+      scheduleAuditDate: '',
       notes: '',
     }
   });
 
-  const [previewImage, setPreviewImage] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [removeImage, setRemoveImage] = useState(false);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Add this state to track the selected product
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  // Modal states for adding new entries
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
+  // Import file state
+  const [importFile, setImportFile] = useState(null);
 
   useEffect(() => {
     // Only fetch the next asset ID if we're creating a new asset (no ID provided)
@@ -147,42 +140,20 @@ export default function AssetsRegistration() {
           // Set form values from retrieved asset data
           setValue('assetId', assetData.displayed_id);
 
-          // For dropdowns, find the matching option objects
-          const currentProductOptions = assetContextsData.products?.map(product => ({
-            value: product.id,
-            label: product.name
-          })) || [];
 
-          const currentStatusOptions = assetContextsData.statuses?.map(status => ({
-            value: status.id,
-            label: status.name
-          })) || [];
 
-          const currentSupplierOptions = contextsData.suppliers?.map(supplier => ({
-            value: supplier.id,
-            label: supplier.name
-          })) || [];
-
-          const currentLocationOptions = locations.map(location => ({
-            value: location.name,
-            label: location.name
-          }));
-
-          const productOption = currentProductOptions.find(option => option.value === assetData.product);
-          const statusOption = currentStatusOptions.find(option => option.value === assetData.status);
-          const supplierOption = currentSupplierOptions.find(option => option.value === assetData.supplier_id);
-          const locationOption = currentLocationOptions.find(option => option.value === assetData.location);
-
-          setValue('product', productOption || null);
-          setValue('status', statusOption || null);
-          setValue('supplier', supplierOption || null);
-          setValue('location', locationOption || null);
+          setValue('product', assetData.product_id || '');
+          setValue('status', assetData.status_id || '');
+          setValue('supplier', assetData.supplier_id || '');
+          setValue('location', assetData.location || '');
           setValue('assetName', assetData.name || '');
           setValue('serialNumber', assetData.serial_number || '');
           setValue('warrantyExpiration', assetData.warranty_expiration || '');
           setValue('orderNumber', assetData.order_number || '');
           setValue('purchaseDate', assetData.purchase_date || '');
           setValue('purchaseCost', assetData.purchase_cost || '');
+          setValue('disposalStatus', assetData.disposal_status || '');
+          setValue('scheduleAuditDate', assetData.schedule_audit_date || '');
           setValue('notes', assetData.notes || '');
           
           if (assetData.image) {
@@ -200,19 +171,167 @@ export default function AssetsRegistration() {
     initialize();
   }, [id, setValue]);
 
-  const handleImageSelection = (e) => {
+  // Handle cloned asset name from location state
+  useEffect(() => {
+    console.log('AssetsRegistration location.state:', location.state);
+    if (location.state?.clonedAssetName && !id) {
+      console.log('Setting cloned asset name:', location.state.clonedAssetName);
+      setValue('assetName', location.state.clonedAssetName);
+    }
+  }, [location.state, setValue, id]);
+
+  const handleFileSelection = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 5 * 1024 * 1024;
+
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 5MB and was not added.`);
+        return false;
+      }
+      return true;
+    });
+
+    setAttachmentFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index) => {
+    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleImportFile = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setSelectedImage(file); // store the actual file
-      setValue('image', file); // optional: sync with react-hook-form
-  
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result); // for display only
-      };
-      reader.readAsDataURL(file);
+      if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+      setImportFile(file);
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
     }
-  };  
+  };
+
+  // Modal field configurations
+  const statusFields = [
+    {
+      name: 'name',
+      label: 'Status Label',
+      type: 'text',
+      placeholder: 'Status Label',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Status Label is required' }
+    },
+    {
+      name: 'type',
+      label: 'Status Type',
+      type: 'select',
+      placeholder: 'Select Status Type',
+      required: true,
+      options: [
+        { value: 'deployable', label: 'Deployable' },
+        { value: 'deployed', label: 'Deployed' },
+        { value: 'undeployable', label: 'Undeployable' },
+        { value: 'pending', label: 'Pending' },
+        { value: 'archived', label: 'Archived' }
+      ],
+      validation: { required: 'Status Type is required' }
+    }
+  ];
+
+  const supplierFields = [
+    {
+      name: 'name',
+      label: 'Supplier Name',
+      type: 'text',
+      placeholder: 'Supplier Name',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Supplier Name is required' }
+    },
+    {
+      name: 'email',
+      label: 'Email',
+      type: 'email',
+      placeholder: 'Email',
+      required: false,
+      maxLength: 100
+    },
+    {
+      name: 'phone_number',
+      label: 'Phone Number',
+      type: 'text',
+      placeholder: 'Phone Number',
+      required: false,
+      maxLength: 20
+    }
+  ];
+
+  const locationFields = [
+    {
+      name: 'name',
+      label: 'Location Name',
+      type: 'text',
+      placeholder: 'Location Name',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Location Name is required' }
+    }
+  ];
+
+  // Modal save handlers
+  const handleSaveStatus = async (data) => {
+    try {
+      // Here you would call the API to create a new status
+      console.log('Creating status:', data);
+      // For now, just add to local state
+      const newStatus = {
+        id: statuses.length + 1,
+        name: data.name,
+        type: data.type
+      };
+      setStatuses(prev => [...prev, newStatus]);
+    } catch (error) {
+      console.error('Error creating status:', error);
+      throw error;
+    }
+  };
+
+  const handleSaveSupplier = async (data) => {
+    try {
+      // Here you would call the API to create a new supplier
+      console.log('Creating supplier:', data);
+      // For now, just add to local state
+      const newSupplier = {
+        id: suppliers.length + 1,
+        name: data.name,
+        email: data.email,
+        phone_number: data.phone_number
+      };
+      setSuppliers(prev => [...prev, newSupplier]);
+    } catch (error) {
+      console.error('Error creating supplier:', error);
+      throw error;
+    }
+  };
+
+  const handleSaveLocation = async (data) => {
+    try {
+      // Here you would call the API to create a new location
+      console.log('Creating location:', data);
+      // For now, just add to local state
+      const newLocation = {
+        id: locations.length + 1,
+        name: data.name
+      };
+      setLocations(prev => [...prev, newLocation]);
+    } catch (error) {
+      console.error('Error creating location:', error);
+      throw error;
+    }
+  };
   
   const onSubmit = async (data) => {
     try {
@@ -220,16 +339,18 @@ export default function AssetsRegistration() {
 
       // Append asset data to FormData object
       formData.append('displayed_id', data.assetId);
-      formData.append('product', data.product?.value || '');
-      formData.append('status', data.status?.value || '');
-      formData.append('supplier_id', data.supplier?.value || '');
-      formData.append('location', data.location?.value || '');
+      formData.append('product', data.product || '');
+      formData.append('status', data.status || '');
+      formData.append('supplier_id', data.supplier || '');
+      formData.append('location', data.location || '');
       formData.append('name', data.assetName);
       formData.append('serial_number', data.serialNumber || '');
       formData.append('warranty_expiration', data.warrantyExpiration || '');
       formData.append('order_number', data.orderNumber || '');
       formData.append('purchase_date', data.purchaseDate || '');
       formData.append('purchase_cost', data.purchaseCost || '');
+      formData.append('disposal_status', data.disposalStatus || '');
+      formData.append('schedule_audit_date', data.scheduleAuditDate || '');
       formData.append('notes', data.notes || '');
       
       // Handle image upload
@@ -275,33 +396,15 @@ export default function AssetsRegistration() {
     }
   };
 
-  // Create options arrays for react-select dropdowns
-  const productOptions = products.map(product => ({
-    value: product.id,
-    label: product.name
-  }));
 
-  const statusOptions = statuses.map(status => ({
-    value: status.id,
-    label: status.name
-  }));
-
-  const supplierOptions = suppliers.map(supplier => ({
-    value: supplier.id,
-    label: supplier.name
-  }));
-
-  const locationOptions = locations.map(location => ({
-    value: location.name,
-    label: location.name
-  }));
 
   // Add this function to handle product selection
-  const handleProductChange = async (selectedOption) => {
-    if (selectedOption && selectedOption.value) {
+  const handleProductChange = async (event) => {
+    const productId = event.target.value;
+    if (productId) {
       try {
         // Fetch the product defaults
-        const productDefaults = await assetsService.fetchProductDefaults(selectedOption.value);
+        const productDefaults = await assetsService.fetchProductDefaults(productId);
 
         if (productDefaults) {
           console.log("Product defaults:", productDefaults);
@@ -313,10 +416,7 @@ export default function AssetsRegistration() {
 
           // Set supplier if available
           if (productDefaults.default_supplier_id) {
-            const supplierOption = supplierOptions.find(option => option.value === productDefaults.default_supplier_id);
-            if (supplierOption) {
-              setValue('supplier', supplierOption);
-            }
+            setValue('supplier', productDefaults.default_supplier_id);
           }
         }
       } catch (error) {
@@ -341,8 +441,24 @@ export default function AssetsRegistration() {
             currentPage={id ? "Edit Asset" : "New Asset"}
             rootNavigatePage="/assets"
             title={id ? 'Edit' + ' ' + (asset?.name || 'Asset') : 'New Asset'}
+            rightComponent={
+              <div className="import-section">
+                <label htmlFor="import-file" className="import-btn">
+                  <img src={PlusIcon} alt="Import" />
+                  Import
+                  <input
+                    type="file"
+                    id="import-file"
+                    accept=".xlsx"
+                    onChange={handleImportFile}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </div>
+            }
           />
         </section>
+
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Asset ID */}
@@ -359,94 +475,116 @@ export default function AssetsRegistration() {
               {errors.assetId && <span className='error-message'>{errors.assetId.message}</span>}
             </fieldset>
 
-            {/* Asset Model selection */}
+            {/* Product Dropdown */}
             <fieldset>
-              <label htmlFor='product'>Asset Model <span style={{color: 'red'}}>*</span></label>
-              <Controller
-                name="product"
-                control={control}
-                rules={{ required: "Asset Model is required" }}
-                render={({ field }) => (
-                  <Select
-                    components={animatedComponents}
-                    options={productOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select Asset Model"
-                    {...field}
-                    onChange={(selectedOption) => {
-                      field.onChange(selectedOption);
-                      handleProductChange(selectedOption);
-                    }}
-                  />
-                )}
-              />
+              <label htmlFor='product'>Product <span style={{color: 'red'}}>*</span></label>
+              <select
+                id="product"
+                {...register("product", { required: "Product is required" })}
+                onChange={handleProductChange}
+                className={errors.product ? 'input-error' : ''}
+              >
+                <option value="">Select Product</option>
+                {products.map(product => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
               {errors.product && <span className='error-message'>{errors.product.message}</span>}
             </fieldset>
 
-            {/* Status selection, Default deployable */}
+            {/* Status Dropdown with + button */}
             <fieldset>
               <label htmlFor='status'>Status <span style={{color: 'red'}}>*</span></label>
-              <Controller
-                name="status"
-                control={control}
-                rules={{ required: "Status is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={statusOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select Status"
-                    {...field}
-                  />
-                )}
-              />
+              <div className="dropdown-with-add">
+                <select
+                  id="status"
+                  {...register("status", { required: "Status is required" })}
+                  className={errors.status ? 'input-error' : ''}
+                >
+                  <option value="">Select Status</option>
+                  {statuses.map(status => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-btn"
+                  onClick={() => setShowStatusModal(true)}
+                  title="Add new status"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
               {errors.status && <span className='error-message'>{errors.status.message}</span>}
             </fieldset>
 
-            {/* Supplier selection */}
+            {/* Supplier Dropdown with + button */}
             <fieldset>
-              <label htmlFor='supplier'>Supplier <span style={{color: 'red'}}>*</span></label>
-              <Controller
-                name="supplier"
-                control={control}
-                rules={{ required: "Supplier is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={supplierOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select Supplier"
-                    {...field}
-                  />
-                )}
-              />
+              <label htmlFor='supplier'>Supplier</label>
+              <div className="dropdown-with-add">
+                <select
+                  id="supplier"
+                  {...register("supplier")}
+                  className={errors.supplier ? 'input-error' : ''}
+                >
+                  <option value="">Select Supplier</option>
+                  {suppliers.map(supplier => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-btn"
+                  onClick={() => setShowSupplierModal(true)}
+                  title="Add new supplier"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
               {errors.supplier && <span className='error-message'>{errors.supplier.message}</span>}
             </fieldset>
 
-            {/* Location selection */}
+            {/* Location Dropdown with + button */}
             <fieldset>
-              <label htmlFor='location'>Location <span style={{color: 'red'}}>*</span></label>
-              <Controller
-                name="location"
-                control={control}
-                rules={{ required: "Location is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={locationOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select Location"
-                    {...field}
-                  />
-                )}
-              />
+              <label htmlFor='location'>Location</label>
+              <div className="dropdown-with-add">
+                <select
+                  id="location"
+                  {...register("location")}
+                  className={errors.location ? 'input-error' : ''}
+                >
+                  <option value="">Select Location</option>
+                  {locations.map(location => (
+                    <option key={location.id} value={location.name}>
+                      {location.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-btn"
+                  onClick={() => setShowLocationModal(true)}
+                  title="Add new location"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
               {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
 
             {/* Asset Name */}
             <fieldset>
-              <label htmlFor='asset-name'>Asset Name <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor='asset-name'>Asset Name</label>
               <input
                 type='text'
                 className={errors.assetName ? 'input-error' : ''}
-                {...register('assetName', { required: 'Asset Name is required' })}
+                {...register('assetName')}
                 maxLength='100'
                 placeholder='Asset Name'
               />
@@ -456,15 +594,15 @@ export default function AssetsRegistration() {
             {/* Serial Number */}
             <fieldset>
               <label htmlFor='serial-number'>Serial Number</label>
-              <input 
+              <input
                 type='text'
-                {...register('serialNumber')} 
+                {...register('serialNumber')}
                 maxLength='50'
                 placeholder='Serial Number'
               />
             </fieldset>
 
-            {/* Warranty Expiration */}
+            {/* Warranty Expiration Date */}
             <fieldset>
               <label htmlFor='warranty-expiration'>Warranty Expiration Date</label>
               <input
@@ -477,9 +615,9 @@ export default function AssetsRegistration() {
             {/* Order Number */}
             <fieldset>
               <label htmlFor='order-number'>Order Number</label>
-              <input 
+              <input
                 type='text'
-                {...register('orderNumber')} 
+                {...register('orderNumber')}
                 maxLength='50'
                 placeholder='Order Number'
               />
@@ -496,69 +634,129 @@ export default function AssetsRegistration() {
             </fieldset>
 
             {/* Purchase Cost */}
-            <fieldset>
-              <label>Default Purchase Cost</label>
-              <div className="purchase-cost-container">
-                <div className="currency-label">PHP</div>
+            <fieldset className="cost-field">
+              <label htmlFor="purchaseCost">Purchase Cost</label>
+              <div className="cost-input-group">
+                <span className="cost-addon">PHP</span>
                 <input
                   type="number"
-                  step="0.01"
+                  id="purchaseCost"
+                  name="purchaseCost"
+                  placeholder="0.00"
                   min="0"
+                  step="0.01"
                   {...register("purchaseCost", { valueAsNumber: true })}
-                  placeholder='Default Purchase Cost'
-                  className="purchase-cost-input"
                 />
               </div>
+            </fieldset>
+
+            {/* Disposal Status */}
+            <fieldset>
+              <label htmlFor='disposal-status'>Disposal Status</label>
+              <select
+                id="disposal-status"
+                {...register("disposalStatus")}
+                className={errors.disposalStatus ? 'input-error' : ''}
+              >
+                <option value="">Select Disposal Status</option>
+                {disposalStatuses.map(status => (
+                  <option key={status.id} value={status.name}>
+                    {status.name}
+                  </option>
+                ))}
+              </select>
+              {errors.disposalStatus && <span className='error-message'>{errors.disposalStatus.message}</span>}
+            </fieldset>
+
+            {/* Schedule Audit Date */}
+            <fieldset>
+              <label htmlFor='schedule-audit-date'>Schedule Audit Date</label>
+              <input
+                type='date'
+                id="schedule-audit-date"
+                {...register('scheduleAuditDate')}
+                min={currentDate}
+              />
             </fieldset>
 
             {/* Notes */}
             <fieldset>
               <label htmlFor='notes'>Notes</label>
-              <textarea 
-                {...register('notes')} 
+              <textarea
+                {...register('notes')}
                 maxLength='500'
                 placeholder='Notes...'
               />
             </fieldset>
 
+            {/* Image Upload */}
             <fieldset>
-              <label htmlFor='upload-image'>Image</label>
-              <div>
-                {previewImage ? (
-                  <div className='image-selected'>
-                    <img src={previewImage} alt='Preview' />
-                    <button
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPreviewImage(null);
-                        setSelectedImage(null);
-                        setValue('image', null);
-                        document.getElementById('image').value = '';
-                        setRemoveImage(true);
-                        console.log("Remove image flag set to:", true);
-                      }}
-                    >
-                      <img src={CloseIcon} alt='Remove' />
-                    </button>
-                  </div>
-                ) : null}
-                <input
-                  type='file'
-                  id='image'
-                  accept='image/*'
-                  onChange={handleImageSelection}
-                  style={{ display: 'none' }}
-                />
-                <label htmlFor='image' className='upload-image-btn'>
-                  {!previewImage ? 'Choose Image' : 'Change Image'}
-                </label>
+              <label>Image Upload</label>
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="attachments" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="attachments"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                      multiple
+                    />
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
+                </div>
+
+                {/* Right column: Uploaded files */}
+                <div className="upload-right">
+                  {attachmentFiles.map((file, index) => (
+                    <div className="file-uploaded" key={index}>
+                      <span title={file.name}>{file.name}</span>
+                      <button type="button" onClick={() => removeFile(index)}>
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </fieldset>
 
-            <button type="submit" className="save-btn" disabled={!isValid}>Save</button>
+            <button type="submit" className="primary-button" disabled={!isValid}>Save</button>
           </form>
         </section>
       </main>
+
+      {/* Modals */}
+      <AddEntryModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        onSave={handleSaveStatus}
+        title="New Status Label"
+        fields={statusFields}
+        type="status"
+      />
+
+      <AddEntryModal
+        isOpen={showSupplierModal}
+        onClose={() => setShowSupplierModal(false)}
+        onSave={handleSaveSupplier}
+        title="New Supplier"
+        fields={supplierFields}
+        type="supplier"
+      />
+
+      <AddEntryModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onSave={handleSaveLocation}
+        title="New Location"
+        fields={locationFields}
+        type="location"
+      />
     </>
   );
 }

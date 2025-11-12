@@ -63,11 +63,8 @@
   border: 1px solid #d3d3d3;
   font-size: 14px;
   background-color: white;
-}
-
-.search-input:focus {
   outline: none;
-  border-color: var(--primary-color);
+  box-sizing: border-box;
   box-shadow: 0 0 10px rgba(0, 123, 255, 0.15);
 }
 

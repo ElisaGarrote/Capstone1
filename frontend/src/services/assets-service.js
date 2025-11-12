@@ -1086,6 +1086,84 @@ class AssetsService {
       throw error;
     }
   }
+
+  // Create Category
+  async createCategory(data) {
+    try {
+      const response = await fetch(API_URL + "categories/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn("Create Category Error:", errorData);
+        throw errorData;
+      }
+
+      const responseData = await response.json();
+      return responseData;
+    } catch (error) {
+      console.error("Error creating category:", error);
+      throw error;
+    }
+  }
+
+  // Create Manufacturer
+  async createManufacturer(data) {
+    try {
+      const response = await fetch(API_URL + "manufacturers/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn("Create Manufacturer Error:", errorData);
+        throw errorData;
+      }
+
+      const responseData = await response.json();
+      return responseData;
+    } catch (error) {
+      console.error("Error creating manufacturer:", error);
+      throw error;
+    }
+  }
+
+  // Create Depreciation
+  async createDepreciation(data) {
+    try {
+      const response = await fetch(API_URL + "depreciations/registration/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn("Create Depreciation Error:", errorData);
+        throw errorData;
+      }
+
+      const responseData = await response.json();
+      return responseData;
+    } catch (error) {
+      console.error("Error creating depreciation:", error);
+      throw error;
+    }
+  }
 }
 
 const assetsService = new AssetsService(); // Create object for Assets Service.

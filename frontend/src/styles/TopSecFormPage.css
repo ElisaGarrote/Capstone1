@@ -54,6 +54,12 @@
     font-weight: 600;
     color: #111827;
     margin: 0;
-    width: 100%;
+    flex: 1;
     overflow-wrap: anywhere;
+}
+
+.top-section-form-page .title .title-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }

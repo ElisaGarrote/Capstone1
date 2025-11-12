@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import Footer from "../Footer";
 import "../../styles/ViewPage.css";
 
 export default function ViewPage({
@@ -11,16 +13,17 @@ export default function ViewPage({
   actionButtons
 }) {
   return (
-    <main className="view-page-layout">
-      {/* Breadcrumb Navigation */}
-      <section className="view-breadcrumb">
-        <ul>
-          <li>
-            <a href={breadcrumbRootPath}>{breadcrumbRoot}</a>
-          </li>
-          <li>{breadcrumbCurrent}</li>
-        </ul>
-      </section>
+    <>
+      <main className="view-page-layout">
+        {/* Breadcrumb Navigation */}
+        <section className="view-breadcrumb">
+          <ul>
+            <li>
+              <Link to={breadcrumbRootPath}>{breadcrumbRoot}</Link>
+            </li>
+            <li>{breadcrumbCurrent}</li>
+          </ul>
+        </section>
 
       {/* Page Title */}
       <section className="view-title-section">
@@ -47,6 +50,8 @@ export default function ViewPage({
           </aside>
         )}
       </section>
-    </main>
+      </main>
+      <Footer />
+    </>
   );
 }

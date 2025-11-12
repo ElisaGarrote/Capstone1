@@ -1,66 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import BinFilter from "../../components/FilterPanel";
+import RecycleBinFilterModal from "../../components/Modals/RecycleBinFilterModal";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import "../../styles/TabNavBar.css";
+import "../../styles/RecycleBin.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 // Import mock data
 import deletedAssets from "../../data/mockData/assets/deleted-asset-mockup-data.json";
 import deletedComponents from "../../data/mockData/components/deleted-component-mockup-data.json";
-
-const filterConfig = [
-  {
-    type: "searchable",
-    name: "category",
-    label: "Cataegory",
-    options: [
-      { value: "1", label: "Laptops" },
-      { value: "2", label: "Mobile Phones" },
-      { value: "3", label: "Tablets" },
-      { value: "4", label: "Desktops" },
-      { value: "5", label: "Monitors" },
-    ],
-  },
-  {
-    type: "searchable",
-    name: "manufacturer",
-    label: "Manufacturer",
-    options: [
-      { value: "1", label: "Lenovo" },
-      { value: "2", label: "Apple" },
-      { value: "3", label: "Samsung" },
-      { value: "4", label: "Microsoft" },
-      { value: "5", label: "HP" },
-    ],
-  },
-  {
-    type: "searchable",
-    name: "supplier",
-    label: "Supplier",
-    options: [
-      { value: "1", label: "Amazon" },
-      { value: "2", label: "WSI" },
-      { value: "3", label: "Iontech Inc." },
-      { value: "4", label: "Noventiq" },
-    ],
-  },
-  {
-    type: "searchable",
-    name: "location",
-    label: "Location",
-    options: [
-      { value: "1", label: "Makati" },
-      { value: "2", label: "Pasig" },
-      { value: "3", label: "Marikina" },
-      { value: "4", label: "Quezon City" },
-      { value: "5", label: "Remote" },
-    ],
-  },
-];
 
 // TableHeader
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -78,8 +30,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>MANUFACTURER</th>
       <th>SUPPLIER</th>
       <th>LOCATION</th>
-      <th>RECOVER</th>
-      <th>DELETE</th>
+      <th>ACTION</th>
     </tr>
   );
 }
@@ -103,12 +54,8 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
       <td>
         <ActionButtons
           showRecover
-          onRecoverClick={() => onRecoverClick(item.id)}
-        />
-      </td>
-      <td>
-        <ActionButtons
           showDelete
+          onRecoverClick={() => onRecoverClick(item.id)}
           onDeleteClick={() => onDeleteClick(item.id)}
         />
       </td>
@@ -130,9 +77,65 @@ export default function RecycleBin() {
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+
+  // filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filteredData, setFilteredData] = useState(data);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...data];
+
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((item) =>
+        item.name?.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    // Filter by Category
+    if (filters.category && filters.category.value) {
+      filtered = filtered.filter((item) =>
+        item.category?.toLowerCase() === filters.category.value.toLowerCase()
+      );
+    }
+
+    // Filter by Manufacturer
+    if (filters.manufacturer && filters.manufacturer.value) {
+      filtered = filtered.filter((item) =>
+        item.manufacturer?.toLowerCase() === filters.manufacturer.value.toLowerCase()
+      );
+    }
+
+    // Filter by Supplier
+    if (filters.supplier && filters.supplier.value) {
+      filtered = filtered.filter((item) =>
+        item.supplier?.toLowerCase() === filters.supplier.value.toLowerCase()
+      );
+    }
+
+    // Filter by Location
+    if (filters.location && filters.location.value) {
+      filtered = filtered.filter((item) =>
+        item.location?.toLowerCase() === filters.location.value.toLowerCase()
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = data.slice(startIndex, endIndex);
+  const paginatedActivity = filteredData.slice(startIndex, endIndex);
 
   // selection
   const [selectedIds, setSelectedIds] = useState([]);
@@ -213,6 +216,12 @@ export default function RecycleBin() {
     closeRecoverModal();
   };
 
+  // Update filteredData when tab changes
+  useEffect(() => {
+    setFilteredData(data);
+    setAppliedFilters({});
+  }, [activeTab, data]);
+
   // outside click for export toggle
   useEffect(() => {
     function handleClickOutside(event) {
@@ -250,16 +259,17 @@ export default function RecycleBin() {
         />
       )}
 
-      <section>
-        <nav>
-          <NavBar />
-        </nav>
+      <RecycleBinFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
-        <main className="page-layout">
-          <section className="title-page-section">
-            <h1>Recycle Bin</h1>
-          </section>
+      <section className="page-layout-with-table">
+        <NavBar />
 
+        <main className="main-with-table">
           { /* Tab Navigation */}
           <div className="tab-nav">
             <ul>
@@ -290,14 +300,12 @@ export default function RecycleBin() {
             </ul>
           </div>
 
-          <BinFilter filters={filterConfig} />
-
           <section className="table-layout">
             <section className="table-header">
               <h2 className="h2">
                 {activeTab === "assets"
-                  ? `Deleted Assets (${deletedAssets.length})`
-                  : `Deleted Components (${deletedComponents.length})`}
+                  ? `Deleted Assets (${filteredData.length})`
+                  : `Deleted Components (${filteredData.length})`}
               </h2>
               <section className="table-actions">
                 {/* Bulk recover button only when checkboxes selected */}
@@ -317,7 +325,7 @@ export default function RecycleBin() {
                 )}
 
                 <input type="search" placeholder="Search..." className="search" />
-                
+
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"
@@ -335,7 +343,7 @@ export default function RecycleBin() {
               </section>
             )}
 
-            <section className="table-section">
+            <section className="recycle-bin-table-section">
               <table>
                 <thead>
                   <TableHeader
@@ -357,7 +365,7 @@ export default function RecycleBin() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="no-data-message">
+                      <td colSpan={8} className="no-data-message">
                         No Deleted Items Found.
                       </td>
                     </tr>
@@ -370,13 +378,14 @@ export default function RecycleBin() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={data.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />
             </section>
           </section>
         </main>
+        <Footer />
       </section>
     </>
   );

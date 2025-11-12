@@ -3,13 +3,18 @@ import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
-import "../../styles/AssetViewPage.css";
+import DefaultImage from "../../assets/img/default-image.jpg";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import { getAssetDetails, getCheckedOutToInfo, getTabs } from "../../data/mockData/assets/assetDetailsData";
+import "../../styles/Assets/AssetViewPage.css";
+import "../../styles/Assets/AssetEditPage.css";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 function AssetViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [asset, setAsset] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
@@ -19,7 +24,12 @@ function AssetViewPage() {
     if (foundAsset) {
       setAsset(foundAsset);
     }
+    setIsLoading(false);
   }, [id]);
+
+  if (isLoading) {
+    return null; // Don't render anything while loading
+  }
 
   if (!asset) {
     return (
@@ -32,17 +42,8 @@ function AssetViewPage() {
     );
   }
 
-  // Define tabs for the detailed view
-  const tabs = [
-    { label: "Info" },
-    { label: "Assets" },
-    { label: "Products" },
-    { label: "Components" },
-    { label: "Maintenance" },
-    { label: "History" },
-    { label: "Files" },
-    { label: "Additional Info" }
-  ];
+  // Get tabs configuration from data
+  const tabs = getTabs();
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
@@ -55,33 +56,71 @@ function AssetViewPage() {
     navigate("/assets");
   };
 
-  // Checked out to information
-  const checkedOutTo = asset.checkoutRecord ? {
-    name: "Elias Gamboa",
-    email: "garciamariaeliasgarcia@gmail.com",
-    checkoutDate: "2025-08-15"
-  } : null;
+  // Get checked out to information from data
+  const checkedOutTo = getCheckedOutToInfo(asset);
 
   // Button action handlers
+  const handleCloneClick = () => {
+    console.log('Clone button clicked, asset:', asset);
+    if (asset) {
+      console.log('Navigating to registration with cloned name:', `${asset.name} (cloned)`);
+      navigate('/assets/registration', {
+        state: { clonedAssetName: `${asset.name} (cloned)` }
+      });
+    } else {
+      console.log('No asset found for cloning');
+    }
+  };
+
   const handleEditClick = () => {
-    navigate(`/assets/registration/${asset.id}`);
+    navigate(`/assets/edit/${asset.id}`);
   };
 
-  const handleCheckInClick = () => {
-    console.log("Check-in asset:", asset.id);
+  const handleDeleteClick = () => {
+    setDeleteModalOpen(true);
   };
 
-  const handleAddNoteClick = () => {
-    console.log("Add note to asset:", asset.id);
-  };
-
-  const handleAuditClick = () => {
-    console.log("Audit asset:", asset.id);
-  };
-
-  const handleUploadClick = () => {
-    console.log("Upload file for asset:", asset.id);
-  };
+  // Create action buttons with vertical layout
+  const actionButtons = (
+    <div className="vertical-action-buttons">
+      <button
+        type="button"
+        className="action-btn clone-btn"
+        onClick={handleCloneClick}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="white"
+          style={{ marginRight: '8px' }}
+        >
+          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+        </svg>
+        Clone
+      </button>
+      <button
+        type="button"
+        className="action-btn edit-btn"
+        onClick={handleEditClick}
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="white"
+          style={{ marginRight: '8px' }}
+        >
+          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+        </svg>
+        Edit
+      </button>
+      <MediumButtons
+        type="delete"
+        onClick={handleDeleteClick}
+      />
+    </div>
+  );
 
   return (
     <>
@@ -94,34 +133,13 @@ function AssetViewPage() {
         />
       )}
       <DetailedViewPage
-        breadcrumbRoot="Assets"
-        breadcrumbCurrent={asset.displayed_id + " - " + asset.name}
-        breadcrumbRootPath="/assets"
-        title={asset.name}
-        subtitle={asset.displayed_id}
-        assetTag={asset.displayed_id}
-        status="Ready to Deploy"
-        statusType="ready-to-deploy"
-        company="Zip Technology Corp."
-        checkoutDate="2025-08-15 12:00 AM"
-        nextAuditDate="2025-08-19"
-        manufacturer="Apple"
-        manufacturerUrl="https://www.apple.com"
-        supportUrl="https://support.apple.com"
-        supportPhone="+1 800 136 900"
-        category="Mobile Phones"
-        model={asset.name || "iPhone 16 Pro Max"}
-        modelNo="2129GH3221"
+        {...getAssetDetails(asset)}
+        assetImage={asset.image ? `https://assets-service-production.up.railway.app${asset.image}` : DefaultImage}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         checkedOutTo={checkedOutTo}
-        onEditClick={handleEditClick}
-        onCheckInClick={handleCheckInClick}
-        onAddNoteClick={handleAddNoteClick}
-        onAuditClick={handleAuditClick}
-        onDeleteClick={() => setDeleteModalOpen(true)}
-        onUploadClick={handleUploadClick}
+        actionButtons={actionButtons}
       />
     </>
   );

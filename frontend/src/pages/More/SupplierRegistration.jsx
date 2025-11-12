@@ -6,8 +6,9 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Footer from "../../components/Footer";
-import * as contextsService from "../../services/contexts-service";
-
+import PlusIcon from "../../assets/icons/plus.svg";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -19,6 +20,9 @@ const SupplierRegistration = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
   // Retrieve the "supplier" data value passed from the navigation state.
   // If the "supplier" data is not exist, the default value for this is "undifiend".
   const supplier = location.state?.supplier;
@@ -28,6 +32,9 @@ const SupplierRegistration = () => {
   );
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
+
+  // Import file state
+  const [importFile, setImportFile] = useState(null);
 
   const {
     register,
@@ -175,17 +182,63 @@ const SupplierRegistration = () => {
     navigate("/More/ViewSupplier", { state });
   };
 
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (
+        file.type !==
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ) {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+      setImportFile(file);
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
+    }
+  };
+
   return (
     <>
+      {isDeleteModalOpen && (
+        <ConfirmationModal
+          closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
+        />
+      )}
+
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
           <section className="top">
             <TopSecFormPage
               root="Suppliers"
-              currentPage={id ? "Edit Supplier" : "New Supplier"}
+              currentPage={id ? "Update Supplier" : "New Supplier"}
               rootNavigatePage="/More/ViewSupplier"
-              title={id ? "Edit Supplier" : "New Supplier"}
+              title={id ? supplier.name : "New Supplier"}
+              rightComponent={
+                !id ? (
+                  <div className="import-section">
+                    <label htmlFor="import-file" className="import-btn">
+                      <img src={PlusIcon} alt="Import" />
+                      Import
+                      <input
+                        type="file"
+                        id="import-file"
+                        accept=".xlsx"
+                        onChange={handleImportFile}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => setDeleteModalOpen(true)}
+                  />
+                )
+              }
             />
           </section>
 
@@ -207,13 +260,13 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="address">Address *</label>
+              <label htmlFor="address">Address</label>
               <input
                 type="text"
                 placeholder="Address"
                 maxLength={200}
                 className={errors.address ? "input-error" : ""}
-                {...register("address", { required: "Address is required" })}
+                {...register("address")}
               />
               {errors.address && (
                 <span className="error-message">{errors.address.message}</span>
@@ -249,14 +302,34 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="contact_name">Contact Person *</label>
+              <label htmlFor="state">State</label>
+              <input
+                type="text"
+                placeholder="State"
+                maxLength={50}
+                className={errors.state ? "input-error" : ""}
+                {...register("state")}
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="country">Country</label>
+              <input
+                type="text"
+                placeholder="Country"
+                maxLength={50}
+                className={errors.state ? "input-error" : ""}
+                {...register("country")}
+              />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="contact_name">Contact Person</label>
               <input
                 type="text"
                 placeholder="Supplier's Contact Name"
                 maxLength={100}
-                {...register("contact_name", {
-                  required: "Contact Person is required",
-                })}
+                {...register("contact_name")}
               />
               {errors.contact_name && (
                 <span className="error-message">
@@ -273,6 +346,20 @@ const SupplierRegistration = () => {
                 maxLength={13}
                 {...register("phone_number")}
               />
+            </fieldset>
+
+            <fieldset>
+              <label htmlFor="fax">Fax</label>
+              <input
+                type="text"
+                placeholder="Fax"
+                maxLength={50}
+                className={errors.state ? "input-error" : ""}
+                {...register("fax")}
+              />
+              {errors.fax && (
+                <span className="error-message">{errors.fax.message}</span>
+              )}
             </fieldset>
 
             <fieldset>

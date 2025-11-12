@@ -1,19 +1,15 @@
-import "../../styles/custom-colors.css";
-import "../../styles/Registration.css";
-import "../../styles/CheckInOut.css";
-import NavBar from "../../components/NavBar";
-import TopSecFormPage from "../../components/TopSecFormPage";
-import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import CloseIcon from "../../assets/icons/close.svg";
-import PersonIcon from "../../assets/icons/person.svg";
-import LocationIcon from "../../assets/icons/location.svg";
+import { useNavigate, useLocation } from "react-router-dom";
+import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
+import "../../styles/Registration.css";
+import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import Alert from "../../components/Alert";
 import assetsService from "../../services/assets-service";
 import dtsService from "../../services/dts-integration-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import DefaultImage from "../../assets/img/default-image.jpg";
+import CloseIcon from "../../assets/icons/close.svg";
 
 
 export default function CheckOutAsset() {
@@ -34,12 +30,10 @@ export default function CheckOutAsset() {
   ];
 
   const navigate = useNavigate();
-  
-  const [previewImage, setPreviewImage] = useState(null);
-  const [previewImages, setPreviewImages] = useState([]);
+
   const [errorMessage, setErrorMessage] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   useEffect(() => {
     if (passedState) {
@@ -82,16 +76,16 @@ export default function CheckOutAsset() {
     register,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm({
+    mode: "all",
     defaultValues: {
       employee: employee || "",
       empLocation: empLocation || "",
       checkoutDate: checkoutDate || "",
       expectedReturnDate: returnDate || "",
       condition: "",
-      notes: "",
-      photos: []
+      notes: ""
     },
   });
 
@@ -108,26 +102,40 @@ export default function CheckOutAsset() {
         setErrorMessage("Failed to initialize data");
       } finally {
         setIsLoading(false);
-      } 
+      }
     };
 
     initialize();
   }, [passedState, setValue]);
 
+  // Handle file selection
+  const handleFileSelection = (e) => {
+    const files = Array.from(e.target.files || []);
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const validFiles = [];
 
-  const handleImageSelection = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file); // store the actual file
-      setValue('image', file); // optional: sync with react-hook-form
-  
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result); // for display only
-      };
-      reader.readAsDataURL(file);
-    }
-  };  
+    files.forEach(file => {
+      if (file.size > maxSize) {
+        setErrorMessage(`${file.name} exceeds 5MB and was not added.`);
+        setTimeout(() => setErrorMessage(""), 5000);
+      } else if (!['image/jpeg', 'image/png'].includes(file.type)) {
+        setErrorMessage(`${file.name} is not a valid image format. Only .jpeg and .png are allowed.`);
+        setTimeout(() => setErrorMessage(""), 5000);
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  // Remove file from selection
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+
+
 
   const onSubmit = async (data) => {
     try {
@@ -146,10 +154,11 @@ export default function CheckOutAsset() {
 
       formData.append('notes', data.notes || '');
       formData.append('confirmation_notes', data.confirmationNotes || '');
-      
-      if (selectedImage) {
-        formData.append('image', selectedImage);
-      }
+
+      // Append image files
+      selectedFiles.forEach((file, index) => {
+        formData.append(`image_${index}`, file);
+      });
 
       for (let pair of formData.entries()) {
         console.log(pair[0]+ ': ' + pair[1]);
@@ -158,24 +167,15 @@ export default function CheckOutAsset() {
       await assetsService.createAssetCheckout(formData);
       await dtsService.resolveCheckoutTicket(ticketId);
 
-      if (fromAsset) {
-        console.log("Ticket Information:", { ticketId });
-
-        navigate('/assets', { 
-          state: { 
-            successMessage: "Asset has been checked out successfully!"
-          } 
-        });
-      } else {
-        navigate('/approved-tickets', {
-          state: {
-            successMessage: "Asset has been checked out successfully!"
-          }
-        });
-      }
+      // Navigate to asset view page after successful checkout
+      navigate(`/assets/view/${id}`, {
+        state: {
+          successMessage: "Asset has been checked out successfully!"
+        }
+      });
 
     } catch (error) {
-      console.error("Error occured while checking out the asset:", error);
+      console.error("Error occurred while checking out the asset:", error);
       setErrorMessage(
         error.message || "An error occurred while checking out the asset"
       );
@@ -191,7 +191,7 @@ export default function CheckOutAsset() {
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav><NavBar /></nav>
-      <main className="check-in-out-page">
+      <main className="registration">
         <section className="top">
           <TopSecFormPage
             root={passedState?.fromAsset ? "Assets" : "Approved Tickets"}
@@ -200,128 +200,143 @@ export default function CheckOutAsset() {
             title={assetId}
           />
         </section>
-        <section className="middle">
-          <section className="recent-checkout-info">
-            <h2>Asset Information</h2>
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Form Header */}
+            <h2 style={{
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: 'var(--secondary-text-color)',
+              marginBottom: '10px',
+              borderBottom: '1px solid #d3d3d3',
+              paddingBottom: '10px'
+            }}>
+              Checkout To
+            </h2>
+
+            {/* Employee */}
             <fieldset>
-              <img
-                className="item-info-image"
-                src={image} alt="asset"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = DefaultImage;
-                }}
+              <label htmlFor="employee">Employee <span style={{color: 'red'}}>*</span></label>
+              <input
+                type="text"
+                id="employee"
+                readOnly
+                {...register("employee")}
               />
             </fieldset>
+
+            {/* Location */}
             <fieldset>
-              <label>Asset ID:</label>
-              <p>{assetId}</p>
+              <label htmlFor="empLocation">Location <span style={{color: 'red'}}>*</span></label>
+              <input
+                type="text"
+                id="empLocation"
+                readOnly
+                {...register("empLocation")}
+              />
             </fieldset>
+
+            {/* Check-Out Date */}
             <fieldset>
-              <label>Product:</label>
-              <p>{product}</p>
+              <label htmlFor="checkoutDate">Check-Out Date <span style={{color: 'red'}}>*</span></label>
+              <input
+                type="text"
+                id="checkoutDate"
+                readOnly
+                {...register("checkoutDate")}
+              />
             </fieldset>
-          </section>
 
-          <section className="checkin-form">
-            <h2>Check-Out Form</h2>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <fieldset>
-                <label>Employee <span style={{color: 'red'}}>*</span></label>
-                <input
-                  type="text"
-                  readOnly
-                  {...register("employee")}
-                />
-              </fieldset>
+            {/* Expected Return Date */}
+            <fieldset>
+              <label htmlFor="returnDate">Expected Return Date <span style={{color: 'red'}}>*</span></label>
+              <input
+                type="date"
+                id="returnDate"
+                className={errors.returnDate ? 'input-error' : ''}
+                {...register("returnDate", { required: "Expected return date is required" })}
+                defaultValue={passedState?.returnDate || ""}
+                min={currentDate}
+              />
+              {errors.returnDate && (
+                <span className="error-message">{errors.returnDate.message}</span>
+              )}
+            </fieldset>
 
-              <fieldset>
-                <label>Location <span style={{color: 'red'}}>*</span></label>
-                <input
-                  type="text"
-                  readOnly
-                  {...register("empLocation")}
-                />
-              </fieldset>
+            {/* Condition */}
+            <fieldset>
+              <label htmlFor="condition">Condition <span style={{color: 'red'}}>*</span></label>
+              <select
+                id="condition"
+                {...register("condition", {required: "Condition is required"})}
+                className={errors.condition ? 'input-error' : ''}
+              >
+                <option value="">Select Condition</option>
+                {conditionOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
+            </fieldset>
 
-              <fieldset>
-                <label>Check-Out Date <span style={{color: 'red'}}>*</span></label>
-                <input
-                  type="text"
-                  readOnly
-                  {...register("checkoutDate")}
-                />
-              </fieldset>
+            {/* Notes */}
+            <fieldset>
+              <label htmlFor="notes">Notes</label>
+              <textarea
+                id="notes"
+                placeholder="Enter notes"
+                {...register("notes")}
+                rows="3"
+                maxLength="500"
+              ></textarea>
+            </fieldset>
 
-              <fieldset>
-                <label>Expected Return Date <span style={{color: 'red'}}>*</span></label>
-                <input
-                  type="date"
-                  className={errors.returnDate ? 'input-error' : ''}
-                  {...register("returnDate", { required: "Expected return date is required" })}
-                  defaultValue={passedState?.returnDate || ""}
-                  {...(returnDate ? {} : { min: currentDate })}
-                />
-              </fieldset>
+            {/* Image Upload */}
+            <fieldset>
+              <label>Image Upload</label>
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="images" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="images"
+                      accept=".jpeg,.jpg,.png"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                      multiple
+                    />
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
+                </div>
 
-              <fieldset>
-                <label>Condition <span style={{color: 'red'}}>*</span></label>
-                <select 
-                  {...register("condition", {required: "Condition is required"})}
-                  className={errors.condition ? 'input-error' : ''}
-                  >
-                  <option value="">Select Condition</option>
-                  {conditionOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
-              </fieldset>
-
-              <fieldset>
-                <label>Notes</label>
-                <textarea {...register("notes")} maxLength="500" />
-              </fieldset>
-
-              <fieldset>
-                <label>Image</label>
-                <div className="images-container">
-                  {previewImages.map((img, index) => (
-                    <div key={index} className="image-selected">
-                      <img
-                        src={img} alt={`Preview ${index}`} />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPreviewImages(previewImages.filter((_, i) => i !== index));
-                          setValue("photos", previewImages.filter((_, i) => i !== index));
-                        }}
-                      >
+                {/* Right column: Uploaded files */}
+                <div className="upload-right">
+                  {selectedFiles.map((file, index) => (
+                    <div className="file-uploaded" key={index}>
+                      <span title={file.name}>{file.name}</span>
+                      <button type="button" onClick={() => removeFile(index)}>
                         <img src={CloseIcon} alt="Remove" />
                       </button>
                     </div>
                   ))}
-                  <input
-                    type="file"
-                    id="images"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageSelection}
-                    style={{ display: "none" }}
-                  />
                 </div>
-                <label htmlFor="images" className="upload-image-btn">
-                  {previewImages.length === 0 ? "Choose Image" : "Change Image"}
-                </label>
-              </fieldset>
+              </div>
+            </fieldset>
 
-              <button type="submit" className="save-btn">Save</button>
-            </form>
-          </section>
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid}>
+              Save
+            </button>
+          </form>
         </section>
       </main>
+      <Footer />
     </>
   );
 }

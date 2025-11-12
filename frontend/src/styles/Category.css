@@ -26,8 +26,6 @@
         overflow-x: auto;
         max-height: 55vh;
         overflow-y: auto;
-
-        /* Prevent affecting the parent when scrolling. */
         overscroll-behavior: contain;
 
         table {
@@ -63,10 +61,13 @@
                 text-align: left !important;
                 padding: 0.75rem;
                 font-size: 0.8125rem;
+                font-weight: 400;
                 color: var(--text-color);
                 border-bottom: 1px solid #cccccc;
-
                 height: 50px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             /* Ensure empty-state row spans correctly across all columns */
@@ -136,12 +137,6 @@
                 color: #333333;
                 border-color: #999999;
             }
-
-            /* .action-button:disabled:hover {
-                background-color: #d3d3d3;
-                color: #555555;
-                border-color: #cccccc;
-            } */
         }
     }
 

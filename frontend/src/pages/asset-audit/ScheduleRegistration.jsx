@@ -56,7 +56,10 @@ const ScheduleRegistration = () => {
       console.log("Creating new audit:", data);
       // Call your create API or state logic here
     }
-    navigate(previousPage);
+
+    // Redirect to scheduled audits section if coming from asset view, otherwise go back to previous page
+    const redirectPage = previousPage === "/asset-view" ? "/audits/scheduled" : previousPage;
+    navigate(redirectPage);
   };
 
 
@@ -70,6 +73,10 @@ const ScheduleRegistration = () => {
         return "Scheduled Audits";
       case "/audits/completed":
         return "Completed Audits";
+      case "/asset-view":
+        return "Audits";
+      default:
+        return "Audits";
     }
   };
 
@@ -83,7 +90,7 @@ const ScheduleRegistration = () => {
           <TopSecFormPage
             root={getRootPage()}
             currentPage="Schedule Audit"
-            rootNavigatePage={previousPage}
+            rootNavigatePage={previousPage === "/asset-view" ? "/audits/scheduled" : previousPage}
             title="Schedule Audit"
           />
         </section>

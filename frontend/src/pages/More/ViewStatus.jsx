@@ -3,28 +3,13 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import CategoryFilter from "../../components/FilterPanel";
+import StatusFilterModal from "../../components/Modals/StatusFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Status from "../../components/Status";
 import MockupData from "../../data/mockData/more/status-mockup-data.json";
 import Footer from "../../components/Footer";
 
 import "../../styles/Category.css";
-
-const filterConfig = [
-  {
-    type: "select",
-    name: "type",
-    label: "Type",
-    options: [
-      { value: "archived", label: "Archived" },
-      { value: "deployable", label: "Deployable" },
-      { value: "deployed", label: "Deployed" },
-      { value: "pending", label: "Pending" },
-      { value: "undeployable", label: "Undeployable" },
-    ],
-  },
-];
 
 // TableHeader component to render the table header
 function TableHeader() {
@@ -136,10 +121,44 @@ export default function Category() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
+  // filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filteredData, setFilteredData] = useState(MockupData);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((status) =>
+        status.name?.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    // Filter by Type
+    if (filters.type && filters.type.value) {
+      filtered = filtered.filter((status) =>
+        status.type?.toLowerCase() === filters.type.value.toLowerCase()
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCategories = MockupData.slice(startIndex, endIndex);
+  const paginatedCategories = filteredData.slice(startIndex, endIndex);
 
   return (
     <>
@@ -150,23 +169,36 @@ export default function Category() {
         />
       )}
 
+      <StatusFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
+
       <section className="page-layout-with-table">
         <NavBar />
 
         <main className="main-with-table">
-          {/* Table Filter */}
-          <CategoryFilter filters={filterConfig} />
-
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Statuses ({MockupData.length})</h2>
+              <h2 className="h2">Statuses ({filteredData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
                   placeholder="Search..."
                   className="search"
                 />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
                 <MediumButtons
                   type="new"
                   navigatePage="/More/StatusRegistration"
@@ -205,7 +237,7 @@ export default function Category() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={MockupData.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

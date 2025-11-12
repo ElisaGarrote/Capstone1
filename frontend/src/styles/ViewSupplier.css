@@ -14,11 +14,19 @@
     input[type="search"] {
       display: flex;
       align-items: center;
-      background-color: #f9f9f9;
-      border-radius: 4px;
-      padding: 10px 12px;
-      border: none;
-      border: 1px solid #cccccc;
+      background-color: white;
+      border-radius: 25px;
+      padding: 13px 16px;
+      border: 1px solid #d3d3d3;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    input[type="search"]:focus {
+      outline: none;
+      border-color: var(--primary-color);
     }
   }
 
@@ -81,8 +89,8 @@
       /* Name and Contact Person Column */
       th:nth-child(2),
       td:nth-child(2),
-      th:nth-child(6),
-      td:nth-child(6) {
+      th:nth-child(8),
+      td:nth-child(8) {
         min-width: 150px;
         max-width: 180px;
         white-space: nowrap;
@@ -91,8 +99,8 @@
       }
 
       /* URL Column */
-      th:nth-child(9),
-      td:nth-child(9) {
+      th:nth-child(11),
+      td:nth-child(11) {
         min-width: 150px;
         max-width: 180px;
         white-space: nowrap;
@@ -100,7 +108,6 @@
         text-overflow: ellipsis;
       }
 
-      /* Actions Button Column */
       th:last-child {
         width: 50px;
       }
@@ -109,10 +116,13 @@
         text-align: left !important;
         padding: 0.75rem;
         font-size: 0.8125rem;
+        font-weight: 400;
         color: var(--text-color);
         border-bottom: 1px solid #cccccc;
-
         height: 50px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
 
         span {
           cursor: pointer;
@@ -123,7 +133,6 @@
         }
       }
 
-      /* Ensure empty-state row spans correctly across all columns */
       td.no-data-message {
         display: table-cell !important;
         width: 100% !important;

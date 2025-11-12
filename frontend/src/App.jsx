@@ -13,6 +13,8 @@ import ProductsRegistration from "./pages/Assets/ProductsRegistration";
 import ProductViewPage from "./pages/Assets/ProductViewPage";
 import Assets from "./pages/Assets/Assets";
 import AssetsRegistration from "./pages/Assets/AssetsRegistration";
+import AssetEditPage from "./pages/Assets/AssetEditPage";
+import BulkEditAssets from "./pages/Assets/BulkEditAssets";
 import AssetViewPage from "./pages/Assets/AssetViewPage";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
@@ -100,6 +102,14 @@ function App() {
           <Route
             path="/assets/registration/:id"
             element={<AssetsRegistration />}
+          />
+          <Route
+            path="/assets/edit/:id"
+            element={<AssetEditPage />}
+          />
+          <Route
+            path="/assets/bulk-edit"
+            element={<BulkEditAssets />}
           />
           <Route
             path="/components"

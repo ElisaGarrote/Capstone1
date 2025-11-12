@@ -2,12 +2,19 @@ import React, { useEffect, useState } from 'react';
 import NavBar from "../components/NavBar";
 import StatusCard from '../components/dashboard/StatusCard';
 import AssetMetrics from '../components/dashboard/AssetMetrics';
+import KPISummaryCards from '../components/Dashboard/KPISummaryCards';
+import AssetStatusForecastChart from '../components/Dashboard/AssetStatusForecastChart';
+import ProductDemandForecastChart from '../components/Dashboard/ProductDemandForecastChart';
 import "../styles/Dashboard.css";
 import assetsService from '../services/assets-service';
+import forecastService from '../services/forecast-service';
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
   const [dashboardStats, setDashboardStats] = useState(null);
+  const [kpiData, setKpiData] = useState([]);
+  const [assetForecast, setAssetForecast] = useState(null);
+  const [productForecast, setProductForecast] = useState(null);
 
   useEffect(() => {
     async function loadDashboardStats() {
@@ -47,7 +54,23 @@ function Dashboard() {
       }
     }
 
+    // Load forecast data
+    function loadForecastData() {
+      try {
+        const kpi = forecastService.getKPISummary();
+        const assetData = forecastService.getAssetStatusForecast();
+        const productData = forecastService.getProductDemandForecast();
+
+        setKpiData(kpi);
+        setAssetForecast(assetData);
+        setProductForecast(productData);
+      } catch (error) {
+        console.error('Failed to load forecast data:', error);
+      }
+    }
+
     loadDashboardStats();
+    loadForecastData();
   }, []);
 
   return (
@@ -64,6 +87,25 @@ function Dashboard() {
             />
           ))}
         </div>
+
+        {/* KPI Summary Cards */}
+        {kpiData.length > 0 && <KPISummaryCards kpiData={kpiData} />}
+
+        {/* Asset Status Forecast Section */}
+        {assetForecast && (
+          <AssetStatusForecastChart
+            chartData={assetForecast.chartData}
+            tableData={assetForecast.tableData}
+          />
+        )}
+
+        {/* Product Demand Forecast Section */}
+        {productForecast && (
+          <ProductDemandForecastChart
+            chartData={productForecast.chartData}
+            tableData={productForecast.tableData}
+          />
+        )}
 
         <AssetMetrics stats={dashboardStats} />
       </main>
