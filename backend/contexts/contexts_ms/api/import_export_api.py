@@ -11,10 +11,10 @@ import logging
 import secrets
 from django.conf import settings
 from ..utils import normalize_name_smart
-from ..serializer import SupplierSerializer, CategorySerializer, DepreciationSerializer
-from ..models import Supplier, Category, Depreciation
-from ..serializer import ManufacturerSerializer, StatusSerializer
-from ..models import Manufacturer, Status
+from ..serializer import *
+from ..models import *
+from ..serializer import *
+from ..models import *
 
 """Import / Export API endpoints for common resources.
 
@@ -56,10 +56,10 @@ def _normalize_header_to_field(header: str):
         'duration': 'duration',
         'minimumvalue': 'minimum_value',
         'minimum_value': 'minimum_value',
-    'createdat': 'created_at',
-    'created_at': 'created_at',
-    'updatedat': 'updated_at',
-    'updated_at': 'updated_at',
+        'createdat': 'created_at',
+        'created_at': 'created_at',
+        'updatedat': 'updated_at',
+        'updated_at': 'updated_at',
         # manufacturer
         'manuurl': 'manu_url',
         'supporturl': 'support_url',
@@ -415,7 +415,7 @@ class SupplierExportAPIView(_BaseExportAPIView):
         'name', 'address', 'city', 'zip', 'contact_name', 'phone_number', 'email', 'url', 'notes', 'created_at', 'updated_at'
     ]
 
-
+#Put views here for easy navigation
 # Categories
 class CategoryImportAPIView(_BaseImportAPIView):
     serializer_class = CategorySerializer

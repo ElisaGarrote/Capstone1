@@ -1,7 +1,6 @@
 import os
-from urllib.parse import urljoin
-
 import requests
+from urllib.parse import urljoin
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from django.conf import settings

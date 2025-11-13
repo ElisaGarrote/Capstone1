@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .api.supplier import SupplierDetailProxy, SupplierListProxy
 from .api.contexts import *
 from .views import *
+from .api.reports import DepreciationReportAPIView
 
 router = DefaultRouter()
 router.register('products', ProductViewSet, basename='categories')
@@ -38,6 +39,7 @@ urlpatterns = [
     path("contexts/depreciations/<int:pk>/", DepreciationDetailProxy.as_view(), name="proxy-depreciation-detail"),
     path("contexts/locations/", LocationListProxy.as_view(), name="proxy-location-list"),
     path("contexts/statuses/", StatusListProxy.as_view(), name="proxy-status-list"),
+    path("reports/depreciation/", DepreciationReportAPIView.as_view(), name="depreciation-report"),
 
     path("", include(router.urls)),
 ]
