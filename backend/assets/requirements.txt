@@ -20,7 +20,13 @@ psycopg2-binary==2.9.10
 pycparser==2.22
 PyJWT==2.9.0
 python-dotenv==1.1.0
-python-magic==0.4.27
+
+# Use python-magic only on non-Windows
+python-magic==0.4.27 ; platform_system != "Windows"
+
+# Use python-magic-bin only on Windows
+python-magic-bin==0.4.14 ; platform_system == "Windows"
+
 python3-openid==3.2.0
 pytz==2025.2
 requests-oauthlib==2.0.0
@@ -32,5 +38,4 @@ tzdata==2025.2
 urllib3==2.4.0
 whitenoise==6.9.0
 openpyxl==3.1.2
-
 requests==2.32.5
