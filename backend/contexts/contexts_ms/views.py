@@ -1,0 +1,309 @@
+from rest_framework import viewsets
+from .models import *
+from .serializer import *
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework import status
+from contexts_ms.services.usage_check import is_item_in_use
+from .services.bulk_delete import _bulk_delete_handler, _build_cant_delete_message
+from rest_framework import serializers as drf_serializers
+from contexts_ms.services.assets import *
+import requests
+from django.db import transaction
+
+
+# If will add more views later or functionality, please create file on api folder or services folder
+# Only viewsets here
+
+@api_view(['GET'])
+def get_all_location(request):
+    locations = Location.objects.all()
+    serializer = LocationSerializer(locations, many=True)
+    return Response(serializer.data)
+
+#CATEGORY
+class CategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = CategorySerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        return Category.objects.filter(is_deleted=False).order_by('name')
+
+    def list(self, request, *args, **kwargs):
+        """Override list to fetch batched usage counts from assets service and pass into serializer context."""
+        qs = self.filter_queryset(self.get_queryset())
+        ids = list(qs.values_list('id', flat=True))
+        usage_map = {}
+        if ids:
+            try:
+                usage_map = bulk_check_usage('category', ids, sample_limit=0)
+            except Exception:
+                usage_map = {}
+
+        serializer = self.get_serializer(qs, many=True, context={'category_usage': usage_map})
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        """Override retrieve to include usage for a single category."""
+        instance = self.get_object()
+        usage_map = {}
+        try:
+            usage_map = bulk_check_usage('category', [instance.id], sample_limit=0)
+        except Exception:
+            usage_map = {}
+        serializer = self.get_serializer(instance, context={'category_usage': usage_map})
+        return Response(serializer.data)
+
+    def perform_destroy(self, instance):
+        usage = is_item_in_use("category", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
+        instance.is_deleted = True
+        instance.save()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'category', hard_delete=False)
+#END
+
+#SUPPLIER 
+class SupplierViewSet(viewsets.ModelViewSet):
+    serializer_class = SupplierSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        return Supplier.objects.filter(is_deleted=False).order_by('name')
+
+    def perform_destroy(self, instance):
+        # Check if supplier is still used in assets-service
+        usage = is_item_in_use("supplier", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
+        instance.is_deleted = True
+        instance.save()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'supplier', hard_delete=False)
+#END
+
+#DEPRECIATION
+class DepreciationViewSet(viewsets.ModelViewSet):
+    serializer_class = DepreciationSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        return Depreciation.objects.filter(is_deleted=False).order_by('name')
+
+    def perform_destroy(self, instance):
+        usage = is_item_in_use("depreciation", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
+        instance.is_deleted = True
+        instance.save()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'depreciation', hard_delete=False)
+#END
+
+#MANUFACTURER
+class ManufacturerViewSet(viewsets.ModelViewSet):
+    serializer_class = ManufacturerSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        return Manufacturer.objects.filter(is_deleted=False).order_by('name')
+
+    def perform_destroy(self, instance):
+        usage = is_item_in_use("manufacturer", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
+        instance.is_deleted = True
+        instance.save()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'manufacturer', hard_delete=False)
+
+# STATUS
+class StatusViewSet(viewsets.ModelViewSet):
+    serializer_class = StatusSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        return Status.objects.filter(is_deleted=False).order_by('name')
+
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+        ids = list(qs.values_list('id', flat=True))
+        usage_map = {}
+        if ids:
+            try:
+                usage_map = bulk_check_usage('status', ids, sample_limit=0)
+            except Exception:
+                usage_map = {}
+
+        serializer = self.get_serializer(qs, many=True, context={'status_usage': usage_map})
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        usage_map = {}
+        try:
+            usage_map = bulk_check_usage('status', [instance.id], sample_limit=0)
+        except Exception:
+            usage_map = {}
+        serializer = self.get_serializer(instance, context={'status_usage': usage_map})
+        return Response(serializer.data)
+
+    def perform_destroy(self, instance):
+        # prevent deleting statuses that are in use
+        usage = is_item_in_use("status", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
+        instance.is_deleted = True
+        instance.save()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'status', hard_delete=False)
+
+# LOCATION
+class LocationViewSet(viewsets.ModelViewSet):
+    serializer_class = LocationSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        return Location.objects.all().order_by('city')
+
+    def perform_destroy(self, instance):
+        # Location has no is_deleted flag; perform hard delete only if not referenced.
+        usage = is_item_in_use("location", instance.id)
+        if usage.get('in_use'):
+            msg = _build_cant_delete_message(instance, usage)
+            raise drf_serializers.ValidationError({"error": msg})
+        instance.delete()
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        return _bulk_delete_handler(request, 'location', hard_delete=True)
+
+# Get all manufacturer's names
+@api_view(['GET'])
+def get_manaufacturers_names(request):
+    manufacturers = Manufacturer.objects.filter(is_deleted=False)
+    serializedManufacturer = ManufacturerNameSerializer(manufacturers, many=True).data
+
+    data = {
+        'manufacturers': serializedManufacturer,
+    }
+    return Response(data)
+
+# Get context names
+@api_view(['GET'])
+def get_contexts_names(request):
+    manufacturers = Manufacturer.objects.filter(is_deleted=False)
+    serializedManufacturer = ManufacturerNameSerializer(manufacturers, many=True).data
+    data = {
+        'manufacturers': serializedManufacturer,
+    }
+    return Response(data)
+
+#Get manufacturer name by id
+@api_view(['GET'])
+def get_manu_name_by_id(request, id):
+    try:
+        manufacturer = Manufacturer.objects.get(pk=id, is_deleted=False)
+    except Manufacturer.DoesNotExist:
+        return Response({'detail': 'Manufacturer not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializedData = ManufacturerNameSerializer(manufacturer)
+
+    data = {
+        'manufacturer': serializedData.data,
+    }
+
+    return Response(data)
+
+#END
+
+class TicketViewSet(viewsets.ModelViewSet):
+    queryset = Ticket.objects.all().order_by('-created_at')
+    serializer_class = TicketSerializer
+
+    # GET /tickets/resolved/
+    @action(detail=False, methods=['get'])
+    def resolved(self, request):
+        tickets = self.queryset.filter(is_resolved=True)
+        serializer = self.get_serializer(tickets, many=True)
+        return Response(serializer.data)
+
+    # GET /tickets/unresolved/
+    @action(detail=False, methods=['get'])
+    def unresolved(self, request):
+        tickets = self.queryset.filter(is_resolved=False)
+        serializer = self.get_serializer(tickets, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'], url_path='by-asset/(?P<asset_id>\d+)')
+    def by_asset(self, request, asset_id=None):
+        tickets = self.queryset.filter(asset=asset_id)
+        serializer = self.get_serializer(tickets, many=True)
+        return Response(serializer.data)
+
+class RecycleBinViewSet(viewsets.ViewSet):
+    """Handles viewing and recovering deleted items from the Assets service"""
+
+    def list(self, request):
+        """List all deleted assets and components"""
+        assets = get_deleted_assets()
+        components = get_deleted_components()
+        return Response({
+            "deleted_assets": assets,
+            "deleted_components": components
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'])
+    def recover_asset(self, request, pk=None):
+        """Recover asset"""
+        try:
+            data = recover_asset(pk)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            # If the upstream response is present, forward its status and content
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            # Unknown HTTP error
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    @action(detail=True, methods=['patch'])
+    def recover_component(self, request, pk=None):
+        """Recover component"""
+        try:
+            data = recover_component(pk)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
