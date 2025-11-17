@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
+import DeleteModal from "../../components/Modals/DeleteModal";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -12,6 +13,7 @@ const SupplierEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [logoFile, setLogoFile] = useState(null);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "Sample Supplier",
     address: "123 Main St",
@@ -82,8 +84,21 @@ const SupplierEdit = () => {
     navigate("/More/ViewSupplier");
   };
 
+  const handleDeleteConfirm = () => {
+    // Handle supplier deletion logic here
+    console.log("Deleting supplier:", id);
+    navigate("/More/ViewSupplier");
+  };
+
   return (
     <>
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
@@ -93,6 +108,8 @@ const SupplierEdit = () => {
               currentPage="Edit Supplier"
               rootNavigatePage="/More/ViewSupplier"
               title={`Edit Supplier - ${formData.name}`}
+              buttonType="delete"
+              deleteModalOpen={() => setDeleteModalOpen(true)}
             />
           </section>
           <section className="registration-form">

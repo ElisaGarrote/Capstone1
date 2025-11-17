@@ -1,6 +1,6 @@
 .consumables-page {
   width: 100%;
-  background-color: #f5f7fa;
+  background-color: #f8f9fa;
   min-height: 100vh;
 }
 
@@ -52,14 +52,12 @@
   margin-bottom: 20px;
 }
 
-/* Make sure inner table has no rounded corners */
 .consumables-table table {
   width: 100%;
   border-collapse: collapse;
   border-radius: 0;
 }
 
-/* Explicitly reset border-radius on table cells */
 .consumables-table table th,
 .consumables-table table td {
   border-radius: 0;

@@ -7,11 +7,14 @@ import TopSecFormPage from '../../components/TopSecFormPage';
 import MediumButtons from '../../components/buttons/MediumButtons';
 import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
+import DeleteModal from '../../components/Modals/DeleteModal';
+import Footer from '../../components/Footer';
 
 const ManufacturerEdit = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [logoFile, setLogoFile] = useState(null);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const {
     register,
@@ -87,18 +90,32 @@ const ManufacturerEdit = () => {
     navigate('/More/ViewManufacturer');
   };
 
+  const handleDeleteConfirm = () => {
+    // Handle manufacturer deletion logic here
+    console.log("Deleting manufacturer:", id);
+    navigate('/More/ViewManufacturer');
+  };
+
   return (
     <>
-      <nav>
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
+      <section className="page-layout-registration">
         <NavBar />
-      </nav>
-      <main className="registration">
+        <main className="registration">
         <section className="top">
           <TopSecFormPage
             root="Manufacturers"
             currentPage="Edit Manufacturer"
             rootNavigatePage="/More/ViewManufacturer"
             title={manufacturersData[id]?.manufacturerName || "Edit Manufacturer"}
+            buttonType="delete"
+            deleteModalOpen={() => setDeleteModalOpen(true)}
           />
         </section>
         <section className="registration-form">
@@ -186,6 +203,8 @@ const ManufacturerEdit = () => {
           </form>
         </section>
       </main>
+      <Footer />
+      </section>
     </>
   );
 };
