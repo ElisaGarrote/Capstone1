@@ -51,6 +51,12 @@
     font-weight: 600;
 }
 
+.registration .required-asterisk {
+    color: red;
+    margin-left: 4px;
+}
+
+
 .registration fieldset .error-message {
     color: red;
     font-size: 0.875rem;
@@ -130,6 +136,19 @@
     min-width: 50px;
     text-align: center;
 }
+
+.registration .duration-addon {
+    background-color: #f8f9fa;
+    padding: 13px 16px;
+    border-left: 1px solid #d3d3d3;
+    font-size: 0.875rem;
+    color: var(--secondary-text-color);
+    white-space: nowrap;
+    min-width: 50px;
+    text-align: center;
+    font-weight: 600;
+}
+
 
 .registration .cost-input-group input {
     flex: 1;
@@ -309,12 +328,12 @@
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .registration .upload-left {
     min-width: 100%;
     max-width: 100%;
   }
-  
+
   .registration .upload-right {
     width: 100%;
   }
@@ -324,11 +343,11 @@
   .registration .upload-left {
     min-width: 100%;
   }
-  
+
   .file-uploaded span {
     max-width: 120px;
   }
-  
+
   .file-uploaded {
     max-width: 100%;
   }

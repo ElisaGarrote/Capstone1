@@ -138,7 +138,7 @@ function TableHeader({ allSelected, onSelectAll }) {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked, onViewClick }) {
+function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -161,13 +161,6 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked, onVie
       <td>{category.quantity}</td>
       <td>
         <section className="action-button-section">
-          <button
-            title="View"
-            className="action-button"
-            onClick={() => onViewClick(category)}
-          >
-            <i className="fas fa-eye"></i>
-          </button>
           <button
             title="Edit"
             className="action-button"
@@ -200,6 +193,8 @@ export default function Category() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -236,6 +231,35 @@ export default function Category() {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedCategories = filteredData.slice(startIndex, endIndex);
+
+  const allSelected =
+    paginatedCategories.length > 0 &&
+    paginatedCategories.every((category) => selectedIds.includes(category.id));
+
+  const handleHeaderChange = (checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...paginatedCategories
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) =>
+        prev.filter(
+          (id) => !paginatedCategories.map((item) => item.id).includes(id)
+        )
+      );
+    }
+  };
+
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    } else {
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
 
   // Retrieve the "addCategory" value passed from the navigation state.
   // If the "addCategory" is not exist, the default value for this is "undifiend".
@@ -278,6 +302,31 @@ export default function Category() {
     return null;
   };
 
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single category id:", deleteTarget);
+      setSuccessMessage("Category deleted successfully!");
+    } else {
+      console.log("Deleting multiple category ids:", selectedIds);
+      if (selectedIds.length > 0) {
+        setSuccessMessage("Categories deleted successfully!");
+      }
+      setSelectedIds([]);
+    }
+    setTimeout(() => setSuccessMessage(""), 5000);
+    closeDeleteModal();
+  };
+
   // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
   useEffect(() => {
     let timeoutId;
@@ -289,13 +338,6 @@ export default function Category() {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [addedCategory, updatedCategory, navigate, location.pathname]);
-
-  // Handle View button click
-  const handleViewClick = (category) => {
-    navigate(`/More/CategoryDetails/${category.id}`, {
-      state: { category }
-    });
-  };
 
   return (
     <>
@@ -312,12 +354,11 @@ export default function Category() {
 
       {isDeleteModalOpen && (
         <DeleteModal
-          closeModal={() => setDeleteModalOpen(false)}
+          closeModal={closeDeleteModal}
           actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
-
-
 
       <CategoryFilterModal
         isOpen={isFilterModalOpen}
@@ -335,20 +376,17 @@ export default function Category() {
             <section className="table-header">
               <h2 className="h2">Categories ({filteredData.length})</h2>
               <section className="table-actions">
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
                 <input
                   type="search"
                   placeholder="Search..."
                   className="search"
                 />
-                <button
-                  type="button"
-                  className="medium-button-filter"
-                  onClick={() => {
-                    setIsFilterModalOpen(true);
-                  }}
-                >
-                  Filter
-                </button>
                 <MediumButtons
                   type="new"
                   navigatePage="/More/CategoryRegistration"
@@ -360,7 +398,10 @@ export default function Category() {
             <section className="table-section">
               <table>
                 <thead>
-                  <TableHeader />
+                  <TableHeader
+                    allSelected={allSelected}
+                    onSelectAll={handleHeaderChange}
+                  />
                 </thead>
                 <tbody>
                   {paginatedCategories.length > 0 ? (
@@ -368,8 +409,9 @@ export default function Category() {
                       <TableItem
                         key={index}
                         category={category}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
-                        onViewClick={handleViewClick}
+                        isChecked={selectedIds.includes(category.id)}
+                        onCheckboxChange={handleRowChange}
+                        onDeleteClick={() => openDeleteModal(category.id)}
                       />
                     ))
                   ) : (

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
+import Alert from "../../components/Alert";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import RecycleBinFilterModal from "../../components/Modals/RecycleBinFilterModal";
 import Pagination from "../../components/Pagination";
+import { exportToExcel } from "../../utils/exportToExcel";
 import "../../styles/Table.css";
 import "../../styles/TabNavBar.css";
 import "../../styles/RecycleBin.css";
@@ -83,6 +85,9 @@ export default function RecycleBin() {
   const [filteredData, setFilteredData] = useState(data);
   const [appliedFilters, setAppliedFilters] = useState({});
 
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...data];
@@ -95,30 +100,30 @@ export default function RecycleBin() {
     }
 
     // Filter by Category
-    if (filters.category && filters.category.value) {
+    if (filters.category && filters.category.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.category?.toLowerCase() === filters.category.value.toLowerCase()
+        item.category?.toLowerCase().includes(filters.category.toLowerCase())
       );
     }
 
     // Filter by Manufacturer
-    if (filters.manufacturer && filters.manufacturer.value) {
+    if (filters.manufacturer && filters.manufacturer.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.manufacturer?.toLowerCase() === filters.manufacturer.value.toLowerCase()
+        item.manufacturer?.toLowerCase().includes(filters.manufacturer.toLowerCase())
       );
     }
 
     // Filter by Supplier
-    if (filters.supplier && filters.supplier.value) {
+    if (filters.supplier && filters.supplier.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.supplier?.toLowerCase() === filters.supplier.value.toLowerCase()
+        item.supplier?.toLowerCase().includes(filters.supplier.toLowerCase())
       );
     }
 
     // Filter by Location
-    if (filters.location && filters.location.value) {
+    if (filters.location && filters.location.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.location?.toLowerCase() === filters.location.value.toLowerCase()
+        item.location?.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
@@ -131,6 +136,12 @@ export default function RecycleBin() {
     const filtered = applyFilters(filters);
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // Handle export
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : data;
+    exportToExcel(dataToExport, "RecycleBin_Records.xlsx");
   };
 
   const startIndex = (currentPage - 1) * pageSize;
@@ -182,12 +193,17 @@ export default function RecycleBin() {
   const confirmDelete = () => {
     if (deleteTarget) {
       console.log("Deleting single id:", deleteTarget);
+      setSuccessMessage("Item deleted successfully from Recycle Bin!");
       // remove from mock data / API call
     } else {
       console.log("Deleting multiple ids:", selectedIds);
+      if (selectedIds.length > 0) {
+        setSuccessMessage("Items deleted successfully from Recycle Bin!");
+      }
       // remove multiple
       setSelectedIds([]); // clear selection
     }
+    setTimeout(() => setSuccessMessage(""), 5000);
     closeDeleteModal();
   };
 
@@ -243,6 +259,9 @@ export default function RecycleBin() {
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}
@@ -264,6 +283,7 @@ export default function RecycleBin() {
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
         initialFilters={appliedFilters}
+        activeTab={activeTab}
       />
 
       <section className="page-layout-with-table">
@@ -326,22 +346,20 @@ export default function RecycleBin() {
 
                 <input type="search" placeholder="Search..." className="search" />
 
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
+
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
               </section>
             </section>
-
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
 
             <section className="recycle-bin-table-section">
               <table>

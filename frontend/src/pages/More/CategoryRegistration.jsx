@@ -34,10 +34,7 @@ const CategoryRegistration = () => {
 
   const categoryTypes = [
     "Asset",
-    "Accessory",
-    "Consumable",
     "Component",
-    "License",
   ];
   const customFieldOptions = [
     "Serial Number",
@@ -115,7 +112,10 @@ const CategoryRegistration = () => {
           <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label htmlFor="categoryName">Category Name *</label>
+                <label htmlFor="categoryName">
+                  Category Name
+                  <span className="required-asterisk">*</span>
+                </label>
                 <input
                   type="text"
                   placeholder="Category Name"
@@ -133,7 +133,10 @@ const CategoryRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="categoryType">Category Type *</label>
+                <label htmlFor="categoryType">
+                  Category Type
+                  <span className="required-asterisk">*</span>
+                </label>
                 <select
                   className={errors.categoryType ? "input-error" : ""}
                   {...register("categoryType", {
@@ -155,34 +158,40 @@ const CategoryRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label>Icon</label>
-                {attachmentFile ? (
-                  <div className="image-selected">
-                    <img
-                      src={URL.createObjectURL(attachmentFile)}
-                      alt="Selected icon"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setAttachmentFile(null)}
-                    >
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
+                <label>Image Upload</label>
+                <div className="attachments-wrapper">
+                  {/* Left column: Upload button & info */}
+                  <div className="upload-left">
+                    <label htmlFor="icon" className="upload-image-btn">
+                      Choose File
+                      <input
+                        type="file"
+                        id="icon"
+                        accept="image/*"
+                        onChange={handleFileSelection}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                    <small className="file-size-info">
+                      Maximum file size must be 5MB
+                    </small>
                   </div>
-                ) : (
-                  <label className="upload-image-btn">
-                    Choose File
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelection}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                )}
-                <small className="file-size-info">
-                  Maximum file size must be 5MB
-                </small>
+
+                  {/* Right column: Uploaded file */}
+                  <div className="upload-right">
+                    {attachmentFile && (
+                      <div className="file-uploaded">
+                        <span title={attachmentFile.name}>{attachmentFile.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setAttachmentFile(null)}
+                        >
+                          <img src={CloseIcon} alt="Remove" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </fieldset>
 
               <button

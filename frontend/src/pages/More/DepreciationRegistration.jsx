@@ -49,17 +49,19 @@ const DepraciationRegistration = () => {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="More / Depreciations"
-            currentPage="New Depreciation"
-            rootNavigatePage="/more/depreciations"
-            title="New Depreciation"
+            root="Depreciations"
+            currentPage={isEdit ? "Update Depreciation" : "New Depreciation"}
+            rootNavigatePage="/More/Depreciations"
+            title={isEdit ? editState?.name || "Update Depreciation" : "New Depreciation"}
           />
         </section>
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Name */}
             <fieldset>
-              <label htmlFor="name">Name *</label>
+              <label htmlFor="name">
+                Name<span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Enter depreciation name"
@@ -78,21 +80,30 @@ const DepraciationRegistration = () => {
 
             {/* Duration */}
             <fieldset>
-              <label htmlFor="duration">Duration *</label>
-              <input
-                type="number"
-                id="duration"
-                placeholder="Enter depreciation duration"
-                min="1"
-                step="1"
-                {...register("duration", {
-                  required: "Duration is required",
-                  valueAsNumber: true,
-                  validate: (value) =>
-                    Number.isInteger(value) && value > 0 || "Must be a positive integer",
-                })}
-                className={errors.duration ? "input-error" : ""}
-              />
+              <label htmlFor="duration">
+                Duration<span className="required-asterisk">*</span>
+              </label>
+              <div
+                className={`cost-input-group ${
+                  errors.duration ? "input-error" : ""
+                }`}
+              >
+                <input
+                  type="number"
+                  id="duration"
+                  placeholder="Enter depreciation duration"
+                  min="1"
+                  step="1"
+                  {...register("duration", {
+                    required: "Duration is required",
+                    valueAsNumber: true,
+                    validate: (value) =>
+                      (Number.isInteger(value) && value > 0) ||
+                      "Must be a positive integer",
+                  })}
+                />
+                <span className="duration-addon">Months</span>
+              </div>
               {errors.duration && (
                 <span className="error-message">{errors.duration.message}</span>
               )}
@@ -100,7 +111,9 @@ const DepraciationRegistration = () => {
 
             {/* Minimum Value */}
             <fieldset>
-              <label htmlFor="minimumValue">Minimum Value *</label>
+              <label htmlFor="minimumValue">
+                Minimum Value<span className="required-asterisk">*</span>
+              </label>
               <input
                 type="number"
                 id="minimumValue"

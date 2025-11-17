@@ -36,10 +36,7 @@ const CategoryEdit = () => {
 
   const categoryTypes = [
     "Asset",
-    "Accessory",
-    "Consumable",
     "Component",
-    "License",
   ];
 
   const handleFileSelection = (e) => {
@@ -72,15 +69,18 @@ const CategoryEdit = () => {
           <section className="top">
             <TopSecFormPage
               root="Categories"
-              currentPage="Edit Category"
+              currentPage="Update Category"
               rootNavigatePage="/More/ViewCategories"
-              title="Edit Category"
+              title={category?.name || "Update Category"}
             />
           </section>
           <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label htmlFor="categoryName">Category Name *</label>
+                <label htmlFor="categoryName">
+                  Category Name
+                  <span className="required-asterisk">*</span>
+                </label>
                 <input
                   type="text"
                   placeholder="Category Name"
@@ -98,7 +98,10 @@ const CategoryEdit = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="categoryType">Category Type *</label>
+                <label htmlFor="categoryType">
+                  Category Type
+                  <span className="required-asterisk">*</span>
+                </label>
                 <select
                   disabled
                   title="Cannot change category type"

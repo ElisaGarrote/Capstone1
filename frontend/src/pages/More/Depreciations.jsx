@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
+import Alert from "../../components/Alert";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
 import DepreciationFilterModal from "../../components/Modals/DepreciationFilterModal";
 import Pagination from "../../components/Pagination";
+import { exportToExcel } from "../../utils/exportToExcel";
 import "../../styles/Depreciations.css";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 
@@ -29,7 +31,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem
-function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick }) {
   const navigate = useNavigate();
 
   return (
@@ -46,13 +48,6 @@ function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick, onVie
       <td>{depreciation.minimum_value}</td>
       <td>
         <section className="action-button-section">
-          <button
-            title="View"
-            className="action-button"
-            onClick={() => onViewClick(depreciation)}
-          >
-            <i className="fas fa-eye"></i>
-          </button>
           <button
             title="Edit"
             className="action-button"
@@ -78,7 +73,6 @@ function TableItem({ depreciation, isSelected, onRowChange, onDeleteClick, onVie
 }
 
 export default function Depreciations() {
-  const navigate = useNavigate();
   const [exportToggle, setExportToggle] = useState(false);
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
@@ -90,31 +84,30 @@ export default function Depreciations() {
   // filter state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(MockupData);
-  const [appliedFilters, setAppliedFilters] = useState({});
+  const [appliedFilters, setAppliedFilters] = useState({ valueSort: "" });
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...MockupData];
 
-    // Filter by Name
-    if (filters.name && filters.name.trim() !== "") {
-      filtered = filtered.filter((depreciation) =>
-        depreciation.name?.toLowerCase().includes(filters.name.toLowerCase())
-      );
-    }
-
-    // Filter by Duration
-    if (filters.duration && filters.duration.toString().trim() !== "") {
-      filtered = filtered.filter((depreciation) =>
-        depreciation.duration?.toString().includes(filters.duration.toString())
-      );
-    }
-
-    // Filter by Minimum Value
-    if (filters.minimumValue && filters.minimumValue.toString().trim() !== "") {
-      filtered = filtered.filter((depreciation) =>
-        depreciation.minimumValue?.toString().includes(filters.minimumValue.toString())
-      );
+    // Sort by Minimum Value (PHP) - greatest to least value
+    if (filters.valueSort === "desc") {
+      // Greatest to least value
+      filtered = [...filtered].sort((a, b) => {
+        const aValue = parseFloat(a.minimum_value || 0) || 0;
+        const bValue = parseFloat(b.minimum_value || 0) || 0;
+        return bValue - aValue;
+      });
+    } else if (filters.valueSort === "asc") {
+      // Least to greatest value
+      filtered = [...filtered].sort((a, b) => {
+        const aValue = parseFloat(a.minimum_value || 0) || 0;
+        const bValue = parseFloat(b.minimum_value || 0) || 0;
+        return aValue - bValue;
+      });
     }
 
     return filtered;
@@ -126,6 +119,13 @@ export default function Depreciations() {
     const filtered = applyFilters(filters);
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // Handle export
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "Depreciations_Records.xlsx");
+    setExportToggle(false); // Close export menu after export
   };
 
   const startIndex = (currentPage - 1) * pageSize;
@@ -177,12 +177,17 @@ export default function Depreciations() {
   const confirmDelete = () => {
     if (deleteTarget) {
       console.log("Deleting single id:", deleteTarget);
+      setSuccessMessage("Depreciation deleted successfully!");
       // remove from mock data / API call
     } else {
       console.log("Deleting multiple ids:", selectedIds);
+      if (selectedIds.length > 0) {
+        setSuccessMessage("Depreciations deleted successfully!");
+      }
       // remove multiple
       setSelectedIds([]); // clear selection
     }
+    setTimeout(() => setSuccessMessage(""), 5000);
     closeDeleteModal();
   };
 
@@ -205,15 +210,11 @@ export default function Depreciations() {
     };
   }, [exportToggle]);
 
-  // Handle View button click
-  const handleViewClick = (depreciation) => {
-    navigate(`/More/DepreciationDetails/${depreciation.id}`, {
-      state: { depreciation }
-    });
-  };
-
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}
@@ -238,17 +239,21 @@ export default function Depreciations() {
             <section className="table-header">
               <h2 className="h2">Asset Depreciations ({filteredData.length})</h2>
               <section className="table-actions">
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
                 <input type="search" placeholder="Search..." className="search" />
-                <button
-                  type="button"
-                  className="medium-button-filter"
-                  onClick={() => {
-                    setIsFilterModalOpen(true);
-                  }}
-                >
-                  Filter
-                </button>
-                <MediumButtons type="export" onClick={() => setExportToggle(!exportToggle)} />
+                <MediumButtons
+                  type="filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                />
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
                 <MediumButtons
                   type="new"
                   navigatePage="/More/Depreciations/Registration"
@@ -274,7 +279,6 @@ export default function Depreciations() {
                         isSelected={selectedIds.includes(depreciation.id)}
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (

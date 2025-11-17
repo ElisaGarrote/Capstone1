@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
+import CloseIcon from "../../assets/icons/close.svg";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -218,39 +219,44 @@ const SupplierEdit = () => {
               </fieldset>
 
               <fieldset>
-                <label>Logo</label>
-                {logoFile ? (
-                  <div className="image-selected">
-                    <img
-                      src={URL.createObjectURL(logoFile)}
-                      alt="Selected logo"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLogoFile(null);
-                        document.getElementById("logo").value = "";
-                      }}
-                    >
-                      ×
-                    </button>
+                <label>Image Upload</label>
+                <div className="attachments-wrapper">
+                  {/* Left column: Upload button & info */}
+                  <div className="upload-left">
+                    <label htmlFor="logo" className="upload-image-btn">
+                      Choose File
+                      <input
+                        type="file"
+                        id="logo"
+                        name="logo"
+                        accept="image/*"
+                        onChange={handleFileSelection}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                    <small className="file-size-info">
+                      Maximum file size must be 5MB
+                    </small>
                   </div>
-                ) : (
-                  <label className="upload-image-btn">
-                    Choose File
-                    <input
-                      type="file"
-                      id="logo"
-                      name="logo"
-                      accept="image/png, image/jpeg"
-                      onChange={handleFileSelection}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                )}
-                <small className="file-size-info">
-                  Maximum file size must be 5MB
-                </small>
+
+                  {/* Right column: Uploaded file */}
+                  <div className="upload-right">
+                    {logoFile && (
+                      <div className="file-uploaded">
+                        <span title={logoFile.name}>{logoFile.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLogoFile(null);
+                            document.getElementById("logo").value = "";
+                          }}
+                        >
+                          <img src={CloseIcon} alt="Remove" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </fieldset>
 
               <button type="submit" className="save-btn">

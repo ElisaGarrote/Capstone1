@@ -5,9 +5,7 @@ import "../../styles/ContextFilterModal.css";
 export default function DepreciationFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
 
   const [filters, setFilters] = useState({
-    name: "",
-    duration: "",
-    minimumValue: "",
+    valueSort: "", // "desc" = greatest to least value, "asc" = least to greatest value
   });
 
   // Initialize filters from props
@@ -28,9 +26,7 @@ export default function DepreciationFilterModal({ isOpen, onClose, onApplyFilter
   // Reset all filters
   const handleReset = () => {
     setFilters({
-      name: "",
-      duration: "",
-      minimumValue: "",
+      valueSort: "",
     });
   };
 
@@ -65,46 +61,18 @@ export default function DepreciationFilterModal({ isOpen, onClose, onApplyFilter
         {/* Modal Body */}
         <div className="depreciation-filter-modal-body">
           <div className="depreciation-filter-grid">
-            {/* Depreciation Name */}
+            {/* Sort by Minimum Value */}
             <fieldset>
-              <label htmlFor="name">Depreciation Name</label>
-              <input
-                type="text"
-                id="name"
-                placeholder="Enter Depreciation Name"
-                value={filters.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Duration */}
-            <fieldset>
-              <label htmlFor="duration">Duration (months)</label>
-              <input
-                type="number"
-                id="duration"
-                placeholder="Enter Duration"
-                value={filters.duration}
-                onChange={(e) => handleInputChange("duration", e.target.value)}
-                min="0"
-              />
-            </fieldset>
-
-            {/* Minimum Value */}
-            <fieldset className="depreciation-filter-cost-field">
-              <label htmlFor="minimumValue">Minimum Value</label>
-              <div className="depreciation-filter-cost-input-group">
-                <span className="depreciation-filter-cost-addon">PHP</span>
-                <input
-                  type="number"
-                  id="minimumValue"
-                  placeholder="0.00"
-                  value={filters.minimumValue}
-                  onChange={(e) => handleInputChange("minimumValue", e.target.value)}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
+              <label htmlFor="valueSort">Sort by Minimum Value</label>
+              <select
+                id="valueSort"
+                value={filters.valueSort}
+                onChange={(e) => handleInputChange("valueSort", e.target.value)}
+              >
+                <option value="">None</option>
+                <option value="desc">Greatest to least value</option>
+                <option value="asc">Least to greatest value</option>
+              </select>
             </fieldset>
           </div>
         </div>

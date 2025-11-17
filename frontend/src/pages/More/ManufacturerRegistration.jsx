@@ -6,6 +6,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
+import PlusIcon from "../../assets/icons/plus.svg";
 
 import "../../styles/Registration.css";
 import "../../styles/ManufacturerRegistration.css";
@@ -41,6 +42,7 @@ const ManufacturerRegistration = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [importFile, setImportFile] = useState(null);
 
   const navigate = useNavigate();
 
@@ -112,6 +114,23 @@ const ManufacturerRegistration = () => {
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (
+        file.type !==
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ) {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+      setImportFile(file);
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
     }
   };
 
@@ -217,15 +236,35 @@ const ManufacturerRegistration = () => {
           <section className="top">
             <TopSecFormPage
               root="Manufacturers"
-              currentPage={id ? "Edit Manufacturer" : "New Manufacturer"}
+              currentPage={id ? "Update Manufacturer" : "New Manufacturer"}
               rootNavigatePage="/More/ViewManufacturer"
-              title={id ? "Edit Manufacturer" : "New Manufacturer"}
+              title={id ? manufacturer?.name || "Update Manufacturer" : "New Manufacturer"}
+              rightComponent={
+                !id && (
+                  <div className="import-section">
+                    <label htmlFor="import-file" className="import-btn">
+                      <img src={PlusIcon} alt="Import" />
+                      Import
+                      <input
+                        type="file"
+                        id="import-file"
+                        accept=".xlsx"
+                        onChange={handleImportFile}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                  </div>
+                )
+              }
             />
           </section>
           <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label htmlFor="manufacturerName">Manufacturer Name *</label>
+                <label htmlFor="manufacturerName">
+                  Manufacturer Name
+                  <span className="required-asterisk">*</span>
+                </label>
                 <input
                   type="text"
                   placeholder="Manufacturer Name"
@@ -310,39 +349,46 @@ const ManufacturerRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="logo">Logo</label>
-                <div>
-                  {previewImage && (
-                    <div className="image-selected">
-                      <img src={previewImage} alt="Selected logo" />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPreviewImage(null);
-                          setSelectedImage(null);
-                          setValue("logo", null);
-                          document.getElementById("logo").value = "";
-                          setRemoveImage(true);
-                          console.log("Remove logo flag set to:", true);
-                        }}
-                      >
-                        <img src={CloseIcon} alt="Remove" />
-                      </button>
-                    </div>
-                  )}
-                  <label htmlFor="logo" className="upload-image-btn">
-                    {previewImage ? "Change Logo" : "Choose Logo"}
-                    <input
-                      type="file"
-                      id="logo"
-                      accept="image/*"
-                      onChange={handleImageSelection}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                  <small className="file-size-info">
-                    Maximum file size must be 5MB
-                  </small>
+                <label>Image Upload</label>
+                <div className="attachments-wrapper">
+                  {/* Left column: Upload button & info */}
+                  <div className="upload-left">
+                    <label htmlFor="logo" className="upload-image-btn">
+                      Choose File
+                      <input
+                        type="file"
+                        id="logo"
+                        accept="image/*"
+                        onChange={handleImageSelection}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                    <small className="file-size-info">
+                      Maximum file size must be 5MB
+                    </small>
+                  </div>
+
+                  {/* Right column: Uploaded file */}
+                  <div className="upload-right">
+                    {selectedImage && (
+                      <div className="file-uploaded">
+                        <span title={selectedImage.name}>{selectedImage.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreviewImage(null);
+                            setSelectedImage(null);
+                            setValue("logo", null);
+                            document.getElementById("logo").value = "";
+                            setRemoveImage(true);
+                            console.log("Remove logo flag set to:", true);
+                          }}
+                        >
+                          <img src={CloseIcon} alt="Remove" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </fieldset>
 
