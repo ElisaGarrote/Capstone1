@@ -475,6 +475,14 @@
   vertical-align: middle;
 }
 
+/* Override global center alignment: last 3 columns in this table should be left-aligned */
+.product-assets-table th:nth-last-child(-n+3),
+.product-assets-table td:nth-last-child(-n+3) {
+  text-align: left !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+}
+
 /* Ensure Status column is left-aligned */
 .product-assets-table td:nth-child(5) {
   text-align: left !important;
