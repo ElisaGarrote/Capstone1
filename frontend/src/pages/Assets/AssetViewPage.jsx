@@ -50,10 +50,13 @@ function AssetViewPage() {
   };
 
   const confirmDelete = () => {
-    // Handle asset deletion logic here
     console.log("Deleting asset:", asset.id);
     closeDeleteModal();
-    navigate("/assets");
+    navigate("/assets", {
+      state: {
+        successMessage: "Asset deleted successfully!",
+      },
+    });
   };
 
   // Get checked out to information from data

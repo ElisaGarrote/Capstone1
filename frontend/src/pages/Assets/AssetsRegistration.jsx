@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import "../../styles/Registration.css";
@@ -36,7 +37,7 @@ export default function AssetsRegistration() {
   ]);
 
 
-  
+
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
   const location = useLocation();
@@ -44,7 +45,7 @@ export default function AssetsRegistration() {
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
   const [generatedAssetId, setGeneratedAssetId] = useState('(Loading...)');
-  
+
   const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
@@ -111,13 +112,13 @@ export default function AssetsRegistration() {
           assetsService.fetchAssetContexts(),
           fetchAllCategories()
         ]);
-        
+
         console.log("Asset contexts data:", assetContextsData);
-        
+
         // Set products and statuses from asset contexts
         setProducts(assetContextsData.products || []);
         setStatuses(assetContextsData.statuses || []);
-        
+
         // Set suppliers from contexts
         setSuppliers(contextsData.suppliers || []);
 
@@ -155,7 +156,7 @@ export default function AssetsRegistration() {
           setValue('disposalStatus', assetData.disposal_status || '');
           setValue('scheduleAuditDate', assetData.schedule_audit_date || '');
           setValue('notes', assetData.notes || '');
-          
+
           if (assetData.image) {
             setPreviewImage(`https://assets-service-production.up.railway.app${assetData.image}`);
           }
@@ -332,7 +333,7 @@ export default function AssetsRegistration() {
       throw error;
     }
   };
-  
+
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
@@ -352,7 +353,7 @@ export default function AssetsRegistration() {
       formData.append('disposal_status', data.disposalStatus || '');
       formData.append('schedule_audit_date', data.scheduleAuditDate || '');
       formData.append('notes', data.notes || '');
-      
+
       // Handle image upload
       if (selectedImage) {
         formData.append('image', selectedImage);
@@ -362,14 +363,14 @@ export default function AssetsRegistration() {
       if (removeImage) {
         formData.append('remove_image', 'true');
       }
-      
+
       console.log("Form data before submission:");
       for (let pair of formData.entries()) {
         console.log(pair[0] + ': ' + pair[1]);
       }
-      
+
       let result;
-      
+
       if (id) {
         // Update existing asset
         result = await assetsService.updateAsset(id, formData);
@@ -383,12 +384,12 @@ export default function AssetsRegistration() {
       }
 
       console.log(`${id ? 'Updated' : 'Created'} asset:`, result);
-      
+
       // Navigate to assets page with success message
-      navigate('/assets', { 
-        state: { 
-          successMessage: `Asset has been ${id ? 'updated' : 'created'} successfully!` 
-        } 
+      navigate('/assets', {
+        state: {
+          successMessage: `Asset has been ${id ? 'updated' : 'created'} successfully!`
+        }
       });
     } catch (error) {
       console.error(`Error ${id ? 'updating' : 'creating'} asset:`, error);
@@ -433,8 +434,9 @@ export default function AssetsRegistration() {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      <nav><NavBar /></nav>
-      <main className="registration">
+      <section className="page-layout-registration">
+        <NavBar />
+        <main className="registration">
         <section className="top">
           <TopSecFormPage
             root="Assets"
@@ -729,6 +731,8 @@ export default function AssetsRegistration() {
           </form>
         </section>
       </main>
+      <Footer />
+      </section>
 
       {/* Modals */}
       <AddEntryModal

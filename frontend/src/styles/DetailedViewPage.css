@@ -37,8 +37,17 @@
 .detailed-content-wrapper:has(.attachments-tab-wrapper) .detailed-main-content,
 .detailed-content-wrapper:has(.audits-tab-wrapper) .detailed-main-content,
 .detailed-content-wrapper:has(.audits-view-tab-wrapper) .detailed-main-content,
-.detailed-content-wrapper:has(.audits-duplicate-tab-wrapper) .detailed-main-content {
+.detailed-content-wrapper:has(.audits-duplicate-tab-wrapper) .detailed-main-content,
+.detailed-content-wrapper:has(.assets-tab-wrapper) .detailed-main-content,
+.detailed-content-wrapper:has(.product-assets-tab-wrapper) .detailed-main-content {
   display: none;
+}
+
+/* Make product assets tab wrapper take full width */
+.detailed-content-wrapper:has(.product-assets-tab-wrapper) {
+  width: 100%;
+  flex-direction: row;
+  gap: 20px;
 }
 
 .detailed-sidebar {
@@ -239,6 +248,7 @@
 }
 
 .asset-details-section,
+.component-details-section,
 .additional-fields-section {
   background-color: white;
   border-radius: 8px;
@@ -249,7 +259,13 @@
   flex-direction: column;
 }
 
-.asset-details-grid {
+.additional-fields-section {
+  margin-top: 24px;
+}
+
+
+.asset-details-grid,
+.component-details-grid {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -727,7 +743,7 @@
   padding: 0;
 }
 
-.components-table-section {
+.components-tab-wrapper .components-detail-table-section {
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior: contain;
@@ -735,13 +751,13 @@
   height: auto;
 }
 
-.components-table-section table {
+.components-tab-wrapper .components-detail-table-section table {
   width: 100%;
   height: auto;
   border-collapse: collapse;
 }
 
-.components-table-section table th {
+.components-tab-wrapper .components-detail-table-section table th {
   padding: 0.75rem !important;
   text-align: left !important;
   font-size: 0.75rem;
@@ -756,32 +772,32 @@
   z-index: 1;
 }
 
-.components-table-section table th:first-child {
+.components-tab-wrapper .components-detail-table-section table th:first-child {
   width: 20%;
   text-align: left !important;
 }
 
-.components-table-section table th:nth-child(2) {
+.components-tab-wrapper .components-detail-table-section table th:nth-child(2) {
   width: 18%;
   text-align: left !important;
 }
 
-.components-table-section table th:nth-child(3) {
+.components-tab-wrapper .components-detail-table-section table th:nth-child(3) {
   width: 18%;
   text-align: left !important;
 }
 
-.components-table-section table th:nth-child(4) {
+.components-tab-wrapper .components-detail-table-section table th:nth-child(4) {
   width: 22%;
   text-align: left !important;
 }
 
-.components-table-section table th:last-child {
+.components-tab-wrapper .components-detail-table-section table th:last-child {
   width: 22%;
   text-align: left !important;
 }
 
-.components-table-section table td {
+.components-tab-wrapper .components-detail-table-section table td {
   text-align: left !important;
   padding: 0.75rem !important;
   font-size: 0.8125rem;
@@ -791,11 +807,11 @@
   vertical-align: middle;
 }
 
-.components-table-section table tr:hover {
+.components-tab-wrapper .components-detail-table-section table tr:hover {
   background-color: #fcfcfc;
 }
 
-.components-table-section .action-button-section {
+.components-tab-wrapper .components-detail-table-section .action-button-section {
   justify-content: flex-start;
 }
 
@@ -883,18 +899,18 @@
   font-size: 0.875rem;
 }
 
-.repairs-table-section {
+.repairs-detail-table-section {
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior: contain;
 }
 
-.repairs-table-section table {
+.repairs-detail-table-section table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.repairs-table-section table th {
+.repairs-detail-table-section table th {
   padding: 0.75rem !important;
   text-align: left !important;
   font-size: 0.75rem;
@@ -909,7 +925,7 @@
   z-index: 1;
 }
 
-.repairs-table-section table td {
+.repairs-detail-table-section table td {
   text-align: left !important;
   padding: 0.75rem !important;
   font-size: 0.8125rem;
@@ -919,7 +935,7 @@
   vertical-align: middle;
 }
 
-.repairs-table-section table tr:hover {
+.repairs-detail-table-section table tr:hover {
   background-color: #fcfcfc;
 }
 
@@ -1688,11 +1704,11 @@
     max-height: 50vh;
   }
 
-  .components-table-section {
+  .components-tab-wrapper .components-detail-table-section {
     max-height: 50vh;
   }
 
-  .repairs-table-section {
+  .repairs-detail-table-section {
     max-height: 50vh;
   }
 

@@ -200,10 +200,30 @@ export default function ViewSupplier() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((supplier) => {
+          const name = supplier.name?.toLowerCase() || "";
+          const city = supplier.city?.toLowerCase() || "";
+          const country = supplier.country?.toLowerCase() || "";
+          const contact =
+            supplier.contactName?.toLowerCase() ||
+            supplier.contact_name?.toLowerCase() ||
+            "";
+          return (
+            name.includes(normalizedQuery) ||
+            city.includes(normalizedQuery) ||
+            country.includes(normalizedQuery) ||
+            contact.includes(normalizedQuery)
+          );
+        });
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedSuppliers = filteredData.slice(startIndex, endIndex);
+  const paginatedSuppliers = searchedData.slice(startIndex, endIndex);
 
   const allChecked =
     paginatedSuppliers.length > 0 &&
@@ -320,11 +340,8 @@ export default function ViewSupplier() {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1);
   };
-
-  const filteredSuppliers = suppliers.filter((supplier) =>
-    supplier.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const actionStatus = (action, status) => {
     let timeoutId;
@@ -390,7 +407,7 @@ export default function ViewSupplier() {
   };
 
   const handleExport = () => {
-    const dataToExport = suppliers.length > 0 ? suppliers : MockupData;
+    const dataToExport = searchedData.length > 0 ? searchedData : filteredData;
     exportToExcel(dataToExport, "Supplier_Records.xlsx");
   };
 
@@ -463,7 +480,7 @@ export default function ViewSupplier() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Suppliers ({filteredData.length})</h2>
+              <h2 className="h2">Suppliers ({searchedData.length})</h2>
               <section className="table-actions">
                 {checkedItems.length > 0 && (
                   <MediumButtons
@@ -538,7 +555,7 @@ export default function ViewSupplier() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={filteredData.length}
+                totalItems={searchedData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

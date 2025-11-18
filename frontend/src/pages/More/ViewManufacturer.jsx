@@ -158,10 +158,35 @@ export default function ViewManuDraft() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((manufacturer) => {
+          const name = manufacturer.name?.toLowerCase() || "";
+          const url = manufacturer.url?.toLowerCase() || "";
+          const supportUrl =
+            manufacturer.support_url?.toLowerCase() ||
+            manufacturer.supportUrl?.toLowerCase() ||
+            "";
+          const email = manufacturer.email?.toLowerCase() || "";
+          const phone =
+            manufacturer.phone_number?.toLowerCase() ||
+            manufacturer.support_phone?.toLowerCase() ||
+            "";
+          return (
+            name.includes(normalizedQuery) ||
+            url.includes(normalizedQuery) ||
+            supportUrl.includes(normalizedQuery) ||
+            email.includes(normalizedQuery) ||
+            phone.includes(normalizedQuery)
+          );
+        });
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedManufacturer = filteredData.slice(startIndex, endIndex);
+  const paginatedManufacturer = searchedData.slice(startIndex, endIndex);
 
   const allChecked =
     paginatedManufacturer.length > 0 &&
@@ -276,11 +301,8 @@ export default function ViewManuDraft() {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1);
   };
-
-  const filteredManufacturers = manufacturers.filter((manufacturer) =>
-    manufacturer.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const actionStatus = (action, status) => {
     let timeoutId;
@@ -344,7 +366,7 @@ export default function ViewManuDraft() {
   };
 
   const handleExport = () => {
-    const dataToExport = filteredData && filteredData.length > 0 ? filteredData : [];
+    const dataToExport = searchedData.length > 0 ? searchedData : filteredData;
     exportToExcel(dataToExport, "Manufacturer_Records.xlsx");
   };
 
@@ -407,7 +429,7 @@ export default function ViewManuDraft() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Manufacturers ({filteredData.length})</h2>
+              <h2 className="h2">Manufacturers ({searchedData.length})</h2>
               <section className="table-actions">
                 {checkedItems.length > 0 && (
                   <MediumButtons

@@ -204,6 +204,7 @@ export default function Category() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(categories);
   const [appliedFilters, setAppliedFilters] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Apply filters to data
   const applyFilters = (filters) => {
@@ -227,10 +228,25 @@ export default function Category() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((category) => {
+          const name = category.name?.toLowerCase() || "";
+          const type = category.type?.toLowerCase() || "";
+          return name.includes(normalizedQuery) || type.includes(normalizedQuery);
+        });
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCategories = filteredData.slice(startIndex, endIndex);
+  const paginatedCategories = searchedData.slice(startIndex, endIndex);
 
   const allSelected =
     paginatedCategories.length > 0 &&
@@ -374,7 +390,7 @@ export default function Category() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Categories ({filteredData.length})</h2>
+              <h2 className="h2">Categories ({searchedData.length})</h2>
               <section className="table-actions">
                 {selectedIds.length > 0 && (
                   <MediumButtons
@@ -386,6 +402,8 @@ export default function Category() {
                   type="search"
                   placeholder="Search..."
                   className="search"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
                 />
                 <MediumButtons
                   type="new"
@@ -430,7 +448,7 @@ export default function Category() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={filteredData.length}
+                totalItems={searchedData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

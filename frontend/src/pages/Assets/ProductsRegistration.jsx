@@ -1,4 +1,5 @@
 import NavBar from '../../components/NavBar';
+import Footer from "../../components/Footer";
 import '../../styles/Registration.css';
 import { useNavigate, useParams } from 'react-router-dom';
 import TopSecFormPage from '../../components/TopSecFormPage';
@@ -66,21 +67,21 @@ export default function ProductsRegistration() {
     const initialize = async () => {
       try {
         setIsLoading(true);
-        
+
         // Fetch all necessary data in parallel
         const [productContextsData, contextsData] = await Promise.all([
           assetsService.fetchProductContexts(),
           fetchAllCategories()
         ]);
-        
+
         // Set categories and depreciations from product contexts
         setCategories(productContextsData.categories || []);
         setDepreciations(productContextsData.depreciations || []);
-        
+
         // Set suppliers and manufacturers from contexts
         setSuppliers(contextsData.suppliers || []);
         setManufacturers(contextsData.manufacturers || []);
-        
+
         console.log("Categories:", productContextsData.categories);
         console.log("Depreciations:", productContextsData.depreciations);
         console.log("Suppliers:", contextsData.suppliers);
@@ -111,7 +112,7 @@ export default function ProductsRegistration() {
           setValue('minimumQuantity', productData.minimum_quantity || '');
           setValue('operatingSystem', productData.operating_system || '');
           setValue('notes', productData.notes || '');
-          
+
           if (productData.image) {
             setPreviewImage(`https://assets-service-production.up.railway.app${productData.image}`);
           }
@@ -264,19 +265,19 @@ export default function ProductsRegistration() {
       setTimeout(() => setErrorMessage(""), 5000);
     }
   };
-  
+
   const onSubmit = async (data) => {
     try {
       // Only check for duplicate names when creating a new product (not when updating)
       if (!id) {
         // Fetch all existing product names
         const existingProducts = await assetsService.fetchProductNames();
-        
+
         // Check if a product with the same name already exists
         const isDuplicate = existingProducts.products.some(
           product => product.name.toLowerCase() === data.productName.toLowerCase()
         );
-        
+
         if (isDuplicate) {
           setErrorMessage("A product with this name already exists. Please use a different name.");
           setTimeout(() => {
@@ -306,7 +307,7 @@ export default function ProductsRegistration() {
       formData.append('storage_size', data.storageSize || '');
       formData.append('archive_model', data.archiveModel || false);
       formData.append('notes', data.notes || '');
-      
+
       // Handle image upload
       if (selectedImage) {
         formData.append('image', selectedImage);
@@ -317,14 +318,14 @@ export default function ProductsRegistration() {
         formData.append('remove_image', 'true');
         console.log("Removing image: remove_image flag set to true");
       }
-      
+
       console.log("Form data before submission:");
       for (let pair of formData.entries()) {
         console.log(pair[0] + ': ' + pair[1]);
       }
-      
+
       let result;
-      
+
       if (id) {
         // Update existing product
         result = await assetsService.updateProduct(id, formData);
@@ -338,12 +339,12 @@ export default function ProductsRegistration() {
       }
 
       console.log(`${id ? 'Updated' : 'Created'} product:`, result);
-      
+
       // Navigate to products page with success message
-      navigate('/products', { 
-        state: { 
-          successMessage: `Product has been ${id ? 'updated' : 'created'} successfully!` 
-        } 
+      navigate('/products', {
+        state: {
+          successMessage: `Product has been ${id ? 'updated' : 'created'} successfully!`
+        }
       });
     } catch (error) {
       console.error(`Error ${id ? 'updating' : 'creating'} product:`, error);
@@ -360,8 +361,9 @@ export default function ProductsRegistration() {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      <nav><NavBar /></nav>
-      <main className="registration">
+      <section className="page-layout-registration">
+        <NavBar />
+        <main className="registration">
         <section className="top">
           <TopSecFormPage
             root="Asset Models"
@@ -502,9 +504,9 @@ export default function ProductsRegistration() {
             {/* Model Number */}
             <fieldset>
               <label htmlFor='model-number'>Model Number</label>
-              <input 
+              <input
                 type='text'
-                {...register('modelNumber')} 
+                {...register('modelNumber')}
                 maxLength='100'
                 placeholder='Model Number'
               />
@@ -758,6 +760,9 @@ export default function ProductsRegistration() {
           type="depreciation"
         />
       </main>
+      <Footer />
+      </section>
+
     </>
   );
 }

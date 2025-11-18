@@ -68,7 +68,8 @@ export default function DetailedViewPage({
   actionButtons,
   checkedOutTo,
   onTabChange,
-  children
+  children,
+  customTabContent = null
 }) {
   const navigate = useNavigate();
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -430,30 +431,33 @@ Updated At: ${updatedAt || 'N/A'}`;
                   </div>
                 </div>
 
-                {/* Additional Fields Section */}
-                <div className="additional-fields-section">
-                  <h3 className="section-header">Additional Fields</h3>
-                  <div className="asset-details-grid">
-                    <div className="detail-row">
-                      <label>Notes</label>
-                      <span>{notes || 'N/A'}</span>
-                    </div>
-
-                    <div className="detail-row">
-                      <label>Created At</label>
-                      <span>{createdAt || 'N/A'}</span>
-                    </div>
-
-                    <div className="detail-row">
-                      <label>Updated At</label>
-                      <span>{updatedAt || 'N/A'}</span>
-                    </div>
-                  </div>
-                </div>
             </div>
           )}
           {/* Custom Children Content */}
           {children}
+
+          {/* Additional Fields Section (always shown on About tab) */}
+          {activeTab === 0 && (
+            <div className="additional-fields-section">
+              <h3 className="section-header">Additional Fields</h3>
+              <div className="asset-details-grid">
+                <div className="detail-row">
+                  <label>Notes</label>
+                  <span>{notes || 'N/A'}</span>
+                </div>
+
+                <div className="detail-row">
+                  <label>Created At</label>
+                  <span>{createdAt || 'N/A'}</span>
+                </div>
+
+                <div className="detail-row">
+                  <label>Updated At</label>
+                  <span>{updatedAt || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Other tab content will go here */}
           {activeTab !== 0 && activeTab !== 1 && activeTab !== 2 && activeTab !== 3 && activeTab !== 4 && activeTab !== 5 && (
@@ -464,7 +468,7 @@ Updated At: ${updatedAt || 'N/A'}`;
         </section>
 
         {/* History Tab - Outside of detailed-main-content */}
-        {activeTab === 1 && (() => {
+        {activeTab === 1 && !customTabContent && (() => {
 
           const startIndex = (historyCurrentPage - 1) * historyPageSize;
           const endIndex = startIndex + historyPageSize;
@@ -508,6 +512,11 @@ Updated At: ${updatedAt || 'N/A'}`;
           );
         })()}
 
+        {/* Custom Tab Content - Renders when customTabContent is provided for activeTab === 1 */}
+        {activeTab === 1 && customTabContent && (
+          customTabContent
+        )}
+
         {/* Components Tab - Outside of detailed-main-content */}
         {activeTab === 2 && (() => {
 
@@ -516,7 +525,7 @@ Updated At: ${updatedAt || 'N/A'}`;
               <div className="components-tab-header">
                 <h3>Components</h3>
               </div>
-              <section className="components-table-section">
+              <section className="components-detail-table-section">
                 <table>
                   <thead>
                     <tr>
@@ -572,7 +581,7 @@ Updated At: ${updatedAt || 'N/A'}`;
                   />
                 </div>
               </div>
-              <section className="repairs-table-section">
+              <section className="repairs-detail-table-section">
                 <table>
                   <thead>
                     <tr>
@@ -835,37 +844,37 @@ Updated At: ${updatedAt || 'N/A'}`;
         })()}
 
         {/* Right Sidebar - Action Buttons */}
-        <aside className="detailed-sidebar">
-          {/* Action Buttons Section */}
-          {actionButtons && (
-            <div className="action-buttons-section">
-              {actionButtons}
-            </div>
-          )}
+        {(actionButtons || checkedOutTo) && (
+          <aside className="detailed-sidebar">
+            {/* Action Buttons Section */}
+            {actionButtons && (
+              <div className="action-buttons-section">
+                {actionButtons}
+              </div>
+            )}
 
-          {/* Checked Out To Section */}
-          {checkedOutTo && (
-            <div className="checked-out-section">
-              <h3>Checked Out To</h3>
-              <div className="checked-out-info">
-                <div className="user-avatar">
-                  <img
-                    src={DefaultProfile}
-                    alt="User Profile"
-                    className="profile-icon"
-                  />
-                </div>
-                <div className="user-details">
-                  <div className="user-name">{checkedOutTo.name}</div>
-                  <div className="user-email">{checkedOutTo.email}</div>
-                  <div className="checkout-date">Checkout Date: {checkedOutTo.checkoutDate}</div>
+            {/* Checked Out To Section */}
+            {checkedOutTo && (
+              <div className="checked-out-section">
+                <h3>Checked Out To</h3>
+                <div className="checked-out-info">
+                  <div className="user-avatar">
+                    <img
+                      src={DefaultProfile}
+                      alt="User Profile"
+                      className="profile-icon"
+                    />
+                  </div>
+                  <div className="user-details">
+                    <div className="user-name">{checkedOutTo.name}</div>
+                    <div className="user-email">{checkedOutTo.email}</div>
+                    <div className="checkout-date">Checkout Date: {checkedOutTo.checkoutDate}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-
-        </aside>
+            )}
+          </aside>
+        )}
       </section>
     </main>
     <Footer />

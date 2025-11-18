@@ -148,6 +148,7 @@ export default function Category() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(MockupData);
   const [appliedFilters, setAppliedFilters] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Retrieve the "status" navigation flags for success alerts
   const addedStatus = location.state?.addedStatus;
@@ -226,10 +227,30 @@ export default function Category() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((status) => {
+          const name = status.name?.toLowerCase() || "";
+          const type = status.type?.toLowerCase() || "";
+          const notes = status.notes?.toLowerCase() || "";
+          return (
+            name.includes(normalizedQuery) ||
+            type.includes(normalizedQuery) ||
+            notes.includes(normalizedQuery)
+          );
+        });
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedCategories = filteredData.slice(startIndex, endIndex);
+  const paginatedCategories = searchedData.slice(startIndex, endIndex);
 
   // Only non-default statuses are selectable for bulk actions
   const selectableStatuses = paginatedCategories.filter(
@@ -325,7 +346,7 @@ export default function Category() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Statuses ({filteredData.length})</h2>
+              <h2 className="h2">Statuses ({searchedData.length})</h2>
               <section className="table-actions">
                 {selectedIds.length > 0 && (
                   <MediumButtons
@@ -337,6 +358,8 @@ export default function Category() {
                   type="search"
                   placeholder="Search..."
                   className="search"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
                 />
                 <button
                   type="button"
@@ -390,7 +413,7 @@ export default function Category() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={filteredData.length}
+                totalItems={searchedData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

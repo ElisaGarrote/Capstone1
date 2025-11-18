@@ -85,6 +85,7 @@ export default function Depreciations() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(MockupData);
   const [appliedFilters, setAppliedFilters] = useState({ valueSort: "" });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -121,16 +122,36 @@ export default function Depreciations() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((item) => {
+          const name = item.name?.toLowerCase() || "";
+          const duration = String(item.duration ?? "").toLowerCase();
+          const minimumValue = String(item.minimum_value ?? "").toLowerCase();
+          return (
+            name.includes(normalizedQuery) ||
+            duration.includes(normalizedQuery) ||
+            minimumValue.includes(normalizedQuery)
+          );
+        });
+
   // Handle export
   const handleExport = () => {
-    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    const dataToExport = searchedData.length > 0 ? searchedData : filteredData;
     exportToExcel(dataToExport, "Depreciations_Records.xlsx");
     setExportToggle(false); // Close export menu after export
   };
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = filteredData.slice(startIndex, endIndex);
+  const paginatedActivity = searchedData.slice(startIndex, endIndex);
 
   // selection
   const [selectedIds, setSelectedIds] = useState([]);
@@ -237,7 +258,7 @@ export default function Depreciations() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Asset Depreciations ({filteredData.length})</h2>
+              <h2 className="h2">Asset Depreciations ({searchedData.length})</h2>
               <section className="table-actions">
                 {selectedIds.length > 0 && (
                   <MediumButtons
@@ -245,7 +266,13 @@ export default function Depreciations() {
                     onClick={() => openDeleteModal(null)}
                   />
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
                 <MediumButtons
                   type="filter"
                   onClick={() => setIsFilterModalOpen(true)}
@@ -297,7 +324,7 @@ export default function Depreciations() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={filteredData.length}
+                totalItems={searchedData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

@@ -5,11 +5,17 @@ import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage
 import DefaultImage from "../../assets/img/default-image.jpg";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
+import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import "../../styles/Products/ProductViewPage.css";
 import "../../styles/Assets/AssetViewPage.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import { getProductDetails, getProductTabs } from "../../data/mockData/products/productDetailsData";
+import Status from "../../components/Status";
+import ActionButtons from "../../components/ActionButtons";
+import Pagination from "../../components/Pagination";
+import { exportToExcel } from "../../utils/exportToExcel";
+import authService from "../../services/auth-service";
 
 function ProductViewPage() {
   const { id } = useParams();
@@ -19,6 +25,13 @@ function ProductViewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+
+  // Assets table state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredAssets, setFilteredAssets] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [selectedAssetIds, setSelectedAssetIds] = useState([]);
 
   useEffect(() => {
     // Find product from mockup data
@@ -31,6 +44,12 @@ function ProductViewPage() {
         (m) => m.id === foundProduct.manufacturer_id
       );
       setManufacturer(foundManufacturer);
+
+      // Filter assets for this product
+      const productAssets = AssetsMockupData.filter(
+        asset => asset.product === foundProduct.model || asset.name === foundProduct.name
+      );
+      setFilteredAssets(productAssets);
     }
     setIsLoading(false);
   }, [id]);
@@ -55,6 +74,205 @@ function ProductViewPage() {
     : DefaultImage;
 
   const tabs = getProductTabs();
+
+  // Handle search
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  // Handle export
+  const handleExport = () => {
+    const dataToExport = filteredAssets.length > 0 ? filteredAssets : [];
+    exportToExcel(dataToExport, "Product_Assets.xlsx");
+  };
+
+  // Handle check-in/check-out
+  const handleCheckInOut = (asset, action) => {
+    const baseImage = asset.image
+      ? `https://assets-service-production.up.railway.app${asset.image}`
+      : DefaultImage;
+
+    const checkout = asset.checkoutRecord;
+    const isCheckIn = action === 'checkin' || asset.isCheckInOrOut === "Check-In";
+
+    if (isCheckIn) {
+      navigate(`/assets/check-in/${asset.id}`, {
+        state: {
+          id: asset.id,
+          assetId: asset.displayed_id,
+          product: asset.product,
+          image: baseImage,
+          employee: checkout?.requestor || "Not assigned",
+          empLocation: checkout?.requestor_location || "Unknown",
+          checkOutDate: checkout?.checkout_date || "Unknown",
+          returnDate: checkout?.return_date || "Unknown",
+          checkoutId: checkout?.checkout_ref_id || "Unknown",
+          checkinDate: checkout?.checkin_date || "Unknown",
+          condition: checkout?.condition || "Unknown",
+          ticketId: checkout?.ticket_id,
+          fromAsset: true,
+        },
+      });
+    } else {
+      navigate(`/assets/check-out/${asset.id}`, {
+        state: {
+          id: asset.id,
+          assetId: asset.displayed_id,
+          product: asset.product,
+          image: baseImage,
+          ticketId: checkout?.ticket_id,
+          empId: checkout?.requestor_id,
+          employee: checkout?.requestor || "Not assigned",
+          empLocation: checkout?.requestor_location || "Unknown",
+          checkoutDate: checkout?.checkout_date || "Unknown",
+          returnDate: checkout?.return_date || "Unknown",
+          fromAsset: true,
+        },
+      });
+    }
+  };
+
+  // Handle view asset
+  const handleViewAsset = (asset) => {
+    navigate(`/assets/view/${asset.id}`);
+  };
+
+  // Handle delete asset
+  const handleDeleteAsset = (assetId) => {
+    console.log("Deleting asset:", assetId);
+    // TODO: Implement delete functionality
+  };
+
+  // Pagination logic
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedAssets = filteredAssets.slice(startIndex, endIndex);
+
+  // Create custom Assets tab content
+  const assetsTabContent = (
+    <div className="product-assets-tab-wrapper">
+      {/* Table Header with Title and Actions */}
+      <section className="product-assets-header">
+        <h2 className="product-assets-title">Assets ({filteredAssets.length})</h2>
+        <section className="product-assets-actions">
+          <input
+            type="search"
+            placeholder="Search..."
+            className="product-assets-search"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+          <button
+            type="button"
+            className="medium-button-filter"
+            onClick={() => console.log("Filter clicked")}
+          >
+            Filter
+          </button>
+          <MediumButtons
+            type="export"
+            onClick={handleExport}
+          />
+          {authService.getUserInfo().role === "Admin" && (
+            <MediumButtons
+              type="new"
+              navigatePage="/assets/registration"
+            />
+          )}
+        </section>
+      </section>
+
+      {/* Table Section */}
+      <section className="product-assets-table-section">
+        <table className="product-assets-table">
+          <thead>
+            <tr>
+              <th>IMAGE</th>
+              <th>ID</th>
+              <th>NAME</th>
+              <th>CATEGORY</th>
+              <th>STATUS</th>
+              <th>CHECK-IN / CHECK-OUT</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedAssets.length > 0 ? (
+              paginatedAssets.map((asset) => {
+                const baseImage = asset.image
+                  ? `https://assets-service-production.up.railway.app${asset.image}`
+                  : DefaultImage;
+
+                return (
+                  <tr key={asset.id}>
+                    <td>
+                      <img
+                        src={baseImage}
+                        alt={asset.name}
+                        className="product-assets-table-img"
+                        onError={(e) => {
+                          e.target.src = DefaultImage;
+                        }}
+                      />
+                    </td>
+                    <td>{asset.displayed_id}</td>
+                    <td>{asset.name}</td>
+                    <td>{asset.category || 'N/A'}</td>
+                    <td>
+                      <Status type={asset.status.toLowerCase()} name={asset.status} />
+                    </td>
+                    <td>
+                      <ActionButtons
+                        showCheckout={
+                          asset.status.toLowerCase() === 'ready to deploy' ||
+                          asset.status.toLowerCase() === 'readytodeploy' ||
+                          asset.status.toLowerCase() === 'archived' ||
+                          asset.status.toLowerCase() === 'pending'
+                        }
+                        showCheckin={asset.status.toLowerCase() === 'deployed'}
+                        onCheckoutClick={() => handleCheckInOut(asset, 'checkout')}
+                        onCheckinClick={() => handleCheckInOut(asset, 'checkin')}
+                      />
+                    </td>
+                    <td>
+                      <ActionButtons
+                        showEdit
+                        showDelete
+                        showView
+                        editPath={`/assets/edit/${asset.id}`}
+                        editState={{ asset }}
+                        onDeleteClick={() => handleDeleteAsset(asset.id)}
+                        onViewClick={() => handleViewAsset(asset)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="7" className="product-assets-no-data">
+                  No assets found for this product.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </section>
+
+      {/* Pagination */}
+      <section className="product-assets-pagination">
+        <Pagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredAssets.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
+      </section>
+    </div>
+  );
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
@@ -147,6 +365,7 @@ function ProductViewPage() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         actionButtons={actionButtons}
+        customTabContent={activeTab === 1 ? assetsTabContent : null}
       >
         {/* Tab Content */}
         {activeTab === 0 && (
@@ -224,54 +443,7 @@ function ProductViewPage() {
                   <label>Storage Size</label>
                   <span>{product.storage_size || "N/A"}</span>
                 </div>
-
-                <div className="detail-row">
-                  <label>Notes</label>
-                  <span>{product.description || "N/A"}</span>
-                </div>
-
-                <div className="detail-row">
-                  <label>Created At</label>
-                  <span>{product.created_at || "N/A"}</span>
-                </div>
-
-                <div className="detail-row">
-                  <label>Updated At</label>
-                  <span>{product.updated_at || "N/A"}</span>
-                </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 1 && (
-          // Products Tab
-          <div className="products-tab-wrapper">
-            <div className="products-table-section">
-              <table className="products-table">
-                <thead>
-                  <tr>
-                    <th>IMAGE</th>
-                    <th>NAME</th>
-                    <th>CATEGORY</th>
-                    <th>MANUFACTURER</th>
-                    <th>DEPRECIATION</th>
-                    <th>END OF LIFE</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <img src={imageSrc} alt={product.name} className="product-thumbnail" onError={(e) => { e.target.src = DefaultImage; }} />
-                    </td>
-                    <td>{product.name}</td>
-                    <td>{product.category}</td>
-                    <td>{manufacturer?.name || "-"}</td>
-                    <td>{product.depreciation}</td>
-                    <td>{product.end_of_life}</td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </div>
         )}

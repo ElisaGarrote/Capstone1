@@ -3,6 +3,7 @@ import "../../styles/StandardizedButtons.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { useNavigate } from "react-router-dom";
+import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
 
 export default function AssetViewModal({ asset, closeModal }) {
   const navigate = useNavigate();
@@ -96,6 +97,26 @@ export default function AssetViewModal({ asset, closeModal }) {
               <p>{notes}</p>
             </fieldset>
           </section>
+        </div>
+
+        {/* Related Assets Section */}
+        <div className="related-assets-section">
+          <h3>Related Assets</h3>
+          <div className="related-assets-list">
+            {AssetsMockupData.filter(a => a.name === asset.name && a.id !== asset.id).length > 0 ? (
+              <ul>
+                {AssetsMockupData.filter(a => a.name === asset.name && a.id !== asset.id).map((relatedAsset) => (
+                  <li key={relatedAsset.id}>
+                    <span className="asset-id">{relatedAsset.displayed_id}</span>
+                    <span className="asset-name">{relatedAsset.name}</span>
+                    <span className="asset-status">{relatedAsset.status}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="no-related-assets">No related assets found.</p>
+            )}
+          </div>
         </div>
       </div>
     </main>

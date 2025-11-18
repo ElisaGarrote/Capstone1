@@ -264,11 +264,18 @@ export default function Assets() {
     if (deleteTarget) {
       console.log("Deleting single id:", deleteTarget);
       // remove from mock data / API call
+      setSuccessMessage("Asset deleted successfully!");
     } else {
       console.log("Deleting multiple ids:", selectedIds);
+      if (selectedIds.length > 0) {
+        setSuccessMessage("Assets deleted successfully!");
+      }
       // remove multiple
       setSelectedIds([]); // clear selection
     }
+
+    // Auto-hide success message after 5 seconds
+    setTimeout(() => setSuccessMessage(""), 5000);
     closeDeleteModal();
   };
 

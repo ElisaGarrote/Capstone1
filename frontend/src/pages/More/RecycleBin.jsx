@@ -84,6 +84,7 @@ export default function RecycleBin() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(data);
   const [appliedFilters, setAppliedFilters] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -138,15 +139,39 @@ export default function RecycleBin() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((item) => {
+          const name = item.name?.toLowerCase() || "";
+          const category = item.category?.toLowerCase() || "";
+          const manufacturer = item.manufacturer?.toLowerCase() || "";
+          const supplier = item.supplier?.toLowerCase() || "";
+          const location = item.location?.toLowerCase() || "";
+          return (
+            name.includes(normalizedQuery) ||
+            category.includes(normalizedQuery) ||
+            manufacturer.includes(normalizedQuery) ||
+            supplier.includes(normalizedQuery) ||
+            location.includes(normalizedQuery)
+          );
+        });
+
   // Handle export
   const handleExport = () => {
-    const dataToExport = filteredData.length > 0 ? filteredData : data;
+    const dataToExport = searchedData.length > 0 ? searchedData : filteredData;
     exportToExcel(dataToExport, "RecycleBin_Records.xlsx");
   };
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = filteredData.slice(startIndex, endIndex);
+  const paginatedActivity = searchedData.slice(startIndex, endIndex);
 
   // selection
   const [selectedIds, setSelectedIds] = useState([]);
@@ -324,8 +349,8 @@ export default function RecycleBin() {
             <section className="table-header">
               <h2 className="h2">
                 {activeTab === "assets"
-                  ? `Deleted Assets (${filteredData.length})`
-                  : `Deleted Components (${filteredData.length})`}
+                  ? `Deleted Assets (${searchedData.length})`
+                  : `Deleted Components (${searchedData.length})`}
               </h2>
               <section className="table-actions">
                 {/* Bulk recover button only when checkboxes selected */}
@@ -344,7 +369,13 @@ export default function RecycleBin() {
                   />
                 )}
 
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
 
                 <button
                   type="button"
@@ -396,7 +427,7 @@ export default function RecycleBin() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={filteredData.length}
+                totalItems={searchedData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

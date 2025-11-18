@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
+import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
@@ -76,6 +78,8 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
 }
 
 export default function AssetRepairs() {
+  const navigate = useNavigate();
+
   // Filter and data state
   const [filteredData, setFilteredData] = useState(MockupData);
 
@@ -152,8 +156,25 @@ export default function AssetRepairs() {
   };
 
   const handleViewClick = (repair) => {
-    console.log("View repair:", repair);
-    // Navigate to repair details page or open modal
+    // Try to find the related asset based on the repair's asset field
+    const assetLabel = (repair.asset || "").toLowerCase();
+
+    const matchedAsset = AssetsMockupData.find((asset) => {
+      const name = (asset.name || "").toLowerCase();
+      const displayedId = (asset.displayed_id || "").toLowerCase();
+      return (
+        (assetLabel && name.includes(assetLabel)) ||
+        (assetLabel && assetLabel.includes(displayedId))
+      );
+    });
+
+    if (matchedAsset) {
+      navigate(`/assets/view/${matchedAsset.id}`);
+    } else {
+      // No linked asset found in mock data; surface a friendly message
+      setErrorMessage("No linked asset found for this repair in mock data.");
+      setTimeout(() => setErrorMessage(""), 4000);
+    }
   };
 
   const handleExport = () => {
