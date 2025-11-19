@@ -355,7 +355,12 @@ export default function ProductsRegistration() {
       formData.append('end_of_life', data.endOfLifeDate || '');
       formData.append('default_purchase_cost', data.defaultPurchaseCost || '');
       formData.append('default_supplier_id', data.supplier || '');
-      formData.append('minimum_quantity', data.minimumQuantity);
+      formData.append(
+        'minimum_quantity',
+        data.minimumQuantity === undefined || data.minimumQuantity === null || Number.isNaN(data.minimumQuantity)
+          ? ''
+          : data.minimumQuantity,
+      );
       formData.append('cpu', data.cpu || '');
       formData.append('gpu', data.gpu || '');
       formData.append('operating_system', data.operatingSystem || '');
@@ -396,8 +401,6 @@ export default function ProductsRegistration() {
       }
 
       console.log(`${id ? 'Updated' : 'Created'} product:`, result);
-
-      // Navigate to products page with success message
       navigate('/products', {
         state: {
           successMessage: `Product has been ${id ? 'updated' : 'created'} successfully!`
@@ -571,12 +574,30 @@ export default function ProductsRegistration() {
 
             {/* End of Life */}
             <fieldset>
-              <label htmlFor='end-of-life-date'>End of Life Date</label>
-              <input
-                type='date'
-                {...register('endOfLifeDate')}
-                min={!id ? currentDate : undefined}
-              />
+              <label htmlFor='end-of-life-date'>End of Life</label>
+              <div className={`cost-input-group ${errors.endOfLifeDate ? 'input-error' : ''}`}>
+                <input
+                  type='number'
+                  id='end-of-life-date'
+                  placeholder='Enter end of life duration'
+                  min='1'
+                  step='1'
+                  {...register('endOfLifeDate', {
+                    valueAsNumber: true,
+                    validate: (value) => (
+                      value === undefined ||
+                      value === null ||
+                      Number.isNaN(value) ||
+                      (Number.isInteger(value) && value > 0) ||
+                      'Must be a positive integer'
+                    ),
+                  })}
+                />
+                <span className="duration-addon">Months</span>
+              </div>
+              {errors.endOfLifeDate && (
+                <span className='error-message'>{errors.endOfLifeDate.message}</span>
+              )}
             </fieldset>
 
             <fieldset className="cost-field">
@@ -596,14 +617,19 @@ export default function ProductsRegistration() {
             </fieldset>
 
             <fieldset>
-              <label htmlFor='minimum-quantity'>Minimum Quantity <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor='minimum-quantity'>Minimum Quantity</label>
               <input
                 type='number'
                 className={errors.minimumQuantity ? 'input-error' : ''}
                 {...register('minimumQuantity', {
-                  required: 'Minimum Quantity is required',
-                  min: { value: 0, message: 'Minimum Quantity must be at least 0' },
-                  valueAsNumber: true
+                  valueAsNumber: true,
+                  validate: (value) => (
+                    value === undefined ||
+                    value === null ||
+                    Number.isNaN(value) ||
+                    value >= 0 ||
+                    'Minimum Quantity must be at least 0'
+                  ),
                 })}
                 placeholder='Minimum Quantity'
                 min="0"
