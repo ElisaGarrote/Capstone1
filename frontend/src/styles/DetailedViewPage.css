@@ -613,6 +613,24 @@
   padding: 0;
 }
 
+.history-header-controls {
+  margin-left: auto;
+}
+
+.history-search-input {
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 8px 12px;
+  border: 1px solid #cccccc;
+  font-size: 0.875rem;
+  outline: none;
+  width: 200px;
+}
+
+.history-search-input:focus {
+  border-color: var(--primary-color);
+}
+
 .history-table-section {
   overflow-x: auto;
   overflow-y: visible;
@@ -665,6 +683,17 @@
   border-bottom: 1px solid #cccccc;
   height: auto;
   vertical-align: middle;
+}
+
+.history-table-section td.no-data-message,
+.components-detail-table-section td.no-data-message,
+.repairs-detail-table-section td.no-data-message,
+.attachments-table-section td.no-data-message {
+  text-align: center !important;
+  color: var(--secondary-text-color);
+  font-style: italic;
+  display: table-cell !important;
+  width: 100% !important;
 }
 
 .history-table-section table tr:hover {
@@ -744,6 +773,27 @@
   padding: 0;
 }
 
+.components-header-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.components-search-input {
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 8px 12px;
+  border: 1px solid #cccccc;
+  font-size: 0.875rem;
+  outline: none;
+  width: 200px;
+}
+
+.components-search-input:focus {
+  border-color: var(--primary-color);
+}
+
 .components-tab-wrapper .components-detail-table-section {
   overflow-x: auto;
   overflow-y: visible;
@@ -807,6 +857,15 @@
   height: auto;
   vertical-align: middle;
 }
+
+.components-tab-wrapper .components-detail-table-section td.no-data-message {
+  text-align: center !important;
+  color: var(--secondary-text-color);
+  font-style: italic;
+  display: table-cell !important;
+  width: 100% !important;
+}
+
 
 .components-tab-wrapper .components-detail-table-section table tr:hover {
   background-color: #fcfcfc;
@@ -1042,6 +1101,11 @@
 .attachments-table-section table tr:hover {
   background-color: #fcfcfc;
 }
+
+.attachments-table-section .action-button-section {
+  justify-content: flex-start !important;
+}
+
 
 .attachments-pagination-section {
   margin: 0;
@@ -1562,6 +1626,8 @@
   border-bottom-color: var(--primary-color);
 }
 
+
+
 .audit-duplicate-action-buttons {
   display: flex;
   gap: 10px;
@@ -1650,7 +1716,7 @@
   background-color: #fcfcfc;
 }
 
-.audits-duplicate-table-section .no-data-message {
+.audits-duplicate-table-section table td.no-data-message {
   text-align: center !important;
   color: var(--secondary-text-color);
   font-style: italic;

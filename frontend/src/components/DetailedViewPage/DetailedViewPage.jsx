@@ -11,6 +11,7 @@ import ConfirmationModal from "../Modals/DeleteModal";
 import UploadModal from "../Modals/UploadModal";
 import View from "../Modals/View";
 import Footer from "../Footer";
+import Alert from "../Alert";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mockData from "../../data/mockData/detailedviewpage/asset-view-page.json";
@@ -75,12 +76,19 @@ export default function DetailedViewPage({
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
   const [historyPageSize, setHistoryPageSize] = useState(5);
+  const [historySearchTerm, setHistorySearchTerm] = useState("");
   const [activeAuditTab, setActiveAuditTab] = useState('pending');
   const [isAuditDeleteModalOpen, setAuditDeleteModalOpen] = useState(false);
   const [auditDeleteId, setAuditDeleteId] = useState(null);
   const [isAuditViewModalOpen, setAuditViewModalOpen] = useState(false);
   const [selectedAuditItem, setSelectedAuditItem] = useState(null);
   const [isUploadModalOpen, setUploadModalOpen] = useState(false);
+  const [attachments, setAttachments] = useState(attachmentsData || []);
+  const [attachmentSuccessMessage, setAttachmentSuccessMessage] = useState("");
+  const [repairs, setRepairs] = useState(repairsData || []);
+  const [isRepairDeleteModalOpen, setRepairDeleteModalOpen] = useState(false);
+  const [repairDeleteIndex, setRepairDeleteIndex] = useState(null);
+  const [repairSuccessMessage, setRepairSuccessMessage] = useState("");
 
   // Generate QR code when component mounts
   useEffect(() => {
@@ -470,14 +478,37 @@ Updated At: ${updatedAt || 'N/A'}`;
         {/* History Tab - Outside of detailed-main-content */}
         {activeTab === 1 && !customTabContent && (() => {
 
+          const normalizedHistoryData = historyData || [];
+          const filteredHistoryData = normalizedHistoryData.filter((item) => {
+            if (!historySearchTerm) return true;
+            const term = historySearchTerm.toLowerCase();
+            return (
+              (item.date && item.date.toLowerCase().includes(term)) ||
+              (item.user && item.user.toLowerCase().includes(term)) ||
+              (item.actionDetails && item.actionDetails.toLowerCase().includes(term))
+            );
+          });
+
           const startIndex = (historyCurrentPage - 1) * historyPageSize;
           const endIndex = startIndex + historyPageSize;
-          const paginatedData = historyData.slice(startIndex, endIndex);
+          const paginatedData = filteredHistoryData.slice(startIndex, endIndex);
 
           return (
             <div className="history-tab-wrapper">
               <div className="history-tab-header">
                 <h3>History</h3>
+                <div className="history-header-controls">
+                  <input
+                    type="search"
+                    placeholder="Search history..."
+                    value={historySearchTerm}
+                    onChange={(e) => {
+                      setHistorySearchTerm(e.target.value);
+                      setHistoryCurrentPage(1);
+                    }}
+                    className="history-search-input"
+                  />
+                </div>
               </div>
               <section className="history-table-section">
                 <table>
@@ -489,13 +520,21 @@ Updated At: ${updatedAt || 'N/A'}`;
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedData.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.date}</td>
-                        <td>{item.user}</td>
-                        <td>{item.actionDetails}</td>
+                    {paginatedData.length > 0 ? (
+                      paginatedData.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.date}</td>
+                          <td>{item.user}</td>
+                          <td>{item.actionDetails}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={3} className="no-data-message">
+                          No History Found.
+                        </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </section>
@@ -503,7 +542,7 @@ Updated At: ${updatedAt || 'N/A'}`;
                 <Pagination
                   currentPage={historyCurrentPage}
                   pageSize={historyPageSize}
-                  totalItems={historyData.length}
+                  totalItems={filteredHistoryData.length}
                   onPageChange={setHistoryCurrentPage}
                   onPageSizeChange={setHistoryPageSize}
                 />
@@ -519,6 +558,8 @@ Updated At: ${updatedAt || 'N/A'}`;
 
         {/* Components Tab - Outside of detailed-main-content */}
         {activeTab === 2 && (() => {
+
+          const normalizedComponents = componentsData || [];
 
           return (
             <div className="components-tab-wrapper">
@@ -537,28 +578,36 @@ Updated At: ${updatedAt || 'N/A'}`;
                     </tr>
                   </thead>
                   <tbody>
-                    {componentsData.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.component}</td>
-                        <td>{item.checkoutDate}</td>
-                        <td>{item.user}</td>
-                        <td>{item.notes}</td>
-                        <td>
-                          <ActionButtons
-                            showCheckin
-                            onCheckinClick={() => {
-                              // Navigate to component check-in page
-                              navigate(`/components/check-in/${item.id}`, {
-                                state: {
-                                  item,
-                                  componentName: item.componentName || item.component
-                                }
-                              });
-                            }}
-                          />
+                    {normalizedComponents.length > 0 ? (
+                      normalizedComponents.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.component}</td>
+                          <td>{item.checkoutDate}</td>
+                          <td>{item.user}</td>
+                          <td>{item.notes}</td>
+                          <td>
+                            <ActionButtons
+                              showCheckin
+                              onCheckinClick={() => {
+                                // Navigate to component check-in page
+                                navigate(`/components/check-in/${item.id}`, {
+                                  state: {
+                                    item,
+                                    componentName: item.componentName || item.component
+                                  }
+                                });
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="no-data-message">
+                          No Components Found.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </section>
@@ -569,65 +618,122 @@ Updated At: ${updatedAt || 'N/A'}`;
         {/* Repairs Tab - Outside of detailed-main-content */}
         {activeTab === 3 && (() => {
 
+          const normalizedRepairs = repairs || [];
+
+          const openRepairDeleteModal = (index) => {
+            setRepairDeleteIndex(index);
+            setRepairDeleteModalOpen(true);
+          };
+
+          const closeRepairDeleteModal = () => {
+            setRepairDeleteModalOpen(false);
+            setRepairDeleteIndex(null);
+          };
+
+          const confirmRepairDelete = () => {
+            if (repairDeleteIndex !== null) {
+              setRepairs((prevRepairs) =>
+                prevRepairs.filter((_, i) => i !== repairDeleteIndex)
+              );
+              setRepairSuccessMessage("Repair deleted successfully.");
+              setTimeout(() => setRepairSuccessMessage(""), 5000);
+            }
+            closeRepairDeleteModal();
+          };
+
+
           return (
-            <div className="repairs-tab-wrapper">
-              <div className="repairs-tab-header">
-                <h3>Repairs</h3>
-                <div className="repairs-header-controls">
-                  <MediumButtons
-                    type="new"
-                    navigatePage="/repairs/registration"
-                    previousPage="/asset-view"
-                  />
+            <>
+              {isRepairDeleteModalOpen && (
+                <ConfirmationModal
+                  closeModal={closeRepairDeleteModal}
+                  actionType="delete"
+                  onConfirm={confirmRepairDelete}
+                />
+              )}
+
+
+              <div className="repairs-tab-wrapper">
+                <div className="repairs-tab-header">
+                  <h3>Repairs</h3>
+                  <div className="repairs-header-controls">
+                    <MediumButtons
+                      type="new"
+                      navigatePage="/repairs/registration"
+                      previousPage="/asset-view"
+                    />
+                  </div>
                 </div>
-              </div>
-              <section className="repairs-detail-table-section">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>ASSET</th>
-                      <th>TYPE</th>
-                      <th>NAME</th>
-                      <th>START DATE</th>
-                      <th>END DATE</th>
-                      <th>COST</th>
-                      <th>STATUS</th>
-                      <th>ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {repairsData.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.asset}</td>
-                        <td>{item.type}</td>
-                        <td>{item.name}</td>
-                        <td>{item.startDate}</td>
-                        <td>{item.endDate || 'Ongoing'}</td>
-                        <td>{item.cost}</td>
-                        <td>
-                          <Status
-                            value={index}
-                            type={item.status === 'Completed' ? 'ready-to-deploy' : 'in-progress'}
-                            name={item.status}
-                          />
-                        </td>
-                        <td>
-                          <ActionButtons
-                            showEdit
-                            showDelete
-                            showView
-                            editPath={`edit/${index}`}
-                            editState={{ item, previousPage: "/asset-view" }}
-                            onDeleteClick={() => console.log('Delete repair:', index)}
-                            onViewClick={() => console.log('View repair:', item)}
-                          />
-                        </td>
+                {repairSuccessMessage && (
+                  <Alert message={repairSuccessMessage} type="success" />
+                )}
+                <section className="repairs-detail-table-section">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>ASSET</th>
+                        <th>TYPE</th>
+                        <th>NAME</th>
+                        <th>START DATE</th>
+                        <th>END DATE</th>
+                        <th>COST</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-            </div>
+                    </thead>
+                    <tbody>
+                      {normalizedRepairs.length > 0 ? (
+                        normalizedRepairs.map((item, index) => {
+                          const repairForEdit = {
+                            asset: item.asset,
+                            supplier: "",
+                            type: item.type,
+                            name: item.name,
+                            start_date: item.startDate,
+                            end_date: item.endDate,
+                            cost: item.cost,
+                            notes: item.notes || "",
+                          };
+
+                          return (
+                            <tr key={index}>
+                              <td>{item.asset}</td>
+                              <td>{item.type}</td>
+                              <td>{item.name}</td>
+                              <td>{item.startDate}</td>
+                              <td>{item.endDate || 'Ongoing'}</td>
+                              <td>{item.cost}</td>
+                              <td>
+                                <Status
+                                  value={index}
+                                  type={item.status === 'Completed' ? 'ready-to-deploy' : 'in-progress'}
+                                  name={item.status}
+                                />
+                              </td>
+                              <td>
+                                <ActionButtons
+                                  showEdit
+                                  showDelete
+                                  editPath={`/repairs/edit/${index + 1}`}
+                                  editState={{ repair: repairForEdit }}
+                                  onDeleteClick={() => openRepairDeleteModal(index)}
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={8} className="no-data-message">
+                            No Repairs Found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </section>
+              </div>
+            </>
           );
         })()}
 
@@ -645,6 +751,16 @@ Updated At: ${updatedAt || 'N/A'}`;
             // Handle file upload logic here
             console.log("Uploading file:", formData);
             // You can send this to your backend API
+          };
+
+          const normalizedAttachments = attachments || [];
+
+          const handleAttachmentDelete = (index) => {
+            setAttachments((prevAttachments) =>
+              prevAttachments.filter((_, i) => i !== index)
+            );
+            setAttachmentSuccessMessage("Attachment deleted successfully.");
+            setTimeout(() => setAttachmentSuccessMessage(""), 5000);
           };
 
           return (
@@ -667,6 +783,9 @@ Updated At: ${updatedAt || 'N/A'}`;
                     />
                   </div>
                 </div>
+                {attachmentSuccessMessage && (
+                  <Alert message={attachmentSuccessMessage} type="success" />
+                )}
                 <section className="attachments-table-section">
                   <table>
                     <thead>
@@ -678,14 +797,27 @@ Updated At: ${updatedAt || 'N/A'}`;
                       </tr>
                     </thead>
                     <tbody>
-                      {attachmentsData.map((item, index) => (
-                        <tr key={index}>
-                          <td>{item.uploaded}</td>
-                          <td>{item.file}</td>
-                          <td>{item.notes}</td>
-                          <td>{item.delete}</td>
+                      {normalizedAttachments.length > 0 ? (
+                        normalizedAttachments.map((item, index) => (
+                          <tr key={index}>
+                            <td>{item.uploaded}</td>
+                            <td>{item.file}</td>
+                            <td>{item.notes}</td>
+                            <td>
+                              <ActionButtons
+                                showDelete
+                                onDeleteClick={() => handleAttachmentDelete(index)}
+                              />
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="no-data-message">
+                            No Attachments Found.
+                          </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </section>

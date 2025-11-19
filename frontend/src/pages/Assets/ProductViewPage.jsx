@@ -8,6 +8,7 @@ import ManufacturersMockupData from "../../data/mockData/products/manufacturers-
 import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import "../../styles/Products/ProductViewPage.css";
 import "../../styles/Assets/AssetViewPage.css";
+import "../../styles/Assets/Assets.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import { getProductDetails, getProductTabs } from "../../data/mockData/products/productDetailsData";
@@ -299,8 +300,8 @@ function ProductViewPage() {
       </section>
 
       {/* Table Section */}
-      <section className="product-assets-table-section">
-        <table className="product-assets-table">
+      <section className="assets-table-section">
+        <table>
           <thead>
             <tr>
               <th>IMAGE</th>
@@ -325,7 +326,7 @@ function ProductViewPage() {
                       <img
                         src={baseImage}
                         alt={asset.name}
-                        className="product-assets-table-img"
+                        className="table-img"
                         onError={(e) => {
                           e.target.src = DefaultImage;
                         }}
@@ -366,8 +367,8 @@ function ProductViewPage() {
               })
             ) : (
               <tr>
-                <td colSpan="7" className="product-assets-no-data">
-                  No assets found for this product.
+                <td colSpan={7} className="no-data-message">
+                  No Assets Found.
                 </td>
               </tr>
             )}

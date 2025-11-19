@@ -175,7 +175,7 @@ export default function AssetRepairs() {
     // Try to find the related asset based on the repair's asset field
     const assetLabel = (repair.asset || "").toLowerCase();
 
-    const matchedAsset = AssetsMockupData.find((asset) => {
+    let matchedAsset = AssetsMockupData.find((asset) => {
       const name = (asset.name || "").toLowerCase();
       const displayedId = (asset.displayed_id || "").toLowerCase();
       return (
@@ -183,6 +183,11 @@ export default function AssetRepairs() {
         (assetLabel && assetLabel.includes(displayedId))
       );
     });
+
+    // Fallback: for mock data, try matching by id so View always opens an Asset view page
+    if (!matchedAsset) {
+      matchedAsset = AssetsMockupData.find((asset) => asset.id === repair.id);
+    }
 
     if (matchedAsset) {
       navigate(`/assets/view/${matchedAsset.id}`);

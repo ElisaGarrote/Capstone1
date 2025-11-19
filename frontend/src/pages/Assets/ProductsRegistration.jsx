@@ -1,7 +1,7 @@
 import NavBar from '../../components/NavBar';
 import Footer from "../../components/Footer";
 import '../../styles/Registration.css';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -30,6 +30,7 @@ export default function ProductsRegistration() {
   const [importFile, setImportFile] = useState(null);
 
   const { id } = useParams();
+  const location = useLocation();
   const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
@@ -367,9 +368,9 @@ export default function ProductsRegistration() {
         <section className="top">
           <TopSecFormPage
             root="Asset Models"
-            currentPage={id ? "Edit Asset Model" : "New Asset Model"}
+            currentPage={id ? "Update Asset Model" : "New Asset Model"}
             rootNavigatePage="/products"
-            title={id ? 'Edit' + ' ' + (product?.name || 'Asset Model') : 'New Asset Model'}
+            title={id ? (product?.name || location.state?.product?.name || 'Asset Model') : 'New Asset Model'}
             rightComponent={
               !id && (
                 <div className="import-section">

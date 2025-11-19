@@ -13,6 +13,8 @@ import { exportToExcel } from "../../../utils/exportToExcel";
 import "../../../styles/Assets/Assets.css";
 import "../../../styles/more/supplier/SupplierDetails.css";
 import ConfirmationModal from "../../../components/Modals/DeleteModal";
+import AssetFilterModal from "../../../components/Modals/AssetFilterModal";
+import Alert from "../../../components/Alert";
 
 function SupplierDetails() {
   const location = useLocation();
@@ -22,6 +24,12 @@ function SupplierDetails() {
   const [assetsCurrentPage, setAssetsCurrentPage] = useState(1);
   const [assetsPageSize, setAssetsPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
+  const [supplierAssets, setSupplierAssets] = useState(AssetsMockupData);
+  const [assetToDelete, setAssetToDelete] = useState(null);
+  const [isAssetDeleteModalOpen, setAssetDeleteModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [assetSuccessMessage, setAssetSuccessMessage] = useState("");
 
   // Retrieve the "supplier" data value passed from the navigation state.
   const supplierDetails = location.state?.supplier;
@@ -42,17 +50,110 @@ function SupplierDetails() {
   const tabs = getSupplierTabs();
 
   // Assets data and pagination for the Assets tab
-  const supplierAssets = AssetsMockupData;
 
-  const filteredAssets = supplierAssets.filter((asset) => {
-    if (!searchTerm) return true;
-    const term = searchTerm.toLowerCase();
-    return (
-      (asset.name && asset.name.toLowerCase().includes(term)) ||
-      (asset.displayed_id && asset.displayed_id.toLowerCase().includes(term)) ||
-      (asset.category && asset.category.toLowerCase().includes(term))
-    );
-  });
+  const applyAssetFilters = (data, filters) => {
+    let filtered = [...data];
+
+    // Filter by Asset ID
+    if (filters.assetId && filters.assetId.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.displayed_id?.toLowerCase().includes(filters.assetId.toLowerCase())
+      );
+    }
+
+    // Filter by Asset Model
+    if (filters.assetModel && filters.assetModel.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.product?.toLowerCase().includes(filters.assetModel.toLowerCase())
+      );
+    }
+
+    // Filter by Status
+    if (filters.status) {
+      filtered = filtered.filter((asset) =>
+        asset.status?.toLowerCase() === filters.status.value.toLowerCase()
+      );
+    }
+
+    // Filter by Supplier
+    if (filters.supplier) {
+      filtered = filtered.filter((asset) =>
+        asset.supplier?.toLowerCase().includes(filters.supplier.label.toLowerCase())
+      );
+    }
+
+    // Filter by Location
+    if (filters.location) {
+      filtered = filtered.filter((asset) =>
+        asset.location?.toLowerCase().includes(filters.location.label.toLowerCase())
+      );
+    }
+
+    // Filter by Asset Name
+    if (filters.assetName && filters.assetName.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.name?.toLowerCase().includes(filters.assetName.toLowerCase())
+      );
+    }
+
+    // Filter by Serial Number
+    if (filters.serialNumber && filters.serialNumber.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.serial_number?.toLowerCase().includes(filters.serialNumber.toLowerCase())
+      );
+    }
+
+    // Filter by Warranty Expiration
+    if (filters.warrantyExpiration && filters.warrantyExpiration.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.warranty_expiration_date === filters.warrantyExpiration
+      );
+    }
+
+    // Filter by Order Number
+    if (filters.orderNumber && filters.orderNumber.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.order_number?.toLowerCase().includes(filters.orderNumber.toLowerCase())
+      );
+    }
+
+    // Filter by Purchase Date
+    if (filters.purchaseDate && filters.purchaseDate.trim() !== "") {
+      filtered = filtered.filter(
+        (asset) => asset.purchase_date === filters.purchaseDate
+      );
+    }
+
+    // Filter by Purchase Cost
+    if (filters.purchaseCost && filters.purchaseCost.trim() !== "") {
+      const cost = parseFloat(filters.purchaseCost);
+      filtered = filtered.filter((asset) => asset.purchase_cost === cost);
+    }
+
+    return filtered;
+  };
+
+  const filterAndSearchAssets = (data, filters, term) => {
+    let filtered = applyAssetFilters(data, filters || {});
+
+    if (term && term.trim() !== "") {
+      const lowerTerm = term.toLowerCase();
+      filtered = filtered.filter((asset) =>
+        (asset.name && asset.name.toLowerCase().includes(lowerTerm)) ||
+        (asset.displayed_id &&
+          asset.displayed_id.toLowerCase().includes(lowerTerm)) ||
+        (asset.category && asset.category.toLowerCase().includes(lowerTerm))
+      );
+    }
+
+    return filtered;
+  };
+
+  const filteredAssets = filterAndSearchAssets(
+    supplierAssets,
+    appliedFilters,
+    searchTerm
+  );
 
   const assetsStartIndex = (assetsCurrentPage - 1) * assetsPageSize;
   const assetsEndIndex = assetsStartIndex + assetsPageSize;
@@ -62,6 +163,28 @@ function SupplierDetails() {
     navigate(`/assets/view/${asset.id}`, {
       state: { asset },
     });
+  };
+
+  const openAssetDeleteModal = (assetId) => {
+    setAssetToDelete(assetId);
+    setAssetDeleteModalOpen(true);
+  };
+
+  const closeAssetDeleteModal = () => {
+    setAssetDeleteModalOpen(false);
+    setAssetToDelete(null);
+  };
+
+  const confirmAssetDelete = () => {
+    if (assetToDelete) {
+      setSupplierAssets((prevAssets) =>
+        prevAssets.filter((asset) => asset.id !== assetToDelete)
+      );
+      setAssetSuccessMessage("Asset deleted successfully.");
+      setTimeout(() => setAssetSuccessMessage(""), 5000);
+      console.log("Deleting asset:", assetToDelete);
+    }
+    closeAssetDeleteModal();
   };
 
   const handleCheckInOut = (asset, action) => {
@@ -113,6 +236,11 @@ function SupplierDetails() {
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
+    setAssetsCurrentPage(1);
+  };
+
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
     setAssetsCurrentPage(1);
   };
 
@@ -289,7 +417,7 @@ function SupplierDetails() {
           <button
             type="button"
             className="medium-button-filter"
-            onClick={() => console.log("Supplier Assets Filter clicked")}
+            onClick={() => setIsFilterModalOpen(true)}
           >
             Filter
           </button>
@@ -366,9 +494,11 @@ function SupplierDetails() {
                     <td>
                       <ActionButtons
                         showEdit
+                        showDelete
                         showView
                         editPath={`/assets/edit/${asset.id}`}
                         editState={{ asset }}
+                        onDeleteClick={() => openAssetDeleteModal(asset.id)}
                         onViewClick={() => handleViewAsset(asset)}
                       />
                     </td>
@@ -402,14 +532,32 @@ function SupplierDetails() {
 
   return (
     <>
+      {assetSuccessMessage && (
+        <Alert message={assetSuccessMessage} type="success" />
+      )}
       <NavBar />
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}
           actionType="delete"
           onConfirm={confirmDelete}
+          isOpen={isDeleteModalOpen}
         />
       )}
+      {isAssetDeleteModalOpen && (
+        <ConfirmationModal
+          closeModal={closeAssetDeleteModal}
+          actionType="delete"
+          onConfirm={confirmAssetDelete}
+          isOpen={isAssetDeleteModalOpen}
+        />
+      )}
+      <AssetFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
       <DetailedViewPage
         {...getSupplierDetails(supplierDetails)}
         tabs={tabs}
