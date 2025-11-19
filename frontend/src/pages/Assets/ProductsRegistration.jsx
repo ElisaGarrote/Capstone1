@@ -12,6 +12,11 @@ import assetsService from "../../services/assets-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import { fetchAllCategories } from "../../services/contexts-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
+import ProductsMockData from "../../data/mockData/products/products-mockup-data.json";
+import DepreciationMockData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
+import ManufacturerMockData from "../../data/mockData/more/manufacturer-mockup-data.json";
+import SupplierMockData from "../../data/mockData/more/supplier-mockup-data.json";
+
 
 
 export default function ProductsRegistration() {
@@ -69,24 +74,71 @@ export default function ProductsRegistration() {
       try {
         setIsLoading(true);
 
-        // Fetch all necessary data in parallel
-        const [productContextsData, contextsData] = await Promise.all([
-          assetsService.fetchProductContexts(),
-          fetchAllCategories()
-        ]);
+        // Try to fetch live contexts first
+        let productContextsData = { categories: [], depreciations: [] };
+        let contextsData = { suppliers: [], manufacturers: [] };
 
-        // Set categories and depreciations from product contexts
-        setCategories(productContextsData.categories || []);
-        setDepreciations(productContextsData.depreciations || []);
+        try {
+          const [productContexts, contextResponse] = await Promise.all([
+            assetsService.fetchProductContexts(),
+            fetchAllCategories(),
+          ]);
 
-        // Set suppliers and manufacturers from contexts
-        setSuppliers(contextsData.suppliers || []);
-        setManufacturers(contextsData.manufacturers || []);
+          if (productContexts) {
+            productContextsData = productContexts;
+          }
 
-        console.log("Categories:", productContextsData.categories);
-        console.log("Depreciations:", productContextsData.depreciations);
-        console.log("Suppliers:", contextsData.suppliers);
-        console.log("Manufacturers:", contextsData.manufacturers);
+          if (contextResponse) {
+            contextsData = contextResponse;
+          }
+        } catch (fetchError) {
+          console.warn(
+            "Failed to fetch product/contexts data, falling back to mock data:",
+            fetchError
+          );
+        }
+
+        const apiCategories = productContextsData.categories || [];
+        const apiDepreciations = productContextsData.depreciations || [];
+        const apiSuppliers = contextsData.suppliers || [];
+        const apiManufacturers = contextsData.manufacturers || [];
+        const mockCategoryNames = Array.from(
+          new Set(
+            (ProductsMockData || [])
+              .map((item) => item.category)
+              .filter(Boolean)
+          )
+        );
+        const mockCategories = mockCategoryNames.map((name, index) => ({
+          id: index + 1,
+          name,
+        }));
+
+        setCategories(apiCategories.length ? apiCategories : mockCategories);
+        setDepreciations(
+          apiDepreciations.length ? apiDepreciations : DepreciationMockData
+        );
+        setSuppliers(apiSuppliers.length ? apiSuppliers : SupplierMockData);
+        setManufacturers(
+          apiManufacturers.length ? apiManufacturers : ManufacturerMockData
+        );
+
+        console.log(
+          "Categories:",
+          apiCategories.length ? apiCategories : mockCategories
+        );
+        console.log(
+          "Depreciations:",
+          apiDepreciations.length ? apiDepreciations : DepreciationMockData
+        );
+        console.log(
+          "Suppliers:",
+          apiSuppliers.length ? apiSuppliers : SupplierMockData
+        );
+        console.log(
+          "Manufacturers:",
+          apiManufacturers.length ? apiManufacturers : ManufacturerMockData
+        );
 
         // If ID is present, fetch the product details
         if (id) {
@@ -101,21 +153,26 @@ export default function ProductsRegistration() {
           console.log("Product Details:", productData);
 
           // Set form values from retrieved product data
-          setValue('productName', productData.name);
+          setValue("productName", productData.name);
 
-          setValue('category', productData.category_id || '');
-          setValue('depreciation', productData.depreciation_id || '');
-          setValue('manufacturer', productData.manufacturer_id || '');
-          setValue('modelNumber', productData.model_number || '');
-          setValue('endOfLifeDate', productData.end_of_life || '');
-          setValue('defaultPurchaseCost', productData.default_purchase_cost || '');
-          setValue('supplier', productData.default_supplier_id || '');
-          setValue('minimumQuantity', productData.minimum_quantity || '');
-          setValue('operatingSystem', productData.operating_system || '');
-          setValue('notes', productData.notes || '');
+          setValue("category", productData.category_id || "");
+          setValue("depreciation", productData.depreciation_id || "");
+          setValue("manufacturer", productData.manufacturer_id || "");
+          setValue("modelNumber", productData.model_number || "");
+          setValue("endOfLifeDate", productData.end_of_life || "");
+          setValue(
+            "defaultPurchaseCost",
+            productData.default_purchase_cost || ""
+          );
+          setValue("supplier", productData.default_supplier_id || "");
+          setValue("minimumQuantity", productData.minimum_quantity || "");
+          setValue("operatingSystem", productData.operating_system || "");
+          setValue("notes", productData.notes || "");
 
           if (productData.image) {
-            setPreviewImage(`https://assets-service-production.up.railway.app${productData.image}`);
+            setPreviewImage(
+              `https://assets-service-production.up.railway.app${productData.image}`
+            );
           }
         }
       } catch (error) {
@@ -140,12 +197,12 @@ export default function ProductsRegistration() {
         return;
       }
 
-      setSelectedImage(file); // store the actual file
-      setValue('image', file); // optional: sync with react-hook-form
+      setSelectedImage(file);
+      setValue('image', file);
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewImage(reader.result); // for display only
+        setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -160,7 +217,6 @@ export default function ProductsRegistration() {
         return;
       }
       setImportFile(file);
-      // Here you would typically process the Excel file
       console.log("Import file selected:", file.name);
     }
   };
@@ -513,7 +569,7 @@ export default function ProductsRegistration() {
               />
             </fieldset>
 
-            {/* End of Life Date */}
+            {/* End of Life */}
             <fieldset>
               <label htmlFor='end-of-life-date'>End of Life Date</label>
               <input

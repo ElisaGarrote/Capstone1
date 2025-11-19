@@ -19,7 +19,6 @@ function AssetViewPage() {
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    // Find asset from mockup data
     const foundAsset = MockupData.find((a) => a.id === parseInt(id));
     if (foundAsset) {
       setAsset(foundAsset);
@@ -28,7 +27,7 @@ function AssetViewPage() {
   }, [id]);
 
   if (isLoading) {
-    return null; // Don't render anything while loading
+    return null;
   }
 
   if (!asset) {
@@ -59,10 +58,7 @@ function AssetViewPage() {
     });
   };
 
-  // Get checked out to information from data
   const checkedOutTo = getCheckedOutToInfo(asset);
-
-  // Button action handlers
   const handleCloneClick = () => {
     console.log('Clone button clicked, asset:', asset);
     if (asset) {
@@ -83,7 +79,6 @@ function AssetViewPage() {
     setDeleteModalOpen(true);
   };
 
-  // Create action buttons with vertical layout
   const actionButtons = (
     <div className="vertical-action-buttons">
       <button
@@ -143,6 +138,7 @@ function AssetViewPage() {
         onTabChange={setActiveTab}
         checkedOutTo={checkedOutTo}
         actionButtons={actionButtons}
+        showCheckoutLog
       />
     </>
   );

@@ -12,6 +12,9 @@ import assetsService from "../../services/assets-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import { fetchAllCategories } from "../../services/contexts-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
+import ProductMockData from "../../data/mockData/products/products-mockup-data.json";
+import StatusMockData from "../../data/mockData/more/status-mockup-data.json";
+import SupplierMockData from "../../data/mockData/more/supplier-mockup-data.json";
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
@@ -107,62 +110,67 @@ export default function AssetsRegistration() {
     const initialize = async () => {
       setIsLoading(true);
       try {
-        // Fetch all necessary data in parallel
-        const [assetContextsData, contextsData] = await Promise.all([
-          assetsService.fetchAssetContexts(),
-          fetchAllCategories()
-        ]);
+        let assetContextsData = {};
+        let contextsData = {};
 
-        console.log("Asset contexts data:", assetContextsData);
+        // Try to fetch real contexts; fall back to mock data if the backend
+        // is unavailable or returns empty arrays so the dropdowns always
+        // have usable options in demo mode.
+        try {
+          [assetContextsData, contextsData] = await Promise.all([
+            assetsService.fetchAssetContexts(),
+            fetchAllCategories(),
+          ]);
+        } catch (ctxError) {
+          console.error("Error fetching asset/contexts data, using mock data:", ctxError);
+        }
 
-        // Set products and statuses from asset contexts
-        setProducts(assetContextsData.products || []);
-        setStatuses(assetContextsData.statuses || []);
+        const apiProducts = assetContextsData?.products || [];
+        const apiStatuses = assetContextsData?.statuses || [];
+        const apiSuppliers = contextsData?.suppliers || [];
 
-        // Set suppliers from contexts
-        setSuppliers(contextsData.suppliers || []);
-
-        console.log("products:", assetContextsData.products);
-        console.log("statuses:", assetContextsData.statuses);
-        console.log("Suppliers:", contextsData.suppliers);
+        setProducts(apiProducts.length ? apiProducts : ProductMockData);
+        setStatuses(apiStatuses.length ? apiStatuses : StatusMockData);
+        setSuppliers(apiSuppliers.length ? apiSuppliers : SupplierMockData);
 
         // If ID is present, fetch the asset details
         if (id) {
-          const assetData = await assetsService.fetchAssetById(id);
-          if (!assetData) {
+          try {
+            const assetData = await assetsService.fetchAssetById(id);
+            if (!assetData) {
+              setErrorMessage("Failed to fetch asset details");
+              return;
+            }
+
+            setAsset(assetData);
+            console.log("Asset Details:", assetData);
+
+            // Set form values from retrieved asset data
+            setValue('assetId', assetData.displayed_id);
+            setValue('product', assetData.product_id || '');
+            setValue('status', assetData.status_id || '');
+            setValue('supplier', assetData.supplier_id || '');
+            setValue('location', assetData.location || '');
+            setValue('assetName', assetData.name || '');
+            setValue('serialNumber', assetData.serial_number || '');
+            setValue('warrantyExpiration', assetData.warranty_expiration || '');
+            setValue('orderNumber', assetData.order_number || '');
+            setValue('purchaseDate', assetData.purchase_date || '');
+            setValue('purchaseCost', assetData.purchase_cost || '');
+            setValue('disposalStatus', assetData.disposal_status || '');
+            setValue('scheduleAuditDate', assetData.schedule_audit_date || '');
+            setValue('notes', assetData.notes || '');
+
+            if (assetData.image) {
+              setPreviewImage(`https://assets-service-production.up.railway.app${assetData.image}`);
+            }
+          } catch (assetError) {
+            console.error("Error fetching asset details:", assetError);
             setErrorMessage("Failed to fetch asset details");
-            setIsLoading(false);
-            return;
-          }
-
-          setAsset(assetData);
-          console.log("Asset Details:", assetData);
-
-          // Set form values from retrieved asset data
-          setValue('assetId', assetData.displayed_id);
-
-
-
-          setValue('product', assetData.product_id || '');
-          setValue('status', assetData.status_id || '');
-          setValue('supplier', assetData.supplier_id || '');
-          setValue('location', assetData.location || '');
-          setValue('assetName', assetData.name || '');
-          setValue('serialNumber', assetData.serial_number || '');
-          setValue('warrantyExpiration', assetData.warranty_expiration || '');
-          setValue('orderNumber', assetData.order_number || '');
-          setValue('purchaseDate', assetData.purchase_date || '');
-          setValue('purchaseCost', assetData.purchase_cost || '');
-          setValue('disposalStatus', assetData.disposal_status || '');
-          setValue('scheduleAuditDate', assetData.schedule_audit_date || '');
-          setValue('notes', assetData.notes || '');
-
-          if (assetData.image) {
-            setPreviewImage(`https://assets-service-production.up.railway.app${assetData.image}`);
           }
         }
       } catch (error) {
-        console.error("Error initializing:", error);
+        console.error("Error initializing asset registration form:", error);
         setErrorMessage("Failed to initialize form data");
       } finally {
         setIsLoading(false);
