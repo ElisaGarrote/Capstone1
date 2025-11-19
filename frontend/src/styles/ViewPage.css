@@ -63,6 +63,16 @@
   flex: 1;
 }
 
+.view-content-wrapper:not(:has(.view-sidebar)) {
+  justify-content: flex-start;
+}
+
+.view-content-wrapper:not(:has(.view-sidebar)) .view-main-content {
+  max-width: 900px;
+  width: 100%;
+}
+
+
 /* Main Content Area */
 .view-main-content {
   flex: 1;

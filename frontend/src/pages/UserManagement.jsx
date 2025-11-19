@@ -5,11 +5,14 @@ import MediumButtons from "../components/buttons/MediumButtons";
 import Status from "../components/Status";
 import RegisterUserModal from "../components/RegisterUserModal";
 import DeleteModal from "../components/Modals/DeleteModal";
-import DefaultProfile from "../assets/img/profile.jpg";
+import UserManagementFilterModal from "../components/Modals/UserManagementFilterModal";
+import DefaultProfile from "../assets/img/default-profile.svg";
 import Alert from "../components/Alert";
 import Pagination from "../components/Pagination";
 import Footer from "../components/Footer";
 import { exportToExcel } from "../utils/exportToExcel";
+import ActionButtons from "../components/ActionButtons";
+import mockUsers from "../data/mockData/user-management/user-management-data.json";
 
 import "../styles/UserManagement/UserManagement.css";
 
@@ -24,18 +27,26 @@ function TableHeader({ allSelected, onHeaderChange }) {
           onChange={onHeaderChange}
         />
       </th>
-      <th>PHOTO</th>
+      <th>PROFILE PICTURE</th>
       <th>NAME</th>
       <th>EMAIL</th>
       <th>ROLE</th>
+      <th>PHONE NUMBER</th>
+      <th>COMPANY</th>
+      <th>PHONE</th>
       <th>STATUS</th>
-      <th>ACTION</th>
+      <th>LAST LOGIN</th>
+      <th>ACTIONS</th>
     </tr>
   );
 }
 
 // TableItem component to render each user row
-function TableItem({ user, isSelected, onRowChange, onDeactivateClick, onActivateClick }) {
+function TableItem({ user, isSelected, onRowChange, onViewUser }) {
+  const formattedLastLogin = user.lastLogin
+    ? new Date(user.lastLogin).toLocaleString()
+    : "—";
+
   return (
     <tr>
       <td>
@@ -47,7 +58,7 @@ function TableItem({ user, isSelected, onRowChange, onDeactivateClick, onActivat
       </td>
       <td>
         <img
-          src={user.photo || DefaultProfile}
+          src={DefaultProfile}
           alt={user.name}
           className="table-img"
           onError={(e) => {
@@ -58,28 +69,21 @@ function TableItem({ user, isSelected, onRowChange, onDeactivateClick, onActivat
       <td>{user.name}</td>
       <td>{user.email}</td>
       <td>{user.role}</td>
+      <td>{user.phoneNumber}</td>
+      <td>{user.company}</td>
+      <td>{user.phone}</td>
       <td>
-        <Status
-          type={user.status.type}
-          name={user.status.name}
-        />
+        <Status type={user.status.type} name={user.status.name} />
       </td>
+      <td>{formattedLastLogin}</td>
       <td>
-        {user.status.type === "archived" || user.status.name === "Inactive" ? (
-          <button
-            className="activate-agent-btn"
-            onClick={() => onActivateClick(user)}
-          >
-            Activate
-          </button>
-        ) : (
-          <button
-            className="deactivate-agent-btn"
-            onClick={() => onDeactivateClick(user)}
-          >
-            Deactivate
-          </button>
-        )}
+        <ActionButtons
+          showView
+          showEdit
+          onViewClick={() => onViewUser(user)}
+          editPath={`/user-management/edit/${user.id}`}
+          editState={{ user }}
+        />
       </td>
     </tr>
   );
@@ -113,85 +117,16 @@ export default function UserManagement() {
   // Search and alert state
   const [searchQuery, setSearchQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+
   const [successMessage, setSuccessMessage] = useState("");
 
 
 
-  // Mock data for users - replace with actual data later
-  const mockUsers = [
-    {
-      id: 1,
-      name: "John Ronald Smith",
-      email: "johnsmith@example.net",
-      role: "Employee",
-      status: {
-        type: "deployable",
-        name: "Active"
-      },
-      photo: DefaultProfile,
-      created_at: "2024-01-15T10:30:00Z"
-    },
-    {
-      id: 2,
-      name: "Mark Mayer",
-      email: "mark7@example.com",
-      role: "Admin",
-      status: {
-        type: "deployable",
-        name: "Active"
-      },
-      photo: DefaultProfile,
-      created_at: "2024-02-20T14:15:00Z"
-    },
-    {
-      id: 3,
-      name: "Jerry Jasmine Tran",
-      email: "catherinetran@example.net",
-      role: "Employee",
-      status: {
-        type: "deployable",
-        name: "Active"
-      },
-      photo: DefaultProfile,
-      created_at: "2024-03-10T09:45:00Z"
-    },
-    {
-      id: 4,
-      name: "Stephanie Lindsey Miranda",
-      email: "heather@example.org",
-      role: "Manager",
-      status: {
-        type: "deployable",
-        name: "Active"
-      },
-      photo: DefaultProfile,
-      created_at: "2024-01-25T16:20:00Z"
-    },
-    {
-      id: 5,
-      name: "Douglas Harmon",
-      email: "johnnyray@example.com",
-      role: "Employee",
-      status: {
-        type: "deployable",
-        name: "Active"
-      },
-      photo: DefaultProfile,
-      created_at: "2024-04-05T11:30:00Z"
-    },
-    {
-      id: 6,
-      name: "Brittany Phillips",
-      email: "brownmichael@example.net",
-      role: "Employee",
-      status: {
-        type: "deployable",
-        name: "Active"
-      },
-      photo: DefaultProfile,
-      created_at: "2024-02-28T13:10:00Z"
-    }
-  ];
+  // Mock data for users - loaded from JSON file (replace with API later)
 
   // Paginate the data
   const startIndex = (currentPage - 1) * pageSize;
@@ -222,6 +157,12 @@ export default function UserManagement() {
     } else {
       setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
     }
+  };
+
+  const handleViewUser = (user) => {
+    navigate(`/user-management/view/${user.id}`, {
+      state: { user },
+    });
   };
 
   const openDeleteModal = (id = null) => {
@@ -260,16 +201,53 @@ export default function UserManagement() {
     setFilteredData(mockUsers);
   }, [location]);
 
-  // Filter users based on search query
+  // Filter users based on search query and applied filters
   useEffect(() => {
-    const filtered = users.filter(user => {
-      return user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             user.role.toLowerCase().includes(searchQuery.toLowerCase());
+    const query = searchQuery.toLowerCase();
+
+    const filtered = users.filter((user) => {
+      const name = (user.name || "").toLowerCase();
+      const email = (user.email || "").toLowerCase();
+      const role = (user.role || "").toLowerCase();
+      const phoneNumber = (user.phoneNumber || "").toLowerCase();
+      const company = (user.company || "").toLowerCase();
+      const phone = (user.phone || "").toLowerCase();
+
+      const matchesSearch =
+        !query ||
+        name.includes(query) ||
+        email.includes(query) ||
+        role.includes(query) ||
+        phoneNumber.includes(query) ||
+        company.includes(query) ||
+        phone.includes(query);
+
+      const filterName = (appliedFilters.name || "").toLowerCase();
+      const filterCompany = (appliedFilters.company || "").toLowerCase();
+      const filterRole = appliedFilters.role || "";
+      const filterStatus = appliedFilters.status || "";
+
+      const matchesNameFilter = filterName ? name.includes(filterName) : true;
+      const matchesCompanyFilter = filterCompany
+        ? company.includes(filterCompany)
+        : true;
+      const matchesRoleFilter = filterRole ? user.role === filterRole : true;
+      const matchesStatusFilter = filterStatus
+        ? user.status?.name === filterStatus
+        : true;
+
+      return (
+        matchesSearch &&
+        matchesNameFilter &&
+        matchesCompanyFilter &&
+        matchesRoleFilter &&
+        matchesStatusFilter
+      );
     });
+
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page when search changes
-  }, [searchQuery, users]);
+    setCurrentPage(1); // Reset to first page when search or filters change
+  }, [searchQuery, users, appliedFilters]);
 
   const handleDeactivate = (user) => {
     setSelectedUser(user);
@@ -324,6 +302,10 @@ export default function UserManagement() {
     }
   };
 
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+  };
+
   const handleExport = () => {
     const dataToExport = filteredData.length > 0 ? filteredData : users;
     exportToExcel(dataToExport, "Users_Records.xlsx");
@@ -374,9 +356,21 @@ export default function UserManagement() {
           onConfirm={confirmDelete}
           onCancel={closeDeleteModal}
           title="Delete User"
-          message={deleteTarget ? "Are you sure you want to delete this user?" : "Are you sure you want to delete the selected users?"}
+          message={
+            deleteTarget
+              ? "Are you sure you want to delete this user?"
+              : "Are you sure you want to delete the selected users?"
+          }
         />
       )}
+
+      {/* User Management Filter Modal */}
+      <UserManagementFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
       <section className="page-layout-with-table">
         <NavBar />
@@ -404,20 +398,13 @@ export default function UserManagement() {
                 <button
                   type="button"
                   className="medium-button-filter"
-                  onClick={() => {
-                    console.log("🔘 FILTER BUTTON CLICKED!");
-                  }}
+                  onClick={() => setIsFilterModalOpen(true)}
                 >
                   Filter
                 </button>
                 <MediumButtons
                   type="export"
                   onClick={handleExport}
-                />
-                <MediumButtons
-                  type="new"
-                  onClick={() => setIsModalOpen(true)}
-                  label="Invite Agent"
                 />
               </section>
             </section>
@@ -439,13 +426,12 @@ export default function UserManagement() {
                         user={user}
                         isSelected={selectedIds.includes(user.id)}
                         onRowChange={handleRowChange}
-                        onDeactivateClick={handleDeactivate}
-                        onActivateClick={handleActivate}
+                        onViewUser={handleViewUser}
                       />
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="no-data-message">
+                      <td colSpan={11} className="no-data-message">
                         No Agents Found.
                       </td>
                     </tr>

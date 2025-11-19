@@ -58,6 +58,8 @@ import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
 import ActivityReport from "./pages/reports/ActivityReport";
 import ManageProfile from "./pages/ManageProfile";
 import UserManagement from "./pages/UserManagement";
+import UserManagementViewPage from "./pages/UserManagementViewPage";
+import UserManagementEditPage from "./pages/UserManagementEditPage";
 import ViewCategories from "./pages/More/ViewCategories";
 import CategoryRegistration from "./pages/More/CategoryRegistration";
 import CategoryEdit from "./pages/More/CategoryEdit";
@@ -158,6 +160,14 @@ function App() {
             element={<ComponentDetails />}
           />
           <Route path="/user-management" element={<UserManagement />} />
+          <Route
+            path="/user-management/view/:id"
+            element={<UserManagementViewPage />}
+          />
+          <Route
+            path="/user-management/edit/:id"
+            element={<UserManagementEditPage />}
+          />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
           <Route
             path="/More/CategoryRegistration"
