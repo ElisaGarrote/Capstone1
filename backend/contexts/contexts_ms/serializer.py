@@ -1,8 +1,12 @@
 from rest_framework import serializers
 from .models import *
-from .utils import normalize_name_smart
+from .utils import normalize_name_smart, validate_image_file
 import logging
 from .services.assets import *
+import re
+
+
+# shared validator for uploaded images lives in `utils.validate_image_file`
 
 class CategorySerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source='get_type_display', read_only=True)
@@ -45,6 +49,35 @@ class CategorySerializer(serializers.ModelSerializer):
 
         return attrs
 
+    def validate_logo(self, value):
+        """Ensure uploaded logo is JPEG/PNG and <= 5MB."""
+        if value in (None, ''):
+            return value
+
+        max_size = 5 * 1024 * 1024  # 5 MB
+        # size check
+        if hasattr(value, 'size') and value.size > max_size:
+            raise serializers.ValidationError('Logo file size must be 5 MB or smaller.')
+
+        # content type check (uploaded InMemoryUploadedFile/TemporaryUploadedFile may have content_type)
+        content_type = getattr(value, 'content_type', None)
+        if content_type:
+            if content_type not in ('image/jpeg', 'image/png'):
+                raise serializers.ValidationError('Logo must be a JPEG or PNG image.')
+            return value
+
+        # fallback: check extension if content_type not available
+        try:
+            import os
+            ext = os.path.splitext(value.name)[1].lower()
+            if ext not in ('.jpg', '.jpeg', '.png'):
+                raise serializers.ValidationError('Logo must be a JPEG or PNG image.')
+        except Exception:
+            # If we cannot determine, be permissive (let downstream handle), but normally we shouldn't reach here.
+            return value
+
+        return value
+
     def get_asset_count(self, obj):
         """Return number of assets referencing this category, or None if unknown."""
         # Prefer batched counts supplied by the view via serializer context
@@ -82,6 +115,9 @@ class SupplierSerializer(serializers.ModelSerializer):
         model = Supplier
         fields = '__all__'
 
+    def validate_logo(self, value):
+        return validate_image_file(value)
+
     def validate(self, attrs):
         # For create: instance not present; for update: instance available at self.instance
         name = attrs.get('name') if 'name' in attrs else (self.instance.name if self.instance else None)
@@ -89,6 +125,53 @@ class SupplierSerializer(serializers.ModelSerializer):
             return attrs
         normalized_name = normalize_name_smart(name)
         attrs['name'] = normalized_name
+
+        # Validate country and state: no numeric characters and reasonable max length
+        country = attrs.get('country') if 'country' in attrs else (self.instance.country if self.instance else None)
+        state_province = attrs.get('state_province') if 'state_province' in attrs else (self.instance.state_province if self.instance else None)
+        # Validate city: no numeric characters and reasonable max length
+        city = attrs.get('city') if 'city' in attrs else (self.instance.city if self.instance else None)
+        if country:
+            if len(country) > 50:
+                raise serializers.ValidationError({'country': 'Country must be 50 characters or fewer.'})
+            if any(ch.isdigit() for ch in country):
+                raise serializers.ValidationError({'country': 'Country must not contain numbers.'})
+
+        if state_province:
+            if len(state_province) > 50:
+                raise serializers.ValidationError({'state_province': 'State/Province must be 50 characters or fewer.'})
+            if any(ch.isdigit() for ch in state_province):
+                raise serializers.ValidationError({'state_province': 'State/Province must not contain numbers.'})
+
+        if city:
+            if len(city) > 50:
+                raise serializers.ValidationError({'city': 'City must be 50 characters or fewer.'})
+            if any(ch.isdigit() for ch in city):
+                raise serializers.ValidationError({'city': 'City must not contain numbers.'})
+
+        # Validate fax: allow digits and common formatting characters, but ensure digits exist and length within bounds
+        fax = attrs.get('fax') if 'fax' in attrs else (self.instance.fax if self.instance else None)
+        if fax:
+            if len(fax) > 20:
+                raise serializers.ValidationError({'fax': 'Fax must be 20 characters or fewer.'})
+            # only allow digits, spaces, parentheses, plus, hyphens
+            if not re.match(r'^[\d\s\-\+\(\)]+$', fax):
+                raise serializers.ValidationError({'fax': 'Fax contains invalid characters.'})
+            # extract digits and ensure there are at least 7 and at most 20 digits
+            digits = re.sub(r'\D', '', fax)
+            if not digits.isdigit() or len(digits) < 7 or len(digits) > 20:
+                raise serializers.ValidationError({'fax': 'Fax must contain 7-20 digits.'})
+
+        # Validate phone number: only digits and formatting chars; require reasonable digit count
+        phone = attrs.get('phone_number') if 'phone_number' in attrs else (self.instance.phone_number if self.instance else None)
+        if phone:
+            if len(phone) > 13:
+                raise serializers.ValidationError({'phone_number': 'Phone number must be 13 characters or fewer.'})
+            if not re.match(r'^[\d\s\-\+\(\)]+$', phone):
+                raise serializers.ValidationError({'phone_number': 'Phone number contains invalid characters.'})
+            digits_phone = re.sub(r'\D', '', phone)
+            if not digits_phone.isdigit() or len(digits_phone) < 7 or len(digits_phone) > 13:
+                raise serializers.ValidationError({'phone_number': 'Phone number must contain 7-13 digits.'})
 
         # Allow import-time bypass when the import flow provides a set of names
         # already created/updated in this run (to avoid false-positive conflicts
@@ -126,6 +209,15 @@ class ManufacturerNameSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
+class ManufacturerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Manufacturer
+        fields = '__all__'
+
+    def validate_logo(self, value):
+        return validate_image_file(value)
+
+
 class DepreciationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Depreciation
@@ -156,9 +248,9 @@ class DepreciationSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ManufacturerSerializer(serializers.ModelSerializer):
+class DepreciationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Manufacturer
+        model = Depreciation
         fields = '__all__'
 
     def validate(self, attrs):
@@ -174,14 +266,14 @@ class ManufacturerSerializer(serializers.ModelSerializer):
         except Exception:
             seen = None
 
-        qs = Manufacturer.objects.filter(name__iexact=normalized_name, is_deleted=False)
+        qs = Depreciation.objects.filter(name__iexact=normalized_name, is_deleted=False)
         if self.instance:
             qs = qs.exclude(pk=self.instance.pk)
 
         if qs.exists():
             if seen and normalized_name in seen:
                 return attrs
-            raise serializers.ValidationError({'name': 'A Manufacturer with this name already exists.'})
+            raise serializers.ValidationError({'name': 'A Depreciation with this name already exists.'})
 
         return attrs
 
@@ -204,6 +296,11 @@ class StatusSerializer(serializers.ModelSerializer):
         # Allow re-using a name if the existing record is soft-deleted.
         name = attrs.get('name') if 'name' in attrs else (self.instance.name if self.instance else None)
         type_val = attrs.get('type') if 'type' in attrs else (self.instance.type if self.instance else None)
+        # Require 'type' when creating a new Status (same as 'name').
+        # For updates, allow omission so existing instance keeps its type.
+        if self.instance is None and not type_val:
+            raise serializers.ValidationError({'type': 'This field is required.'})
+
         if not name or not type_val:
             return attrs
 

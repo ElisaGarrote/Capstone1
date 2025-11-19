@@ -34,10 +34,13 @@ class Supplier(models.Model):
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
+    state_province = models.CharField(max_length=50, blank=True, null=True)
+    country = models.CharField(max_length=50, blank=True, null=True)
     zip = models.CharField(max_length=4, blank=True, null=True)
 
     contact_name = models.CharField(max_length=100, blank=True, null=True)
     phone_number = models.CharField(max_length=13, blank=True, null=True)
+    fax = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     url = models.URLField(blank=True, null=True)
 
