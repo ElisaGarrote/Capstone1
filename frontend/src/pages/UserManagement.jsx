@@ -379,7 +379,7 @@ export default function UserManagement() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">All Agents ({filteredData.length})</h2>
+              <h2 className="h2">System Agents ({filteredData.length})</h2>
               <section className="table-actions">
                 {/* Bulk delete button only when checkboxes selected */}
                 {selectedIds.length > 0 && (
