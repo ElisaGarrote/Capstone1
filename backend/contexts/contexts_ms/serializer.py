@@ -16,6 +16,11 @@ class CategorySerializer(serializers.ModelSerializer):
         # Normalize name and enforce unique (name,type) among non-deleted categories
         name = attrs.get('name') if 'name' in attrs else (self.instance.name if self.instance else None)
         type_val = attrs.get('type') if 'type' in attrs else (self.instance.type if self.instance else None)
+        # Require 'type' when creating a new Category (same as 'name').
+        # For updates, allow omission so existing instance keeps its type.
+        if self.instance is None and not type_val:
+            raise serializers.ValidationError({'type': 'This field is required.'})
+
         if not name or not type_val:
             return attrs
 
