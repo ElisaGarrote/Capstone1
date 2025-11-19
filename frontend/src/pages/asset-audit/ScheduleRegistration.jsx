@@ -98,7 +98,7 @@ const ScheduleRegistration = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Asset */}
             <fieldset>
-              <label htmlFor="asset">Check-out To *</label>
+              <label htmlFor="asset">Check-out To<span className="required-asterisk">*</span></label>
               <select
                 className={errors.asset ? "input-error" : ""}
                 {...register("asset", {
@@ -119,7 +119,7 @@ const ScheduleRegistration = () => {
 
             {/* Audit Due Date */}
             <fieldset>
-              <label htmlFor="auditDueDate">Audit Due Date *</label>
+              <label htmlFor="auditDueDate">Audit Due Date<span className="required-asterisk">*</span></label>
               <input
                 type="date"
                 className={errors.auditDueDate ? "input-error" : ""}
@@ -149,8 +149,8 @@ const ScheduleRegistration = () => {
             </button>
           </form>
         </section>
-        <Footer />
       </main>
+      <Footer />
     </>
   );
 };

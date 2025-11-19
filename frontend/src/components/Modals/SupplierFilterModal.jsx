@@ -5,10 +5,10 @@ import "../../styles/ContextFilterModal.css";
 export default function SupplierFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
 
   const [filters, setFilters] = useState({
-    name: "",
-    country: "",
     city: "",
-    email: "",
+    state: "",
+    country: "",
+    contact: "",
   });
 
   // Initialize filters from props
@@ -29,10 +29,10 @@ export default function SupplierFilterModal({ isOpen, onClose, onApplyFilter, in
   // Reset all filters
   const handleReset = () => {
     setFilters({
-      name: "",
-      country: "",
       city: "",
-      email: "",
+      state: "",
+      country: "",
+      contact: "",
     });
   };
 
@@ -67,15 +67,27 @@ export default function SupplierFilterModal({ isOpen, onClose, onApplyFilter, in
         {/* Modal Body */}
         <div className="supplier-filter-modal-body">
           <div className="supplier-filter-grid">
-            {/* Supplier Name */}
+            {/* City */}
             <fieldset>
-              <label htmlFor="name">Supplier Name</label>
+              <label htmlFor="city">City</label>
               <input
                 type="text"
-                id="name"
-                placeholder="Enter Supplier Name"
-                value={filters.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
+                id="city"
+                placeholder="Enter City"
+                value={filters.city}
+                onChange={(e) => handleInputChange("city", e.target.value)}
+              />
+            </fieldset>
+
+            {/* State */}
+            <fieldset>
+              <label htmlFor="state">State</label>
+              <input
+                type="text"
+                id="state"
+                placeholder="Enter State"
+                value={filters.state}
+                onChange={(e) => handleInputChange("state", e.target.value)}
               />
             </fieldset>
 
@@ -91,27 +103,15 @@ export default function SupplierFilterModal({ isOpen, onClose, onApplyFilter, in
               />
             </fieldset>
 
-            {/* City */}
+            {/* Contact Person */}
             <fieldset>
-              <label htmlFor="city">City</label>
+              <label htmlFor="contact">Contact Person</label>
               <input
                 type="text"
-                id="city"
-                placeholder="Enter City"
-                value={filters.city}
-                onChange={(e) => handleInputChange("city", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Email */}
-            <fieldset>
-              <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                placeholder="Enter Email"
-                value={filters.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
+                id="contact"
+                placeholder="Enter Contact Person"
+                value={filters.contact}
+                onChange={(e) => handleInputChange("contact", e.target.value)}
               />
             </fieldset>
           </div>

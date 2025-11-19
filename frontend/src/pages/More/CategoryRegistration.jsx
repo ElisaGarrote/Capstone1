@@ -34,7 +34,21 @@ const CategoryRegistration = () => {
     },
   });
 
+<<<<<<< HEAD
   console.log("editState:", editState);
+=======
+  const categoryTypes = [
+    "Asset",
+    "Component",
+  ];
+  const customFieldOptions = [
+    "Serial Number",
+    "MAC Address",
+    "Asset Tag",
+    "Purchase Date",
+    "Warranty",
+  ];
+>>>>>>> Sillano
 
   const handleFileSelection = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -111,7 +125,10 @@ const CategoryRegistration = () => {
           <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label htmlFor="categoryName">Category Name *</label>
+                <label htmlFor="categoryName">
+                  Category Name
+                  <span className="required-asterisk">*</span>
+                </label>
                 <input
                   type="text"
                   placeholder="Category Name"
@@ -129,7 +146,10 @@ const CategoryRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="categoryType">Category Type *</label>
+                <label htmlFor="categoryType">
+                  Category Type
+                  <span className="required-asterisk">*</span>
+                </label>
                 <select
                   className={errors.categoryType ? "input-error" : ""}
                   {...register("categoryType", {
@@ -143,6 +163,7 @@ const CategoryRegistration = () => {
               </fieldset>
 
               <fieldset>
+<<<<<<< HEAD
                 <label>Icon</label>
 
                 {existingImage && !attachmentFile && !removeExistingLogo ? (
@@ -179,6 +200,42 @@ const CategoryRegistration = () => {
                 )}
 
                 <small className="file-size-info">Maximum file size must be 5MB</small>
+=======
+                <label>Image Upload</label>
+                <div className="attachments-wrapper">
+                  {/* Left column: Upload button & info */}
+                  <div className="upload-left">
+                    <label htmlFor="icon" className="upload-image-btn">
+                      Choose File
+                      <input
+                        type="file"
+                        id="icon"
+                        accept="image/*"
+                        onChange={handleFileSelection}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                    <small className="file-size-info">
+                      Maximum file size must be 5MB
+                    </small>
+                  </div>
+
+                  {/* Right column: Uploaded file */}
+                  <div className="upload-right">
+                    {attachmentFile && (
+                      <div className="file-uploaded">
+                        <span title={attachmentFile.name}>{attachmentFile.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setAttachmentFile(null)}
+                        >
+                          <img src={CloseIcon} alt="Remove" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+>>>>>>> Sillano
               </fieldset>
 
               <button

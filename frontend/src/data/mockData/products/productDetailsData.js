@@ -49,7 +49,7 @@ export const getProductDetails = (product, manufacturer) => {
 export const getProductTabs = () => {
   return [
     { label: "About" },
-    { label: "Products" }
+    { label: "Assets" }
   ];
 };
 

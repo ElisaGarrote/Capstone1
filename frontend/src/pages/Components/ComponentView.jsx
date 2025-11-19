@@ -94,9 +94,9 @@ function ComponentView() {
 
   const aboutContent = (
     <div className="about-section">
-      <div className="asset-details-section">
+      <div className="component-details-section">
         <h3 className="section-header">Details</h3>
-        <div className="asset-details-grid">
+        <div className="component-details-grid">
           <div className="detail-row">
             <label>Component Name</label>
             <span>{component.name}</span>

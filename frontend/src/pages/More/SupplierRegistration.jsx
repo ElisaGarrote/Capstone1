@@ -9,6 +9,7 @@ import Footer from "../../components/Footer";
 import PlusIcon from "../../assets/icons/plus.svg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import CloseIcon from "../../assets/icons/close.svg";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -246,7 +247,10 @@ const SupplierRegistration = () => {
 
           <form onSubmit={handleSubmit(onSubmit)} className="registration-form">
             <fieldset>
-              <label htmlFor="name">Supplier Name *</label>
+              <label htmlFor="name">
+                Supplier Name
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Supplier Name"
@@ -399,33 +403,44 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="logo">Logo</label>
-              {previewImage ? (
-                <div className="image-selected">
-                  <img src={previewImage} alt="Logo preview" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPreviewImage(null);
-                      setSelectedImage(null);
-                      setRemoveImage(true);
-                    }}
-                  >
-                    ×
-                  </button>
+              <label>Image Upload</label>
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="logo" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="logo"
+                      accept="image/*"
+                      onChange={handleImageSelection}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 5MB
+                  </small>
                 </div>
-              ) : (
-                <label className="upload-image-btn">
-                  Choose File
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageSelection}
-                    hidden
-                  />
-                </label>
-              )}
-              <small className="file-size-info">Max file size: 5MB</small>
+
+                {/* Right column: Uploaded file */}
+                <div className="upload-right">
+                  {selectedImage && (
+                    <div className="file-uploaded">
+                      <span title={selectedImage.name}>{selectedImage.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewImage(null);
+                          setSelectedImage(null);
+                          setRemoveImage(true);
+                        }}
+                      >
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </fieldset>
 
             <button

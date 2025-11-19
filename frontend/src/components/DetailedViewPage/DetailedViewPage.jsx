@@ -11,11 +11,12 @@ import ConfirmationModal from "../Modals/DeleteModal";
 import UploadModal from "../Modals/UploadModal";
 import View from "../Modals/View";
 import Footer from "../Footer";
+import Alert from "../Alert";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mockData from "../../data/mockData/detailedviewpage/asset-view-page.json";
 
-const { historyData, componentsData, repairsData, auditsDuplicateData, attachmentsData } = mockData;
+const { historyData, checkoutLogData, componentsData, repairsData, auditsDuplicateData, attachmentsData } = mockData;
 
 export default function DetailedViewPage({
   breadcrumbRoot,
@@ -68,18 +69,27 @@ export default function DetailedViewPage({
   actionButtons,
   checkedOutTo,
   onTabChange,
-  children
+  children,
+  customTabContent = null,
+  showCheckoutLog = false
 }) {
   const navigate = useNavigate();
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
   const [historyPageSize, setHistoryPageSize] = useState(5);
+  const [historySearchTerm, setHistorySearchTerm] = useState("");
   const [activeAuditTab, setActiveAuditTab] = useState('pending');
   const [isAuditDeleteModalOpen, setAuditDeleteModalOpen] = useState(false);
   const [auditDeleteId, setAuditDeleteId] = useState(null);
   const [isAuditViewModalOpen, setAuditViewModalOpen] = useState(false);
   const [selectedAuditItem, setSelectedAuditItem] = useState(null);
   const [isUploadModalOpen, setUploadModalOpen] = useState(false);
+  const [attachments, setAttachments] = useState(attachmentsData || []);
+  const [attachmentSuccessMessage, setAttachmentSuccessMessage] = useState("");
+  const [repairs, setRepairs] = useState(repairsData || []);
+  const [isRepairDeleteModalOpen, setRepairDeleteModalOpen] = useState(false);
+  const [repairDeleteIndex, setRepairDeleteIndex] = useState(null);
+  const [repairSuccessMessage, setRepairSuccessMessage] = useState("");
 
   // Generate QR code when component mounts
   useEffect(() => {
@@ -430,50 +440,184 @@ Updated At: ${updatedAt || 'N/A'}`;
                   </div>
                 </div>
 
-                {/* Additional Fields Section */}
-                <div className="additional-fields-section">
-                  <h3 className="section-header">Additional Fields</h3>
-                  <div className="asset-details-grid">
-                    <div className="detail-row">
-                      <label>Notes</label>
-                      <span>{notes || 'N/A'}</span>
-                    </div>
-
-                    <div className="detail-row">
-                      <label>Created At</label>
-                      <span>{createdAt || 'N/A'}</span>
-                    </div>
-
-                    <div className="detail-row">
-                      <label>Updated At</label>
-                      <span>{updatedAt || 'N/A'}</span>
-                    </div>
-                  </div>
-                </div>
             </div>
           )}
           {/* Custom Children Content */}
           {children}
 
+          {/* Additional Fields Section (always shown on About tab) */}
+          {activeTab === 0 && (
+            <div className="additional-fields-section">
+              <h3 className="section-header">Additional Fields</h3>
+              <div className="asset-details-grid">
+                <div className="detail-row">
+                  <label>Notes</label>
+                  <span>{notes || 'N/A'}</span>
+                </div>
+
+                <div className="detail-row">
+                  <label>Created At</label>
+                  <span>{createdAt || 'N/A'}</span>
+                </div>
+
+                <div className="detail-row">
+                  <label>Updated At</label>
+                  <span>{updatedAt || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Other tab content will go here */}
-          {activeTab !== 0 && activeTab !== 1 && activeTab !== 2 && activeTab !== 3 && activeTab !== 4 && activeTab !== 5 && (
+          {activeTab !== 0 && activeTab !== 1 && activeTab !== 2 && activeTab !== 3 && activeTab !== 4 && activeTab !== 5 && activeTab !== 6 && (
             <div className="tab-content">
               <p>No data available.</p>
             </div>
           )}
         </section>
 
+        {/* Checkout Log Tab - Outside of detailed-main-content */}
+        {activeTab === 1 && showCheckoutLog && (() => {
+          const normalizedCheckoutLog = checkoutLogData || [];
+
+          if (!normalizedCheckoutLog.length) {
+            return (
+              <section className="additional-fields-section checkout-log-section">
+                <h3 className="section-header">Checkout Log</h3>
+                <div className="checkout-log-list">
+                  <div className="no-data-message">No Checkout Log Found.</div>
+                </div>
+              </section>
+            );
+          }
+
+          return (
+            <section className="additional-fields-section checkout-log-section">
+              <h3 className="section-header">Checkout Log</h3>
+              <div className="checkout-log-list">
+                {normalizedCheckoutLog.map((entry, index) => (
+                  <div className="checkout-log-item" key={index}>
+                    <div className="checkout-log-marker-column">
+                      <div className="checkout-log-marker" />
+                      {index !== normalizedCheckoutLog.length - 1 && (
+                        <div className="checkout-log-line" />
+                      )}
+                    </div>
+                    <div className="checkout-log-content">
+                      <div className="checkout-log-title">
+                        <span className="checkout-log-action">{entry.actionLabel}</span>{" "}
+                        <span className="checkout-log-target">{entry.target}</span>
+                      </div>
+                      <div className="checkout-log-details">
+                        {entry.checkoutDate && (
+                          <div className="checkout-log-detail-row">
+                            <span className="label">Checkout Date:</span>
+                            <span>{entry.checkoutDate}</span>
+                          </div>
+                        )}
+                        {entry.checkinDate && (
+                          <div className="checkout-log-detail-row">
+                            <span className="label">Checkin Date:</span>
+                            <span>{entry.checkinDate}</span>
+                          </div>
+                        )}
+                        {entry.expectedReturnDate && (
+                          <div className="checkout-log-detail-row">
+                            <span className="label">Expected Return Date:</span>
+                            <span>{entry.expectedReturnDate}</span>
+                          </div>
+                        )}
+                        {entry.status && (
+                          <div className="checkout-log-detail-row">
+                            <span className="label">Status:</span>
+                            <span>{entry.status}</span>
+                          </div>
+                        )}
+                        {entry.condition && (
+                          <div className="checkout-log-detail-row">
+                            <span className="label">Condition:</span>
+                            <span>{entry.condition}</span>
+                          </div>
+                        )}
+                        <div className="checkout-log-detail-row">
+                          <span className="label">Photos:</span>
+                          <span>{entry.photos || "-"}</span>
+                        </div>
+                        <div className="checkout-log-detail-row">
+                          <span className="label">Notes:</span>
+                          <span>{entry.notes || "-"}</span>
+                        </div>
+                        <div className="checkout-log-detail-row">
+                          <span className="label">User:</span>
+                          <span>{entry.user || "-"}</span>
+                        </div>
+                        {entry.confirmationEmailSent && (
+                          <div className="checkout-log-detail-row">
+                            <span className="label">Confirmation Email Sent:</span>
+                            <span>{entry.confirmationEmailSent}</span>
+                          </div>
+                        )}
+                        {entry.confirmationEmailNote && (
+                          <div className="checkout-log-detail-row">
+                            <span className="label">Confirmation Email Note:</span>
+                            <span>{entry.confirmationEmailNote}</span>
+                          </div>
+                        )}
+                        {entry.digitalSignatureEnabled && (
+                          <div className="checkout-log-detail-row">
+                            <span className="label">Digital Signature Enabled:</span>
+                            <span>{entry.digitalSignatureEnabled}</span>
+                          </div>
+                        )}
+                        {entry.digitalSignatureCompleted && (
+                          <div className="checkout-log-detail-row">
+                            <span className="label">Digital Signature Completed:</span>
+                            <span>{entry.digitalSignatureCompleted}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
+
         {/* History Tab - Outside of detailed-main-content */}
-        {activeTab === 1 && (() => {
+        {activeTab === 2 && !customTabContent && (() => {
+
+          const normalizedHistoryData = historyData || [];
+          const filteredHistoryData = normalizedHistoryData.filter((item) => {
+            if (!historySearchTerm) return true;
+            const term = historySearchTerm.toLowerCase();
+            return (
+              (item.date && item.date.toLowerCase().includes(term)) ||
+              (item.user && item.user.toLowerCase().includes(term)) ||
+              (item.actionDetails && item.actionDetails.toLowerCase().includes(term))
+            );
+          });
 
           const startIndex = (historyCurrentPage - 1) * historyPageSize;
           const endIndex = startIndex + historyPageSize;
-          const paginatedData = historyData.slice(startIndex, endIndex);
+          const paginatedData = filteredHistoryData.slice(startIndex, endIndex);
 
           return (
             <div className="history-tab-wrapper">
               <div className="history-tab-header">
                 <h3>History</h3>
+                <div className="history-header-controls">
+                  <input
+                    type="search"
+                    placeholder="Search history..."
+                    value={historySearchTerm}
+                    onChange={(e) => {
+                      setHistorySearchTerm(e.target.value);
+                      setHistoryCurrentPage(1);
+                    }}
+                    className="history-search-input"
+                  />
+                </div>
               </div>
               <section className="history-table-section">
                 <table>
@@ -485,13 +629,21 @@ Updated At: ${updatedAt || 'N/A'}`;
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedData.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.date}</td>
-                        <td>{item.user}</td>
-                        <td>{item.actionDetails}</td>
+                    {paginatedData.length > 0 ? (
+                      paginatedData.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.date}</td>
+                          <td>{item.user}</td>
+                          <td>{item.actionDetails}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={3} className="no-data-message">
+                          No History Found.
+                        </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </section>
@@ -499,7 +651,7 @@ Updated At: ${updatedAt || 'N/A'}`;
                 <Pagination
                   currentPage={historyCurrentPage}
                   pageSize={historyPageSize}
-                  totalItems={historyData.length}
+                  totalItems={filteredHistoryData.length}
                   onPageChange={setHistoryCurrentPage}
                   onPageSizeChange={setHistoryPageSize}
                 />
@@ -508,15 +660,22 @@ Updated At: ${updatedAt || 'N/A'}`;
           );
         })()}
 
+        {/* Custom Tab Content - Renders when customTabContent is provided for activeTab === 2 */}
+        {activeTab === 2 && customTabContent && (
+          customTabContent
+        )}
+
         {/* Components Tab - Outside of detailed-main-content */}
-        {activeTab === 2 && (() => {
+        {activeTab === 3 && (() => {
+
+          const normalizedComponents = componentsData || [];
 
           return (
             <div className="components-tab-wrapper">
               <div className="components-tab-header">
                 <h3>Components</h3>
               </div>
-              <section className="components-table-section">
+              <section className="components-detail-table-section">
                 <table>
                   <thead>
                     <tr>
@@ -528,28 +687,36 @@ Updated At: ${updatedAt || 'N/A'}`;
                     </tr>
                   </thead>
                   <tbody>
-                    {componentsData.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.component}</td>
-                        <td>{item.checkoutDate}</td>
-                        <td>{item.user}</td>
-                        <td>{item.notes}</td>
-                        <td>
-                          <ActionButtons
-                            showCheckin
-                            onCheckinClick={() => {
-                              // Navigate to component check-in page
-                              navigate(`/components/check-in/${item.id}`, {
-                                state: {
-                                  item,
-                                  componentName: item.componentName || item.component
-                                }
-                              });
-                            }}
-                          />
+                    {normalizedComponents.length > 0 ? (
+                      normalizedComponents.map((item, index) => (
+                        <tr key={index}>
+                          <td>{item.component}</td>
+                          <td>{item.checkoutDate}</td>
+                          <td>{item.user}</td>
+                          <td>{item.notes}</td>
+                          <td>
+                            <ActionButtons
+                              showCheckin
+                              onCheckinClick={() => {
+                                // Navigate to component check-in page
+                                navigate(`/components/check-in/${item.id}`, {
+                                  state: {
+                                    item,
+                                    componentName: item.componentName || item.component
+                                  }
+                                });
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="no-data-message">
+                          No Components Found.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </section>
@@ -558,72 +725,129 @@ Updated At: ${updatedAt || 'N/A'}`;
         })()}
 
         {/* Repairs Tab - Outside of detailed-main-content */}
-        {activeTab === 3 && (() => {
+        {activeTab === 4 && (() => {
+
+          const normalizedRepairs = repairs || [];
+
+          const openRepairDeleteModal = (index) => {
+            setRepairDeleteIndex(index);
+            setRepairDeleteModalOpen(true);
+          };
+
+          const closeRepairDeleteModal = () => {
+            setRepairDeleteModalOpen(false);
+            setRepairDeleteIndex(null);
+          };
+
+          const confirmRepairDelete = () => {
+            if (repairDeleteIndex !== null) {
+              setRepairs((prevRepairs) =>
+                prevRepairs.filter((_, i) => i !== repairDeleteIndex)
+              );
+              setRepairSuccessMessage("Repair deleted successfully.");
+              setTimeout(() => setRepairSuccessMessage(""), 5000);
+            }
+            closeRepairDeleteModal();
+          };
+
 
           return (
-            <div className="repairs-tab-wrapper">
-              <div className="repairs-tab-header">
-                <h3>Repairs</h3>
-                <div className="repairs-header-controls">
-                  <MediumButtons
-                    type="new"
-                    navigatePage="/repairs/registration"
-                    previousPage="/asset-view"
-                  />
+            <>
+              {isRepairDeleteModalOpen && (
+                <ConfirmationModal
+                  closeModal={closeRepairDeleteModal}
+                  actionType="delete"
+                  onConfirm={confirmRepairDelete}
+                />
+              )}
+
+
+              <div className="repairs-tab-wrapper">
+                <div className="repairs-tab-header">
+                  <h3>Repairs</h3>
+                  <div className="repairs-header-controls">
+                    <MediumButtons
+                      type="new"
+                      navigatePage="/repairs/registration"
+                      previousPage="/asset-view"
+                    />
+                  </div>
                 </div>
-              </div>
-              <section className="repairs-table-section">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>ASSET</th>
-                      <th>TYPE</th>
-                      <th>NAME</th>
-                      <th>START DATE</th>
-                      <th>END DATE</th>
-                      <th>COST</th>
-                      <th>STATUS</th>
-                      <th>ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {repairsData.map((item, index) => (
-                      <tr key={index}>
-                        <td>{item.asset}</td>
-                        <td>{item.type}</td>
-                        <td>{item.name}</td>
-                        <td>{item.startDate}</td>
-                        <td>{item.endDate || 'Ongoing'}</td>
-                        <td>{item.cost}</td>
-                        <td>
-                          <Status
-                            value={index}
-                            type={item.status === 'Completed' ? 'ready-to-deploy' : 'in-progress'}
-                            name={item.status}
-                          />
-                        </td>
-                        <td>
-                          <ActionButtons
-                            showEdit
-                            showDelete
-                            showView
-                            editPath={`edit/${index}`}
-                            editState={{ item, previousPage: "/asset-view" }}
-                            onDeleteClick={() => console.log('Delete repair:', index)}
-                            onViewClick={() => console.log('View repair:', item)}
-                          />
-                        </td>
+                {repairSuccessMessage && (
+                  <Alert message={repairSuccessMessage} type="success" />
+                )}
+                <section className="repairs-detail-table-section">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>ASSET</th>
+                        <th>TYPE</th>
+                        <th>NAME</th>
+                        <th>START DATE</th>
+                        <th>END DATE</th>
+                        <th>COST</th>
+                        <th>STATUS</th>
+                        <th>ACTION</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </section>
-            </div>
+                    </thead>
+                    <tbody>
+                      {normalizedRepairs.length > 0 ? (
+                        normalizedRepairs.map((item, index) => {
+                          const repairForEdit = {
+                            asset: item.asset,
+                            supplier: "",
+                            type: item.type,
+                            name: item.name,
+                            start_date: item.startDate,
+                            end_date: item.endDate,
+                            cost: item.cost,
+                            notes: item.notes || "",
+                          };
+
+                          return (
+                            <tr key={index}>
+                              <td>{item.asset}</td>
+                              <td>{item.type}</td>
+                              <td>{item.name}</td>
+                              <td>{item.startDate}</td>
+                              <td>{item.endDate || 'Ongoing'}</td>
+                              <td>{item.cost}</td>
+                              <td>
+                                <Status
+                                  value={index}
+                                  type={item.status === 'Completed' ? 'ready-to-deploy' : 'in-progress'}
+                                  name={item.status}
+                                />
+                              </td>
+                              <td>
+                                <ActionButtons
+                                  showEdit
+                                  showDelete
+                                  editPath={`/repairs/edit/${index + 1}`}
+                                  editState={{ repair: repairForEdit }}
+                                  onDeleteClick={() => openRepairDeleteModal(index)}
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={8} className="no-data-message">
+                            No Repairs Found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </section>
+              </div>
+            </>
           );
         })()}
 
         {/* Attachments Tab - Outside of detailed-main-content */}
-        {activeTab === 5 && (() => {
+        {activeTab === 6 && (() => {
           const handleUploadClick = () => {
             setUploadModalOpen(true);
           };
@@ -636,6 +860,16 @@ Updated At: ${updatedAt || 'N/A'}`;
             // Handle file upload logic here
             console.log("Uploading file:", formData);
             // You can send this to your backend API
+          };
+
+          const normalizedAttachments = attachments || [];
+
+          const handleAttachmentDelete = (index) => {
+            setAttachments((prevAttachments) =>
+              prevAttachments.filter((_, i) => i !== index)
+            );
+            setAttachmentSuccessMessage("Attachment deleted successfully.");
+            setTimeout(() => setAttachmentSuccessMessage(""), 5000);
           };
 
           return (
@@ -658,6 +892,9 @@ Updated At: ${updatedAt || 'N/A'}`;
                     />
                   </div>
                 </div>
+                {attachmentSuccessMessage && (
+                  <Alert message={attachmentSuccessMessage} type="success" />
+                )}
                 <section className="attachments-table-section">
                   <table>
                     <thead>
@@ -669,14 +906,27 @@ Updated At: ${updatedAt || 'N/A'}`;
                       </tr>
                     </thead>
                     <tbody>
-                      {attachmentsData.map((item, index) => (
-                        <tr key={index}>
-                          <td>{item.uploaded}</td>
-                          <td>{item.file}</td>
-                          <td>{item.notes}</td>
-                          <td>{item.delete}</td>
+                      {normalizedAttachments.length > 0 ? (
+                        normalizedAttachments.map((item, index) => (
+                          <tr key={index}>
+                            <td>{item.uploaded}</td>
+                            <td>{item.file}</td>
+                            <td>{item.notes}</td>
+                            <td>
+                              <ActionButtons
+                                showDelete
+                                onDeleteClick={() => handleAttachmentDelete(index)}
+                              />
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={4} className="no-data-message">
+                            No Attachments Found.
+                          </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </section>
@@ -685,8 +935,8 @@ Updated At: ${updatedAt || 'N/A'}`;
           );
         })()}
 
-        {/* Audits Tab (Position 4) - Duplicated Audits Table with Navigation */}
-        {activeTab === 4 && (() => {
+        {/* Audits Tab (Position 5) - Duplicated Audits Table with Navigation */}
+        {activeTab === 5 && (() => {
 
           const currentAuditData = auditsDuplicateData[activeAuditTab] || [];
 
@@ -835,37 +1085,37 @@ Updated At: ${updatedAt || 'N/A'}`;
         })()}
 
         {/* Right Sidebar - Action Buttons */}
-        <aside className="detailed-sidebar">
-          {/* Action Buttons Section */}
-          {actionButtons && (
-            <div className="action-buttons-section">
-              {actionButtons}
-            </div>
-          )}
+        {(actionButtons || checkedOutTo) && (
+          <aside className="detailed-sidebar">
+            {/* Action Buttons Section */}
+            {actionButtons && (
+              <div className="action-buttons-section">
+                {actionButtons}
+              </div>
+            )}
 
-          {/* Checked Out To Section */}
-          {checkedOutTo && (
-            <div className="checked-out-section">
-              <h3>Checked Out To</h3>
-              <div className="checked-out-info">
-                <div className="user-avatar">
-                  <img
-                    src={DefaultProfile}
-                    alt="User Profile"
-                    className="profile-icon"
-                  />
-                </div>
-                <div className="user-details">
-                  <div className="user-name">{checkedOutTo.name}</div>
-                  <div className="user-email">{checkedOutTo.email}</div>
-                  <div className="checkout-date">Checkout Date: {checkedOutTo.checkoutDate}</div>
+            {/* Checked Out To Section */}
+            {checkedOutTo && (
+              <div className="checked-out-section">
+                <h3>Checked Out To</h3>
+                <div className="checked-out-info">
+                  <div className="user-avatar">
+                    <img
+                      src={DefaultProfile}
+                      alt="User Profile"
+                      className="profile-icon"
+                    />
+                  </div>
+                  <div className="user-details">
+                    <div className="user-name">{checkedOutTo.name}</div>
+                    <div className="user-email">{checkedOutTo.email}</div>
+                    <div className="checkout-date">Checkout Date: {checkedOutTo.checkoutDate}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-
-        </aside>
+            )}
+          </aside>
+        )}
       </section>
     </main>
     <Footer />

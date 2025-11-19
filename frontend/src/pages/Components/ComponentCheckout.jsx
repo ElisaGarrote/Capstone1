@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
@@ -53,7 +54,7 @@ const ComponentCheckout = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Asset */}
             <fieldset>
-              <label htmlFor="asset">Check-out To *</label>
+              <label htmlFor="asset">Check-out To<span className="required-asterisk">*</span></label>
               <select
                 className={errors.asset ? "input-error" : ""}
                 {...register("asset", {
@@ -74,7 +75,7 @@ const ComponentCheckout = () => {
 
             {/* Quantity */}
             <fieldset>
-              <label htmlFor="quantity">Quantity * (Remaining: {item.available_quantity})</label>
+              <label htmlFor="quantity">Quantity<span className="required-asterisk">*</span> (Remaining: {item.available_quantity})</label>
               <input
                 className={errors.quantity ? "input-error" : ""}
                 type="number"
@@ -89,7 +90,7 @@ const ComponentCheckout = () => {
                   validate: (value) =>
                     value <= item.available_quantity ||
                     `Cannot exceed available quantity (${item.available_quantity})`,
-                })} 
+                })}
               />
               {errors.quantity && (
                 <span className="error-message">{errors.quantity.message}</span>
@@ -98,7 +99,7 @@ const ComponentCheckout = () => {
 
             {/* Checkout Date */}
             <fieldset>
-              <label htmlFor="checkoutDate">Checkout Date *</label>
+              <label htmlFor="checkoutDate">Checkout Date<span className="required-asterisk">*</span></label>
               <input
                 type="date"
                 className={errors.checkoutDate ? "input-error" : ""}
@@ -129,6 +130,7 @@ const ComponentCheckout = () => {
           </form>
         </section>
       </main>
+      <Footer />
     </>
   );
 };

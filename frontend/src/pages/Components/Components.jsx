@@ -1,20 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
+import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/components/component-mockup-data.json";
+import ComponentFilterModal from "../../components/Modals/ComponentFilterModal";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import ComponentFilterModal from "../../components/Modals/ComponentFilterModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import MockupData from "../../data/mockData/components/component-mockup-data.json";
 import { exportToExcel } from "../../utils/exportToExcel";
 
-import "../../styles/Components/Components.css";
+import "../../styles/components/Components.css";
 
-// TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
@@ -36,9 +37,11 @@ function TableHeader({ allSelected, onHeaderChange }) {
   );
 }
 
-// TableItem component to render each component row
-function TableItem({ component, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckoutClick, onCheckinClick }) {
-  const baseImage = component.image || DefaultImage;
+// TableItem component to render each asset row
+function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+  const baseImage = asset.image
+    ? `https://assets-service-production.up.railway.app${asset.image}`
+    : DefaultImage;
 
   return (
     <tr>
@@ -46,31 +49,31 @@ function TableItem({ component, isSelected, onRowChange, onDeleteClick, onViewCl
         <input
           type="checkbox"
           checked={isSelected}
-          onChange={(e) => onRowChange(component.id, e.target.checked)}
+          onChange={(e) => onRowChange(asset.id, e.target.checked)}
         />
       </td>
       <td>
         <img
           src={baseImage}
-          alt={component.name}
+          alt={asset.name}
           className="table-img"
           onError={(e) => {
             e.target.src = DefaultImage;
           }}
         />
       </td>
-      <td>{component.name}</td>
-      <td>{component.category || 'N/A'}</td>
-      <td>{component.manufacturer || 'N/A'}</td>
-      <td>{component.depreciation || 'N/A'}</td>
+      <td>{asset.name}</td>
+      <td>{asset.category || 'N/A'}</td>
+      <td>{asset.manufacturer || 'N/A'}</td>
+      <td>{asset.depreciation || 'N/A'}</td>
 
-      {/* Check-out/Check-in Column */}
+      {/* Check-out / Check-in Column */}
       <td>
         <ActionButtons
-          showCheckout={component.available_quantity > 0}
-          showCheckin={component.checked_out_quantity > 0}
-          onCheckoutClick={() => onCheckoutClick(component)}
-          onCheckinClick={() => onCheckinClick(component)}
+          showCheckout={asset.showCheckout}
+          showCheckin={asset.showCheckin}
+          onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
+          onCheckinClick={() => onCheckInOut(asset, 'checkin')}
         />
       </td>
 
@@ -79,60 +82,131 @@ function TableItem({ component, isSelected, onRowChange, onDeleteClick, onViewCl
           showEdit
           showDelete
           showView
-          editPath={`/components/edit/${component.id}`}
-          editState={{ component }}
-          onDeleteClick={() => onDeleteClick(component.id)}
-          onViewClick={() => onViewClick(component)}
+          editPath={`/components/edit/${asset.id}`}
+          editState={{ item: asset }}
+          onDeleteClick={() => onDeleteClick(asset.id)}
+          onViewClick={() => onViewClick(asset)}
         />
       </td>
     </tr>
   );
 }
 
-export default function Components() {
+export default function Assets() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const [baseData] = useState(() =>
+    MockupData.map((asset) => {
+      const available = asset.available_quantity ?? 0;
+      const checkedOut = asset.checked_out_quantity ?? 0;
 
-  // Filter and data state
-  const [filteredData, setFilteredData] = useState(MockupData);
+      const showCheckout = available > 0;
+      const showCheckin = checkedOut > 0;
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
-
-  // Selection state
-  const [selectedIds, setSelectedIds] = useState([]);
-
-  // Delete modal state
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+      return { ...asset, showCheckout, showCheckin };
+    })
+  );
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState(baseData);
 
-  // Alert state
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
+  useEffect(() => {
+    console.log("Filter Modal State Changed:", isFilterModalOpen);
+  }, [isFilterModalOpen]);
 
-  // Paginate the data
+  // pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+
+  // selection state
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...baseData];
+
+    // Filter by Component Name
+    if (filters.name && filters.name.trim() !== "") {
+      filtered = filtered.filter((component) =>
+        component.name.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    // Filter by Category
+    if (filters.category && filters.category.label) {
+      const categoryLabel = filters.category.label.toLowerCase();
+      filtered = filtered.filter((component) =>
+        component.category?.toLowerCase().includes(categoryLabel)
+      );
+    }
+
+    // Filter by Manufacturer
+    if (filters.manufacturer && filters.manufacturer.label) {
+      const manufacturerLabel = filters.manufacturer.label.toLowerCase();
+      filtered = filtered.filter((component) =>
+        component.manufacturer?.toLowerCase().includes(manufacturerLabel)
+      );
+    }
+
+    return filtered;
+  };
+
+  // Combine modal filters and search term
+  const applyFiltersAndSearch = (filters, term) => {
+    let filtered = applyFilters(filters || {});
+
+    if (term && term.trim() !== "") {
+      const lowerTerm = term.toLowerCase();
+      filtered = filtered.filter((component) =>
+        (component.name && component.name.toLowerCase().includes(lowerTerm)) ||
+        (component.category && component.category.toLowerCase().includes(lowerTerm)) ||
+        (component.manufacturer && component.manufacturer.toLowerCase().includes(lowerTerm))
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // Handle search input
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
+  };
+
+  // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedComponents = filteredData.slice(startIndex, endIndex);
+  const paginatedAssets = filteredData.slice(startIndex, endIndex);
 
-  // Selection logic
+  // selection logic
   const allSelected =
-    paginatedComponents.length > 0 &&
-    paginatedComponents.every((item) => selectedIds.includes(item.id));
+    paginatedAssets.length > 0 &&
+    paginatedAssets.every((item) => selectedIds.includes(item.id));
 
   const handleHeaderChange = (e) => {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedComponents.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedAssets.map((item) => item.id).filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedComponents.map((item) => item.id).includes(id))
+        prev.filter((id) => !paginatedAssets.map((item) => item.id).includes(id))
       );
     }
   };
@@ -144,6 +218,11 @@ export default function Components() {
       setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
     }
   };
+
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // delete modal state
+  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
 
   const openDeleteModal = (id = null) => {
     setDeleteTarget(id);
@@ -167,58 +246,58 @@ export default function Components() {
     closeDeleteModal();
   };
 
-  const handleViewClick = (component) => {
-    navigate(`/components/view/${component.id}`);
+
+  const handleViewClick = (asset) => {
+    navigate(`/assets/view/${asset.id}`);
   };
 
-  const handleCheckout = (component) => {
-    navigate(`/components/check-out/${component.id}`, { state: { component } });
-  };
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const handleCheckin = (component) => {
-    navigate(`/components/checked-out-list/${component.id}`, { state: { component } });
-  };
+
+
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      setTimeout(() => {
+        setSuccessMessage("");
+        window.history.replaceState({}, document.title);
+      }, 5000);
+    }
+  }, [location]);
 
   const handleExport = () => {
-    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
-    exportToExcel(dataToExport, "Components_Records.xlsx");
+    const dataToExport = filteredData.length > 0 ? filteredData : baseData;
+    exportToExcel(dataToExport, "Assets_Records.xlsx");
   };
 
-  // Apply filters to data
-  const applyFilters = (filters) => {
-    let filtered = [...MockupData];
+  const handleCheckInOut = (asset, action) => {
+    // Build minimal mock item data expected by ComponentCheckout/ComponentCheckin
+    const available_quantity = asset.available_quantity ?? 10;
+    const remaining_quantity = asset.remaining_quantity ?? available_quantity;
 
-    // Filter by Name
-    if (filters.name && filters.name.trim() !== "") {
-      filtered = filtered.filter((component) =>
-        component.name?.toLowerCase().includes(filters.name.toLowerCase())
-      );
+    const item = {
+      id: asset.id,
+      name: asset.name,
+      available_quantity,
+      remaining_quantity,
+    };
+
+    if (action === 'checkin') {
+      navigate(`/components/check-in/${asset.id}`, {
+        state: {
+          item,
+          componentName: asset.name,
+        },
+      });
+    } else {
+      navigate(`/components/check-out/${asset.id}`, {
+        state: { item },
+      });
     }
-
-    // Filter by Category
-    if (filters.category) {
-      filtered = filtered.filter((component) =>
-        component.category?.toLowerCase() === filters.category.value?.toLowerCase()
-      );
-    }
-
-    // Filter by Manufacturer
-    if (filters.manufacturer) {
-      filtered = filtered.filter((component) =>
-        component.manufacturer?.toLowerCase() === filters.manufacturer.value?.toLowerCase()
-      );
-    }
-
-    return filtered;
   };
 
-  // Handle filter apply
-  const handleApplyFilter = (filters) => {
-    setAppliedFilters(filters);
-    const filtered = applyFilters(filters);
-    setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
-  };
+
 
   return (
     <>
@@ -255,7 +334,9 @@ export default function Components() {
                   <>
                     <MediumButtons
                       type="edit"
-                      onClick={() => navigate('/components/bulk-edit', { state: { selectedIds } })}
+                      onClick={() =>
+                        navigate("/components/bulk-edit", { state: { selectedIds } })
+                      }
                     />
                     <MediumButtons
                       type="delete"
@@ -263,11 +344,18 @@ export default function Components() {
                     />
                   </>
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                />
                 <button
                   type="button"
                   className="medium-button-filter"
                   onClick={() => {
+                    console.log("DIRECT FILTER BUTTON CLICKED!");
                     setIsFilterModalOpen(true);
                   }}
                 >
@@ -277,15 +365,17 @@ export default function Components() {
                   type="export"
                   onClick={handleExport}
                 />
-                <MediumButtons
-                  type="new"
-                  navigatePage="/components/registration"
-                />
+                {authService.getUserInfo().role === "Admin" && (
+                  <MediumButtons
+                    type="new"
+                    navigatePage="/components/registration"
+                  />
+                )}
               </section>
             </section>
 
             {/* Table Structure */}
-            <section className="components-table-section">
+            <section className="assets-table-section">
               <table>
                 <thead>
                   <TableHeader
@@ -294,23 +384,22 @@ export default function Components() {
                   />
                 </thead>
                 <tbody>
-                  {paginatedComponents.length > 0 ? (
-                    paginatedComponents.map((component) => (
+                  {paginatedAssets.length > 0 ? (
+                    paginatedAssets.map((asset) => (
                       <TableItem
-                        key={component.id}
-                        component={component}
-                        isSelected={selectedIds.includes(component.id)}
+                        key={asset.id}
+                        asset={asset}
+                        isSelected={selectedIds.includes(asset.id)}
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
                         onViewClick={handleViewClick}
-                        onCheckoutClick={handleCheckout}
-                        onCheckinClick={handleCheckin}
+                        onCheckInOut={handleCheckInOut}
                       />
                     ))
                   ) : (
                     <tr>
                       <td colSpan={8} className="no-data-message">
-                        No Components Found.
+                        No Assets Found.
                       </td>
                     </tr>
                   )}

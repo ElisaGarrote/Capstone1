@@ -111,7 +111,7 @@ const PerformAudits = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Asset */}
             <fieldset>
-              <label htmlFor="asset">Select Asset *</label>
+              <label htmlFor="asset">Select Asset<span className="required-asterisk">*</span></label>
               <select
                 className={errors.asset ? "input-error" : ""}
                 {...register("asset", {
@@ -132,7 +132,7 @@ const PerformAudits = () => {
 
             {/* Location */}
             <fieldset>
-              <label htmlFor="location">Location *</label>
+              <label htmlFor="location">Location<span className="required-asterisk">*</span></label>
               <select
                 className={errors.location ? "input-error" : ""}
                 {...register("location", {
@@ -163,7 +163,7 @@ const PerformAudits = () => {
 
             {/* Audit Date */}
             <fieldset>
-              <label htmlFor="auditDate">Audit Date *</label>
+              <label htmlFor="auditDate">Audit Date<span className="required-asterisk">*</span></label>
               <input
                 type="date"
                 className={errors.checkoutDate ? "input-error" : ""}
@@ -243,8 +243,8 @@ const PerformAudits = () => {
             </button>
           </form>
         </section>
-        <Footer />
       </main>
+      <Footer />
     </>
   );
 };

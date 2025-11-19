@@ -3,23 +3,14 @@ import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/Modal.css";
 import "../../styles/AssetFilterModal.css";
 
-export default function TicketFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
+export default function CompletedAuditFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
 
   const [filters, setFilters] = useState({
-    ticketNumber: "",
+    auditDate: "",
     asset: "",
-    requestor: "",
-    subject: "",
     location: "",
-    checkInOut: null,
+    performedBy: "",
   });
-
-  // Check-In / Check-Out options
-  const checkInOutOptions = [
-    { value: "Check-In", label: "Check-In" },
-    { value: "Check-Out", label: "Check-Out" },
-    { value: "All", label: "All" },
-  ];
 
   // Initialize filters from props
   useEffect(() => {
@@ -36,23 +27,13 @@ export default function TicketFilterModal({ isOpen, onClose, onApplyFilter, init
     }));
   };
 
-  // Handle select changes
-  const handleSelectChange = (field, selectedOption) => {
-    setFilters((prev) => ({
-      ...prev,
-      [field]: selectedOption,
-    }));
-  };
-
   // Reset all filters
   const handleReset = () => {
     setFilters({
-      ticketNumber: "",
+      auditDate: "",
       asset: "",
-      requestor: "",
-      subject: "",
       location: "",
-      checkInOut: null,
+      performedBy: "",
     });
   };
 
@@ -78,7 +59,7 @@ export default function TicketFilterModal({ isOpen, onClose, onApplyFilter, init
       <div className="modal-container asset-filter-modal-container" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="modal-header">
-          <h2>Filter Tickets</h2>
+          <h2>Filter Audits</h2>
           <button className="modal-close-btn" onClick={onClose}>
             <img src={CloseIcon} alt="Close" />
           </button>
@@ -87,15 +68,14 @@ export default function TicketFilterModal({ isOpen, onClose, onApplyFilter, init
         {/* Modal Body */}
         <div className="modal-body asset-filter-modal-body">
           <div className="filter-grid">
-            {/* Ticket Number */}
+            {/* Audit Date */}
             <fieldset>
-              <label htmlFor="ticketNumber">Ticket Number</label>
+              <label htmlFor="auditDate">Audit Date</label>
               <input
-                type="text"
-                id="ticketNumber"
-                placeholder="Enter Ticket Number"
-                value={filters.ticketNumber}
-                onChange={(e) => handleInputChange("ticketNumber", e.target.value)}
+                type="date"
+                id="auditDate"
+                value={filters.auditDate}
+                onChange={(e) => handleInputChange("auditDate", e.target.value)}
               />
             </fieldset>
 
@@ -111,30 +91,6 @@ export default function TicketFilterModal({ isOpen, onClose, onApplyFilter, init
               />
             </fieldset>
 
-            {/* Requestor */}
-            <fieldset>
-              <label htmlFor="requestor">Requestor</label>
-              <input
-                type="text"
-                id="requestor"
-                placeholder="Enter Requestor Name"
-                value={filters.requestor}
-                onChange={(e) => handleInputChange("requestor", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Subject */}
-            <fieldset>
-              <label htmlFor="subject">Subject</label>
-              <input
-                type="text"
-                id="subject"
-                placeholder="Enter Subject"
-                value={filters.subject}
-                onChange={(e) => handleInputChange("subject", e.target.value)}
-              />
-            </fieldset>
-
             {/* Location */}
             <fieldset>
               <label htmlFor="location">Location</label>
@@ -147,24 +103,16 @@ export default function TicketFilterModal({ isOpen, onClose, onApplyFilter, init
               />
             </fieldset>
 
-            {/* Check-In / Check-Out */}
+            {/* Performed By */}
             <fieldset>
-              <label htmlFor="checkInOut">Check-In / Check-Out</label>
-              <select
-                id="checkInOut"
-                value={filters.checkInOut?.value || ""}
-                onChange={(e) => {
-                  const selectedOption = checkInOutOptions.find(opt => opt.value === e.target.value);
-                  handleSelectChange("checkInOut", selectedOption || null);
-                }}
-              >
-                <option value="">Select Option</option>
-                {checkInOutOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <label htmlFor="performedBy">Performed By</label>
+              <input
+                type="text"
+                id="performedBy"
+                placeholder="Enter Performer Name"
+                value={filters.performedBy}
+                onChange={(e) => handleInputChange("performedBy", e.target.value)}
+              />
             </fieldset>
           </div>
         </div>

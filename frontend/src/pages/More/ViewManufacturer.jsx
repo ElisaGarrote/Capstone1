@@ -5,16 +5,16 @@ import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ManufacturerFilterModal from "../../components/Modals/ManufacturerFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
-import View from "../../components/Modals/View";
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Footer from "../../components/Footer";
 import MockupData from "../../data/mockData/more/manufacturer-mockup-data.json";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/Manufacturer.css";
 
 // TableHeader component to render the table header
-function TableHeader() {
+function TableHeader({ allChecked, onHeaderChange }) {
   return (
     <tr>
       <th>
@@ -22,6 +22,8 @@ function TableHeader() {
           type="checkbox"
           name="checkbox-manufacturer"
           id="checkbox-manufacturer"
+          checked={allChecked}
+          onChange={(e) => onHeaderChange(e.target.checked)}
         />
       </th>
       <th>NAME</th>
@@ -36,14 +38,20 @@ function TableHeader() {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ manufacturer, onDeleteClick, onViewClick }) {
+function TableItem({ manufacturer, onDeleteClick, isChecked, onRowChange }) {
   const navigate = useNavigate();
 
   return (
     <tr>
       <td>
         <div className="checkbox-manufacturer">
-          <input type="checkbox" name="" id="" />
+          <input
+            type="checkbox"
+            name=""
+            id=""
+            checked={isChecked}
+            onChange={(e) => onRowChange(manufacturer.id, e.target.checked)}
+          />
         </div>
       </td>
       <td>
@@ -62,13 +70,6 @@ function TableItem({ manufacturer, onDeleteClick, onViewClick }) {
       <td>{manufacturer.notes || "-"}</td>
       <td>
         <section className="action-button-section">
-          <button
-            title="View"
-            className="action-button"
-            onClick={() => onViewClick(manufacturer)}
-          >
-            <i className="fas fa-eye"></i>
-          </button>
           <button
             title="Edit"
             className="action-button"
@@ -106,11 +107,11 @@ export default function ViewManuDraft() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const allChecked = checkedItems.length === manufacturers.length;
   const navigate = useNavigate();
 
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -120,10 +121,6 @@ export default function ViewManuDraft() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(MockupData);
   const [appliedFilters, setAppliedFilters] = useState({});
-
-  // View modal state
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedManufacturer, setSelectedManufacturer] = useState(null);
 
   // Apply filters to data
   const applyFilters = (filters) => {
@@ -161,10 +158,64 @@ export default function ViewManuDraft() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((manufacturer) => {
+          const name = manufacturer.name?.toLowerCase() || "";
+          const url = manufacturer.url?.toLowerCase() || "";
+          const supportUrl =
+            manufacturer.support_url?.toLowerCase() ||
+            manufacturer.supportUrl?.toLowerCase() ||
+            "";
+          const email = manufacturer.email?.toLowerCase() || "";
+          const phone =
+            manufacturer.phone_number?.toLowerCase() ||
+            manufacturer.support_phone?.toLowerCase() ||
+            "";
+          return (
+            name.includes(normalizedQuery) ||
+            url.includes(normalizedQuery) ||
+            supportUrl.includes(normalizedQuery) ||
+            email.includes(normalizedQuery) ||
+            phone.includes(normalizedQuery)
+          );
+        });
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedManufacturer = filteredData.slice(startIndex, endIndex);
+  const paginatedManufacturer = searchedData.slice(startIndex, endIndex);
+
+  const allChecked =
+    paginatedManufacturer.length > 0 &&
+    paginatedManufacturer.every((item) => checkedItems.includes(item.id));
+
+  const handleHeaderChange = (checked) => {
+    if (checked) {
+      setCheckedItems((prev) => [
+        ...prev,
+        ...paginatedManufacturer
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setCheckedItems((prev) =>
+        prev.filter(
+          (id) => !paginatedManufacturer.map((item) => item.id).includes(id)
+        )
+      );
+    }
+  };
+
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setCheckedItems((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    } else {
+      setCheckedItems((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
 
   // Retrieve the "addManufacturer" value passed from the navigation state.
   // If the "addManufacturer" is not exist, the default value for this is "undifiend".
@@ -250,11 +301,8 @@ export default function ViewManuDraft() {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1);
   };
-
-  const filteredManufacturers = manufacturers.filter((manufacturer) =>
-    manufacturer.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const actionStatus = (action, status) => {
     let timeoutId;
@@ -292,6 +340,36 @@ export default function ViewManuDraft() {
     return null;
   };
 
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single manufacturer id:", deleteTarget);
+      setSuccessMessage("Manufacturer deleted successfully!");
+    } else {
+      console.log("Deleting multiple manufacturer ids:", checkedItems);
+      if (checkedItems.length > 0) {
+        setSuccessMessage("Manufacturers deleted successfully!");
+      }
+      setCheckedItems([]);
+    }
+    setTimeout(() => setSuccessMessage(""), 5000);
+    closeDeleteModal();
+  };
+
+  const handleExport = () => {
+    const dataToExport = searchedData.length > 0 ? searchedData : filteredData;
+    exportToExcel(dataToExport, "Manufacturer_Records.xlsx");
+  };
+
   // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
   useEffect(() => {
     let timeoutId;
@@ -303,12 +381,6 @@ export default function ViewManuDraft() {
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [addedManufacturer, updatedManufacturer, navigate, location.pathname]);
-
-  // Handle View button click
-  const handleViewClick = (manufacturer) => {
-    setSelectedManufacturer(manufacturer);
-    setIsViewModalOpen(true);
-  };
 
   return (
     <>
@@ -326,8 +398,9 @@ export default function ViewManuDraft() {
       {isDeleteModalOpen && (
         <DeleteModal
           endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
+          closeModal={closeDeleteModal}
           actionType={"delete"}
+          onConfirm={confirmDelete}
           /* BACKEND INTEGRATION HERE
           confirmDelete={async () => {
             await fetchManufacturers();
@@ -339,21 +412,6 @@ export default function ViewManuDraft() {
             setTimeout(() => setErrorMessage(""), 5000);
           }}
             */
-        />
-      )}
-
-      {isViewModalOpen && selectedManufacturer && (
-        <View
-          title={selectedManufacturer.name}
-          data={[
-            { label: "URL", value: selectedManufacturer.url },
-            { label: "Support URL", value: selectedManufacturer.support_url },
-            { label: "Phone Number", value: selectedManufacturer.phone_number },
-            { label: "Email", value: selectedManufacturer.email },
-            { label: "Notes", value: selectedManufacturer.notes },
-          ]}
-          closeModal={() => setIsViewModalOpen(false)}
-          imageSrc={selectedManufacturer.logo}
         />
       )}
 
@@ -371,8 +429,14 @@ export default function ViewManuDraft() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Manufacturers ({filteredData.length})</h2>
+              <h2 className="h2">Manufacturers ({searchedData.length})</h2>
               <section className="table-actions">
+                {checkedItems.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
                 <input
                   type="search"
                   placeholder="Search..."
@@ -380,15 +444,7 @@ export default function ViewManuDraft() {
                   onChange={handleSearchChange}
                   className="search"
                 />
-                <button
-                  type="button"
-                  className="medium-button-filter"
-                  onClick={() => {
-                    setIsFilterModalOpen(true);
-                  }}
-                >
-                  Filter
-                </button>
+                <MediumButtons type="export" onClick={handleExport} />
                 <MediumButtons
                   type="new"
                   navigatePage="/More/ManufacturerRegistration"
@@ -400,7 +456,10 @@ export default function ViewManuDraft() {
             <section className="manufacturer-page-table-section">
               <table>
                 <thead>
-                  <TableHeader />
+                  <TableHeader
+                    allChecked={allChecked}
+                    onHeaderChange={handleHeaderChange}
+                  />
                 </thead>
                 <tbody>
                   {paginatedManufacturer.length > 0 ? (
@@ -408,14 +467,15 @@ export default function ViewManuDraft() {
                       <TableItem
                         key={index}
                         manufacturer={manufacturer}
+                        isChecked={checkedItems.includes(manufacturer.id)}
+                        onRowChange={handleRowChange}
                         onDeleteClick={() => {
                           /* BACKEND INTEGRATION HERE
                           setEndPoint(
                             `${contextServiceUrl}/contexts/manufacturers/${manufacturer.id}/delete/`
                           ); */
-                          setDeleteModalOpen(true);
+                          openDeleteModal(manufacturer.id);
                         }}
-                        onViewClick={handleViewClick}
                       />
                     ))
                   ) : (

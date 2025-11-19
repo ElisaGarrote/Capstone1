@@ -1,15 +1,20 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Status from "../../components/Status";
+import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
+import PlusIcon from "../../assets/icons/plus.svg";
 
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
 
 const StatusRegistration = () => {
   const navigate = useNavigate();
+  const [importFile, setImportFile] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const {
     register,
@@ -23,6 +28,7 @@ const StatusRegistration = () => {
       showInList: true,
       defaultStatus: false,
     },
+    mode: "all",
   });
 
   const statusTypes = [
@@ -33,16 +39,36 @@ const StatusRegistration = () => {
     "Undeployable",
   ];
 
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (
+        file.type !==
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ) {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        e.target.value = "";
+        return;
+      }
+      setImportFile(file);
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
+    }
+  };
+
   const onSubmit = (data) => {
     // Here you would typically send the data to your API
     console.log("Form submitted:", data);
 
     // Optional: navigate back to status view after successful submission
-    navigate("/More/ViewStatus");
+    navigate("/More/ViewStatus", { state: { addedStatus: true } });
   };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
@@ -52,13 +78,31 @@ const StatusRegistration = () => {
               currentPage="New Status"
               rootNavigatePage="/More/ViewStatus"
               title="New Status Label"
+              rightComponent={
+                <div className="import-section">
+                  <label htmlFor="status-import-file" className="import-btn">
+                    <img src={PlusIcon} alt="Import" />
+                    Import
+                    <input
+                      type="file"
+                      id="status-import-file"
+                      accept=".xlsx"
+                      onChange={handleImportFile}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                </div>
+              }
             />
           </section>
           <section className="status-registration-section">
             <section className="registration-form">
               <form onSubmit={handleSubmit(onSubmit)}>
                 <fieldset>
-                  <label htmlFor="statusName">Status Name *</label>
+                  <label htmlFor="statusName">
+                    Status Name
+                    <span className="required-asterisk">*</span>
+                  </label>
                   <input
                     type="text"
                     placeholder="Status Name"
@@ -76,7 +120,10 @@ const StatusRegistration = () => {
                 </fieldset>
 
                 <fieldset>
-                  <label htmlFor="statusType">Status Type *</label>
+                  <label htmlFor="statusType">
+                    Status Type
+                    <span className="required-asterisk">*</span>
+                  </label>
                   <select
                     className={errors.statusType ? "input-error" : ""}
                     {...register("statusType", {

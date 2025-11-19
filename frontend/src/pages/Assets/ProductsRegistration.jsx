@@ -1,6 +1,7 @@
 import NavBar from '../../components/NavBar';
+import Footer from "../../components/Footer";
 import '../../styles/Registration.css';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -11,6 +12,11 @@ import assetsService from "../../services/assets-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import { fetchAllCategories } from "../../services/contexts-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
+import ProductsMockData from "../../data/mockData/products/products-mockup-data.json";
+import DepreciationMockData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
+import ManufacturerMockData from "../../data/mockData/more/manufacturer-mockup-data.json";
+import SupplierMockData from "../../data/mockData/more/supplier-mockup-data.json";
+
 
 
 export default function ProductsRegistration() {
@@ -29,6 +35,7 @@ export default function ProductsRegistration() {
   const [importFile, setImportFile] = useState(null);
 
   const { id } = useParams();
+  const location = useLocation();
   const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
@@ -66,25 +73,72 @@ export default function ProductsRegistration() {
     const initialize = async () => {
       try {
         setIsLoading(true);
-        
-        // Fetch all necessary data in parallel
-        const [productContextsData, contextsData] = await Promise.all([
-          assetsService.fetchProductContexts(),
-          fetchAllCategories()
-        ]);
-        
-        // Set categories and depreciations from product contexts
-        setCategories(productContextsData.categories || []);
-        setDepreciations(productContextsData.depreciations || []);
-        
-        // Set suppliers and manufacturers from contexts
-        setSuppliers(contextsData.suppliers || []);
-        setManufacturers(contextsData.manufacturers || []);
-        
-        console.log("Categories:", productContextsData.categories);
-        console.log("Depreciations:", productContextsData.depreciations);
-        console.log("Suppliers:", contextsData.suppliers);
-        console.log("Manufacturers:", contextsData.manufacturers);
+
+        // Try to fetch live contexts first
+        let productContextsData = { categories: [], depreciations: [] };
+        let contextsData = { suppliers: [], manufacturers: [] };
+
+        try {
+          const [productContexts, contextResponse] = await Promise.all([
+            assetsService.fetchProductContexts(),
+            fetchAllCategories(),
+          ]);
+
+          if (productContexts) {
+            productContextsData = productContexts;
+          }
+
+          if (contextResponse) {
+            contextsData = contextResponse;
+          }
+        } catch (fetchError) {
+          console.warn(
+            "Failed to fetch product/contexts data, falling back to mock data:",
+            fetchError
+          );
+        }
+
+        const apiCategories = productContextsData.categories || [];
+        const apiDepreciations = productContextsData.depreciations || [];
+        const apiSuppliers = contextsData.suppliers || [];
+        const apiManufacturers = contextsData.manufacturers || [];
+        const mockCategoryNames = Array.from(
+          new Set(
+            (ProductsMockData || [])
+              .map((item) => item.category)
+              .filter(Boolean)
+          )
+        );
+        const mockCategories = mockCategoryNames.map((name, index) => ({
+          id: index + 1,
+          name,
+        }));
+
+        setCategories(apiCategories.length ? apiCategories : mockCategories);
+        setDepreciations(
+          apiDepreciations.length ? apiDepreciations : DepreciationMockData
+        );
+        setSuppliers(apiSuppliers.length ? apiSuppliers : SupplierMockData);
+        setManufacturers(
+          apiManufacturers.length ? apiManufacturers : ManufacturerMockData
+        );
+
+        console.log(
+          "Categories:",
+          apiCategories.length ? apiCategories : mockCategories
+        );
+        console.log(
+          "Depreciations:",
+          apiDepreciations.length ? apiDepreciations : DepreciationMockData
+        );
+        console.log(
+          "Suppliers:",
+          apiSuppliers.length ? apiSuppliers : SupplierMockData
+        );
+        console.log(
+          "Manufacturers:",
+          apiManufacturers.length ? apiManufacturers : ManufacturerMockData
+        );
 
         // If ID is present, fetch the product details
         if (id) {
@@ -99,21 +153,26 @@ export default function ProductsRegistration() {
           console.log("Product Details:", productData);
 
           // Set form values from retrieved product data
-          setValue('productName', productData.name);
+          setValue("productName", productData.name);
 
-          setValue('category', productData.category_id || '');
-          setValue('depreciation', productData.depreciation_id || '');
-          setValue('manufacturer', productData.manufacturer_id || '');
-          setValue('modelNumber', productData.model_number || '');
-          setValue('endOfLifeDate', productData.end_of_life || '');
-          setValue('defaultPurchaseCost', productData.default_purchase_cost || '');
-          setValue('supplier', productData.default_supplier_id || '');
-          setValue('minimumQuantity', productData.minimum_quantity || '');
-          setValue('operatingSystem', productData.operating_system || '');
-          setValue('notes', productData.notes || '');
-          
+          setValue("category", productData.category_id || "");
+          setValue("depreciation", productData.depreciation_id || "");
+          setValue("manufacturer", productData.manufacturer_id || "");
+          setValue("modelNumber", productData.model_number || "");
+          setValue("endOfLifeDate", productData.end_of_life || "");
+          setValue(
+            "defaultPurchaseCost",
+            productData.default_purchase_cost || ""
+          );
+          setValue("supplier", productData.default_supplier_id || "");
+          setValue("minimumQuantity", productData.minimum_quantity || "");
+          setValue("operatingSystem", productData.operating_system || "");
+          setValue("notes", productData.notes || "");
+
           if (productData.image) {
-            setPreviewImage(`https://assets-service-production.up.railway.app${productData.image}`);
+            setPreviewImage(
+              `https://assets-service-production.up.railway.app${productData.image}`
+            );
           }
         }
       } catch (error) {
@@ -138,12 +197,12 @@ export default function ProductsRegistration() {
         return;
       }
 
-      setSelectedImage(file); // store the actual file
-      setValue('image', file); // optional: sync with react-hook-form
+      setSelectedImage(file);
+      setValue('image', file);
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewImage(reader.result); // for display only
+        setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -158,7 +217,6 @@ export default function ProductsRegistration() {
         return;
       }
       setImportFile(file);
-      // Here you would typically process the Excel file
       console.log("Import file selected:", file.name);
     }
   };
@@ -264,19 +322,19 @@ export default function ProductsRegistration() {
       setTimeout(() => setErrorMessage(""), 5000);
     }
   };
-  
+
   const onSubmit = async (data) => {
     try {
       // Only check for duplicate names when creating a new product (not when updating)
       if (!id) {
         // Fetch all existing product names
         const existingProducts = await assetsService.fetchProductNames();
-        
+
         // Check if a product with the same name already exists
         const isDuplicate = existingProducts.products.some(
           product => product.name.toLowerCase() === data.productName.toLowerCase()
         );
-        
+
         if (isDuplicate) {
           setErrorMessage("A product with this name already exists. Please use a different name.");
           setTimeout(() => {
@@ -306,7 +364,7 @@ export default function ProductsRegistration() {
       formData.append('storage_size', data.storageSize || '');
       formData.append('archive_model', data.archiveModel || false);
       formData.append('notes', data.notes || '');
-      
+
       // Handle image upload
       if (selectedImage) {
         formData.append('image', selectedImage);
@@ -317,14 +375,14 @@ export default function ProductsRegistration() {
         formData.append('remove_image', 'true');
         console.log("Removing image: remove_image flag set to true");
       }
-      
+
       console.log("Form data before submission:");
       for (let pair of formData.entries()) {
         console.log(pair[0] + ': ' + pair[1]);
       }
-      
+
       let result;
-      
+
       if (id) {
         // Update existing product
         result = await assetsService.updateProduct(id, formData);
@@ -338,12 +396,12 @@ export default function ProductsRegistration() {
       }
 
       console.log(`${id ? 'Updated' : 'Created'} product:`, result);
-      
+
       // Navigate to products page with success message
-      navigate('/products', { 
-        state: { 
-          successMessage: `Product has been ${id ? 'updated' : 'created'} successfully!` 
-        } 
+      navigate('/products', {
+        state: {
+          successMessage: `Product has been ${id ? 'updated' : 'created'} successfully!`
+        }
       });
     } catch (error) {
       console.error(`Error ${id ? 'updating' : 'creating'} product:`, error);
@@ -360,14 +418,15 @@ export default function ProductsRegistration() {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      <nav><NavBar /></nav>
-      <main className="registration">
+      <section className="page-layout-registration">
+        <NavBar />
+        <main className="registration">
         <section className="top">
           <TopSecFormPage
             root="Asset Models"
-            currentPage={id ? "Edit Asset Model" : "New Asset Model"}
+            currentPage={id ? "Update Asset Model" : "New Asset Model"}
             rootNavigatePage="/products"
-            title={id ? 'Edit' + ' ' + (product?.name || 'Asset Model') : 'New Asset Model'}
+            title={id ? (product?.name || location.state?.product?.name || 'Asset Model') : 'New Asset Model'}
             rightComponent={
               !id && (
                 <div className="import-section">
@@ -502,15 +561,15 @@ export default function ProductsRegistration() {
             {/* Model Number */}
             <fieldset>
               <label htmlFor='model-number'>Model Number</label>
-              <input 
+              <input
                 type='text'
-                {...register('modelNumber')} 
+                {...register('modelNumber')}
                 maxLength='100'
                 placeholder='Model Number'
               />
             </fieldset>
 
-            {/* End of Life Date */}
+            {/* End of Life */}
             <fieldset>
               <label htmlFor='end-of-life-date'>End of Life Date</label>
               <input
@@ -758,6 +817,9 @@ export default function ProductsRegistration() {
           type="depreciation"
         />
       </main>
+      <Footer />
+      </section>
+
     </>
   );
 }

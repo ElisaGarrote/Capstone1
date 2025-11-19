@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
@@ -53,7 +54,7 @@ const ComponentCheckin = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Checkin Date */}
             <fieldset>
-              <label htmlFor="checkinDate">Checkin Date *</label>
+              <label htmlFor="checkinDate">Checkin Date<span className="required-asterisk">*</span></label>
               <input
                 type="date"
                 className={errors.checkinDate ? "input-error" : ""}
@@ -69,7 +70,7 @@ const ComponentCheckin = () => {
 
             {/* Quantity */}
             <fieldset>
-              <label htmlFor="quantity">Quantity * (Remaining: {item.remaining_quantity})</label>
+              <label htmlFor="quantity">Quantity<span className="required-asterisk">*</span> (Remaining: {item.remaining_quantity})</label>
               <input
                 className={errors.quantity ? "input-error" : ""}
                 type="number"
@@ -84,7 +85,7 @@ const ComponentCheckin = () => {
                   validate: (value) =>
                     value <= item.remaining_quantity ||
                     `Cannot exceed available quantity (${item.available_quantity})`,
-                })} 
+                })}
               />
               {errors.quantity && (
                 <span className="error-message">{errors.quantity.message}</span>
@@ -108,6 +109,7 @@ const ComponentCheckin = () => {
           </form>
         </section>
       </main>
+      <Footer />
     </>
   );
 };

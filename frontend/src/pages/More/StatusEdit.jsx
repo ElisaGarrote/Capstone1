@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Status from "../../components/Status";
+import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 
 import "../../styles/Registration.css";
@@ -11,6 +13,7 @@ import "../../styles/CategoryRegistration.css";
 const StatusRegistration = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Retrieve the "status" data value passed from the navigation state.
   // If the "status" data is not exist, the default value for this is "undifiend".
@@ -26,6 +29,7 @@ const StatusRegistration = () => {
       statusType: status.type,
       notes: status.notes,
     },
+    mode: "all",
   });
 
   const statusTypes = [
@@ -41,27 +45,32 @@ const StatusRegistration = () => {
     console.log("Form submitted:", data);
 
     // Optional: navigate back to status view after successful submission
-    navigate("/More/ViewStatus");
+    navigate("/More/ViewStatus", { state: { updatedStatus: true } });
   };
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
           <section className="top">
             <TopSecFormPage
               root="Statuses"
-              currentPage="Edit Status"
+              currentPage="Update Status"
               rootNavigatePage="/More/ViewStatus"
-              title="Edit Status Label"
+              title={status?.name || "Update Status"}
             />
           </section>
           <section className="status-registration-section">
             <section className="registration-form">
               <form onSubmit={handleSubmit(onSubmit)}>
                 <fieldset>
-                  <label htmlFor="statusName">Status Name *</label>
+                  <label htmlFor="statusName">
+                    Status Name
+                    <span className="required-asterisk">*</span>
+                  </label>
                   <input
                     type="text"
                     placeholder="Status Name"
@@ -79,7 +88,10 @@ const StatusRegistration = () => {
                 </fieldset>
 
                 <fieldset>
-                  <label htmlFor="statusType">Status Type *</label>
+                  <label htmlFor="statusType">
+                    Status Type
+                    <span className="required-asterisk">*</span>
+                  </label>
                   <select
                     className={errors.statusType ? "input-error" : ""}
                     {...register("statusType", {

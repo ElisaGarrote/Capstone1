@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
+import Alert from "../../components/Alert";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import RecycleBinFilterModal from "../../components/Modals/RecycleBinFilterModal";
 import Pagination from "../../components/Pagination";
+import { exportToExcel } from "../../utils/exportToExcel";
 import "../../styles/Table.css";
 import "../../styles/TabNavBar.css";
 import "../../styles/RecycleBin.css";
@@ -82,6 +84,10 @@ export default function RecycleBin() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(data);
   const [appliedFilters, setAppliedFilters] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Apply filters to data
   const applyFilters = (filters) => {
@@ -95,30 +101,30 @@ export default function RecycleBin() {
     }
 
     // Filter by Category
-    if (filters.category && filters.category.value) {
+    if (filters.category && filters.category.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.category?.toLowerCase() === filters.category.value.toLowerCase()
+        item.category?.toLowerCase().includes(filters.category.toLowerCase())
       );
     }
 
     // Filter by Manufacturer
-    if (filters.manufacturer && filters.manufacturer.value) {
+    if (filters.manufacturer && filters.manufacturer.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.manufacturer?.toLowerCase() === filters.manufacturer.value.toLowerCase()
+        item.manufacturer?.toLowerCase().includes(filters.manufacturer.toLowerCase())
       );
     }
 
     // Filter by Supplier
-    if (filters.supplier && filters.supplier.value) {
+    if (filters.supplier && filters.supplier.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.supplier?.toLowerCase() === filters.supplier.value.toLowerCase()
+        item.supplier?.toLowerCase().includes(filters.supplier.toLowerCase())
       );
     }
 
     // Filter by Location
-    if (filters.location && filters.location.value) {
+    if (filters.location && filters.location.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.location?.toLowerCase() === filters.location.value.toLowerCase()
+        item.location?.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
@@ -133,9 +139,39 @@ export default function RecycleBin() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((item) => {
+          const name = item.name?.toLowerCase() || "";
+          const category = item.category?.toLowerCase() || "";
+          const manufacturer = item.manufacturer?.toLowerCase() || "";
+          const supplier = item.supplier?.toLowerCase() || "";
+          const location = item.location?.toLowerCase() || "";
+          return (
+            name.includes(normalizedQuery) ||
+            category.includes(normalizedQuery) ||
+            manufacturer.includes(normalizedQuery) ||
+            supplier.includes(normalizedQuery) ||
+            location.includes(normalizedQuery)
+          );
+        });
+
+  // Handle export
+  const handleExport = () => {
+    const dataToExport = searchedData.length > 0 ? searchedData : filteredData;
+    exportToExcel(dataToExport, "RecycleBin_Records.xlsx");
+  };
+
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = filteredData.slice(startIndex, endIndex);
+  const paginatedActivity = searchedData.slice(startIndex, endIndex);
 
   // selection
   const [selectedIds, setSelectedIds] = useState([]);
@@ -182,12 +218,17 @@ export default function RecycleBin() {
   const confirmDelete = () => {
     if (deleteTarget) {
       console.log("Deleting single id:", deleteTarget);
+      setSuccessMessage("Item deleted successfully from Recycle Bin!");
       // remove from mock data / API call
     } else {
       console.log("Deleting multiple ids:", selectedIds);
+      if (selectedIds.length > 0) {
+        setSuccessMessage("Items deleted successfully from Recycle Bin!");
+      }
       // remove multiple
       setSelectedIds([]); // clear selection
     }
+    setTimeout(() => setSuccessMessage(""), 5000);
     closeDeleteModal();
   };
 
@@ -243,6 +284,9 @@ export default function RecycleBin() {
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}
@@ -264,6 +308,7 @@ export default function RecycleBin() {
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
         initialFilters={appliedFilters}
+        activeTab={activeTab}
       />
 
       <section className="page-layout-with-table">
@@ -304,8 +349,8 @@ export default function RecycleBin() {
             <section className="table-header">
               <h2 className="h2">
                 {activeTab === "assets"
-                  ? `Deleted Assets (${filteredData.length})`
-                  : `Deleted Components (${filteredData.length})`}
+                  ? `Deleted Assets (${searchedData.length})`
+                  : `Deleted Components (${searchedData.length})`}
               </h2>
               <section className="table-actions">
                 {/* Bulk recover button only when checkboxes selected */}
@@ -324,24 +369,28 @@ export default function RecycleBin() {
                   />
                 )}
 
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
 
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
+
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
               </section>
             </section>
-
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
 
             <section className="recycle-bin-table-section">
               <table>
@@ -378,7 +427,7 @@ export default function RecycleBin() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={filteredData.length}
+                totalItems={searchedData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

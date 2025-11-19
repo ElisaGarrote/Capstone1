@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import NavBar from "../../../components/NavBar";
-import DetailedViewPage from "../../../components/DetailedViewPage/DetailedViewPage";
-import MediumButtons from "../../../components/buttons/MediumButtons";
-import MockupData from "../../../data/mockData/components/component-mockup-data.json";
-import { getComponentDetails, getComponentTabs } from "../../../data/mockData/components/componentDetailsData";
-import ConfirmationModal from "../../../components/Modals/DeleteModal";
+import NavBar from "../../components/NavBar";
+import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import MockupData from "../../data/mockData/components/component-mockup-data.json";
+import { getComponentDetails, getComponentTabs } from "../../data/mockData/components/componentDetailsData";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 
 function ComponentDetails() {
   const { id } = useParams();
@@ -17,7 +17,6 @@ function ComponentDetails() {
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    // Get component from location state or find from mockup data
     if (location.state?.component) {
       setComponent(location.state.component);
     } else {
@@ -94,9 +93,9 @@ function ComponentDetails() {
 
   const aboutContent = (
     <div className="about-section">
-      <div className="asset-details-section">
+      <div className="component-details-section">
         <h3 className="section-header">Details</h3>
-        <div className="asset-details-grid">
+        <div className="component-details-grid">
           <div className="detail-row">
             <label>Component Name</label>
             <span>{component.name}</span>

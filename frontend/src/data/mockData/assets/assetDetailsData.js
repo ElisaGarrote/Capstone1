@@ -103,6 +103,7 @@ export const getCheckedOutToInfo = (asset) => {
 export const getTabs = () => {
   return [
     { label: "About" },
+    { label: "Checkout Log" },
     { label: "History" },
     { label: "Components ()" },
     { label: "Repair ()" },
