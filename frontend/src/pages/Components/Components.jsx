@@ -16,7 +16,6 @@ import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/components/Components.css";
 
-// TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
@@ -96,11 +95,6 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
 export default function Assets() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // Base data with deterministic check-in/check-out visibility per component
-  // Show Check-Out when there is available quantity; show Check-In when
-  // there is some quantity currently checked out. This removes randomness
-  // so the table renders the same way every time, even with mock data.
   const [baseData] = useState(() =>
     MockupData.map((asset) => {
       const available = asset.available_quantity ?? 0;
@@ -118,9 +112,10 @@ export default function Assets() {
   const [appliedFilters, setAppliedFilters] = useState({});
   const [filteredData, setFilteredData] = useState(baseData);
 
-  // Debug: Monitor filter modal state changes
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
   useEffect(() => {
-    console.log("🔍 Filter Modal State Changed:", isFilterModalOpen);
+    console.log("Filter Modal State Changed:", isFilterModalOpen);
   }, [isFilterModalOpen]);
 
   // pagination state
@@ -160,12 +155,37 @@ export default function Assets() {
     return filtered;
   };
 
+  // Combine modal filters and search term
+  const applyFiltersAndSearch = (filters, term) => {
+    let filtered = applyFilters(filters || {});
+
+    if (term && term.trim() !== "") {
+      const lowerTerm = term.toLowerCase();
+      filtered = filtered.filter((component) =>
+        (component.name && component.name.toLowerCase().includes(lowerTerm)) ||
+        (component.category && component.category.toLowerCase().includes(lowerTerm)) ||
+        (component.manufacturer && component.manufacturer.toLowerCase().includes(lowerTerm))
+      );
+    }
+
+    return filtered;
+  };
+
   // Handle filter apply
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    const filtered = applyFilters(filters);
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // Handle search input
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
   };
 
   // paginate the data
@@ -313,17 +333,29 @@ export default function Assets() {
                 {selectedIds.length > 0 && (
                   <>
                     <MediumButtons
+                      type="edit"
+                      onClick={() =>
+                        navigate("/components/bulk-edit", { state: { selectedIds } })
+                      }
+                    />
+                    <MediumButtons
                       type="delete"
                       onClick={() => openDeleteModal(null)}
                     />
                   </>
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                />
                 <button
                   type="button"
                   className="medium-button-filter"
                   onClick={() => {
-                    console.log("🔘 DIRECT FILTER BUTTON CLICKED!");
+                    console.log("DIRECT FILTER BUTTON CLICKED!");
                     setIsFilterModalOpen(true);
                   }}
                 >

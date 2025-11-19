@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
 import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
@@ -26,13 +25,16 @@ function TableHeader({ allSelected, onHeaderChange }) {
           onChange={onHeaderChange}
         />
       </th>
-      <th>ASSET</th>
-      <th>TYPE</th>
-      <th>NAME</th>
+      <th>ASSET ID</th>
+      <th>ASSET NAME</th>
+      <th>REPAIR TYPE</th>
+      <th>REPAIR NAME</th>
       <th>START DATE</th>
       <th>END DATE</th>
       <th>COST</th>
-      <th>STATUS</th>
+      <th>SUPPLIER</th>
+      <th>NOTES</th>
+      <th>ATTACHMENT</th>
       <th>ACTION</th>
     </tr>
   );
@@ -40,6 +42,11 @@ function TableHeader({ allSelected, onHeaderChange }) {
 
 // TableItem component to render each repair row
 function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+  const assetLabel = repair.asset || "";
+  const assetParts = assetLabel.split(" ");
+  const assetId = assetParts.length > 1 ? assetParts[assetParts.length - 1] : "-";
+  const assetName = assetParts.length > 1 ? assetParts.slice(0, -1).join(" ") : assetLabel;
+
   return (
     <tr>
       <td>
@@ -49,19 +56,16 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
           onChange={(e) => onRowChange(repair.id, e.target.checked)}
         />
       </td>
-      <td>{repair.asset}</td>
+      <td>{assetId}</td>
+      <td>{assetName}</td>
       <td>{repair.type}</td>
       <td>{repair.name}</td>
       <td>{repair.start_date}</td>
-      <td>{repair.end_date || 'N/A'}</td>
+      <td>{repair.end_date || "N/A"}</td>
       <td>{repair.cost}</td>
-      <td>
-        <Status
-          value={repair.id}
-          type={repair.statusType}
-          name={repair.status_name}
-        />
-      </td>
+      <td>{repair.supplier || "N/A"}</td>
+      <td>{repair.notes || "N/A"}</td>
+      <td>{repair.attachments?.length ? `${repair.attachments.length} file(s)` : "N/A"}</td>
       <td>
         <ActionButtons
           showEdit
@@ -79,6 +83,7 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
 
 export default function AssetRepairs() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Filter and data state
   const [filteredData, setFilteredData] = useState(MockupData);
@@ -101,6 +106,17 @@ export default function AssetRepairs() {
   // Alert state
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      setTimeout(() => {
+        setSuccessMessage("");
+        window.history.replaceState({}, document.title);
+      }, 5000);
+    }
+  }, [location]);
+
 
   // Paginate the data
   const startIndex = (currentPage - 1) * pageSize;
@@ -334,7 +350,7 @@ export default function AssetRepairs() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={9} className="no-data-message">
+                      <td colSpan={12} className="no-data-message">
                         No Repairs Found.
                       </td>
                     </tr>

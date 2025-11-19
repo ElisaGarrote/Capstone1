@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
@@ -12,6 +12,8 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
+import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
+
 
 import "../../styles/Products/Products.css";
 import "../../styles/ProductFilterModal.css";
@@ -107,6 +109,9 @@ export default function Products() {
   // Filter state
   const [filteredData, setFilteredData] = useState(ProductsMockupData);
   const [appliedFilters, setAppliedFilters] = useState({});
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -230,84 +235,165 @@ export default function Products() {
   };
 
   // Apply filters to data
+  const productsInUseSet = useMemo(
+    () => new Set(AssetsMockupData.map((asset) => asset.name)),
+    []
+  );
+
+  const isProductArchived = (product) => {
+    if (!product.end_of_life) return false;
+    const today = new Date().toISOString().split("T")[0];
+    return product.end_of_life < today;
+  };
+
   const applyFilters = (filters) => {
     let filtered = [...products];
 
-    // Filter by Asset ID
-    if (filters.assetId && filters.assetId.toString().trim() !== "") {
-      filtered = filtered.filter((product) =>
-        product.id.toString().includes(filters.assetId.toString())
+    // Filter by Category
+    if (filters.category && filters.category.trim() !== "") {
+      filtered = filtered.filter(
+        (product) =>
+          product.category &&
+          product.category.toLowerCase() === filters.category.toLowerCase()
       );
     }
 
-    // Filter by Asset Model
-    if (filters.assetModel && filters.assetModel.trim() !== "") {
-      filtered = filtered.filter((product) =>
-        product.name?.toLowerCase().includes(filters.assetModel.toLowerCase())
+    // Filter by Manufacturer
+    if (filters.manufacturer && filters.manufacturer.toString().trim() !== "") {
+      filtered = filtered.filter(
+        (product) =>
+          product.manufacturer_id?.toString() === filters.manufacturer.toString()
       );
     }
 
-    // Filter by Status
-    if (filters.status) {
-      filtered = filtered.filter((product) =>
-        product.status?.toLowerCase() === filters.status.value?.toLowerCase()
+    // Filter by Depreciation
+    if (filters.depreciation && filters.depreciation.trim() !== ""
+    ) {
+      filtered = filtered.filter(
+        (product) =>
+          product.depreciation &&
+          product.depreciation.toLowerCase() === filters.depreciation.toLowerCase()
       );
     }
 
-    // Filter by Supplier
-    if (filters.supplier) {
-      filtered = filtered.filter((product) =>
-        product.default_supplier?.toLowerCase().includes(filters.supplier.label?.toLowerCase())
+    // Filter by Archived flag
+    if (filters.archived === "yes") {
+      filtered = filtered.filter((product) => isProductArchived(product));
+    } else if (filters.archived === "no") {
+      filtered = filtered.filter((product) => !isProductArchived(product));
+    }
+
+    // Filter by In used by Asset flag
+    if (filters.inUseByAsset === "yes") {
+      filtered = filtered.filter((product) => productsInUseSet.has(product.name));
+    } else if (filters.inUseByAsset === "no") {
+      filtered = filtered.filter((product) => !productsInUseSet.has(product.name));
+    }
+
+    // Filter by Created At range
+    if (filters.createdAtFrom || filters.createdAtTo) {
+      const from = filters.createdAtFrom ? new Date(filters.createdAtFrom) : null;
+      const to = filters.createdAtTo ? new Date(filters.createdAtTo) : null;
+
+      filtered = filtered.filter((product) => {
+        if (!product.created_at) return false;
+        const created = new Date(product.created_at);
+        if (Number.isNaN(created)) return false;
+        if (from && created < from) return false;
+        if (to && created > to) return false;
+        return true;
+      });
+    }
+
+    // Filter by Updated At range
+    if (filters.updatedAtFrom || filters.updatedAtTo) {
+      const from = filters.updatedAtFrom ? new Date(filters.updatedAtFrom) : null;
+      const to = filters.updatedAtTo ? new Date(filters.updatedAtTo) : null;
+
+      filtered = filtered.filter((product) => {
+        if (!product.updated_at) return false;
+        const updated = new Date(product.updated_at);
+        if (Number.isNaN(updated)) return false;
+        if (from && updated < from) return false;
+        if (to && updated > to) return false;
+        return true;
+      });
+    }
+
+    // Filter by Connectivity
+    if (filters.connectivity && filters.connectivity.trim() !== "") {
+      filtered = filtered.filter(
+        (product) =>
+          product.connectivity &&
+          product.connectivity.toLowerCase() === filters.connectivity.toLowerCase()
       );
     }
 
-    // Filter by Location
-    if (filters.location) {
-      filtered = filtered.filter((product) =>
-        product.location?.toLowerCase().includes(filters.location.label?.toLowerCase())
+    // Filter by CPU
+    if (filters.cpu && filters.cpu.trim() !== "") {
+      filtered = filtered.filter(
+        (product) =>
+          product.cpu && product.cpu.toLowerCase() === filters.cpu.toLowerCase()
       );
     }
 
-    // Filter by Asset Name
-    if (filters.assetName && filters.assetName.trim() !== "") {
-      filtered = filtered.filter((product) =>
-        product.name?.toLowerCase().includes(filters.assetName.toLowerCase())
+    // Filter by GPU
+    if (filters.gpu && filters.gpu.trim() !== "") {
+      filtered = filtered.filter(
+        (product) =>
+          product.gpu && product.gpu.toLowerCase() === filters.gpu.toLowerCase()
       );
     }
 
-    // Filter by Serial Number
-    if (filters.serialNumber && filters.serialNumber.toString().trim() !== "") {
-      filtered = filtered.filter((product) =>
-        product.serial_number?.toString().includes(filters.serialNumber.toString())
+    // Filter by RAM
+    if (filters.ram && filters.ram.trim() !== "") {
+      filtered = filtered.filter(
+        (product) =>
+          product.ram && product.ram.toLowerCase() === filters.ram.toLowerCase()
       );
     }
 
-    // Filter by Warranty Expiration
-    if (filters.warrantyExpiration && filters.warrantyExpiration.trim() !== "") {
-      filtered = filtered.filter((product) =>
-        product.warranty_expiration_date === filters.warrantyExpiration
+    // Filter by Operating System
+    if (filters.operatingSystem && filters.operatingSystem.trim() !== "") {
+      filtered = filtered.filter(
+        (product) =>
+          product.operating_system &&
+          product.operating_system.toLowerCase() === filters.operatingSystem.toLowerCase()
       );
     }
 
-    // Filter by Order Number
-    if (filters.orderNumber && filters.orderNumber.toString().trim() !== "") {
-      filtered = filtered.filter((product) =>
-        product.order_number?.toString().includes(filters.orderNumber.toString())
+    // Filter by Screen Size
+    if (filters.screenSize && filters.screenSize.trim() !== "") {
+      filtered = filtered.filter(
+        (product) =>
+          product.screen_size &&
+          product.screen_size.toLowerCase() === filters.screenSize.toLowerCase()
       );
     }
 
-    // Filter by Purchase Date
-    if (filters.purchaseDate && filters.purchaseDate.trim() !== "") {
-      filtered = filtered.filter((product) =>
-        product.purchase_date === filters.purchaseDate
+    // Filter by Storage Size
+    if (filters.storageSize && filters.storageSize.trim() !== "") {
+      filtered = filtered.filter(
+        (product) =>
+          product.storage_size &&
+          product.storage_size.toLowerCase() === filters.storageSize.toLowerCase()
       );
     }
 
-    // Filter by Purchase Cost
-    if (filters.purchaseCost && filters.purchaseCost.toString().trim() !== "") {
-      const cost = parseFloat(filters.purchaseCost);
+    return filtered;
+  };
+
+  // Combine modal filters and search term
+  const applyFiltersAndSearch = (filters, term) => {
+    let filtered = applyFilters(filters || {});
+
+    if (term && term.trim() !== "") {
+      const lowerTerm = term.toLowerCase();
       filtered = filtered.filter((product) =>
-        product.purchase_cost === cost
+        (product.name && product.name.toLowerCase().includes(lowerTerm)) ||
+        (product.category && product.category.toLowerCase().includes(lowerTerm)) ||
+        (product.model && product.model.toLowerCase().includes(lowerTerm)) ||
+        (product.default_supplier && product.default_supplier.toLowerCase().includes(lowerTerm))
       );
     }
 
@@ -317,9 +403,18 @@ export default function Products() {
   // Handle filter apply
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    const filtered = applyFilters(filters);
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // Handle search input
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
   };
 
 
@@ -354,14 +449,28 @@ export default function Products() {
             <section className="table-header">
               <h2 className="h2">Asset Models ({filteredData.length})</h2>
               <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
+                {/* Bulk edit and delete buttons only when checkboxes selected */}
                 {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
+                  <>
+                    <MediumButtons
+                      type="edit"
+                      onClick={() =>
+                        navigate("/products/bulk-edit", { state: { selectedIds } })
+                      }
+                    />
+                    <MediumButtons
+                      type="delete"
+                      onClick={() => openDeleteModal(null)}
+                    />
+                  </>
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                />
                 <button
                   type="button"
                   className="medium-button-filter"

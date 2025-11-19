@@ -285,7 +285,8 @@
 }
 
 .detail-row label {
-  width: 150px;
+  width: 180px;
+  margin-right: 24px;
   font-size: 0.875rem;
   font-weight: 600;
   color: #333;

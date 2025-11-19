@@ -16,6 +16,7 @@ import ActionButtons from "../../components/ActionButtons";
 import Pagination from "../../components/Pagination";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
+import AssetFilterModal from "../../components/Modals/AssetFilterModal";
 
 function ProductViewPage() {
   const { id } = useParams();
@@ -27,11 +28,16 @@ function ProductViewPage() {
   const [activeTab, setActiveTab] = useState(0);
 
   // Assets table state
+  const [productAssets, setProductAssets] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [selectedAssetIds, setSelectedAssetIds] = useState([]);
+
+  // Filter modal state for Assets tab
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
 
   useEffect(() => {
     // Find product from mockup data
@@ -45,11 +51,12 @@ function ProductViewPage() {
       );
       setManufacturer(foundManufacturer);
 
-      // Filter assets for this product
-      const productAssets = AssetsMockupData.filter(
-        asset => asset.product === foundProduct.model || asset.name === foundProduct.name
+      // Filter assets for this product (base dataset for this page)
+      const productAssetsForModel = AssetsMockupData.filter(
+        (asset) => asset.product === foundProduct.model || asset.name === foundProduct.name
       );
-      setFilteredAssets(productAssets);
+      setProductAssets(productAssetsForModel);
+      setFilteredAssets(productAssetsForModel);
     }
     setIsLoading(false);
   }, [id]);
@@ -75,11 +82,118 @@ function ProductViewPage() {
 
   const tabs = getProductTabs();
 
+  // Apply filters from AssetFilterModal to this product's assets
+  const applyAssetFilters = (data, filters) => {
+    let filtered = [...data];
+
+    // Filter by Asset ID
+    if (filters.assetId && filters.assetId.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.displayed_id?.toLowerCase().includes(filters.assetId.toLowerCase())
+      );
+    }
+
+    // Filter by Asset Model
+    if (filters.assetModel && filters.assetModel.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.product?.toLowerCase().includes(filters.assetModel.toLowerCase())
+      );
+    }
+
+    // Filter by Status
+    if (filters.status) {
+      filtered = filtered.filter((asset) =>
+        asset.status?.toLowerCase() === filters.status.value.toLowerCase()
+      );
+    }
+
+    // Filter by Supplier
+    if (filters.supplier) {
+      filtered = filtered.filter((asset) =>
+        asset.supplier?.toLowerCase().includes(filters.supplier.label.toLowerCase())
+      );
+    }
+
+    // Filter by Location
+    if (filters.location) {
+      filtered = filtered.filter((asset) =>
+        asset.location?.toLowerCase().includes(filters.location.label.toLowerCase())
+      );
+    }
+
+    // Filter by Asset Name
+    if (filters.assetName && filters.assetName.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.name?.toLowerCase().includes(filters.assetName.toLowerCase())
+      );
+    }
+
+    // Filter by Serial Number
+    if (filters.serialNumber && filters.serialNumber.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.serial_number?.toLowerCase().includes(filters.serialNumber.toLowerCase())
+      );
+    }
+
+    // Filter by Warranty Expiration
+    if (filters.warrantyExpiration && filters.warrantyExpiration.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.warranty_expiration_date === filters.warrantyExpiration
+      );
+    }
+
+    // Filter by Order Number
+    if (filters.orderNumber && filters.orderNumber.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.order_number?.toLowerCase().includes(filters.orderNumber.toLowerCase())
+      );
+    }
+
+    // Filter by Purchase Date
+    if (filters.purchaseDate && filters.purchaseDate.trim() !== "") {
+      filtered = filtered.filter((asset) => asset.purchase_date === filters.purchaseDate);
+    }
+
+    // Filter by Purchase Cost
+    if (filters.purchaseCost && filters.purchaseCost.trim() !== "") {
+      const cost = parseFloat(filters.purchaseCost);
+      filtered = filtered.filter((asset) => asset.purchase_cost === cost);
+    }
+
+    return filtered;
+  };
+
+  // Combine modal filters and search term
+  const filterAndSearchAssets = (assets, filters, term) => {
+    let filtered = applyAssetFilters(assets, filters || {});
+
+    if (term && term.trim() !== "") {
+      const lowerTerm = term.toLowerCase();
+      filtered = filtered.filter((asset) =>
+        (asset.name && asset.name.toLowerCase().includes(lowerTerm)) ||
+        (asset.displayed_id && asset.displayed_id.toLowerCase().includes(lowerTerm)) ||
+        (asset.category && asset.category.toLowerCase().includes(lowerTerm))
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply from modal
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = filterAndSearchAssets(productAssets, filters, searchTerm);
+    setFilteredAssets(filtered);
+    setCurrentPage(1);
+  };
+
   // Handle search
   const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
+    const term = e.target.value;
     setSearchTerm(term);
     setCurrentPage(1);
+    const filtered = filterAndSearchAssets(productAssets, appliedFilters, term);
+    setFilteredAssets(filtered);
   };
 
   // Handle export
@@ -167,7 +281,7 @@ function ProductViewPage() {
           <button
             type="button"
             className="medium-button-filter"
-            onClick={() => console.log("Filter clicked")}
+            onClick={() => setIsFilterModalOpen(true)}
           >
             Filter
           </button>
@@ -358,6 +472,13 @@ function ProductViewPage() {
           onConfirm={confirmDelete}
         />
       )}
+
+      <AssetFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
       <DetailedViewPage
         {...getProductDetails(product, manufacturer)}
         assetImage={imageSrc}

@@ -15,6 +15,7 @@ import Assets from "./pages/Assets/Assets";
 import AssetsRegistration from "./pages/Assets/AssetsRegistration";
 import AssetEditPage from "./pages/Assets/AssetEditPage";
 import BulkEditAssets from "./pages/Assets/BulkEditAssets";
+import BulkEditAssetModels from "./pages/Assets/BulkEditAssetModels";
 import AssetViewPage from "./pages/Assets/AssetViewPage";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
@@ -30,8 +31,9 @@ import ComponentRegistration from "./pages/Components/ComponentRegistration";
 import ComponentCheckout from "./pages/Components/ComponentCheckout";
 import ComponentCheckedoutList from "./pages/Components/ComponentCheckedoutList";
 import ComponentCheckin from "./pages/Components/ComponentCheckin";
+import BulkEditComponents from "./pages/Components/BulkEditComponents";
 import ComponentView from "./pages/Components/ComponentView";
-import ComponentDetails from "./pages/Components/component-details/ComponentDetails";
+import ComponentDetails from "./pages/Components/ComponentDetails";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";
 import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
@@ -102,6 +104,10 @@ function App() {
             path="/products/registration/:id"
             element={<ProductsRegistration />}
           />
+          <Route
+            path="/products/bulk-edit"
+            element={<BulkEditAssetModels />}
+          />
           <Route path="/assets/registration" element={<AssetsRegistration />} />
           <Route
             path="/assets/registration/:id"
@@ -126,6 +132,10 @@ function App() {
           <Route
             path="/components/edit/:id"
             element={<ComponentRegistration />}
+          />
+          <Route
+            path="/components/bulk-edit"
+            element={<BulkEditComponents />}
           />
           <Route
             path="/components/check-out/:id"

@@ -4,6 +4,13 @@ import NavBar from "../../../components/NavBar";
 import DetailedViewPage from "../../../components/DetailedViewPage/DetailedViewPage";
 import MediumButtons from "../../../components/buttons/MediumButtons";
 import { getSupplierDetails, getSupplierTabs } from "../../../data/mockData/more/supplierDetailsData";
+import AssetsMockupData from "../../../data/mockData/assets/assets-mockup-data.json";
+import Status from "../../../components/Status";
+import ActionButtons from "../../../components/ActionButtons";
+import Pagination from "../../../components/Pagination";
+import DefaultImage from "../../../assets/img/default-image.jpg";
+import { exportToExcel } from "../../../utils/exportToExcel";
+import "../../../styles/Assets/Assets.css";
 import "../../../styles/more/supplier/SupplierDetails.css";
 import ConfirmationModal from "../../../components/Modals/DeleteModal";
 
@@ -12,6 +19,9 @@ function SupplierDetails() {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [assetsCurrentPage, setAssetsCurrentPage] = useState(1);
+  const [assetsPageSize, setAssetsPageSize] = useState(5);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Retrieve the "supplier" data value passed from the navigation state.
   const supplierDetails = location.state?.supplier;
@@ -21,6 +31,7 @@ function SupplierDetails() {
       <>
         <NavBar />
         <div style={{ padding: "40px", textAlign: "center" }}>
+
           <h2>Supplier not found</h2>
         </div>
       </>
@@ -29,6 +40,86 @@ function SupplierDetails() {
 
   // Get tabs configuration from data
   const tabs = getSupplierTabs();
+
+  // Assets data and pagination for the Assets tab
+  const supplierAssets = AssetsMockupData;
+
+  const filteredAssets = supplierAssets.filter((asset) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (asset.name && asset.name.toLowerCase().includes(term)) ||
+      (asset.displayed_id && asset.displayed_id.toLowerCase().includes(term)) ||
+      (asset.category && asset.category.toLowerCase().includes(term))
+    );
+  });
+
+  const assetsStartIndex = (assetsCurrentPage - 1) * assetsPageSize;
+  const assetsEndIndex = assetsStartIndex + assetsPageSize;
+  const paginatedAssets = filteredAssets.slice(assetsStartIndex, assetsEndIndex);
+
+  const handleViewAsset = (asset) => {
+    navigate(`/assets/view/${asset.id}`, {
+      state: { asset },
+    });
+  };
+
+  const handleCheckInOut = (asset, action) => {
+    const baseImage = asset.image
+      ? `https://assets-service-production.up.railway.app${asset.image}`
+      : DefaultImage;
+
+    const checkout = asset.checkoutRecord;
+    const isCheckIn =
+      action === "checkin" || asset.isCheckInOrOut === "Check-In";
+
+    if (isCheckIn) {
+      navigate(`/assets/check-in/${asset.id}`, {
+        state: {
+          id: asset.id,
+          assetId: asset.displayed_id,
+          product: asset.product,
+          image: baseImage,
+          employee: checkout?.requestor || "Not assigned",
+          empLocation: checkout?.requestor_location || "Unknown",
+          checkOutDate: checkout?.checkout_date || "Unknown",
+          returnDate: checkout?.return_date || "Unknown",
+          checkoutId: checkout?.checkout_ref_id || "Unknown",
+          checkinDate: checkout?.checkin_date || "Unknown",
+          condition: checkout?.condition || "Unknown",
+          ticketId: checkout?.ticket_id,
+          fromAsset: true,
+        },
+      });
+    } else {
+      navigate(`/assets/check-out/${asset.id}`, {
+        state: {
+          id: asset.id,
+          assetId: asset.displayed_id,
+          product: asset.product,
+          image: baseImage,
+          ticketId: checkout?.ticket_id,
+          empId: checkout?.requestor_id,
+          employee: checkout?.requestor || "Not assigned",
+          empLocation: checkout?.requestor_location || "Unknown",
+          checkoutDate: checkout?.checkout_date || "Unknown",
+          returnDate: checkout?.return_date || "Unknown",
+          fromAsset: true,
+        },
+      });
+    }
+  };
+
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setAssetsCurrentPage(1);
+  };
+
+  const handleExport = () => {
+    const dataToExport = filteredAssets.length > 0 ? filteredAssets : [];
+    exportToExcel(dataToExport, "Supplier_Assets.xlsx");
+  };
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
@@ -179,6 +270,136 @@ function SupplierDetails() {
     </div>
   );
 
+  // Custom Assets tab content: show Assets table instead of generic History table
+  const assetsTabContent = (
+    <div className="history-tab-wrapper">
+      {/* Header with title and actions */}
+      <section className="product-assets-header">
+        <h2 className="product-assets-title">
+          Assets ({filteredAssets.length})
+        </h2>
+        <section className="product-assets-actions">
+          <input
+            type="search"
+            placeholder="Search..."
+            className="product-assets-search"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+          <button
+            type="button"
+            className="medium-button-filter"
+            onClick={() => console.log("Supplier Assets Filter clicked")}
+          >
+            Filter
+          </button>
+          <MediumButtons
+            type="export"
+            onClick={handleExport}
+          />
+        </section>
+      </section>
+
+      {/* Table Section */}
+      <section className="assets-table-section">
+        <table>
+          <thead>
+            <tr>
+              <th>IMAGE</th>
+              <th>ID</th>
+              <th>NAME</th>
+              <th>CATEGORY</th>
+              <th>STATUS</th>
+              <th>CHECK-IN / CHECK-OUT</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedAssets.length > 0 ? (
+              paginatedAssets.map((asset) => {
+                const baseImage = asset.image
+                  ? `https://assets-service-production.up.railway.app${asset.image}`
+                  : DefaultImage;
+
+                return (
+                  <tr key={asset.id}>
+                    <td>
+                      <img
+                        src={baseImage}
+                        alt={asset.name}
+                        className="table-img"
+                        onError={(e) => {
+                          e.target.src = DefaultImage;
+                        }}
+                      />
+                    </td>
+                    <td>{asset.displayed_id}</td>
+                    <td>{asset.name}</td>
+                    <td>{asset.category || "N/A"}</td>
+                    <td>
+                      <Status
+                        type={asset.status ? asset.status.toLowerCase() : "unknown"}
+                        name={asset.status || "Unknown"}
+                      />
+                    </td>
+                    <td>
+                      <ActionButtons
+                        showCheckout={
+                          asset.status &&
+                          (asset.status.toLowerCase() === "ready to deploy" ||
+                            asset.status.toLowerCase() === "readytodeploy" ||
+                            asset.status.toLowerCase() === "archived" ||
+                            asset.status.toLowerCase() === "pending")
+                        }
+                        showCheckin={
+                          asset.status &&
+                          asset.status.toLowerCase() === "deployed"
+                        }
+                        onCheckoutClick={() =>
+                          handleCheckInOut(asset, "checkout")
+                        }
+                        onCheckinClick={() =>
+                          handleCheckInOut(asset, "checkin")
+                        }
+                      />
+                    </td>
+                    <td>
+                      <ActionButtons
+                        showEdit
+                        showView
+                        editPath={`/assets/edit/${asset.id}`}
+                        editState={{ asset }}
+                        onViewClick={() => handleViewAsset(asset)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={7} className="no-data-message">
+                  No Assets Found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </section>
+
+      {/* Pagination Section */}
+      <section className="history-pagination-section">
+        <Pagination
+          currentPage={assetsCurrentPage}
+          pageSize={assetsPageSize}
+          totalItems={filteredAssets.length}
+          onPageChange={setAssetsCurrentPage}
+          onPageSizeChange={setAssetsPageSize}
+        />
+      </section>
+    </div>
+  );
+
+
   return (
     <>
       <NavBar />
@@ -195,6 +416,7 @@ function SupplierDetails() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         actionButtons={actionButtons}
+        customTabContent={activeTab === 1 ? assetsTabContent : null}
       >
         {activeTab === 0 && aboutContent}
       </DetailedViewPage>
