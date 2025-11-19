@@ -4,15 +4,25 @@ import api from "../api";
 import { REFRESH_TOKEN, ACCESS_TOKEN } from "../constants";
 import { useState, useEffect } from "react";
 import SystemLoading from "./Loading/SystemLoading";
+import authService from "../services/auth-service";
 
 function ProtectedRoute({ roles }) {
   const navigate = useNavigate();
   // const token = sessionStorage.getItem(ACCESS_TOKEN);
-  const currentUser = JSON.parse(sessionStorage.getItem("user"));
+
+  // Prefer authService user info, fallback to raw sessionStorage
+  const currentUser =
+    authService.getUserInfo?.() || JSON.parse(sessionStorage.getItem("user"));
   // console.log("currentUser:", currentUser);
 
-  const role = currentUser?.system_roles[0].role_name?.toLowerCase() || "";
-  const isAuthenticated = currentUser ? true : false;
+  const rawRole =
+    currentUser?.system_roles?.[0]?.role_name ||
+    currentUser?.role ||
+    currentUser?.user_role ||
+    "";
+
+  const role = rawRole.toLowerCase();
+  const isAuthenticated = !!currentUser;
   // const isAuthenticated = token ? true : false;
 
   // Redirect the user back to the previous page.

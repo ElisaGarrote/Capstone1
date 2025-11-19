@@ -44,12 +44,6 @@ function TableHeader({ allChecked, onHeaderChange }) {
 // TableItem component to render each ticket row
 function TableItem({ supplier, onDeleteClick, onViewClick, isChecked, onRowChange }) {
   const navigate = useNavigate();
-<<<<<<< HEAD
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [endPoint, setEndPoint] = useState("");
-
-=======
->>>>>>> Sillano
 
   return (
     <tr>
@@ -548,16 +542,11 @@ export default function ViewSupplier() {
                         isChecked={checkedItems.includes(supplier.id)}
                         onRowChange={handleRowChange}
                         onDeleteClick={() => {
-<<<<<<< HEAD
-                        setEndPoint(`${import.meta.env.VITE_CONTEXTS_API_URL}suppliers/${supplier.id}/`);
-                          setDeleteModalOpen(true);
-=======
                           /* BACKEND INTEGRATION HERE
                           setEndPoint(
                             `${contextServiceUrl}/contexts/suppliers/${supplier.id}/delete/`
                           ); */
                           openDeleteModal(supplier.id);
->>>>>>> Sillano
                         }}
                         onViewClick={handleViewClick}
                       />

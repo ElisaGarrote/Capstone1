@@ -1,14 +1,17 @@
-<<<<<<< HEAD
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
+import PlusIcon from "../../assets/icons/plus.svg";
+import AddEntryModal from "../../components/Modals/AddEntryModal";
 import MockupData from "../../data/mockData/components/component-mockup-data.json";
 
-const ComponentRegistration = () => {
+const ComponentRegistrationLegacy = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const editState = location.state?.item || null;
@@ -288,18 +291,6 @@ const ComponentRegistration = () => {
   );
 };
 
-=======
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import NavBar from "../../components/NavBar";
-import Footer from "../../components/Footer";
-import "../../styles/Registration.css";
-import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm, Controller } from "react-hook-form";
-import CloseIcon from "../../assets/icons/close.svg";
-import PlusIcon from "../../assets/icons/plus.svg";
-import AddEntryModal from "../../components/Modals/AddEntryModal";
-import MockupData from "../../data/mockData/components/component-mockup-data.json";
 
 const ComponentRegistration = () => {
   const navigate = useNavigate();
@@ -793,5 +784,5 @@ const ComponentRegistration = () => {
   );
 };
 
->>>>>>> Sillano
+
 export default ComponentRegistration;

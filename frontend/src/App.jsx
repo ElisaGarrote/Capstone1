@@ -280,7 +280,7 @@ function App() {
             element={<ComponentView />}
           />
           <Route
-            path="/Repairs/"
+            path="/repairs"
             element={<Repairs />}
           />
           <Route

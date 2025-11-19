@@ -395,15 +395,7 @@ export default function Category() {
                 {selectedIds.length > 0 && (
                   <MediumButtons
                     type="delete"
-<<<<<<< HEAD
-                    onClick={() => {
-                      if (selectedIds.length > 0) {
-                        setDeleteModalOpen(true);
-                      }
-                    }}
-=======
                     onClick={() => openDeleteModal(null)}
->>>>>>> Sillano
                   />
                 )}
                 <input

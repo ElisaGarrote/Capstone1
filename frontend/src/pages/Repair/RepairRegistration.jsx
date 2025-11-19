@@ -1,14 +1,18 @@
-<<<<<<< HEAD
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
+import PlusIcon from "../../assets/icons/plus.svg";
+import Alert from "../../components/Alert";
+import * as XLSX from "xlsx";
 import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
 
-const RepairRegistration = () => {
+const RepairRegistrationLegacy = () => {
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -284,20 +288,6 @@ const RepairRegistration = () => {
   );
 };
 
-export default RepairRegistration;
-=======
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import NavBar from "../../components/NavBar";
-import Footer from "../../components/Footer";
-import "../../styles/Registration.css";
-import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm } from "react-hook-form";
-import CloseIcon from "../../assets/icons/close.svg";
-import PlusIcon from "../../assets/icons/plus.svg";
-import Alert from "../../components/Alert";
-import * as XLSX from "xlsx";
-import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
 
 const RepairRegistration = () => {
   const navigate = useNavigate();
@@ -876,4 +866,4 @@ const RepairRegistration = () => {
 };
 
 export default RepairRegistration;
->>>>>>> Sillano
+

@@ -16,10 +16,16 @@ import { createCategory, updateCategory, } from "../../services/contexts-service
 
 const CategoryRegistration = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const editState = location.state?.category || null;
+  const isEdit = !!editState;
+
   const [attachmentFile, setAttachmentFile] = useState(null);
 
   // Import file state
   const [importFile, setImportFile] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const {
     register,
@@ -30,25 +36,16 @@ const CategoryRegistration = () => {
     mode: "all",
     defaultValues: {
       categoryName: editState?.name || "",
-      categoryType: editState?.type || "",
+      categoryType: editState?.type?.toLowerCase() || "",
     },
   });
 
-<<<<<<< HEAD
-  console.log("editState:", editState);
-=======
-  const categoryTypes = [
-    "Asset",
-    "Component",
-  ];
-  const customFieldOptions = [
-    "Serial Number",
-    "MAC Address",
-    "Asset Tag",
-    "Purchase Date",
-    "Warranty",
-  ];
->>>>>>> Sillano
+  useEffect(() => {
+    if (editState) {
+      setValue("categoryName", editState.name || "");
+      setValue("categoryType", editState.type?.toLowerCase() || "");
+    }
+  }, [editState, setValue]);
 
   const handleFileSelection = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -63,16 +60,18 @@ const CategoryRegistration = () => {
       }
 
       setAttachmentFile(file);
-      setExistingImage(null);
     }
   };
+
+  const state = editState
+    ? { updatedCategory: true }
+    : { addedCategory: true };
 
   const onSubmit = (data) => {
     // Here you would typically send the data to your API
     console.log("Form submitted:", data, attachmentFile);
 
-    // Optional: navigate back to categories view after successful submission
-    navigate("/More/ViewCategories", { state: { addedCategory: true } });
+    navigate("/More/ViewCategories", { state });
   };
 
   const handleImportFile = (e) => {
@@ -102,23 +101,27 @@ const CategoryRegistration = () => {
           <section className="top">
             <TopSecFormPage
               root="Categories"
-              currentPage="New Category"
+              currentPage={isEdit ? "Update Category" : "New Category"}
               rootNavigatePage="/More/ViewCategories"
-              title="New Category"
+              title={
+                isEdit ? editState?.name || "Update Category" : "New Category"
+              }
               rightComponent={
-                <div className="import-section">
-                  <label htmlFor="import-file" className="import-btn">
-                    <img src={PlusIcon} alt="Import" />
-                    Import
-                    <input
-                      type="file"
-                      id="import-file"
-                      accept=".xlsx"
-                      onChange={handleImportFile}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                </div>
+                !isEdit && (
+                  <div className="import-section">
+                    <label htmlFor="import-file" className="import-btn">
+                      <img src={PlusIcon} alt="Import" />
+                      Import
+                      <input
+                        type="file"
+                        id="import-file"
+                        accept=".xlsx"
+                        onChange={handleImportFile}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                  </div>
+                )
               }
             />
           </section>
@@ -163,44 +166,6 @@ const CategoryRegistration = () => {
               </fieldset>
 
               <fieldset>
-<<<<<<< HEAD
-                <label>Icon</label>
-
-                {existingImage && !attachmentFile && !removeExistingLogo ? (
-                  <div className="image-selected">
-                    <img src={existingImage} alt="Current logo" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRemoveExistingLogo(true);
-                        setExistingImage(null);
-                      }}>
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
-                ) : attachmentFile ? (
-                  <div className="image-selected">
-                    <img src={URL.createObjectURL(attachmentFile)} alt="Selected icon" />
-                    <button
-                      type="button"
-                      onClick={() => setAttachmentFile(null)}>
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="upload-image-btn">
-                    Choose File
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelection}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                )}
-
-                <small className="file-size-info">Maximum file size must be 5MB</small>
-=======
                 <label>Image Upload</label>
                 <div className="attachments-wrapper">
                   {/* Left column: Upload button & info */}
@@ -235,7 +200,6 @@ const CategoryRegistration = () => {
                     )}
                   </div>
                 </div>
->>>>>>> Sillano
               </fieldset>
 
               <button
