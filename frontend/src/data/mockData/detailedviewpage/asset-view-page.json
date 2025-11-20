@@ -36,6 +36,43 @@
       "actionDetails": "Development work"
     }
   ],
+  "checkoutLogData": [
+    {
+      "actionLabel": "Checked out to",
+      "target": "New York Office",
+      "checkoutDate": "November 19, 2025",
+      "expectedReturnDate": "December 19, 2025",
+      "condition": "9",
+      "photos": "-",
+      "notes": "-",
+      "user": "Demo User",
+      "confirmationEmailSent": "No"
+    },
+    {
+      "actionLabel": "Checked in from",
+      "target": "Justin R. Campbell",
+      "checkinDate": "October 28, 2025",
+      "status": "Ready to Deploy",
+      "condition": "-",
+      "photos": "-",
+      "notes": "-",
+      "user": "Demo User"
+    },
+    {
+      "actionLabel": "Checked out to",
+      "target": "Justin R. Campbell",
+      "checkoutDate": "January 20, 2025",
+      "expectedReturnDate": "-",
+      "condition": "2",
+      "photos": "-",
+      "notes": "-",
+      "user": "Demo User",
+      "confirmationEmailSent": "Yes",
+      "confirmationEmailNote": "",
+      "digitalSignatureEnabled": "Yes",
+      "digitalSignatureCompleted": "No"
+    }
+  ],
   "componentsData": [
     {
       "id": 1,

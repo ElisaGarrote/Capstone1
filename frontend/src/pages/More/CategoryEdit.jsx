@@ -5,6 +5,7 @@ import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
+import DeleteModal from "../../components/Modals/DeleteModal";
 
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
@@ -15,6 +16,7 @@ const CategoryEdit = () => {
 
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [initialAttachment, setInitialAttachment] = useState(true);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   // Retrieve the "category" data value passed from the navigation state.
   // If the "category" data is not exist, the default value for this is "undifiend".
@@ -36,10 +38,7 @@ const CategoryEdit = () => {
 
   const categoryTypes = [
     "Asset",
-    "Accessory",
-    "Consumable",
     "Component",
-    "License",
   ];
 
   const handleFileSelection = (e) => {
@@ -64,23 +63,41 @@ const CategoryEdit = () => {
 
   console.log("initial:", initialAttachment);
 
+  const handleDeleteConfirm = () => {
+    // Handle category deletion logic here
+    console.log("Deleting category:", category.id);
+    navigate("/More/ViewCategories");
+  };
+
   return (
     <>
+      {isDeleteModalOpen && (
+        <DeleteModal
+          closeModal={() => setDeleteModalOpen(false)}
+          actionType="delete"
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
           <section className="top">
             <TopSecFormPage
               root="Categories"
-              currentPage="Edit Category"
+              currentPage="Update Category"
               rootNavigatePage="/More/ViewCategories"
-              title="Edit Category"
+              title={category?.name || "Update Category"}
+              buttonType="delete"
+              deleteModalOpen={() => setDeleteModalOpen(true)}
             />
           </section>
           <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
-                <label htmlFor="categoryName">Category Name *</label>
+                <label htmlFor="categoryName">
+                  Category Name
+                  <span className="required-asterisk">*</span>
+                </label>
                 <input
                   type="text"
                   placeholder="Category Name"
@@ -98,7 +115,10 @@ const CategoryEdit = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="categoryType">Category Type *</label>
+                <label htmlFor="categoryType">
+                  Category Type
+                  <span className="required-asterisk">*</span>
+                </label>
                 <select
                   disabled
                   title="Cannot change category type"

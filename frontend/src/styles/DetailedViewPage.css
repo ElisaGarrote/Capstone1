@@ -3,7 +3,7 @@
   flex-direction: column;
   width: 100%;
   padding: 100px 40px 40px 40px;
-  background-color: #f5f6f8;
+  background-color: #f8f9fa;
   min-height: calc(100vh - 100px);
 }
 
@@ -37,8 +37,18 @@
 .detailed-content-wrapper:has(.attachments-tab-wrapper) .detailed-main-content,
 .detailed-content-wrapper:has(.audits-tab-wrapper) .detailed-main-content,
 .detailed-content-wrapper:has(.audits-view-tab-wrapper) .detailed-main-content,
-.detailed-content-wrapper:has(.audits-duplicate-tab-wrapper) .detailed-main-content {
+.detailed-content-wrapper:has(.audits-duplicate-tab-wrapper) .detailed-main-content,
+.detailed-content-wrapper:has(.assets-tab-wrapper) .detailed-main-content,
+.detailed-content-wrapper:has(.product-assets-tab-wrapper) .detailed-main-content,
+.detailed-content-wrapper:has(.checkout-log-section) .detailed-main-content {
   display: none;
+}
+
+/* Make product assets tab wrapper take full width */
+.detailed-content-wrapper:has(.product-assets-tab-wrapper) {
+  width: 100%;
+  flex-direction: row;
+  gap: 20px;
 }
 
 .detailed-sidebar {
@@ -239,6 +249,7 @@
 }
 
 .asset-details-section,
+.component-details-section,
 .additional-fields-section {
   background-color: white;
   border-radius: 8px;
@@ -249,7 +260,100 @@
   flex-direction: column;
 }
 
-.asset-details-grid {
+.additional-fields-section {
+  margin-top: 24px;
+}
+
+.checkout-log-section {
+  margin-top: 24px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.checkout-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.checkout-log-item {
+  display: flex;
+}
+
+.checkout-log-marker-column {
+  position: relative;
+  width: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.checkout-log-marker-column::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #e3e6ef;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.checkout-log-marker {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 4px solid #d0d4dd;
+  background-color: #ffffff;
+  position: relative;
+  z-index: 1;
+}
+
+.checkout-log-line {
+  display: none;
+}
+
+.checkout-log-content {
+  flex: 1;
+  padding-left: 16px;
+}
+
+.checkout-log-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.checkout-log-action {
+  color: #333333;
+}
+
+.checkout-log-target {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.checkout-log-target:hover {
+  text-decoration: underline;
+}
+
+.checkout-log-details {
+  font-size: 0.8125rem;
+  color: var(--text-color);
+}
+
+.checkout-log-detail-row {
+  display: flex;
+  gap: 4px;
+}
+
+.checkout-log-detail-row .label {
+  font-weight: 600;
+}
+
+
+.asset-details-grid,
+.component-details-grid {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -269,7 +373,8 @@
 }
 
 .detail-row label {
-  width: 150px;
+  width: 180px;
+  margin-right: 24px;
   font-size: 0.875rem;
   font-weight: 600;
   color: #333;
@@ -596,6 +701,24 @@
   padding: 0;
 }
 
+.history-header-controls {
+  margin-left: auto;
+}
+
+.history-search-input {
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 8px 12px;
+  border: 1px solid #cccccc;
+  font-size: 0.875rem;
+  outline: none;
+  width: 200px;
+}
+
+.history-search-input:focus {
+  border-color: var(--primary-color);
+}
+
 .history-table-section {
   overflow-x: auto;
   overflow-y: visible;
@@ -648,6 +771,17 @@
   border-bottom: 1px solid #cccccc;
   height: auto;
   vertical-align: middle;
+}
+
+.history-table-section td.no-data-message,
+.components-detail-table-section td.no-data-message,
+.repairs-detail-table-section td.no-data-message,
+.attachments-table-section td.no-data-message {
+  text-align: center !important;
+  color: var(--secondary-text-color);
+  font-style: italic;
+  display: table-cell !important;
+  width: 100% !important;
 }
 
 .history-table-section table tr:hover {
@@ -727,7 +861,28 @@
   padding: 0;
 }
 
-.components-table-section {
+.components-header-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.components-search-input {
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  padding: 8px 12px;
+  border: 1px solid #cccccc;
+  font-size: 0.875rem;
+  outline: none;
+  width: 200px;
+}
+
+.components-search-input:focus {
+  border-color: var(--primary-color);
+}
+
+.components-tab-wrapper .components-detail-table-section {
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior: contain;
@@ -735,13 +890,13 @@
   height: auto;
 }
 
-.components-table-section table {
+.components-tab-wrapper .components-detail-table-section table {
   width: 100%;
   height: auto;
   border-collapse: collapse;
 }
 
-.components-table-section table th {
+.components-tab-wrapper .components-detail-table-section table th {
   padding: 0.75rem !important;
   text-align: left !important;
   font-size: 0.75rem;
@@ -756,32 +911,32 @@
   z-index: 1;
 }
 
-.components-table-section table th:first-child {
+.components-tab-wrapper .components-detail-table-section table th:first-child {
   width: 20%;
   text-align: left !important;
 }
 
-.components-table-section table th:nth-child(2) {
+.components-tab-wrapper .components-detail-table-section table th:nth-child(2) {
   width: 18%;
   text-align: left !important;
 }
 
-.components-table-section table th:nth-child(3) {
+.components-tab-wrapper .components-detail-table-section table th:nth-child(3) {
   width: 18%;
   text-align: left !important;
 }
 
-.components-table-section table th:nth-child(4) {
+.components-tab-wrapper .components-detail-table-section table th:nth-child(4) {
   width: 22%;
   text-align: left !important;
 }
 
-.components-table-section table th:last-child {
+.components-tab-wrapper .components-detail-table-section table th:last-child {
   width: 22%;
   text-align: left !important;
 }
 
-.components-table-section table td {
+.components-tab-wrapper .components-detail-table-section table td {
   text-align: left !important;
   padding: 0.75rem !important;
   font-size: 0.8125rem;
@@ -791,11 +946,20 @@
   vertical-align: middle;
 }
 
-.components-table-section table tr:hover {
+.components-tab-wrapper .components-detail-table-section td.no-data-message {
+  text-align: center !important;
+  color: var(--secondary-text-color);
+  font-style: italic;
+  display: table-cell !important;
+  width: 100% !important;
+}
+
+
+.components-tab-wrapper .components-detail-table-section table tr:hover {
   background-color: #fcfcfc;
 }
 
-.components-table-section .action-button-section {
+.components-tab-wrapper .components-detail-table-section .action-button-section {
   justify-content: flex-start;
 }
 
@@ -883,18 +1047,18 @@
   font-size: 0.875rem;
 }
 
-.repairs-table-section {
+.repairs-detail-table-section {
   overflow-x: auto;
   overflow-y: visible;
   overscroll-behavior: contain;
 }
 
-.repairs-table-section table {
+.repairs-detail-table-section table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.repairs-table-section table th {
+.repairs-detail-table-section table th {
   padding: 0.75rem !important;
   text-align: left !important;
   font-size: 0.75rem;
@@ -909,7 +1073,7 @@
   z-index: 1;
 }
 
-.repairs-table-section table td {
+.repairs-detail-table-section table td {
   text-align: left !important;
   padding: 0.75rem !important;
   font-size: 0.8125rem;
@@ -919,7 +1083,7 @@
   vertical-align: middle;
 }
 
-.repairs-table-section table tr:hover {
+.repairs-detail-table-section table tr:hover {
   background-color: #fcfcfc;
 }
 
@@ -1025,6 +1189,11 @@
 .attachments-table-section table tr:hover {
   background-color: #fcfcfc;
 }
+
+.attachments-table-section .action-button-section {
+  justify-content: flex-start !important;
+}
+
 
 .attachments-pagination-section {
   margin: 0;
@@ -1545,6 +1714,8 @@
   border-bottom-color: var(--primary-color);
 }
 
+
+
 .audit-duplicate-action-buttons {
   display: flex;
   gap: 10px;
@@ -1633,7 +1804,7 @@
   background-color: #fcfcfc;
 }
 
-.audits-duplicate-table-section .no-data-message {
+.audits-duplicate-table-section table td.no-data-message {
   text-align: center !important;
   color: var(--secondary-text-color);
   font-style: italic;
@@ -1688,11 +1859,11 @@
     max-height: 50vh;
   }
 
-  .components-table-section {
+  .components-tab-wrapper .components-detail-table-section {
     max-height: 50vh;
   }
 
-  .repairs-table-section {
+  .repairs-detail-table-section {
     max-height: 50vh;
   }
 

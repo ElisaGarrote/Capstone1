@@ -16,7 +16,7 @@ import { exportToExcel } from "../../utils/exportToExcel";
 import "../../styles/ViewSupplier.css";
 
 // TableHeader component to render the table header
-function TableHeader() {
+function TableHeader({ allChecked, onHeaderChange }) {
   return (
     <tr>
       <th>
@@ -24,6 +24,8 @@ function TableHeader() {
           type="checkbox"
           name="checkbox-supplier"
           id="checkbox-supplier"
+          checked={allChecked}
+          onChange={(e) => onHeaderChange(e.target.checked)}
         />
       </th>
       <th>NAME</th>
@@ -34,22 +36,26 @@ function TableHeader() {
       <th>COUNTRY</th>
       <th>CONTACT PERSON</th>
       <th>PHONE</th>
-      <th>URL</th>
       <th>ACTIONS</th>
     </tr>
   );
 }
 
 // TableItem component to render each ticket row
-function TableItem({ supplier, onDeleteClick, onViewClick }) {
+function TableItem({ supplier, onDeleteClick, onViewClick, isChecked, onRowChange }) {
   const navigate = useNavigate();
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   return (
     <tr>
       <td>
         <div className="checkbox-supplier">
-          <input type="checkbox" name="" id="" />
+          <input
+            type="checkbox"
+            name=""
+            id=""
+            checked={isChecked}
+            onChange={(e) => onRowChange(supplier.id, e.target.checked)}
+          />
         </div>
       </td>
       <td>
@@ -83,7 +89,6 @@ function TableItem({ supplier, onDeleteClick, onViewClick }) {
       <td>{supplier.country || "-"}</td>
       <td>{supplier.contactName || "-"}</td>
       <td>{supplier.phoneNumber || "-"}</td>
-      <td>{supplier.url || "-"}</td>
       <td>
         <section className="action-button-section">
           <button
@@ -130,10 +135,10 @@ export default function ViewSupplier() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const allChecked = checkedItems.length === suppliers.length;
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -150,32 +155,38 @@ export default function ViewSupplier() {
   const applyFilters = (filters) => {
     let filtered = [...MockupData];
 
-    // Filter by Name
-    if (filters.name && filters.name.trim() !== "") {
+    // Filter by City
+    if (filters.city && filters.city.trim() !== "") {
+      const cityQuery = filters.city.toLowerCase();
       filtered = filtered.filter((supplier) =>
-        supplier.name?.toLowerCase().includes(filters.name.toLowerCase())
+        supplier.city?.toLowerCase().includes(cityQuery)
+      );
+    }
+
+    // Filter by State
+    if (filters.state && filters.state.trim() !== "") {
+      const stateQuery = filters.state.toLowerCase();
+      filtered = filtered.filter((supplier) =>
+        supplier.state?.toLowerCase().includes(stateQuery)
       );
     }
 
     // Filter by Country
     if (filters.country && filters.country.trim() !== "") {
+      const countryQuery = filters.country.toLowerCase();
       filtered = filtered.filter((supplier) =>
-        supplier.country?.toLowerCase().includes(filters.country.toLowerCase())
+        supplier.country?.toLowerCase().includes(countryQuery)
       );
     }
 
-    // Filter by City
-    if (filters.city && filters.city.trim() !== "") {
-      filtered = filtered.filter((supplier) =>
-        supplier.city?.toLowerCase().includes(filters.city.toLowerCase())
-      );
-    }
-
-    // Filter by Email
-    if (filters.email && filters.email.trim() !== "") {
-      filtered = filtered.filter((supplier) =>
-        supplier.email?.toLowerCase().includes(filters.email.toLowerCase())
-      );
+    // Filter by Contact Person
+    if (filters.contact && filters.contact.trim() !== "") {
+      const contactQuery = filters.contact.toLowerCase();
+      filtered = filtered.filter((supplier) => {
+        const contactValue =
+          supplier.contactName || supplier.contact_name || "";
+        return contactValue.toLowerCase().includes(contactQuery);
+      });
     }
 
     return filtered;
@@ -189,10 +200,59 @@ export default function ViewSupplier() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((supplier) => {
+          const name = supplier.name?.toLowerCase() || "";
+          const city = supplier.city?.toLowerCase() || "";
+          const country = supplier.country?.toLowerCase() || "";
+          const contact =
+            supplier.contactName?.toLowerCase() ||
+            supplier.contact_name?.toLowerCase() ||
+            "";
+          return (
+            name.includes(normalizedQuery) ||
+            city.includes(normalizedQuery) ||
+            country.includes(normalizedQuery) ||
+            contact.includes(normalizedQuery)
+          );
+        });
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedSuppliers = filteredData.slice(startIndex, endIndex);
+  const paginatedSuppliers = searchedData.slice(startIndex, endIndex);
+
+  const allChecked =
+    paginatedSuppliers.length > 0 &&
+    paginatedSuppliers.every((supplier) => checkedItems.includes(supplier.id));
+
+  const handleHeaderChange = (checked) => {
+    if (checked) {
+      setCheckedItems((prev) => [
+        ...prev,
+        ...paginatedSuppliers
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setCheckedItems((prev) =>
+        prev.filter(
+          (id) => !paginatedSuppliers.map((item) => item.id).includes(id)
+        )
+      );
+    }
+  };
+
+  const handleRowChange = (id, isChecked) => {
+    if (isChecked) {
+      setCheckedItems((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    } else {
+      setCheckedItems((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
 
   // Retrieve the "addManufacturer" value passed from the navigation state.
   // If the "addManufacturer" is not exist, the default value for this is "undifiend".
@@ -280,11 +340,8 @@ export default function ViewSupplier() {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1);
   };
-
-  const filteredSuppliers = suppliers.filter((supplier) =>
-    supplier.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   const actionStatus = (action, status) => {
     let timeoutId;
@@ -301,13 +358,15 @@ export default function ViewSupplier() {
     // replace the current history entry with an empty state
     navigate(location.pathname, { replace: true, state: {} });
 
-    return (timeoutId = setTimeout(() => {
+    timeoutId = setTimeout(() => {
       if (action === "create") {
         setAddRecordSuccess(false);
       } else {
         setUpdateRecordSuccess(false);
       }
-    }, 5000));
+    }, 5000);
+
+    return timeoutId;
   };
 
   const getAction = () => {
@@ -322,8 +381,33 @@ export default function ViewSupplier() {
     return null;
   };
 
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single supplier id:", deleteTarget);
+      setSuccessMessage("Supplier deleted successfully!");
+    } else {
+      console.log("Deleting multiple supplier ids:", checkedItems);
+      if (checkedItems.length > 0) {
+        setSuccessMessage("Suppliers deleted successfully!");
+      }
+      setCheckedItems([]);
+    }
+    setTimeout(() => setSuccessMessage(""), 5000);
+    closeDeleteModal();
+  };
+
   const handleExport = () => {
-    const dataToExport = suppliers.length > 0 ? suppliers : MockupData;
+    const dataToExport = searchedData.length > 0 ? searchedData : filteredData;
     exportToExcel(dataToExport, "Supplier_Records.xlsx");
   };
 
@@ -363,8 +447,9 @@ export default function ViewSupplier() {
       {isDeleteModalOpen && (
         <DeleteModal
           endPoint={endPoint}
-          closeModal={() => setDeleteModalOpen(false)}
+          closeModal={closeDeleteModal}
           actionType="delete"
+          onConfirm={confirmDelete}
           /* BACKEND INTEGRATION HERE
           confirmDelete={async () => {
             await fetchSuppliers();
@@ -395,8 +480,14 @@ export default function ViewSupplier() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Suppliers ({filteredData.length})</h2>
+              <h2 className="h2">Suppliers ({searchedData.length})</h2>
               <section className="table-actions">
+                {checkedItems.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
                 <input
                   type="search"
                   placeholder="Search..."
@@ -425,7 +516,10 @@ export default function ViewSupplier() {
             <section className="supplier-page-table-section">
               <table>
                 <thead>
-                  <TableHeader />
+                  <TableHeader
+                    allChecked={allChecked}
+                    onHeaderChange={handleHeaderChange}
+                  />
                 </thead>
                 <tbody>
                   {paginatedSuppliers.length > 0 ? (
@@ -433,12 +527,14 @@ export default function ViewSupplier() {
                       <TableItem
                         key={index}
                         supplier={supplier}
+                        isChecked={checkedItems.includes(supplier.id)}
+                        onRowChange={handleRowChange}
                         onDeleteClick={() => {
                           /* BACKEND INTEGRATION HERE
                           setEndPoint(
                             `${contextServiceUrl}/contexts/suppliers/${supplier.id}/delete/`
                           ); */
-                          setDeleteModalOpen(true);
+                          openDeleteModal(supplier.id);
                         }}
                         onViewClick={handleViewClick}
                       />
@@ -459,7 +555,7 @@ export default function ViewSupplier() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={filteredData.length}
+                totalItems={searchedData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

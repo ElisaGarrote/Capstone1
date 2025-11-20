@@ -2,54 +2,20 @@ import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/ContextFilterModal.css";
 
-export default function RecycleBinFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
+export default function RecycleBinFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {}, activeTab }) {
 
   const [filters, setFilters] = useState({
     name: "",
-    category: null,
-    manufacturer: null,
-    supplier: null,
-    location: null,
+    category: "",
+    manufacturer: "",
+    supplier: "",
+    location: "",
   });
-
-  // Category options
-  const categoryOptions = [
-    { value: "laptop", label: "Laptop" },
-    { value: "desktop", label: "Desktop" },
-    { value: "mobile", label: "Mobile Phone" },
-    { value: "tablet", label: "Tablet" },
-  ];
-
-  // Manufacturer options
-  const manufacturerOptions = [
-    { value: "lenovo", label: "Lenovo" },
-    { value: "apple", label: "Apple" },
-    { value: "samsung", label: "Samsung" },
-    { value: "microsoft", label: "Microsoft" },
-    { value: "hp", label: "HP" },
-  ];
-
-  // Supplier options
-  const supplierOptions = [
-    { value: "amazon", label: "Amazon" },
-    { value: "wsi", label: "WSI" },
-    { value: "iontech", label: "Iontech Inc." },
-    { value: "noventiq", label: "Noventiq" },
-  ];
-
-  // Location options
-  const locationOptions = [
-    { value: "makati", label: "Makati" },
-    { value: "pasig", label: "Pasig" },
-    { value: "marikina", label: "Marikina" },
-    { value: "quezon", label: "Quezon City" },
-    { value: "remote", label: "Remote" },
-  ];
 
   // Initialize filters from props
   useEffect(() => {
     if (initialFilters && Object.keys(initialFilters).length > 0) {
-      setFilters(initialFilters);
+      setFilters((prev) => ({ ...prev, ...initialFilters }));
     }
   }, [initialFilters]);
 
@@ -61,23 +27,14 @@ export default function RecycleBinFilterModal({ isOpen, onClose, onApplyFilter, 
     }));
   };
 
-  // Handle select changes
-  const handleSelectChange = (field, value, optionsArray) => {
-    const selectedOption = optionsArray.find(opt => opt.value === value);
-    setFilters((prev) => ({
-      ...prev,
-      [field]: selectedOption || null,
-    }));
-  };
-
   // Reset all filters
   const handleReset = () => {
     setFilters({
       name: "",
-      category: null,
-      manufacturer: null,
-      supplier: null,
-      location: null,
+      category: "",
+      manufacturer: "",
+      supplier: "",
+      location: "",
     });
   };
 
@@ -103,7 +60,11 @@ export default function RecycleBinFilterModal({ isOpen, onClose, onApplyFilter, 
       <div className="recyclebin-filter-modal-container" onClick={(e) => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="recyclebin-modal-header">
-          <h2>Filter Recycle Bin</h2>
+          <h2>
+            {activeTab === "components"
+              ? "Filter Deleted Components"
+              : "Filter Deleted Assets"}
+          </h2>
           <button className="recyclebin-modal-close-btn" onClick={onClose}>
             <img src={CloseIcon} alt="Close" />
           </button>
@@ -127,69 +88,49 @@ export default function RecycleBinFilterModal({ isOpen, onClose, onApplyFilter, 
             {/* Category */}
             <fieldset>
               <label htmlFor="category">Category</label>
-              <select
+              <input
+                type="text"
                 id="category"
-                value={filters.category?.value || ""}
-                onChange={(e) => handleSelectChange("category", e.target.value, categoryOptions)}
-              >
-                <option value="">Select Category</option>
-                {categoryOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                placeholder="Enter Category"
+                value={filters.category}
+                onChange={(e) => handleInputChange("category", e.target.value)}
+              />
             </fieldset>
 
             {/* Manufacturer */}
             <fieldset>
               <label htmlFor="manufacturer">Manufacturer</label>
-              <select
+              <input
+                type="text"
                 id="manufacturer"
-                value={filters.manufacturer?.value || ""}
-                onChange={(e) => handleSelectChange("manufacturer", e.target.value, manufacturerOptions)}
-              >
-                <option value="">Select Manufacturer</option>
-                {manufacturerOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                placeholder="Enter Manufacturer"
+                value={filters.manufacturer}
+                onChange={(e) => handleInputChange("manufacturer", e.target.value)}
+              />
             </fieldset>
 
             {/* Supplier */}
             <fieldset>
               <label htmlFor="supplier">Supplier</label>
-              <select
+              <input
+                type="text"
                 id="supplier"
-                value={filters.supplier?.value || ""}
-                onChange={(e) => handleSelectChange("supplier", e.target.value, supplierOptions)}
-              >
-                <option value="">Select Supplier</option>
-                {supplierOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                placeholder="Enter Supplier"
+                value={filters.supplier}
+                onChange={(e) => handleInputChange("supplier", e.target.value)}
+              />
             </fieldset>
 
             {/* Location */}
             <fieldset>
               <label htmlFor="location">Location</label>
-              <select
+              <input
+                type="text"
                 id="location"
-                value={filters.location?.value || ""}
-                onChange={(e) => handleSelectChange("location", e.target.value, locationOptions)}
-              >
-                <option value="">Select Location</option>
-                {locationOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                placeholder="Enter Location"
+                value={filters.location}
+                onChange={(e) => handleInputChange("location", e.target.value)}
+              />
             </fieldset>
           </div>
         </div>

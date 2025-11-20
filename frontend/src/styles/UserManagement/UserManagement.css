@@ -5,7 +5,7 @@
   overscroll-behavior: contain;
 
   table {
-    width: auto;
+    width: 100%;
     border-collapse: collapse;
     white-space: nowrap;
 
@@ -31,7 +31,7 @@
       min-width: 50px;
     }
 
-    /* table header for 'Photo' */
+    /* table header for 'Profile Picture' */
     th:nth-child(2) {
       width: 60px;
       min-width: 60px;
@@ -39,14 +39,14 @@
 
     /* table header for 'Name' */
     th:nth-child(3) {
-      width: 150px;
-      min-width: 150px;
+      width: 180px;
+      min-width: 180px;
     }
 
     /* table header for 'Email' */
     th:nth-child(4) {
-      width: 180px;
-      min-width: 180px;
+      width: 220px;
+      min-width: 220px;
     }
 
     /* table header for 'Role' */
@@ -55,16 +55,40 @@
       min-width: 120px;
     }
 
-    /* table header for 'Status' */
+    /* table header for 'Phone Number' */
     th:nth-child(6) {
+      width: 140px;
+      min-width: 140px;
+    }
+
+    /* table header for 'Company' */
+    th:nth-child(7) {
+      width: 160px;
+      min-width: 160px;
+    }
+
+    /* table header for 'Phone' */
+    th:nth-child(8) {
+      width: 130px;
+      min-width: 130px;
+    }
+
+    /* table header for 'Status' */
+    th:nth-child(9) {
       width: 120px;
       min-width: 120px;
     }
 
-    /* table header for 'Action' */
-    th:nth-child(7) {
-      width: 120px;
-      min-width: 120px;
+    /* table header for 'Last Login' */
+    th:nth-child(10) {
+      width: 180px;
+      min-width: 180px;
+    }
+
+    /* table header for 'Actions' */
+    th:nth-child(11) {
+      width: 110px;
+      min-width: 110px;
     }
 
     td {
@@ -99,16 +123,21 @@
 .users-table-section .table-img {
   width: 40px;
   height: 40px;
-  border-radius: 4px;
+  border-radius: 50%;
   object-fit: cover;
 }
 
+/* Activate / Deactivate buttons - match pill style used in other tables */
 .activate-agent-btn,
 .deactivate-agent-btn {
-  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 16px;
   border: none;
-  border-radius: 4px;
-  font-size: 0.8125rem;
+  border-radius: 40px;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -116,20 +145,36 @@
 }
 
 .activate-agent-btn {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--primary-color);
+  color: #ffffff;
 }
 
 .activate-agent-btn:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-color-hover);
 }
 
 .deactivate-agent-btn {
   background-color: #dc3545;
-  color: white;
+  color: #ffffff;
 }
 
 .deactivate-agent-btn:hover {
   background-color: #c82333;
 }
 
+.user-management-view-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+
+
+
+.user-management-view-content .user-profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}

@@ -108,10 +108,14 @@ const Tickets = () => {
     const loadTickets = () => {
       try {
         // Use mockup data instead of API call
-        const mappedTickets = TicketsMockupData.map(ticket => {
-          const isCheckInOrOut = !ticket.is_resolved
-            ? (ticket.checkin_date ? "Check-In" : "Check-Out")
-            : null;
+        const mappedTickets = TicketsMockupData.map((ticket) => {
+          const isCheckInOrOut =
+            ticket.isCheckInOrOut ??
+            (!ticket.is_resolved
+              ? ticket.checkin_date
+                ? "Check-In"
+                : "Check-Out"
+              : null);
 
           return {
             id: ticket.ticket_id,

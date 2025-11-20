@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import "../../styles/Registration.css";
@@ -11,6 +12,9 @@ import assetsService from "../../services/assets-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import { fetchAllCategories } from "../../services/contexts-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
+import ProductMockData from "../../data/mockData/products/products-mockup-data.json";
+import StatusMockData from "../../data/mockData/more/status-mockup-data.json";
+import SupplierMockData from "../../data/mockData/more/supplier-mockup-data.json";
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
@@ -36,7 +40,7 @@ export default function AssetsRegistration() {
   ]);
 
 
-  
+
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
   const location = useLocation();
@@ -44,7 +48,7 @@ export default function AssetsRegistration() {
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
   const [generatedAssetId, setGeneratedAssetId] = useState('(Loading...)');
-  
+
   const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
@@ -106,62 +110,67 @@ export default function AssetsRegistration() {
     const initialize = async () => {
       setIsLoading(true);
       try {
-        // Fetch all necessary data in parallel
-        const [assetContextsData, contextsData] = await Promise.all([
-          assetsService.fetchAssetContexts(),
-          fetchAllCategories()
-        ]);
-        
-        console.log("Asset contexts data:", assetContextsData);
-        
-        // Set products and statuses from asset contexts
-        setProducts(assetContextsData.products || []);
-        setStatuses(assetContextsData.statuses || []);
-        
-        // Set suppliers from contexts
-        setSuppliers(contextsData.suppliers || []);
+        let assetContextsData = {};
+        let contextsData = {};
 
-        console.log("products:", assetContextsData.products);
-        console.log("statuses:", assetContextsData.statuses);
-        console.log("Suppliers:", contextsData.suppliers);
+        // Try to fetch real contexts; fall back to mock data if the backend
+        // is unavailable or returns empty arrays so the dropdowns always
+        // have usable options in demo mode.
+        try {
+          [assetContextsData, contextsData] = await Promise.all([
+            assetsService.fetchAssetContexts(),
+            fetchAllCategories(),
+          ]);
+        } catch (ctxError) {
+          console.error("Error fetching asset/contexts data, using mock data:", ctxError);
+        }
+
+        const apiProducts = assetContextsData?.products || [];
+        const apiStatuses = assetContextsData?.statuses || [];
+        const apiSuppliers = contextsData?.suppliers || [];
+
+        setProducts(apiProducts.length ? apiProducts : ProductMockData);
+        setStatuses(apiStatuses.length ? apiStatuses : StatusMockData);
+        setSuppliers(apiSuppliers.length ? apiSuppliers : SupplierMockData);
 
         // If ID is present, fetch the asset details
         if (id) {
-          const assetData = await assetsService.fetchAssetById(id);
-          if (!assetData) {
+          try {
+            const assetData = await assetsService.fetchAssetById(id);
+            if (!assetData) {
+              setErrorMessage("Failed to fetch asset details");
+              return;
+            }
+
+            setAsset(assetData);
+            console.log("Asset Details:", assetData);
+
+            // Set form values from retrieved asset data
+            setValue('assetId', assetData.displayed_id);
+            setValue('product', assetData.product_id || '');
+            setValue('status', assetData.status_id || '');
+            setValue('supplier', assetData.supplier_id || '');
+            setValue('location', assetData.location || '');
+            setValue('assetName', assetData.name || '');
+            setValue('serialNumber', assetData.serial_number || '');
+            setValue('warrantyExpiration', assetData.warranty_expiration || '');
+            setValue('orderNumber', assetData.order_number || '');
+            setValue('purchaseDate', assetData.purchase_date || '');
+            setValue('purchaseCost', assetData.purchase_cost || '');
+            setValue('disposalStatus', assetData.disposal_status || '');
+            setValue('scheduleAuditDate', assetData.schedule_audit_date || '');
+            setValue('notes', assetData.notes || '');
+
+            if (assetData.image) {
+              setPreviewImage(`https://assets-service-production.up.railway.app${assetData.image}`);
+            }
+          } catch (assetError) {
+            console.error("Error fetching asset details:", assetError);
             setErrorMessage("Failed to fetch asset details");
-            setIsLoading(false);
-            return;
-          }
-
-          setAsset(assetData);
-          console.log("Asset Details:", assetData);
-
-          // Set form values from retrieved asset data
-          setValue('assetId', assetData.displayed_id);
-
-
-
-          setValue('product', assetData.product_id || '');
-          setValue('status', assetData.status_id || '');
-          setValue('supplier', assetData.supplier_id || '');
-          setValue('location', assetData.location || '');
-          setValue('assetName', assetData.name || '');
-          setValue('serialNumber', assetData.serial_number || '');
-          setValue('warrantyExpiration', assetData.warranty_expiration || '');
-          setValue('orderNumber', assetData.order_number || '');
-          setValue('purchaseDate', assetData.purchase_date || '');
-          setValue('purchaseCost', assetData.purchase_cost || '');
-          setValue('disposalStatus', assetData.disposal_status || '');
-          setValue('scheduleAuditDate', assetData.schedule_audit_date || '');
-          setValue('notes', assetData.notes || '');
-          
-          if (assetData.image) {
-            setPreviewImage(`https://assets-service-production.up.railway.app${assetData.image}`);
           }
         }
       } catch (error) {
-        console.error("Error initializing:", error);
+        console.error("Error initializing asset registration form:", error);
         setErrorMessage("Failed to initialize form data");
       } finally {
         setIsLoading(false);
@@ -332,7 +341,7 @@ export default function AssetsRegistration() {
       throw error;
     }
   };
-  
+
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
@@ -352,7 +361,7 @@ export default function AssetsRegistration() {
       formData.append('disposal_status', data.disposalStatus || '');
       formData.append('schedule_audit_date', data.scheduleAuditDate || '');
       formData.append('notes', data.notes || '');
-      
+
       // Handle image upload
       if (selectedImage) {
         formData.append('image', selectedImage);
@@ -362,14 +371,14 @@ export default function AssetsRegistration() {
       if (removeImage) {
         formData.append('remove_image', 'true');
       }
-      
+
       console.log("Form data before submission:");
       for (let pair of formData.entries()) {
         console.log(pair[0] + ': ' + pair[1]);
       }
-      
+
       let result;
-      
+
       if (id) {
         // Update existing asset
         result = await assetsService.updateAsset(id, formData);
@@ -383,12 +392,12 @@ export default function AssetsRegistration() {
       }
 
       console.log(`${id ? 'Updated' : 'Created'} asset:`, result);
-      
+
       // Navigate to assets page with success message
-      navigate('/assets', { 
-        state: { 
-          successMessage: `Asset has been ${id ? 'updated' : 'created'} successfully!` 
-        } 
+      navigate('/assets', {
+        state: {
+          successMessage: `Asset has been ${id ? 'updated' : 'created'} successfully!`
+        }
       });
     } catch (error) {
       console.error(`Error ${id ? 'updating' : 'creating'} asset:`, error);
@@ -433,8 +442,9 @@ export default function AssetsRegistration() {
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
-      <nav><NavBar /></nav>
-      <main className="registration">
+      <section className="page-layout-registration">
+        <NavBar />
+        <main className="registration">
         <section className="top">
           <TopSecFormPage
             root="Assets"
@@ -729,6 +739,8 @@ export default function AssetsRegistration() {
           </form>
         </section>
       </main>
+      <Footer />
+      </section>
 
       {/* Modals */}
       <AddEntryModal

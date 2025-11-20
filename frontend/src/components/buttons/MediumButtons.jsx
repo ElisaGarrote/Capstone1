@@ -11,8 +11,9 @@ export default function MediumButtons({
   navigatePage = null,
   previousPage,
   onClick = null,
+  deleteModalOpen = null,
 }) {
-  console.log("🔧 MediumButtons RENDER - type:", type, "| onClick exists:", !!onClick);
+  console.log("MediumButtons RENDER - type:", type, "| onClick exists:", !!onClick);
 
   /* List of Button Type:
     - new
@@ -64,48 +65,53 @@ export default function MediumButtons({
       onClick();
     }
 
-    if (type.toLowerCase() === "delete" && onClick) {
-      console.log("🗑️ Executing DELETE onClick");
-      onClick();
+    if (type.toLowerCase() === "delete") {
+      if (deleteModalOpen) {
+        console.log("Executing DELETE deleteModalOpen");
+        deleteModalOpen();
+      } else if (onClick) {
+        console.log("Executing DELETE onClick");
+        onClick();
+      }
     }
 
     if (type.toLowerCase() === "recover" && onClick) {
-      console.log("♻️ Executing RECOVER onClick");
+      console.log("Executing RECOVER onClick");
       onClick();
     }
 
     if (type.toLowerCase() === "edit" && onClick) {
-      console.log("✏️ Executing EDIT onClick");
+      console.log("Executing EDIT onClick");
       onClick();
     }
 
     if (type.toLowerCase() === "clone" && onClick) {
-      console.log("📋 Executing CLONE onClick");
+      console.log("Executing CLONE onClick");
       onClick();
     }
 
     if (type.toLowerCase() === "filter" && onClick) {
-      console.log("🔍 Executing FILTER onClick");
+      console.log("Executing FILTER onClick");
       onClick();
-      console.log("✅ FILTER onClick executed");
+      console.log("FILTER onClick executed");
     }
 
     if (navigatePage) {
-      console.log("🧭 Navigating to:", navigatePage);
+      console.log("Navigating to:", navigatePage);
       navigate(navigatePage, { state: { previousPage } });
     }
   };
 
-  console.log("🔧 About to render button - type:", type, "className:", `medium-button-${type}`);
+  console.log("About to render button - type:", type, "className:", `medium-button-${type}`);
 
   return (
     <button
       type="button"
       className={`medium-button-${type}`}
       onClick={(e) => {
-        console.log("🖱️ BUTTON CLICKED - type:", type);
-        console.log("🖱️ Event target:", e.target);
-        console.log("🖱️ Current target:", e.currentTarget);
+        console.log("BUTTON CLICKED - type:", type);
+        console.log("Event target:", e.target);
+        console.log("Current target:", e.currentTarget);
         e.preventDefault();
         e.stopPropagation();
         handleClick();

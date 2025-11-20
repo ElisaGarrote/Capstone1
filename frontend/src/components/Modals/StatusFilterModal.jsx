@@ -5,20 +5,17 @@ import "../../styles/ContextFilterModal.css";
 export default function StatusFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
 
   const [filters, setFilters] = useState({
-    name: "",
-    type: null,
+    usageSort: "", // "desc" = greatest to least used, "asc" = least to greatest
   });
 
-  // Status type options
-  const typeOptions = [
-    { value: "asset", label: "Asset" },
-    { value: "component", label: "Component" },
-  ];
 
   // Initialize filters from props
   useEffect(() => {
     if (initialFilters && Object.keys(initialFilters).length > 0) {
-      setFilters(initialFilters);
+      setFilters((prev) => ({
+        ...prev,
+        ...initialFilters,
+      }));
     }
   }, [initialFilters]);
 
@@ -30,20 +27,11 @@ export default function StatusFilterModal({ isOpen, onClose, onApplyFilter, init
     }));
   };
 
-  // Handle select changes
-  const handleSelectChange = (field, value) => {
-    const selectedOption = typeOptions.find(opt => opt.value === value);
-    setFilters((prev) => ({
-      ...prev,
-      [field]: selectedOption || null,
-    }));
-  };
 
   // Reset all filters
   const handleReset = () => {
     setFilters({
-      name: "",
-      type: null,
+      usageSort: "",
     });
   };
 
@@ -78,32 +66,17 @@ export default function StatusFilterModal({ isOpen, onClose, onApplyFilter, init
         {/* Modal Body */}
         <div className="status-filter-modal-body">
           <div className="status-filter-grid">
-            {/* Status Name */}
+            {/* Sort by Assets (usage count) */}
             <fieldset>
-              <label htmlFor="name">Status Name</label>
-              <input
-                type="text"
-                id="name"
-                placeholder="Enter Status Name"
-                value={filters.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Status Type */}
-            <fieldset>
-              <label htmlFor="type">Status Type</label>
+              <label htmlFor="usageSort">Sort by Assets</label>
               <select
-                id="type"
-                value={filters.type?.value || ""}
-                onChange={(e) => handleSelectChange("type", e.target.value)}
+                id="usageSort"
+                value={filters.usageSort}
+                onChange={(e) => handleInputChange("usageSort", e.target.value)}
               >
-                <option value="">Select Type</option>
-                {typeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                <option value="">None</option>
+                <option value="desc">Greatest to least used</option>
+                <option value="asc">Least to greatest used</option>
               </select>
             </fieldset>
           </div>

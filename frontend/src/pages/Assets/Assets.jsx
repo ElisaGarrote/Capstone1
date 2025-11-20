@@ -109,6 +109,9 @@ export default function Assets() {
   const [appliedFilters, setAppliedFilters] = useState({});
   const [filteredData, setFilteredData] = useState(MockupData);
 
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
+
   // Debug: Monitor filter modal state changes
   useEffect(() => {
     console.log("🔍 Filter Modal State Changed:", isFilterModalOpen);
@@ -121,7 +124,7 @@ export default function Assets() {
   // selection state
   const [selectedIds, setSelectedIds] = useState([]);
 
-  // Apply filters to data
+  // Apply filters to data (base: all assets)
   const applyFilters = (filters) => {
     let filtered = [...MockupData];
 
@@ -205,13 +208,37 @@ export default function Assets() {
 
     return filtered;
   };
+  
+  const applyFiltersAndSearch = (filters, term) => {
+    let filtered = applyFilters(filters || {});
+
+    if (term && term.trim() !== "") {
+      const lowerTerm = term.toLowerCase();
+      filtered = filtered.filter((asset) =>
+        (asset.name && asset.name.toLowerCase().includes(lowerTerm)) ||
+        (asset.displayed_id && asset.displayed_id.toLowerCase().includes(lowerTerm)) ||
+        (asset.category && asset.category.toLowerCase().includes(lowerTerm))
+      );
+    }
+
+    return filtered;
+  };
 
   // Handle filter apply
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    const filtered = applyFilters(filters);
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // Handle search input
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
   };
 
   // paginate the data
@@ -264,11 +291,18 @@ export default function Assets() {
     if (deleteTarget) {
       console.log("Deleting single id:", deleteTarget);
       // remove from mock data / API call
+      setSuccessMessage("Asset deleted successfully!");
     } else {
       console.log("Deleting multiple ids:", selectedIds);
+      if (selectedIds.length > 0) {
+        setSuccessMessage("Assets deleted successfully!");
+      }
       // remove multiple
       setSelectedIds([]); // clear selection
     }
+
+    // Auto-hide success message after 5 seconds
+    setTimeout(() => setSuccessMessage(""), 5000);
     closeDeleteModal();
   };
 
@@ -391,7 +425,13 @@ export default function Assets() {
                     />
                   </>
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                />
                 <button
                   type="button"
                   className="medium-button-filter"
