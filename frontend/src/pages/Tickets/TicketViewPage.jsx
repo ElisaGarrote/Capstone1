@@ -1,20 +1,21 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import ViewPage from "../../components/View/Viewpage";
-import Status from "../../components/Status";
+import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import TicketsMockupData from "../../data/mockData/tickets/tickets-mockup-data.json";
-import "../../styles/TicketViewPage.css";
-import MediumButtons from "../../components/buttons/MediumButtons";
+import "../../styles/Tickets/TicketViewPage.css";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import Status from "../../components/Status";
 
 function TicketViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const [ticket, setTicket] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     // Find ticket from mockup data
@@ -22,124 +23,129 @@ function TicketViewPage() {
     if (foundTicket) {
       setTicket(foundTicket);
     }
+    setIsLoading(false);
   }, [id]);
+
+  if (isLoading) {
+    return null;
+  }
 
   if (!ticket) {
     return (
-      <>
-        <NavBar />
-        <div style={{ padding: "40px", textAlign: "center" }}>
-          <h2>Ticket not found</h2>
-        </div>
-      </>
+      <div style={{ padding: "40px", textAlign: "center" }}>
+        <h2>Ticket not found</h2>
+      </div>
     );
   }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
-  };
-
-  // Sidebar content
-  const sidebarContent = (
-    <>
-      <div className="view-info-item">
-        <label>Ticket ID:</label>
-        <p>{ticket.ticket_id}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Asset:</label>
-        <p>{ticket.asset_name}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Requestor:</label>
-        <p>{ticket.requestor}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Email:</label>
-        <p>{ticket.requestor_email}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Phone:</label>
-        <p>{ticket.requestor_phone}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Location:</label>
-        <p>{ticket.requestor_location}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Priority:</label>
-        <p>{ticket.priority}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Status:</label>
-        <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
-      </div>
-      <div className="view-info-item">
-        <label>Category:</label>
-        <p>{ticket.category}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Assigned To:</label>
-        <p>{ticket.assigned_to}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Created:</label>
-        <p>{formatDateTime(ticket.created_at)}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Updated:</label>
-        <p>{formatDateTime(ticket.updated_at)}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Checkout Date:</label>
-        <p>{formatDate(ticket.checkout_date)}</p>
-      </div>
-      <div className="view-info-item">
-        <label>Return Date:</label>
-        <p>{formatDate(ticket.return_date)}</p>
-      </div>
-      {ticket.checkin_date && (
-        <div className="view-info-item">
-          <label>Check-in Date:</label>
-          <p>{formatDate(ticket.checkin_date)}</p>
-        </div>
-      )}
-      {ticket.resolution_notes && (
-        <div className="view-info-item">
-          <label>Resolution Notes:</label>
-          <p>{ticket.resolution_notes}</p>
-        </div>
-      )}
-    </>
-  );
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
   };
 
   const confirmDelete = () => {
-    // Handle ticket deletion logic here
     console.log("Deleting ticket:", ticket.id);
     closeDeleteModal();
     navigate("/approved-tickets");
   };
 
-  // Action buttons
+  const handleCheckOut = () => {
+    console.log("Check-Out ticket:", ticket.id);
+  };
+
+  const handleCheckIn = () => {
+    console.log("Check-In ticket:", ticket.id);
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteModalOpen(true);
+  };
+
+  // Create action buttons with vertical layout - Check-Out, Check-In, Delete
   const actionButtons = (
-    <>
+    <div className="ticket-vertical-action-buttons">
       <button
-        className="view-action-btn delete"
-        onClick={() => setDeleteModalOpen(true)}
+        type="button"
+        className="ticket-action-btn ticket-checkout-btn"
+        onClick={handleCheckOut}
       >
-        Delete
+        <i className="fas fa-sign-out-alt"></i>
+        Check-Out
       </button>
-    </>
+      <button
+        type="button"
+        className="ticket-action-btn ticket-checkin-btn"
+        onClick={handleCheckIn}
+      >
+        <i className="fas fa-sign-in-alt"></i>
+        Check-In
+      </button>
+      <MediumButtons
+        type="delete"
+        onClick={handleDeleteClick}
+      />
+    </div>
+  );
+
+  // Tabs configuration
+  const tabs = [
+    { label: "About" }
+  ];
+
+  // Custom About tab content for Ticket Details
+  const ticketDetailsContent = (
+    <div className="ticket-about-section">
+      <div className="ticket-details-section">
+        <h3 className="ticket-section-header">Ticket Details</h3>
+        <div className="ticket-details-grid">
+          <div className="ticket-detail-row">
+            <label>Ticket Number</label>
+            <span>{ticket.ticket_id}</span>
+          </div>
+          <div className="ticket-detail-row">
+            <label>Asset</label>
+            <span>{ticket.asset_name}</span>
+          </div>
+          <div className="ticket-detail-row">
+            <label>Requestor</label>
+            <span>{ticket.requestor}</span>
+          </div>
+          <div className="ticket-detail-row">
+            <label>Subject</label>
+            <span>{ticket.subject}</span>
+          </div>
+          <div className="ticket-detail-row">
+            <label>Location</label>
+            <span>{ticket.requestor_location}</span>
+          </div>
+          <div className="ticket-detail-row">
+            <label>Status</label>
+            <span>
+              <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
+            </span>
+          </div>
+          <div className="ticket-detail-row">
+            <label>Priority</label>
+            <span>{ticket.priority}</span>
+          </div>
+          <div className="ticket-detail-row">
+            <label>Category</label>
+            <span>{ticket.category}</span>
+          </div>
+          <div className="ticket-detail-row">
+            <label>Assigned To</label>
+            <span>{ticket.assigned_to}</span>
+          </div>
+        </div>
+
+        {/* Description Section */}
+        <div className="ticket-description-section">
+          <h4>Description</h4>
+          <p>{ticket.description}</p>
+        </div>
+      </div>
+
+
+    </div>
   );
 
   return (
@@ -152,66 +158,20 @@ function TicketViewPage() {
           onConfirm={confirmDelete}
         />
       )}
-      <ViewPage
+      <DetailedViewPage
         breadcrumbRoot="Tickets"
         breadcrumbCurrent="Show Ticket"
         breadcrumbRootPath="/approved-tickets"
-        title={`${ticket.ticket_id} - ${ticket.subject}`}
-        sidebarContent={sidebarContent}
+        title={ticket.ticket_id}
+        subtitle={ticket.subject}
+        assetImage={DefaultImage}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         actionButtons={actionButtons}
       >
-        {/* Main Content - Ticket Details */}
-        <div className="ticket-view-content">
-          {/* Top Actions */}
-          <div className="ticket-view-header">
-            <div className="ticket-view-tabs">
-              <span className="ticket-tab-text">Ticket Details</span>
-            </div>
-            <div className="ticket-view-actions">
-              <input type="search" placeholder="Search..." className="ticket-search" />
-            </div>
-          </div>
-
-          {/* Ticket Details Table */}
-          <div className="ticket-view-table-wrapper">
-            <table className="ticket-view-table">
-              <thead>
-                <tr>
-                  <th>TICKET NUMBER</th>
-                  <th>ASSET</th>
-                  <th>REQUESTOR</th>
-                  <th>SUBJECT</th>
-                  <th>LOCATION</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{ticket.ticket_id}</td>
-                  <td>{ticket.asset_name}</td>
-                  <td>{ticket.requestor}</td>
-                  <td>{ticket.subject}</td>
-                  <td>{ticket.requestor_location}</td>
-                  <td>
-                    <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Description Section */}
-          <div className="ticket-description-section">
-            <h3>Description</h3>
-            <p>{ticket.description}</p>
-          </div>
-
-          {/* Pagination */}
-          <div className="ticket-view-pagination">
-            Showing 1 to 1 of 1 entries
-          </div>
-        </div>
-      </ViewPage>
+        {ticketDetailsContent}
+      </DetailedViewPage>
     </>
   );
 }

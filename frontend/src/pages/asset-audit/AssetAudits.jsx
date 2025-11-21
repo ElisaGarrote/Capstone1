@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import PageFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
@@ -14,21 +12,7 @@ import dueAudit from "../../data/mockData/audits/due-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import DueAuditFilterModal from "../../components/Modals/DueAuditFilterModal";
-
-const filterConfig = [
-  {
-    type: "searchable",
-    name: "asset",
-    label: "Asset",
-    options: [
-      { value: "1", label: "Lenovo" },
-      { value: "2", label: "Apple" },
-      { value: "3", label: "Samsung" },
-      { value: "4", label: "Microsoft" },
-      { value: "5", label: "HP" },
-    ],
-  },
-];
+import { exportToExcel } from "../../utils/exportToExcel";
 
 // TableHeader
 function TableHeader() {
@@ -44,7 +28,7 @@ function TableHeader() {
 }
 
 // TableItem
-function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
+function TableItem({ item, onDeleteClick, onViewClick }) {
   return (
     <tr>
       <td>{item.date}</td>
@@ -74,8 +58,6 @@ function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
 }
 
 export default function AssetAudits() {
-  const navigate = useNavigate();
-
   const data = dueAudit;
 
   // Filter modal state
@@ -171,6 +153,12 @@ export default function AssetAudits() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleExport = () => {
+    const baseData = data;
+    const dataToExport = filteredData.length > 0 ? filteredData : baseData;
+    exportToExcel(dataToExport, "Due_Audits.xlsx");
+  };
+
   return (
     <>
       {isDeleteModalOpen && (
@@ -227,8 +215,6 @@ export default function AssetAudits() {
             <TabNavBar />
           </section>
 
-          <PageFilter filters={filterConfig} />
-
           <section className="table-layout">
             <section className="table-header">
               <h2 className="h2">Due to be Audited ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
@@ -241,6 +227,10 @@ export default function AssetAudits() {
                 >
                   Filter
                 </button>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
               </section>
             </section>
 
@@ -257,8 +247,6 @@ export default function AssetAudits() {
                         item={item}
                         onDeleteClick={openDeleteModal}
                         onViewClick={handleViewClick}
-                        navigate={navigate}
-                        location={location}
                       />
                     ))
                   ) : (

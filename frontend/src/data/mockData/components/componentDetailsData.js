@@ -19,6 +19,10 @@ export const getComponentDetails = (component) => {
 };
 
 export const getComponentTabs = () => {
-  return [{ label: "About" }];
+  return [
+    { label: "About" },
+    { label: "Active Checkouts" },
+    { label: "History" }
+  ];
 };
 

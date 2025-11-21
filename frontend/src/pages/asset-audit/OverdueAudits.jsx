@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import PageFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
@@ -14,21 +13,7 @@ import overdueAudit from "../../data/mockData/audits/overdue-audit-mockup-data.j
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import OverdueAuditFilterModal from "../../components/Modals/OverdueAuditFilterModal";
-
-const filterConfig = [
-  {
-    type: "searchable",
-    name: "asset",
-    label: "Asset",
-    options: [
-      { value: "1", label: "Lenovo" },
-      { value: "2", label: "Apple" },
-      { value: "3", label: "Samsung" },
-      { value: "4", label: "Microsoft" },
-      { value: "5", label: "HP" },
-    ],
-  },
-];
+import { exportToExcel } from "../../utils/exportToExcel";
 
 // TableHeader
 function TableHeader() {
@@ -45,7 +30,7 @@ function TableHeader() {
 }
 
 // TableItem
-function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
+function TableItem({ item, onDeleteClick, onViewClick }) {
   return (
     <tr>
       <td>{item.date}</td>
@@ -182,6 +167,12 @@ export default function OverdueAudits() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleExport = () => {
+    const baseData = data;
+    const dataToExport = filteredData.length > 0 ? filteredData : baseData;
+    exportToExcel(dataToExport, "Overdue_Audits.xlsx");
+  };
+
   return (
     <>
       {isDeleteModalOpen && (
@@ -239,8 +230,6 @@ export default function OverdueAudits() {
             <TabNavBar />
           </section>
 
-          <PageFilter filters={filterConfig} />
-
           <section className="table-layout">
             <section className="table-header">
               <h2 className="h2">Overdue for Audits ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
@@ -253,6 +242,10 @@ export default function OverdueAudits() {
                 >
                   Filter
                 </button>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
               </section>
             </section>
 

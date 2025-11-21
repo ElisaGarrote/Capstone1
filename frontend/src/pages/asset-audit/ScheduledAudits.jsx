@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import PageFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
@@ -14,21 +13,7 @@ import scheduledAudit from "../../data/mockData/audits/scheduled-audit-mockup-da
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import DueAuditFilterModal from "../../components/Modals/DueAuditFilterModal";
-
-const filterConfig = [
-  {
-    type: "searchable",
-    name: "asset",
-    label: "Asset",
-    options: [
-      { value: "1", label: "Lenovo" },
-      { value: "2", label: "Apple" },
-      { value: "3", label: "Samsung" },
-      { value: "4", label: "Microsoft" },
-      { value: "5", label: "HP" },
-    ],
-  },
-];
+import { exportToExcel } from "../../utils/exportToExcel";
 
 // TableHeader
 function TableHeader() {
@@ -44,7 +29,7 @@ function TableHeader() {
 }
 
 // TableItem
-function TableItem({ item, onDeleteClick, onViewClick, navigate }) {
+function TableItem({ item, onDeleteClick, onViewClick }) {
   return (
     <tr>
       <td>{item.date}</td>
@@ -172,6 +157,12 @@ export default function ScheduledAudits() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleExport = () => {
+    const baseData = data;
+    const dataToExport = filteredData.length > 0 ? filteredData : baseData;
+    exportToExcel(dataToExport, "Scheduled_Audits.xlsx");
+  };
+
   return (
     <>
       {isDeleteModalOpen && (
@@ -228,8 +219,6 @@ export default function ScheduledAudits() {
             <TabNavBar />
           </section>
 
-          <PageFilter filters={filterConfig} />
-
           <section className="table-layout">
             <section className="table-header">
               <h2 className="h2">Scheduled Audits ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
@@ -242,6 +231,10 @@ export default function ScheduledAudits() {
                 >
                   Filter
                 </button>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
               </section>
             </section>
 

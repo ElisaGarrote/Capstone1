@@ -48,8 +48,8 @@ export const getSupplierDetails = (supplier) => {
 export const getSupplierTabs = () => {
   return [
     { label: "About" },
-    { label: "Assets ()" },
-    { label: "Components ()" }
+    { label: "Assets" },
+    { label: "Components" }
   ];
 };
 

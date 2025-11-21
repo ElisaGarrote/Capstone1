@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
@@ -13,7 +13,7 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
 import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
-
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/Products/Products.css";
 import "../../styles/ProductFilterModal.css";
@@ -102,9 +102,6 @@ export default function Products() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
 
   // Filter state
   const [filteredData, setFilteredData] = useState(ProductsMockupData);
@@ -210,24 +207,6 @@ export default function Products() {
     }
   }, [location]);
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
 
   const getManufacturerName = (id) => {
     const found = manufacturers.find((m) => m.id === id);
@@ -417,7 +396,10 @@ export default function Products() {
     setFilteredData(filtered);
   };
 
-
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : products;
+    exportToExcel(dataToExport, "AssetModels_Records.xlsx");
+  };
 
   return (
     <>
@@ -480,12 +462,10 @@ export default function Products() {
                 >
                   Filter
                 </button>
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
                 {authService.getUserInfo().role === "Admin" && (
                   <MediumButtons
                     type="new"
@@ -497,13 +477,6 @@ export default function Products() {
 
             {/* Table Structure */}
             <section className="products-table-section">
-              {exportToggle && (
-                <section className="export-button-section" ref={exportRef}>
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
               <table>
                 <thead>
                   <TableHeader

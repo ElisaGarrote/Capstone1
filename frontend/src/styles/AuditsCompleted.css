@@ -81,7 +81,7 @@
     th:nth-child(5),
     td:nth-child(5) {
       width: 150px;
-      text-align: center;
+      text-align: left;
     }
   }
 }

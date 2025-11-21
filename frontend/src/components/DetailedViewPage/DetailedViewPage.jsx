@@ -660,10 +660,8 @@ Updated At: ${updatedAt || 'N/A'}`;
           );
         })()}
 
-        {/* Custom Tab Content - Renders when customTabContent is provided for activeTab === 2 */}
-        {activeTab === 2 && customTabContent && (
-          customTabContent
-        )}
+        {/* Custom Tab Content - Parent controls which tab uses this via the value passed */}
+        {customTabContent && customTabContent}
 
         {/* Components Tab - Outside of detailed-main-content */}
         {activeTab === 3 && (() => {

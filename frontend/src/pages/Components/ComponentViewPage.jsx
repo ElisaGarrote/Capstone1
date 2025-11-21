@@ -18,8 +18,6 @@ function ComponentView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [activeCheckoutSearchTerm, setActiveCheckoutSearchTerm] = useState("");
-  const [historySearchTerm, setHistorySearchTerm] = useState("");
 
   useEffect(() => {
     // Get component from location state or find from mockup data
@@ -202,31 +200,11 @@ function ComponentView() {
     };
   });
 
-  // Filter active checkouts based on search term
-  const filteredActiveCheckouts = activeCheckouts.filter((checkout) => {
-    if (!activeCheckoutSearchTerm) return true;
-    const term = activeCheckoutSearchTerm.toLowerCase();
-    return (
-      (checkout.checkout_date && checkout.checkout_date.toLowerCase().includes(term)) ||
-      (checkout.to_asset?.displayed_id && checkout.to_asset.displayed_id.toLowerCase().includes(term)) ||
-      (checkout.notes && checkout.notes.toLowerCase().includes(term))
-    );
-  });
-
   // Custom tab content for Active Checkouts and History
   const customTabContent = activeTab === 1 ? (
     <div className="components-tab-wrapper">
       <div className="components-tab-header">
         <h3>Active Checkouts</h3>
-        <div className="history-header-controls">
-          <input
-            type="search"
-            placeholder="Search checkouts..."
-            value={activeCheckoutSearchTerm}
-            onChange={(e) => setActiveCheckoutSearchTerm(e.target.value)}
-            className="history-search-input"
-          />
-        </div>
       </div>
       <section className="components-detail-table-section">
         <table>
@@ -240,8 +218,8 @@ function ComponentView() {
             </tr>
           </thead>
           <tbody>
-            {filteredActiveCheckouts.length > 0 ? (
-              filteredActiveCheckouts.map((checkout, index) => (
+            {activeCheckouts.length > 0 ? (
+              activeCheckouts.map((checkout, index) => (
                 <tr key={index}>
                   <td>{new Date(checkout.checkout_date).toLocaleDateString()}</td>
                   <td>N/A</td>
@@ -270,7 +248,7 @@ function ComponentView() {
             ) : (
               <tr>
                 <td colSpan={5} className="no-data-message">
-                  {activeCheckouts.length === 0 ? "No Active Checkouts Found." : "No results match your search."}
+                  No Active Checkouts Found.
                 </td>
               </tr>
             )}
@@ -279,66 +257,41 @@ function ComponentView() {
       </section>
     </div>
   ) : activeTab === 2 ? (
-    (() => {
-      // Filter history based on search term
-      const filteredHistory = componentHistory.filter((history) => {
-        if (!historySearchTerm) return true;
-        const term = historySearchTerm.toLowerCase();
-        return (
-          (history.checkin_date && history.checkin_date.toLowerCase().includes(term)) ||
-          (history.handled_by && history.handled_by.toLowerCase().includes(term)) ||
-          (history.checkout?.to_asset?.displayed_id && history.checkout.to_asset.displayed_id.toLowerCase().includes(term)) ||
-          (history.notes && history.notes.toLowerCase().includes(term))
-        );
-      });
-
-      return (
-        <div className="components-tab-wrapper">
-          <div className="components-tab-header">
-            <h3>History</h3>
-            <div className="history-header-controls">
-              <input
-                type="search"
-                placeholder="Search history..."
-                value={historySearchTerm}
-                onChange={(e) => setHistorySearchTerm(e.target.value)}
-                className="history-search-input"
-              />
-            </div>
-          </div>
-          <section className="components-detail-table-section">
-            <table>
-              <thead>
-                <tr>
-                  <th>CHECKIN DATE</th>
-                  <th>USER</th>
-                  <th>CHECKED OUT TO</th>
-                  <th>NOTES</th>
+    <div className="components-tab-wrapper">
+      <div className="components-tab-header">
+        <h3>History</h3>
+      </div>
+      <section className="components-detail-table-section">
+        <table>
+          <thead>
+            <tr>
+              <th>CHECKIN DATE</th>
+              <th>USER</th>
+              <th>CHECKED OUT TO</th>
+              <th>NOTES</th>
+            </tr>
+          </thead>
+          <tbody>
+            {componentHistory.length > 0 ? (
+              componentHistory.map((history, index) => (
+                <tr key={index}>
+                  <td>{new Date(history.checkin_date).toLocaleDateString()}</td>
+                  <td>{history.handled_by || 'N/A'}</td>
+                  <td>{history.checkout?.to_asset?.displayed_id || 'N/A'}</td>
+                  <td>{history.notes}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredHistory.length > 0 ? (
-                  filteredHistory.map((history, index) => (
-                    <tr key={index}>
-                      <td>{new Date(history.checkin_date).toLocaleDateString()}</td>
-                      <td>{history.handled_by || 'N/A'}</td>
-                      <td>{history.checkout?.to_asset?.displayed_id || 'N/A'}</td>
-                      <td>{history.notes}</td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="no-data-message">
-                      {componentHistory.length === 0 ? "No History Found." : "No results match your search."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </section>
-        </div>
-      );
-    })()
+              ))
+            ) : (
+              <tr>
+                <td colSpan={4} className="no-data-message">
+                  No History Found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </section>
+    </div>
   ) : null;
 
   return (

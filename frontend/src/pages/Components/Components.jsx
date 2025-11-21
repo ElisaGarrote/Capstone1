@@ -125,18 +125,19 @@ export default function Assets() {
   // selection state
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Helper to normalise date strings (YYYY-MM-DD) for comparison
+  const toDate = (value) => {
+    if (!value) return null;
+    const d = new Date(value);
+    // Guard against invalid dates from bad mock data
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+
   // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...baseData];
 
-    // Filter by Component Name
-    if (filters.name && filters.name.trim() !== "") {
-      filtered = filtered.filter((component) =>
-        component.name.toLowerCase().includes(filters.name.toLowerCase())
-      );
-    }
-
-    // Filter by Category
+    // Category (Dropdown)
     if (filters.category && filters.category.label) {
       const categoryLabel = filters.category.label.toLowerCase();
       filtered = filtered.filter((component) =>
@@ -144,12 +145,72 @@ export default function Assets() {
       );
     }
 
-    // Filter by Manufacturer
+    // Manufacturer (Dropdown)
     if (filters.manufacturer && filters.manufacturer.label) {
       const manufacturerLabel = filters.manufacturer.label.toLowerCase();
       filtered = filtered.filter((component) =>
         component.manufacturer?.toLowerCase().includes(manufacturerLabel)
       );
+    }
+
+    // Supplier (Dropdown)
+    if (filters.supplier && filters.supplier.label) {
+      const supplierLabel = filters.supplier.label.toLowerCase();
+      filtered = filtered.filter((component) =>
+        component.supplier?.toLowerCase().includes(supplierLabel)
+      );
+    }
+
+    // Location (Dropdown)
+    if (filters.location && filters.location.label) {
+      const locationLabel = filters.location.label.toLowerCase();
+      filtered = filtered.filter((component) =>
+        component.location?.toLowerCase().includes(locationLabel)
+      );
+    }
+
+    // Purchase Date range
+    const purchaseFrom = toDate(filters.purchaseDateFrom);
+    const purchaseTo = toDate(filters.purchaseDateTo);
+    if (purchaseFrom || purchaseTo) {
+      filtered = filtered.filter((component) => {
+        const purchaseDate = toDate(component.purchase_date);
+        if (!purchaseDate) return false;
+        if (purchaseFrom && purchaseDate < purchaseFrom) return false;
+        if (purchaseTo && purchaseDate > purchaseTo) return false;
+        return true;
+      });
+    }
+
+    // Due for Check-in range
+    // NOTE: components list does not have a direct "due for check-in" field.
+    // For now, we treat this as a no-op so the UI remains consistent
+    // and can be wired to real data once available.
+
+    // Created At range (front-end only; not present in current mock data)
+    const createdFrom = toDate(filters.createdAtFrom);
+    const createdTo = toDate(filters.createdAtTo);
+    if (createdFrom || createdTo) {
+      filtered = filtered.filter((component) => {
+        const createdAt = toDate(component.created_at);
+        if (!createdAt) return false;
+        if (createdFrom && createdAt < createdFrom) return false;
+        if (createdTo && createdAt > createdTo) return false;
+        return true;
+      });
+    }
+
+    // Updated At range (front-end only; not present in current mock data)
+    const updatedFrom = toDate(filters.updatedAtFrom);
+    const updatedTo = toDate(filters.updatedAtTo);
+    if (updatedFrom || updatedTo) {
+      filtered = filtered.filter((component) => {
+        const updatedAt = toDate(component.updated_at);
+        if (!updatedAt) return false;
+        if (updatedFrom && updatedAt < updatedFrom) return false;
+        if (updatedTo && updatedAt > updatedTo) return false;
+        return true;
+      });
     }
 
     return filtered;
@@ -164,7 +225,9 @@ export default function Assets() {
       filtered = filtered.filter((component) =>
         (component.name && component.name.toLowerCase().includes(lowerTerm)) ||
         (component.category && component.category.toLowerCase().includes(lowerTerm)) ||
-        (component.manufacturer && component.manufacturer.toLowerCase().includes(lowerTerm))
+        (component.manufacturer && component.manufacturer.toLowerCase().includes(lowerTerm)) ||
+        (component.supplier && component.supplier.toLowerCase().includes(lowerTerm)) ||
+        (component.location && component.location.toLowerCase().includes(lowerTerm))
       );
     }
 
@@ -247,8 +310,10 @@ export default function Assets() {
   };
 
 
-  const handleViewClick = (asset) => {
-    navigate(`/assets/view/${asset.id}`);
+  const handleViewClick = (component) => {
+    navigate(`/components/view/${component.id}`, {
+      state: { component },
+    });
   };
 
   const [errorMessage, setErrorMessage] = useState("");

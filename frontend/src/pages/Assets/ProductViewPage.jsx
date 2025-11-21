@@ -11,6 +11,8 @@ import "../../styles/Assets/AssetViewPage.css";
 import "../../styles/Assets/Assets.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import Alert from "../../components/Alert";
+
 import { getProductDetails, getProductTabs } from "../../data/mockData/products/productDetailsData";
 import Status from "../../components/Status";
 import ActionButtons from "../../components/ActionButtons";
@@ -39,6 +41,11 @@ function ProductViewPage() {
   // Filter modal state for Assets tab
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
+
+  // Alert state for asset actions in Assets tab
+  const [assetSuccessMessage, setAssetSuccessMessage] = useState("");
+  const [isAssetDeleteModalOpen, setAssetDeleteModalOpen] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState(null);
 
   useEffect(() => {
     // Find product from mockup data
@@ -254,10 +261,31 @@ function ProductViewPage() {
     navigate(`/assets/view/${asset.id}`);
   };
 
-  // Handle delete asset
+  // Handle delete asset - open confirmation modal and track which asset to delete
   const handleDeleteAsset = (assetId) => {
-    console.log("Deleting asset:", assetId);
-    // TODO: Implement delete functionality
+    setAssetToDelete(assetId);
+    setAssetDeleteModalOpen(true);
+  };
+
+  const closeAssetDeleteModal = () => {
+    setAssetDeleteModalOpen(false);
+    setAssetToDelete(null);
+  };
+
+  const confirmAssetDelete = () => {
+    if (assetToDelete) {
+      // Remove from local assets collections
+      const updatedAssets = productAssets.filter((asset) => asset.id !== assetToDelete);
+      setProductAssets(updatedAssets);
+
+      const updatedFiltered = filteredAssets.filter((asset) => asset.id !== assetToDelete);
+      setFilteredAssets(updatedFiltered);
+
+      setAssetSuccessMessage("Asset deleted successfully!");
+      setTimeout(() => setAssetSuccessMessage(""), 5000);
+      console.log("Deleting asset:", assetToDelete);
+    }
+    closeAssetDeleteModal();
   };
 
   // Pagination logic
@@ -436,7 +464,7 @@ function ProductViewPage() {
           fill="white"
           style={{ marginRight: '8px' }}
         >
-          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
         </svg>
         Clone
       </button>
@@ -472,6 +500,18 @@ function ProductViewPage() {
           actionType="delete"
           onConfirm={confirmDelete}
         />
+      )}
+
+      {isAssetDeleteModalOpen && (
+        <ConfirmationModal
+          closeModal={closeAssetDeleteModal}
+          actionType="delete"
+          onConfirm={confirmAssetDelete}
+        />
+      )}
+
+      {assetSuccessMessage && (
+        <Alert message={assetSuccessMessage} type="success" />
       )}
 
       <AssetFilterModal

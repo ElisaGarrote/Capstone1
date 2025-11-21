@@ -1,7 +1,6 @@
 import { useState } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import PageFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
@@ -12,21 +11,7 @@ import completedAudit from "../../data/mockData/audits/completed-audit-mockup-da
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import CompletedAuditFilterModal from "../../components/Modals/CompletedAuditFilterModal";
-
-const filterConfig = [
-  {
-    type: "searchable",
-    name: "asset",
-    label: "Asset",
-    options: [
-      { value: "1", label: "Lenovo" },
-      { value: "2", label: "Apple" },
-      { value: "3", label: "Samsung" },
-      { value: "4", label: "Microsoft" },
-      { value: "5", label: "HP" },
-    ],
-  },
-];
+import { exportToExcel } from "../../utils/exportToExcel";
 
 // TableHeader
 function TableHeader() {
@@ -134,6 +119,12 @@ export default function CompletedAudits() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleExport = () => {
+    const baseData = data;
+    const dataToExport = filteredData.length > 0 ? filteredData : baseData;
+    exportToExcel(dataToExport, "Completed_Audits.xlsx");
+  };
+
   return (
     <>
       {isViewModalOpen && selectedItem && (
@@ -186,8 +177,6 @@ export default function CompletedAudits() {
             <TabNavBar />
           </section>
 
-          <PageFilter filters={filterConfig} />
-
           <section className="table-layout">
             <section className="table-header">
               <h2 className="h2">Completed Audits ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
@@ -200,6 +189,10 @@ export default function CompletedAudits() {
                 >
                   Filter
                 </button>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
               </section>
             </section>
 
