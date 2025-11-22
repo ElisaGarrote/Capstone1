@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
@@ -6,9 +6,9 @@ import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import Alert from "../../components/Alert";
-import assetsService from "../../services/assets-service";
+import { createAssetCheckin } from "../../services/assets-service";
+import { resolveTicket } from "../../services/contexts-service";
 import dtsService from "../../services/dts-integration-service";
-import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 
 
@@ -30,17 +30,6 @@ export default function CheckInAsset() {
     { value: "10", label: "10 - Brand New" }
   ];
 
-  const [statuses, setStatuses] = useState([]);
-  const [locations, setLocations] = useState([
-    { id: 1, name: "Makati Office" },
-    { id: 2, name: "Pasig Office" },
-    { id: 3, name: "Marikina Office" },
-    { id: 4, name: "Quezon City Office" },
-    { id: 5, name: "Manila Office" },
-    { id: 6, name: "Taguig Office" },
-    { id: 7, name: "Remote" }
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
 
@@ -58,7 +47,8 @@ export default function CheckInAsset() {
     checkoutId,
     checkinDate,
     ticketId,
-    fromAsset
+    fromAsset,
+    fromTicket
   } = location.state || {};
 
   const {
@@ -77,18 +67,7 @@ export default function CheckInAsset() {
     }
   });
 
-  // Fetch statuses on component mount
-  useEffect(() => {
-    const fetchStatuses = async () => {
-      try {
-        const response = await assetsService.fetchAssetContexts();
-        setStatuses(response.statuses || []);
-      } catch (error) {
-        console.error("Error fetching statuses:", error);
-      }
-    };
-    fetchStatuses();
-  }, []);
+
 
   // Handle file selection
   const handleFileSelection = (e) => {
@@ -121,11 +100,14 @@ export default function CheckInAsset() {
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
+
+      // Required fields
       formData.append("asset_checkout", checkoutId);
       formData.append("checkin_date", data.checkinDate);
-      formData.append("status", data.status);
       formData.append("condition", data.condition);
-      formData.append("location", data.location);
+
+      // Optional fields
+      formData.append("ticket_id", ticketId);
       formData.append("notes", data.notes || "");
 
       // Append image files
@@ -133,8 +115,8 @@ export default function CheckInAsset() {
         formData.append(`image_${index}`, file);
       });
 
-      await assetsService.createAssetCheckin(formData);
-      await dtsService.resolveCheckoutTicket(ticketId);
+      await createAssetCheckin(formData);
+      await resolveTicket(ticketId);
 
       // Navigate to asset view page after successful check-in
       navigate(`/assets/view/${id}`, {
@@ -146,10 +128,7 @@ export default function CheckInAsset() {
     }
   };
 
-  if (isLoading) {
-    console.log("isLoading triggered — showing loading screen");
-    return <SystemLoading />;
-  }
+
 
   return (
     <>
@@ -158,9 +137,9 @@ export default function CheckInAsset() {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="Assets"
+            root={fromAsset ? "Assets" : "Tickets"}
             currentPage="Check-In Asset"
-            rootNavigatePage="/assets"
+            rootNavigatePage={fromAsset ? "/assets" : "/tickets"}
             title={assetId}
           />
         </section>
@@ -193,24 +172,6 @@ export default function CheckInAsset() {
               )}
             </fieldset>
 
-            {/* Status */}
-            <fieldset>
-              <label htmlFor="status">Status <span style={{color: 'red'}}>*</span></label>
-              <select
-                id="status"
-                {...register("status", { required: "Status is required" })}
-                className={errors.status ? 'input-error' : ''}
-              >
-                <option value="">Select Status</option>
-                {statuses.map(status => (
-                  <option key={status.id} value={status.id}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
-              {errors.status && <span className='error-message'>{errors.status.message}</span>}
-            </fieldset>
-
             {/* Condition */}
             <fieldset>
               <label htmlFor="condition">Condition <span style={{color: 'red'}}>*</span></label>
@@ -227,24 +188,6 @@ export default function CheckInAsset() {
                 ))}
               </select>
               {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
-            </fieldset>
-
-            {/* Location */}
-            <fieldset>
-              <label htmlFor="location">Location <span style={{color: 'red'}}>*</span></label>
-              <select
-                id="location"
-                {...register("location", { required: "Location is required" })}
-                className={errors.location ? 'input-error' : ''}
-              >
-                <option value="">Select Location</option>
-                {locations.map(location => (
-                  <option key={location.id} value={location.name}>
-                    {location.name}
-                  </option>
-                ))}
-              </select>
-              {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
 
             {/* Notes */}

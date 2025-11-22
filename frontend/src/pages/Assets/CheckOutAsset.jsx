@@ -6,11 +6,11 @@ import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import Alert from "../../components/Alert";
-import assetsService from "../../services/assets-service";
+import { createAssetCheckout } from "../../services/assets-service";
+import { resolveTicket } from "../../services/contexts-service";
 import dtsService from "../../services/dts-integration-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
-
 
 export default function CheckOutAsset() {
   const location = useLocation();
@@ -55,6 +55,7 @@ export default function CheckOutAsset() {
     returnDate,
     ticketId,
     fromAsset,
+    fromTicket,
   } = passedState || {};
 
   console.log({
@@ -68,7 +69,8 @@ export default function CheckOutAsset() {
     checkoutDate,
     returnDate,
     ticketId,
-    fromAsset
+    fromAsset,
+    fromTicket
   });
 
 
@@ -141,19 +143,17 @@ export default function CheckOutAsset() {
     try {
       const formData = new FormData();
 
+      // Required fields
       formData.append('asset', id);
-      formData.append('to_user_id', empId);
-      formData.append('to_location', data.empLocation);
-      formData.append('checkout_date', data.checkoutDate);
-      formData.append('return_date', data.returnDate);
+      formData.append('ticket_id', ticketId);
 
       const conditionValue = parseInt(data.condition, 10);
-        if (!isNaN(conditionValue)) {
-          formData.append('condition', conditionValue);
-        }
+      if (!isNaN(conditionValue)) {
+        formData.append('condition', conditionValue);
+      }
 
+      // Optional fields
       formData.append('notes', data.notes || '');
-      formData.append('confirmation_notes', data.confirmationNotes || '');
 
       // Append image files
       selectedFiles.forEach((file, index) => {
@@ -164,8 +164,8 @@ export default function CheckOutAsset() {
         console.log(pair[0]+ ': ' + pair[1]);
       }
 
-      await assetsService.createAssetCheckout(formData);
-      await dtsService.resolveCheckoutTicket(ticketId);
+      await createAssetCheckout(formData);
+      await resolveTicket(ticketId);
 
       // Navigate to asset view page after successful checkout
       navigate(`/assets/view/${id}`, {
@@ -194,9 +194,9 @@ export default function CheckOutAsset() {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root={passedState?.fromAsset ? "Assets" : "Approved Tickets"}
+            root={passedState?.fromAsset ? "Assets" : "Tickets"}
             currentPage="Check-Out Asset"
-            rootNavigatePage={passedState?.fromAsset ? "/assets" : "/approved-tickets"}
+            rootNavigatePage={passedState?.fromAsset ? "/assets" : "/tickets"}
             title={assetId}
           />
         </section>

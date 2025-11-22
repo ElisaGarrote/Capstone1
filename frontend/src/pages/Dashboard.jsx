@@ -6,7 +6,7 @@ import KPISummaryCards from '../components/Dashboard/KPISummaryCards';
 import AssetStatusForecastChart from '../components/Dashboard/AssetStatusForecastChart';
 import ProductDemandForecastChart from '../components/Dashboard/ProductDemandForecastChart';
 import "../styles/Dashboard.css";
-import assetsService from '../services/assets-service';
+import { fetchDashboardStats } from '../services/assets-service';
 import forecastService from '../services/forecast-service';
 
 function Dashboard() {

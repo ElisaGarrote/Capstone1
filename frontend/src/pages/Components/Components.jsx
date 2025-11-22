@@ -13,6 +13,7 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MockupData from "../../data/mockData/components/component-mockup-data.json";
 import { exportToExcel } from "../../utils/exportToExcel";
+import { fetchAllComponents } from "../../services/assets-service";
 
 import "../../styles/components/Components.css";
 
@@ -31,7 +32,8 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>CATEGORY</th>
       <th>MANUFACTURER</th>
       <th>DEPRECIATION</th>
-      <th>CHECK-OUT / CHECK-IN</th>
+      <th>CHECK-OUT</th>
+      <th>CHECK-IN</th>
       <th>ACTION</th>
     </tr>
   );
@@ -40,7 +42,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 // TableItem component to render each asset row
 function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
   const baseImage = asset.image
-    ? `https://assets-service-production.up.railway.app${asset.image}`
+    ? `${ASSETS_API_URL.replace(/\/$/, '')}${asset.image}`
     : DefaultImage;
 
   return (
@@ -67,12 +69,18 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       <td>{asset.manufacturer || 'N/A'}</td>
       <td>{asset.depreciation || 'N/A'}</td>
 
-      {/* Check-out / Check-in Column */}
+      {/* Check-out Column */}
       <td>
         <ActionButtons
-          showCheckout={asset.showCheckout}
-          showCheckin={asset.showCheckin}
+          showCheckout
           onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
+        />
+      </td>
+
+      {/* Check-in Column */}
+      <td>
+        <ActionButtons
+          showCheckin
           onCheckinClick={() => onCheckInOut(asset, 'checkin')}
         />
       </td>
@@ -95,17 +103,36 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
 export default function Assets() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [baseData] = useState(() =>
-    MockupData.map((asset) => {
-      const available = asset.available_quantity ?? 0;
-      const checkedOut = asset.checked_out_quantity ?? 0;
 
-      const showCheckout = available > 0;
-      const showCheckin = checkedOut > 0;
+  // base data state
+  const [baseData, setBaseData] = useState([]);
 
-      return { ...asset, showCheckout, showCheckin };
-    })
-  );
+  // Load components from API
+  useEffect(() => {
+    async function loadComponents() {
+      try {
+        const data = await fetchAllComponents();
+
+        const processed = data.map((asset) => {
+          const available = asset.available_quantity ?? 0;
+          const checkedOut = asset.checked_out_quantity ?? 0;
+
+          return {
+            ...asset,
+            showCheckout: available > 0,
+            showCheckin: checkedOut > 0,
+          };
+        });
+
+        setBaseData(processed);
+        setFilteredData(processed);
+      } catch (error) {
+        setErrorMessage("Failed to load components.");
+      }
+    }
+
+    loadComponents();
+  }, []);
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);

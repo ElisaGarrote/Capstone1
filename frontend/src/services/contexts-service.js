@@ -20,3 +20,16 @@ export async function deleteCategory(id) {
   const res = await contextsAxios.delete(`categories/${id}/`);
   return res.data;
 }
+
+// TICKETS
+export async function fetchAllTickets() {
+  const res = await contextsAxios.get("tickets/unresolved/");
+  return res.data;
+}
+
+export async function resolveTicket(ticketId) {
+  const res = await contextsAxios.patch(`tickets/${ticketId}/`, {
+    is_resolved: true,
+  });
+  return res.data;
+}

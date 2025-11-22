@@ -8,8 +8,8 @@ import TicketFilterModal from "../../components/Modals/TicketFilterModal";
 import ActionButtons from "../../components/ActionButtons";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
-import TicketsMockupData from "../../data/mockData/tickets/tickets-mockup-data.json";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import { fetchAllTickets } from "../../services/contexts-service";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -91,6 +91,7 @@ const Tickets = () => {
   const [exportToggle, setExportToggle] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -105,31 +106,47 @@ const Tickets = () => {
 
 
   useEffect(() => {
-    const loadTickets = () => {
+    const loadTickets = async () => {
       try {
-        // Use mockup data instead of API call
-        const mappedTickets = TicketsMockupData.map((ticket) => {
+        setIsLoading(true);
+        setErrorMessage("");
+
+        // Fetch tickets from API
+        const response = await fetchAllTickets();
+
+        // Handle paginated response
+        const ticketsData = response.results || response;
+
+        // Map API response to component format
+        const mappedTickets = ticketsData.map((ticket) => {
+          // Determine if ticket needs check-in or check-out action
+          // Logic: If checkin_date is null, it's a Check-Out ticket, otherwise Check-In
           const isCheckInOrOut =
-            ticket.isCheckInOrOut ??
-            (!ticket.is_resolved
-              ? ticket.checkin_date
-                ? "Check-In"
-                : "Check-Out"
-              : null);
+            !ticket.is_resolved
+              ? ticket.checkin_date === null || ticket.checkin_date === undefined
+                ? "Check-Out"
+                : "Check-In"
+              : null;
 
           return {
-            id: ticket.ticket_id,
-            assetId: ticket.asset_id,
-            assetName: ticket.asset_name,
+            id: ticket.ticket_number,
+            ticketId: ticket.id, // Database ID for API calls
+            assetId: ticket.asset,
+            assetName: `Asset #${ticket.asset}`, // Will be enriched later if needed
             subject: ticket.subject,
-            requestor: ticket.requestor,
-            requestorId: ticket.requestor_id,
-            requestorLocation: ticket.requestor_location || "-",
+            requestor: ticket.employee,
+            requestorId: ticket.employee, // Using employee as ID for now
+            requestorLocation: ticket.location || "-",
             checkoutDate: ticket.checkout_date,
             returnDate: ticket.return_date,
+            checkinDate: ticket.checkin_date,
+            assetCheckout: ticket.asset_checkout,
             image: DefaultImage,
             isResolved: ticket.is_resolved,
             isCheckInOrOut,
+            ticketType: ticket.ticket_type,
+            createdAt: ticket.created_at,
+            updatedAt: ticket.updated_at,
           };
         });
 
@@ -137,8 +154,11 @@ const Tickets = () => {
         setFilteredData(mappedTickets);
       } catch (error) {
         console.error("Error loading tickets:", error);
-        setErrorMessage("Failed to load tickets.");
+        setErrorMessage("Failed to load tickets from server. Please try again later.");
         setTicketItems([]);
+        setFilteredData([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -247,9 +267,9 @@ const Tickets = () => {
           empLocation: ticket.requestorLocation || "Unknown",
           checkOutDate: ticket.checkoutDate || "Unknown",
           returnDate: ticket.returnDate || "Unknown",
-          checkoutId: ticket.id,
+          checkoutId: ticket.assetCheckout,
           condition: "Unknown",
-          ticketId: ticket.id,
+          ticketId: ticket.ticketId, // Use database ID, not ticket number
           fromTicket: true,
         },
       });
@@ -260,7 +280,7 @@ const Tickets = () => {
           assetId: ticket.assetId,
           product: ticket.assetName || "Generic Asset",
           image: DefaultImage,
-          ticketId: ticket.id,
+          ticketId: ticket.ticketId, // Use database ID, not ticket number
           empId: ticket.requestorId,
           employee: ticket.requestor || "Not assigned",
           empLocation: ticket.requestorLocation || "Unknown",
@@ -413,7 +433,13 @@ const Tickets = () => {
                   />
                 </thead>
                 <tbody>
-                  {paginatedTickets.length > 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={8} className="no-data-message">
+                        Loading tickets...
+                      </td>
+                    </tr>
+                  ) : paginatedTickets.length > 0 ? (
                     paginatedTickets.map((ticket) => (
                       <TableItem
                         key={ticket.id}

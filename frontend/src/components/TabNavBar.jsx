@@ -1,6 +1,5 @@
 import "../styles/TabNavBar.css";
 import { useNavigate } from "react-router-dom";
-import assetsService from "../services/assets-service";
 import { useEffect, useState } from "react";
 
 export default function TabNavBar() {

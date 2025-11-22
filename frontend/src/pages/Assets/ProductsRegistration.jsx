@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 import PlusIcon from '../../assets/icons/plus.svg';
 import Alert from "../../components/Alert";
-import assetsService from "../../services/assets-service";
+import { fetchAllComponents } from "../../services/assets-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import { fetchAllCategories } from "../../services/contexts-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
@@ -80,7 +80,6 @@ export default function ProductsRegistration() {
 
         try {
           const [productContexts, contextResponse] = await Promise.all([
-            assetsService.fetchProductContexts(),
             fetchAllCategories(),
           ]);
 
