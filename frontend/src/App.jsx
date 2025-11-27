@@ -103,7 +103,7 @@ function App() {
             element={<ProductsRegistration />}
           />
           <Route
-            path="/products/registration/:id"
+            path="/products/edit/:id"
             element={<ProductsRegistration />}
           />
           <Route

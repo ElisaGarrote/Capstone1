@@ -4,20 +4,14 @@ import '../../styles/Registration.css';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import TopSecFormPage from '../../components/TopSecFormPage';
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { set, useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 import PlusIcon from '../../assets/icons/plus.svg';
 import Alert from "../../components/Alert";
-import { fetchAllComponents } from "../../services/assets-service";
+import { createProduct, updateProduct } from "../../services/assets-service";
+import { fetchAllCategories, fetchAllManufacturers, fetchAllDepreciations, fetchAllSuppliers, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import { fetchAllCategories } from "../../services/contexts-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import ProductsMockData from "../../data/mockData/products/products-mockup-data.json";
-import DepreciationMockData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
-import ManufacturerMockData from "../../data/mockData/more/manufacturer-mockup-data.json";
-import SupplierMockData from "../../data/mockData/more/supplier-mockup-data.json";
-
-
 
 export default function ProductsRegistration() {
   const [suppliers, setSuppliers] = useState([]);
@@ -30,12 +24,15 @@ export default function ProductsRegistration() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showManufacturerModal, setShowManufacturerModal] = useState(false);
   const [showDepreciationModal, setShowDepreciationModal] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
 
   // Import file state
   const [importFile, setImportFile] = useState(null);
 
-  const { id } = useParams();
+  const navigate = useNavigate();
   const location = useLocation();
+  const { id } = useParams();
+
   const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
@@ -44,9 +41,9 @@ export default function ProductsRegistration() {
       manufacturer: '',
       depreciation: '',
       modelNumber: '',
-      endOfLifeDate: '',
+      endOfLife: '',
       defaultPurchaseCost: '',
-      supplier: '',
+      defaultSupplier: '',
       minimumQuantity: '',
       cpu: '',
       gpu: '',
@@ -54,17 +51,13 @@ export default function ProductsRegistration() {
       ram: '',
       screenSize: '',
       storageSize: '',
-      archiveModel: false,
       notes: ''
     }
   });
 
-  const currentDate = new Date().toISOString().split('T')[0];
   const [previewImage, setPreviewImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
-
-  const navigate = useNavigate();
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -74,104 +67,59 @@ export default function ProductsRegistration() {
       try {
         setIsLoading(true);
 
-        // Try to fetch live contexts first
-        let productContextsData = { categories: [], depreciations: [] };
-        let contextsData = { suppliers: [], manufacturers: [] };
+        // Fetch dropdown options
+        const [
+          categoriesData,
+          depreciationsData,
+          suppliersData,
+          manufacturersData,
+        ] = await Promise.all([
+          fetchAllCategories(),
+          fetchAllDepreciations(),
+          fetchAllSuppliers(),
+          fetchAllManufacturers(),
+        ]);
 
-        try {
-          const [productContexts, contextResponse] = await Promise.all([
-            fetchAllCategories(),
-          ]);
+        // Set dropdown options - API returns direct arrays
+        // Filter categories to only show asset categories
+        const assetCategories = Array.isArray(categoriesData)
+          ? categoriesData.filter(cat => cat.type === 'asset')
+          : [];
 
-          if (productContexts) {
-            productContextsData = productContexts;
-          }
+        setCategories(assetCategories);
+        setManufacturers(Array.isArray(manufacturersData) ? manufacturersData : []);
+        setDepreciations(Array.isArray(depreciationsData) ? depreciationsData : []);
+        setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
 
-          if (contextResponse) {
-            contextsData = contextResponse;
-          }
-        } catch (fetchError) {
-          console.warn(
-            "Failed to fetch product/contexts data, falling back to mock data:",
-            fetchError
-          );
+        // Get product data - prioritize state, then fetch from API
+        let productData = location.state?.product;
+
+        // If no product in state but we have an ID, fetch from API
+        if (!productData && id) {
+          productData = await assetsService.fetchProductById(id);
         }
 
-        const apiCategories = productContextsData.categories || [];
-        const apiDepreciations = productContextsData.depreciations || [];
-        const apiSuppliers = contextsData.suppliers || [];
-        const apiManufacturers = contextsData.manufacturers || [];
-        const mockCategoryNames = Array.from(
-          new Set(
-            (ProductsMockData || [])
-              .map((item) => item.category)
-              .filter(Boolean)
-          )
-        );
-        const mockCategories = mockCategoryNames.map((name, index) => ({
-          id: index + 1,
-          name,
-        }));
-
-        setCategories(apiCategories.length ? apiCategories : mockCategories);
-        setDepreciations(
-          apiDepreciations.length ? apiDepreciations : DepreciationMockData
-        );
-        setSuppliers(apiSuppliers.length ? apiSuppliers : SupplierMockData);
-        setManufacturers(
-          apiManufacturers.length ? apiManufacturers : ManufacturerMockData
-        );
-
-        console.log(
-          "Categories:",
-          apiCategories.length ? apiCategories : mockCategories
-        );
-        console.log(
-          "Depreciations:",
-          apiDepreciations.length ? apiDepreciations : DepreciationMockData
-        );
-        console.log(
-          "Suppliers:",
-          apiSuppliers.length ? apiSuppliers : SupplierMockData
-        );
-        console.log(
-          "Manufacturers:",
-          apiManufacturers.length ? apiManufacturers : ManufacturerMockData
-        );
-
-        // If ID is present, fetch the product details
-        if (id) {
-          const productData = await assetsService.fetchProductById(id);
-          if (!productData) {
-            setErrorMessage("Failed to fetch product details");
-            setIsLoading(false);
-            return;
-          }
-
-          setProduct(productData);
-          console.log("Product Details:", productData);
-
-          // Set form values from retrieved product data
-          setValue("productName", productData.name);
-
-          setValue("category", productData.category_id || "");
-          setValue("depreciation", productData.depreciation_id || "");
-          setValue("manufacturer", productData.manufacturer_id || "");
+        // Initialize form if editing
+        if (productData) {
+          setValue("productName", productData.name || "");
+          setValue("category", productData.category || "");
+          setValue("manufacturer", productData.manufacturer || "");
+          setValue("depreciation", productData.depreciation || "");
           setValue("modelNumber", productData.model_number || "");
-          setValue("endOfLifeDate", productData.end_of_life || "");
-          setValue(
-            "defaultPurchaseCost",
-            productData.default_purchase_cost || ""
-          );
-          setValue("supplier", productData.default_supplier_id || "");
+          setValue("endOfLife", productData.end_of_life || "");
+          setValue("defaultPurchaseCost", productData.default_purchase_cost || "");
+          setValue("defaultSupplier", productData.default_supplier || "");
           setValue("minimumQuantity", productData.minimum_quantity || "");
-          setValue("operatingSystem", productData.operating_system || "");
+          setValue("cpu", productData.cpu || "");
+          setValue("gpu", productData.gpu || "");
+          setValue("operatingSystem", productData.os || "");
+          setValue("ram", productData.ram || "");
+          setValue("screenSize", productData.size || "");
+          setValue("storageSize", productData.storage || "");
           setValue("notes", productData.notes || "");
-
+          setProduct(productData);
           if (productData.image) {
-            setPreviewImage(
-              `https://assets-service-production.up.railway.app${productData.image}`
-            );
+            setPreviewImage(productData.image);
           }
         }
       } catch (error) {
@@ -181,11 +129,8 @@ export default function ProductsRegistration() {
         setIsLoading(false);
       }
     };
-
     initialize();
-  }, [id, setValue]);
-
-
+  }, [id, location.state, setValue]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -282,10 +227,26 @@ export default function ProductsRegistration() {
     }
   ];
 
+  const supplierFields = [
+    {
+      name: "name",
+      label: "Supplier Name",
+      type: "text",
+      placeholder: "Supplier Name",
+      required: true,
+      maxLength: 100,
+      validation: { required: "Supplier Name is required" },
+    },
+  ];
+
   // Handle save for each modal
   const handleSaveCategory = async (data) => {
     try {
-      const newCategory = await assetsService.createCategory(data);
+      const categoryData = {
+        name: data.name,
+        type: 'asset'
+      };
+      const newCategory = await createCategory(categoryData);
       setCategories([...categories, newCategory]);
       setShowCategoryModal(false);
       setErrorMessage("");
@@ -298,7 +259,7 @@ export default function ProductsRegistration() {
 
   const handleSaveManufacturer = async (data) => {
     try {
-      const newManufacturer = await assetsService.createManufacturer(data);
+      const newManufacturer = await createManufacturer(data);
       setManufacturers([...manufacturers, newManufacturer]);
       setShowManufacturerModal(false);
       setErrorMessage("");
@@ -311,7 +272,7 @@ export default function ProductsRegistration() {
 
   const handleSaveDepreciation = async (data) => {
     try {
-      const newDepreciation = await assetsService.createDepreciation(data);
+      const newDepreciation = await createDepreciation(data);
       setDepreciations([...depreciations, newDepreciation]);
       setShowDepreciationModal(false);
       setErrorMessage("");
@@ -322,51 +283,40 @@ export default function ProductsRegistration() {
     }
   };
 
+  const handleSaveSupplier = async (data) => {
+    try {
+      const newSupplier = await createSupplier(data);
+      setSuppliers([...suppliers, newSupplier]);
+      setShowSupplierModal(false);
+      setErrorMessage("");
+    } catch (error) {
+      console.error("Error creating supplier:", error);
+      setErrorMessage("Failed to create supplier");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
+
   const onSubmit = async (data) => {
     try {
-      // Only check for duplicate names when creating a new product (not when updating)
-      if (!id) {
-        // Fetch all existing product names
-        const existingProducts = await assetsService.fetchProductNames();
-
-        // Check if a product with the same name already exists
-        const isDuplicate = existingProducts.products.some(
-          product => product.name.toLowerCase() === data.productName.toLowerCase()
-        );
-
-        if (isDuplicate) {
-          setErrorMessage("A product with this name already exists. Please use a different name.");
-          setTimeout(() => {
-            setErrorMessage("");
-          }, 5000);
-          return; // Stop the submission process
-        }
-      }
-
       const formData = new FormData();
 
       // Append all form data to FormData object
       formData.append('name', data.productName);
       formData.append('category', data.category || '');
-      formData.append('manufacturer_id', data.manufacturer || '');
+      formData.append('manufacturer', data.manufacturer || '');
       formData.append('depreciation', data.depreciation || '');
       formData.append('model_number', data.modelNumber || '');
-      formData.append('end_of_life', data.endOfLifeDate || '');
+      formData.append('end_of_life', data.endOfLife || '');
       formData.append('default_purchase_cost', data.defaultPurchaseCost || '');
-      formData.append('default_supplier_id', data.supplier || '');
-      formData.append(
-        'minimum_quantity',
-        data.minimumQuantity === undefined || data.minimumQuantity === null || Number.isNaN(data.minimumQuantity)
-          ? ''
-          : data.minimumQuantity,
-      );
+      formData.append('default_supplier', data.defaultSupplier || '');
+      formData.append('minimum_quantity', data.minimumQuantity || '');
       formData.append('cpu', data.cpu || '');
       formData.append('gpu', data.gpu || '');
-      formData.append('operating_system', data.operatingSystem || '');
+      formData.append('os', data.operatingSystem || '');
       formData.append('ram', data.ram || '');
-      formData.append('screen_size', data.screenSize || '');
-      formData.append('storage_size', data.storageSize || '');
-      formData.append('archive_model', data.archiveModel || false);
+      formData.append('size', data.screenSize || '');
+      formData.append('storage', data.storageSize || '');
       formData.append('notes', data.notes || '');
 
       // Handle image upload
@@ -387,14 +337,13 @@ export default function ProductsRegistration() {
 
       let result;
 
+      // Create new product
       if (id) {
-        // Update existing product
-        result = await assetsService.updateProduct(id, formData);
+        result = await updateProduct(id, formData);
       } else {
-        // Create new product
-        result = await assetsService.createProduct(formData);
+        result = await createProduct(formData);
       }
-
+      
       if (!result) {
         throw new Error(`Failed to ${id ? 'update' : 'create'} product.`);
       }
@@ -428,7 +377,7 @@ export default function ProductsRegistration() {
             root="Asset Models"
             currentPage={id ? "Update Asset Model" : "New Asset Model"}
             rootNavigatePage="/products"
-            title={id ? (product?.name || location.state?.product?.name || 'Asset Model') : 'New Asset Model'}
+            title={id ? (product?.name || 'Asset Model') : 'New Asset Model'}
             rightComponent={
               !id && (
                 <div className="import-section">
@@ -545,21 +494,6 @@ export default function ProductsRegistration() {
               {errors.depreciation && <span className='error-message'>{errors.depreciation.message}</span>}
             </fieldset>
 
-            <fieldset>
-              <label htmlFor='supplier'>Default Supplier</label>
-              <select
-                id="supplier"
-                {...register("supplier")}
-              >
-                <option value="">Select Supplier</option>
-                {suppliers.map(supplier => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </option>
-                ))}
-              </select>
-            </fieldset>
-
             {/* Model Number */}
             <fieldset>
               <label htmlFor='model-number'>Model Number</label>
@@ -573,30 +507,12 @@ export default function ProductsRegistration() {
 
             {/* End of Life */}
             <fieldset>
-              <label htmlFor='end-of-life-date'>End of Life</label>
-              <div className={`cost-input-group ${errors.endOfLifeDate ? 'input-error' : ''}`}>
-                <input
-                  type='number'
-                  id='end-of-life-date'
-                  placeholder='Enter end of life duration'
-                  min='1'
-                  step='1'
-                  {...register('endOfLifeDate', {
-                    valueAsNumber: true,
-                    validate: (value) => (
-                      value === undefined ||
-                      value === null ||
-                      Number.isNaN(value) ||
-                      (Number.isInteger(value) && value > 0) ||
-                      'Must be a positive integer'
-                    ),
-                  })}
-                />
-                <span className="duration-addon">Months</span>
-              </div>
-              {errors.endOfLifeDate && (
-                <span className='error-message'>{errors.endOfLifeDate.message}</span>
-              )}
+              <label htmlFor='end-of-life'>End of Life</label>
+              <input
+                type='date'
+                id='end-of-life'
+                {...register('endOfLife')}
+              />
             </fieldset>
 
             <fieldset className="cost-field">
@@ -612,6 +528,29 @@ export default function ProductsRegistration() {
                   step="0.01"
                   {...register("defaultPurchaseCost", { valueAsNumber: true })}
                 />
+              </div>
+            </fieldset>
+
+            {/* Supplier (optional) */}
+            <fieldset>
+              <label htmlFor="defaultSupplier">Default Supplier</label>
+              <div className="select-with-button">
+                <select {...register("defaultSupplier")}>
+                  <option value="">Select Default Supplier</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-entry-btn"
+                  onClick={() => setShowSupplierModal(true)}
+                  title="Add new supplier"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
               </div>
             </fieldset>
 
@@ -747,19 +686,6 @@ export default function ProductsRegistration() {
               </select>
             </fieldset>
 
-            {/* Archive Model Toggle */}
-            <fieldset>
-              <label htmlFor='archiveModel'>Archive Model</label>
-              <div className="toggle-switch">
-                <input
-                  type='checkbox'
-                  id='archiveModel'
-                  {...register('archiveModel')}
-                />
-                <label htmlFor='archiveModel' className="toggle-label"></label>
-              </div>
-            </fieldset>
-
             <fieldset>
               <label htmlFor='notes'>Notes</label>
               <textarea
@@ -841,6 +767,16 @@ export default function ProductsRegistration() {
           fields={depreciationFields}
           type="depreciation"
         />
+
+        {/* Add Supplier Modal */}
+        <AddEntryModal
+        isOpen={showSupplierModal}
+        onClose={() => setShowSupplierModal(false)}
+        onSave={handleSaveSupplier}
+        title="New Supplier"
+        fields={supplierFields}
+        type="supplier"
+      />
       </main>
       <Footer />
       </section>

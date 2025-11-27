@@ -83,7 +83,7 @@ function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteCli
           showEdit
           showDelete
           showView
-          editPath={`/products/registration/${product.id}`}
+          editPath={`/products/edit/${product.id}`}
           editState={{ product }}
           onDeleteClick={() => onDeleteClick(product.id)}
           onViewClick={() => onViewClick(product)}
