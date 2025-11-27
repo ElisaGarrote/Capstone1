@@ -42,7 +42,7 @@ class Command(BaseCommand):
 
     def get_tickets_data(self):
         base_date = timezone.now()
-        
+
         # Employee names for variety
         employees = [
             'John Smith', 'Maria Garcia', 'Robert Johnson', 'Emily Davis', 'Michael Brown',
@@ -50,13 +50,10 @@ class Command(BaseCommand):
             'William Moore', 'Patricia Jackson', 'Richard White', 'Linda Harris', 'Joseph Martin',
             'Elizabeth Thompson', 'Charles Garcia', 'Susan Robinson', 'Christopher Clark', 'Jessica Rodriguez',
         ]
-        
-        # Locations
-        locations = [
-            'Makati Office', 'Pasig Office', 'Quezon City Office', 'BGC Office', 'Ortigas Office',
-            'Manila Office', 'Taguig Office', 'Mandaluyong Office', 'San Juan Office', 'Marikina Office',
-        ]
-        
+
+        # Locations (IDs 1-10 from contexts seeder)
+        location_ids = list(range(1, 11))
+
         # Subjects for checkout requests
         checkout_subjects = [
             'Laptop needed for remote work',
@@ -75,7 +72,7 @@ class Command(BaseCommand):
             'Printer for satellite office',
             'Workstation for design team',
         ]
-        
+
         # Subjects for checkin requests
         checkin_subjects = [
             'Returning laptop after project completion',
@@ -89,20 +86,27 @@ class Command(BaseCommand):
             'Network equipment return',
             'Printer return - upgrade to new model',
         ]
-        
+
         tickets = []
 
-        # Generate 100 tickets with variations (50 checkout, 50 checkin)
+        # Create a list of asset IDs 1-100 and shuffle to ensure each is used once
+        asset_ids = list(range(1, 101))
+        random.shuffle(asset_ids)
+
+        # Generate 100 tickets - each asset requested only once
+        # First 50 tickets: checkout only (no checkin)
+        # Last 50 tickets: checkout with checkin
         for i in range(1, 101):
             ticket_number = f'TKT{i:03d}'  # TKT001, TKT002, etc.
 
-            # Alternate between checkout and checkin for variation
-            # 50% checkout (checkin_date = null), 50% checkin (checkin_date has value)
-            is_checkout = i % 2 == 1  # Odd numbers = checkout, Even numbers = checkin
+            # Get unique asset ID for this ticket
+            asset_id = asset_ids[i - 1]
+
+            # First 50 = checkout only, Last 50 = checkout with checkin
+            has_checkin = i > 50
 
             employee = random.choice(employees)
-            location = random.choice(locations)
-            asset_id = random.randint(1, 50)  # Assuming assets with IDs 1-50
+            location_id = random.choice(location_ids)
 
             # Random date within last 90 days
             days_ago = random.randint(1, 90)
@@ -111,8 +115,8 @@ class Command(BaseCommand):
             # 30% resolved, 70% unresolved (so more buttons are visible)
             is_resolved = random.random() < 0.3
 
-            if is_checkout:
-                # Checkout ticket - checkin_date is NULL
+            if not has_checkin:
+                # Checkout ticket only - checkin_date is NULL
                 subject = random.choice(checkout_subjects)
                 checkout_date = (created_date + timedelta(days=random.randint(1, 3))).date()
                 return_date = checkout_date + timedelta(days=random.randint(7, 90))
@@ -123,18 +127,19 @@ class Command(BaseCommand):
                     'employee': employee,
                     'asset': asset_id,
                     'subject': subject,
-                    'location': location,
+                    'location': location_id,
                     'checkout_date': checkout_date,
                     'return_date': return_date,
-                    'checkin_date': None,  # NULL for checkout tickets
-                    'asset_checkout': None,  # NULL for checkout tickets
+                    'checkin_date': None,  # NULL for checkout-only tickets
+                    'asset_checkout': None,  # NULL for checkout-only tickets
                     'is_resolved': is_resolved,
                 }
             else:
                 # Checkin ticket - checkin_date has value
                 subject = random.choice(checkin_subjects)
                 checkin_date = (created_date + timedelta(days=random.randint(1, 3))).date()
-                asset_checkout_id = random.randint(1, 60)  # Reference to a checkout record
+                # Reference to a checkout record (IDs 1-50 correspond to first 50 tickets)
+                asset_checkout_id = i - 50  # Maps tickets 51-100 to checkouts 1-50
 
                 ticket_data = {
                     'ticket_number': ticket_number,
@@ -142,7 +147,7 @@ class Command(BaseCommand):
                     'employee': employee,
                     'asset': asset_id,
                     'subject': subject,
-                    'location': location,
+                    'location': location_id,
                     'checkout_date': None,  # NULL for checkin tickets
                     'return_date': None,  # NULL for checkin tickets
                     'checkin_date': checkin_date,  # Has value for checkin tickets
@@ -151,6 +156,6 @@ class Command(BaseCommand):
                 }
 
             tickets.append(ticket_data)
-        
+
         return tickets
 

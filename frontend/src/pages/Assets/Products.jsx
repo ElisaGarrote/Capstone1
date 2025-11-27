@@ -218,11 +218,6 @@ export default function Products() {
     navigate(`/products/view/${product.id}`);
   };
 
-  const getManufacturerName = (id) => {
-    const found = products.find((m) => m.id === id);
-    return found ? found.name : "-";
-  };
-
   // Apply filters to data
   const productsInUseSet = useMemo(
     () => new Set(products.map((asset) => asset.name)),
@@ -495,18 +490,21 @@ export default function Products() {
                   />
                 </thead>
                 <tbody>
-                  {paginatedProducts.length > 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={12} className="no-data-message">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : paginatedProducts.length > 0 ? (
                     paginatedProducts.map((product) => (
                       <TableItem
-                        key={product.id}
-                        product={product}
-                        manufacturer={getManufacturerName(
-                          product.manufacturer_id
-                        )}
-                        isSelected={selectedIds.includes(product.id)}
-                        onRowChange={handleRowChange}
-                        onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
+                      key={product.id} 
+                      product={product}
+                      isSelected={selectedIds.includes(product.id)}
+                      onRowChange={handleRowChange}
+                      onDeleteClick={openDeleteModal}
+                      onViewClick={handleViewClick}
                       />
                     ))
                   ) : (

@@ -27,6 +27,8 @@ router.register('statuses', StatusViewSet, basename='status')
 router.register('locations', LocationViewSet, basename='location')
 router.register('tickets', TicketViewSet, basename='tickets')
 router.register('recycle-bin', RecycleBinViewSet, basename='recycle-bin')
+router.register('contexts-dropdowns', ContextsDropdownsViewSet, basename='contexts-dropdowns')
+
 urlpatterns = router.urls
 
 urlpatterns = [

@@ -12,9 +12,7 @@ BASE_URL = getattr(settings, "CONTEXTS_API_URL", os.getenv("CONTEXTS_API_URL", "
 # Cache settings
 SUPPLIERS_LIST_CACHE_KEY = "external_suppliers_list"
 SUPPLIERS_CACHE_TTL = 300  
-LOCATION_CACHE_TTL = 300
 STATUS_CACHE_TTL = 300
-LOCATION_WARNING_TTL = 60
 STATUS_WARNING_TTL = 60
 SUPPLIER_ITEM_CACHE_TTL = 300
 CATEGORY_CACHE_TTL = 300
@@ -272,25 +270,6 @@ def get_depreciations_list(q=None, limit=50):
         cache.set(key, result, LIST_CACHE_TTL)
     return result
 
-
-def get_locations_list(q=None, limit=50):
-    key = f"contexts:list:locations:{q}:{limit}"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-    params = {}
-    if q:
-        params['q'] = q
-    if limit:
-        params['limit'] = limit
-    result = fetch_resource_list('locations', params=params)
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LIST_WARNING_TTL)
-    else:
-        cache.set(key, result, LIST_CACHE_TTL)
-    return result
-
-
 def get_statuses_list(q=None, limit=50):
     key = f"contexts:list:statuses:{q}:{limit}"
     cached = cache.get(key)
@@ -307,38 +286,3 @@ def get_statuses_list(q=None, limit=50):
     else:
         cache.set(key, result, LIST_CACHE_TTL)
     return result
-
-def get_ticket_by_id(ticket_id):
-    """Fetch a ticket from the Contexts service by ID with caching."""
-    if not ticket_id:
-        return None
-
-    key = f"contexts:ticket:{ticket_id}"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-
-    # Tries /api/tickets/<id>/ then /tickets/<id>/
-    result = fetch_resource_by_id("tickets", ticket_id)
-
-    # Cache warnings short, successful fetch longer
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LIST_WARNING_TTL)
-    else:
-        cache.set(key, result, LIST_CACHE_TTL)
-
-    return result
-
-def resolve_ticket(ticket_id):
-    if not ticket_id:
-        return None
-
-    url = _build_url(f"tickets/{ticket_id}/")
-    try:
-        resp = client_patch(url, json={"is_resolved": True}, timeout=6, headers={"Content-Type": "application/json"})
-        resp.raise_for_status()
-    except RequestException as e:
-        raise Exception(f"Failed to resolve ticket {ticket_id}") from e
-
-    cache.delete(f"contexts:ticket:{ticket_id}")
-    return resp.json()

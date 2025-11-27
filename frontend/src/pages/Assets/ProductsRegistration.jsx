@@ -9,7 +9,7 @@ import CloseIcon from '../../assets/icons/close.svg';
 import PlusIcon from '../../assets/icons/plus.svg';
 import Alert from "../../components/Alert";
 import { createProduct, updateProduct } from "../../services/assets-service";
-import { fetchAllCategories, fetchAllManufacturers, fetchAllDepreciations, fetchAllSuppliers, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
+import { fetchAllDropdowns, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 
@@ -68,28 +68,11 @@ export default function ProductsRegistration() {
         setIsLoading(true);
 
         // Fetch dropdown options
-        const [
-          categoriesData,
-          depreciationsData,
-          suppliersData,
-          manufacturersData,
-        ] = await Promise.all([
-          fetchAllCategories(),
-          fetchAllDepreciations(),
-          fetchAllSuppliers(),
-          fetchAllManufacturers(),
-        ]);
-
-        // Set dropdown options - API returns direct arrays
-        // Filter categories to only show asset categories
-        const assetCategories = Array.isArray(categoriesData)
-          ? categoriesData.filter(cat => cat.type === 'asset')
-          : [];
-
-        setCategories(assetCategories);
-        setManufacturers(Array.isArray(manufacturersData) ? manufacturersData : []);
-        setDepreciations(Array.isArray(depreciationsData) ? depreciationsData : []);
-        setSuppliers(Array.isArray(suppliersData) ? suppliersData : []);
+        const dropdowns = await fetchAllDropdowns("product");
+          setCategories(dropdowns.categories);
+          setManufacturers(dropdowns.manufacturers);
+          setSuppliers(dropdowns.suppliers);
+          setDepreciations(dropdowns.depreciations);
 
         // Get product data - prioritize state, then fetch from API
         let productData = location.state?.product;

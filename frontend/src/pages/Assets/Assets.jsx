@@ -13,6 +13,7 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import { exportToExcel } from "../../utils/exportToExcel";
+import { fetchAllAssets } from "../../services/assets-service";
 
 import "../../styles/Assets/Assets.css";
 

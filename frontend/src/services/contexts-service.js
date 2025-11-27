@@ -140,3 +140,11 @@ export async function resolveTicket(ticketId) {
   });
   return res.data;
 }
+
+/* ===============================
+          CONTEXTS DROPDOWNS
+================================= */
+export async function fetchAllDropdowns(entity) {
+  const res = await contextsAxios.get(`contexts-dropdowns/all/?entity=${entity}`);
+  return res.data;
+}

@@ -203,12 +203,6 @@ class SupplierSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class ManufacturerNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Manufacturer
-        fields = ['id', 'name']
-
-
 class ManufacturerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Manufacturer
@@ -216,73 +210,6 @@ class ManufacturerSerializer(serializers.ModelSerializer):
 
     def validate_logo(self, value):
         return validate_image_file(value)
-
-
-class DepreciationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Depreciation
-        fields = '__all__'
-
-    def validate(self, attrs):
-        name = attrs.get('name') if 'name' in attrs else (self.instance.name if self.instance else None)
-        if not name:
-            return attrs
-        normalized_name = normalize_name_smart(name)
-        attrs['name'] = normalized_name
-
-        seen = None
-        try:
-            seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
-        except Exception:
-            seen = None
-
-        qs = Depreciation.objects.filter(name__iexact=normalized_name, is_deleted=False)
-        if self.instance:
-            qs = qs.exclude(pk=self.instance.pk)
-
-        if qs.exists():
-            if seen and normalized_name in seen:
-                return attrs
-            raise serializers.ValidationError({'name': 'A Depreciation with this name already exists.'})
-
-        return attrs
-
-
-class DepreciationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Depreciation
-        fields = '__all__'
-
-    def validate(self, attrs):
-        name = attrs.get('name') if 'name' in attrs else (self.instance.name if self.instance else None)
-        if not name:
-            return attrs
-        normalized_name = normalize_name_smart(name)
-        attrs['name'] = normalized_name
-
-        seen = None
-        try:
-            seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
-        except Exception:
-            seen = None
-
-        qs = Depreciation.objects.filter(name__iexact=normalized_name, is_deleted=False)
-        if self.instance:
-            qs = qs.exclude(pk=self.instance.pk)
-
-        if qs.exists():
-            if seen and normalized_name in seen:
-                return attrs
-            raise serializers.ValidationError({'name': 'A Depreciation with this name already exists.'})
-
-        return attrs
-
-
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = '__all__'
-
 
 class StatusSerializer(serializers.ModelSerializer):
     asset_count = serializers.SerializerMethodField(read_only=True)
@@ -335,6 +262,39 @@ class StatusSerializer(serializers.ModelSerializer):
         except Exception:
             return None
 
+class DepreciationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Depreciation
+        fields = '__all__'
+
+    def validate(self, attrs):
+        name = attrs.get('name') if 'name' in attrs else (self.instance.name if self.instance else None)
+        if not name:
+            return attrs
+        normalized_name = normalize_name_smart(name)
+        attrs['name'] = normalized_name
+
+        seen = None
+        try:
+            seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
+        except Exception:
+            seen = None
+
+        qs = Depreciation.objects.filter(name__iexact=normalized_name, is_deleted=False)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            if seen and normalized_name in seen:
+                return attrs
+            raise serializers.ValidationError({'name': 'A Depreciation with this name already exists.'})
+
+        return attrs
+    
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = '__all__'
 
 class TicketSerializer(serializers.ModelSerializer):
 
@@ -375,3 +335,32 @@ class TicketSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"return_date": "Not allowed for checkin ticket."})
 
         return data
+
+class CategoryNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
+class SupplierNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Supplier
+        fields = ['id', 'name']
+class ManufacturerNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Manufacturer
+        fields = ['id', 'name']
+
+class StatusNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Manufacturer
+        fields = ['id', 'name', 'type']
+
+class DepreciationNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Depreciation
+        fields = ['id', 'name']
+
+class LocationNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = ['id', 'city']

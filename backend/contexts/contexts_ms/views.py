@@ -307,3 +307,26 @@ class RecycleBinViewSet(viewsets.ViewSet):
         except Exception as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
+# Dropdowns for asset service
+class ContextsDropdownsViewSet(viewsets.ViewSet):
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        entity = request.query_params.get("entity", "").lower()
+        data = {}
+
+        if entity in ["product", "asset", "component"]:
+            # common dropdowns
+            data["suppliers"] = SupplierNameSerializer(Supplier.objects.filter(is_deleted=False), many=True).data
+        
+        if entity in ["product", "component"]:
+            category_type = "asset" if entity == "product" else "component"
+            data["categories"] = CategoryNameSerializer(Category.objects.filter(is_deleted=False, type=category_type), many=True).data
+            data["manufacturers"] = ManufacturerNameSerializer(Manufacturer.objects.filter(is_deleted=False), many=True).data
+        
+        if entity in ["product"]:
+            data["depreciations"] = DepreciationNameSerializer(Depreciation.objects.filter(is_deleted=False), many=True).data
+
+        if entity in ["asset"]:
+            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False), many=True).data
+            
+        return Response(data, status=status.HTTP_200_OK,)

@@ -43,6 +43,40 @@ export async function createAssetCheckout(data) {
 }
 
 /* ===============================
+            ASSETS CRUD
+================================= */
+
+// GET all assets
+export async function fetchAllAssets() {
+  const res = await assetsAxios.get("assets/");
+  return res.data;
+}
+
+// GET asset by ID
+export async function fetchAssetById(id) {
+  const res = await assetsAxios.get(`assets/${id}/`);
+  return res.data;
+}
+
+// CREATE asset
+export async function createAsset(data) {
+  const res = await assetsAxios.post("assets/", data);
+  return res.data;
+}
+
+// UPDATE asset
+export async function updateAsset(id, data) {
+  const res = await assetsAxios.patch(`assets/${id}/`, data);
+  return res.data;
+}
+
+// DELETE asset
+export async function deleteAsset(id) {
+  const res = await assetsAxios.delete(`assets/${id}/`);
+  return res.data;
+}
+
+/* ===============================
           ASSET CHECKIN
 ================================= */
 

@@ -80,6 +80,7 @@ class AssetSerializer(serializers.ModelSerializer):
     status_details = serializers.SerializerMethodField()
     location_details = serializers.SerializerMethodField()
     supplier_details = serializers.SerializerMethodField()
+    ticket = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -141,6 +142,16 @@ class AssetSerializer(serializers.ModelSerializer):
             return get_supplier_by_id(obj.supplier)
         except Exception:
             return {"warning": "Contexts service unreachable for suppliers."}
+
+    def get_ticket(self, obj):
+        """Return all tickets referencing this asset from Contexts service."""
+        try:
+            if not obj.id:
+                return []
+            from assets_ms.services.contexts import get_tickets_by_asset_id
+            return get_tickets_by_asset_id(obj.id)
+        except Exception:
+            return []
  
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     checkout_to = serializers.IntegerField(read_only=True)
