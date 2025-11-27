@@ -281,6 +281,7 @@ export default function ProductsRegistration() {
 
 
   const onSubmit = async (data) => {
+    setErrorMessage("");
     try {
       const formData = new FormData();
 
@@ -339,7 +340,22 @@ export default function ProductsRegistration() {
       });
     } catch (error) {
       console.error(`Error ${id ? 'updating' : 'creating'} product:`, error);
-      setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the product`);
+
+      let message = `An error occurred while ${id ? 'updating' : 'creating'} the product`;
+
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+
+        // Extract the first message from the first key
+        if (typeof data === "object") {
+          const firstKey = Object.keys(data)[0];
+          if (Array.isArray(data[firstKey]) && data[firstKey].length > 0) {
+            message = data[firstKey][0]; // "A product with this name already exists."
+          }
+        }
+      }
+
+      setErrorMessage(message);
     }
   };
 

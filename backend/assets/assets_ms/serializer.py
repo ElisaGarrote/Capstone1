@@ -37,7 +37,7 @@ class ProductSerializer(serializers.ModelSerializer):
             is_deleted=False
         ).exclude(pk=instance.pk if instance else None).exists():
             raise serializers.ValidationError({
-                "name": "A product with this name already exists."
+                "name": "An asset model with this name already exists."
             })
         
         return data
