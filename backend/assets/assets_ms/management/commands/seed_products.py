@@ -3,10 +3,11 @@ from django.utils import timezone
 from assets_ms.models import Product
 from decimal import Decimal
 from datetime import timedelta
+import random
 
 
 class Command(BaseCommand):
-    help = 'Seed the database with 10 product records'
+    help = 'Seed the database with 100 product records'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -21,12 +22,12 @@ class Command(BaseCommand):
             Product.objects.all().delete()
             self.stdout.write(self.style.SUCCESS('Existing products cleared.'))
 
-        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Products ==='))
+        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding 100 Products ==='))
 
         products_data = self.get_products_data()
         created_count = 0
 
-        for product_data in products_data:
+        for i, product_data in enumerate(products_data, 1):
             product, created = Product.objects.get_or_create(
                 name=product_data['name'],
                 model_number=product_data['model_number'],
@@ -34,7 +35,8 @@ class Command(BaseCommand):
             )
             if created:
                 created_count += 1
-                self.stdout.write(self.style.SUCCESS(f'✓ Created product: {product.name}'))
+                if created_count % 10 == 0:
+                    self.stdout.write(self.style.SUCCESS(f'✓ Created {created_count} products...'))
             else:
                 self.stdout.write(self.style.WARNING(f'- Product exists: {product.name}'))
 
@@ -42,144 +44,150 @@ class Command(BaseCommand):
 
     def get_products_data(self):
         base_date = timezone.now().date()
-        
-        return [
-            # Laptops
-            {
-                'name': 'Dell Latitude 5420',
+
+        # Product templates for different categories
+        laptop_models = [
+            ('Dell', 'Latitude', [5420, 5430, 5440, 7420, 7430]),
+            ('HP', 'EliteBook', [840, 850, 860, 1040, 1050]),
+            ('Lenovo', 'ThinkPad', ['X1', 'T14', 'T15', 'P14s', 'P15s']),
+            ('Apple', 'MacBook Pro', [13, 14, 15, 16]),
+            ('ASUS', 'ZenBook', [13, 14, 15]),
+        ]
+
+        desktop_models = [
+            ('HP', 'EliteDesk', [800, 805, 880]),
+            ('Dell', 'OptiPlex', [3090, 5090, 7090, 9020]),
+            ('Lenovo', 'ThinkCentre', ['M70', 'M75', 'M90']),
+            ('Apple', 'Mac Mini', ['M1', 'M2']),
+        ]
+
+        monitor_models = [
+            ('Dell', 'UltraSharp', ['U2720Q', 'U2723DE', 'U3223QE']),
+            ('LG', '4K Monitor', ['27UK850', '27UP850', '32UN880']),
+            ('Samsung', 'ViewFinity', ['S8', 'S9']),
+            ('BenQ', 'Designer', ['PD2700U', 'PD3220U']),
+        ]
+
+        network_models = [
+            ('Cisco', 'Catalyst', ['2960-X', '3650', '9300']),
+            ('Ubiquiti', 'UniFi', ['Dream Machine', 'Switch Pro', 'Access Point']),
+            ('Netgear', 'ProSafe', ['GS724T', 'GS748T']),
+        ]
+
+        printer_models = [
+            ('HP', 'LaserJet', ['M404dn', 'M507dn', 'M608dn']),
+            ('Canon', 'imageCLASS', ['MF445dw', 'MF743Cdw']),
+            ('Epson', 'WorkForce', ['Pro WF-4830', 'Pro WF-C5790']),
+        ]
+
+        cpus = ['Intel Core i5-1135G7', 'Intel Core i7-1165G7', 'Intel Core i7-1185G7',
+                'Intel Core i5-11400', 'Intel Core i7-11700', 'AMD Ryzen 5 5600G', 'AMD Ryzen 7 5700G']
+        gpus = ['Intel Iris Xe Graphics', 'Intel UHD Graphics 630', 'Intel UHD Graphics 750',
+                'AMD Radeon Graphics', 'NVIDIA GeForce GTX 1650']
+        operating_systems = ['Windows 11 Pro', 'Windows 10 Pro', 'macOS Ventura', 'Ubuntu 22.04 LTS']
+        ram_options = ['8GB DDR4', '16GB DDR4', '32GB DDR4', '16GB LPDDR4X', '64GB DDR4']
+        storage_options = ['256GB NVMe SSD', '512GB NVMe SSD', '1TB NVMe SSD', '2TB NVMe SSD']
+
+        products = []
+
+        # Generate 40 Laptops (Category 1)
+        for i in range(40):
+            manufacturer, model_base, variants = random.choice(laptop_models)
+            variant = random.choice(variants)
+            model_num = f'{model_base}-{variant}-{i+1:03d}'
+
+            products.append({
+                'name': f'{manufacturer} {model_base} {variant} #{i+1}',
                 'category': 1,
-                'manufacturer': 15,  # Dell
+                'manufacturer': random.choice([14, 15, 19, 12]),  # HP, Dell, Lenovo, LG
                 'depreciation': 1,
-                'model_number': 'LAT-5420',
-                'end_of_life': base_date + timedelta(days=1825),  # 5 years
-                'default_purchase_cost': Decimal('1299.99'),
-                'minimum_quantity': 5,
-                'cpu': 'Intel Core i5-1135G7',
-                'gpu': 'Intel Iris Xe Graphics',
-                'os': 'Windows 11 Pro',
-                'ram': '16GB DDR4',
-                'storage': '512GB NVMe SSD',
-                'notes': 'Standard business laptop for office work',
-            },
-            {
-                'name': 'HP EliteBook 840 G8',
-                'category': 1,
-                'manufacturer': 14,  # HP
-                'depreciation': 1,
-                'model_number': 'EB-840G8',
-                'end_of_life': base_date + timedelta(days=1825),
-                'default_purchase_cost': Decimal('1499.99'),
-                'minimum_quantity': 3,
-                'cpu': 'Intel Core i7-1165G7',
-                'gpu': 'Intel Iris Xe Graphics',
-                'os': 'Windows 11 Pro',
-                'ram': '16GB DDR4',
-                'storage': '512GB NVMe SSD',
-                'notes': 'Premium business laptop with enhanced security',
-            },
-            {
-                'name': 'Lenovo ThinkPad X1 Carbon Gen 9',
-                'category': 1,
-                'manufacturer': 19,  # Lenovo
-                'depreciation': 1,
-                'model_number': 'X1C-G9',
-                'end_of_life': base_date + timedelta(days=1825),
-                'default_purchase_cost': Decimal('1799.99'),
-                'minimum_quantity': 2,
-                'cpu': 'Intel Core i7-1185G7',
-                'gpu': 'Intel Iris Xe Graphics',
-                'os': 'Windows 11 Pro',
-                'ram': '16GB LPDDR4X',
-                'storage': '1TB NVMe SSD',
-                'notes': 'Ultra-portable premium laptop for executives',
-            },
-            # Desktops
-            {
-                'name': 'HP EliteDesk 800 G6',
+                'model_number': model_num,
+                'end_of_life': base_date + timedelta(days=random.randint(1095, 2190)),  # 3-6 years
+                'default_purchase_cost': Decimal(str(round(random.uniform(899.99, 2499.99), 2))),
+                'minimum_quantity': random.randint(2, 10),
+                'cpu': random.choice(cpus),
+                'gpu': random.choice(gpus),
+                'os': random.choice(operating_systems),
+                'ram': random.choice(ram_options),
+                'storage': random.choice(storage_options),
+                'notes': f'Business laptop model {i+1}',
+            })
+
+        # Generate 25 Desktops (Category 2)
+        for i in range(25):
+            manufacturer, model_base, variants = random.choice(desktop_models)
+            variant = random.choice(variants)
+            model_num = f'{model_base}-{variant}-{i+1:03d}'
+
+            products.append({
+                'name': f'{manufacturer} {model_base} {variant} #{i+1}',
                 'category': 2,
-                'manufacturer': 14,  # HP
+                'manufacturer': random.choice([14, 15, 19]),  # HP, Dell, Lenovo
                 'depreciation': 1,
-                'model_number': 'ED-800G6',
-                'end_of_life': base_date + timedelta(days=1825),
-                'default_purchase_cost': Decimal('899.99'),
-                'minimum_quantity': 4,
-                'cpu': 'Intel Core i7-10700',
-                'gpu': 'Intel UHD Graphics 630',
-                'os': 'Windows 11 Pro',
-                'ram': '32GB DDR4',
-                'storage': '1TB NVMe SSD',
-                'notes': 'Desktop workstation for power users',
-            },
-            {
-                'name': 'Dell OptiPlex 7090',
-                'category': 2,
-                'manufacturer': 15,  # Dell
-                'depreciation': 1,
-                'model_number': 'OPT-7090',
-                'end_of_life': base_date + timedelta(days=1825),
-                'default_purchase_cost': Decimal('1099.99'),
-                'minimum_quantity': 3,
-                'cpu': 'Intel Core i7-11700',
-                'gpu': 'Intel UHD Graphics 750',
-                'os': 'Windows 11 Pro',
-                'ram': '32GB DDR4',
-                'storage': '512GB NVMe SSD',
-                'notes': 'Compact desktop for office environments',
-            },
-            # Monitors
-            {
-                'name': 'Dell UltraSharp U2720Q',
+                'model_number': model_num,
+                'end_of_life': base_date + timedelta(days=random.randint(1460, 2555)),  # 4-7 years
+                'default_purchase_cost': Decimal(str(round(random.uniform(699.99, 1899.99), 2))),
+                'minimum_quantity': random.randint(3, 8),
+                'cpu': random.choice(cpus),
+                'gpu': random.choice(gpus),
+                'os': random.choice(operating_systems),
+                'ram': random.choice(ram_options),
+                'storage': random.choice(storage_options),
+                'notes': f'Desktop workstation model {i+1}',
+            })
+
+        # Generate 15 Monitors (Category 3)
+        for i in range(15):
+            manufacturer, model_base, variants = random.choice(monitor_models)
+            variant = random.choice(variants)
+            model_num = f'{model_base}-{variant}-{i+1:03d}'
+
+            products.append({
+                'name': f'{manufacturer} {model_base} {variant} #{i+1}',
                 'category': 3,
-                'manufacturer': 15,  # Dell
-                'model_number': 'U2720Q',
-                'end_of_life': base_date + timedelta(days=1095),  # 3 years
-                'default_purchase_cost': Decimal('549.99'),
-                'minimum_quantity': 10,
-                'size': '27-inch 4K',
-                'notes': '27-inch 4K USB-C monitor with excellent color accuracy',
-            },
-            {
-                'name': 'LG 27UK850-W',
-                'category': 3,
-                'manufacturer': 12,  # LG (assuming manufacturer ID)
-                'model_number': 'LG-27UK850',
-                'end_of_life': base_date + timedelta(days=1095),
-                'default_purchase_cost': Decimal('499.99'),
-                'minimum_quantity': 8,
-                'size': '27-inch 4K',
-                'notes': '27-inch 4K monitor with HDR10 support',
-            },
-            # Network Equipment
-            {
-                'name': 'Cisco Catalyst 2960-X',
+                'manufacturer': random.choice([15, 12]),  # Dell, LG
+                'model_number': model_num,
+                'end_of_life': base_date + timedelta(days=random.randint(1095, 1825)),  # 3-5 years
+                'default_purchase_cost': Decimal(str(round(random.uniform(299.99, 899.99), 2))),
+                'minimum_quantity': random.randint(5, 15),
+                'size': random.choice(['24-inch FHD', '27-inch 4K', '32-inch 4K', '34-inch UltraWide']),
+                'notes': f'Professional monitor model {i+1}',
+            })
+
+        # Generate 10 Network Equipment (Category 4)
+        for i in range(10):
+            manufacturer, model_base, variants = random.choice(network_models)
+            variant = random.choice(variants)
+            model_num = f'{model_base}-{variant}-{i+1:03d}'
+
+            products.append({
+                'name': f'{manufacturer} {model_base} {variant} #{i+1}',
                 'category': 4,
-                'manufacturer': 27,  # Cisco
-                'model_number': 'WS-C2960X-24TS-L',
-                'end_of_life': base_date + timedelta(days=2555),  # 7 years
-                'default_purchase_cost': Decimal('1899.99'),
-                'minimum_quantity': 2,
-                'notes': '24-port managed gigabit switch with Layer 2 features',
-            },
-            {
-                'name': 'Ubiquiti UniFi Dream Machine Pro',
-                'category': 4,
-                'manufacturer': 28,  # Ubiquiti
-                'model_number': 'UDM-PRO',
-                'end_of_life': base_date + timedelta(days=1825),
-                'default_purchase_cost': Decimal('379.99'),
-                'minimum_quantity': 3,
-                'notes': 'All-in-one network security gateway and controller',
-            },
-            # Printers
-            {
-                'name': 'HP LaserJet Pro M404dn',
+                'manufacturer': random.choice([27, 28]),  # Cisco, Ubiquiti
+                'model_number': model_num,
+                'end_of_life': base_date + timedelta(days=random.randint(1825, 3650)),  # 5-10 years
+                'default_purchase_cost': Decimal(str(round(random.uniform(299.99, 2999.99), 2))),
+                'minimum_quantity': random.randint(1, 5),
+                'notes': f'Network equipment model {i+1}',
+            })
+
+        # Generate 10 Printers (Category 5)
+        for i in range(10):
+            manufacturer, model_base, variants = random.choice(printer_models)
+            variant = random.choice(variants)
+            model_num = f'{model_base}-{variant}-{i+1:03d}'
+
+            products.append({
+                'name': f'{manufacturer} {model_base} {variant} #{i+1}',
                 'category': 5,
                 'manufacturer': 14,  # HP
-                'model_number': 'M404DN',
-                'end_of_life': base_date + timedelta(days=1460),  # 4 years
-                'default_purchase_cost': Decimal('299.99'),
-                'minimum_quantity': 5,
-                'notes': 'Monochrome laser printer with duplex printing',
-            },
-        ]
+                'model_number': model_num,
+                'end_of_life': base_date + timedelta(days=random.randint(1095, 1825)),  # 3-5 years
+                'default_purchase_cost': Decimal(str(round(random.uniform(199.99, 799.99), 2))),
+                'minimum_quantity': random.randint(2, 8),
+                'notes': f'Office printer model {i+1}',
+            })
+
+        return products
+
 
