@@ -96,24 +96,36 @@ function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteCli
 export default function Products() {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  
+  const [isLoading, setIsLoading] = useState(true);
+
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // base data state
+  // Products state
   const [products, setProducts] = useState([]);
 
   // Filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filteredData, setFilteredData] = useState(products);
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  // Load components from API
+  // Load success message from navigation state
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      setTimeout(() => {
+        setSuccessMessage("");
+        window.history.replaceState({}, document.title);
+      }, 5000);
+    }
+  }, [location]);
+
+  // Load products from API
   useEffect(() => {
     async function loadProducts() {
       try {
+        setIsLoading(true);
         const data = await fetchAllProducts();
 
         const processed = data.map((product) => {
@@ -126,12 +138,15 @@ export default function Products() {
         setFilteredData(processed);
       } catch (error) {
         setErrorMessage("Failed to load products.");
+      } finally {
+        setIsLoading(false);
       }
     }
 
     loadProducts();
   }, []);
 
+  
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -202,36 +217,6 @@ export default function Products() {
   const handleViewClick = (product) => {
     navigate(`/products/view/${product.id}`);
   };
-
-  useEffect(() => {
-    // Using mockup data - no need to fetch from API
-    // Uncomment below to use real API data
-    /*
-    const fetchData = async () => {
-      try {
-        const [productRes, manufacturerRes] = await Promise.all([
-          assetsService.fetchAllProducts(),
-          fetchAllCategories(),
-        ]);
-        setProducts(productRes.products || []);
-        setManufacturers(manufacturerRes.manufacturers || []);
-      } catch (error) {
-        console.error("Fetch error:", error);
-        setErrorMessage("Failed to load data.");
-      }
-    };
-    fetchData();
-    */
-
-    if (location.state?.successMessage) {
-      setSuccessMessage(location.state.successMessage);
-      setTimeout(() => {
-        setSuccessMessage("");
-        window.history.replaceState({}, document.title);
-      }, 5000);
-    }
-  }, [location]);
-
 
   const getManufacturerName = (id) => {
     const found = products.find((m) => m.id === id);
