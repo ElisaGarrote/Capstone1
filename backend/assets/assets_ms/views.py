@@ -107,6 +107,28 @@ class AssetViewSet(viewsets.ModelViewSet):
         # Otherwise, perform soft delete
         instance.is_deleted = True
         instance.save()
+    
+    def perform_create(self, serializer):
+        validated = serializer.validated_data
+
+        product = validated.get("product")
+        supplier = validated.get("supplier")
+        purchase_cost = validated.get("purchase_cost")
+
+        # Auto-assign supplier from product.default_supplier
+        if supplier is None and product and product.default_supplier:
+            supplier = product.default_supplier
+
+        # Auto-assign purchase_cost from product.default_purchase_cost
+        if purchase_cost is None and product and product.default_purchase_cost is not None:
+            purchase_cost = product.default_purchase_cost
+
+        serializer.save(
+            created_by=self.request.user,
+            updated_by=self.request.user,
+            supplier=supplier,
+            purchase_cost=purchase_cost
+        )
 
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
     serializer_class = AssetCheckoutSerializer

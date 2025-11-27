@@ -65,6 +65,14 @@ class ProductSerializer(serializers.ModelSerializer):
         except Exception:
             return {"warning": "Contexts service unreachable for depreciations."}
     
+    def get_default_supplier_details(self, obj):
+        try:
+            if not getattr(obj, 'default_supplier', None):
+                return None
+            return get_supplier_by_id(obj.default_supplier)
+        except Exception:
+            return {"warning": "Contexts service unreachable for suppliers."}
+    
 # Asset
 class AssetSerializer(serializers.ModelSerializer):
     # Include context details for frontend convenience
