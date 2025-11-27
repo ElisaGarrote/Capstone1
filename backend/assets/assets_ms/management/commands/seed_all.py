@@ -4,7 +4,7 @@ from assets_ms.models import Product
 
 
 class Command(BaseCommand):
-    help = 'Seed the database with all sample data (100 products, 100 assets, 100 components, 100 tickets)'
+    help = 'Seed the database with all assets service data (100 products, 100 assets, 100 components)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -27,22 +27,17 @@ class Command(BaseCommand):
             action='store_true',
             help='Seed only components (100 records)',
         )
-        parser.add_argument(
-            '--tickets-only',
-            action='store_true',
-            help='Seed only tickets (100 records)',
-        )
 
     def handle(self, *args, **options):
         clear_flag = '--clear' if options['clear'] else ''
 
         # Seed Products (100 records)
-        if not options['components_only'] and not options['assets_only'] and not options['tickets_only']:
+        if not options['components_only'] and not options['assets_only']:
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Products (100 records) ==='))
             call_command('seed_products', clear_flag) if clear_flag else call_command('seed_products')
 
         # Seed Assets (100 records - requires products to exist)
-        if not options['products_only'] and not options['components_only'] and not options['tickets_only']:
+        if not options['products_only'] and not options['components_only']:
             # If assets-only flag is used, ensure products exist first
             if options['assets_only']:
                 products_count = Product.objects.filter(is_deleted=False).count()
@@ -57,19 +52,9 @@ class Command(BaseCommand):
             call_command('seed_assets', clear_flag) if clear_flag else call_command('seed_assets')
 
         # Seed Components (100 records)
-        if not options['products_only'] and not options['assets_only'] and not options['tickets_only']:
+        if not options['products_only'] and not options['assets_only']:
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Components (100 records) ==='))
             call_command('seed_components', clear_flag) if clear_flag else call_command('seed_components')
 
-        # Seed Tickets (100 records - in contexts service)
-        if not options['products_only'] and not options['assets_only'] and not options['components_only']:
-            self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Tickets (100 records) ==='))
-            # Note: This command is in the contexts service
-            try:
-                call_command('seed_tickets', clear_flag) if clear_flag else call_command('seed_tickets')
-            except Exception as e:
-                self.stdout.write(self.style.WARNING(f'Could not seed tickets: {e}'))
-                self.stdout.write(self.style.WARNING('Run tickets seeder separately in contexts service'))
-
-        self.stdout.write(self.style.SUCCESS('\n✓ All seeding complete!'))
+        self.stdout.write(self.style.SUCCESS('\n✓ All assets service seeding complete!'))
 

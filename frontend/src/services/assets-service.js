@@ -1,6 +1,17 @@
 import assetsAxios from "../api/assetsAxios";
 
 /* ===============================
+              PRODCTS
+================================= */
+export async function fetchAllProducts() {
+  const res = await assetsAxios.get("products/");
+  return res.data;
+}
+
+
+// GET all products
+
+/* ===============================
           ASSET CHECKOUT
 ================================= */
 

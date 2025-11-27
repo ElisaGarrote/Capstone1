@@ -77,9 +77,10 @@ class Command(BaseCommand):
             ))
 
         assets = []
-        statuses = [1, 2, 3, 4, 5]  # Available, In Use, Under Repair, Retired, Lost/Stolen
-        suppliers = [1, 2, 3]
-        locations = [1, 2, 3, 4, 5]
+        # Use IDs 1-10 to match context seeders (10 records each)
+        statuses = list(range(1, 11))  # Status IDs 1-10 (from contexts)
+        suppliers = list(range(1, 11))  # Supplier IDs 1-10 (from contexts)
+        locations = list(range(1, 11))  # Location IDs 1-10 (from contexts)
 
         # Create 100 assets
         for i in range(100):

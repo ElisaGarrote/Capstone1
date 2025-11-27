@@ -98,9 +98,9 @@ class Command(BaseCommand):
 
             products.append({
                 'name': f'{manufacturer} {model_base} {variant} #{i+1}',
-                'category': 1,
-                'manufacturer': random.choice([14, 15, 19, 12]),  # HP, Dell, Lenovo, LG
-                'depreciation': 1,
+                'category': 1,  # Laptops category (from contexts)
+                'manufacturer': random.randint(1, 10),  # Random manufacturer ID 1-10
+                'depreciation': random.randint(1, 10),  # Random depreciation ID 1-10
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1095, 2190)),  # 3-6 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(899.99, 2499.99), 2))),
@@ -121,9 +121,9 @@ class Command(BaseCommand):
 
             products.append({
                 'name': f'{manufacturer} {model_base} {variant} #{i+1}',
-                'category': 2,
-                'manufacturer': random.choice([14, 15, 19]),  # HP, Dell, Lenovo
-                'depreciation': 1,
+                'category': 2,  # Desktops category (from contexts)
+                'manufacturer': random.randint(1, 10),  # Random manufacturer ID 1-10
+                'depreciation': random.randint(1, 10),  # Random depreciation ID 1-10
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1460, 2555)),  # 4-7 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(699.99, 1899.99), 2))),
@@ -144,8 +144,8 @@ class Command(BaseCommand):
 
             products.append({
                 'name': f'{manufacturer} {model_base} {variant} #{i+1}',
-                'category': 3,
-                'manufacturer': random.choice([15, 12]),  # Dell, LG
+                'category': 3,  # Monitors category (from contexts)
+                'manufacturer': random.randint(1, 10),  # Random manufacturer ID 1-10
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1095, 1825)),  # 3-5 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(299.99, 899.99), 2))),
@@ -162,8 +162,8 @@ class Command(BaseCommand):
 
             products.append({
                 'name': f'{manufacturer} {model_base} {variant} #{i+1}',
-                'category': 4,
-                'manufacturer': random.choice([27, 28]),  # Cisco, Ubiquiti
+                'category': 4,  # Network Equipment category (from contexts)
+                'manufacturer': random.randint(1, 10),  # Random manufacturer ID 1-10
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1825, 3650)),  # 5-10 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(299.99, 2999.99), 2))),
@@ -179,8 +179,8 @@ class Command(BaseCommand):
 
             products.append({
                 'name': f'{manufacturer} {model_base} {variant} #{i+1}',
-                'category': 5,
-                'manufacturer': 14,  # HP
+                'category': 5,  # Printers category (from contexts)
+                'manufacturer': random.randint(1, 10),  # Random manufacturer ID 1-10
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1095, 1825)),  # 3-5 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(199.99, 799.99), 2))),
