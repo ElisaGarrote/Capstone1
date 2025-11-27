@@ -1,15 +1,37 @@
 import assetsAxios from "../api/assetsAxios";
 
 /* ===============================
-              PRODCTS
+          PRODCTS CRUD
 ================================= */
+// GET all products
 export async function fetchAllProducts() {
   const res = await assetsAxios.get("products/");
   return res.data;
 }
 
+// GET product by ID
+export async function fetchProductById(id) {
+  const res = await assetsAxios.get(`products/${id}/`);
+  return res.data;
+}
 
-// GET all products
+// CREATE product
+export async function createProduct(data) {
+  const res = await assetsAxios.post("products/", data);
+  return res.data;
+}
+
+// UPDATE product
+export async function updateProduct(id, data) {
+  const res = await assetsAxios.put(`products/${id}/`, data);
+  return res.data;
+}
+
+// DELETE product
+export async function deleteProduct(id) {
+  const res = await assetsAxios.delete(`products/${id}/`);
+  return res.data;
+}
 
 /* ===============================
           ASSET CHECKOUT
@@ -30,12 +52,18 @@ export async function createAssetCheckin(data) {
 }
 
 /* ===============================
-          PRODUCTS CRUD
+          COMPONENTS CRUD
 ================================= */
 
 // GET all components
 export async function fetchAllComponents() {
   const res = await assetsAxios.get("components/");
+  return res.data;
+}
+
+// GET component by ID
+export async function fetchComponentById(id) {
+  const res = await assetsAxios.get(`components/${id}/`);
   return res.data;
 }
 

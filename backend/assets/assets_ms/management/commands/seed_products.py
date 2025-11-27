@@ -104,6 +104,7 @@ class Command(BaseCommand):
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1095, 2190)),  # 3-6 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(899.99, 2499.99), 2))),
+                'default_supplier': random.randint(1, 10),  # Random supplier ID 1-10
                 'minimum_quantity': random.randint(2, 10),
                 'cpu': random.choice(cpus),
                 'gpu': random.choice(gpus),
@@ -127,6 +128,7 @@ class Command(BaseCommand):
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1460, 2555)),  # 4-7 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(699.99, 1899.99), 2))),
+                'default_supplier': random.randint(1, 10),  # Random supplier ID 1-10
                 'minimum_quantity': random.randint(3, 8),
                 'cpu': random.choice(cpus),
                 'gpu': random.choice(gpus),
@@ -149,6 +151,7 @@ class Command(BaseCommand):
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1095, 1825)),  # 3-5 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(299.99, 899.99), 2))),
+                'default_supplier': random.randint(1, 10),  # Random supplier ID 1-10
                 'minimum_quantity': random.randint(5, 15),
                 'size': random.choice(['24-inch FHD', '27-inch 4K', '32-inch 4K', '34-inch UltraWide']),
                 'notes': f'Professional monitor model {i+1}',
@@ -167,6 +170,7 @@ class Command(BaseCommand):
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1825, 3650)),  # 5-10 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(299.99, 2999.99), 2))),
+                'default_supplier': random.randint(1, 10),  # Random supplier ID 1-10
                 'minimum_quantity': random.randint(1, 5),
                 'notes': f'Network equipment model {i+1}',
             })
@@ -184,6 +188,7 @@ class Command(BaseCommand):
                 'model_number': model_num,
                 'end_of_life': base_date + timedelta(days=random.randint(1095, 1825)),  # 3-5 years
                 'default_purchase_cost': Decimal(str(round(random.uniform(199.99, 799.99), 2))),
+                'default_supplier': random.randint(1, 10),  # Random supplier ID 1-10
                 'minimum_quantity': random.randint(2, 8),
                 'notes': f'Office printer model {i+1}',
             })

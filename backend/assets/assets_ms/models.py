@@ -62,6 +62,7 @@ class Product(models.Model):
     model_number = models.CharField(max_length=50, blank=True, null=True)
     end_of_life = models.DateField(blank=True, null=True)
     default_purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    default_supplier = models.PositiveIntegerField(blank=True, null=True)
     minimum_quantity = models.PositiveIntegerField(default=1)
     cpu = models.CharField(max_length=100, blank=True, null=True)
     gpu = models.CharField(max_length=100, blank=True, null=True)

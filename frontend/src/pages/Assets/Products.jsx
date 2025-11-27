@@ -47,7 +47,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 // TableItem component to render each product row
 function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteClick, onViewClick }) {
   const baseImage = product.image
-    ? `https://assets-service-production.up.railway.app${product.image}`
+    ? `${ASSETS_API_URL.replace(/\/$/, '')}${product.image}`
     : DefaultImage;
 
   return (
@@ -70,12 +70,12 @@ function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteCli
         />
       </td>
       <td>{product.name}</td>
-      <td>{product.category}</td>
-      <td>{product.model || 'N/A'}</td>
+      <td>{product.category_details?.name || 'N/A'}</td>
+      <td>{product.model_number || 'N/A'}</td>
       <td>{product.end_of_life || 'N/A'}</td>
-      <td>{manufacturer}</td>
-      <td>{product.depreciation}</td>
-      <td>{product.purchase_cost ? `₱${product.purchase_cost.toLocaleString()}` : 'N/A'}</td>
+      <td>{product.manufacturer_details?.name || 'N/A'}</td>
+      <td>{product.depreciation_details?.name || 'N/A'}</td>
+      <td>{product.default_purchase_cost ? `₱${product.purchase_cost.toLocaleString()}` : 'N/A'}</td>
       <td>{product.default_supplier || 'N/A'}</td>
       <td>{product.minimum_quantity || 'N/A'}</td>
       <td>
