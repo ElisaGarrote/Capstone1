@@ -17,13 +17,13 @@ def validate_image(image):
 
     # Check file size
     if image.size > max_size:
-        raise ValidationError(f"Image size exceeds 5 MB limit.")
+        raise ValidationError("Image size exceeds 5 MB limit.")
     
     # Check file format
     try:
         img = Image.open(image)
-        if img.upper() not in valid_formats:
-            raise ValidationError(f"Invalid image format. Only JPEG and PNG formats are allowed.")
+        if img.format.upper() not in valid_formats:
+            raise ValidationError("Invalid image format. Only JPEG and PNG formats are allowed.")
     except Exception as e:
         raise ValidationError(f"Error processing image: {e}")
 

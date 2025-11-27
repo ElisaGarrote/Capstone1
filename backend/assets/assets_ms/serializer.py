@@ -11,6 +11,7 @@ class ProductSerializer(serializers.ModelSerializer):
     category_details = serializers.SerializerMethodField()
     manufacturer_details = serializers.SerializerMethodField()
     depreciation_details = serializers.SerializerMethodField()
+    default_supplier_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Product

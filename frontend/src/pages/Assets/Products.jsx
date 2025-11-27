@@ -10,13 +10,11 @@ import ProductFilterModal from "../../components/Modals/ProductFilterModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
-import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
-import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/Products/Products.css";
 import "../../styles/ProductFilterModal.css";
+import { fetchAllProducts } from "../../services/assets-service";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -46,9 +44,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 
 // TableItem component to render each product row
 function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteClick, onViewClick }) {
-  const baseImage = product.image
-    ? `${ASSETS_API_URL.replace(/\/$/, '')}${product.image}`
-    : DefaultImage;
+  const baseImage = product.image || DefaultImage;
 
   return (
     <tr>
@@ -75,8 +71,12 @@ function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteCli
       <td>{product.end_of_life || 'N/A'}</td>
       <td>{product.manufacturer_details?.name || 'N/A'}</td>
       <td>{product.depreciation_details?.name || 'N/A'}</td>
-      <td>{product.default_purchase_cost ? `₱${product.purchase_cost.toLocaleString()}` : 'N/A'}</td>
-      <td>{product.default_supplier || 'N/A'}</td>
+      <td>
+        {product.default_purchase_cost
+          ? `₱${Number(product.default_purchase_cost).toLocaleString()}`
+          : 'N/A'}
+      </td>
+      <td>{product.default_supplier_details?.name || 'N/A'}</td>
       <td>{product.minimum_quantity || 'N/A'}</td>
       <td>
         <ActionButtons
@@ -96,16 +96,41 @@ function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteCli
 export default function Products() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [products] = useState(ProductsMockupData);
-  const [manufacturers] = useState(ManufacturersMockupData);
+  
+  
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // base data state
+  const [products, setProducts] = useState([]);
+
   // Filter state
-  const [filteredData, setFilteredData] = useState(ProductsMockupData);
+  const [filteredData, setFilteredData] = useState(products);
   const [appliedFilters, setAppliedFilters] = useState({});
+
+  // Load components from API
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const data = await fetchAllProducts();
+
+        const processed = data.map((product) => {
+          return {
+            ...product,
+          };
+        });
+
+        setProducts(processed);
+        setFilteredData(processed);
+      } catch (error) {
+        setErrorMessage("Failed to load products.");
+      }
+    }
+
+    loadProducts();
+  }, []);
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -209,13 +234,13 @@ export default function Products() {
 
 
   const getManufacturerName = (id) => {
-    const found = manufacturers.find((m) => m.id === id);
+    const found = products.find((m) => m.id === id);
     return found ? found.name : "-";
   };
 
   // Apply filters to data
   const productsInUseSet = useMemo(
-    () => new Set(AssetsMockupData.map((asset) => asset.name)),
+    () => new Set(products.map((asset) => asset.name)),
     []
   );
 
