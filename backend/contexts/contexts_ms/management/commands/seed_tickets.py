@@ -153,6 +153,8 @@ class Command(BaseCommand):
 
         # Create 40 CHECKIN tickets for deployed assets
         # These will be for assets that are currently checked out (status 3-4)
+        # IMPORTANT: The asset_checkout IDs reference the AssetCheckout records
+        # created by seed_asset_checkouts.py for assets 41-80
         for i in range(40):
             asset_id = i + 41  # Assets 41-80 will have checkin tickets
             ticket_number = f'TKT{ticket_number_counter:03d}'
@@ -167,8 +169,9 @@ class Command(BaseCommand):
             created_date = base_date - timedelta(days=days_ago)
             checkin_date = (created_date + timedelta(days=random.randint(1, 3))).date()
 
-            # Reference to a checkout record (use tickets 1-40 as the original checkouts)
-            asset_checkout_id = (i % 40) + 1  # Cycles through tickets 1-40
+            # Reference to the AssetCheckout record (IDs 1-40 correspond to assets 41-80)
+            # AssetCheckout ID 1 = Asset 41, ID 2 = Asset 42, ..., ID 40 = Asset 80
+            asset_checkout_id = i + 1  # Checkout IDs 1-40
 
             # 30% resolved, 70% unresolved (so more buttons are visible)
             is_resolved = random.random() < 0.3

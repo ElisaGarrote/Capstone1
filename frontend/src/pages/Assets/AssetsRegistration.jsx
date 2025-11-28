@@ -8,11 +8,11 @@ import "../../styles/Registration.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import Alert from "../../components/Alert";
-import * as assetsService from "../../services/assets-service";
 import { fetchAllProducts, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
+import SystemLoading from "../../components/Loading/SystemLoading";
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);

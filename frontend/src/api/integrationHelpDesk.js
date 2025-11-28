@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const helpDeskAxios = axios.create({
-  baseURL: import.meta.env.VITE_CONTEXTS_API_URL,
+  baseURL: import.meta.env.VITE_INTEGRATION_HELP_DESK_API_URL,
   timeout: 10000,
 });
 

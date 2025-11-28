@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const ticketTrackingAxios = axios.create({
-  baseURL: import.meta.env.VITE_CONTEXTS_API_URL,
+  baseURL: import.meta.env.VITE_INTEGRATION_TICKET_TRACKING_API_URL,
   timeout: 10000,
 });
 

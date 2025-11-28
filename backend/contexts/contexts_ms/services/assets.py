@@ -91,3 +91,13 @@ def bulk_check_usage(item_type, ids, sample_limit=0, timeout=8):
         return out
     except Exception:
         return {}
+
+def get_asset_by_id(asset_id):
+    response = client_get(f"assets/{asset_id}/")
+    response.raise_for_status()
+    return response.json()
+
+def get_asset_checkout_by_id(checkout_id):
+    response = client_get(f"asset-checkout/{checkout_id}/")
+    response.raise_for_status()
+    return response.json()

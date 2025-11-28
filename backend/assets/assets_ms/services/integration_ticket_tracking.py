@@ -7,7 +7,7 @@ from django.conf import settings
 
 # Centralized Ticket Tracking service helper module
 # Use settings.CONTEXTS_API_URL or fallback to the default service host
-BASE_URL = getattr(settings, "CONTEXTS_API_URL", os.getenv("CONTEXTS_API_URL", "http://contexts-service:8003/"))
+BASE_URL = getattr(settings, "TICKET_TRACKING_API_URL", os.getenv("TICKET_TRACKING_API_URL", "http://contexts-service:8003/"))
 
 # Cache settings
 TICKET_CACHE_TTL = 300

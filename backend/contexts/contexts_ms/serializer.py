@@ -297,6 +297,7 @@ class LocationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TicketSerializer(serializers.ModelSerializer):
+    location_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Ticket
@@ -343,71 +344,44 @@ class TicketSerializer(serializers.ModelSerializer):
         return data
 
     def _validate_asset_status_consistency(self, asset_id, ticket_type):
-        """
-        Validate that the ticket type matches the asset status.
-
-        Business Rules:
-        1. Only assets with 'deployable', 'deployed', or 'pending' status can have tickets
-        2. Assets with 'deployed' status must have 'checkin' tickets
-        3. Assets with 'deployable' status must have 'checkout' tickets
-        4. Assets with 'undeployable' or 'archived' status cannot have tickets
-        """
-        import requests
-        from django.conf import settings
+        logger = logging.getLogger(__name__)
 
         try:
-            # Fetch asset data from Asset service
-            asset_service_url = getattr(settings, 'ASSET_SERVICE_URL', 'http://backend-dev:8000')
-            response = requests.get(
-                f"{asset_service_url}/api/assets/{asset_id}/",
-                timeout=5
-            )
+            asset_data = get_asset_by_id(asset_id)  # uses internal http client
 
-            if response.status_code == 200:
-                asset_data = response.json()
-                status_details = asset_data.get('status_details', {})
+            status_details = asset_data.get('status_details', {})
+            status_type = status_details.get('type', '').lower()
 
-                # Handle case where status_details might be a warning dict
-                if isinstance(status_details, dict) and status_details.get('warning'):
-                    # Skip validation if we can't get status details
-                    return
+            if status_type not in ['deployable', 'deployed', 'pending']:
+                raise serializers.ValidationError({
+                    'asset': f"Cannot create ticket for asset with '{status_type}' status."
+                })
 
-                status_type = status_details.get('type', '').lower()
+            if status_type == 'deployed' and ticket_type != Ticket.TicketType.CHECKIN:
+                raise serializers.ValidationError({
+                    'ticket_type': "Assets with 'deployed' status must have 'checkin' tickets."
+                })
 
-                # Rule 1: Only deployable, deployed, or pending assets can have tickets
-                if status_type not in ['deployable', 'deployed', 'pending']:
-                    raise serializers.ValidationError({
-                        'asset': f"Cannot create ticket for asset with '{status_type}' status. "
-                                f"Only 'deployable', 'deployed', or 'pending' assets can have tickets."
-                    })
+            if status_type == 'deployable' and ticket_type != Ticket.TicketType.CHECKOUT:
+                raise serializers.ValidationError({
+                    'ticket_type': "Assets with 'deployable' status must have 'checkout' tickets."
+                })
 
-                # Rule 2: Deployed assets must have checkin tickets
-                if status_type == 'deployed' and ticket_type != Ticket.TicketType.CHECKIN:
-                    raise serializers.ValidationError({
-                        'ticket_type': f"Assets with 'deployed' status must have 'checkin' tickets, not '{ticket_type}'."
-                    })
-
-                # Rule 3: Deployable assets must have checkout tickets
-                if status_type == 'deployable' and ticket_type != Ticket.TicketType.CHECKOUT:
-                    raise serializers.ValidationError({
-                        'ticket_type': f"Assets with 'deployable' status must have 'checkout' tickets, not '{ticket_type}'."
-                    })
-
-                # Rule 4: Pending assets can have either checkout or checkin tickets (no restriction)
-                # This is allowed for workflow flexibility
-
-        except requests.RequestException:
-            # If we can't reach the asset service, skip validation
-            # This prevents blocking ticket creation during service outages
-            pass
-        except serializers.ValidationError:
-            # Re-raise validation errors
-            raise
         except Exception as e:
-            # Log other errors but don't block ticket creation
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Error validating ticket asset status: {e}")
+            # Do NOT block ticket creation if assets service unreachable
+            logger.warning(f"Asset validation skipped (service unreachable): {e}")
+            return
+        
+    def get_location_details(self, obj):
+        """Return location details fetched from Help Desk service."""
+        try:
+            if not getattr(obj, 'location', None):
+                return None
+            from contexts_ms.services.integration_help_desk import get_location_by_id
+            return get_location_by_id(obj.location)
+        except Exception:
+            return {"warning": "Help Desk service unreachable for locations."}
+
 
 class CategoryNameSerializer(serializers.ModelSerializer):
     class Meta:

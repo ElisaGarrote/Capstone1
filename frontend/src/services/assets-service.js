@@ -92,6 +92,15 @@ export async function createAssetCheckin(data) {
 }
 
 /* ===============================
+          ASSET CHECKOUT
+================================= */
+// GET asset checkout by ID
+export async function fetchAssetCheckoutById(id) {
+  const res = await assetsAxios.get(`asset-checkout/${id}/`);
+  return res.data;
+}
+
+/* ===============================
           COMPONENTS CRUD
 ================================= */
 

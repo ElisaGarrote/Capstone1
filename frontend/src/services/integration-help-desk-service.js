@@ -1,4 +1,4 @@
-import helpDeskAxios from "../api/helpDeskAxios";
+import helpDeskAxios from "../api/integrationHelpDesk";
 
 /* ===============================
           LOCATIONS CRUD
