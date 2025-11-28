@@ -6,7 +6,7 @@ import random
 
 
 class Command(BaseCommand):
-    help = 'Seed the database with 100 ticket records (checkout and checkin requests)'
+    help = 'Seed the database with 80 ticket records (40 checkout + 40 checkin requests matched to asset statuses)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -21,7 +21,7 @@ class Command(BaseCommand):
             Ticket.objects.all().delete()
             self.stdout.write(self.style.SUCCESS('Existing tickets cleared.'))
 
-        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Tickets ==='))
+        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding 80 Tickets (40 Checkout + 40 Checkin) ==='))
 
         tickets_data = self.get_tickets_data()
         created_count = 0
@@ -89,73 +89,106 @@ class Command(BaseCommand):
 
         tickets = []
 
-        # Create a list of asset IDs 1-100 and shuffle to ensure each is used once
-        asset_ids = list(range(1, 101))
-        random.shuffle(asset_ids)
+        # Status IDs from seed_statuses.py:
+        # 1: Ready to Deploy (deployable)
+        # 2: Available (deployable)
+        # 3: In Use (deployed)
+        # 4: Checked Out (deployed)
+        # 5: Under Repair (undeployable)
+        # 6: Broken (undeployable)
+        # 7: Pending Approval (pending)
+        # 8: In Transit (pending)
+        # 9: Retired (archived)
+        # 10: Lost/Stolen (archived)
 
-        # Generate 100 tickets - each asset requested only once
-        # First 50 tickets: checkout only (no checkin)
-        # Last 50 tickets: checkout with checkin
-        for i in range(1, 101):
-            ticket_number = f'TKT{i:03d}'  # TKT001, TKT002, etc.
+        # IMPORTANT: Ticket logic based on asset status
+        # - Assets with DEPLOYED status (IDs 3, 4) → Need CHECKIN tickets
+        # - Assets with DEPLOYABLE status (IDs 1, 2) → Can have CHECKOUT tickets
+        # - Other statuses → No active tickets
 
-            # Get unique asset ID for this ticket
-            asset_id = asset_ids[i - 1]
+        # From seed_assets.py distribution:
+        # - 40 assets are DEPLOYABLE (status 1-2) → 40 checkout tickets
+        # - 40 assets are DEPLOYED (status 3-4) → 40 checkin tickets
+        # - 20 assets are other statuses → No tickets
 
-            # First 50 = checkout only, Last 50 = checkout with checkin
-            has_checkin = i > 50
+        # We'll create 80 tickets total (40 checkout + 40 checkin)
+        # Tickets will be assigned to assets based on their expected status
+
+        ticket_number_counter = 1
+
+        # Create 40 CHECKOUT tickets for deployable assets
+        # These will be for assets that are currently available (status 1-2)
+        for i in range(40):
+            asset_id = i + 1  # Assets 1-40 will have checkout tickets
+            ticket_number = f'TKT{ticket_number_counter:03d}'
+            ticket_number_counter += 1
 
             employee = random.choice(employees)
             location_id = random.choice(location_ids)
+            subject = random.choice(checkout_subjects)
 
             # Random date within last 90 days
             days_ago = random.randint(1, 90)
             created_date = base_date - timedelta(days=days_ago)
+            checkout_date = (created_date + timedelta(days=random.randint(1, 3))).date()
+            return_date = checkout_date + timedelta(days=random.randint(7, 90))
 
             # 30% resolved, 70% unresolved (so more buttons are visible)
             is_resolved = random.random() < 0.3
 
-            if not has_checkin:
-                # Checkout ticket only - checkin_date is NULL
-                subject = random.choice(checkout_subjects)
-                checkout_date = (created_date + timedelta(days=random.randint(1, 3))).date()
-                return_date = checkout_date + timedelta(days=random.randint(7, 90))
-
-                ticket_data = {
-                    'ticket_number': ticket_number,
-                    'ticket_type': Ticket.TicketType.CHECKOUT,
-                    'employee': employee,
-                    'asset': asset_id,
-                    'subject': subject,
-                    'location': location_id,
-                    'checkout_date': checkout_date,
-                    'return_date': return_date,
-                    'checkin_date': None,  # NULL for checkout-only tickets
-                    'asset_checkout': None,  # NULL for checkout-only tickets
-                    'is_resolved': is_resolved,
-                }
-            else:
-                # Checkin ticket - checkin_date has value
-                subject = random.choice(checkin_subjects)
-                checkin_date = (created_date + timedelta(days=random.randint(1, 3))).date()
-                # Reference to a checkout record (IDs 1-50 correspond to first 50 tickets)
-                asset_checkout_id = i - 50  # Maps tickets 51-100 to checkouts 1-50
-
-                ticket_data = {
-                    'ticket_number': ticket_number,
-                    'ticket_type': Ticket.TicketType.CHECKIN,
-                    'employee': employee,
-                    'asset': asset_id,
-                    'subject': subject,
-                    'location': location_id,
-                    'checkout_date': None,  # NULL for checkin tickets
-                    'return_date': None,  # NULL for checkin tickets
-                    'checkin_date': checkin_date,  # Has value for checkin tickets
-                    'asset_checkout': asset_checkout_id,
-                    'is_resolved': is_resolved,
-                }
-
+            ticket_data = {
+                'ticket_number': ticket_number,
+                'ticket_type': Ticket.TicketType.CHECKOUT,
+                'employee': employee,
+                'asset': asset_id,
+                'subject': subject,
+                'location': location_id,
+                'checkout_date': checkout_date,
+                'return_date': return_date,
+                'checkin_date': None,  # NULL for checkout tickets
+                'asset_checkout': None,  # NULL for checkout tickets
+                'is_resolved': is_resolved,
+            }
             tickets.append(ticket_data)
+
+        # Create 40 CHECKIN tickets for deployed assets
+        # These will be for assets that are currently checked out (status 3-4)
+        for i in range(40):
+            asset_id = i + 41  # Assets 41-80 will have checkin tickets
+            ticket_number = f'TKT{ticket_number_counter:03d}'
+            ticket_number_counter += 1
+
+            employee = random.choice(employees)
+            location_id = random.choice(location_ids)
+            subject = random.choice(checkin_subjects)
+
+            # Random date within last 90 days
+            days_ago = random.randint(1, 90)
+            created_date = base_date - timedelta(days=days_ago)
+            checkin_date = (created_date + timedelta(days=random.randint(1, 3))).date()
+
+            # Reference to a checkout record (use tickets 1-40 as the original checkouts)
+            asset_checkout_id = (i % 40) + 1  # Cycles through tickets 1-40
+
+            # 30% resolved, 70% unresolved (so more buttons are visible)
+            is_resolved = random.random() < 0.3
+
+            ticket_data = {
+                'ticket_number': ticket_number,
+                'ticket_type': Ticket.TicketType.CHECKIN,
+                'employee': employee,
+                'asset': asset_id,
+                'subject': subject,
+                'location': location_id,
+                'checkout_date': None,  # NULL for checkin tickets
+                'return_date': None,  # NULL for checkin tickets
+                'checkin_date': checkin_date,  # Has value for checkin tickets
+                'asset_checkout': asset_checkout_id,
+                'is_resolved': is_resolved,
+            }
+            tickets.append(ticket_data)
+
+        # Assets 81-100 will have NO tickets (undeployable, pending, archived statuses)
 
         return tickets
 

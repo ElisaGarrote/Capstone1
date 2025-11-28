@@ -44,6 +44,14 @@ function TableHeader({ allSelected, onHeaderChange }) {
 function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
   const baseImage = asset.image || DefaultImage;
 
+  const statusType = asset.status_details?.type?.toLowerCase();
+
+  // Check-In available when asset is deployed
+  const showCheckIn = statusType === "deployed";
+
+  // Check-Out available when asset is deployable AND has a checkout ticket
+  const showCheckOut =statusType === "deployable" && asset.ticket
+
   return (
     <tr>
       <td>
@@ -74,13 +82,8 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       {/* Check-in/Check-out Column */}
       <td>
         <ActionButtons
-          showCheckout={
-            asset.status_details.type.toLowerCase() === 'deployable' ||
-            asset.status.toLowerCase() === 'readytodeploy' ||
-            asset.status.toLowerCase() === 'archived' ||
-            asset.status.toLowerCase() === 'pending'
-          }
-          showCheckin={asset.status_details.type.toLowerCase() === 'deployed'}
+          showCheckout={showCheckOut}
+          showCheckin={showCheckIn}
           onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
           onCheckinClick={() => onCheckInOut(asset, 'checkin')}
         />
@@ -104,11 +107,15 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
 export default function Assets() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Assets state
+  const [assets, setAssets] = useState([]);
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
-  const [filteredData, setFilteredData] = useState(MockupData);
+  const [filteredData, setFilteredData] = useState(assets);
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -127,7 +134,7 @@ export default function Assets() {
 
   // Apply filters to data (base: all assets)
   const applyFilters = (filters) => {
-    let filtered = [...MockupData];
+    let filtered = [...assets];
 
     // Filter by Asset ID
     if (filters.assetId && filters.assetId.trim() !== "") {
@@ -328,7 +335,7 @@ export default function Assets() {
   }, [location]);
 
   const handleExport = () => {
-    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    const dataToExport = filteredData.length > 0 ? filteredData : assets;
     exportToExcel(dataToExport, "Assets_Records.xlsx");
   };
 
@@ -380,6 +387,26 @@ export default function Assets() {
       });
     }
   };
+
+  // Fetch assets on component mount
+  useEffect(() => {
+    const loadAssets = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchAllAssets();
+        setAssets(data);
+        setFilteredData(data);
+        setErrorMessage("");
+      } catch (error) {
+        console.error("Error fetching assets:", error);
+        setErrorMessage("Failed to load assets. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAssets();
+  }, []);
 
 
 
@@ -466,7 +493,13 @@ export default function Assets() {
                   />
                 </thead>
                 <tbody>
-                  {paginatedAssets.length > 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={10} className="no-data-message">
+                        Loading assets...
+                      </td>
+                    </tr>
+                  ) : paginatedAssets.length > 0 ? (
                     paginatedAssets.map((asset) => (
                       <TableItem
                         key={asset.id}
@@ -480,7 +513,7 @@ export default function Assets() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="no-data-message">
+                      <td colSpan={10} className="no-data-message">
                         No Assets Found.
                       </td>
                     </tr>

@@ -77,18 +77,44 @@ class Command(BaseCommand):
             ))
 
         assets = []
-        # Use IDs 1-10 to match context seeders (10 records each)
-        statuses = list(range(1, 11))  # Status IDs 1-10 (from contexts)
         suppliers = list(range(1, 11))  # Supplier IDs 1-10 (from contexts)
         locations = list(range(1, 11))  # Location IDs 1-10 (from contexts)
+
+        # Status IDs from seed_statuses.py:
+        # 1: Ready to Deploy (deployable)
+        # 2: Available (deployable)
+        # 3: In Use (deployed)
+        # 4: Checked Out (deployed)
+        # 5: Under Repair (undeployable)
+        # 6: Broken (undeployable)
+        # 7: Pending Approval (pending)
+        # 8: In Transit (pending)
+        # 9: Retired (archived)
+        # 10: Lost/Stolen (archived)
+
+        # Distribution strategy for 100 assets:
+        # - 40 assets: Deployable (IDs 1-2) - Available for checkout
+        # - 40 assets: Deployed (IDs 3-4) - Currently checked out (need checkin tickets)
+        # - 10 assets: Undeployable (IDs 5-6) - Under repair or broken
+        # - 5 assets: Pending (IDs 7-8) - Pending approval or in transit
+        # - 5 assets: Archived (IDs 9-10) - Retired or lost/stolen
+
+        status_distribution = (
+            [1, 2] * 20 +  # 40 deployable assets
+            [3, 4] * 20 +  # 40 deployed assets
+            [5, 6] * 5 +   # 10 undeployable assets
+            [7, 8] * 3 + [7] * 2 +  # 5 pending assets (3+2 to avoid index issues)
+            [9, 10] * 3 + [9] * 2   # 5 archived assets (3+2 to avoid index issues)
+        )
+        random.shuffle(status_distribution)
 
         # Create 100 assets
         for i in range(100):
             # Cycle through products if we have fewer than 100
             product = products_list[i % len(products_list)]
 
-            # Generate varied data for each asset
-            status = random.choice(statuses)
+            # Get status from distribution
+            status = status_distribution[i]
             supplier = random.choice(suppliers)
             location = random.choice(locations)
 
