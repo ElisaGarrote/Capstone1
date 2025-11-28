@@ -109,14 +109,14 @@ class Ticket(models.Model):
     # Details
     ticket_number = models.CharField(max_length=6, unique=True)
     ticket_type = models.CharField(max_length=10, choices=TicketType.choices)
-    
+
     # Relations
     employee = models.CharField(max_length=100)
     asset = models.PositiveIntegerField()
     # Requestor details
     subject = models.CharField(max_length=255)
     location = models.CharField(max_length=255)
-    
+
     # Status
     is_resolved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

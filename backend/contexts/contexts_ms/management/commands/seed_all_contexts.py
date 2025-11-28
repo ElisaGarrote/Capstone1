@@ -3,7 +3,7 @@ from django.core.management import call_command
 
 
 class Command(BaseCommand):
-    help = 'Seed all context data (categories, suppliers, manufacturers, statuses, depreciations, locations, tickets)'
+    help = 'Seed all context data (categories, suppliers, manufacturers, statuses, depreciations, locations)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -41,11 +41,6 @@ class Command(BaseCommand):
             action='store_true',
             help='Seed only locations (10 records)',
         )
-        parser.add_argument(
-            '--tickets-only',
-            action='store_true',
-            help='Seed only tickets (100 records)',
-        )
 
     def handle(self, *args, **options):
         clear_flag = '--clear' if options['clear'] else ''
@@ -58,7 +53,6 @@ class Command(BaseCommand):
             options['statuses_only'],
             options['depreciations_only'],
             options['locations_only'],
-            options['tickets_only'],
         ]
         
         seed_all = not any(specific_flags)
@@ -92,11 +86,6 @@ class Command(BaseCommand):
         if seed_all or options['locations_only']:
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Locations (10 records) ==='))
             call_command('seed_locations', clear_flag) if clear_flag else call_command('seed_locations')
-
-        # Seed Tickets (100 records)
-        if seed_all or options['tickets_only']:
-            self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Tickets (100 records) ==='))
-            call_command('seed_tickets', clear_flag) if clear_flag else call_command('seed_tickets')
 
         self.stdout.write(self.style.SUCCESS('\n✓ All context seeding complete!'))
 

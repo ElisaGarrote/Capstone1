@@ -46,11 +46,13 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
 
   const statusType = asset.status_details?.type?.toLowerCase();
 
-  // Check-In available when asset is deployed
+  // Check-In button: Shows when asset is deployed (no ticket required)
   const showCheckIn = statusType === "deployed";
 
-  // Check-Out available when asset is deployable AND has a checkout ticket
-  const showCheckOut =statusType === "deployable" && asset.ticket
+  // Check-Out button: Shows when asset is deployable AND has a checkout ticket
+  const showCheckOut = statusType === "deployable" &&
+                       asset.ticket &&
+                       asset.ticket.ticket_type === "checkout"
 
   return (
     <tr>
