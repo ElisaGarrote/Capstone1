@@ -124,8 +124,6 @@ class AssetViewSet(viewsets.ModelViewSet):
             purchase_cost = product.default_purchase_cost
 
         serializer.save(
-            created_by=self.request.user,
-            updated_by=self.request.user,
             supplier=supplier,
             purchase_cost=purchase_cost
         )

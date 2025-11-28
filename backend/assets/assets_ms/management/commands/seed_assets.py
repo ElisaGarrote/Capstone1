@@ -93,20 +93,21 @@ class Command(BaseCommand):
         # 10: Lost/Stolen (archived)
 
         # Distribution strategy for 100 assets:
-        # - 40 assets: Deployable (IDs 1-2) - Available for checkout
-        # - 40 assets: Deployed (IDs 3-4) - Currently checked out (need checkin tickets)
-        # - 10 assets: Undeployable (IDs 5-6) - Under repair or broken
-        # - 5 assets: Pending (IDs 7-8) - Pending approval or in transit
-        # - 5 assets: Archived (IDs 9-10) - Retired or lost/stolen
+        # - Assets 1-40: Deployable (status IDs 1-2) - Available for checkout → CHECKOUT tickets
+        # - Assets 41-80: Deployed (status IDs 3-4) - Currently checked out → CHECKIN tickets
+        # - Assets 81-90: Undeployable (status IDs 5-6) - Under repair or broken → NO tickets
+        # - Assets 91-95: Pending (status IDs 7-8) - Pending approval or in transit → NO tickets
+        # - Assets 96-100: Archived (status IDs 9-10) - Retired or lost/stolen → NO tickets
 
+        # IMPORTANT: Do NOT shuffle! Ticket seeder depends on this exact order
         status_distribution = (
-            [1, 2] * 20 +  # 40 deployable assets
-            [3, 4] * 20 +  # 40 deployed assets
-            [5, 6] * 5 +   # 10 undeployable assets
-            [7, 8] * 3 + [7] * 2 +  # 5 pending assets (3+2 to avoid index issues)
-            [9, 10] * 3 + [9] * 2   # 5 archived assets (3+2 to avoid index issues)
+            [1, 2] * 20 +  # Assets 1-40: deployable (will have CHECKOUT tickets)
+            [3, 4] * 20 +  # Assets 41-80: deployed (will have CHECKIN tickets)
+            [5, 6] * 5 +   # Assets 81-90: undeployable (no tickets)
+            [7, 8] * 3 + [7] * 2 +  # Assets 91-95: pending (no tickets)
+            [9, 10] * 3 + [9] * 2   # Assets 96-100: archived (no tickets)
         )
-        random.shuffle(status_distribution)
+        # DO NOT SHUFFLE - ticket seeder relies on this order!
 
         # Create 100 assets
         for i in range(100):
