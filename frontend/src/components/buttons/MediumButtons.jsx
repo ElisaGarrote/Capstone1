@@ -96,6 +96,11 @@ export default function MediumButtons({
       console.log("FILTER onClick executed");
     }
 
+    if (type.toLowerCase() === "new" && onClick) {
+      console.log("Executing NEW onClick");
+      onClick();
+    }
+
     if (navigatePage) {
       console.log("Navigating to:", navigatePage);
       navigate(navigatePage, { state: { previousPage } });

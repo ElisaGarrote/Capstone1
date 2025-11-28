@@ -12,7 +12,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
-import { fetchAllAssets } from "../../services/assets-service";
+import { fetchAllAssets, getNextAssetId } from "../../services/assets-service";
 
 import "../../styles/Assets/Assets.css";
 
@@ -325,8 +325,6 @@ export default function Assets() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-
-
   useEffect(() => {
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
@@ -341,6 +339,19 @@ export default function Assets() {
     const dataToExport = filteredData.length > 0 ? filteredData : assets;
     exportToExcel(dataToExport, "Assets_Records.xlsx");
   };
+
+  const handleCreateNewAsset = async () => {
+    try {
+      const nextId = await getNextAssetId();
+      navigate("/assets/registration", {
+        state: { nextAssetId: nextId }
+      });
+    } catch (error) {
+      console.error("Error fetching next asset ID:", error);
+      setErrorMessage("Failed to prepare new asset form. Try again.");
+    }
+  };
+
 
   const handleCheckInOut = (asset, action) => {
     const baseImage = asset.image
@@ -480,7 +491,7 @@ export default function Assets() {
                 {authService.getUserInfo().role === "Admin" && (
                   <MediumButtons
                     type="new"
-                    navigatePage="/assets/registration"
+                    onClick={handleCreateNewAsset}
                   />
                 )}
               </section>

@@ -13,7 +13,6 @@ import ProductsRegistration from "./pages/Assets/ProductsRegistration";
 import ProductViewPage from "./pages/Assets/ProductViewPage";
 import Assets from "./pages/Assets/Assets";
 import AssetsRegistration from "./pages/Assets/AssetsRegistration";
-import AssetEditPage from "./pages/Assets/AssetEditPage";
 import BulkEditAssets from "./pages/Assets/BulkEditAssets";
 import BulkEditAssetModels from "./pages/Assets/BulkEditAssetModels";
 import AssetViewPage from "./pages/Assets/AssetViewPage";
@@ -117,7 +116,7 @@ function App() {
           />
           <Route
             path="/assets/edit/:id"
-            element={<AssetEditPage />}
+            element={<AssetsRegistration />}
           />
           <Route
             path="/assets/bulk-edit"

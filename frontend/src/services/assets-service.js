@@ -58,6 +58,12 @@ export async function fetchAssetById(id) {
   return res.data;
 }
 
+// GET next asset ID
+export async function getNextAssetId() {
+  const res = await assetsAxios.get("assets/generate-asset-id/");
+  return res.data;
+}
+
 // CREATE asset
 export async function createAsset(data) {
   const res = await assetsAxios.post("assets/", data);
@@ -116,6 +122,15 @@ export async function updateComponent(id, data) {
 // DELETE component
 export async function deleteComponent(id) {
   const res = await assetsAxios.delete(`components/${id}/`);
+  return res.data;
+}
+
+/* ===============================
+          AUDIT SCHEDULE
+================================= */
+// Create audit schedule
+export async function createAuditSchedule(data) {
+  const res = await assetsAxios.post("audit-schedule/", data);
   return res.data;
 }
 

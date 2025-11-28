@@ -8,38 +8,17 @@ import "../../styles/Registration.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import Alert from "../../components/Alert";
-import { fetchAllComponents } from "../../services/assets-service";
+import * as assetsService from "../../services/assets-service";
+import { fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
+import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
-import { fetchAllCategories } from "../../services/contexts-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import ProductMockData from "../../data/mockData/products/products-mockup-data.json";
-import StatusMockData from "../../data/mockData/more/status-mockup-data.json";
-import SupplierMockData from "../../data/mockData/more/supplier-mockup-data.json";
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-  const [locations, setLocations] = useState([
-    { id: 1, name: "Makati Office" },
-    { id: 2, name: "Pasig Office" },
-    { id: 3, name: "Marikina Office" },
-    { id: 4, name: "Quezon City Office" },
-    { id: 5, name: "Manila Office" },
-    { id: 6, name: "Taguig Office" },
-    { id: 7, name: "Remote" }
-  ]);
-  const [disposalStatuses] = useState([
-    { id: 1, name: "Not Disposed" },
-    { id: 2, name: "Sold" },
-    { id: 3, name: "Donated" },
-    { id: 4, name: "Recycled" },
-    { id: 5, name: "Destroyed" },
-    { id: 6, name: "Lost" },
-    { id: 7, name: "Stolen" }
-  ]);
-
-
+  const [locations, setLocations] = useState([]);
 
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
@@ -47,9 +26,8 @@ export default function AssetsRegistration() {
 
   const navigate = useNavigate();
   const currentDate = new Date().toISOString().split("T")[0];
-  const [generatedAssetId, setGeneratedAssetId] = useState('(Loading...)');
 
-  const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       assetId: '',
@@ -63,13 +41,13 @@ export default function AssetsRegistration() {
       orderNumber: '',
       purchaseDate: '',
       purchaseCost: '',
-      disposalStatus: '',
-      scheduleAuditDate: '',
       notes: '',
     }
   });
 
-  const [attachmentFiles, setAttachmentFiles] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -79,133 +57,76 @@ export default function AssetsRegistration() {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
-  // Import file state
-  const [importFile, setImportFile] = useState(null);
-
-  useEffect(() => {
-    // Only fetch the next asset ID if we're creating a new asset (no ID provided)
-    if (!id) {
-      const fetchNextAssetId = async () => {
-        try {
-          setIsLoading(true);
-          const response = await assetsService.getNextAssetId();
-          if (response && response.next_id) {
-            setValue('assetId', response.next_id);
-            setGeneratedAssetId(response.next_id);
-          } else {
-            console.error("Failed to get next asset ID");
-            setErrorMessage("Failed to generate asset ID. Please try again.");
-          }
-        } catch (error) {
-          console.error("Error fetching next asset ID:", error);
-          setErrorMessage("Error generating asset ID. Please try again.");
-        }
-      };
-
-      fetchNextAssetId();
-    }
-  }, [id, setValue]);
-
   useEffect(() => {
     const initialize = async () => {
-      setIsLoading(true);
       try {
-        let assetContextsData = {};
-        let contextsData = {};
+        setIsLoading(true);
 
-        // Try to fetch real contexts; fall back to mock data if the backend
-        // is unavailable or returns empty arrays so the dropdowns always
-        // have usable options in demo mode.
-        try {
-          [assetContextsData, contextsData] = await Promise.all([
-            assetsService.fetchAssetContexts(),
-            fetchAllCategories(),
-          ]);
-        } catch (ctxError) {
-          console.error("Error fetching asset/contexts data, using mock data:", ctxError);
+        // Fetch dropdown options for assets
+        const dropdowns = await fetchAllDropdowns("asset");
+        setProducts(dropdowns.products || []);
+        setStatuses(dropdowns.statuses || []);
+        setSuppliers(dropdowns.suppliers || []);
+        setLocations(dropdowns.locations || []);
+
+        // Get asset data - prioritize state, then fetch from API
+        let assetData = location.state?.asset;
+
+        // If no asset in state but we have an ID, fetch from API
+        if (!assetData && id) {
+          assetData = await fetchAssetById(id);
         }
 
-        const apiProducts = assetContextsData?.products || [];
-        const apiStatuses = assetContextsData?.statuses || [];
-        const apiSuppliers = contextsData?.suppliers || [];
-
-        setProducts(apiProducts.length ? apiProducts : ProductMockData);
-        setStatuses(apiStatuses.length ? apiStatuses : StatusMockData);
-        setSuppliers(apiSuppliers.length ? apiSuppliers : SupplierMockData);
-
-        // If ID is present, fetch the asset details
-        if (id) {
-          try {
-            const assetData = await assetsService.fetchAssetById(id);
-            if (!assetData) {
-              setErrorMessage("Failed to fetch asset details");
-              return;
-            }
-
-            setAsset(assetData);
-            console.log("Asset Details:", assetData);
-
-            // Set form values from retrieved asset data
-            setValue('assetId', assetData.displayed_id);
-            setValue('product', assetData.product_id || '');
-            setValue('status', assetData.status_id || '');
-            setValue('supplier', assetData.supplier_id || '');
-            setValue('location', assetData.location || '');
-            setValue('assetName', assetData.name || '');
-            setValue('serialNumber', assetData.serial_number || '');
-            setValue('warrantyExpiration', assetData.warranty_expiration || '');
-            setValue('orderNumber', assetData.order_number || '');
-            setValue('purchaseDate', assetData.purchase_date || '');
-            setValue('purchaseCost', assetData.purchase_cost || '');
-            setValue('disposalStatus', assetData.disposal_status || '');
-            setValue('scheduleAuditDate', assetData.schedule_audit_date || '');
-            setValue('notes', assetData.notes || '');
-
-            if (assetData.image) {
-              setPreviewImage(`https://assets-service-production.up.railway.app${assetData.image}`);
-            }
-          } catch (assetError) {
-            console.error("Error fetching asset details:", assetError);
-            setErrorMessage("Failed to fetch asset details");
+        // Initialize form if editing
+        if (assetData) {
+          setValue("assetId", assetData.asset_id || "");
+          setValue("product", assetData.product || "");
+          setValue("status", assetData.status || "");
+          setValue("supplier", assetData.supplier || "");
+          setValue("location", assetData.location || "");
+          setValue("assetName", assetData.name || "");
+          setValue("serialNumber", assetData.serial_number || "");
+          setValue("warrantyExpiration", assetData.warranty_expiration || "");
+          setValue("orderNumber", assetData.order_number || "");
+          setValue("purchaseDate", assetData.purchase_date || "");
+          setValue("purchaseCost", assetData.purchase_cost || "");
+          setValue("notes", assetData.notes || "");
+          setAsset(assetData);
+          if (assetData.image) {
+            setPreviewImage(assetData.image);
           }
+        } else if (location.state?.nextAssetId) {
+          // Set generated asset ID for new asset
+          setValue("assetId", location.state.nextAssetId);
         }
       } catch (error) {
-        console.error("Error initializing asset registration form:", error);
+        console.error("Error initializing:", error);
         setErrorMessage("Failed to initialize form data");
       } finally {
         setIsLoading(false);
       }
     };
-
     initialize();
-  }, [id, setValue]);
+  }, [id, location.state, setValue]);
 
-  // Handle cloned asset name from location state
-  useEffect(() => {
-    console.log('AssetsRegistration location.state:', location.state);
-    if (location.state?.clonedAssetName && !id) {
-      console.log('Setting cloned asset name:', location.state.clonedAssetName);
-      setValue('assetName', location.state.clonedAssetName);
-    }
-  }, [location.state, setValue, id]);
-
-  const handleFileSelection = (e) => {
-    const files = Array.from(e.target.files);
-    const maxSize = 5 * 1024 * 1024;
-
-    const validFiles = files.filter(file => {
-      if (file.size > maxSize) {
-        alert(`${file.name} is larger than 5MB and was not added.`);
-        return false;
+  const handleImageSelection = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage("Image size exceeds 5MB. Please choose a smaller file.");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
       }
-      return true;
-    });
 
-    setAttachmentFiles(prev => [...prev, ...validFiles]);
-  };
+      setSelectedImage(file);
+      setRemoveImage(false);
 
-  const removeFile = (index) => {
-    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleImportFile = (e) => {
@@ -216,8 +137,6 @@ export default function AssetsRegistration() {
         setTimeout(() => setErrorMessage(""), 5000);
         return;
       }
-      setImportFile(file);
-      // Here you would typically process the Excel file
       console.log("Import file selected:", file.name);
     }
   };
@@ -293,73 +212,63 @@ export default function AssetsRegistration() {
   // Modal save handlers
   const handleSaveStatus = async (data) => {
     try {
-      // Here you would call the API to create a new status
-      console.log('Creating status:', data);
-      // For now, just add to local state
-      const newStatus = {
-        id: statuses.length + 1,
-        name: data.name,
-        type: data.type
-      };
-      setStatuses(prev => [...prev, newStatus]);
+      const newStatus = await createStatus(data);
+      setStatuses([...statuses, newStatus]);
+      setShowStatusModal(false);
+      setErrorMessage("");
     } catch (error) {
       console.error('Error creating status:', error);
-      throw error;
+      setErrorMessage("Failed to create status");
+      setTimeout(() => setErrorMessage(""), 5000);
     }
   };
 
   const handleSaveSupplier = async (data) => {
     try {
-      // Here you would call the API to create a new supplier
-      console.log('Creating supplier:', data);
-      // For now, just add to local state
-      const newSupplier = {
-        id: suppliers.length + 1,
-        name: data.name,
-        email: data.email,
-        phone_number: data.phone_number
-      };
-      setSuppliers(prev => [...prev, newSupplier]);
+      const newSupplier = await createSupplier(data);
+      setSuppliers([...suppliers, newSupplier]);
+      setShowSupplierModal(false);
+      setErrorMessage("");
     } catch (error) {
       console.error('Error creating supplier:', error);
-      throw error;
+      setErrorMessage("Failed to create supplier");
+      setTimeout(() => setErrorMessage(""), 5000);
     }
   };
 
   const handleSaveLocation = async (data) => {
     try {
-      // Here you would call the API to create a new location
+      // For now, just add to local state (location API not available)
       console.log('Creating location:', data);
-      // For now, just add to local state
       const newLocation = {
         id: locations.length + 1,
-        name: data.name
+        city: data.name
       };
       setLocations(prev => [...prev, newLocation]);
+      setShowLocationModal(false);
     } catch (error) {
       console.error('Error creating location:', error);
-      throw error;
+      setErrorMessage("Failed to create location");
+      setTimeout(() => setErrorMessage(""), 5000);
     }
   };
 
   const onSubmit = async (data) => {
+    setErrorMessage("");
     try {
       const formData = new FormData();
 
       // Append asset data to FormData object
-      formData.append('displayed_id', data.assetId);
       formData.append('product', data.product || '');
       formData.append('status', data.status || '');
-      formData.append('supplier_id', data.supplier || '');
+      formData.append('supplier', data.supplier || '');
       formData.append('location', data.location || '');
-      formData.append('name', data.assetName);
+      formData.append('name', data.assetName || '');
       formData.append('serial_number', data.serialNumber || '');
       formData.append('warranty_expiration', data.warrantyExpiration || '');
       formData.append('order_number', data.orderNumber || '');
       formData.append('purchase_date', data.purchaseDate || '');
       formData.append('purchase_cost', data.purchaseCost || '');
-      formData.append('disposal_status', data.disposalStatus || '');
-      formData.append('schedule_audit_date', data.scheduleAuditDate || '');
       formData.append('notes', data.notes || '');
 
       // Handle image upload
@@ -370,6 +279,7 @@ export default function AssetsRegistration() {
       // Handle image removal
       if (removeImage) {
         formData.append('remove_image', 'true');
+        console.log("Removing image: remove_image flag set to true");
       }
 
       console.log("Form data before submission:");
@@ -381,10 +291,10 @@ export default function AssetsRegistration() {
 
       if (id) {
         // Update existing asset
-        result = await assetsService.updateAsset(id, formData);
+        result = await updateAsset(id, formData);
       } else {
         // Create new asset
-        result = await assetsService.createAsset(formData);
+        result = await createAsset(formData);
       }
 
       if (!result) {
@@ -392,8 +302,6 @@ export default function AssetsRegistration() {
       }
 
       console.log(`${id ? 'Updated' : 'Created'} asset:`, result);
-
-      // Navigate to assets page with success message
       navigate('/assets', {
         state: {
           successMessage: `Asset has been ${id ? 'updated' : 'created'} successfully!`
@@ -401,31 +309,48 @@ export default function AssetsRegistration() {
       });
     } catch (error) {
       console.error(`Error ${id ? 'updating' : 'creating'} asset:`, error);
-      setErrorMessage(error.message || `An error occurred while ${id ? 'updating' : 'creating'} the asset`);
+
+      let message = `An error occurred while ${id ? 'updating' : 'creating'} the asset`;
+
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+
+        // Extract the first message from the first key
+        if (typeof data === "object") {
+          const firstKey = Object.keys(data)[0];
+          if (Array.isArray(data[firstKey]) && data[firstKey].length > 0) {
+            message = data[firstKey][0];
+          }
+        }
+      }
+
+      setErrorMessage(message);
     }
   };
 
 
 
-  // Add this function to handle product selection
+  // Handle product selection to auto-fill default values
   const handleProductChange = async (event) => {
     const productId = event.target.value;
+    setValue('product', productId);
+
     if (productId) {
       try {
-        // Fetch the product defaults
-        const productDefaults = await assetsService.fetchProductDefaults(productId);
+        // Fetch the product to get default values
+        const product = await assetsService.fetchProductById(productId);
 
-        if (productDefaults) {
-          console.log("Product defaults:", productDefaults);
+        if (product) {
+          console.log("Product defaults:", product);
 
           // Set purchase cost if available
-          if (productDefaults.default_purchase_cost) {
-            setValue('purchaseCost', productDefaults.default_purchase_cost);
+          if (product.default_purchase_cost) {
+            setValue('purchaseCost', product.default_purchase_cost);
           }
 
           // Set supplier if available
-          if (productDefaults.default_supplier_id) {
-            setValue('supplier', productDefaults.default_supplier_id);
+          if (product.default_supplier) {
+            setValue('supplier', product.default_supplier);
           }
         }
       } catch (error) {
@@ -570,9 +495,9 @@ export default function AssetsRegistration() {
                   className={errors.location ? 'input-error' : ''}
                 >
                   <option value="">Select Location</option>
-                  {locations.map(location => (
-                    <option key={location.id} value={location.name}>
-                      {location.name}
+                  {locations.map(loc => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.city}
                     </option>
                   ))}
                 </select>
@@ -660,35 +585,6 @@ export default function AssetsRegistration() {
               </div>
             </fieldset>
 
-            {/* Disposal Status */}
-            <fieldset>
-              <label htmlFor='disposal-status'>Disposal Status</label>
-              <select
-                id="disposal-status"
-                {...register("disposalStatus")}
-                className={errors.disposalStatus ? 'input-error' : ''}
-              >
-                <option value="">Select Disposal Status</option>
-                {disposalStatuses.map(status => (
-                  <option key={status.id} value={status.name}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
-              {errors.disposalStatus && <span className='error-message'>{errors.disposalStatus.message}</span>}
-            </fieldset>
-
-            {/* Schedule Audit Date */}
-            <fieldset>
-              <label htmlFor='schedule-audit-date'>Schedule Audit Date</label>
-              <input
-                type='date'
-                id="schedule-audit-date"
-                {...register('scheduleAuditDate')}
-                min={currentDate}
-              />
-            </fieldset>
-
             {/* Notes */}
             <fieldset>
               <label htmlFor='notes'>Notes</label>
@@ -701,38 +597,39 @@ export default function AssetsRegistration() {
 
             {/* Image Upload */}
             <fieldset>
-              <label>Image Upload</label>
-              <div className="attachments-wrapper">
-                {/* Left column: Upload button & info */}
-                <div className="upload-left">
-                  <label htmlFor="attachments" className="upload-image-btn">
-                    Choose File
-                    <input
-                      type="file"
-                      id="attachments"
-                      accept="image/*,.pdf,.doc,.docx"
-                      onChange={handleFileSelection}
-                      style={{ display: "none" }}
-                      multiple
-                    />
-                  </label>
-                  <small className="file-size-info">
-                    Maximum file size must be 5MB
-                  </small>
+              <label>Image</label>
+              {previewImage ? (
+                <div className="image-selected">
+                  <img src={previewImage} alt="Selected image" />
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setPreviewImage(null);
+                      setSelectedImage(null);
+                      document.getElementById('image').value = '';
+                      setRemoveImage(true);
+                      console.log("Remove image flag set to:", true);
+                    }}
+                  >
+                    <img src={CloseIcon} alt="Remove" />
+                  </button>
                 </div>
-
-                {/* Right column: Uploaded files */}
-                <div className="upload-right">
-                  {attachmentFiles.map((file, index) => (
-                    <div className="file-uploaded" key={index}>
-                      <span title={file.name}>{file.name}</span>
-                      <button type="button" onClick={() => removeFile(index)}>
-                        <img src={CloseIcon} alt="Remove" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ) : (
+                <label className="upload-image-btn">
+                  Choose File
+                  <input
+                    type="file"
+                    id="image"
+                    accept="image/*"
+                    onChange={handleImageSelection}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              )}
+              <small className="file-size-info">
+                Maximum file size must be 5MB
+              </small>
             </fieldset>
 
             <button type="submit" className="primary-button" disabled={!isValid}>Save</button>

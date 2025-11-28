@@ -42,8 +42,6 @@ class AssetViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
-        return Asset.objects.filter(is_deleted=False).order_by('name')
-    def get_queryset(self):
         queryset = Asset.objects.filter(is_deleted=False).order_by('name')
      # Optional: allow query param ?show_deleted=true
         if self.request.query_params.get('show_deleted') == 'true':
