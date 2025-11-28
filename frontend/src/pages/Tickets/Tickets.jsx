@@ -25,7 +25,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
         />
       </th>
       <th>TICKET NUMBER</th>
-      <th>ASSET</th>
+      <th>DATE</th>
       <th>REQUESTOR</th>
       <th>SUBJECT</th>
       <th>LOCATION</th>
@@ -46,11 +46,11 @@ function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick
           onChange={(e) => onRowChange(ticket.id, e.target.checked)}
         />
       </td>
-      <td>{ticket.id}</td>
-      <td>{ticket.assetName}</td>
-      <td>{ticket.requestor}</td>
+      <td>{ticket.ticketNumber}</td>
+      <td>{ticket.checkInOutDisplay}</td>
+      <td>{ticket.requestorName}</td>
       <td>{ticket.subject}</td>
-      <td>{ticket.requestorLocation}</td>
+      <td>{ticket.location}</td>
 
       {/* CHECK-IN / CHECK-OUT Column */}
       <td>
@@ -103,8 +103,6 @@ const Tickets = () => {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-
-
   useEffect(() => {
     const loadTickets = async () => {
       try {
@@ -127,24 +125,34 @@ const Tickets = () => {
                 ? "Check-Out"
                 : "Check-In"
               : null;
+          
+          const formattedDate = isCheckInOrOut === "Check-In"
+            ? ticket.checkin_date.slice(0, 10)
+            : ticket.checkout_date.slice(0, 10);
+
+          const checkInOutDisplay = isCheckInOrOut
+            ? `${isCheckInOrOut}: ${formattedDate}`
+            : "";
+
 
           return {
-            id: ticket.ticket_number,
-            ticketId: ticket.id, // Database ID for API calls
+            id: ticket.id,
+            ticketNumber: ticket.ticket_number,
             assetId: ticket.asset,
-            assetName: `Asset #${ticket.asset}`, // Will be enriched later if needed
+            checkinDate: ticket.checkin_date?.slice(0, 10),
+            checkoutDate: ticket.checkout_date?.slice(0, 10),
+            date: formattedDate,
+            requestorId: ticket.employee,
+            requestorName: ticket.employee,
             subject: ticket.subject,
-            requestor: ticket.employee,
-            requestorId: ticket.employee, // Using employee as ID for now
-            requestorLocation: ticket.location || "-",
-            checkoutDate: ticket.checkout_date,
+            locationId: ticket.location,
+            location: ticket.location_details.city,
             returnDate: ticket.return_date,
-            checkinDate: ticket.checkin_date,
-            assetCheckout: ticket.asset_checkout,
-            image: DefaultImage,
-            isResolved: ticket.is_resolved,
             isCheckInOrOut,
+            checkInOutDisplay,
             ticketType: ticket.ticket_type,
+            assetCheckout: ticket.asset_checkout,
+            isResolved: ticket.is_resolved,
             createdAt: ticket.created_at,
             updatedAt: ticket.updated_at,
           };
@@ -172,7 +180,7 @@ const Tickets = () => {
     // Filter by Ticket Number
     if (filters.ticketNumber && filters.ticketNumber.trim() !== "") {
       filtered = filtered.filter((ticket) =>
-        ticket.id?.toLowerCase().includes(filters.ticketNumber.toLowerCase())
+        ticket.ticketNumber?.toLowerCase().includes(filters.ticketNumber.toLowerCase())
       );
     }
 
@@ -293,12 +301,20 @@ const Tickets = () => {
   };
 
   // Filter tickets based on search query and applied filters
-  let filteredTickets = filteredData.filter(ticket =>
-    ticket.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ticket.requestor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ticket.assetName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  let filteredTickets = filteredData.filter(ticket => {
+    const qWords = searchQuery.toLowerCase().trim().split(/\s+/); // split by space
+    const fields = [
+
+      ticket.ticketNumber?.toLowerCase() || "",
+      ticket.checkInOutDisplay?.toLowerCase() || "",
+      ticket.requestorName?.toLowerCase() || "",
+      ticket.subject?.toLowerCase() || "",
+      ticket.location?.toLowerCase() || "",
+    ];
+
+    // Every word in search query must match at least one field
+    return qWords.every(word => fields.some(f => f.includes(word)));
+  });
 
   // Pagination logic
   const startIndex = (currentPage - 1) * pageSize;
