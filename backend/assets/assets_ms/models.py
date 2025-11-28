@@ -152,9 +152,11 @@ class AssetCheckin(models.Model):
     asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
     ticket_id = models.PositiveIntegerField(blank=True, null=True)
     checkin_date = models.DateField()
+    status = models.PositiveIntegerField()
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
+    location = models.PositiveIntegerField()
     notes = models.TextField(max_length=500, blank=True, null=True)
     image = models.ImageField(
         upload_to='asset_checkin_images/',

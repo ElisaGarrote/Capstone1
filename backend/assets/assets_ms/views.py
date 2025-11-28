@@ -435,7 +435,7 @@ class DashboardViewSet(viewsets.ViewSet):
                 "metrics": request.build_absolute_uri() + "metrics/"
             }
         })
-
+    # /dashboard/metrics
     @action(detail=False, methods=['get'])
     def metrics(self, request):
         today = now().date()

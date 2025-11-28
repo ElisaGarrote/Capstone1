@@ -317,6 +317,7 @@ class RecycleBinViewSet(viewsets.ViewSet):
 
 # Dropdowns for asset service
 class ContextsDropdownsViewSet(viewsets.ViewSet):
+    # /contexts-dropdowns/all/?entity=product
     @action(detail=False, methods=['get'])
     def all(self, request):
         entity = request.query_params.get("entity", "").lower()
@@ -331,10 +332,29 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
             data["categories"] = CategoryNameSerializer(Category.objects.filter(is_deleted=False, type=category_type), many=True).data
             data["manufacturers"] = ManufacturerNameSerializer(Manufacturer.objects.filter(is_deleted=False), many=True).data
         
-        if entity in ["product"]:
+        if entity == "product":
             data["depreciations"] = DepreciationNameSerializer(Depreciation.objects.filter(is_deleted=False), many=True).data
 
-        if entity in ["asset"]:
+        if entity == "asset":
             data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False), many=True).data
+
+        # individual dropdowns
+        if entity == "category":
+            data["categories"] = CategoryNameSerializer(Category.objects.filter(is_deleted=False), many=True).data
+        
+        if entity == "supplier":
+            data["suppliers"] = SupplierNameSerializer(Supplier.objects.filter(is_deleted=False), many=True).data
+
+        if entity == "manufacturer":
+            data["manufacturers"] = ManufacturerNameSerializer(Manufacturer.objects.filter(is_deleted=False), many=True).data
+        
+        if entity == "status":
+            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False), many=True).data
+        
+        if entity == "depreciation":
+            data["depreciations"] = DepreciationNameSerializer(Depreciation.objects.filter(is_deleted=False), many=True).data
+        
+        if entity == "location":
+            data["locations"] = LocationNameSerializer(Location.objects.all(), many=True).data
             
         return Response(data, status=status.HTTP_200_OK,)

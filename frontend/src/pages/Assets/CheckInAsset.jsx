@@ -15,6 +15,16 @@ import CloseIcon from "../../assets/icons/close.svg";
 export default function CheckInAsset() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const ticket = location.state?.ticket;
+  const checkout = location.state?.checkout;
+  const fromAsset = location.state?.fromAsset;
+  const checkinDate = ticket?.checkin_date;
+
+  const assetId = ticket?.assetId;
+  const ticketId = ticket?.id;
+  const checkoutId = checkout?.id;
+
   const currentDate = new Date().toISOString().split("T")[0];
 
   const conditionOptions = [
@@ -33,24 +43,6 @@ export default function CheckInAsset() {
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
 
-
-  const {
-    id,
-    assetId,
-    product,
-    image,
-    employee,
-    empLocation,
-    checkOutDate,
-    returnDate,
-    condition,
-    checkoutId,
-    checkinDate,
-    ticketId,
-    fromAsset,
-    fromTicket
-  } = location.state || {};
-
   const {
     register,
     handleSubmit,
@@ -59,15 +51,13 @@ export default function CheckInAsset() {
   } = useForm({
     mode: "all",
     defaultValues: {
-      checkinDate: checkinDate || currentDate,
+      checkinDate: ticket.checkin_date || currentDate,
       status: '',
       condition: '',
       location: '',
-      notes: ''
+      notes: '',
     }
   });
-
-
 
   // Handle file selection
   const handleFileSelection = (e) => {

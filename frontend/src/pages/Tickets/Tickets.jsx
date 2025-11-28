@@ -10,6 +10,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/contexts-service";
+import { fetchAssetCheckoutById } from "../../services/assets-service";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -263,38 +264,27 @@ const Tickets = () => {
     }
   }, [location]);
 
-  const handleCheckInOut = (ticket) => {
+  const handleCheckInOut = async (ticket) => {
     if (ticket.isCheckInOrOut === "Check-In") {
-      navigate(`/assets/check-in/${ticket.assetId}`, {
-        state: {
-          id: ticket.assetId,
-          assetId: ticket.assetId,
-          product: ticket.assetName || "Generic Asset",
-          image: DefaultImage,
-          employee: ticket.requestor || "Not assigned",
-          empLocation: ticket.requestorLocation || "Unknown",
-          checkOutDate: ticket.checkoutDate || "Unknown",
-          returnDate: ticket.returnDate || "Unknown",
-          checkoutId: ticket.assetCheckout,
-          condition: "Unknown",
-          ticketId: ticket.ticketId, // Use database ID, not ticket number
-          fromTicket: true,
-        },
-      });
+      try {
+        // Fetch the checkout data before navigating
+        const checkout = await fetchAssetCheckoutById(ticket.assetCheckout);
+
+        navigate(`/assets/check-in/${ticket.assetId}`, {
+          state: {
+            ticket,
+            checkout,
+            fromAsset: false,
+          },
+        });
+      } catch (error) {
+        console.error("Failed to fetch checkout data:", error);
+        setErrorMessage("Failed to fetch checkout data. Please try again later.");t
+      }
     } else {
       navigate(`/assets/check-out/${ticket.assetId}`, {
         state: {
-          id: ticket.assetId,
-          assetId: ticket.assetId,
-          product: ticket.assetName || "Generic Asset",
-          image: DefaultImage,
-          ticketId: ticket.ticketId, // Use database ID, not ticket number
-          empId: ticket.requestorId,
-          employee: ticket.requestor || "Not assigned",
-          empLocation: ticket.requestorLocation || "Unknown",
-          checkoutDate: ticket.checkoutDate || "Unknown",
-          returnDate: ticket.returnDate || "Unknown",
-          fromTicket: true,
+          ticket,
         },
       });
     }
