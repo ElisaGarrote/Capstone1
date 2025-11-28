@@ -9,9 +9,9 @@ import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import Alert from "../../components/Alert";
 import * as assetsService from "../../services/assets-service";
-import { fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
+import { fetchAllProducts, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
-import SystemLoading from "../../components/Loading/SystemLoading";
+import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 
 export default function AssetsRegistration() {
@@ -19,12 +19,16 @@ export default function AssetsRegistration() {
   const [statuses, setStatuses] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [locations, setLocations] = useState([]);
-
   const [asset, setAsset] = useState(null);
-  const { id } = useParams();
-  const location = useLocation();
+
+  // Modal states for adding new entries
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { id } = useParams();
   const currentDate = new Date().toISOString().split("T")[0];
 
   const { setValue, register, handleSubmit, formState: { errors, isValid } } = useForm({
@@ -52,22 +56,18 @@ export default function AssetsRegistration() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Modal states for adding new entries
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showSupplierModal, setShowSupplierModal] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
-
   useEffect(() => {
     const initialize = async () => {
       try {
         setIsLoading(true);
 
         // Fetch dropdown options for assets
-        const dropdowns = await fetchAllDropdowns("asset");
-        setProducts(dropdowns.products || []);
-        setStatuses(dropdowns.statuses || []);
-        setSuppliers(dropdowns.suppliers || []);
-        setLocations(dropdowns.locations || []);
+        const contextDropdowns = await fetchAllDropdowns("asset");
+        setStatuses(contextDropdowns.statuses || []);
+        setSuppliers(contextDropdowns.suppliers || []);
+
+        const helpDeskDropdowns = await fetchAllLocations();
+        setLocations(helpDeskDropdowns || []);
 
         // Get asset data - prioritize state, then fetch from API
         let assetData = location.state?.asset;

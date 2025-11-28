@@ -36,7 +36,7 @@ export async function deleteProduct(id) {
 /* ===============================
           ASSET CHECKOUT
 ================================= */
-
+// Create asset checkout
 export async function createAssetCheckout(data) {
   const res = await assetsAxios.post("asset-checkout/", data);
   return res.data;
@@ -141,21 +141,4 @@ export async function createAuditSchedule(data) {
 export async function fetchDashboardStats() {
   const res = await assetsAxios.get("dashboard/");
   return res.data;
-}
-
-/* ===============================
-          CONTEXTS PROXY
-================================= */
-
-// Fetch statuses and locations from contexts service via assets proxy
-export async function fetchAssetContexts() {
-  const [statusesRes, locationsRes] = await Promise.all([
-    assetsAxios.get("contexts/statuses/"),
-    assetsAxios.get("contexts/locations/")
-  ]);
-
-  return {
-    statuses: statusesRes.data.results || statusesRes.data,
-    locations: locationsRes.data.results || locationsRes.data
-  };
 }

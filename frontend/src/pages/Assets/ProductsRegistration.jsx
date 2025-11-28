@@ -8,7 +8,7 @@ import { set, useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 import PlusIcon from '../../assets/icons/plus.svg';
 import Alert from "../../components/Alert";
-import { createProduct, updateProduct } from "../../services/assets-service";
+import { fetchProductById, createProduct, updateProduct } from "../../services/assets-service";
 import { fetchAllDropdowns, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
@@ -79,7 +79,7 @@ export default function ProductsRegistration() {
 
         // If no product in state but we have an ID, fetch from API
         if (!productData && id) {
-          productData = await assetsService.fetchProductById(id);
+          productData = await fetchProductById(id);
         }
 
         // Initialize form if editing
