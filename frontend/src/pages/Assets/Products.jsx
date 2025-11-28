@@ -43,7 +43,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each product row
-function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+function TableItem({ product, isSelected, onRowChange, onDeleteClick, onViewClick }) {
   const baseImage = product.image || DefaultImage;
 
   return (

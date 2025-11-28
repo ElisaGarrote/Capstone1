@@ -11,7 +11,6 @@ import ConfirmationModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import { exportToExcel } from "../../utils/exportToExcel";
 import { fetchAllAssets } from "../../services/assets-service";
 
@@ -31,8 +30,10 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>IMAGE</th>
       <th>ID</th>
       <th>NAME</th>
-      <th>CATEGORY</th>
+      <th>SERIAL</th>
       <th>STATUS</th>
+      <th>WARRANTY</th>
+      <th>END OF LIFE</th>
       <th>CHECK-IN / CHECK-OUT</th>
       <th>ACTION</th>
     </tr>
@@ -41,9 +42,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 
 // TableItem component to render each asset row
 function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
-  const baseImage = asset.image
-    ? `https://assets-service-production.up.railway.app${asset.image}`
-    : DefaultImage;
+  const baseImage = asset.image || DefaultImage;
 
   return (
     <tr>
@@ -64,23 +63,24 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
           }}
         />
       </td>
-      <td>{asset.displayed_id}</td>
+      <td>{asset.asset_id}</td>
       <td>{asset.name}</td>
-      <td>{asset.category || 'N/A'}</td>
+      <td>{asset.serial_number || 'N/A'}</td>
       <td>
-        <Status type={asset.status.toLowerCase()} name={asset.status} />
+        <Status type={asset.status_details.type.toLowerCase()} name={asset.status_details.name} />
       </td>
-
+      <td>{asset.warranty_expiration || 'N/A'}</td>
+      <td>{asset.end_of_life || 'N/A'}</td>
       {/* Check-in/Check-out Column */}
       <td>
         <ActionButtons
           showCheckout={
-            asset.status.toLowerCase() === 'ready to deploy' ||
+            asset.status_details.type.toLowerCase() === 'deployable' ||
             asset.status.toLowerCase() === 'readytodeploy' ||
             asset.status.toLowerCase() === 'archived' ||
             asset.status.toLowerCase() === 'pending'
           }
-          showCheckin={asset.status.toLowerCase() === 'deployed'}
+          showCheckin={asset.status_details.type.toLowerCase() === 'deployed'}
           onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
           onCheckinClick={() => onCheckInOut(asset, 'checkin')}
         />

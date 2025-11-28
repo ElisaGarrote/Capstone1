@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from assets_ms.services.contexts import *
+from assets_ms.services.integration_help_desk import *
+from assets_ms.services.integration_ticket_tracking import *
 from .models import *
 from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
@@ -124,14 +126,14 @@ class AssetSerializer(serializers.ModelSerializer):
             return {"warning": "Contexts service unreachable for statuses."}
 
     def get_location_details(self, obj):
-        """Return location details fetched from Contexts service."""
+        """Return location details fetched from Help Desk service."""
         try:
             if not getattr(obj, 'location', None):
                 return None
-            from assets_ms.services.contexts import get_location_by_id
+            from assets_ms.services.integration_help_desk import get_location_by_id
             return get_location_by_id(obj.location)
         except Exception:
-            return {"warning": "Contexts service unreachable for locations."}
+            return {"warning": "Help Desk service unreachable for locations."}
 
     def get_supplier_details(self, obj):
         """Return supplier details fetched from Contexts service."""
@@ -144,14 +146,14 @@ class AssetSerializer(serializers.ModelSerializer):
             return {"warning": "Contexts service unreachable for suppliers."}
 
     def get_ticket(self, obj):
-        """Return all tickets referencing this asset from Contexts service."""
+        """Return ticket referencing this asset from Contexts service."""
         try:
             if not obj.id:
-                return []
-            from assets_ms.services.contexts import get_tickets_by_asset_id
-            return get_tickets_by_asset_id(obj.id)
+                return None
+            from assets_ms.services.integration_ticket_tracking import get_ticket_by_asset_id
+            return get_ticket_by_asset_id(obj.id)
         except Exception:
-            return []
+            return None
  
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     checkout_to = serializers.IntegerField(read_only=True)
