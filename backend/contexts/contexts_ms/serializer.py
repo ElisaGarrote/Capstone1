@@ -298,6 +298,7 @@ class LocationSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     location_details = serializers.SerializerMethodField()
+    asset_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Ticket
@@ -381,6 +382,22 @@ class TicketSerializer(serializers.ModelSerializer):
             return get_location_by_id(obj.location)
         except Exception:
             return {"warning": "Help Desk service unreachable for locations."}
+
+    def get_asset_details(self, obj):
+        """Return asset details (id and name) fetched from Assets service."""
+        try:
+            if not getattr(obj, 'asset', None):
+                return None
+            from contexts_ms.services.assets import get_asset_by_id
+            asset = get_asset_by_id(obj.asset)
+            if asset:
+                return {
+                    "id": asset.get("id"),
+                    "name": asset.get("name") or asset.get("asset_tag") or f"Asset #{obj.asset}"
+                }
+            return {"id": obj.asset, "name": f"Asset #{obj.asset}"}
+        except Exception:
+            return {"id": obj.asset, "name": f"Asset #{obj.asset}"}
 
 
 class CategoryNameSerializer(serializers.ModelSerializer):
