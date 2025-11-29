@@ -103,6 +103,7 @@ export default function CheckOutAsset() {
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
+      console.log("passedState:", passedState);
       try {
         setValue("employee", passedState.employee || "");
         setValue("empLocation", passedState.empLocation || "");

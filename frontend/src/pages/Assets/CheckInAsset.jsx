@@ -10,7 +10,7 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { fetchAssetById, createAssetCheckinWithStatus } from "../../services/assets-service";
+import { createAssetCheckinWithStatus } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 
@@ -31,9 +31,9 @@ export default function CheckInAsset() {
 
   // Extract data from state, store in variables
   const ticket = state?.ticket || {};
+  const asset = state?.asset || {};
   const checkout = state?.checkout || {};
   const fromAsset = state?.fromAsset || false;
-  const [asset, setAsset] = useState(state?.asset || null);
 
   //Only allow asset statuses with these types for checkin (excludes 'deployed')
   const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";
@@ -42,8 +42,11 @@ export default function CheckInAsset() {
   const {
     id: ticketId,
     checkin_date: checkinDate,
-    ticket_number: ticketNumber,
   } = ticket;
+  const {
+    asset_id: assetId,
+    name: assetName
+  } = asset;
   const { checkout_date: checkoutDate } = checkout;
   const currentDate = new Date().toISOString().split("T")[0];
 
@@ -64,19 +67,12 @@ export default function CheckInAsset() {
     }
   });
  
-  // Initialize all data
+  // Initialize dropdowns
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
       console.log("states:", state);
       try {
-        // Fetch asset if not passed in state
-        if (!state?.asset && ticket?.asset) {
-          const fetchedAsset = await fetchAssetById(ticket.asset);
-          setAsset(fetchedAsset);
-        }
-
-        // Fetch dropdowns
         const dropdowns = await fetchAllDropdowns("status", {
           category: "asset",
           types: CHECKIN_STATUS_TYPES
@@ -86,15 +82,15 @@ export default function CheckInAsset() {
         const locations = await fetchAllLocations();
         setLocations(locations || []);
       } catch (error) {
-        console.error("Error initializing:", error);
-        setErrorMessage("Failed to load data. Please try again.");
+        console.error("Error fetching dropdowns:", error);
+        setErrorMessage("Failed to load dropdowns. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
     initialize();
-  }, [state?.asset, ticket?.asset]);
+  }, []);
 
   const conditionOptions = [
       { value: "1", label: "1 - Unserviceable" },
@@ -312,7 +308,7 @@ export default function CheckInAsset() {
             root={fromAsset ? "Assets" : "Tickets"}
             currentPage="Check-In Asset"
             rootNavigatePage={fromAsset ? "/assets" : "/approved-tickets"}
-            title={asset.asset_id}
+            title={assetName ? `${assetId} - ${assetName}` : assetId}
           />
         </section>
         <section className="registration-form">

@@ -10,7 +10,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
-import { fetchAssetCheckoutById } from "../../services/assets-service";
+import { fetchAssetById, fetchAssetCheckoutById } from "../../services/assets-service";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -246,10 +246,12 @@ const Tickets = () => {
       try {
         // Fetch the checkout data before navigating
         const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
+        const asset = await fetchAssetById(ticket.asset);
 
         navigate(`/assets/check-in/${ticket.asset}`, {
           state: {
             ticket,
+            asset,
             checkout,
             fromAsset: false,
           },
@@ -262,6 +264,8 @@ const Tickets = () => {
       navigate(`/assets/check-out/${ticket.asset}`, {
         state: {
           ticket,
+          asset,
+          fromAsset: false,
         },
       });
     }
