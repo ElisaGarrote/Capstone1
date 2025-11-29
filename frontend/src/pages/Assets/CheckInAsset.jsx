@@ -64,49 +64,37 @@ export default function CheckInAsset() {
     }
   });
  
-  useEffect(() => {
-    const loadAsset = async () => {
-      if (!state?.asset && ticket?.asset) {
-        try {
-          setIsLoading(true);
-          const fetchedAsset = await fetchAssetById(ticket.asset);
-          setAsset(fetchedAsset);
-        } catch (error) {
-          console.error("Failed to fetch asset:", error);
-          setErrorMessage("Failed to fetch asset data.");
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadAsset();
-  }, [state?.asset, ticket?.asset]);
-
-  // Initialize dropdowns
+  // Initialize all data
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
       console.log("states:", state);
       try {
-        const dropdowns = await fetchAllDropdowns("status", { 
-          category: "asset", 
-          types: CHECKIN_STATUS_TYPES 
+        // Fetch asset if not passed in state
+        if (!state?.asset && ticket?.asset) {
+          const fetchedAsset = await fetchAssetById(ticket.asset);
+          setAsset(fetchedAsset);
+        }
+
+        // Fetch dropdowns
+        const dropdowns = await fetchAllDropdowns("status", {
+          category: "asset",
+          types: CHECKIN_STATUS_TYPES
         });
         setStatuses(dropdowns.statuses || []);
 
         const locations = await fetchAllLocations();
         setLocations(locations || []);
       } catch (error) {
-        console.error("Error fetching dropdowns:", error);
-        setErrorMessage("Failed to load dropdowns. Please try again.");
+        console.error("Error initializing:", error);
+        setErrorMessage("Failed to load data. Please try again.");
       } finally {
-        setIsLoading(false);  // <-- release loading after ALL awaits
+        setIsLoading(false);
       }
     };
 
     initialize();
-  }, []);
+  }, [state?.asset, ticket?.asset]);
 
   const conditionOptions = [
       { value: "1", label: "1 - Unserviceable" },
