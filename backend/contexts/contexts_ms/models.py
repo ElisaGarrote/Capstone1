@@ -115,7 +115,7 @@ class Ticket(models.Model):
     asset = models.PositiveIntegerField()
     # Requestor details
     subject = models.CharField(max_length=255)
-    location = models.CharField(max_length=255)
+    location = models.PositiveIntegerField()
 
     # Status
     is_resolved = models.BooleanField(default=False)

@@ -51,7 +51,7 @@ class Command(BaseCommand):
             'Elizabeth Thompson', 'Charles Garcia', 'Susan Robinson', 'Christopher Clark', 'Jessica Rodriguez',
         ]
 
-        # Locations (IDs 1-10 from contexts seeder)
+        # Location IDs (1-10 from seed_locations.py)
         location_ids = list(range(1, 11))
 
         # Subjects for checkout requests
