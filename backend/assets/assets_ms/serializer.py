@@ -82,7 +82,10 @@ class AssetSerializer(serializers.ModelSerializer):
     status_details = serializers.SerializerMethodField()
     location_details = serializers.SerializerMethodField()
     supplier_details = serializers.SerializerMethodField()
-    ticket = serializers.SerializerMethodField()
+    # Active checkout (checkout without a check-in)
+    active_checkout = serializers.SerializerMethodField()
+    # Unresolved ticket referencing this asset
+    unresolved_ticket = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -95,7 +98,7 @@ class AssetSerializer(serializers.ModelSerializer):
         instance = self.instance
 
         # Check if product is deleted
-        if product.is_deleted:
+        if product and product.is_deleted:
             raise serializers.ValidationError({"product": "Cannot check out a deleted product."})
 
         # Validate status category - must be 'asset' category
@@ -158,13 +161,35 @@ class AssetSerializer(serializers.ModelSerializer):
         except Exception:
             return {"warning": "Contexts service unreachable for suppliers."}
 
-    def get_ticket(self, obj):
-        """Return ticket referencing this asset from Contexts service."""
+    def get_active_checkout(self, obj):
+        """Return the active checkout (without a check-in) for this asset."""
         try:
             if not obj.id:
                 return None
-            from assets_ms.services.integration_ticket_tracking import get_ticket_by_asset_id
-            return get_ticket_by_asset_id(obj.id)
+            checkout = AssetCheckout.objects.filter(
+                asset=obj,
+                asset_checkin__isnull=True  # No check-in yet
+            ).first()
+            if checkout:
+                return {
+                    "id": checkout.id,
+                    "checkout_date": checkout.checkout_date,
+                    "return_date": checkout.return_date,
+                    "checkout_to": checkout.checkout_to,
+                    "location": checkout.location,
+                    "ticket_id": checkout.ticket_id,
+                }
+            return None
+        except Exception:
+            return None
+
+    def get_unresolved_ticket(self, obj):
+        """Return unresolved ticket referencing this asset from Ticket Tracking service."""
+        try:
+            if not obj.id:
+                return None
+            from assets_ms.services.integration_ticket_tracking import get_unresolved_ticket_by_asset_id
+            return get_unresolved_ticket_by_asset_id(obj.id)
         except Exception:
             return None
 
@@ -293,23 +318,38 @@ class AssetCheckinFileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AssetCheckinSerializer(serializers.ModelSerializer):
-    # Only these status types are valid for asset checkin (excludes 'deployed')
-    VALID_CHECKIN_STATUS_TYPES = ['deployable', 'undeployable', 'pending', 'archived']
-
+    # Accept asset ID to automatically find active checkout
+    asset = serializers.PrimaryKeyRelatedField(
+        queryset=Asset.objects.filter(is_deleted=False),
+        write_only=True,
+        required=True,
+        help_text="Asset ID - will automatically link to the active checkout for this asset."
+    )
+    # Make asset_checkout read-only since it's auto-assigned
+    asset_checkout = serializers.PrimaryKeyRelatedField(read_only=True)
     files = AssetCheckinFileSerializer(many=True, required=False)
+
     class Meta:
         model = AssetCheckin
         fields = '__all__'
 
     def validate(self, data):
-        checkout = data.get('asset_checkout')
+        asset = data.pop('asset')  # Remove asset from data since it's not a model field
         checkin_date = data.get('checkin_date', timezone.now())
         ticket_id = data.get('ticket_id')
-        status_id = data.get('status')
 
-        # Check if checkout exists
+        # Find the active checkout for this asset
+        checkout = AssetCheckout.objects.filter(
+            asset=asset,
+            asset_checkin__isnull=True  # No check-in yet
+        ).first()
+
         if not checkout:
-            raise serializers.ValidationError({"asset_checkout": "Checkout record is required."})
+            raise serializers.ValidationError({
+                "asset": "No active checkout found for this asset."
+            })
+
+        data['asset_checkout'] = checkout
 
         # Prevent multiple checkins
         if checkout and AssetCheckin.objects.filter(asset_checkout=checkout).exists():
@@ -323,26 +363,6 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
                 "checkin_date": "Cannot check in before checkout date."
             })
 
-        # Validate status category and type - must be asset category with valid type
-        if status_id:
-            status_details = get_status_by_id(status_id)
-            if not status_details or status_details.get("warning"):
-                raise serializers.ValidationError({"status": "Status not found."})
-
-            # Check category is 'asset'
-            status_category = status_details.get("category")
-            if status_category != "asset":
-                raise serializers.ValidationError({
-                    "status": "Invalid status. Only asset statuses are allowed for check-in."
-                })
-
-            # Check type is valid for checkin (excludes 'deployed')
-            status_type = status_details.get("type")
-            if status_type not in self.VALID_CHECKIN_STATUS_TYPES:
-                raise serializers.ValidationError({
-                    "status": f"Invalid status type for check-in. Allowed types: {', '.join(self.VALID_CHECKIN_STATUS_TYPES)}."
-                })
-
         # Optional ticket validation
         if ticket_id:
             ticket = get_ticket_by_id(ticket_id)
@@ -355,7 +375,7 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
                 })
 
         return data
-    
+
     def create(self, validated_data):
         files_data = validated_data.pop('files', [])
         checkin = AssetCheckin.objects.create(**validated_data)

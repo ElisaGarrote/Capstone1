@@ -10,7 +10,7 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { createAssetCheckin } from "../../services/assets-service";
+import { createAssetCheckin, updateAssetStatus } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 
@@ -260,6 +260,7 @@ export default function CheckInAsset() {
       });
 
       await createAssetCheckin(formData)
+      await updateAssetStatus(asset.id, { status: data.status, isCheckout: false });
 
       // Navigate to asset view page after successful check-in
       navigate(`/approved-tickets`, {
@@ -304,7 +305,7 @@ export default function CheckInAsset() {
             root={fromAsset ? "Assets" : "Tickets"}
             currentPage="Check-In Asset"
             rootNavigatePage={fromAsset ? "/assets" : "/approved-tickets"}
-            title={ticketNumber}
+            title={"asset"}
           />
         </section>
         <section className="registration-form">

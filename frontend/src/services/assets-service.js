@@ -82,6 +82,12 @@ export async function deleteAsset(id) {
   return res.data;
 }
 
+// UPDATE asset status
+export async function updateAssetStatus(id, data) {
+  const res = await assetsAxios.patch(`assets/${id}/update-status/`, data);
+  return res.data;
+}
+
 /* ===============================
           ASSET CHECKIN
 ================================= */

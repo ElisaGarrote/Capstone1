@@ -53,12 +53,17 @@ def get_ticket_by_id(ticket_id):
     return result
 
 
-def get_ticket_by_asset_id(asset_id):
-    """Fetch the first ticket for a specific asset from the Contexts service with caching."""
+def get_ticket_by_asset_id(asset_id, status=None):
+    """Fetch the first ticket for a specific asset from the Contexts service with caching.
+
+    Args:
+        asset_id: The ID of the asset
+        status: Optional filter - 'resolved' or 'unresolved'
+    """
     if not asset_id:
         return None
 
-    key = f"contexts:tickets:asset:{asset_id}"
+    key = f"contexts:tickets:asset:{asset_id}:{status or 'all'}"
     cached = cache.get(key)
     if cached is not None:
         return cached
@@ -66,8 +71,12 @@ def get_ticket_by_asset_id(asset_id):
     # Use the by-asset action endpoint: /tickets/by-asset/{asset_id}/
     # This endpoint returns a single ticket (only one active ticket per asset)
     url = _build_url(f"tickets/by-asset/{asset_id}/")
+    params = {}
+    if status:
+        params['status'] = status
+
     try:
-        resp = client_get(url, timeout=6)
+        resp = client_get(url, params=params, timeout=6)
         if resp.status_code == 404:
             cache.set(key, None, TICKET_WARNING_TTL)
             return None
@@ -85,6 +94,11 @@ def get_ticket_by_asset_id(asset_id):
         # Return None on error, cache briefly to avoid hammering the service
         cache.set(key, None, TICKET_WARNING_TTL)
         return None
+
+
+def get_unresolved_ticket_by_asset_id(asset_id):
+    """Fetch the unresolved ticket for a specific asset from the Contexts service."""
+    return get_ticket_by_asset_id(asset_id, status='unresolved')
 
 def fetch_resource_list(resource_name, params=None, skip_api_prefix=False):
     """Fetch a list endpoint from the Contexts service."""

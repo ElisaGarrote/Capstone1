@@ -11,8 +11,6 @@ import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { createAssetCheckout } from "../../services/assets-service";
-import { resolveTicket } from "../../services/integration-ticket-tracking-service";
-
 
 export default function CheckOutAsset() {
   const location = useLocation();
@@ -167,7 +165,6 @@ export default function CheckOutAsset() {
       }
 
       await createAssetCheckout(formData);
-      await resolveTicket(ticketId);
 
       // Navigate to asset view page after successful checkout
       navigate(`/assets/view/${id}`, {

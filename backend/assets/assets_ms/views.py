@@ -90,6 +90,74 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         return Response({"asset_id": new_id})
     
+    # assets/{asset_id}/update-status/
+    @action(detail=True, methods=['patch'], url_path='update-status')
+    def update_status(self, request, pk=None):
+        """
+        Update asset status with validation based on checkout state.
+        Expects: { "status": <id>, "isCheckout": <bool> }
+        - If isCheckout=true: status type must be 'deployed'
+        - If isCheckout=false: status type must be 'deployable', 'undeployable', 'pending', or 'archived'
+        """
+        VALID_CHECKIN_STATUS_TYPES = ['deployable', 'undeployable', 'pending', 'archived']
+
+        try:
+            asset = Asset.objects.get(pk=pk, is_deleted=False)
+        except Asset.DoesNotExist:
+            return Response(
+                {"detail": "Asset not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        status_id = request.data.get('status')
+        is_checkout = request.data.get('isCheckout', False)
+
+        if not status_id:
+            return Response(
+                {"status": "Status is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Fetch and validate status from Contexts service
+        from assets_ms.services.contexts import get_status_by_id
+        status_details = get_status_by_id(status_id)
+
+        if not status_details or status_details.get("warning"):
+            return Response(
+                {"status": "Status not found."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Must be 'asset' category
+        status_category = status_details.get("category")
+        if status_category != "asset":
+            return Response(
+                {"status": "Invalid status. Only asset statuses are allowed."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate type based on isCheckout
+        status_type = status_details.get("type")
+        if is_checkout:
+            if status_type != "deployed":
+                return Response(
+                    {"status": "Invalid status type for checkout. Must be 'deployed'."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            if status_type not in VALID_CHECKIN_STATUS_TYPES:
+                return Response(
+                    {"status": f"Invalid status type. Allowed types: {', '.join(VALID_CHECKIN_STATUS_TYPES)}."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Update asset status
+        asset.status = status_id
+        asset.save(update_fields=['status'])
+
+        serializer = self.get_serializer(asset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
     def perform_destroy(self, instance):
         errors = []
 
