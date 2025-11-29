@@ -287,6 +287,7 @@ export default function ProductsRegistration() {
 
       // Append all form data to FormData object
       formData.append('name', data.productName);
+      
       formData.append('category', data.category || '');
       formData.append('manufacturer', data.manufacturer || '');
       formData.append('depreciation', data.depreciation || '');

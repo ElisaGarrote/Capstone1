@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
@@ -8,40 +8,35 @@ import { useForm } from "react-hook-form";
 import Alert from "../../components/Alert";
 import { createAssetCheckin } from "../../services/assets-service";
 import { resolveTicket } from "../../services/contexts-service";
-import dtsService from "../../services/dts-integration-service";
 import CloseIcon from "../../assets/icons/close.svg";
+import { fetchAllDropdowns } from "../../services/contexts-service";
+import { fetchAllLocations } from "../../services/helpdesk-service";
 
 
 export default function CheckInAsset() {
-  const location = useLocation();
+  const { state } = useLocation();
   const navigate = useNavigate();
+  
+  // Extract data from state
+  const ticket = state?.ticket || {};
+  const checkout = state?.checkout || {};
+  const fromAsset = state?.fromAsset || false;
 
-  const ticket = location.state?.ticket;
-  const checkout = location.state?.checkout;
-  const fromAsset = location.state?.fromAsset;
-  const checkinDate = ticket?.checkin_date;
+  // Declare variables from ticket and checkout
+  const {
+    assetId,
+    id: ticketId,
+    checkin_date: checkinDate,
+  } = ticket;
+  const { id: checkoutId } = checkout;
 
-  const assetId = ticket?.assetId;
-  const ticketId = ticket?.id;
-  const checkoutId = checkout?.id;
-
+  // Dropdowns
+  const [statuses, setStatuses] = useState([]);
+  const [locations, setLocations] = useState([]);
+  
+  // Form
   const currentDate = new Date().toISOString().split("T")[0];
-
-  const conditionOptions = [
-    { value: "1", label: "1 - Unserviceable" },
-    { value: "2", label: "2 - Poor" },
-    { value: "3", label: "3 - Needs Maintenance" },
-    { value: "4", label: "4 - Functional" },
-    { value: "5", label: "5 - Fair" },
-    { value: "6", label: "6 - Good" },
-    { value: "7", label: "7 - Very Good" },
-    { value: "8", label: "8 - Excellent" },
-    { value: "9", label: "9 - Like New" },
-    { value: "10", label: "10 - Brand New" }
-  ];
-
   const [errorMessage, setErrorMessage] = useState("");
-  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const {
     register,
@@ -58,6 +53,41 @@ export default function CheckInAsset() {
       notes: '',
     }
   });
+
+  // Initialize dropdowns
+  useEffect(() => {
+      const initialize = async () => {
+        try {
+          // Fetch statuses from contexts service
+          const dropdowns = await fetchAllDropdowns("status");
+          setStatuses(dropdowns.statuses || []);
+
+          // Fetch locations from helpdesk service
+          const locations = await fetchAllLocations();
+          setLocations(locations || []);
+        } catch (error) {
+          console.error("Error fetching dropdowns:", error);
+          setErrorMessage("Failed to load dropdowns");
+        }
+      };
+      initialize();
+    }, []);
+
+  const conditionOptions = [
+      { value: "1", label: "1 - Unserviceable" },
+      { value: "2", label: "2 - Poor" },
+      { value: "3", label: "3 - Needs Maintenance" },
+      { value: "4", label: "4 - Functional" },
+      { value: "5", label: "5 - Fair" },
+      { value: "6", label: "6 - Good" },
+      { value: "7", label: "7 - Very Good" },
+      { value: "8", label: "8 - Excellent" },
+      { value: "9", label: "9 - Like New" },
+      { value: "10", label: "10 - Brand New" }
+    ];
+
+  // File upload
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   // Handle file selection
   const handleFileSelection = (e) => {
@@ -84,8 +114,6 @@ export default function CheckInAsset() {
   const removeFile = (index) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
-
-
 
   const onSubmit = async (data) => {
     try {
@@ -117,8 +145,6 @@ export default function CheckInAsset() {
       setErrorMessage("An error occurred while checking in the asset.");
     }
   };
-
-
 
   return (
     <>

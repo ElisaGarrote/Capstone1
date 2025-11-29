@@ -138,15 +138,17 @@ class AssetCheckout(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     notes = models.TextField(max_length=500, blank=True, null=True)
-    image = models.ImageField(
-        upload_to='asset_checkout_images/',
-        blank=True,
-        null=True,
-        validators=[validate_image]
-    )
     
     def __str__(self):
         return f"Checkout of {self.asset.asset_id} by user {self.checkout_to}"
+
+class AssetCheckoutFile(models.Model):
+    asset_checkout = models.ForeignKey(AssetCheckout, on_delete=models.CASCADE, related_name='files')
+    file = models.FileField(upload_to='asset_checkout_files/', validators=[validate_file])
+    is_deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"AssetCheckout #{self.asset_checkin.id} - {self.file.name}"
 
 class AssetCheckin(models.Model):
     asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
@@ -158,15 +160,18 @@ class AssetCheckin(models.Model):
     )
     location = models.PositiveIntegerField()
     notes = models.TextField(max_length=500, blank=True, null=True)
-    image = models.ImageField(
-        upload_to='asset_checkin_images/',
-        blank=True,
-        null=True,
-        validators=[validate_image]
-    )
 
     def __str__(self):
         return f"Checkin of {self.asset_checkout.asset.asset_id} by user {self.asset_checkout.checkout_to}" 
+
+class AssetCheckinFile(models.Model):
+    asset_checkin = models.ForeignKey(AssetCheckin, on_delete=models.CASCADE, related_name='files')
+    file = models.FileField(upload_to='asset_checkin_files/', validators=[validate_file])
+    is_deleted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"AssetCheckin #{self.asset_checkin.id} - {self.file.name}"
+
     
 class Component(models.Model):
     name = models.CharField(max_length=100)
