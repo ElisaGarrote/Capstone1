@@ -291,8 +291,7 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
                 
                 # Update asset status if valid
                 asset.status = status_id
-                asset.is_checkout = False
-                asset.save(update_fields=["status", "is_checkout"])
+                asset.save(update_fields=["status"])
 
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
