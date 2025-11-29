@@ -11,8 +11,8 @@ import { resolveTicket } from "../../services/contexts-service";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { fetchAllDropdowns } from "../../services/contexts-service";
-import { fetchAllLocations } from "../../services/integration-help-desk-service";
+import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
+import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 
 
 export default function CheckInAsset() {
@@ -123,13 +123,13 @@ export default function CheckInAsset() {
 
   const locationFields = [
     {
-      name: 'name',
-      label: 'Location Name',
+      name: 'city',
+      label: 'Location City',
       type: 'text',
-      placeholder: 'Location Name',
+      placeholder: 'Location City',
       required: true,
       maxLength: 100,
-      validation: { required: 'Location Name is required' }
+      validation: { required: 'Location City is required' }
     }
   ];
 
@@ -141,24 +141,56 @@ export default function CheckInAsset() {
       setErrorMessage("");
     } catch (error) {
       console.error('Error creating status:', error);
-      setErrorMessage("Failed to create status");
+
+      let message = "Failed to create status";
+
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+
+        // Aggregate all error messages
+        const messages = [];
+        Object.values(data).forEach((value) => {
+          if (Array.isArray(value)) messages.push(...value);
+          else if (typeof value === "string") messages.push(value);
+        });
+
+        if (messages.length > 0) {
+          message = messages.join(" ");
+        }
+      }
+
+      setErrorMessage(message);
       setTimeout(() => setErrorMessage(""), 5000);
     }
   };
 
   const handleSaveLocation = async (data) => {
     try {
-      // For now, just add to local state (location API not available)
-      console.log('Creating location:', data);
-      const newLocation = {
-        id: locations.length + 1,
-        city: data.name
-      };
+      const newLocation = await createLocation(data);
       setLocations(prev => [...prev, newLocation]);
       setShowLocationModal(false);
+      setErrorMessage("");
     } catch (error) {
       console.error('Error creating location:', error);
-      setErrorMessage("Failed to create location");
+
+      let message = "Failed to create location";
+
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+
+        // Aggregate all error messages
+        const messages = [];
+        Object.values(data).forEach((value) => {
+          if (Array.isArray(value)) messages.push(...value);
+          else if (typeof value === "string") messages.push(value);
+        });
+
+        if (messages.length > 0) {
+          message = messages.join(" ");
+        }
+      }
+
+      setErrorMessage(message);
       setTimeout(() => setErrorMessage(""), 5000);
     }
   };

@@ -95,7 +95,7 @@ class Depreciation(models.Model):
 
 
 class Location(models.Model):
-    city = models.CharField(max_length=50, blank=True, null=True)
+    city = models.CharField(max_length=50)
     zip = models.CharField(max_length=4, blank=True, null=True)
 
     def __str__(self):
