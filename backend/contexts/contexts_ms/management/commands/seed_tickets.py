@@ -51,13 +51,8 @@ class Command(BaseCommand):
     def get_tickets_data(self):
         base_date = timezone.now()
 
-        # Employee names for variety
-        employees = [
-            'John Smith', 'Maria Garcia', 'Robert Johnson', 'Emily Davis', 'Michael Brown',
-            'Sarah Wilson', 'David Martinez', 'Lisa Anderson', 'James Taylor', 'Jennifer Thomas',
-            'William Moore', 'Patricia Jackson', 'Richard White', 'Linda Harris', 'Joseph Martin',
-            'Elizabeth Thompson', 'Charles Garcia', 'Susan Robinson', 'Christopher Clark', 'Jessica Rodriguez',
-        ]
+        # Employee IDs (1-20 from seed_employees.py)
+        employee_ids = list(range(1, 21))
 
         # Location IDs (1-10 from seed_locations.py)
         location_ids = list(range(1, 11))
@@ -131,7 +126,7 @@ class Command(BaseCommand):
             ticket_number = f'TKT{ticket_number_counter:03d}'
             ticket_number_counter += 1
 
-            employee = random.choice(employees)
+            employee_id = random.choice(employee_ids)
             location_id = random.choice(location_ids)
             subject = random.choice(checkout_subjects)
 
@@ -147,7 +142,7 @@ class Command(BaseCommand):
             ticket_data = {
                 'ticket_number': ticket_number,
                 'ticket_type': Ticket.TicketType.CHECKOUT,
-                'employee': employee,
+                'employee': employee_id,
                 'asset': asset_id,
                 'subject': subject,
                 'location': location_id,
@@ -172,7 +167,7 @@ class Command(BaseCommand):
             ticket_number = f'TKT{ticket_number_counter:03d}'
             ticket_number_counter += 1
 
-            employee = random.choice(employees)
+            employee_id = random.choice(employee_ids)
             location_id = random.choice(location_ids)
             subject = random.choice(checkin_subjects)
 
@@ -195,7 +190,7 @@ class Command(BaseCommand):
             ticket_data = {
                 'ticket_number': ticket_number,
                 'ticket_type': Ticket.TicketType.CHECKIN,
-                'employee': employee,
+                'employee': employee_id,
                 'asset': asset_id,
                 'subject': subject,
                 'location': location_id,

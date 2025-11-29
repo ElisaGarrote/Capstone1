@@ -120,6 +120,11 @@ class Location(models.Model):
 
     def __str__(self):
         return self.city
+    
+class Employee(models.Model):
+    firstname = models.CharField(max_length=50)
+    lastname = models.CharField(max_length=50)
+    
      
 class Ticket(models.Model):
     class TicketType(models.TextChoices):
@@ -131,7 +136,7 @@ class Ticket(models.Model):
     ticket_type = models.CharField(max_length=10, choices=TicketType.choices)
 
     # Relations
-    employee = models.CharField(max_length=100)
+    employee = models.PositiveIntegerField()
     asset = models.PositiveIntegerField()
     # Requestor details
     subject = models.CharField(max_length=255)

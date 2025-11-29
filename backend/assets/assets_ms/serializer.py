@@ -167,12 +167,18 @@ class AssetSerializer(serializers.ModelSerializer):
             return get_ticket_by_asset_id(obj.id)
         except Exception:
             return None
- 
+
+class AssetCheckoutFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetCheckoutFile
+        fields = '__all__'
+
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     checkout_to = serializers.IntegerField(read_only=True)
     location = serializers.IntegerField(read_only=True)
     checkout_date = serializers.DateField(read_only=True)
     return_date = serializers.DateField(read_only=True)
+    files = AssetCheckoutFileSerializer(many=True, required=False)
     class Meta:
         model = AssetCheckout
         fields = '__all__'
@@ -190,6 +196,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
     def validate(self, data):
         asset = data.get('asset')
         ticket_id = data.get('ticket_id')
+        status_id = data.get('status')
 
         if not ticket_id:
             raise serializers.ValidationError({"ticket_id": "A ticket is required to check out this asset."})
@@ -201,7 +208,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         if ticket.get("is_resolved", False):
             raise serializers.ValidationError({"ticket_id": "Ticket is already resolved."})
 
-        if ticket.get("asset") != asset.id:
+        if ticket.get("asset") != asset:
             raise serializers.ValidationError({
                 "ticket_id": "This ticket does not correspond to the selected asset."
             })
@@ -226,25 +233,59 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "return_date": "Return date cannot be before checkout date."
             })
+        
+        # Validate status category and type - must be asset category and type 'deployed'
+        if status_id:
+            status_details = get_status_by_id(status_id)
+            if not status_details or status_details.get("warning"):
+                raise serializers.ValidationError({"status": "Status not found."})
+            
+            # Check category is 'asset'
+            status_category = status_details.get("category")
+            if status_category != "asset":
+                raise serializers.ValidationError({
+                    "status": "Invalid status. Only asset statuses are allowed for check-out."
+                })
+            
+            # Check type is 'deployed'
+            status_type = status_details.get("type")
+            if status_type != "deployed":
+                raise serializers.ValidationError({
+                    "status": "Invalid status type for check-out. Must be 'deployed'."
+                })
 
         return data
     
     def create(self, validated_data):
         ticket_id = validated_data.get('ticket_id')
+        files_data = validated_data.pop('files', [])
+
+        # Fetch ticket details
         ticket = get_ticket_by_id(ticket_id)
+
+        # Validate ticket exists
         if not ticket or ticket.get("warning"):
             raise serializers.ValidationError({"ticket_id": "Invalid ticket"})
-
-        # Preserve ticket_id
+        
+        # Force values from ticket
         validated_data['ticket_id'] = ticket_id
-
-        # Populate fields from ticket
+        validated_data['asset'] = ticket.get('asset')
         validated_data['checkout_to'] = ticket.get('employee')
         validated_data['location'] = ticket.get('location')
         validated_data['checkout_date'] = ticket.get('checkout_date')
         validated_data['return_date'] = ticket.get('return_date')
 
-        return super().create(validated_data)
+        checkout = super().create(validated_data)
+
+        request = self.context.get('request')
+        if request and hasattr(request, 'FILES'):
+            for f in request.FILES.getlist('image'):
+                AssetCheckoutFile.objects.create(asset_checkout=checkout, file=f)
+
+        for file_dict in files_data:
+            AssetCheckoutFile.objects.create(asset_checkout=checkout, **file_dict)
+
+        return checkout
 
 class AssetCheckinFileSerializer(serializers.ModelSerializer):
     class Meta:

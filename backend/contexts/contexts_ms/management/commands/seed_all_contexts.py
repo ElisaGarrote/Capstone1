@@ -3,7 +3,7 @@ from django.core.management import call_command
 
 
 class Command(BaseCommand):
-    help = 'Seed all context data (categories, suppliers, manufacturers, statuses, depreciations, locations)'
+    help = 'Seed all context data (categories, suppliers, manufacturers, statuses, depreciations, locations, employees, tickets)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -46,10 +46,15 @@ class Command(BaseCommand):
             action='store_true',
             help='Seed only tickets (80 records)',
         )
+        parser.add_argument(
+            '--employees-only',
+            action='store_true',
+            help='Seed only employees (20 records)',
+        )
 
     def handle(self, *args, **options):
         clear_flag = '--clear' if options['clear'] else ''
-        
+
         # Check if any specific flag is set
         specific_flags = [
             options['categories_only'],
@@ -58,6 +63,7 @@ class Command(BaseCommand):
             options['statuses_only'],
             options['depreciations_only'],
             options['locations_only'],
+            options['employees_only'],
             options['tickets_only'],
         ]
         
@@ -92,7 +98,12 @@ class Command(BaseCommand):
         if seed_all or options['locations_only']:
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Locations (10 records) ==='))
             call_command('seed_locations', clear_flag) if clear_flag else call_command('seed_locations')
-        
+
+        # Seed Employees (20 records)
+        if seed_all or options['employees_only']:
+            self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Employees (20 records) ==='))
+            call_command('seed_employees', clear_flag) if clear_flag else call_command('seed_employees')
+
         # Seed Tickets (80 records: 40 checkout + 40 checkin)
         if seed_all or options['tickets_only']:
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Tickets (80 records) ==='))
