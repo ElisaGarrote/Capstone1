@@ -91,9 +91,9 @@ export async function updateAssetStatus(id, data) {
 /* ===============================
           ASSET CHECKIN
 ================================= */
-// Create asset checkin
-export async function createAssetCheckin(data) {
-  const res = await assetsAxios.post("asset-checkin/", data);
+// Checkin with status
+export async function createAssetCheckinWithStatus(data) {
+  const res = await assetsAxios.post("asset-checkin/checkin-with-status/", data);
   return res.data;
 }
 

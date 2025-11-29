@@ -318,15 +318,6 @@ class AssetCheckinFileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AssetCheckinSerializer(serializers.ModelSerializer):
-    # Accept asset ID to automatically find active checkout
-    asset = serializers.PrimaryKeyRelatedField(
-        queryset=Asset.objects.filter(is_deleted=False),
-        write_only=True,
-        required=True,
-        help_text="Asset ID - will automatically link to the active checkout for this asset."
-    )
-    # Make asset_checkout read-only since it's auto-assigned
-    asset_checkout = serializers.PrimaryKeyRelatedField(read_only=True)
     files = AssetCheckinFileSerializer(many=True, required=False)
 
     class Meta:
@@ -334,25 +325,17 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, data):
-        asset = data.pop('asset')  # Remove asset from data since it's not a model field
+        checkout = data.get('asset_checkout')
         checkin_date = data.get('checkin_date', timezone.now())
         ticket_id = data.get('ticket_id')
 
-        # Find the active checkout for this asset
-        checkout = AssetCheckout.objects.filter(
-            asset=asset,
-            asset_checkin__isnull=True  # No check-in yet
-        ).first()
-
         if not checkout:
             raise serializers.ValidationError({
-                "asset": "No active checkout found for this asset."
+                "asset_checkout": "Asset checkout is required."
             })
 
-        data['asset_checkout'] = checkout
-
         # Prevent multiple checkins
-        if checkout and AssetCheckin.objects.filter(asset_checkout=checkout).exists():
+        if AssetCheckin.objects.filter(asset_checkout=checkout).exists():
             raise serializers.ValidationError({
                 "asset_checkout": "This asset has already been checked in."
             })

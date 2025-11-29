@@ -10,7 +10,7 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { createAssetCheckin, updateAssetStatus } from "../../services/assets-service";
+import { fetchAssetById, createAssetCheckinWithStatus } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 
@@ -33,6 +33,10 @@ export default function CheckInAsset() {
   const ticket = state?.ticket || {};
   const checkout = state?.checkout || {};
   const fromAsset = state?.fromAsset || false;
+  const [asset, setAsset] = useState(state?.asset || null);
+
+  //Only allow asset statuses with these types for checkin (excludes 'deployed')
+  const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";
 
   // Declare variables for destructuring
   const {
@@ -59,9 +63,25 @@ export default function CheckInAsset() {
       notes: '',
     }
   });
+ 
+  useEffect(() => {
+    const loadAsset = async () => {
+      if (!state?.asset && ticket?.asset) {
+        try {
+          setIsLoading(true);
+          const fetchedAsset = await fetchAssetById(ticket.asset);
+          setAsset(fetchedAsset);
+        } catch (error) {
+          console.error("Failed to fetch asset:", error);
+          setErrorMessage("Failed to fetch asset data.");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
 
-  //Only allow asset statuses with these types for checkin (excludes 'deployed')
-  const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";
+    loadAsset();
+  }, [state?.asset, ticket?.asset]);
 
   // Initialize dropdowns
   useEffect(() => {
@@ -244,7 +264,7 @@ export default function CheckInAsset() {
       }
 
       // Required fields
-      formData.append("asset_checkout", checkout.id);
+      formData.append("asset_checkout", asset.active_checkout.id);
       formData.append("checkin_date", data.checkinDate);
       formData.append("status", data.status);
       formData.append("condition", data.condition);
@@ -259,8 +279,7 @@ export default function CheckInAsset() {
         formData.append("attachments", file);
       });
 
-      await createAssetCheckin(formData)
-      await updateAssetStatus(asset.id, { status: data.status, isCheckout: false });
+      await createAssetCheckinWithStatus(formData);
 
       // Navigate to asset view page after successful check-in
       navigate(`/approved-tickets`, {
@@ -305,7 +324,7 @@ export default function CheckInAsset() {
             root={fromAsset ? "Assets" : "Tickets"}
             currentPage="Check-In Asset"
             rootNavigatePage={fromAsset ? "/assets" : "/approved-tickets"}
-            title={"asset"}
+            title={asset.asset_id}
           />
         </section>
         <section className="registration-form">
