@@ -276,7 +276,7 @@ const Tickets = () => {
       ticket.checkInOutDisplay?.toLowerCase() || "",
       ticket.requestorName?.toLowerCase() || "",
       ticket.subject?.toLowerCase() || "",
-      ticket.location?.toLowerCase() || "",
+      ticket.location_details?.city.toLowerCase() || "",
     ];
 
     // Every word in search query must match at least one field

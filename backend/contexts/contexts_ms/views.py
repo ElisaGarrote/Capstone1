@@ -358,7 +358,19 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
             data["manufacturers"] = ManufacturerNameSerializer(Manufacturer.objects.filter(is_deleted=False), many=True).data
         
         if entity == "status":
-            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False), many=True).data
+            # Support filtering by status category and types (comma-separated)
+            # ?entity=status&category=asset&types=deployable,undeployable,pending,archived
+            # ?entity=status&category=repair
+            status_category = request.query_params.get("category")
+            status_types = request.query_params.get("types")
+            status_queryset = Status.objects.filter(is_deleted=False)
+            if status_category:
+                status_queryset = status_queryset.filter(category=status_category)
+            if status_types:
+                type_list = [t.strip() for t in status_types.split(",") if t.strip()]
+                if type_list:
+                    status_queryset = status_queryset.filter(type__in=type_list)
+            data["statuses"] = StatusNameSerializer(status_queryset, many=True).data
         
         if entity == "depreciation":
             data["depreciations"] = DepreciationNameSerializer(Depreciation.objects.filter(is_deleted=False), many=True).data

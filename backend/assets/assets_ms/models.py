@@ -133,7 +133,9 @@ class AssetCheckout(models.Model):
     checkout_to = models.PositiveIntegerField()
     location = models.PositiveIntegerField()
     checkout_date = models.DateField()
-    return_date = models.DateField()
+    return_date = models.DateField(blank=True, null=True)
+    status = models.PositiveIntegerField()
+    revenue = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  
     condition = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )

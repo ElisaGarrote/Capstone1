@@ -71,6 +71,14 @@ const AddEntryModal = ({
         <form onSubmit={handleSubmit(onSubmit)} className="modal-form">
           <div className="modal-body">
             {fields.map((field) => (
+              field.type === 'hidden' ? (
+                <input
+                  key={field.name}
+                  type="hidden"
+                  {...register(field.name)}
+                  defaultValue={field.defaultValue}
+                />
+              ) : (
               <fieldset key={field.name}>
                 <label htmlFor={field.name}>
                   {field.label} {field.required && <span style={{color: 'red'}}>*</span>}
@@ -129,6 +137,7 @@ const AddEntryModal = ({
                   </span>
                 )}
               </fieldset>
+              )
             ))}
 
 

@@ -91,11 +91,24 @@ class AssetSerializer(serializers.ModelSerializer):
     def validate(self, data):
         product = data.get('product')
         name = data.get('name')
+        status_id = data.get('status')
         instance = self.instance
 
         # Check if product is deleted
         if product.is_deleted:
             raise serializers.ValidationError({"product": "Cannot check out a deleted product."})
+
+        # Validate status category - must be 'asset' category
+        if status_id:
+            status_details = get_status_by_id(status_id)
+            if not status_details or status_details.get("warning"):
+                raise serializers.ValidationError({"status": "Status not found."})
+
+            status_category = status_details.get("category")
+            if status_category != "asset":
+                raise serializers.ValidationError({
+                    "status": "Invalid status. Only asset statuses are allowed for assets."
+                })
 
         if name:
             # Normalize spacing and apply Title Case
@@ -111,7 +124,7 @@ class AssetSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "name": "An asset with this name already exists."
             })
-        
+
         return data
 
     def get_status_details(self, obj):
@@ -239,6 +252,9 @@ class AssetCheckinFileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AssetCheckinSerializer(serializers.ModelSerializer):
+    # Only these status types are valid for asset checkin (excludes 'deployed')
+    VALID_CHECKIN_STATUS_TYPES = ['deployable', 'undeployable', 'pending', 'archived']
+
     files = AssetCheckinFileSerializer(many=True, required=False)
     class Meta:
         model = AssetCheckin
@@ -248,6 +264,7 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
         checkout = data.get('asset_checkout')
         checkin_date = data.get('checkin_date', timezone.now())
         ticket_id = data.get('ticket_id')
+        status_id = data.get('status')
 
         # Check if checkout exists
         if not checkout:
@@ -258,13 +275,33 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "asset_checkout": "This asset has already been checked in."
             })
-        
+
         # Make sure checkin happens after checkout
         if checkin_date < checkout.checkout_date:
             raise serializers.ValidationError({
                 "checkin_date": "Cannot check in before checkout date."
             })
-        
+
+        # Validate status category and type - must be asset category with valid type
+        if status_id:
+            status_details = get_status_by_id(status_id)
+            if not status_details or status_details.get("warning"):
+                raise serializers.ValidationError({"status": "Status not found."})
+
+            # Check category is 'asset'
+            status_category = status_details.get("category")
+            if status_category != "asset":
+                raise serializers.ValidationError({
+                    "status": "Invalid status. Only asset statuses are allowed for check-in."
+                })
+
+            # Check type is valid for checkin (excludes 'deployed')
+            status_type = status_details.get("type")
+            if status_type not in self.VALID_CHECKIN_STATUS_TYPES:
+                raise serializers.ValidationError({
+                    "status": f"Invalid status type for check-in. Allowed types: {', '.join(self.VALID_CHECKIN_STATUS_TYPES)}."
+                })
+
         # Optional ticket validation
         if ticket_id:
             ticket = get_ticket_by_id(ticket_id)
@@ -275,7 +312,7 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     "ticket_id": "Ticket does not match this asset."
                 })
-            
+
         return data
     
     def create(self, validated_data):
@@ -550,10 +587,23 @@ class RepairSerializer(serializers.ModelSerializer):
             }
 
     def validate(self, attrs):
-        """Prevent duplicate repairs on the same asset with same name/date."""
+        """Validate repair data including status category and prevent duplicates."""
         asset = attrs.get('asset') or getattr(self.instance, 'asset', None)
         name = attrs.get('name') or getattr(self.instance, 'name', None)
+        status_id = attrs.get('status_id') or getattr(self.instance, 'status_id', None)
         start_date = attrs.get('start_date') or getattr(self.instance, 'start_date', timezone.localdate())
+
+        # Validate status category - must be 'repair' category
+        if status_id:
+            status_details = get_status_by_id(status_id)
+            if not status_details or status_details.get("warning"):
+                raise serializers.ValidationError({"status_id": "Status not found."})
+
+            status_category = status_details.get("category")
+            if status_category != "repair":
+                raise serializers.ValidationError({
+                    "status_id": "Invalid status. Only repair statuses are allowed for repairs."
+                })
 
         # Ensure date-only (no datetime)
         if isinstance(start_date, timezone.datetime):

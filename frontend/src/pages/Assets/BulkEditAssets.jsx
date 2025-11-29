@@ -453,7 +453,28 @@ export default function BulkEditAssets() {
               label: "Status Name",
               type: "text",
               required: true,
-              placeholder: "Enter status name"
+              placeholder: "Enter status name",
+              validation: { required: 'Status Name is required' }
+            },
+            {
+              name: "category",
+              type: "hidden",
+              defaultValue: "asset"
+            },
+            {
+              name: "type",
+              label: "Status Type",
+              type: "select",
+              required: true,
+              placeholder: "Select Status Type",
+              options: [
+                { value: 'deployable', label: 'Deployable' },
+                { value: 'deployed', label: 'Deployed' },
+                { value: 'undeployable', label: 'Undeployable' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'archived', label: 'Archived' }
+              ],
+              validation: { required: 'Status Type is required' }
             }
           ]}
           onSubmit={handleAddStatus}

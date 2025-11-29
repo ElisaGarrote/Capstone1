@@ -61,8 +61,8 @@ export default function AssetsRegistration() {
       try {
         setIsLoading(true);
 
-        // Fetch dropdown options for assets
-        const contextDropdowns = await fetchAllDropdowns("asset");
+        // Fetch dropdown options for assets (filter statuses by asset category)
+        const contextDropdowns = await fetchAllDropdowns("asset", { category: "asset" });
         setStatuses(contextDropdowns.statuses || []);
         setSuppliers(contextDropdowns.suppliers || []);
 
@@ -151,6 +151,11 @@ export default function AssetsRegistration() {
       required: true,
       maxLength: 100,
       validation: { required: 'Status Label is required' }
+    },
+    {
+      name: 'category',
+      type: 'hidden',
+      defaultValue: 'asset'
     },
     {
       name: 'type',

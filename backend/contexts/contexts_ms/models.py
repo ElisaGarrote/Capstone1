@@ -69,17 +69,37 @@ class Manufacturer(models.Model):
         return self.name
     
 class Status(models.Model):
-    class StatusType(models.TextChoices):
+    class Category(models.TextChoices):
+        ASSET = 'asset', 'Asset Status'
+        REPAIR = 'repair', 'Repair Status'
+    class AssetStatusType(models.TextChoices):
         DEPLOYABLE = 'deployable', 'Deployable'
         DEPLOYED = 'deployed', 'Deployed'
         UNDEPLOYABLE = 'undeployable', 'Undeployable'
         PENDING = 'pending', 'Pending'
         ARCHIVED = 'archived', 'Archived'
 
+    category = models.CharField(
+        max_length=10,
+        choices=Category.choices,
+        default=Category.ASSET
+    )
+    type = models.CharField(
+        max_length=12,
+        choices=AssetStatusType.choices,
+        blank=True,
+        null=True
+    )
     name = models.CharField(max_length=50)
-    type = models.CharField(max_length=12, choices=StatusType.choices)
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
+
+    def clean(self):
+        if self.category == self.Category.ASSET and not self.type:
+            raise ValidationError("Asset status must include a type.")
+
+        if self.category == self.Category.REPAIR and self.type:
+            raise ValidationError("Repair status should not include a type.")
 
     def __str__(self):
         return self.name

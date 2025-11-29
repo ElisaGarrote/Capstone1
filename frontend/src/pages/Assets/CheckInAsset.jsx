@@ -30,6 +30,8 @@ export default function CheckInAsset() {
     checkin_date: checkinDate,
     ticket_number: ticketNumber,
   } = ticket;
+  
+  const { checkout_date: checkoutDate } = checkout;
 
   // Dropdowns
   const [statuses, setStatuses] = useState([]);
@@ -56,12 +58,15 @@ export default function CheckInAsset() {
   });
 
   // Initialize dropdowns
+  // Only allow asset statuses with these types for checkin (excludes 'deployed')
+  const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";
+
   useEffect(() => {
       const initialize = async () => {
         console.log("Location state:", state);
         try {
-          // Fetch statuses from contexts service
-          const dropdowns = await fetchAllDropdowns("status");
+          // Fetch statuses from contexts service - filtered to asset category and checkin-valid types only
+          const dropdowns = await fetchAllDropdowns("status", { category: "asset", types: CHECKIN_STATUS_TYPES });
           setStatuses(dropdowns.statuses || []);
 
           // Fetch locations from helpdesk service
@@ -69,7 +74,7 @@ export default function CheckInAsset() {
           setLocations(locations || []);
         } catch (error) {
           console.error("Error fetching dropdowns:", error);
-          setErrorMessage("Failed to load dropdowns");
+          setErrorMessage("Failed to load dropdowns. Please try again.");
         }
       };
       initialize();
@@ -92,7 +97,7 @@ export default function CheckInAsset() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
-  // Modal field configurations
+  // Modal field configurations - only allow checkin-valid status types (excludes 'deployed')
   const statusFields = [
     {
       name: 'name',
@@ -104,6 +109,11 @@ export default function CheckInAsset() {
       validation: { required: 'Status Label is required' }
     },
     {
+      name: 'category',
+      type: 'hidden',
+      defaultValue: 'asset'
+    },
+    {
       name: 'type',
       label: 'Status Type',
       type: 'select',
@@ -111,7 +121,6 @@ export default function CheckInAsset() {
       required: true,
       options: [
         { value: 'deployable', label: 'Deployable' },
-        { value: 'deployed', label: 'Deployed' },
         { value: 'undeployable', label: 'Undeployable' },
         { value: 'pending', label: 'Pending' },
         { value: 'archived', label: 'Archived' }
@@ -219,7 +228,10 @@ export default function CheckInAsset() {
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      console.log("Form data:", data);
+      console.log("FINAL FORM DATA:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
 
       // Required fields
       formData.append("asset_checkout", checkout.id);
@@ -241,13 +253,36 @@ export default function CheckInAsset() {
       await resolveTicket(ticketId);
 
       // Navigate to asset view page after successful check-in
-      navigate(`/assets/view/${id}`, {
+      navigate(`/approvedtickets`, {
         state: { successMessage: "Asset has been checked in successfully!" }
       });
     } catch (error) {
-      console.error("Error checking in asset:", error);
-      setErrorMessage("An error occurred while checking in the asset.");
-    }
+        console.error("Error checking in asset:", error);
+
+        let message = "An error occurred while checking in the asset.";
+
+        if (error.response && error.response.data) {
+          const data = error.response.data;
+
+          // Collect all errors from all keys
+          const messages = [];
+
+          Object.entries(data).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+              messages.push(...value);
+            } else if (typeof value === "string") {
+              messages.push(value);
+            }
+          });
+
+          if (messages.length > 0) {
+            message = messages.join(" ");
+          }
+        }
+
+        setErrorMessage(message);
+        setTimeout(() => setErrorMessage(""), 5000);
+      }
   };
 
   return (
@@ -259,7 +294,7 @@ export default function CheckInAsset() {
           <TopSecFormPage
             root={fromAsset ? "Assets" : "Tickets"}
             currentPage="Check-In Asset"
-            rootNavigatePage={fromAsset ? "/assets" : "/tickets"}
+            rootNavigatePage={fromAsset ? "/assets" : "/approved-tickets"}
             title={ticketNumber}
           />
         </section>
@@ -284,7 +319,13 @@ export default function CheckInAsset() {
                 type="date"
                 id="checkinDate"
                 className={errors.checkinDate ? 'input-error' : ''}
-                {...register("checkinDate", { required: "Check-in date is required" })}
+                {...register("checkinDate", { 
+                  required: "Check-in date is required",
+                  validate: (value) =>
+                    new Date(value) >= new Date(checkoutDate) ||
+                    "Check-in date cannot be earlier than checkout date."
+                })}
+                min={checkoutDate}
                 defaultValue={checkinDate || currentDate}
               />
               {errors.checkinDate && (
@@ -349,7 +390,7 @@ export default function CheckInAsset() {
                 >
                   <option value="">Select Location</option>
                   {locations.map(location => (
-                    <option key={location.id} value={location.city}>
+                    <option key={location.id} value={location.id}>
                       {location.city}
                     </option>
                   ))}

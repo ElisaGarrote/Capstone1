@@ -29,7 +29,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--statuses-only',
             action='store_true',
-            help='Seed only statuses (10 records)',
+            help='Seed only statuses (15 records: 10 asset + 5 repair)',
         )
         parser.add_argument(
             '--depreciations-only',
@@ -78,9 +78,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Manufacturers (10 records) ==='))
             call_command('seed_manufacturers', clear_flag) if clear_flag else call_command('seed_manufacturers')
 
-        # Seed Statuses (10 records)
+        # Seed Statuses (15 records: 10 asset + 5 repair)
         if seed_all or options['statuses_only']:
-            self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Statuses (10 records) ==='))
+            self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Statuses (15 records: 10 asset + 5 repair) ==='))
             call_command('seed_statuses', clear_flag) if clear_flag else call_command('seed_statuses')
 
         # Seed Depreciations (10 records)

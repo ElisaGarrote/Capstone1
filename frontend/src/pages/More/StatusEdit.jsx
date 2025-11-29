@@ -22,17 +22,26 @@ const StatusRegistration = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
-      statusName: status.name,
-      statusType: status.type,
-      notes: status.notes,
+      statusName: status?.name || "",
+      statusCategory: status?.category || "",
+      statusType: status?.type || "",
+      notes: status?.notes || "",
     },
     mode: "all",
   });
 
-  const statusTypes = [
+  const statusCategory = watch("statusCategory");
+
+  const statusCategories = [
+    { value: "asset", label: "Asset Status" },
+    { value: "repair", label: "Repair Status" },
+  ];
+
+  const assetStatusTypes = [
     "Archived",
     "Deployable",
     "Deployed",
@@ -88,29 +97,56 @@ const StatusRegistration = () => {
                 </fieldset>
 
                 <fieldset>
-                  <label htmlFor="statusType">
-                    Status Type
+                  <label htmlFor="statusCategory">
+                    Status Category
                     <span className="required-asterisk">*</span>
                   </label>
                   <select
-                    className={errors.statusType ? "input-error" : ""}
-                    {...register("statusType", {
-                      required: "Status Type is required",
+                    className={errors.statusCategory ? "input-error" : ""}
+                    {...register("statusCategory", {
+                      required: "Status Category is required",
                     })}
                   >
-                    <option value="">Select Status Type</option>
-                    {statusTypes.map((type, idx) => (
-                      <option key={idx} value={type.toLowerCase()}>
-                        {type}
+                    <option value="">Select Status Category</option>
+                    {statusCategories.map((cat) => (
+                      <option key={cat.value} value={cat.value}>
+                        {cat.label}
                       </option>
                     ))}
                   </select>
-                  {errors.statusType && (
+                  {errors.statusCategory && (
                     <span className="error-message">
-                      {errors.statusType.message}
+                      {errors.statusCategory.message}
                     </span>
                   )}
                 </fieldset>
+
+                {statusCategory === "asset" && (
+                  <fieldset>
+                    <label htmlFor="statusType">
+                      Status Type
+                      <span className="required-asterisk">*</span>
+                    </label>
+                    <select
+                      className={errors.statusType ? "input-error" : ""}
+                      {...register("statusType", {
+                        required: statusCategory === "asset" ? "Status Type is required for asset statuses" : false,
+                      })}
+                    >
+                      <option value="">Select Status Type</option>
+                      {assetStatusTypes.map((type, idx) => (
+                        <option key={idx} value={type.toLowerCase()}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.statusType && (
+                      <span className="error-message">
+                        {errors.statusType.message}
+                      </span>
+                    )}
+                  </fieldset>
+                )}
 
                 <fieldset>
                   <label htmlFor="notes">Notes</label>

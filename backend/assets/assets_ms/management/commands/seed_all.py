@@ -4,7 +4,7 @@ from assets_ms.models import Product
 
 
 class Command(BaseCommand):
-    help = 'Seed the database with all assets service data (100 products, 100 assets, 40 checkouts, 100 components)'
+    help = 'Seed the database with all assets service data (100 products, 100 assets, 40 checkouts, 100 components, 20 repairs)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -32,17 +32,32 @@ class Command(BaseCommand):
             action='store_true',
             help='Seed only asset checkouts (40 records) - will also seed assets if they don\'t exist',
         )
+        parser.add_argument(
+            '--repairs-only',
+            action='store_true',
+            help='Seed only repairs (20 records) - will also seed assets if they don\'t exist',
+        )
 
     def handle(self, *args, **options):
         clear_flag = '--clear' if options['clear'] else ''
 
+        # Check if any specific flag is set
+        specific_flags = [
+            options['products_only'],
+            options['assets_only'],
+            options['components_only'],
+            options['checkouts_only'],
+            options['repairs_only'],
+        ]
+        seed_all = not any(specific_flags)
+
         # Seed Products (100 records)
-        if not options['components_only'] and not options['assets_only'] and not options['checkouts_only']:
+        if seed_all or options['products_only']:
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Products (100 records) ==='))
             call_command('seed_products', clear_flag) if clear_flag else call_command('seed_products')
 
         # Seed Assets (100 records - requires products to exist)
-        if not options['products_only'] and not options['components_only'] and not options['checkouts_only']:
+        if seed_all or options['assets_only']:
             # If assets-only flag is used, ensure products exist first
             if options['assets_only']:
                 products_count = Product.objects.filter(is_deleted=False).count()
@@ -57,14 +72,19 @@ class Command(BaseCommand):
             call_command('seed_assets', clear_flag) if clear_flag else call_command('seed_assets')
 
         # Seed Asset Checkouts (40 records - requires assets to exist)
-        if not options['products_only'] and not options['components_only'] and not options['assets_only']:
+        if seed_all or options['checkouts_only']:
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Asset Checkouts (40 records) ==='))
             call_command('seed_asset_checkouts', clear_flag) if clear_flag else call_command('seed_asset_checkouts')
 
         # Seed Components (100 records)
-        if not options['products_only'] and not options['assets_only'] and not options['checkouts_only']:
+        if seed_all or options['components_only']:
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Components (100 records) ==='))
             call_command('seed_components', clear_flag) if clear_flag else call_command('seed_components')
+
+        # Seed Repairs (20 records - requires assets to exist)
+        if seed_all or options['repairs_only']:
+            self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Repairs (20 records) ==='))
+            call_command('seed_repairs', clear_flag) if clear_flag else call_command('seed_repairs')
 
         self.stdout.write(self.style.SUCCESS('\n✓ All assets service seeding complete!'))
 

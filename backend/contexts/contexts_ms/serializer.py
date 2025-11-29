@@ -219,35 +219,68 @@ class StatusSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def validate(self, attrs):
-        # Enforce uniqueness of name+type among non-deleted statuses.
-        # Allow re-using a name if the existing record is soft-deleted.
-        name = attrs.get('name') if 'name' in attrs else (self.instance.name if self.instance else None)
-        type_val = attrs.get('type') if 'type' in attrs else (self.instance.type if self.instance else None)
-        # Require 'type' when creating a new Status (same as 'name').
-        # For updates, allow omission so existing instance keeps its type.
-        if self.instance is None and not type_val:
-            raise serializers.ValidationError({'type': 'This field is required.'})
+        instance = self.instance
 
-        if not name or not type_val:
-            return attrs
+        category = attrs.get('category') if 'category' in attrs else (instance.category if instance else None)
+        type_val = attrs.get('type') if 'type' in attrs else (instance.type if instance else None)
+        name = attrs.get('name') if 'name' in attrs else (instance.name if instance else None)
 
-        normalized_name = normalize_name_smart(name)
-        attrs['name'] = normalized_name
+        if category == Status.Category.ASSET:
+            if not type_val:
+                raise serializers.ValidationError({
+                    "type": "Type is required when category is 'asset'."
+                })
+        
+        if category == Status.Category.REPAIR:
+            if type_val:
+                raise serializers.ValidationError({
+                    "type": "Repair statuses must not have a type."
+                })
+            type_val = None
+        
+        if name:
+            normalized = normalize_name_smart(name)
+            attrs['name'] = normalized
+            name = normalized
 
+        # Allow import-time bypass when the import flow provides a set of names
         seen = None
         try:
             seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
         except Exception:
-            seen = None
+            pass
 
-        qs = Status.objects.filter(name__iexact=normalized_name, type=type_val, is_deleted=False)
-        if self.instance:
-            qs = qs.exclude(pk=self.instance.pk)
+        qs = Status.objects.filter(
+            name__iexact=name,
+            is_deleted=False
+        )
 
+        # Enforce uniqueness of name+type among non-deleted statuses
+        # Allow re-using a name if the existing record is soft-deleted.
+        if category == Status.Category.ASSET:
+            qs = qs.filter(type=type_val, category=Status.Category.ASSET)
+        else:
+            qs = qs.filter(category=Status.Category.REPAIR)
+
+        # Exclude self from uniqueness check if updating
+        if instance:
+            qs = qs.exclude(pk=instance.pk)
+
+        # If conflict exists:
         if qs.exists():
-            if seen and normalized_name in seen:
+            # Skip conflict for import-session duplicate detection
+            if seen and name in seen:
                 return attrs
-            raise serializers.ValidationError({'name': 'A Status with this name and type already exists.'})
+
+            # Standard conflict message
+            if category == Status.Category.ASSET:
+                raise serializers.ValidationError({
+                    'name': "A Status with this name and type already exists."
+                })
+            else:
+                raise serializers.ValidationError({
+                    'name': "A repair status with this name already exists."
+                })
 
         return attrs
 

@@ -144,7 +144,24 @@ export async function resolveTicket(ticketId) {
 /* ===============================
           CONTEXTS DROPDOWNS
 ================================= */
-export async function fetchAllDropdowns(entity) {
-  const res = await contextsAxios.get(`contexts-dropdowns/all/?entity=${entity}`);
+export async function fetchAllDropdowns(entity, options = {}) {
+  let url = `contexts-dropdowns/all/?entity=${entity}`;
+
+  // For status filtering: ?category=asset or repair
+  if (options.category) {
+    url += `&category=${options.category}`;
+  }
+
+  // For status type filtering: ?types=deployable,pending
+  if (options.types) {
+    url += `&types=${options.types}`;
+  }
+
+  // For CATEGORY entity only: ?type=asset or component
+  if (entity === "category" && options.type) {
+    url += `&type=${options.type}`;
+  }
+
+  const res = await contextsAxios.get(url);
   return res.data;
 }
