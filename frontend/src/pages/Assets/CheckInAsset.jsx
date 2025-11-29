@@ -11,7 +11,7 @@ import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { createAssetCheckin, createAssetCheckinFile } from "../../services/assets-service";
-import { resolveTicket } from "../../services/contexts-service";
+import { resolveTicket } from "../../services/integration-ticket-tracking-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 
@@ -56,7 +56,7 @@ export default function CheckInAsset() {
       checkinDate: ticket.checkin_date || currentDate,
       status: '',
       condition: '',
-      location: '',
+      location: ticket.location || '',
       notes: '',
     }
   });

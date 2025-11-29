@@ -1,4 +1,4 @@
-import ticketTrackingAxios from "../api/ticketTrackingAxios";
+import ticketTrackingAxios from "../api/integrationTicketTracking";
 
 /* ===============================
                 TICKETS

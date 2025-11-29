@@ -9,7 +9,7 @@ import ActionButtons from "../../components/ActionButtons";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import { fetchAllTickets } from "../../services/contexts-service";
+import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
 import { fetchAssetCheckoutById } from "../../services/assets-service";
 
 import "../../styles/Tickets/Tickets.css";
