@@ -340,7 +340,16 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
 
         # individual dropdowns
         if entity == "category":
-            data["categories"] = CategoryNameSerializer(Category.objects.filter(is_deleted=False), many=True).data
+            category_type = request.query_params.get("type")  # asset or component
+            
+            queryset = Category.objects.filter(is_deleted=False)
+
+            # If type is provided, filter by it
+            if category_type:
+                queryset = queryset.filter(type=category_type)
+
+            data["categories"] = CategoryNameSerializer(queryset, many=True).data
+
         
         if entity == "supplier":
             data["suppliers"] = SupplierNameSerializer(Supplier.objects.filter(is_deleted=False), many=True).data

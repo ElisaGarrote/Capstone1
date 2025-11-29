@@ -9,8 +9,10 @@ import Alert from "../../components/Alert";
 import { createAssetCheckin } from "../../services/assets-service";
 import { resolveTicket } from "../../services/contexts-service";
 import CloseIcon from "../../assets/icons/close.svg";
+import PlusIcon from "../../assets/icons/plus.svg";
+import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { fetchAllDropdowns } from "../../services/contexts-service";
-import { fetchAllLocations } from "../../services/helpdesk-service";
+import { fetchAllLocations } from "../../services/integration-help-desk-service";
 
 
 export default function CheckInAsset() {
@@ -24,9 +26,9 @@ export default function CheckInAsset() {
 
   // Declare variables from ticket and checkout
   const {
-    assetId,
     id: ticketId,
     checkin_date: checkinDate,
+    ticket_number: ticketNumber,
   } = ticket;
   const { id: checkoutId } = checkout;
 
@@ -57,6 +59,7 @@ export default function CheckInAsset() {
   // Initialize dropdowns
   useEffect(() => {
       const initialize = async () => {
+        console.log("Location state:", state);
         try {
           // Fetch statuses from contexts service
           const dropdowns = await fetchAllDropdowns("status");
@@ -86,33 +89,100 @@ export default function CheckInAsset() {
       { value: "10", label: "10 - Brand New" }
     ];
 
-  // File upload
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  // Modal states for adding new entries
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
-  // Handle file selection
-  const handleFileSelection = (e) => {
-    const files = Array.from(e.target.files || []);
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const validFiles = [];
+  // Modal field configurations
+  const statusFields = [
+    {
+      name: 'name',
+      label: 'Status Label',
+      type: 'text',
+      placeholder: 'Status Label',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Status Label is required' }
+    },
+    {
+      name: 'type',
+      label: 'Status Type',
+      type: 'select',
+      placeholder: 'Select Status Type',
+      required: true,
+      options: [
+        { value: 'deployable', label: 'Deployable' },
+        { value: 'deployed', label: 'Deployed' },
+        { value: 'undeployable', label: 'Undeployable' },
+        { value: 'pending', label: 'Pending' },
+        { value: 'archived', label: 'Archived' }
+      ],
+      validation: { required: 'Status Type is required' }
+    }
+  ];
 
-    files.forEach(file => {
-      if (file.size > maxSize) {
-        setErrorMessage(`${file.name} exceeds 5MB and was not added.`);
-        setTimeout(() => setErrorMessage(""), 5000);
-      } else if (!['image/jpeg', 'image/png'].includes(file.type)) {
-        setErrorMessage(`${file.name} is not a valid image format. Only .jpeg and .png are allowed.`);
-        setTimeout(() => setErrorMessage(""), 5000);
-      } else {
-        validFiles.push(file);
-      }
-    });
+  const locationFields = [
+    {
+      name: 'name',
+      label: 'Location Name',
+      type: 'text',
+      placeholder: 'Location Name',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Location Name is required' }
+    }
+  ];
 
-    setSelectedFiles(prev => [...prev, ...validFiles]);
+  const handleSaveStatus = async (data) => {
+    try {
+      const newStatus = await createStatus(data);
+      setStatuses([...statuses, newStatus]);
+      setShowStatusModal(false);
+      setErrorMessage("");
+    } catch (error) {
+      console.error('Error creating status:', error);
+      setErrorMessage("Failed to create status");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
   };
 
-  // Remove file from selection
+  const handleSaveLocation = async (data) => {
+    try {
+      // For now, just add to local state (location API not available)
+      console.log('Creating location:', data);
+      const newLocation = {
+        id: locations.length + 1,
+        city: data.name
+      };
+      setLocations(prev => [...prev, newLocation]);
+      setShowLocationModal(false);
+    } catch (error) {
+      console.error('Error creating location:', error);
+      setErrorMessage("Failed to create location");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
+  // File upload
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
+
+  const handleFileSelection = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 300 * 1024 * 1024; // 300MB
+
+    const validFiles = files.filter((file) => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 300MB and was not added.`);
+        return false;
+      }
+      return true;
+    });
+
+    setAttachmentFiles((prev) => [...prev, ...validFiles]);
+  };
+
   const removeFile = (index) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data) => {
@@ -129,9 +199,6 @@ export default function CheckInAsset() {
       formData.append("notes", data.notes || "");
 
       // Append image files
-      selectedFiles.forEach((file, index) => {
-        formData.append(`image_${index}`, file);
-      });
 
       await createAssetCheckin(formData);
       await resolveTicket(ticketId);
@@ -156,7 +223,7 @@ export default function CheckInAsset() {
             root={fromAsset ? "Assets" : "Tickets"}
             currentPage="Check-In Asset"
             rootNavigatePage={fromAsset ? "/assets" : "/tickets"}
-            title={assetId}
+            title={ticketNumber}
           />
         </section>
         <section className="registration-form">
@@ -188,6 +255,34 @@ export default function CheckInAsset() {
               )}
             </fieldset>
 
+            {/* Status Dropdown with + button */}
+            <fieldset>
+              <label htmlFor='status'>Status <span style={{color: 'red'}}>*</span></label>
+              <div className="dropdown-with-add">
+                <select
+                  id="status"
+                  {...register("status", { required: "Status is required" })}
+                  className={errors.status ? 'input-error' : ''}
+                >
+                  <option value="">Select Status</option>
+                  {statuses.map(status => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-btn"
+                  onClick={() => setShowStatusModal(true)}
+                  title="Add new status"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
+              {errors.status && <span className='error-message'>{errors.status.message}</span>}
+            </fieldset>
+
             {/* Condition */}
             <fieldset>
               <label htmlFor="condition">Condition <span style={{color: 'red'}}>*</span></label>
@@ -206,6 +301,34 @@ export default function CheckInAsset() {
               {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
             </fieldset>
 
+            {/* Location Dropdown with + button */}
+            <fieldset>
+              <label htmlFor='location'>Location <span style={{color: 'red'}}>*</span></label>
+              <div className="dropdown-with-add">
+                <select
+                  id="location"
+                  {...register("location", { required: "Location is required" })}
+                  className={errors.location ? 'input-error' : ''}
+                >
+                  <option value="">Select Location</option>
+                  {locations.map(location => (
+                    <option key={location.id} value={location.city}>
+                      {location.city}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-btn"
+                  onClick={() => setShowLocationModal(true)}
+                  title="Add new location"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
+              {errors.location && <span className='error-message'>{errors.location.message}</span>}
+            </fieldset>
+
             {/* Notes */}
             <fieldset>
               <label htmlFor="notes">Notes</label>
@@ -218,31 +341,32 @@ export default function CheckInAsset() {
               ></textarea>
             </fieldset>
 
-            {/* Image Upload */}
+            {/* Attachments */}
             <fieldset>
-              <label>Image Upload</label>
+              <label htmlFor="attachments">Upload File</label>
+
               <div className="attachments-wrapper">
                 {/* Left column: Upload button & info */}
                 <div className="upload-left">
-                  <label htmlFor="images" className="upload-image-btn">
+                  <label htmlFor="attachments" className="upload-image-btn">
                     Choose File
                     <input
                       type="file"
-                      id="images"
-                      accept=".jpeg,.jpg,.png"
+                      id="attachments"
+                      accept="image/*,.pdf,.doc,.docx"
                       onChange={handleFileSelection}
                       style={{ display: "none" }}
                       multiple
                     />
                   </label>
                   <small className="file-size-info">
-                    Maximum file size must be 5MB
+                    Maximum file size must be 300MB
                   </small>
                 </div>
 
                 {/* Right column: Uploaded files */}
                 <div className="upload-right">
-                  {selectedFiles.map((file, index) => (
+                  {attachmentFiles.map((file, index) => (
                     <div className="file-uploaded" key={index}>
                       <span title={file.name}>{file.name}</span>
                       <button type="button" onClick={() => removeFile(index)}>
@@ -262,6 +386,24 @@ export default function CheckInAsset() {
         </section>
       </main>
       <Footer />
+
+      <AddEntryModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        onSave={handleSaveStatus}
+        title="New Status Label"
+        fields={statusFields}
+        type="status"
+      />
+
+      <AddEntryModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onSave={handleSaveLocation}
+        title="New Location"
+        fields={locationFields}
+        type="location"
+      />
     </>
   );
 }

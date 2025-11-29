@@ -399,7 +399,7 @@ class ManufacturerNameSerializer(serializers.ModelSerializer):
 
 class StatusNameSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Manufacturer
+        model = Status
         fields = ['id', 'name', 'type']
 
 class DepreciationNameSerializer(serializers.ModelSerializer):

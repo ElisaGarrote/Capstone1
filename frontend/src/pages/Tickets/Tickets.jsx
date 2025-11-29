@@ -47,11 +47,11 @@ function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick
           onChange={(e) => onRowChange(ticket.id, e.target.checked)}
         />
       </td>
-      <td>{ticket.ticketNumber}</td>
+      <td>{ticket.ticket_number}</td>
       <td>{ticket.checkInOutDisplay}</td>
-      <td>{ticket.requestorName}</td>
+      <td>{ticket.employee}</td>
       <td>{ticket.subject}</td>
-      <td>{ticket.location}</td>
+      <td>{ticket.location_details.city}</td>
 
       {/* CHECK-IN / CHECK-OUT Column */}
       <td>
@@ -112,8 +112,6 @@ const Tickets = () => {
 
         // Fetch tickets from API
         const response = await fetchAllTickets();
-
-        // Handle paginated response
         const ticketsData = response.results || response;
 
         // Map API response to component format
@@ -131,31 +129,10 @@ const Tickets = () => {
             ? ticket.checkin_date.slice(0, 10)
             : ticket.checkout_date.slice(0, 10);
 
-          const checkInOutDisplay = isCheckInOrOut
-            ? `${isCheckInOrOut}: ${formattedDate}`
-            : "";
-
-
           return {
-            id: ticket.id,
-            ticketNumber: ticket.ticket_number,
-            assetId: ticket.asset,
-            checkinDate: ticket.checkin_date?.slice(0, 10),
-            checkoutDate: ticket.checkout_date?.slice(0, 10),
-            date: formattedDate,
-            requestorId: ticket.employee,
-            requestorName: ticket.employee,
-            subject: ticket.subject,
-            locationId: ticket.location,
-            location: ticket.location_details.city,
-            returnDate: ticket.return_date,
+            ...ticket,
             isCheckInOrOut,
-            checkInOutDisplay,
-            ticketType: ticket.ticket_type,
-            assetCheckout: ticket.asset_checkout,
-            isResolved: ticket.is_resolved,
-            createdAt: ticket.created_at,
-            updatedAt: ticket.updated_at,
+            checkInOutDisplay: isCheckInOrOut ? `${isCheckInOrOut}: ${formattedDate}` : "",
           };
         });
 
@@ -268,9 +245,9 @@ const Tickets = () => {
     if (ticket.isCheckInOrOut === "Check-In") {
       try {
         // Fetch the checkout data before navigating
-        const checkout = await fetchAssetCheckoutById(ticket.assetCheckout);
+        const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
 
-        navigate(`/assets/check-in/${ticket.assetId}`, {
+        navigate(`/assets/check-in/${ticket.asset}`, {
           state: {
             ticket,
             checkout,
@@ -279,10 +256,10 @@ const Tickets = () => {
         });
       } catch (error) {
         console.error("Failed to fetch checkout data:", error);
-        setErrorMessage("Failed to fetch checkout data. Please try again later.");t
+        setErrorMessage("Failed to fetch checkout data. Please try again later.");
       }
     } else {
-      navigate(`/assets/check-out/${ticket.assetId}`, {
+      navigate(`/assets/check-out/${ticket.asset}`, {
         state: {
           ticket,
         },
