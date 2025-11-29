@@ -85,9 +85,18 @@ export async function deleteAsset(id) {
 /* ===============================
           ASSET CHECKIN
 ================================= */
-
+// Create asset checkin
 export async function createAssetCheckin(data) {
   const res = await assetsAxios.post("asset-checkin/", data);
+  return res.data;
+}
+
+/* ===============================
+        ASSET CHECKIN FILES
+================================= */
+// Create asset checkin file
+export async function createAssetCheckinFile(data) {
+  const res = await assetsAxios.post("asset-checkin-file/", data);
   return res.data;
 }
 

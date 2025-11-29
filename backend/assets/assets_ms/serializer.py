@@ -75,7 +75,7 @@ class ProductSerializer(serializers.ModelSerializer):
             return get_supplier_by_id(obj.default_supplier)
         except Exception:
             return {"warning": "Contexts service unreachable for suppliers."}
-    
+
 # Asset
 class AssetSerializer(serializers.ModelSerializer):
     # Include context details for frontend convenience
@@ -232,8 +232,14 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         validated_data['return_date'] = ticket.get('return_date')
 
         return super().create(validated_data)
-        
+
+class AssetCheckinFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AssetCheckinFile
+        fields = '__all__'
+
 class AssetCheckinSerializer(serializers.ModelSerializer):
+    files = AssetCheckinFileSerializer(many=True, required=False)
     class Meta:
         model = AssetCheckin
         fields = '__all__'
@@ -271,6 +277,22 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
                 })
             
         return data
+    
+    def create(self, validated_data):
+        files_data = validated_data.pop('files', [])
+        checkin = AssetCheckin.objects.create(**validated_data)
+
+        # Handle files uploaded via FormData
+        request = self.context.get('request')
+        if request and hasattr(request, 'FILES'):
+            for f in request.FILES.getlist('attachments'):  # matches your frontend key
+                AssetCheckinFile.objects.create(asset_checkin=checkin, file=f)
+
+        # Also handle nested JSON files if any
+        for file_dict in files_data:
+            AssetCheckinFile.objects.create(asset_checkin=checkin, **file_dict)
+
+        return checkin
 
 # Component
 class ComponentSerializer(serializers.ModelSerializer):

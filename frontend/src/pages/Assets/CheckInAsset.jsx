@@ -6,7 +6,7 @@ import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import Alert from "../../components/Alert";
-import { createAssetCheckin } from "../../services/assets-service";
+import { createAssetCheckin, createAssetCheckinFile } from "../../services/assets-service";
 import { resolveTicket } from "../../services/contexts-service";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
@@ -30,7 +30,6 @@ export default function CheckInAsset() {
     checkin_date: checkinDate,
     ticket_number: ticketNumber,
   } = ticket;
-  const { id: checkoutId } = checkout;
 
   // Dropdowns
   const [statuses, setStatuses] = useState([]);
@@ -220,17 +219,23 @@ export default function CheckInAsset() {
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
+      console.log("Form data:", data);
 
       // Required fields
-      formData.append("asset_checkout", checkoutId);
+      formData.append("asset_checkout", checkout.id);
       formData.append("checkin_date", data.checkinDate);
-      formData.append("condition", data.condition);
+      formData.append("status", data.status);
+      formData.append("location", data.location);
 
       // Optional fields
       formData.append("ticket_id", ticketId);
+      formData.append("condition", data.condition);
       formData.append("notes", data.notes || "");
 
-      // Append image files
+      // Append attachment files if any
+      attachmentFiles.forEach((file, index) => {
+        formData.append("attachments", file);
+      });
 
       await createAssetCheckin(formData);
       await resolveTicket(ticketId);
