@@ -6,41 +6,45 @@ import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import Alert from "../../components/Alert";
-import { createAssetCheckin, createAssetCheckinFile } from "../../services/assets-service";
-import { resolveTicket } from "../../services/contexts-service";
+import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
+import { createAssetCheckin, createAssetCheckinFile } from "../../services/assets-service";
+import { resolveTicket } from "../../services/contexts-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
-
 
 export default function CheckInAsset() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  
-  // Extract data from state
+  // Form state
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  // Dropdowns state
+  const [statuses, setStatuses] = useState([]);
+  const [locations, setLocations] = useState([]);
+  // Modal states for adding new entries
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  // File upload state
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
+
+  // Extract data from state, store in variables
   const ticket = state?.ticket || {};
   const checkout = state?.checkout || {};
   const fromAsset = state?.fromAsset || false;
 
-  // Declare variables from ticket and checkout
+  // Declare variables for destructuring
   const {
     id: ticketId,
     checkin_date: checkinDate,
     ticket_number: ticketNumber,
   } = ticket;
-  
   const { checkout_date: checkoutDate } = checkout;
-
-  // Dropdowns
-  const [statuses, setStatuses] = useState([]);
-  const [locations, setLocations] = useState([]);
-  
-  // Form
   const currentDate = new Date().toISOString().split("T")[0];
-  const [errorMessage, setErrorMessage] = useState("");
 
+  // Form handling initializations
   const {
     register,
     handleSubmit,
@@ -57,28 +61,33 @@ export default function CheckInAsset() {
     }
   });
 
-  // Initialize dropdowns
-  // Only allow asset statuses with these types for checkin (excludes 'deployed')
+  //Only allow asset statuses with these types for checkin (excludes 'deployed')
   const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";
 
+  // Initialize dropdowns
   useEffect(() => {
-      const initialize = async () => {
-        console.log("Location state:", state);
-        try {
-          // Fetch statuses from contexts service - filtered to asset category and checkin-valid types only
-          const dropdowns = await fetchAllDropdowns("status", { category: "asset", types: CHECKIN_STATUS_TYPES });
-          setStatuses(dropdowns.statuses || []);
+    const initialize = async () => {
+      setIsLoading(true);
+      console.log("states:", state);
+      try {
+        const dropdowns = await fetchAllDropdowns("status", { 
+          category: "asset", 
+          types: CHECKIN_STATUS_TYPES 
+        });
+        setStatuses(dropdowns.statuses || []);
 
-          // Fetch locations from helpdesk service
-          const locations = await fetchAllLocations();
-          setLocations(locations || []);
-        } catch (error) {
-          console.error("Error fetching dropdowns:", error);
-          setErrorMessage("Failed to load dropdowns. Please try again.");
-        }
-      };
-      initialize();
-    }, []);
+        const locations = await fetchAllLocations();
+        setLocations(locations || []);
+      } catch (error) {
+        console.error("Error fetching dropdowns:", error);
+        setErrorMessage("Failed to load dropdowns. Please try again.");
+      } finally {
+        setIsLoading(false);  // <-- release loading after ALL awaits
+      }
+    };
+
+    initialize();
+  }, []);
 
   const conditionOptions = [
       { value: "1", label: "1 - Unserviceable" },
@@ -92,11 +101,12 @@ export default function CheckInAsset() {
       { value: "9", label: "9 - Like New" },
       { value: "10", label: "10 - Brand New" }
     ];
-
-  // Modal states for adding new entries
-  const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
-
+  
+  if (isLoading) {
+    console.log("isLoading triggered — showing loading screen");
+    return <SystemLoading />;
+  }
+  
   // Modal field configurations - only allow checkin-valid status types (excludes 'deployed')
   const statusFields = [
     {
@@ -204,8 +214,7 @@ export default function CheckInAsset() {
   };
 
   // File upload
-  const [attachmentFiles, setAttachmentFiles] = useState([]);
-
+  // Handle file selection
   const handleFileSelection = (e) => {
     const files = Array.from(e.target.files);
     const maxSize = 300 * 1024 * 1024; // 300MB
@@ -221,10 +230,12 @@ export default function CheckInAsset() {
     setAttachmentFiles((prev) => [...prev, ...validFiles]);
   };
 
+  // Remove file from selection
   const removeFile = (index) => {
     setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Form submission
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
@@ -253,7 +264,7 @@ export default function CheckInAsset() {
       await resolveTicket(ticketId);
 
       // Navigate to asset view page after successful check-in
-      navigate(`/approvedtickets`, {
+      navigate(`/approved-tickets`, {
         state: { successMessage: "Asset has been checked in successfully!" }
       });
     } catch (error) {
