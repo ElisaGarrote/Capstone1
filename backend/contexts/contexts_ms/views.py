@@ -266,6 +266,32 @@ class TicketViewSet(viewsets.ModelViewSet):
                 return Response(None, status=404)
         except Exception:
             return Response(None, status=404)
+        
+    # PATCH /tickets/{id}/resolve/
+    @action(detail=True, methods=['patch'])
+    def resolve(self, request, pk=None):
+        ticket = self.get_object()
+
+        action_id = request.data.get('id')
+        if not action_id:
+            return Response({"error": "ID is required."}, status=400)
+
+        # If this is a checkout ticket
+        if ticket.asset_checkout is None:
+            ticket.asset_checkout = action_id
+
+        # If this is a checkin ticket
+        elif ticket.asset_checkout and ticket.asset_checkin is None:
+            ticket.asset_checkin = action_id
+
+        else:
+            return Response({"error": "Ticket cannot be resolved or is already resolved."}, status=400)
+
+        ticket.is_resolved = True
+        ticket.save()
+
+        serializer = self.get_serializer(ticket)
+        return Response(serializer.data)
 
 class RecycleBinViewSet(viewsets.ViewSet):
     """Handles viewing and recovering deleted items from the Assets service"""

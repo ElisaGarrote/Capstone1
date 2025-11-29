@@ -10,9 +10,12 @@ export async function fetchAllTickets() {
 }
 
 // Resolve ticket
-export async function resolveTicket(ticketId) {
-  const res = await ticketTrackingAxios.patch(`tickets/${ticketId}/`, {
-    is_resolved: true,
-  });
+export async function resolveTicket(ticketId, actionId) {
+  const res = await ticketTrackingAxios.patch(
+    `tickets/${ticketId}/resolve/`,
+    {
+      id: actionId,
+    }
+  );
   return res.data;
 }

@@ -260,8 +260,14 @@ export default function CheckInAsset() {
         formData.append("attachments", file);
       });
 
-      await createAssetCheckin(formData);
-      await resolveTicket(ticketId);
+      // Create checkin record
+      const checkinRes = await createAssetCheckin(formData);
+
+      // Extract checkin ID from response
+      const checkinId = checkinRes.id;
+
+      // Resolve ticket
+      await resolveTicket(ticketId, checkinId);
 
       // Navigate to asset view page after successful check-in
       navigate(`/approved-tickets`, {

@@ -151,9 +151,13 @@ class Ticket(models.Model):
     # CHECKOUT
     checkout_date = models.DateField(null=True, blank=True)
     return_date = models.DateField(null=True, blank=True)
+    # Reference to asset checkout record or store asset checkout ID when checkout is performed
     asset_checkout = models.PositiveIntegerField(null=True, blank=True)
     # CHECKIN
     checkin_date = models.DateField(null=True, blank=True)
+    
+    # Store asset checkin ID when checkin is performed
+    asset_checkin = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
         type = "Check Out Request" if self.asset_checkout is None else "Checked In Request"

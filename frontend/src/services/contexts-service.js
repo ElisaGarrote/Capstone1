@@ -118,30 +118,6 @@ export async function createDepreciation(data) {
 }
 
 /* ===============================
-          LOCATION CRUD
-================================= */
-// GET all categories
-export async function fetchAllLocations() {
-  const res = await contextsAxios.get("locations/");
-  return res.data;
-}
-
-/* ===============================
-              TICKETS
-================================= */
-export async function fetchAllTickets() {
-  const res = await contextsAxios.get("tickets/unresolved/");
-  return res.data;
-}
-
-export async function resolveTicket(ticketId) {
-  const res = await contextsAxios.patch(`tickets/${ticketId}/`, {
-    is_resolved: true,
-  });
-  return res.data;
-}
-
-/* ===============================
           CONTEXTS DROPDOWNS
 ================================= */
 export async function fetchAllDropdowns(entity, options = {}) {
