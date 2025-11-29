@@ -286,3 +286,32 @@ def get_statuses_list(q=None, limit=50):
     else:
         cache.set(key, result, LIST_CACHE_TTL)
     return result
+
+
+def resolve_ticket(ticket_id, asset_checkout_id=None, asset_checkin_id=None):
+    """Resolve a ticket by setting is_resolved=True and optionally storing checkout/checkin IDs.
+
+    Args:
+        ticket_id: The ID of the ticket to resolve
+        asset_checkout_id: The ID of the AssetCheckout record (for checkout tickets)
+        asset_checkin_id: The ID of the AssetCheckin record (for checkin tickets)
+    """
+    if not ticket_id:
+        return None
+
+    url = _build_url(f"tickets/{ticket_id}/")
+    payload = {"is_resolved": True}
+
+    if asset_checkout_id is not None:
+        payload["asset_checkout"] = asset_checkout_id
+    if asset_checkin_id is not None:
+        payload["asset_checkin"] = asset_checkin_id
+
+    try:
+        resp = client_patch(url, json=payload, timeout=6)
+        resp.raise_for_status()
+        # Invalidate ticket cache
+        cache.delete(f"contexts:ticket:{ticket_id}")
+        return resp.json()
+    except RequestException:
+        return {"warning": "Failed to resolve ticket. Contexts service unreachable."}

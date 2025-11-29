@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from datetime import datetime
 from django.db import transaction
 import logging
+from assets_ms.services.contexts import resolve_ticket, fetch_resource_list
 
 logger = logging.getLogger(__name__)
 
@@ -139,8 +140,8 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         checkout = serializer.save()
         ticket_id = checkout.ticket_id
 
-        # Resolve the ticket that triggered this checkout
-        resolve_ticket(ticket_id)
+        # Resolve the ticket that triggered this checkout and store checkout ID
+        resolve_ticket(ticket_id, asset_checkout_id=checkout.id)
 
         asset_id = checkout.asset.id
         unresolved_tickets = fetch_resource_list(
@@ -189,11 +190,10 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
         checkin = serializer.save()
         ticket_id = checkin.ticket_id or checkin.asset_checkout.ticket_id
 
-        # Resolve the ticket if it exists
+        # Resolve the ticket and store the checkin ID
         if ticket_id:
             try:
-                from assets_ms.services.contexts import resolve_ticket
-                resolve_ticket(ticket_id)
+                resolve_ticket(ticket_id, asset_checkin_id=checkin.id)
             except Exception:
                 pass
 

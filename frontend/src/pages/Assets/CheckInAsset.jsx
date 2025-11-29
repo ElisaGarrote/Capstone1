@@ -11,7 +11,6 @@ import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { createAssetCheckin } from "../../services/assets-service";
-import { resolveTicket } from "../../services/integration-ticket-tracking-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 
@@ -260,14 +259,7 @@ export default function CheckInAsset() {
         formData.append("attachments", file);
       });
 
-      // Create checkin record
-      const checkinRes = await createAssetCheckin(formData);
-
-      // Extract checkin ID from response
-      const checkinId = checkinRes.id;
-
-      // Resolve ticket
-      await resolveTicket(ticketId, checkinId);
+      await createAssetCheckin(formData)
 
       // Navigate to asset view page after successful check-in
       navigate(`/approved-tickets`, {

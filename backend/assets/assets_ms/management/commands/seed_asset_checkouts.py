@@ -114,9 +114,6 @@ class Command(BaseCommand):
                 k=1
             )[0]
 
-            # Status IDs 3 and 4 are deployed statuses (In Use, Checked Out)
-            status_id = random.choice([3, 4])
-
             checkouts.append({
                 'asset': asset,
                 'ticket_id': ticket_id,
@@ -124,7 +121,6 @@ class Command(BaseCommand):
                 'location': location_id,
                 'checkout_date': checkout_date,
                 'return_date': return_date,
-                'status': status_id,
                 'condition': condition,
                 'notes': f'Checkout for asset {asset.asset_id} to employee {employee_id}',
             })
