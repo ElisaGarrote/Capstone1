@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from .models import *
 from .serializer import *
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -196,6 +196,13 @@ class LocationViewSet(viewsets.ModelViewSet):
     def bulk_delete(self, request):
         return _bulk_delete_handler(request, 'location', hard_delete=True)
 
+class EmployeeViewSet(viewsets.ModelViewSet):
+    serializer_class = EmployeeSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        return Employee.objects.all().order_by('firstname')
+    
 # Get all manufacturer's names
 @api_view(['GET'])
 def get_manaufacturers_names(request):
@@ -253,19 +260,26 @@ class TicketViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(tickets, many=True)
         return Response(serializer.data)
 
-    # GET /tickets/by-asset/{asset_id}/
+    # GET /tickets/by-asset/{asset_id}/?status={resolved|unresolved}
     @action(detail=False, methods=['get'], url_path='by-asset/(?P<asset_id>\d+)')
     def by_asset(self, request, asset_id=None):
-        """Get the ticket for a specific asset"""
-        try:
-            ticket = self.queryset.filter(asset=asset_id).first()
-            if ticket:
-                serializer = self.get_serializer(ticket)
-                return Response(serializer.data)
-            else:
-                return Response(None, status=404)
-        except Exception:
-            return Response(None, status=404)
+        """Get the first ticket for a specific asset, optionally filtered by status"""
+        status_param = request.query_params.get('status')  # 'resolved' or 'unresolved'
+
+        qs = self.queryset.filter(asset=asset_id)
+
+        if status_param == 'resolved':
+            qs = qs.filter(is_resolved=True)
+        elif status_param == 'unresolved':
+            qs = qs.filter(is_resolved=False)
+
+        ticket = qs.order_by('-created_at').first()
+
+        if ticket:
+            serializer = self.get_serializer(ticket)
+            return Response(serializer.data)
+        else:
+            return Response(None, status=status.HTTP_404_NOT_FOUND)
         
     # PATCH /tickets/{id}/resolve/
     @action(detail=True, methods=['patch'])

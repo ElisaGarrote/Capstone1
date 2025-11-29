@@ -10,7 +10,7 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { createAssetCheckin, createAssetCheckinFile } from "../../services/assets-service";
+import { createAssetCheckin } from "../../services/assets-service";
 import { resolveTicket } from "../../services/integration-ticket-tracking-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
@@ -248,11 +248,11 @@ export default function CheckInAsset() {
       formData.append("asset_checkout", checkout.id);
       formData.append("checkin_date", data.checkinDate);
       formData.append("status", data.status);
+      formData.append("condition", data.condition);
       formData.append("location", data.location);
 
       // Optional fields
-      formData.append("ticket_id", ticketId);
-      formData.append("condition", data.condition);
+      formData.append("ticket_id", ticketId || "");
       formData.append("notes", data.notes || "");
 
       // Append attachment files if any
@@ -352,14 +352,14 @@ export default function CheckInAsset() {
 
             {/* Status Dropdown with + button */}
             <fieldset>
-              <label htmlFor='status'>Status <span style={{color: 'red'}}>*</span></label>
+              <label htmlFor='status'>Asset Status <span style={{color: 'red'}}>*</span></label>
               <div className="dropdown-with-add">
                 <select
                   id="status"
                   {...register("status", { required: "Status is required" })}
                   className={errors.status ? 'input-error' : ''}
                 >
-                  <option value="">Select Status</option>
+                  <option value="">Select Asset Status</option>
                   {statuses.map(status => (
                     <option key={status.id} value={status.id}>
                       {status.name}

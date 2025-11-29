@@ -329,6 +329,11 @@ class LocationSerializer(serializers.ModelSerializer):
         model = Location
         fields = '__all__'
 
+class EmployeeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Employee
+        fields = '__all__'
+
 class TicketSerializer(serializers.ModelSerializer):
     location_details = serializers.SerializerMethodField()
 
