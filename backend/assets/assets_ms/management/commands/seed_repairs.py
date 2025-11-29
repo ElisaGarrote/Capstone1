@@ -28,22 +28,24 @@ class Command(BaseCommand):
             Repair.objects.all().delete()
             self.stdout.write(self.style.SUCCESS('Existing repairs cleared.'))
 
-        # Check if assets exist (target undeployable assets IDs 81-90)
-        undeployable_assets = Asset.objects.filter(id__gte=81, id__lte=90, is_deleted=False)
-        if not undeployable_assets.exists():
+        # Get assets with undeployable status (5 or 6) - these are the ones that should have repairs
+        # According to seed_assets.py, assets at positions 81-90 (0-indexed: 80-89) have undeployable status
+        undeployable_assets = Asset.objects.filter(status__in=[5, 6], is_deleted=False).order_by('id')[:10]
+
+        if undeployable_assets.count() < 10:
             if options['no_auto_seed_assets']:
                 self.stdout.write(self.style.ERROR(
-                    'No undeployable assets found (IDs 81-90). Please seed assets first using: python manage.py seed_assets'
+                    f'Only {undeployable_assets.count()} undeployable assets found. Need 10. Please seed assets first using: python manage.py seed_assets'
                 ))
                 return
             else:
-                self.stdout.write(self.style.WARNING('\n⚠ No undeployable assets found. Auto-seeding assets first...'))
+                self.stdout.write(self.style.WARNING(f'\n⚠ Only {undeployable_assets.count()} undeployable assets found. Auto-seeding assets first...'))
                 self.stdout.write(self.style.MIGRATE_HEADING('\n=== Auto-Seeding Assets (100 records) ==='))
                 call_command('seed_assets')
                 # Refresh assets queryset
-                undeployable_assets = Asset.objects.filter(id__gte=81, id__lte=90, is_deleted=False)
-                if not undeployable_assets.exists():
-                    self.stdout.write(self.style.ERROR('Failed to seed assets. Cannot create repairs.'))
+                undeployable_assets = Asset.objects.filter(status__in=[5, 6], is_deleted=False).order_by('id')[:10]
+                if undeployable_assets.count() < 10:
+                    self.stdout.write(self.style.ERROR(f'Failed to seed assets. Only {undeployable_assets.count()} undeployable assets found.'))
                     return
                 self.stdout.write(self.style.SUCCESS('\n✓ Successfully seeded assets'))
 

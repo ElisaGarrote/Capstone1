@@ -4,6 +4,14 @@ from contexts_ms.models import Ticket
 from datetime import timedelta
 import random
 
+# Shared date constants - must match seed_asset_checkouts.py in assets service
+# Checkout dates: 60-90 days ago (earlier window)
+# Checkin dates: must be AFTER checkout dates, so 1-30 days after checkout
+CHECKOUT_DAYS_AGO_MIN = 60
+CHECKOUT_DAYS_AGO_MAX = 90
+CHECKIN_DAYS_AFTER_CHECKOUT_MIN = 1
+CHECKIN_DAYS_AFTER_CHECKOUT_MAX = 30
+
 
 class Command(BaseCommand):
     help = 'Seed the database with 80 ticket records (40 checkout + 40 checkin requests matched to asset statuses)'
@@ -155,6 +163,10 @@ class Command(BaseCommand):
         # These will be for assets that are currently checked out (status 3-4)
         # IMPORTANT: The asset_checkout IDs reference the AssetCheckout records
         # created by seed_asset_checkouts.py for assets 41-80
+        #
+        # IMPORTANT: Checkin date MUST be >= checkout date
+        # Checkout dates are calculated as: base_date - (60 + i * 30/40) days
+        # So we calculate checkout_date here and ensure checkin_date is after it
         for i in range(40):
             asset_id = i + 41  # Assets 41-80 will have checkin tickets
             ticket_number = f'TKT{ticket_number_counter:03d}'
@@ -164,10 +176,14 @@ class Command(BaseCommand):
             location_id = random.choice(location_ids)
             subject = random.choice(checkin_subjects)
 
-            # Random date within last 90 days
-            days_ago = random.randint(1, 90)
-            created_date = base_date - timedelta(days=days_ago)
-            checkin_date = (created_date + timedelta(days=random.randint(1, 3))).date()
+            # Calculate the same checkout_date that seed_asset_checkouts.py uses
+            # This ensures checkin_date is always AFTER checkout_date
+            checkout_days_ago = CHECKOUT_DAYS_AGO_MIN + (i * (CHECKOUT_DAYS_AGO_MAX - CHECKOUT_DAYS_AGO_MIN) // 40)
+            checkout_date = (base_date - timedelta(days=checkout_days_ago)).date()
+
+            # Checkin date must be AFTER checkout date (1-30 days after)
+            days_after_checkout = random.randint(CHECKIN_DAYS_AFTER_CHECKOUT_MIN, CHECKIN_DAYS_AFTER_CHECKOUT_MAX)
+            checkin_date = checkout_date + timedelta(days=days_after_checkout)
 
             # Reference to the AssetCheckout record (IDs 1-40 correspond to assets 41-80)
             # AssetCheckout ID 1 = Asset 41, ID 2 = Asset 42, ..., ID 40 = Asset 80
@@ -185,7 +201,7 @@ class Command(BaseCommand):
                 'location': location_id,
                 'checkout_date': None,  # NULL for checkin tickets
                 'return_date': None,  # NULL for checkin tickets
-                'checkin_date': checkin_date,  # Has value for checkin tickets
+                'checkin_date': checkin_date,  # Has value for checkin tickets - ALWAYS after checkout_date
                 'asset_checkout': asset_checkout_id,
                 'is_resolved': is_resolved,
             }

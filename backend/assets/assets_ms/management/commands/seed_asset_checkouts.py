@@ -5,6 +5,12 @@ from assets_ms.models import Asset, AssetCheckout
 from datetime import timedelta
 import random
 
+# Shared date constants - ensure consistency between assets and contexts seeders
+# Checkout dates: 60-90 days ago (earlier window)
+# Checkin dates: must be AFTER checkout dates, so 1-30 days after checkout
+CHECKOUT_DAYS_AGO_MIN = 60
+CHECKOUT_DAYS_AGO_MAX = 90
+
 
 class Command(BaseCommand):
     help = 'Seed the database with 40 AssetCheckout records for deployed assets (IDs 41-80)'
@@ -27,22 +33,24 @@ class Command(BaseCommand):
             AssetCheckout.objects.all().delete()
             self.stdout.write(self.style.SUCCESS('Existing asset checkouts cleared.'))
 
-        # Check if assets exist
-        deployed_assets = Asset.objects.filter(id__gte=41, id__lte=80, is_deleted=False)
-        if not deployed_assets.exists():
+        # Get assets with deployed status (3 or 4) - these are the ones that should have checkouts
+        # According to seed_assets.py, assets at positions 41-80 (0-indexed: 40-79) have deployed status
+        deployed_assets = Asset.objects.filter(status__in=[3, 4], is_deleted=False).order_by('id')[:40]
+
+        if deployed_assets.count() < 40:
             if options['no_auto_seed_assets']:
                 self.stdout.write(self.style.ERROR(
-                    'No deployed assets found (IDs 41-80). Please seed assets first using: python manage.py seed_assets'
+                    f'Only {deployed_assets.count()} deployed assets found. Need 40. Please seed assets first using: python manage.py seed_assets'
                 ))
                 return
             else:
-                self.stdout.write(self.style.WARNING('\n⚠ No deployed assets found. Auto-seeding assets first...'))
+                self.stdout.write(self.style.WARNING(f'\n⚠ Only {deployed_assets.count()} deployed assets found. Auto-seeding assets first...'))
                 self.stdout.write(self.style.MIGRATE_HEADING('\n=== Auto-Seeding Assets (100 records) ==='))
                 call_command('seed_assets')
                 # Refresh assets queryset
-                deployed_assets = Asset.objects.filter(id__gte=41, id__lte=80, is_deleted=False)
-                if not deployed_assets.exists():
-                    self.stdout.write(self.style.ERROR('Failed to seed assets. Cannot create checkouts.'))
+                deployed_assets = Asset.objects.filter(status__in=[3, 4], is_deleted=False).order_by('id')[:40]
+                if deployed_assets.count() < 40:
+                    self.stdout.write(self.style.ERROR(f'Failed to seed assets. Only {deployed_assets.count()} deployed assets found.'))
                     return
                 self.stdout.write(self.style.SUCCESS(f'\n✓ Successfully seeded assets'))
 
@@ -92,8 +100,9 @@ class Command(BaseCommand):
             employee_id = random.choice(employee_ids)
             location_id = random.choice(location_ids)
 
-            # Checkout happened in the past (30-90 days ago)
-            days_ago = random.randint(30, 90)
+            # Checkout happened in the past (60-90 days ago)
+            # Using consistent range so ticket seeder can generate valid checkin dates
+            days_ago = CHECKOUT_DAYS_AGO_MIN + (i * (CHECKOUT_DAYS_AGO_MAX - CHECKOUT_DAYS_AGO_MIN) // 40)
             checkout_date = (base_date - timedelta(days=days_ago)).date()
             # Return date is 7-30 days after checkout
             return_date = checkout_date + timedelta(days=random.randint(7, 30))

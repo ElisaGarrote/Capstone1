@@ -44,7 +44,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '--tickets-only',
             action='store_true',
-            help='Seed only tickets (100 records)',
+            help='Seed only tickets (80 records)',
         )
 
     def handle(self, *args, **options):
@@ -93,9 +93,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Locations (10 records) ==='))
             call_command('seed_locations', clear_flag) if clear_flag else call_command('seed_locations')
         
-        # Seed Tickets (100 records)
+        # Seed Tickets (80 records: 40 checkout + 40 checkin)
         if seed_all or options['tickets_only']:
-            self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Tickets (100 records) ==='))
+            self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding Tickets (80 records) ==='))
             call_command('seed_tickets', clear_flag) if clear_flag else call_command('seed_tickets')
 
         self.stdout.write(self.style.SUCCESS('\n✓ All context seeding complete!'))
