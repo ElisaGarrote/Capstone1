@@ -10,7 +10,8 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { createAssetCheckout } from "../../services/assets-service";
+import { createAssetCheckoutWithStatus } from "../../services/assets-service";
+import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 
 export default function CheckOutAsset() {
   const location = useLocation();
@@ -34,6 +35,13 @@ export default function CheckOutAsset() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
+
+  // Status dropdown state
+  const [statuses, setStatuses] = useState([]);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+
+  // Only allow deployed status type for checkout
+  const CHECKOUT_STATUS_TYPES = "deployed";
 
   useEffect(() => {
     if (passedState) {
@@ -86,6 +94,7 @@ export default function CheckOutAsset() {
       empLocation: empLocation || "",
       checkoutDate: checkoutDate || "",
       expectedReturnDate: returnDate || "",
+      status: "",
       condition: "",
       notes: ""
     },
@@ -99,6 +108,13 @@ export default function CheckOutAsset() {
         setValue("empLocation", passedState.empLocation || "");
         setValue("checkoutDate", passedState.checkoutDate || "");
         setValue("expectedReturnDate", passedState.returnDate || "");
+
+        // Fetch deployed statuses only
+        const dropdowns = await fetchAllDropdowns("status", {
+          category: "asset",
+          types: CHECKOUT_STATUS_TYPES
+        });
+        setStatuses(dropdowns.statuses || []);
       } catch (error) {
         console.error("Error initializing:", error);
         setErrorMessage("Failed to initialize data");
@@ -139,6 +155,54 @@ export default function CheckOutAsset() {
 
 
 
+  // Modal field configurations - only allow deployed status type for checkout
+  const statusFields = [
+    {
+      name: 'name',
+      label: 'Status Label',
+      type: 'text',
+      placeholder: 'Status Label',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Status Label is required' }
+    },
+    {
+      name: 'category',
+      type: 'hidden',
+      defaultValue: 'asset'
+    },
+    {
+      name: 'type',
+      type: 'hidden',
+      defaultValue: 'deployed'
+    }
+  ];
+
+  const handleSaveStatus = async (data) => {
+    try {
+      const newStatus = await createStatus(data);
+      setStatuses([...statuses, newStatus]);
+      setShowStatusModal(false);
+      setErrorMessage("");
+    } catch (error) {
+      console.error('Error creating status:', error);
+      let message = "Failed to create status";
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+        const messages = [];
+        Object.values(data).forEach((value) => {
+          if (Array.isArray(value)) messages.push(...value);
+          else if (typeof value === "string") messages.push(value);
+        });
+        if (messages.length > 0) {
+          message = messages.join(" ");
+        }
+      }
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
@@ -146,6 +210,7 @@ export default function CheckOutAsset() {
       // Required fields
       formData.append('asset', id);
       formData.append('ticket_id', ticketId);
+      formData.append('status', data.status);
 
       const conditionValue = parseInt(data.condition, 10);
       if (!isNaN(conditionValue)) {
@@ -155,19 +220,19 @@ export default function CheckOutAsset() {
       // Optional fields
       formData.append('notes', data.notes || '');
 
-      // Append image files
-      selectedFiles.forEach((file, index) => {
-        formData.append(`image_${index}`, file);
+      // Append image files as attachments
+      selectedFiles.forEach((file) => {
+        formData.append('attachments', file);
       });
 
       for (let pair of formData.entries()) {
         console.log(pair[0]+ ': ' + pair[1]);
       }
 
-      await createAssetCheckout(formData);
+      await createAssetCheckoutWithStatus(formData);
 
-      // Navigate to asset view page after successful checkout
-      navigate(`/assets/view/${id}`, {
+      // Navigate to approved tickets after successful checkout
+      navigate(`/approved-tickets`, {
         state: {
           successMessage: "Asset has been checked out successfully!"
         }
@@ -175,9 +240,25 @@ export default function CheckOutAsset() {
 
     } catch (error) {
       console.error("Error occurred while checking out the asset:", error);
-      setErrorMessage(
-        error.message || "An error occurred while checking out the asset"
-      );
+
+      let message = "An error occurred while checking out the asset.";
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+        const messages = [];
+        Object.entries(data).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            messages.push(...value);
+          } else if (typeof value === "string") {
+            messages.push(value);
+          }
+        });
+        if (messages.length > 0) {
+          message = messages.join(" ");
+        }
+      }
+
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(""), 5000);
     }
   };
 
@@ -262,6 +343,34 @@ export default function CheckOutAsset() {
               )}
             </fieldset>
 
+            {/* Status Dropdown with + button */}
+            <fieldset>
+              <label htmlFor='status'>Asset Status <span style={{color: 'red'}}>*</span></label>
+              <div className="dropdown-with-add">
+                <select
+                  id="status"
+                  {...register("status", { required: "Status is required" })}
+                  className={errors.status ? 'input-error' : ''}
+                >
+                  <option value="">Select Asset Status</option>
+                  {statuses.map(status => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-btn"
+                  onClick={() => setShowStatusModal(true)}
+                  title="Add new status"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
+              {errors.status && <span className='error-message'>{errors.status.message}</span>}
+            </fieldset>
+
             {/* Condition */}
             <fieldset>
               <label htmlFor="condition">Condition <span style={{color: 'red'}}>*</span></label>
@@ -336,6 +445,15 @@ export default function CheckOutAsset() {
         </section>
       </main>
       <Footer />
+
+      <AddEntryModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        onSave={handleSaveStatus}
+        title="New Status Label"
+        fields={statusFields}
+        type="status"
+      />
     </>
   );
 }

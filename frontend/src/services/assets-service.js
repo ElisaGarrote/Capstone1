@@ -42,6 +42,12 @@ export async function createAssetCheckout(data) {
   return res.data;
 }
 
+// Create asset checkout with status (atomic)
+export async function createAssetCheckoutWithStatus(data) {
+  const res = await assetsAxios.post("asset-checkout/checkout-with-status/", data);
+  return res.data;
+}
+
 /* ===============================
             ASSETS CRUD
 ================================= */

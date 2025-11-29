@@ -304,7 +304,9 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
 
         request = self.context.get('request')
         if request and hasattr(request, 'FILES'):
-            for f in request.FILES.getlist('image'):
+            # Handle files from 'attachments' or 'image' key
+            files = request.FILES.getlist('attachments') or request.FILES.getlist('image')
+            for f in files:
                 AssetCheckoutFile.objects.create(asset_checkout=checkout, file=f)
 
         for file_dict in files_data:
