@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
-import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import "../../styles/Products/ProductViewPage.css";
 import "../../styles/Assets/AssetViewPage.css";
 import "../../styles/Assets/Assets.css";
@@ -20,10 +18,12 @@ import Pagination from "../../components/Pagination";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import AssetFilterModal from "../../components/Modals/AssetFilterModal";
+import { fetchAssetsByProduct } from "../../services/assets-service";
 
 function ProductViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [product, setProduct] = useState(null);
   const [manufacturer, setManufacturer] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,26 +48,35 @@ function ProductViewPage() {
   const [assetToDelete, setAssetToDelete] = useState(null);
 
   useEffect(() => {
-    // Find product from mockup data
-    const foundProduct = ProductsMockupData.find((p) => p.id === parseInt(id));
-    if (foundProduct) {
-      setProduct(foundProduct);
+    const loadProductData = async () => {
+      // Get product from location state (passed from Products page)
+      const passedProduct = location.state?.product;
 
-      // Find manufacturer
-      const foundManufacturer = ManufacturersMockupData.find(
-        (m) => m.id === foundProduct.manufacturer_id
-      );
-      setManufacturer(foundManufacturer);
+      if (passedProduct) {
+        setProduct(passedProduct);
 
-      // Filter assets for this product (base dataset for this page)
-      const productAssetsForModel = AssetsMockupData.filter(
-        (asset) => asset.product === foundProduct.model || asset.name === foundProduct.name
-      );
-      setProductAssets(productAssetsForModel);
-      setFilteredAssets(productAssetsForModel);
-    }
-    setIsLoading(false);
-  }, [id]);
+        // Find manufacturer using manufacturer_id from passed product
+        const foundManufacturer = ManufacturersMockupData.find(
+          (m) => m.id === passedProduct.manufacturer_id
+        );
+        setManufacturer(foundManufacturer);
+
+        // Fetch assets for this product from API
+        try {
+          const assets = await fetchAssetsByProduct(passedProduct.id);
+          setProductAssets(assets);
+          setFilteredAssets(assets);
+        } catch (error) {
+          console.error("Error fetching assets for product:", error);
+          setProductAssets([]);
+          setFilteredAssets([]);
+        }
+      }
+      setIsLoading(false);
+    };
+
+    loadProductData();
+  }, [id, location.state]);
 
   if (isLoading) {
     return null; // Don't render anything while loading
@@ -85,7 +94,7 @@ function ProductViewPage() {
   }
 
   const imageSrc = product.image
-    ? `https://assets-service-production.up.railway.app${product.image}`
+    ? `${ASSETS_API_URL.replace(/\/$/, '')}${product.image}`
     : DefaultImage;
 
   const tabs = getProductTabs();
@@ -335,7 +344,7 @@ function ProductViewPage() {
               <th>IMAGE</th>
               <th>ID</th>
               <th>NAME</th>
-              <th>CATEGORY</th>
+              <th>SERIAL</th>
               <th>STATUS</th>
               <th>CHECK-IN / CHECK-OUT</th>
               <th>ACTION</th>
@@ -345,8 +354,19 @@ function ProductViewPage() {
             {paginatedAssets.length > 0 ? (
               paginatedAssets.map((asset) => {
                 const baseImage = asset.image
-                  ? `https://assets-service-production.up.railway.app${asset.image}`
+                  ? `${ASSETS_API_URL.replace(/\/$/, '')}${asset.image}`
                   : DefaultImage;
+
+                const statusType = asset.status_details?.type?.toLowerCase();
+
+                // Check-In button: Shows when asset is deployed (no ticket required)
+                const showCheckIn = statusType === "deployed";
+
+                // Check-Out button: Shows when asset is deployable AND has a checkout ticket
+                const showCheckOut =
+                  (statusType === "deployable" || statusType === "pending") &&
+                  asset.ticket &&
+                  asset.ticket.ticket_type === "checkout";
 
                 return (
                   <tr key={asset.id}>
@@ -360,21 +380,16 @@ function ProductViewPage() {
                         }}
                       />
                     </td>
-                    <td>{asset.displayed_id}</td>
-                    <td>{asset.name}</td>
-                    <td>{asset.category || 'N/A'}</td>
+                    <td>{asset.asset_id}</td>
+                    <td>{asset.name || 'N/A'}</td>
+                    <td>{asset.serial_number || 'N/A'}</td>
                     <td>
-                      <Status type={asset.status.toLowerCase()} name={asset.status} />
+                      <Status type={asset.status_details?.type?.toLowerCase()} name={asset.status_details?.name} />
                     </td>
                     <td>
                       <ActionButtons
-                        showCheckout={
-                          asset.status.toLowerCase() === 'ready to deploy' ||
-                          asset.status.toLowerCase() === 'readytodeploy' ||
-                          asset.status.toLowerCase() === 'archived' ||
-                          asset.status.toLowerCase() === 'pending'
-                        }
-                        showCheckin={asset.status.toLowerCase() === 'deployed'}
+                        showCheckout={showCheckOut}
+                        showCheckin={showCheckIn}
                         onCheckoutClick={() => handleCheckInOut(asset, 'checkout')}
                         onCheckinClick={() => handleCheckInOut(asset, 'checkin')}
                       />
@@ -434,7 +449,7 @@ function ProductViewPage() {
     if (product) {
       console.log('Navigating to registration with cloned name:', `${product.name} (cloned)`);
       navigate('/products/registration', {
-        state: { clonedProductName: `${product.name} (cloned)` }
+        state: { product, isClone: true }
       });
     } else {
       console.log('No product found for cloning');
@@ -442,7 +457,9 @@ function ProductViewPage() {
   };
 
   const handleEditClick = () => {
-    navigate(`/products/registration/${product.id}`);
+    navigate(`/products/edit/${product.id}`, {
+      state: { product }
+    });
   };
 
   const handleDeleteClick = () => {
@@ -543,22 +560,22 @@ function ProductViewPage() {
 
                 <div className="detail-row">
                   <label>Model Number</label>
-                  <span>{product.model || "N/A"}</span>
+                  <span>{product.model_number || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
                   <label>Category</label>
-                  <span>{product.category || "N/A"}</span>
+                  <span>{product.category_details?.name || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
                   <label>Manufacturer</label>
-                  <span>{manufacturer?.name || "N/A"}</span>
+                  <span>{product.manufacturer_details?.name || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
                   <label>Depreciation</label>
-                  <span>{product.depreciation || "N/A"}</span>
+                  <span>{product.depreciation_details?.name || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
@@ -568,7 +585,12 @@ function ProductViewPage() {
 
                 <div className="detail-row">
                   <label>Default Purchase Cost</label>
-                  <span>{product.purchase_cost ? `PHP ${product.purchase_cost}` : "N/A"}</span>
+                  <span>{product.default_purchase_cost ? `₱${Number(product.default_purchase_cost).toLocaleString()}` : "N/A"}</span>
+                </div>
+
+                <div className="detail-row">
+                  <label>Default Supplier</label>
+                  <span>{product.default_supplier_details?.name || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">

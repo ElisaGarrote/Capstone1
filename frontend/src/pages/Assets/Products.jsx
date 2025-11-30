@@ -215,7 +215,7 @@ export default function Products() {
 
   // Add view handler
   const handleViewClick = (product) => {
-    navigate(`/products/view/${product.id}`);
+    navigate(`/products/view/${product.id}`, { state: { product } });
   };
 
   // Apply filters to data

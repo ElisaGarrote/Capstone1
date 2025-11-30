@@ -58,6 +58,12 @@ export async function fetchAllAssets() {
   return res.data;
 }
 
+// GET all assets for a product
+export async function fetchAssetsByProduct(productId) {
+  const res = await assetsAxios.get(`assets/by-product/${productId}/`);
+  return res.data;
+}
+
 // GET asset by ID
 export async function fetchAssetById(id) {
   const res = await assetsAxios.get(`assets/${id}/`);

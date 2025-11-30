@@ -422,8 +422,6 @@ export default function Assets() {
     loadAssets();
   }, []);
 
-
-
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}

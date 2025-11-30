@@ -48,6 +48,13 @@ class AssetViewSet(viewsets.ModelViewSet):
         if self.request.query_params.get('show_deleted') == 'true':
             queryset = Asset.objects.filter(is_deleted=True).order_by('name')
         return queryset
+    
+    @action(detail=False, methods=['get'], url_path='by-product/(?P<product_id>\d+)')
+    def by_product(self, request, product_id=None):
+        """Get all assets for a specific product"""
+        assets = Asset.objects.filter(product=product_id, is_deleted=False).order_by('name')
+        serializer = self.get_serializer(assets, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def deleted(self, request):

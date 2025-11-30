@@ -19,6 +19,7 @@ export default function ProductsRegistration() {
   const [categories, setCategories] = useState([]);
   const [depreciations, setDepreciations] = useState([]);
   const [product, setProduct] = useState(null);
+  const [isClone, setIsClone] = useState(false);
 
   // Modal states for adding new entries
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -76,6 +77,8 @@ export default function ProductsRegistration() {
 
         // Get product data - prioritize state, then fetch from API
         let productData = location.state?.product;
+        const cloneMode = location.state?.isClone === true;
+        setIsClone(cloneMode);
 
         // If no product in state but we have an ID, fetch from API
         if (!productData && id) {
@@ -84,7 +87,7 @@ export default function ProductsRegistration() {
 
         // Initialize form if editing
         if (productData) {
-          setValue("productName", productData.name || "");
+          setValue("productName", cloneMode ? `${productData.name} (cloned)` : productData.name || "");
           setValue("category", productData.category || "");
           setValue("manufacturer", productData.manufacturer || "");
           setValue("depreciation", productData.depreciation || "");
@@ -322,8 +325,8 @@ export default function ProductsRegistration() {
 
       let result;
 
-      // Create new product
-      if (id) {
+      // Update existing product or create new one
+      if (id && !isClone) {
         result = await updateProduct(id, formData);
       } else {
         result = await createProduct(formData);
