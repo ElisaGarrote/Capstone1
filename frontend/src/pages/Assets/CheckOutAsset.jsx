@@ -14,9 +14,73 @@ import { createAssetCheckoutWithStatus } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 
 export default function CheckOutAsset() {
-  const location = useLocation();
-  const passedState = location.state;
-  const currentDate = new Date().toISOString().split("T")[0];
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  // Form state
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  // Dropdowns state
+  const [statuses, setStatuses] = useState([]);
+  // Modal states for adding new entries
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  // File upload state
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
+
+  // Extract data from state, store in variables
+  const ticket = state?.ticket || {};
+  const asset = state?.asset || {};
+  const employeeName = state?.employeeName || "";
+  const fromAsset = state?.fromAsset || false;
+
+  // Declare variables for destructuring
+  const { 
+    id: ticketId,
+    asset: assetId,
+    location: location,
+  } = ticket;
+  const { asset_id: assetDisplayedId, name: assetName } = asset;
+
+  // Form handling initializations
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm({
+    mode: "all",
+    defaultValues: {
+      employeeName: '',
+      empLocation: '',
+      checkoutDate: '',
+      expectedReturnDate: '',
+      status: '',
+      condition: '',
+      notes: '',
+    },
+  });
+
+  // Initialize dropdowns
+  useEffect(() => {
+    const initialize = async () => {
+      setIsLoading(true);
+      console.log("states:", state);
+      try {
+        const dropdowns = await fetchAllDropdowns("status", {
+          category: "asset",
+          types: "deployed",
+        });
+        setStatuses(dropdowns.statuses || []);
+      } catch (error) {
+        console.error("Error fetching dropdowns:", error);
+        setErrorMessage("Failed to load dropdowns. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+  }, []);
+
   const conditionOptions = [
     { value: "1", label: "1 - Unserviceable" },
     { value: "2", label: "2 - Poor" },
@@ -30,133 +94,28 @@ export default function CheckOutAsset() {
     { value: "10", label: "10 - Brand New" }
   ];
 
-  const navigate = useNavigate();
-
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-
-  // Status dropdown state
-  const [statuses, setStatuses] = useState([]);
-  const [showStatusModal, setShowStatusModal] = useState(false);
-
-  // Only allow deployed status type for checkout
-  const CHECKOUT_STATUS_TYPES = "deployed";
-
   useEffect(() => {
-    if (passedState) {
-      console.log("Received state:", passedState);
-    } else {
-      console.warn("No state was passed!");
+    if (state?.ticket && state?.asset) {
+      const ticketData = state.ticket;
+
+      const employeeName = state.employeeName || "Unknown";
+      const locationCity = ticketData.location_details?.city || "";
+      const checkoutDate = ticketData.checkout_date || "";
+      const returnDate = ticketData.return_date || "";
+
+      setValue("employeeName", employeeName);
+      setValue("empLocation", locationCity);
+      setValue("checkoutDate", checkoutDate);
+      setValue("returnDate", returnDate);
     }
-  }, [passedState]);
+  }, [state, setValue]);
 
-  const {
-    id,
-    image,
-    assetId,
-    product,
-    empId,
-    employee,
-    empLocation,
-    checkoutDate,
-    returnDate,
-    ticketId,
-    fromAsset,
-    fromTicket,
-  } = passedState || {};
+  if (isLoading) {
+    console.log("isLoading triggered — showing loading screen");
+    return <SystemLoading />;
+  }
 
-  console.log({
-    id,
-    image,
-    assetId,
-    product,
-    empId,
-    employee,
-    empLocation,
-    checkoutDate,
-    returnDate,
-    ticketId,
-    fromAsset,
-    fromTicket
-  });
-
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors, isValid },
-  } = useForm({
-    mode: "all",
-    defaultValues: {
-      employee: employee || "",
-      empLocation: empLocation || "",
-      checkoutDate: checkoutDate || "",
-      expectedReturnDate: returnDate || "",
-      status: "",
-      condition: "",
-      notes: ""
-    },
-  });
-
-  useEffect(() => {
-    const initialize = async () => {
-      setIsLoading(true);
-      console.log("passedState:", passedState);
-      try {
-        setValue("employee", passedState.employee || "");
-        setValue("empLocation", passedState.empLocation || "");
-        setValue("checkoutDate", passedState.checkoutDate || "");
-        setValue("expectedReturnDate", passedState.returnDate || "");
-
-        // Fetch deployed statuses only
-        const dropdowns = await fetchAllDropdowns("status", {
-          category: "asset",
-          types: CHECKOUT_STATUS_TYPES
-        });
-        setStatuses(dropdowns.statuses || []);
-      } catch (error) {
-        console.error("Error initializing:", error);
-        setErrorMessage("Failed to initialize data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initialize();
-  }, [passedState, setValue]);
-
-  // Handle file selection
-  const handleFileSelection = (e) => {
-    const files = Array.from(e.target.files || []);
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    const validFiles = [];
-
-    files.forEach(file => {
-      if (file.size > maxSize) {
-        setErrorMessage(`${file.name} exceeds 5MB and was not added.`);
-        setTimeout(() => setErrorMessage(""), 5000);
-      } else if (!['image/jpeg', 'image/png'].includes(file.type)) {
-        setErrorMessage(`${file.name} is not a valid image format. Only .jpeg and .png are allowed.`);
-        setTimeout(() => setErrorMessage(""), 5000);
-      } else {
-        validFiles.push(file);
-      }
-    });
-
-    setSelectedFiles(prev => [...prev, ...validFiles]);
-  };
-
-  // Remove file from selection
-  const removeFile = (index) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-
-
-
-  // Modal field configurations - only allow deployed status type for checkout
+  // Modal field configurations - only allow checkin-valid status types (excludes 'deployed')
   const statusFields = [
     {
       name: 'name',
@@ -174,8 +133,14 @@ export default function CheckOutAsset() {
     },
     {
       name: 'type',
-      type: 'hidden',
-      defaultValue: 'deployed'
+      label: 'Status Type',
+      type: 'select',
+      placeholder: 'Select Status Type',
+      required: true,
+      options: [
+        { value: 'deployed', label: 'Deployed' },
+      ],
+      validation: { required: 'Status Type is required' }
     }
   ];
 
@@ -187,21 +152,49 @@ export default function CheckOutAsset() {
       setErrorMessage("");
     } catch (error) {
       console.error('Error creating status:', error);
+
       let message = "Failed to create status";
+
       if (error.response && error.response.data) {
         const data = error.response.data;
+
+        // Aggregate all error messages
         const messages = [];
         Object.values(data).forEach((value) => {
           if (Array.isArray(value)) messages.push(...value);
           else if (typeof value === "string") messages.push(value);
         });
+
         if (messages.length > 0) {
           message = messages.join(" ");
         }
       }
+
       setErrorMessage(message);
       setTimeout(() => setErrorMessage(""), 5000);
     }
+  };
+
+  // File upload
+  // Handle file selection
+  const handleFileSelection = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 300 * 1024 * 1024; // 300MB
+
+    const validFiles = files.filter((file) => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 300MB and was not added.`);
+        return false;
+      }
+      return true;
+    });
+
+    setAttachmentFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  // Remove file from selection
+  const removeFile = (index) => {
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data) => {
@@ -209,25 +202,26 @@ export default function CheckOutAsset() {
       const formData = new FormData();
 
       // Required fields
-      formData.append('asset', id);
       formData.append('ticket_id', ticketId);
       formData.append('status', data.status);
-
-      const conditionValue = parseInt(data.condition, 10);
-      if (!isNaN(conditionValue)) {
-        formData.append('condition', conditionValue);
-      }
+      formData.append("condition", data.condition);
 
       // Optional fields
+      formData.append('revenue', data.revenue || 0);
       formData.append('notes', data.notes || '');
 
-      // Append image files as attachments
-      selectedFiles.forEach((file) => {
-        formData.append('attachments', file);
+      // Append attachment files if any
+      attachmentFiles.forEach((file, index) => {
+        formData.append("attachments", file);
       });
 
-      for (let pair of formData.entries()) {
-        console.log(pair[0]+ ': ' + pair[1]);
+      console.log("FINAL FORM DATA:");
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
       }
 
       await createAssetCheckoutWithStatus(formData);
@@ -263,11 +257,6 @@ export default function CheckOutAsset() {
     }
   };
 
-  if (isLoading) {
-    console.log("isLoading triggered — showing loading screen");
-    return <SystemLoading />;
-  }
-
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -275,10 +264,10 @@ export default function CheckOutAsset() {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root={passedState?.fromAsset ? "Assets" : "Tickets"}
+            root={fromAsset ? "Assets" : "Tickets"}
             currentPage="Check-Out Asset"
-            rootNavigatePage={passedState?.fromAsset ? "/assets" : "/tickets"}
-            title={assetId}
+            rootNavigatePage={fromAsset ? "/assets" : "/approved-tickets"}
+            title={assetName ? `${assetDisplayedId} - ${assetName}` : assetId}
           />
         </section>
         <section className="registration-form">
@@ -302,7 +291,7 @@ export default function CheckOutAsset() {
                 type="text"
                 id="employee"
                 readOnly
-                {...register("employee")}
+                {...register("employeeName")}
               />
             </fieldset>
 
@@ -332,16 +321,11 @@ export default function CheckOutAsset() {
             <fieldset>
               <label htmlFor="returnDate">Expected Return Date <span style={{color: 'red'}}>*</span></label>
               <input
-                type="date"
+                type="text"
                 id="returnDate"
-                className={errors.returnDate ? 'input-error' : ''}
-                {...register("returnDate", { required: "Expected return date is required" })}
-                defaultValue={passedState?.returnDate || ""}
-                min={currentDate}
+                readOnly
+                {...register("returnDate")}
               />
-              {errors.returnDate && (
-                <span className="error-message">{errors.returnDate.message}</span>
-              )}
             </fieldset>
 
             {/* Status Dropdown with + button */}
@@ -402,31 +386,32 @@ export default function CheckOutAsset() {
               ></textarea>
             </fieldset>
 
-            {/* Image Upload */}
+            {/* Attachments */}
             <fieldset>
-              <label>Image Upload</label>
+              <label htmlFor="attachments">Upload File</label>
+
               <div className="attachments-wrapper">
                 {/* Left column: Upload button & info */}
                 <div className="upload-left">
-                  <label htmlFor="images" className="upload-image-btn">
+                  <label htmlFor="attachments" className="upload-image-btn">
                     Choose File
                     <input
                       type="file"
-                      id="images"
-                      accept=".jpeg,.jpg,.png"
+                      id="attachments"
+                      accept="image/*,.pdf,.doc,.docx"
                       onChange={handleFileSelection}
                       style={{ display: "none" }}
                       multiple
                     />
                   </label>
                   <small className="file-size-info">
-                    Maximum file size must be 5MB
+                    Maximum file size must be 300MB
                   </small>
                 </div>
 
                 {/* Right column: Uploaded files */}
                 <div className="upload-right">
-                  {selectedFiles.map((file, index) => (
+                  {attachmentFiles.map((file, index) => (
                     <div className="file-uploaded" key={index}>
                       <span title={file.name}>{file.name}</span>
                       <button type="button" onClick={() => removeFile(index)}>

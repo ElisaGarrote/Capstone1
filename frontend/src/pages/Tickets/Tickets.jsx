@@ -11,7 +11,7 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
 import { fetchAssetById, fetchAssetCheckoutById } from "../../services/assets-service";
-import { fetchAllEmployees } from "../../services/integration-auth-service";
+import { fetchAllEmployees, fetchEmployeeById } from "../../services/integration-auth-service";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -271,7 +271,7 @@ const Tickets = () => {
         });
       } else {
         navigate(`/assets/check-out/${ticket.asset}`, {
-          state: { ticket, asset, fromAsset: false },
+          state: { ticket, asset, employeeName: ticket.employeeName, fromAsset: false },
         });
       }
     } catch (error) {

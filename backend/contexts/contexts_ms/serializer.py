@@ -357,10 +357,9 @@ class TicketSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError({"return_date": "This field is required for checkout ticket."})
 
             # Disallow checkin-only fields even on partial update
-            if data.get("asset_checkout"):
-                raise serializers.ValidationError({"asset_checkout": "Not allowed for checkout ticket."})
+            # Note: asset_checkout IS allowed on checkout tickets - it stores the checkout record ID when resolved
             if data.get("checkin_date"):
-                raise serializers.ValidationError({"checkin_date": "Not allowed for checkin ticket."})
+                raise serializers.ValidationError({"checkin_date": "Not allowed for checkout ticket."})
 
         elif ticket_type == Ticket.TicketType.CHECKIN:
             if not self.partial:  # only enforce on creation
