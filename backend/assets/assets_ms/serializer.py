@@ -6,6 +6,7 @@ from .models import *
 from django.db.models import Sum, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
+from datetime import datetime
 
 # Product
 class ProductSerializer(serializers.ModelSerializer):
@@ -199,30 +200,27 @@ class AssetCheckoutFileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AssetCheckoutSerializer(serializers.ModelSerializer):
+    """
+    Form data: ticket_id, condition, revenue (optional), notes (optional), status, attachments (optional)
+    Ticket provides: asset, checkout_to, location, checkout_date, return_date
+    """
+    # Read-only fields (derived from ticket)
+    asset = serializers.PrimaryKeyRelatedField(read_only=True)
     checkout_to = serializers.IntegerField(read_only=True)
     location = serializers.IntegerField(read_only=True)
     checkout_date = serializers.DateField(read_only=True)
     return_date = serializers.DateField(read_only=True)
     files = AssetCheckoutFileSerializer(many=True, required=False)
+
     class Meta:
         model = AssetCheckout
         fields = '__all__'
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
-        # Limit the asset dropdown to assets that are not checked out
-        self.fields['asset'].queryset = Asset.objects.filter(
-            is_deleted=False
-        ).exclude(
-            id__in=AssetCheckout.objects.filter(asset_checkin__isnull=True).values_list('asset_id', flat=True)
-        )
-    
     def validate(self, data):
-        asset = data.get('asset')
         ticket_id = data.get('ticket_id')
-        status_id = data.get('status')
+        status_id = self.context.get('request').data.get('status') if self.context.get('request') else None
 
+        # --- Ticket Validations ---
         if not ticket_id:
             raise serializers.ValidationError({"ticket_id": "A ticket is required to check out this asset."})
 
@@ -233,78 +231,80 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         if ticket.get("is_resolved", False):
             raise serializers.ValidationError({"ticket_id": "Ticket is already resolved."})
 
-        if ticket.get("asset") != asset:
-            raise serializers.ValidationError({
-                "ticket_id": "This ticket does not correspond to the selected asset."
-            })
+        # --- Asset Validations (from ticket) ---
+        asset_id = ticket.get('asset')
+        if not asset_id:
+            raise serializers.ValidationError({"asset": "Ticket has no asset assigned."})
 
-        if asset is None:
-            raise serializers.ValidationError({"asset": "Asset is required."})
+        try:
+            asset = Asset.objects.get(id=asset_id)
+        except Asset.DoesNotExist:
+            raise serializers.ValidationError({"asset": "Asset not found."})
 
-        # Check if asset is deleted
         if asset.is_deleted:
             raise serializers.ValidationError({"asset": "Cannot check out a deleted asset."})
 
-        # Check for existing active checkouts (without select_for_update)
         if AssetCheckout.objects.filter(asset=asset, asset_checkin__isnull=True).exists():
             raise serializers.ValidationError({
                 "asset": "This asset is already checked out and not yet checked in."
             })
-        
-        # Validate return date
-        checkout_date = data.get('checkout_date', timezone.now())
-        return_date = data.get('return_date')
-        if return_date and return_date < checkout_date:
+
+        # --- Status Validations ---
+        if not status_id:
+            raise serializers.ValidationError({"status": "Status is required for checkout."})
+
+        status_details = get_status_by_id(status_id)
+        if not status_details or status_details.get("warning"):
+            raise serializers.ValidationError({"status": "Status not found."})
+
+        if status_details.get("category") != "asset":
             raise serializers.ValidationError({
-                "return_date": "Return date cannot be before checkout date."
+                "status": "Invalid status. Only asset statuses are allowed for checkout."
             })
-        
-        # Validate status category and type - must be asset category and type 'deployed'
-        if status_id:
-            status_details = get_status_by_id(status_id)
-            if not status_details or status_details.get("warning"):
-                raise serializers.ValidationError({"status": "Status not found."})
-            
-            # Check category is 'asset'
-            status_category = status_details.get("category")
-            if status_category != "asset":
+
+        if status_details.get("type") != "deployed":
+            raise serializers.ValidationError({
+                "status": "Invalid status type for checkout. Must be 'deployed'."
+            })
+
+        # --- Date Validations (from ticket) ---
+        checkout_date = ticket.get('checkout_date')
+        return_date = ticket.get('return_date')
+        if checkout_date and return_date:
+            if isinstance(checkout_date, str):
+                checkout_date = datetime.strptime(checkout_date, "%Y-%m-%d").date()
+            if isinstance(return_date, str):
+                return_date = datetime.strptime(return_date, "%Y-%m-%d").date()
+            if return_date < checkout_date:
                 raise serializers.ValidationError({
-                    "status": "Invalid status. Only asset statuses are allowed for check-out."
+                    "return_date": "Return date cannot be before checkout date."
                 })
-            
-            # Check type is 'deployed'
-            status_type = status_details.get("type")
-            if status_type != "deployed":
-                raise serializers.ValidationError({
-                    "status": "Invalid status type for check-out. Must be 'deployed'."
-                })
+
+        # Store ticket data for create method
+        data['_ticket'] = ticket
 
         return data
-    
+
     def create(self, validated_data):
-        ticket_id = validated_data.get('ticket_id')
+        # Pop internal data
+        ticket = validated_data.pop('_ticket')
         files_data = validated_data.pop('files', [])
 
-        # Fetch ticket details
-        ticket = get_ticket_by_id(ticket_id)
-
-        # Validate ticket exists
-        if not ticket or ticket.get("warning"):
-            raise serializers.ValidationError({"ticket_id": "Invalid ticket"})
-        
-        # Force values from ticket
-        validated_data['ticket_id'] = ticket_id
-        validated_data['asset'] = ticket.get('asset')
+        # Enforce values from ticket (backend sets these, not form)
+        validated_data['ticket_id'] = ticket.get('id')
+        validated_data['asset_id'] = ticket.get('asset')
         validated_data['checkout_to'] = ticket.get('employee')
         validated_data['location'] = ticket.get('location')
         validated_data['checkout_date'] = ticket.get('checkout_date')
         validated_data['return_date'] = ticket.get('return_date')
 
+        # Form data already in validated_data: condition, revenue, notes
+
         checkout = super().create(validated_data)
 
+        # Handle file attachments
         request = self.context.get('request')
         if request and hasattr(request, 'FILES'):
-            # Handle files from 'attachments' or 'image' key
             files = request.FILES.getlist('attachments') or request.FILES.getlist('image')
             for f in files:
                 AssetCheckoutFile.objects.create(asset_checkout=checkout, file=f)

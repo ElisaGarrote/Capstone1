@@ -203,6 +203,18 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         return AssetCheckout.objects.select_related('asset').filter(
             asset__is_deleted=False
         ).order_by('-checkout_date')
+    
+    def create(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Use /checkout-with-status/ to create checkouts."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    def destroy(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Hard delete not allowed. Use soft delete."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(detail=False, methods=['get'])
     def active(self, request):
@@ -213,21 +225,50 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         ).order_by('-checkout_date')
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
-    def perform_create(self, serializer):
-        checkout = serializer.save()
-        ticket_id = checkout.ticket_id
 
-        # Resolve the ticket that triggered this checkout and store checkout ID
-        resolve_ticket(ticket_id, asset_checkout_id=checkout.id)
+    @action(detail=False, methods=['post'], url_path='checkout-with-status')
+    def checkout_with_status(self, request):
+        """
+        Atomically create check-out, update asset status, and resolve ticket.
+        Serializer handles all validations and ticket-to-checkout data mapping.
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        status_id = request.data.get("status")
 
+        try:
+            with transaction.atomic():
+                # 1. Create checkout (serializer handles validations, data mapping, file attachments)
+                checkout = serializer.save()
+
+                # 2. Update asset status
+                asset = checkout.asset
+                asset.status = status_id
+                asset.save(update_fields=["status"])
+
+                # 3. Resolve the ticket that triggered this checkout
+                ticket_id = checkout.ticket_id
+                resolve_ticket(ticket_id, asset_checkout_id=checkout.id)
+
+                # 4. Resolve overlapping tickets for the same asset
+                self._resolve_overlapping_tickets(checkout, ticket_id)
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            {"success": "Checkout, attachments, and status update completed successfully."},
+            status=status.HTTP_201_CREATED
+        )
+
+    def _resolve_overlapping_tickets(self, checkout, current_ticket_id):
+        """Resolve other unresolved tickets that overlap with this checkout period."""
         asset_id = checkout.asset.id
         unresolved_tickets = fetch_resource_list(
             f"tickets/by-asset/{asset_id}",
             params={"is_resolved": False}
         )
 
-        # Handle both list and dict with 'results'
         if isinstance(unresolved_tickets, dict):
             tickets = unresolved_tickets.get('results', [])
         elif isinstance(unresolved_tickets, list):
@@ -238,14 +279,13 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         current_start = checkout.checkout_date
         current_end = checkout.return_date
 
-        # Convert to date if strings
         if isinstance(current_start, str):
             current_start = datetime.strptime(current_start, "%Y-%m-%d").date()
         if isinstance(current_end, str):
             current_end = datetime.strptime(current_end, "%Y-%m-%d").date()
 
         for t in tickets:
-            if t["id"] == ticket_id:
+            if t["id"] == current_ticket_id:
                 continue
 
             if not t.get("checkout_date") or not t.get("return_date"):
@@ -254,105 +294,26 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
             ticket_start = datetime.strptime(t["checkout_date"], "%Y-%m-%d").date()
             ticket_end = datetime.strptime(t["return_date"], "%Y-%m-%d").date()
 
-            # Resolve overlapping tickets
             if ticket_start <= current_end and current_start <= ticket_end:
                 resolve_ticket(t["id"])
-
-    @action(detail=False, methods=['post'], url_path='checkout-with-status')
-    def checkout_with_status(self, request):
-        """
-        Atomically create check-out, attach files, and update asset status.
-        - Validates status category is 'asset' and type is 'deployed' only
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        status_id = request.data.get("status")
-
-        if not status_id:
-            return Response(
-                {"status": "Status is required for checkout."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            with transaction.atomic():
-                # Create checkout (serializer handles file attachments)
-                checkout = serializer.save()
-
-                # Update asset status
-                asset = checkout.asset
-
-                # Validate status category and type
-                from assets_ms.services.contexts import get_status_by_id
-                status_details = get_status_by_id(status_id)
-
-                if not status_details:
-                    raise ValueError("Status not found.")
-
-                status_category = status_details.get("category")
-                if status_category != "asset":
-                    raise ValueError("Invalid status. Only asset statuses are allowed for checkout.")
-
-                status_type = status_details.get("type")
-                if status_type != "deployed":
-                    raise ValueError("Invalid status type for checkout. Must be 'deployed'.")
-
-                # Update asset status
-                asset.status = status_id
-                asset.save(update_fields=["status"])
-
-                # Resolve the ticket that triggered this checkout
-                ticket_id = checkout.ticket_id
-                resolve_ticket(ticket_id, asset_checkout_id=checkout.id)
-
-                # Handle overlapping tickets
-                asset_id = checkout.asset.id
-                unresolved_tickets = fetch_resource_list(
-                    f"tickets/by-asset/{asset_id}",
-                    params={"is_resolved": False}
-                )
-
-                if isinstance(unresolved_tickets, dict):
-                    tickets = unresolved_tickets.get('results', [])
-                elif isinstance(unresolved_tickets, list):
-                    tickets = unresolved_tickets
-                else:
-                    tickets = []
-
-                current_start = checkout.checkout_date
-                current_end = checkout.return_date
-
-                if isinstance(current_start, str):
-                    current_start = datetime.strptime(current_start, "%Y-%m-%d").date()
-                if isinstance(current_end, str):
-                    current_end = datetime.strptime(current_end, "%Y-%m-%d").date()
-
-                for t in tickets:
-                    if t["id"] == ticket_id:
-                        continue
-
-                    if not t.get("checkout_date") or not t.get("return_date"):
-                        continue
-
-                    ticket_start = datetime.strptime(t["checkout_date"], "%Y-%m-%d").date()
-                    ticket_end = datetime.strptime(t["return_date"], "%Y-%m-%d").date()
-
-                    if ticket_start <= current_end and current_start <= ticket_end:
-                        resolve_ticket(t["id"])
-
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(
-            {"success": "Checkout, attachments, and status update completed successfully."},
-            status=status.HTTP_201_CREATED
-        )
 
 class AssetCheckinViewSet(viewsets.ModelViewSet):
     serializer_class = AssetCheckinSerializer
 
     def get_queryset(self):
         return AssetCheckin.objects.select_related('asset_checkout', 'asset_checkout__asset').order_by('-checkin_date')
+    
+    def create(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Use /checkin-with-status/ to create checkins."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    def destroy(self, request, *args, **kwargs):
+        return Response(
+            {"detail": "Hard delete not allowed. Use soft delete."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
     @action(detail=False, methods=['post'], url_path='checkin-with-status')
     def checkin_with_status(self, request):
