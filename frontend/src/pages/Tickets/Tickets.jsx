@@ -228,7 +228,9 @@ const Tickets = () => {
   };
 
   const handleViewClick = (ticket) => {
-    navigate(`/tickets/view/${ticket.id}`);
+    navigate(`/tickets/view/${ticket.id}`, {
+      state: { ticket },
+    });
   };
 
   // outside click for export toggle
