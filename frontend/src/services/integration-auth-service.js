@@ -1,4 +1,4 @@
-import authAxios from "../api/integraitonAuth";
+import authAxios from "../api/integrationAuth";
 
 /* ===============================
             EMPLOYEES

@@ -11,6 +11,7 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
 import { fetchAssetById, fetchAssetCheckoutById } from "../../services/assets-service";
+import { fetchAllEmployees } from "../../services/integration-auth-service";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -48,8 +49,8 @@ function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick
         />
       </td>
       <td>{ticket.ticket_number}</td>
-      <td>{ticket.checkInOutDisplay}</td>
-      <td>{ticket.employee}</td>
+      <td>{ticket.formattedDate}</td>
+      <td>{ticket.employeeName}</td>
       <td>{ticket.subject}</td>
       <td>{ticket.location_details.city}</td>
 
@@ -94,6 +95,8 @@ const Tickets = () => {
   const [pageSize, setPageSize] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [employees, setEmployees] = useState([]);
+
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
@@ -114,6 +117,14 @@ const Tickets = () => {
         const response = await fetchAllTickets();
         const ticketsData = response.results || response;
 
+        // Fetch employees from API
+        const employeesResponse = await fetchAllEmployees();
+
+        const employeesList = Array.isArray(employeesResponse)
+          ? employeesResponse
+          : (employeesResponse?.results || []);
+        setEmployees(employeesList);
+
         // Map API response to component format
         const mappedTickets = ticketsData.map((ticket) => {
           // Determine if ticket needs check-in or check-out action
@@ -124,15 +135,23 @@ const Tickets = () => {
                 ? "Check-Out"
                 : "Check-In"
               : null;
-          
+
           const formattedDate = isCheckInOrOut === "Check-In"
-            ? ticket.checkin_date.slice(0, 10)
-            : ticket.checkout_date.slice(0, 10);
+            ? ticket.checkin_date?.slice(0, 10)
+            : ticket.checkout_date?.slice(0, 10);
+
+          // Find employee name
+          const employee = employeesList.find(e => Number(e.id) === Number(ticket.employee));
+
+          const employeeName = employee
+            ? `${employee.firstname} ${employee.lastname}`
+            : "Unknown";
 
           return {
             ...ticket,
             isCheckInOrOut,
-            checkInOutDisplay: isCheckInOrOut ? `${isCheckInOrOut}: ${formattedDate}` : "",
+            formattedDate,
+            employeeName,
           };
         });
 
@@ -242,32 +261,22 @@ const Tickets = () => {
   }, [location]);
 
   const handleCheckInOut = async (ticket) => {
-    if (ticket.isCheckInOrOut === "Check-In") {
-      try {
-        // Fetch the checkout data before navigating
-        const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
-        const asset = await fetchAssetById(ticket.asset);
+    try {
+      const asset = await fetchAssetById(ticket.asset);
 
+      if (ticket.isCheckInOrOut === "Check-In") {
+        const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
         navigate(`/assets/check-in/${ticket.asset}`, {
-          state: {
-            ticket,
-            asset,
-            checkout,
-            fromAsset: false,
-          },
+          state: { ticket, asset, checkout, fromAsset: false },
         });
-      } catch (error) {
-        console.error("Failed to fetch checkout data:", error);
-        setErrorMessage("Failed to fetch checkout data. Please try again later.");
+      } else {
+        navigate(`/assets/check-out/${ticket.asset}`, {
+          state: { ticket, asset, fromAsset: false },
+        });
       }
-    } else {
-      navigate(`/assets/check-out/${ticket.asset}`, {
-        state: {
-          ticket,
-          asset,
-          fromAsset: false,
-        },
-      });
+    } catch (error) {
+      console.error("Failed to fetch asset/checkout data:", error);
+      setErrorMessage("Failed to fetch asset data. Please try again later.");
     }
   };
 
@@ -277,8 +286,8 @@ const Tickets = () => {
     const fields = [
 
       ticket.ticketNumber?.toLowerCase() || "",
-      ticket.checkInOutDisplay?.toLowerCase() || "",
-      ticket.requestorName?.toLowerCase() || "",
+      ticket.formattedDate?.toLowerCase() || "",
+      ticket.employeeName?.toLowerCase() || "",
       ticket.subject?.toLowerCase() || "",
       ticket.location_details?.city.toLowerCase() || "",
     ];
