@@ -227,9 +227,10 @@ const Tickets = () => {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
-  const handleViewClick = (ticket) => {
+  const handleViewClick = async (ticket) => {
+    const asset = await fetchAssetById(ticket.asset);
     navigate(`/tickets/view/${ticket.id}`, {
-      state: { ticket },
+      state: { ticket, asset },
     });
   };
 

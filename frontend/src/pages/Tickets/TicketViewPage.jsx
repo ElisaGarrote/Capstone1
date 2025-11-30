@@ -12,12 +12,14 @@ import { fetchAssetById, fetchAssetCheckoutById } from "../../services/assets-se
 
 function TicketViewPage() {
   const navigate = useNavigate();
-  const { state } = useLocation();
-  const ticket = state?.ticket || null;
+  const location = useLocation();
+  const { ticket, asset } = location.state || {};
 
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const assetImage = asset?.image || DefaultImage;
 
   if (!ticket) {
     return (
@@ -180,7 +182,7 @@ function TicketViewPage() {
         breadcrumbRootPath="/approved-tickets"
         title={ticket.ticket_number}
         subtitle={ticket.subject}
-        assetImage={DefaultImage}
+        assetImage={assetImage || DefaultImage}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
