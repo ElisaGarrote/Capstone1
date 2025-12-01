@@ -107,7 +107,8 @@ class AssetReportAPIView(APIView):
         category_id = request.query_params.get('category_id')
         supplier_id = request.query_params.get('supplier_id')
         location_id = request.query_params.get('location_id')
-        fmt = request.query_params.get('format', '').lower()
+        # Use 'export_format' instead of 'format' to avoid conflict with DRF's format suffix
+        fmt = request.query_params.get('export_format', '').lower()
 
         # Validate and convert filter IDs
         try:
@@ -131,7 +132,7 @@ class AssetReportAPIView(APIView):
 
         # CSV not supported
         if fmt == 'csv':
-            return Response({'detail': 'CSV export is not supported. Use format=xlsx or omit format to download an XLSX file.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'CSV export is not supported. Use export_format=xlsx or omit export_format to download an XLSX file.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Default: XLSX export
         try:
