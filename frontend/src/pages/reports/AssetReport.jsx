@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar";
 import "../../styles/reports/AssetReport.css";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
 import { useForm, Controller } from "react-hook-form";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 // FilterForm component for handling filter selections
 function FilterForm({ title, placeholder, options }) {
@@ -94,8 +96,6 @@ function FilterForm({ title, placeholder, options }) {
 export default function AssetReport() {
   const animatedComponents = makeAnimated();
   const [selectAll, setSelectAll] = useState(true);
-  const [downloadToggle, setDownloadToggle] = useState(false);
-  const downloadRef = useRef(null);
   const [hasTemplateName, setHasTemplateName] = useState(false);
 
   const customStylesDropdown = {
@@ -205,12 +205,10 @@ export default function AssetReport() {
       checked: true,
     },
     { id: "notes", label: "Notes", checked: true },
-    { id: "created_at", label: "Created At", checked: true },
-    { id: "updated_at", label: "Updated At", checked: true },
+    { id: "product_data", label: "Product Data", checked: true },
   ]);
 
   const [rightColumns, setRightColumns] = useState([
-    { id: "product_data", label: "Product Data", checked: true },
     { id: "category_data", label: "Category Data", checked: true },
     { id: "manufacturer_data", label: "Manufacturer Data", checked: true },
     { id: "status_data", label: "Status Data", checked: true },
@@ -224,6 +222,8 @@ export default function AssetReport() {
       checked: true,
     },
     { id: "picture_data", label: "Picture Data", checked: true },
+    { id: "created_at", label: "Created At", checked: true },
+    { id: "updated_at", label: "Updated At", checked: true },
   ]);
 
   // Keep selectAll state in sync when columns change
@@ -250,24 +250,6 @@ export default function AssetReport() {
     setSelectAll((prev) => (prev === desired ? prev : desired));
   }, [rightColumns, leftColumns]);
 
-  // Close download options when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const target = event.target || event.srcElement;
-      const refEl = downloadRef.current;
-      if (!refEl) return;
-      // If click is outside the downloadRef element, close the toggle
-      if (!refEl.contains(target)) {
-        setDownloadToggle(false);
-      }
-    };
-
-    document.addEventListener("click", handleClickOutside);
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
-
   // Validation
   const { register, watch } = useForm({
     mode: "all",
@@ -282,6 +264,99 @@ export default function AssetReport() {
       setHasTemplateName(false);
     }
   }, [templateName]);
+
+  // Generate a random 7-character alphanumeric token
+  const generateToken = () => {
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let token = "";
+    for (let i = 0; i < 7; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+  };
+
+  // Format current date as YYYYMMDD
+  const getFormattedDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}${month}${day}`;
+  };
+
+  // Handle download report
+  const handleDownloadReport = () => {
+    // Get selected columns (excluding select_all)
+    const selectedLeftColumns = leftColumns
+      .filter((c) => c.id !== "select_all" && c.checked)
+      .map((c) => c.id);
+    const selectedRightColumns = rightColumns
+      .filter((c) => c.checked)
+      .map((c) => c.id);
+    const selectedColumns = [...selectedLeftColumns, ...selectedRightColumns];
+
+    // Mock data for the report (in real implementation, this would come from API)
+    const mockReportData = [
+      {
+        asset_id: "AST-001",
+        asset_name: "MacBook Pro 16",
+        purchase_date: "2023-01-15",
+        purchase_cost: 2499.99,
+        currency: "USD",
+        order_number: "ORD-12345",
+        serial_number: "SN-ABC123",
+        warranty_expiration: "2026-01-15",
+        notes: "Executive laptop",
+        created_at: "2023-01-10",
+        updated_at: "2023-11-20",
+        product_data: "MacBook Pro 16-inch",
+        category_data: "Laptops",
+        manufacturer_data: "Apple",
+        status_data: "Deployed",
+        supplier_data: "Apple Store",
+        location_data: "Makati Office",
+        depreciation_data: "3 Years",
+        checked_out_to: "John Doe",
+        last_next_audit_date: "2024-01-15",
+        picture_data: "image.jpg",
+      },
+    ];
+
+    // Filter data to only include selected columns
+    const filteredData = mockReportData.map((row) => {
+      const filteredRow = {};
+      selectedColumns.forEach((col) => {
+        if (row[col] !== undefined) {
+          // Convert column id to readable header
+          const header = col
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+          filteredRow[header] = row[col];
+        }
+      });
+      return filteredRow;
+    });
+
+    // Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Asset Report");
+
+    // Generate filename: [TemplateName]_[DateGenerated]_[7DigitToken].xlsx
+    const name = templateName.trim() || "AssetReport";
+    const sanitizedName = name.replace(/[^a-zA-Z0-9]/g, "_");
+    const dateGenerated = getFormattedDate();
+    const token = generateToken();
+    const fileName = `${sanitizedName}_${dateGenerated}_${token}.xlsx`;
+
+    // Write and download the file
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(blob, fileName);
+  };
 
   return (
     <>
@@ -369,21 +444,10 @@ export default function AssetReport() {
             </section>
           </section>
           <section className="asset-report-right-card">
-            <section className="asset-report-download" ref={downloadRef}>
-              <button
-                className="primary-button"
-                onClick={() => setDownloadToggle(!downloadToggle)}
-              >
+            <section className="asset-report-download">
+              <button className="primary-button" onClick={handleDownloadReport}>
                 Download Report
               </button>
-
-              {downloadToggle && (
-                <section className="download-toggle">
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
             </section>
             <section className="top-section">
               <h2>Open Saved Template</h2>
