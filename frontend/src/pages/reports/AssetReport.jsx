@@ -43,7 +43,11 @@ function FilterForm({ title, placeholder, options }) {
       color: state.isSelected ? "white" : "grey",
       fontSize: "0.875rem",
       padding: "8px 12px",
-      backgroundColor: state.isSelected ? "#007bff" : state.isFocused ? "#f8f9fa" : "white",
+      backgroundColor: state.isSelected
+        ? "#007bff"
+        : state.isFocused
+        ? "#f8f9fa"
+        : "white",
       cursor: "pointer",
       "&:hover": {
         backgroundColor: "#f8f9fa",
@@ -203,7 +207,6 @@ export default function AssetReport() {
     { id: "notes", label: "Notes", checked: true },
     { id: "created_at", label: "Created At", checked: true },
     { id: "updated_at", label: "Updated At", checked: true },
-    { id: "custom_fields", label: "Custom Fields", checked: true },
   ]);
 
   const [rightColumns, setRightColumns] = useState([
@@ -213,7 +216,6 @@ export default function AssetReport() {
     { id: "status_data", label: "Status Data", checked: true },
     { id: "supplier_data", label: "Supplier Data", checked: true },
     { id: "location_data", label: "Location Data", checked: true },
-    { id: "department_data", label: "Department Data", checked: true },
     { id: "depreciation_data", label: "Depreciation Data", checked: true },
     { id: "checked_out_to", label: "Checked Out To", checked: true },
     {
@@ -222,7 +224,6 @@ export default function AssetReport() {
       checked: true,
     },
     { id: "picture_data", label: "Picture Data", checked: true },
-    { id: "paid_for_data", label: "Paid For Data", checked: true },
   ]);
 
   // Keep selectAll state in sync when columns change
