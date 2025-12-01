@@ -44,7 +44,10 @@ export async function createAssetCheckout(data) {
 
 // Create asset checkout with status (atomic)
 export async function createAssetCheckoutWithStatus(data) {
-  const res = await assetsAxios.post("asset-checkout/checkout-with-status/", data);
+  const res = await assetsAxios.post(
+    "asset-checkout/checkout-with-status/",
+    data
+  );
   return res.data;
 }
 
@@ -99,7 +102,10 @@ export async function updateAssetStatus(id, data) {
 ================================= */
 // Checkin with status
 export async function createAssetCheckinWithStatus(data) {
-  const res = await assetsAxios.post("asset-checkin/checkin-with-status/", data);
+  const res = await assetsAxios.post(
+    "asset-checkin/checkin-with-status/",
+    data
+  );
   return res.data;
 }
 
@@ -171,4 +177,67 @@ export async function createAuditSchedule(data) {
 export async function fetchDashboardStats() {
   const res = await assetsAxios.get("dashboard/");
   return res.data;
+}
+
+/* ===============================
+          ASSET REPORT
+================================= */
+
+/**
+ * Fetch asset report data with optional filters
+ * @param {Object} filters - Filter parameters
+ * @param {number} filters.status_id - Filter by status ID
+ * @param {number} filters.category_id - Filter by category ID
+ * @param {number} filters.supplier_id - Filter by supplier ID
+ * @param {number} filters.location_id - Filter by location ID
+ * @param {string} filters.format - Response format: 'json' or 'xlsx'
+ * @returns {Promise} - Report data or blob for Excel download
+ */
+export async function fetchAssetReport(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.status_id) params.append("status_id", filters.status_id);
+  if (filters.category_id) params.append("category_id", filters.category_id);
+  if (filters.supplier_id) params.append("supplier_id", filters.supplier_id);
+  if (filters.location_id) params.append("location_id", filters.location_id);
+  // Use 'export_format' instead of 'format' to avoid conflict with DRF's format suffix
+  if (filters.export_format)
+    params.append("export_format", filters.export_format);
+
+  const queryString = params.toString();
+  const url = `reports/assets/${queryString ? "?" + queryString : ""}`;
+
+  // If requesting Excel format, return as blob
+  // Use longer timeout (60 seconds) for report generation as it may take time
+  if (filters.export_format === "xlsx" || !filters.export_format) {
+    const res = await assetsAxios.get(url, {
+      responseType: "blob",
+      timeout: 60000,
+    });
+    return res.data;
+  }
+
+  // Use longer timeout for JSON report as well
+  const res = await assetsAxios.get(url, { timeout: 60000 });
+  return res.data;
+}
+
+/**
+ * Download asset report as Excel file
+ * @param {Object} filters - Filter parameters
+ * @param {string} filename - Optional custom filename
+ */
+export async function downloadAssetReportExcel(filters = {}, filename = null) {
+  const blob = await fetchAssetReport({ ...filters, export_format: "xlsx" });
+
+  // Create download link
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download =
+    filename || `asset_report_${new Date().toISOString().split("T")[0]}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 }

@@ -1,16 +1,33 @@
 import React, { useEffect, useState } from "react";
 import NavBar from "../../components/NavBar";
+import Alert from "../../components/Alert";
 import "../../styles/reports/AssetReport.css";
 import Select from "react-select";
 import makeAnimated from "react-select/animated";
-import { useForm, Controller } from "react-hook-form";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
+import { useForm } from "react-hook-form";
+
+// Services
+import {
+  fetchAllCategories,
+  fetchAllSuppliers,
+  fetchAllManufacturers,
+  fetchAllStatuses,
+} from "../../services/contexts-service";
+import { fetchAllLocations } from "../../services/integration-help-desk-service";
+import {
+  fetchAllProducts,
+  downloadAssetReportExcel,
+} from "../../services/assets-service";
 
 // FilterForm component for handling filter selections
-function FilterForm({ title, placeholder, options }) {
+function FilterForm({
+  title,
+  placeholder,
+  options,
+  onSelectionChange,
+  filterKey,
+}) {
   const animatedComponents = makeAnimated();
-  const [hasSelectedOptions, setHasSelectedOptions] = useState(false);
 
   const customStylesDropdown = {
     control: (provided) => ({
@@ -57,37 +74,28 @@ function FilterForm({ title, placeholder, options }) {
     }),
   };
 
-  // Validation
-  const { register, watch, control } = useForm({
-    mode: "all",
-  });
-
-  const selectedOption = watch("selectedOption", "");
-
-  useEffect(() => {
-    if (selectedOption.length > 0) {
-      setHasSelectedOptions(true);
-    } else {
-      setHasSelectedOptions(false);
+  // Handle selection change - pass first selected value to parent
+  const handleChange = (selectedOptions) => {
+    if (onSelectionChange && filterKey) {
+      // For single filter, take the first selected value
+      const value =
+        selectedOptions && selectedOptions.length > 0
+          ? selectedOptions[0].value
+          : null;
+      onSelectionChange(filterKey, value);
     }
-  }, [selectedOption]);
+  };
 
   return (
     <div className="filter-form">
       <label htmlFor={`filter-${title}`}>{title}</label>
-      <Controller
-        name="selectedOption"
-        control={control}
-        render={({ field }) => (
-          <Select
-            components={animatedComponents}
-            options={options}
-            placeholder={placeholder}
-            styles={customStylesDropdown}
-            isMulti
-            {...field}
-          />
-        )}
+      <Select
+        components={animatedComponents}
+        options={options}
+        placeholder={placeholder}
+        styles={customStylesDropdown}
+        isMulti
+        onChange={handleChange}
       />
     </div>
   );
@@ -97,6 +105,38 @@ export default function AssetReport() {
   const animatedComponents = makeAnimated();
   const [selectAll, setSelectAll] = useState(true);
   const [hasTemplateName, setHasTemplateName] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  // Alert states
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // State for filter options from backend
+  const [filterOptions, setFilterOptions] = useState({
+    locations: [],
+    suppliers: [],
+    products: [],
+    manufacturers: [],
+    categories: [],
+    statuses: [],
+  });
+
+  // State for selected filter values
+  const [selectedFilters, setSelectedFilters] = useState({
+    location: null,
+    supplier: null,
+    category: null,
+    status: null,
+  });
+
+  // Handle filter selection change
+  const handleFilterChange = (filterKey, value) => {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      [filterKey]: value,
+    }));
+  };
 
   const customStylesDropdown = {
     control: (provided) => ({
@@ -117,69 +157,100 @@ export default function AssetReport() {
     }),
   };
 
-  // Mock data for filters fields
+  // Fetch filter options from backend on mount
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      setIsLoading(true);
+      try {
+        const [
+          locations,
+          suppliers,
+          products,
+          manufacturers,
+          categories,
+          statuses,
+        ] = await Promise.all([
+          fetchAllLocations().catch(() => []),
+          fetchAllSuppliers().catch(() => []),
+          fetchAllProducts().catch(() => []),
+          fetchAllManufacturers().catch(() => []),
+          fetchAllCategories().catch(() => []),
+          fetchAllStatuses().catch(() => []),
+        ]);
+
+        setFilterOptions({
+          locations: (locations || []).map((l) => ({
+            value: l.id,
+            label: l.name,
+          })),
+          suppliers: (suppliers || []).map((s) => ({
+            value: s.id,
+            label: s.name,
+          })),
+          products: (products || []).map((p) => ({
+            value: p.id,
+            label: p.name,
+          })),
+          manufacturers: (manufacturers || []).map((m) => ({
+            value: m.id,
+            label: m.name,
+          })),
+          categories: (categories || []).map((c) => ({
+            value: c.id,
+            label: c.name,
+          })),
+          statuses: (statuses || []).map((s) => ({
+            value: s.id,
+            label: s.name,
+          })),
+        });
+      } catch (error) {
+        console.error("Error loading filter options:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFilterOptions();
+  }, []);
+
+  // Build filters config from loaded options
   const filters = [
     {
       title: "Location",
       placeholder: "Select Locations",
-      options: [
-        { value: "makati", label: "Makati" },
-        { value: "pasig", label: "Pasig" },
-        { value: "marikina", label: "Marikina" },
-        { value: "quezon_city", label: "Quezon City" },
-        { value: "manila", label: "Manila" },
-        { value: "taguig", label: "Taguig" },
-        { value: "remote", label: "Remote" },
-      ],
+      options: filterOptions.locations,
+      filterKey: "location",
     },
     {
       title: "Supplier",
       placeholder: "Select Suppliers",
-      options: [
-        { value: "amazon", label: "Amazon" },
-        { value: "tilt_supplier", label: "Tilt Supplier" },
-        { value: "global_parts", label: "Global Parts" },
-      ],
+      options: filterOptions.suppliers,
+      filterKey: "supplier",
     },
     {
       title: "Product",
       placeholder: "Select Products",
-      options: [
-        { value: "macbook pro 16'", label: "Macbook Pro 16'" },
-        { value: "swift go 14", label: "Swift Go 14" },
-        { value: "iphone 17 pro max", label: "Iphone 17 Pro Max" },
-      ],
+      options: filterOptions.products,
+      filterKey: "product",
     },
     {
       title: "Manufacturer",
       placeholder: "Select Manufacturers",
-      options: [
-        { value: "acer", label: "Acer" },
-        { value: "hp", label: "HP" },
-        { value: "apple", label: "Apple" },
-      ],
+      options: filterOptions.manufacturers,
+      filterKey: "manufacturer",
     },
     {
       title: "Category",
       placeholder: "Select Categories",
-      options: [
-        { value: "laptops", label: "Laptops" },
-        { value: "mobile phones", label: "Mobile Phones" },
-        { value: "tables", label: "Tables" },
-      ],
+      options: filterOptions.categories,
+      filterKey: "category",
     },
     {
       title: "Status",
       placeholder: "Select Statuses",
-      options: [
-        { value: "archived", label: "Archived" },
-        { value: "being repaired", label: "Being Repaired" },
-        { value: "broken", label: "Broken" },
-        { value: "deployed", label: "Deployed" },
-        { value: "lost or stolen", label: "Lost or Stolen" },
-        { value: "pending", label: "Pending" },
-        { value: "ready to deploy", label: "Ready to Deploy" },
-      ],
+      options: filterOptions.statuses,
+      filterKey: "status",
     },
   ];
 
@@ -284,82 +355,73 @@ export default function AssetReport() {
     return `${year}${month}${day}`;
   };
 
-  // Handle download report
-  const handleDownloadReport = () => {
-    // Get selected columns (excluding select_all)
-    const selectedLeftColumns = leftColumns
-      .filter((c) => c.id !== "select_all" && c.checked)
-      .map((c) => c.id);
-    const selectedRightColumns = rightColumns
-      .filter((c) => c.checked)
-      .map((c) => c.id);
-    const selectedColumns = [...selectedLeftColumns, ...selectedRightColumns];
+  // Handle download report from backend
+  const handleDownloadReport = async () => {
+    setIsDownloading(true);
+    // Clear any previous messages
+    setErrorMessage("");
+    setSuccessMessage("");
 
-    // Mock data for the report (in real implementation, this would come from API)
-    const mockReportData = [
-      {
-        asset_id: "AST-001",
-        asset_name: "MacBook Pro 16",
-        purchase_date: "2023-01-15",
-        purchase_cost: 2499.99,
-        currency: "USD",
-        order_number: "ORD-12345",
-        serial_number: "SN-ABC123",
-        warranty_expiration: "2026-01-15",
-        notes: "Executive laptop",
-        created_at: "2023-01-10",
-        updated_at: "2023-11-20",
-        product_data: "MacBook Pro 16-inch",
-        category_data: "Laptops",
-        manufacturer_data: "Apple",
-        status_data: "Deployed",
-        supplier_data: "Apple Store",
-        location_data: "Makati Office",
-        depreciation_data: "3 Years",
-        checked_out_to: "John Doe",
-        last_next_audit_date: "2024-01-15",
-        picture_data: "image.jpg",
-      },
-    ];
+    try {
+      // Build filter params from selected filters
+      const filterParams = {};
+      if (selectedFilters.status)
+        filterParams.status_id = selectedFilters.status;
+      if (selectedFilters.category)
+        filterParams.category_id = selectedFilters.category;
+      if (selectedFilters.supplier)
+        filterParams.supplier_id = selectedFilters.supplier;
+      if (selectedFilters.location)
+        filterParams.location_id = selectedFilters.location;
 
-    // Filter data to only include selected columns
-    const filteredData = mockReportData.map((row) => {
-      const filteredRow = {};
-      selectedColumns.forEach((col) => {
-        if (row[col] !== undefined) {
-          // Convert column id to readable header
-          const header = col
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (char) => char.toUpperCase());
-          filteredRow[header] = row[col];
+      // Generate filename
+      const name = templateName.trim() || "AssetReport";
+      const sanitizedName = name.replace(/[^a-zA-Z0-9]/g, "_");
+      const dateGenerated = getFormattedDate();
+      const token = generateToken();
+      const fileName = `${sanitizedName}_${dateGenerated}_${token}.xlsx`;
+
+      // Download from backend
+      await downloadAssetReportExcel(filterParams, fileName);
+
+      // Show success message
+      setSuccessMessage("Report downloaded successfully!");
+      setTimeout(() => setSuccessMessage(""), 5000);
+    } catch (error) {
+      console.error("Error downloading report:", error);
+
+      // Build error message
+      let message = "Failed to download report. Please try again.";
+
+      if (error.code === "ECONNABORTED") {
+        message =
+          "Request timed out. The report may be too large. Please try with more specific filters.";
+      } else if (error.response && error.response.data) {
+        const data = error.response.data;
+        if (typeof data === "string") {
+          message = data;
+        } else if (data.detail) {
+          message = data.detail;
+        } else if (data.message) {
+          message = data.message;
         }
-      });
-      return filteredRow;
-    });
+      } else if (error.message) {
+        message = error.message;
+      }
 
-    // Create worksheet and workbook
-    const worksheet = XLSX.utils.json_to_sheet(filteredData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Asset Report");
-
-    // Generate filename: [TemplateName]_[DateGenerated]_[7DigitToken].xlsx
-    const name = templateName.trim() || "AssetReport";
-    const sanitizedName = name.replace(/[^a-zA-Z0-9]/g, "_");
-    const dateGenerated = getFormattedDate();
-    const token = generateToken();
-    const fileName = `${sanitizedName}_${dateGenerated}_${token}.xlsx`;
-
-    // Write and download the file
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, fileName);
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(""), 5000);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
     <>
+      {/* Alert Messages */}
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       <nav>
         <NavBar />
       </nav>
@@ -371,16 +433,22 @@ export default function AssetReport() {
           <section className="asset-report-left-card">
             <section className="asset-report-filter">
               <h2>Select Filter</h2>
-              {filters.map((filter, index) => {
-                return (
-                  <FilterForm
-                    key={index}
-                    title={filter.title}
-                    placeholder={filter.placeholder}
-                    options={filter.options}
-                  />
-                );
-              })}
+              {isLoading ? (
+                <p>Loading filters...</p>
+              ) : (
+                filters.map((filter, index) => {
+                  return (
+                    <FilterForm
+                      key={index}
+                      title={filter.title}
+                      placeholder={filter.placeholder}
+                      options={filter.options}
+                      filterKey={filter.filterKey}
+                      onSelectionChange={handleFilterChange}
+                    />
+                  );
+                })
+              )}
             </section>
             <section className="asset-report-column">
               <h2>Select Columns</h2>
@@ -445,8 +513,12 @@ export default function AssetReport() {
           </section>
           <section className="asset-report-right-card">
             <section className="asset-report-download">
-              <button className="primary-button" onClick={handleDownloadReport}>
-                Download Report
+              <button
+                className="primary-button"
+                onClick={handleDownloadReport}
+                disabled={isDownloading}
+              >
+                {isDownloading ? "Downloading..." : "Download Report"}
               </button>
             </section>
             <section className="top-section">
