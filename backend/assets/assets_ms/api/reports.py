@@ -97,9 +97,46 @@ class AssetReportAPIView(APIView):
       - category_id: int to filter by a specific category
       - supplier_id: int to filter by a specific supplier
       - location_id: int to filter by a specific location
+      - product_id: int to filter by a specific product
+      - manufacturer_id: int to filter by a specific manufacturer
+      - columns: comma-separated list of column IDs to include
       - format=xlsx (default) to download an XLSX file
       - format=json to return JSON results
     """
+
+    # Map frontend column IDs to backend field names
+    COLUMN_MAPPING = {
+        'asset_id': 'assetId',
+        'asset_name': 'name',
+        'purchase_date': 'purchaseDate',
+        'purchase_cost': 'purchaseCost',
+        'currency': 'currency',
+        'order_number': 'orderNumber',
+        'serial_number': 'serialNumber',
+        'warranty_expiration': 'warrantyExpiration',
+        'notes': 'notes',
+        'product_data': 'product',
+        'category_data': 'category',
+        'manufacturer_data': 'manufacturer',
+        'status_data': 'statusName',
+        'supplier_data': 'supplier',
+        'location_data': 'location',
+        'depreciation_data': 'depreciation',
+        'checked_out_to': 'checkedOutTo',
+        'last_next_audit_date': 'auditDates',
+        'picture_data': 'image',
+        'created_at': 'createdAt',
+        'updated_at': 'updatedAt',
+    }
+
+    # All available fieldnames for the report
+    ALL_FIELDNAMES = [
+        'assetId', 'name', 'product', 'category', 'statusName', 'supplier',
+        'manufacturer', 'location', 'serialNumber', 'orderNumber',
+        'purchaseDate', 'purchaseCost', 'warrantyExpiration', 'notes',
+        'currency', 'depreciation', 'checkedOutTo', 'auditDates', 'image',
+        'createdAt', 'updatedAt'
+    ]
 
     def get(self, request):
         # Parse filter parameters
@@ -107,6 +144,9 @@ class AssetReportAPIView(APIView):
         category_id = request.query_params.get('category_id')
         supplier_id = request.query_params.get('supplier_id')
         location_id = request.query_params.get('location_id')
+        product_id = request.query_params.get('product_id')
+        manufacturer_id = request.query_params.get('manufacturer_id')
+        columns_param = request.query_params.get('columns', '')
         # Use 'export_format' instead of 'format' to avoid conflict with DRF's format suffix
         fmt = request.query_params.get('export_format', '').lower()
 
@@ -116,6 +156,8 @@ class AssetReportAPIView(APIView):
             category_id = int(category_id) if category_id else None
             supplier_id = int(supplier_id) if supplier_id else None
             location_id = int(location_id) if location_id else None
+            product_id = int(product_id) if product_id else None
+            manufacturer_id = int(manufacturer_id) if manufacturer_id else None
         except ValueError:
             return Response({"detail": "Invalid filter parameter. IDs must be integers."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -124,11 +166,38 @@ class AssetReportAPIView(APIView):
             category_id=category_id,
             supplier_id=supplier_id,
             location_id=location_id,
+            product_id=product_id,
+            manufacturer_id=manufacturer_id,
         )
+
+        # Determine which columns to include
+        if columns_param:
+            column_ids = [c.strip() for c in columns_param.split(',') if c.strip()]
+            fieldnames = []
+            for col_id in column_ids:
+                if col_id in self.COLUMN_MAPPING:
+                    field = self.COLUMN_MAPPING[col_id]
+                    if field not in fieldnames:
+                        fieldnames.append(field)
+            # If no valid columns found, use defaults
+            if not fieldnames:
+                fieldnames = self.ALL_FIELDNAMES[:14]  # Original default fields
+        else:
+            # Default fieldnames (original behavior)
+            fieldnames = [
+                'assetId', 'name', 'product', 'category', 'statusName', 'supplier',
+                'manufacturer', 'location', 'serialNumber', 'orderNumber',
+                'purchaseDate', 'purchaseCost', 'warrantyExpiration', 'notes'
+            ]
 
         # JSON format
         if fmt == 'json':
-            return Response({'results': rows, 'count': len(rows)})
+            # Filter rows to only include selected columns
+            filtered_rows = []
+            for row in rows:
+                filtered_row = {k: row.get(k, '') for k in fieldnames}
+                filtered_rows.append(filtered_row)
+            return Response({'results': filtered_rows, 'count': len(filtered_rows)})
 
         # CSV not supported
         if fmt == 'csv':
@@ -145,18 +214,13 @@ class AssetReportAPIView(APIView):
                 )
             }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        fieldnames = [
-            'assetId', 'name', 'product', 'category', 'statusName', 'supplier',
-            'manufacturer', 'location', 'serialNumber', 'orderNumber',
-            'purchaseDate', 'purchaseCost', 'warrantyExpiration', 'notes'
-        ]
-
         wb = Workbook()
         ws = wb.active
         ws.title = 'AssetReport'
 
-        # Header row
-        ws.append(fieldnames)
+        # Header row with human-readable names
+        header_names = self._get_header_names(fieldnames)
+        ws.append(header_names)
 
         for r in rows:
             row = []
@@ -176,3 +240,30 @@ class AssetReportAPIView(APIView):
         response = HttpResponse(bio.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+    def _get_header_names(self, fieldnames):
+        """Convert field names to human-readable header names."""
+        header_map = {
+            'assetId': 'Asset ID',
+            'name': 'Asset Name',
+            'product': 'Product',
+            'category': 'Category',
+            'statusName': 'Status',
+            'supplier': 'Supplier',
+            'manufacturer': 'Manufacturer',
+            'location': 'Location',
+            'serialNumber': 'Serial Number',
+            'orderNumber': 'Order Number',
+            'purchaseDate': 'Purchase Date',
+            'purchaseCost': 'Purchase Cost',
+            'warrantyExpiration': 'Warranty Expiration',
+            'notes': 'Notes',
+            'currency': 'Currency',
+            'depreciation': 'Depreciation',
+            'checkedOutTo': 'Checked Out To',
+            'auditDates': 'Audit Dates',
+            'image': 'Image',
+            'createdAt': 'Created At',
+            'updatedAt': 'Updated At',
+        }
+        return [header_map.get(f, f) for f in fieldnames]

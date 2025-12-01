@@ -708,3 +708,57 @@ class DashboardStatsSerializer(serializers.Serializer):
     expired_warranties = serializers.IntegerField()
     expiring_warranties = serializers.IntegerField()
     low_stock = serializers.IntegerField()
+
+
+class AssetReportTemplateSerializer(serializers.ModelSerializer):
+    """Serializer for AssetReportTemplate CRUD operations."""
+
+    class Meta:
+        model = AssetReportTemplate
+        fields = ['id', 'name', 'user_id', 'filters', 'columns', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_name(self, value):
+        """Validate template name uniqueness (per user if user_id provided)."""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Template name cannot be empty.")
+
+        # Normalize name
+        normalized_name = " ".join(value.split()).strip()
+
+        # Check for duplicate names (case insensitive)
+        user_id = self.initial_data.get('user_id') or (self.instance.user_id if self.instance else None)
+
+        queryset = AssetReportTemplate.objects.filter(
+            name__iexact=normalized_name,
+            is_deleted=False
+        )
+
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.exists():
+            raise serializers.ValidationError("A template with this name already exists.")
+
+        return normalized_name
+
+    def validate_columns(self, value):
+        """Validate that columns is a list of strings."""
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise serializers.ValidationError("Columns must be a list.")
+        if not all(isinstance(col, str) for col in value):
+            raise serializers.ValidationError("All column IDs must be strings.")
+        return value
+
+    def validate_filters(self, value):
+        """Validate that filters is a dictionary."""
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Filters must be an object/dictionary.")
+        return value

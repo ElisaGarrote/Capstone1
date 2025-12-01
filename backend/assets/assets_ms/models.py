@@ -323,3 +323,27 @@ class AuditFile(models.Model):
 
     def __str__(self):
         return f"File(s) for audit on {self.audit.created_at} for {self.audit.audit_schedule.asset.asset_id}"
+
+
+class AssetReportTemplate(models.Model):
+    """Model to store saved asset report templates with filters and column selections."""
+    name = models.CharField(max_length=100)
+    user_id = models.PositiveIntegerField(blank=True, null=True)  # User who created the template
+
+    # Filter configuration (stored as JSON)
+    filters = models.JSONField(default=dict, blank=True)
+    # Example: {"status_id": 1, "category_id": 2, "supplier_id": null, "location_id": null}
+
+    # Column selection (stored as JSON list of column IDs)
+    columns = models.JSONField(default=list, blank=True)
+    # Example: ["asset_id", "asset_name", "purchase_date", "status_data"]
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.name

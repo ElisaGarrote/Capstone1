@@ -1,12 +1,12 @@
-from datetime import date
 from typing import List, Dict, Optional
-from ..models import Asset
+from ..models import Asset, AssetCheckout
 from .contexts import (
     get_statuses_list,
     get_categories_list,
     get_suppliers_list,
     get_manufacturers_list,
     get_locations_list,
+    get_depreciations_list,
 )
 
 
@@ -26,6 +26,8 @@ def generate_asset_report(
     category_id: Optional[int] = None,
     supplier_id: Optional[int] = None,
     location_id: Optional[int] = None,
+    product_id: Optional[int] = None,
+    manufacturer_id: Optional[int] = None,
 ) -> List[Dict]:
     """Return a list of assets with their full details for reporting.
 
@@ -45,6 +47,10 @@ def generate_asset_report(
         qs = qs.filter(supplier=supplier_id)
     if location_id is not None:
         qs = qs.filter(location=location_id)
+    if product_id is not None:
+        qs = qs.filter(product_id=product_id)
+    if manufacturer_id is not None:
+        qs = qs.filter(product__manufacturer=manufacturer_id)
 
     # Batch fetch all context data upfront (single HTTP call each)
     statuses_lookup = _build_lookup_dict(get_statuses_list(limit=500))
@@ -52,6 +58,19 @@ def generate_asset_report(
     suppliers_lookup = _build_lookup_dict(get_suppliers_list(limit=500))
     manufacturers_lookup = _build_lookup_dict(get_manufacturers_list(limit=500))
     locations_lookup = _build_lookup_dict(get_locations_list(limit=500))
+    depreciations_lookup = _build_lookup_dict(get_depreciations_list(limit=500))
+
+    # Get active checkouts for all assets (checkouts without a corresponding checkin)
+    active_checkouts = {}
+    checkout_qs = AssetCheckout.objects.filter(
+        asset_checkin__isnull=True  # Not checked in yet (no related AssetCheckin)
+    ).select_related('asset')
+    for checkout in checkout_qs:
+        if checkout.asset_id:
+            active_checkouts[checkout.asset_id] = {
+                'checkout_to': checkout.checkout_to or '',
+                'checkout_date': checkout.checkout_date.isoformat() if checkout.checkout_date else '',
+            }
 
     results = []
 
@@ -85,15 +104,36 @@ def generate_asset_report(
         location_info = locations_lookup.get(asset.location) if asset.location else None
         location_name = location_info.get('name', '') if location_info else ''
 
+        # Depreciation lookup
+        depreciation_info = None
+        depreciation_name = ''
+        if product and product.depreciation:
+            depreciation_info = depreciations_lookup.get(product.depreciation)
+            depreciation_name = depreciation_info.get('name', '') if depreciation_info else ''
+
         # Format dates
         purchase_date_str = asset.purchase_date.isoformat() if asset.purchase_date else ''
         warranty_exp_str = asset.warranty_expiration.isoformat() if asset.warranty_expiration else ''
+        created_at_str = asset.created_at.isoformat() if hasattr(asset, 'created_at') and asset.created_at else ''
+        updated_at_str = asset.updated_at.isoformat() if hasattr(asset, 'updated_at') and asset.updated_at else ''
 
         # Purchase cost
         try:
             purchase_cost = float(asset.purchase_cost) if asset.purchase_cost is not None else 0.0
         except (TypeError, ValueError):
             purchase_cost = 0.0
+
+        # Checkout info
+        checkout_info = active_checkouts.get(asset.id, {})
+        checked_out_to = str(checkout_info.get('checkout_to', '')) if checkout_info.get('checkout_to') else ''
+
+        # Audit dates
+        last_audit = asset.last_audit_date.isoformat() if hasattr(asset, 'last_audit_date') and asset.last_audit_date else ''
+        next_audit = asset.next_audit_date.isoformat() if hasattr(asset, 'next_audit_date') and asset.next_audit_date else ''
+        audit_dates = f"Last: {last_audit}, Next: {next_audit}" if last_audit or next_audit else ''
+
+        # Image URL
+        image_url = asset.image.url if asset.image else ''
 
         results.append({
             'id': asset.id,
@@ -112,6 +152,13 @@ def generate_asset_report(
             'purchaseCost': purchase_cost,
             'warrantyExpiration': warranty_exp_str,
             'notes': asset.notes or '',
+            'currency': getattr(asset, 'currency', '') or '',
+            'depreciation': depreciation_name,
+            'checkedOutTo': checked_out_to,
+            'auditDates': audit_dates,
+            'image': image_url,
+            'createdAt': created_at_str,
+            'updatedAt': updated_at_str,
         })
 
     return results

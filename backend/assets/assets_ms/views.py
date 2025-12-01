@@ -592,7 +592,7 @@ from .api.usage import check_bulk_usage
 
 #DASHBOARD
 class DashboardViewSet(viewsets.ViewSet):
-    
+
     def list(self, request):
         """List available dashboard endpoints"""
         return Response({
@@ -648,4 +648,39 @@ class DashboardViewSet(viewsets.ViewSet):
         }
 
         serializer = DashboardStatsSerializer(data)
+        return Response(serializer.data)
+
+
+# ASSET REPORT TEMPLATES
+class AssetReportTemplateViewSet(viewsets.ModelViewSet):
+    """ViewSet for CRUD operations on AssetReportTemplate."""
+    serializer_class = AssetReportTemplateSerializer
+
+    def get_queryset(self):
+        """Return non-deleted templates, optionally filtered by user_id."""
+        queryset = AssetReportTemplate.objects.filter(is_deleted=False)
+        user_id = self.request.query_params.get('user_id')
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+        return queryset.order_by('-created_at')
+
+    def perform_destroy(self, instance):
+        """Soft delete the template."""
+        instance.is_deleted = True
+        instance.save()
+
+    @action(detail=False, methods=['get'])
+    def my_templates(self, request):
+        """List templates for a specific user (via query param user_id)."""
+        user_id = request.query_params.get('user_id')
+        if not user_id:
+            return Response(
+                {"detail": "user_id query parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        templates = AssetReportTemplate.objects.filter(
+            user_id=user_id,
+            is_deleted=False
+        ).order_by('-created_at')
+        serializer = self.get_serializer(templates, many=True)
         return Response(serializer.data)

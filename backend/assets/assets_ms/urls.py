@@ -18,6 +18,7 @@ router.register('audits', AuditViewSet, basename='audits')
 router.register('audit-files', AuditFileViewSet, basename='audit-files')
 router.register('repairs', RepairViewSet, basename='repair')
 router.register('dashboard', DashboardViewSet, basename='dashboard')
+router.register('report-templates', AssetReportTemplateViewSet, basename='report-templates')
 
 urlpatterns = [
     # Internal cross-service usage checks
