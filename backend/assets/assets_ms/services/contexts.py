@@ -11,17 +11,19 @@ BASE_URL = getattr(settings, "CONTEXTS_API_URL", os.getenv("CONTEXTS_API_URL", "
 
 # Cache settings
 SUPPLIERS_LIST_CACHE_KEY = "external_suppliers_list"
-SUPPLIERS_CACHE_TTL = 300  
+SUPPLIERS_CACHE_TTL = 300
 STATUS_CACHE_TTL = 300
 STATUS_WARNING_TTL = 60
 SUPPLIER_ITEM_CACHE_TTL = 300
 CATEGORY_CACHE_TTL = 300
 MANUFACTURER_CACHE_TTL = 300
 DEPRECIATION_CACHE_TTL = 300
+LOCATION_CACHE_TTL = 300
 SUPPLIER_WARNING_TTL = 60
 CATEGORY_WARNING_TTL = 60
 MANUFACTURER_WARNING_TTL = 60
 DEPRECIATION_WARNING_TTL = 60
+LOCATION_WARNING_TTL = 60
 LIST_CACHE_TTL = 300
 LIST_WARNING_TTL = 60
 
@@ -281,6 +283,24 @@ def get_statuses_list(q=None, limit=50):
     if limit:
         params['limit'] = limit
     result = fetch_resource_list('statuses', params=params)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+
+def get_locations_list(q=None, limit=500):
+    key = f"contexts:list:locations:{q}:{limit}"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    params = {}
+    if q:
+        params['q'] = q
+    if limit:
+        params['limit'] = limit
+    result = fetch_resource_list('locations', params=params)
     if isinstance(result, dict) and result.get('warning'):
         cache.set(key, result, LIST_WARNING_TTL)
     else:
