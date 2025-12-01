@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import NavBar from "../../components/NavBar";
 import Alert from "../../components/Alert";
 import "../../styles/reports/AssetReport.css";
@@ -17,6 +17,9 @@ import { fetchAllLocations } from "../../services/integration-help-desk-service"
 import {
   fetchAllProducts,
   downloadAssetReportExcel,
+  fetchReportTemplates,
+  createReportTemplate,
+  deleteReportTemplate,
 } from "../../services/assets-service";
 
 // FilterForm component for handling filter selections
@@ -26,6 +29,7 @@ function FilterForm({
   options,
   onSelectionChange,
   filterKey,
+  selectedValue,
 }) {
   const animatedComponents = makeAnimated();
 
@@ -86,6 +90,13 @@ function FilterForm({
     }
   };
 
+  // Find the selected option from options based on selectedValue
+  const getSelectedOption = () => {
+    if (!selectedValue) return [];
+    const found = options.find((opt) => opt.value === selectedValue);
+    return found ? [found] : [];
+  };
+
   return (
     <div className="filter-form">
       <label htmlFor={`filter-${title}`}>{title}</label>
@@ -96,6 +107,7 @@ function FilterForm({
         styles={customStylesDropdown}
         isMulti
         onChange={handleChange}
+        value={getSelectedOption()}
       />
     </div>
   );
@@ -107,10 +119,16 @@ export default function AssetReport() {
   const [hasTemplateName, setHasTemplateName] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
 
   // Alert states
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  // Template states
+  const [savedTemplates, setSavedTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
 
   // State for filter options from backend
   const [filterOptions, setFilterOptions] = useState({
@@ -126,6 +144,8 @@ export default function AssetReport() {
   const [selectedFilters, setSelectedFilters] = useState({
     location: null,
     supplier: null,
+    product: null,
+    manufacturer: null,
     category: null,
     status: null,
   });
@@ -214,6 +234,28 @@ export default function AssetReport() {
     loadFilterOptions();
   }, []);
 
+  // Load templates on mount
+  useEffect(() => {
+    const loadTemplates = async () => {
+      setIsLoadingTemplates(true);
+      try {
+        const templates = await fetchReportTemplates();
+        const templateOptions = (templates || []).map((t) => ({
+          value: t.id,
+          label: t.name,
+          data: t,
+        }));
+        setSavedTemplates(templateOptions);
+      } catch (error) {
+        console.error("Error loading templates:", error);
+      } finally {
+        setIsLoadingTemplates(false);
+      }
+    };
+
+    loadTemplates();
+  }, []);
+
   // Build filters config from loaded options
   const filters = [
     {
@@ -252,13 +294,6 @@ export default function AssetReport() {
       options: filterOptions.statuses,
       filterKey: "status",
     },
-  ];
-
-  // Mock data for saved templates
-  const savedTemplate = [
-    { value: "template1", label: "Template 1" },
-    { value: "template2", label: "Template 2" },
-    { value: "template3", label: "Template 3" },
   ];
 
   const [leftColumns, setLeftColumns] = useState([
@@ -322,7 +357,7 @@ export default function AssetReport() {
   }, [rightColumns, leftColumns]);
 
   // Validation
-  const { register, watch } = useForm({
+  const { register, watch, setValue } = useForm({
     mode: "all",
   });
 
@@ -355,6 +390,153 @@ export default function AssetReport() {
     return `${year}${month}${day}`;
   };
 
+  // Get selected column IDs
+  const getSelectedColumns = useCallback(() => {
+    const selected = [];
+    leftColumns.forEach((col) => {
+      if (col.id !== "select_all" && col.checked) {
+        selected.push(col.id);
+      }
+    });
+    rightColumns.forEach((col) => {
+      if (col.checked) {
+        selected.push(col.id);
+      }
+    });
+    return selected;
+  }, [leftColumns, rightColumns]);
+
+  // Handle template selection
+  const handleTemplateSelect = (option) => {
+    setSelectedTemplate(option);
+    if (option && option.data) {
+      const template = option.data;
+
+      // Set template name in the input field
+      setValue("templateName", template.name);
+
+      // Apply filters from template
+      if (template.filters) {
+        setSelectedFilters({
+          location: template.filters.location || null,
+          supplier: template.filters.supplier || null,
+          product: template.filters.product || null,
+          manufacturer: template.filters.manufacturer || null,
+          category: template.filters.category || null,
+          status: template.filters.status || null,
+        });
+      }
+
+      // Apply columns from template
+      if (template.columns && template.columns.length > 0) {
+        const columnSet = new Set(template.columns);
+
+        setLeftColumns((prev) =>
+          prev.map((col) => ({
+            ...col,
+            checked: col.id === "select_all" ? false : columnSet.has(col.id),
+          }))
+        );
+
+        setRightColumns((prev) =>
+          prev.map((col) => ({
+            ...col,
+            checked: columnSet.has(col.id),
+          }))
+        );
+      }
+
+      setSuccessMessage(`Template "${template.name}" loaded successfully!`);
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } else {
+      // Clear template name when deselected
+      setValue("templateName", "");
+      // Reset filters
+      setSelectedFilters({
+        location: null,
+        supplier: null,
+        product: null,
+        manufacturer: null,
+        category: null,
+        status: null,
+      });
+    }
+  };
+
+  // Handle save template
+  const handleSaveTemplate = async () => {
+    if (!templateName.trim()) {
+      setErrorMessage("Please enter a template name.");
+      setTimeout(() => setErrorMessage(""), 3000);
+      return;
+    }
+
+    setIsSavingTemplate(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      const templateData = {
+        name: templateName.trim(),
+        filters: selectedFilters,
+        columns: getSelectedColumns(),
+      };
+
+      const newTemplate = await createReportTemplate(templateData);
+
+      // Add to saved templates list
+      setSavedTemplates((prev) => [
+        ...prev,
+        {
+          value: newTemplate.id,
+          label: newTemplate.name,
+          data: newTemplate,
+        },
+      ]);
+
+      setSuccessMessage(`Template "${newTemplate.name}" saved successfully!`);
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error("Error saving template:", error);
+      let message = "Failed to save template. Please try again.";
+      if (error.response?.data?.name) {
+        message = error.response.data.name[0];
+      } else if (error.response?.data?.detail) {
+        message = error.response.data.detail;
+      }
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(""), 5000);
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  // Handle delete template
+  const handleDeleteTemplate = async () => {
+    if (!selectedTemplate) {
+      setErrorMessage("Please select a template to delete.");
+      setTimeout(() => setErrorMessage(""), 3000);
+      return;
+    }
+
+    try {
+      await deleteReportTemplate(selectedTemplate.value);
+
+      // Remove from saved templates list
+      setSavedTemplates((prev) =>
+        prev.filter((t) => t.value !== selectedTemplate.value)
+      );
+
+      setSelectedTemplate(null);
+      setSuccessMessage("Template deleted successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error("Error deleting template:", error);
+      setErrorMessage("Failed to delete template. Please try again.");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
   // Handle download report from backend
   const handleDownloadReport = async () => {
     setIsDownloading(true);
@@ -373,6 +555,13 @@ export default function AssetReport() {
         filterParams.supplier_id = selectedFilters.supplier;
       if (selectedFilters.location)
         filterParams.location_id = selectedFilters.location;
+      if (selectedFilters.product)
+        filterParams.product_id = selectedFilters.product;
+      if (selectedFilters.manufacturer)
+        filterParams.manufacturer_id = selectedFilters.manufacturer;
+
+      // Get selected columns
+      const selectedColumns = getSelectedColumns();
 
       // Generate filename
       const name = templateName.trim() || "AssetReport";
@@ -381,8 +570,8 @@ export default function AssetReport() {
       const token = generateToken();
       const fileName = `${sanitizedName}_${dateGenerated}_${token}.xlsx`;
 
-      // Download from backend
-      await downloadAssetReportExcel(filterParams, fileName);
+      // Download from backend with columns
+      await downloadAssetReportExcel(filterParams, fileName, selectedColumns);
 
       // Show success message
       setSuccessMessage("Report downloaded successfully!");
@@ -445,6 +634,7 @@ export default function AssetReport() {
                       options={filter.options}
                       filterKey={filter.filterKey}
                       onSelectionChange={handleFilterChange}
+                      selectedValue={selectedFilters[filter.filterKey]}
                     />
                   );
                 })
@@ -525,10 +715,24 @@ export default function AssetReport() {
               <h2>Open Saved Template</h2>
               <Select
                 components={animatedComponents}
-                options={savedTemplate}
-                placeholder="Select a Template"
+                options={savedTemplates}
+                value={selectedTemplate}
+                onChange={handleTemplateSelect}
+                placeholder={
+                  isLoadingTemplates ? "Loading..." : "Select a Template"
+                }
+                isLoading={isLoadingTemplates}
+                isClearable
                 styles={customStylesDropdown}
               />
+              {selectedTemplate && (
+                <button
+                  className="delete-template-btn"
+                  onClick={handleDeleteTemplate}
+                >
+                  Delete Template
+                </button>
+              )}
             </section>
             <section className="middle-section">
               <h2>Template Name</h2>
@@ -540,8 +744,12 @@ export default function AssetReport() {
                 placeholder="Enter template name"
                 {...register("templateName")}
               />
-              <button className="primary-button" disabled={!hasTemplateName}>
-                Save Template
+              <button
+                className="primary-button"
+                disabled={!hasTemplateName || isSavingTemplate}
+                onClick={handleSaveTemplate}
+              >
+                {isSavingTemplate ? "Saving..." : "Save Template"}
               </button>
             </section>
             <section className="bottom-section">
