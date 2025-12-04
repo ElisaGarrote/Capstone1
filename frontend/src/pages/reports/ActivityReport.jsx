@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -12,8 +12,28 @@ import { HiOutlineTag } from "react-icons/hi";
 import { RxPerson } from "react-icons/rx";
 import { AiOutlineAudit } from "react-icons/ai";
 import { RxComponent1 } from "react-icons/rx";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/reports/ActivityReport.css";
+
+// Generate a random 7-character alphanumeric token
+const generateToken = () => {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let token = "";
+  for (let i = 0; i < 7; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return token;
+};
+
+// Get formatted date as YYYYMMDD
+const getFormattedDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}${month}${day}`;
+};
 
 const filterConfig = [
   {
@@ -121,10 +141,6 @@ function TableItem({ activity }) {
 }
 
 export default function ActivityReport() {
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
-
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
@@ -134,24 +150,15 @@ export default function ActivityReport() {
   const endIndex = startIndex + pageSize;
   const paginatedActivity = MockupData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
+  // Handle export to Excel with format: [Name]_[DateGenerated]_[7DigitToken].xlsx
+  const handleExportExcel = () => {
+    const name = "ActivityReport";
+    const dateGenerated = getFormattedDate();
+    const token = generateToken();
+    const fileName = `${name}_${dateGenerated}_${token}.xlsx`;
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+    exportToExcel(MockupData, fileName);
+  };
 
   return (
     <section className="page-layout-with-table">
@@ -172,24 +179,12 @@ export default function ActivityReport() {
             <h2 className="h2">Activity Log ({MockupData.length})</h2>
             <section className="table-actions">
               <input type="search" placeholder="Search..." className="search" />
-              <div ref={toggleRef}>
-                <MediumButtons
-                  type="export"
-                  onClick={() => setExportToggle(!exportToggle)}
-                />
-              </div>
+              <MediumButtons type="export" onClick={handleExportExcel} />
             </section>
           </section>
 
           {/* Table Structure */}
           <section className="activity-report-table-section">
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
             <table>
               <thead>
                 <TableHeader />
