@@ -195,7 +195,7 @@ export default function BulkEditAssets() {
             <form onSubmit={handleSubmit(onSubmit)} className="bulk-edit-form">
               {/* Product Dropdown */}
               <fieldset className="form-field">
-                <label htmlFor='product'>Product <span className="required">*</span></label>
+                <label htmlFor='product'>Product</label>
                 <select
                   id="product"
                   {...register("product")}
@@ -208,12 +208,11 @@ export default function BulkEditAssets() {
                     </option>
                   ))}
                 </select>
-                {errors.product && <span className='error-message'>{errors.product.message}</span>}
               </fieldset>
 
               {/* Status Dropdown with Add Button */}
               <fieldset className="form-field">
-                <label htmlFor='status'>Status <span className="required">*</span></label>
+                <label htmlFor='status'>Status</label>
                 <div className="dropdown-with-add">
                   <select
                     id="status"
@@ -236,7 +235,6 @@ export default function BulkEditAssets() {
                     <img src={PlusIcon} alt="Add" />
                   </button>
                 </div>
-                {errors.status && <span className='error-message'>{errors.status.message}</span>}
               </fieldset>
 
               {/* Supplier Dropdown with Add Button */}

@@ -41,12 +41,12 @@ export const fetchProductNames = (ids = []) =>
     .then(res => res.data);
 
 // BULK EDIT products
-export async function bulkEditProducts(data) {
-  const res = await assetsAxios.patch("products/bulk-edit/", data, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+export async function bulkEditProducts(data, useFormData = false) {
+  const headers = useFormData
+    ? { "Content-Type": "multipart/form-data" }
+    : { "Content-Type": "application/json" };
+
+  const res = await assetsAxios.patch("products/bulk-edit/", data, { headers });
   return res.data;
 }
 

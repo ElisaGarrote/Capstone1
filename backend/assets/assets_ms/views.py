@@ -214,7 +214,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     def bulk_edit(self, request):
         """
         Bulk edit multiple products.
-        Payload:
+        Payload (JSON):
         {
             "ids": [1, 2, 3],
             "data": {
@@ -223,10 +223,37 @@ class ProductViewSet(viewsets.ModelViewSet):
                 "default_purchase_cost": "200.00"
             }
         }
+        Or FormData with 'ids' (JSON string), 'data' (JSON string), and optional 'image' file.
         Only non-empty fields will be updated.
         """
-        ids = request.data.get("ids", [])
-        update_data = request.data.get("data", {})
+        import json
+        from django.core.files.base import ContentFile
+
+        # Handle both JSON and FormData
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            ids_raw = request.data.get("ids", "[]")
+            data_raw = request.data.get("data", "{}")
+            try:
+                ids = json.loads(ids_raw) if isinstance(ids_raw, str) else ids_raw
+                update_data = json.loads(data_raw) if isinstance(data_raw, str) else data_raw
+            except json.JSONDecodeError:
+                return Response({"detail": "Invalid JSON in ids or data."}, status=status.HTTP_400_BAD_REQUEST)
+
+            uploaded_image = request.FILES.get("image")
+            # Read image content into memory so it can be reused for multiple products
+            if uploaded_image:
+                image_content = uploaded_image.read()
+                image_name = uploaded_image.name
+            else:
+                image_content = None
+                image_name = None
+            remove_image = request.data.get("remove_image") == "true"
+        else:
+            ids = request.data.get("ids", [])
+            update_data = request.data.get("data", {})
+            image_content = None
+            image_name = None
+            remove_image = False
 
         if not ids:
             return Response({"detail": "No IDs provided."},
@@ -235,7 +262,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         # Remove blank values so they won't overwrite existing fields
         safe_data = {k: v for k, v in update_data.items() if v not in [None, "", [], {}]}
 
-        if not safe_data:
+        # Check if there's anything to update (fields, image, or remove_image)
+        has_field_updates = bool(safe_data)
+        has_image_update = image_content is not None or remove_image
+
+        if not has_field_updates and not has_image_update:
             return Response(
                 {"detail": "No valid fields to update."},
                 status=status.HTTP_400_BAD_REQUEST
@@ -262,7 +293,17 @@ class ProductViewSet(viewsets.ModelViewSet):
             )
 
             if serializer.is_valid():
-                serializer.save()
+                instance = serializer.save()
+
+                # Handle image update
+                if image_content:
+                    # Create a new ContentFile for each product from the stored bytes
+                    instance.image.save(image_name, ContentFile(image_content), save=True)
+                elif remove_image and instance.image:
+                    instance.image.delete(save=False)
+                    instance.image = None
+                    instance.save()
+
                 updated.append(product.id)
                 cache.delete(f"products:detail:{product.id}")
             else:
