@@ -14,7 +14,10 @@ from rest_framework.response import Response
 from datetime import datetime
 from django.db import transaction
 import logging
-from assets_ms.services.contexts import resolve_ticket, fetch_resource_list
+from assets_ms.services.contexts import *
+from assets_ms.services.integration_help_desk import *
+from assets_ms.services.integration_ticket_tracking import *
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +38,37 @@ class ProductViewSet(viewsets.ModelViewSet):
         if self.action == "asset_registration":
             return ProductAssetRegistrationSerializer
 
-        # 3. Create, Update, Retrieve → full serializer
+        if self.action == "retrieve":
+            return ProductInstanceSerializer
+        
+        # 3. Create, Update, Destroy
         return ProductSerializer
+    
+    def _build_context_maps(self):
+        """Fetch context data and build lookup maps for serializers."""
+        categories = get_category_names()
+        manufacturers = get_manufacturer_names()
+        suppliers = get_supplier_names()
+        depreciations = get_depreciation_names()
+
+        return {
+            "category_map": {c['id']: c for c in categories},
+            "manufacturer_map": {m['id']: m for m in manufacturers},
+            "supplier_map": {s['id']: s for s in suppliers},
+            "depreciation_map": {d['id']: d for d in depreciations},
+        }
+    
+    def list(self, request, *args, **kwargs):
+        products = self.get_queryset()
+        context_maps = self._build_context_maps()
+        serializer = self.get_serializer(products, many=True, context=context_maps)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        context_maps = self._build_context_maps()
+        serializer = self.get_serializer(instance, context=context_maps)
+        return Response(serializer.data)
 
     def perform_destroy(self, instance):
         # Check for referencing assets that are not deleted
@@ -48,15 +80,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         # If no active assets, allow soft delete
         instance.is_deleted = True
         instance.save()
-        
-    @action(detail=False, methods=["get"], url_path='asset-registration')
-    def asset_registration(self, request):
-        """
-        Returns minimal product list for Asset Registration.
-        """
-        products = Product.objects.filter(is_deleted=False)
-        serializer = self.get_serializer(products, many=True)
-        return Response(serializer.data)
 
     @action(detail=False, methods=["post"], url_path='bulk-delete')
     def bulk_delete(self, request):
@@ -84,9 +107,17 @@ class ProductViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"detail": "Products soft-deleted successfully."}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=["get"], url_path='asset-registration')
+    def asset_registration(self, request):
+        """
+        Returns minimal product list for Asset Registration.
+        """
+        products = Product.objects.filter(is_deleted=False)
+        serializer = self.get_serializer(products, many=True)
+        return Response(serializer.data)
 
 class AssetViewSet(viewsets.ModelViewSet):
-    serializer_class = AssetSerializer
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
@@ -95,6 +126,13 @@ class AssetViewSet(viewsets.ModelViewSet):
         if self.request.query_params.get('show_deleted') == 'true':
             queryset = Asset.objects.filter(is_deleted=True).order_by('name')
         return queryset
+    
+    def get_serializer_class(self):
+        # 1. Assets Table (list)
+        if self.action == "list":
+            return AssetListSerializer
+        # 2. Create, Update, Retrieve → full serializer
+        return AssetSerializer
     
     @action(detail=False, methods=['get'], url_path='by-product/(?P<product_id>\d+)')
     def by_product(self, request, product_id=None):

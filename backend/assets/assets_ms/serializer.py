@@ -9,8 +9,9 @@ from django.utils import timezone
 from datetime import datetime
 
 # Product
+
+# Serializer for product list view
 class ProductListSerializer(serializers.ModelSerializer):
-    # Include handy context details from the Contexts service for the frontend
     category_details = serializers.SerializerMethodField()
     manufacturer_details = serializers.SerializerMethodField()
     depreciation_details = serializers.SerializerMethodField()
@@ -19,54 +20,30 @@ class ProductListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'image', 'name', 'category_details', 'model_number', 'end_of_life', 'manufacturer_details', 'depreciation_details', 'default_purchase_cost', 'default_supplier_details', 'minimum_quantity', 'has_assets']
+        fields = [
+            'id', 'image', 'name', 'category_details', 'model_number', 'end_of_life',
+            'manufacturer_details', 'depreciation_details', 'default_purchase_cost',
+            'default_supplier_details', 'minimum_quantity', 'has_assets'
+        ]
 
     def get_has_assets(self, obj):
-        """Check if this product is referenced by any active (non-deleted) assets."""
         return obj.product_assets.filter(is_deleted=False).exists()
 
     def get_category_details(self, obj):
-        try:
-            if not getattr(obj, 'category', None):
-                return None
-            data = get_category_by_id(obj.category)
-            return {"id": data.get("id"), "name": data.get("name")}
-        except Exception:
-            return {"warning": "Contexts service unreachable for categories."}
+        return self.context.get("category_map", {}).get(obj.category)
 
     def get_manufacturer_details(self, obj):
-        try:
-            if not getattr(obj, 'manufacturer', None):
-                return None
-            data = get_manufacturer_by_id(obj.manufacturer)
-            return {"id": data.get("id"), "name": data.get("name")}
-        except Exception:
-            return {"warning": "Contexts service unreachable for manufacturers."}
+        return self.context.get("manufacturer_map", {}).get(obj.manufacturer)
 
     def get_depreciation_details(self, obj):
-        try:
-            if not getattr(obj, 'depreciation', None):
-                return None
-            data = get_depreciation_by_id(obj.depreciation)
-            return {"id": data.get("id"), "name": data.get("name")}
-        except Exception:
-            return {"warning": "Contexts service unreachable for depreciations."}
-    
+        return self.context.get("depreciation_map", {}).get(obj.depreciation)
+
     def get_default_supplier_details(self, obj):
-        try:
-            if not getattr(obj, 'default_supplier', None):
-                return None
-            data = get_supplier_by_id(obj.default_supplier)
-            return {"id": data.get("id"), "name": data.get("name")}
-        except Exception:
-            return {"warning": "Contexts service unreachable for suppliers."}
-            
+        return self.context.get("supplier_map", {}).get(obj.default_supplier)
+
+# Serializer for product create, update, and destroy
 class ProductSerializer(serializers.ModelSerializer):
-    # Include handy context details from the Contexts service for the frontend
-    category_details = serializers.SerializerMethodField()
-    manufacturer_details = serializers.SerializerMethodField()
-    depreciation_details = serializers.SerializerMethodField()
-    default_supplier_details = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = '__all__'
@@ -95,42 +72,44 @@ class ProductSerializer(serializers.ModelSerializer):
             })
         
         return data
-    
+
+# Serializer for product instance retrieve
+class ProductInstanceSerializer(serializers.ModelSerializer):
+    category_details = serializers.SerializerMethodField()
+    manufacturer_details = serializers.SerializerMethodField()
+    depreciation_details = serializers.SerializerMethodField()
+    default_supplier_details = serializers.SerializerMethodField()
+    assets = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+    def get_has_assets(self, obj):
+        return obj.product_assets.filter(is_deleted=False).exists()
+
     def get_category_details(self, obj):
-        try:
-            if not getattr(obj, 'category', None):
-                return None
-            data = get_category_by_id(obj.category)
-            return {"id": data.get("id"), "name": data.get("name")}
-        except Exception:
-            return {"warning": "Contexts service unreachable for categories."}
+        return self.context.get("category_map", {}).get(obj.category)
 
     def get_manufacturer_details(self, obj):
-        try:
-            if not getattr(obj, 'manufacturer', None):
-                return None
-            data = get_manufacturer_by_id(obj.manufacturer)
-            return {"id": data.get("id"), "name": data.get("name")}
-        except Exception:
-            return {"warning": "Contexts service unreachable for manufacturers."}
+        return self.context.get("manufacturer_map", {}).get(obj.manufacturer)
 
     def get_depreciation_details(self, obj):
-        try:
-            if not getattr(obj, 'depreciation', None):
-                return None
-            data = get_depreciation_by_id(obj.depreciation)
-            return {"id": data.get("id"), "name": data.get("name")}
-        except Exception:
-            return {"warning": "Contexts service unreachable for depreciations."}
-    
+        return self.context.get("depreciation_map", {}).get(obj.depreciation)
+
     def get_default_supplier_details(self, obj):
-        try:
-            if not getattr(obj, 'default_supplier', None):
-                return None
-            data = get_supplier_by_id(obj.default_supplier)
-            return {"id": data.get("id"), "name": data.get("name")}
-        except Exception:
-            return {"warning": "Contexts service unreachable for suppliers."}
+        return self.context.get("supplier_map", {}).get(obj.default_supplier)
+
+    def get_assets(self, obj):
+        assets = obj.product_assets.filter(is_deleted=False).order_by('name')
+
+        # Reuse full list serializer
+        serializer = AssetListSerializer(
+            assets,
+            many=True,
+            context=self.context   # pass context so ticket/status mappings work
+        )
+        return serializer.data
       
 class ProductAssetRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -138,6 +117,40 @@ class ProductAssetRegistrationSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'default_purchase_cost', 'default_supplier']
 
 # Asset
+class AssetListSerializer(serializers.ModelSerializer):
+    status_details = serializers.SerializerMethodField()
+    product_details = serializers.SerializerMethodField()
+    ticket_details = serializers.SerializerMethodField()
+    class Meta:
+        model = Asset
+        fields = ['id', 'image', 'asset_id', 'name', 'status_details', 'warranty_expiration', 'product_details', 'ticket_details']
+
+    def get_status_details(self, obj):
+        try:
+            if not getattr(obj, 'status', None):
+                return None
+            data = get_status_names()
+            
+        except Exception:
+            return {"warning": "Contexts service unreachable for statuses."}
+    
+    def get_product_details(self, obj):
+        try:
+            if not getattr(obj, 'product', None):
+                return None
+            return {"id": obj.product.id, "end_of_life": obj.product.end_of_life}
+        except Exception:
+            return {"warning": "Product not found."}
+        
+    def get_ticket_details(self, obj):
+        try:
+            if not getattr(obj, 'id', None):
+                return None
+            data = get_unresolved_ticket_by_asset_id(obj.id)
+            return {"id": data.get("id"), "asset_checkout": data.get("asset_checkout")}
+        except Exception:
+            return None
+
 class AssetSerializer(serializers.ModelSerializer):
     # Include context details for frontend convenience
     status_details = serializers.SerializerMethodField()
