@@ -58,16 +58,10 @@ function ProductViewPage() {
           setProduct(apiProduct);
           setManufacturer(apiProduct.manufacturer_details);
 
-          // Fetch assets for this product
-          try {
-            const assets = await fetchAssetsByProduct(id);
-            setProductAssets(assets);
-            setFilteredAssets(assets);
-          } catch (error) {
-            console.error("Error fetching assets for product:", error);
-            setProductAssets([]);
-            setFilteredAssets([]);
-          }
+          // Use assets directly from apiProduct response
+          const assets = apiProduct.assets || [];
+          setProductAssets(assets);
+          setFilteredAssets(assets);
         }
       } catch (error) {
         console.error("Error fetching product:", error);

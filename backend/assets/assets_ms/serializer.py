@@ -130,6 +130,7 @@ class AssetListSerializer(serializers.ModelSerializer):
             if not getattr(obj, 'status', None):
                 return None
             data = get_status_names()
+            return data.get(obj.status)
             
         except Exception:
             return {"warning": "Contexts service unreachable for statuses."}
