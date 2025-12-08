@@ -81,6 +81,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         instance.is_deleted = True
         instance.save()
 
+    # Bulk delete
+    # Receive list of IDs and soft delete all products that are not referenced by active assets, else return error
     @action(detail=False, methods=["post"], url_path='bulk-delete')
     def bulk_delete(self, request):
         """
@@ -108,6 +110,65 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         return Response({"detail": "Products soft-deleted successfully."}, status=status.HTTP_200_OK)
     
+    # Bulk edit
+    # Receive list of IDs and partially or fully update all products with the same data, else return error
+    @action(detail=False, methods=["patch"], url_path='bulk-edit')
+    def bulk_edit(self, request):
+        """
+        Bulk edit multiple products.
+        Payload:
+        {
+            "ids": [1, 2, 3],
+            "data": {
+                "manufacturer": 5,
+                "depreciation": 2,
+                "default_purchase_cost": "200.00"
+            }
+        }
+        Only non-empty fields will be updated.
+        """
+        ids = request.data.get("ids", [])
+        update_data = request.data.get("data", {})
+
+        if not ids:
+            return Response({"detail": "No IDs provided."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Remove blank values so they won't overwrite existing fields
+        safe_data = {k: v for k, v in update_data.items() if v not in [None, "", [], {}]}
+
+        if not safe_data:
+            return Response(
+                {"detail": "No valid fields to update."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        products = Product.objects.filter(id__in=ids, is_deleted=False)
+
+        updated = []
+        failed = []
+
+        for product in products:
+            serializer = ProductSerializer(
+                product,
+                data=safe_data,
+                partial=True  # important so blank fields won’t cause validation errors
+            )
+
+            if serializer.is_valid():
+                serializer.save()
+                updated.append(product.id)
+            else:
+                failed.append({
+                    "id": product.id,
+                    "errors": serializer.errors
+                })
+
+        return Response({
+            "updated": updated,
+            "failed": failed
+        })
+
     @action(detail=False, methods=["get"], url_path='asset-registration')
     def asset_registration(self, request):
         """
