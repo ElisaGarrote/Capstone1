@@ -14,7 +14,7 @@ import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/Products/Products.css";
 import "../../styles/ProductFilterModal.css";
-import { fetchAllProducts, deleteProduct, bulkDeleteProducts } from "../../services/assets-service";
+import { fetchAllProducts } from "../../services/assets-service";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -214,34 +214,30 @@ export default function Products() {
     setDeleteTarget(null);
   };
 
-  const confirmDelete = async () => {
-    try {
-      if (deleteTarget) {
-        // Single delete
-        await deleteProduct(deleteTarget);
-        setProducts((prev) => prev.filter((p) => p.id !== deleteTarget));
-        setFilteredData((prev) => prev.filter((p) => p.id !== deleteTarget));
-        setSuccessMessage("Product deleted successfully!");
-      } else {
-        // Bulk delete
-        await bulkDeleteProducts({ ids: selectedIds });
-        setProducts((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
-        setFilteredData((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
-        setSuccessMessage(`${selectedIds.length} products deleted successfully!`);
-        setSelectedIds([]);
-      }
-      setTimeout(() => setSuccessMessage(""), 5000);
-    } catch (error) {
-      console.error("Error deleting product(s):", error);
-      setErrorMessage(error.response?.data?.detail || "Failed to delete product(s).");
-      setTimeout(() => setErrorMessage(""), 5000);
+  const handleDeleteSuccess = (deletedIds) => {
+    if (Array.isArray(deletedIds)) {
+      // Bulk delete
+      setProducts((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+      setFilteredData((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+      setSuccessMessage(`${deletedIds.length} products deleted successfully!`);
+      setSelectedIds([]);
+    } else {
+      // Single delete
+      setProducts((prev) => prev.filter((p) => p.id !== deletedIds));
+      setFilteredData((prev) => prev.filter((p) => p.id !== deletedIds));
+      setSuccessMessage("Product deleted successfully!");
     }
-    closeDeleteModal();
+    setTimeout(() => setSuccessMessage(""), 5000);
+  };
+
+  const handleDeleteError = (error) => {
+    setErrorMessage(error.response?.data?.detail || "Failed to delete product(s).");
+    setTimeout(() => setErrorMessage(""), 5000);
   };
 
   // Add view handler
   const handleViewClick = (product) => {
-    navigate(`/products/view/${product.id}`);
+    navigate(`/products/view/${product}`);
   };
 
   // Apply filters to data
@@ -439,9 +435,14 @@ export default function Products() {
 
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
           actionType={deleteTarget ? "delete" : "bulk-delete"}
-          onConfirm={confirmDelete}
+          entityType="product"
+          targetId={deleteTarget}
+          targetIds={selectedIds}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 
@@ -530,7 +531,7 @@ export default function Products() {
                       isSelected={selectedIds.includes(product.id)}
                       onRowChange={handleRowChange}
                       onDeleteClick={() => openDeleteModal(product.id)}
-                      onViewClick={handleViewClick}
+                      onViewClick={() => handleViewClick(product.id)}
                       />
                     ))
                   ) : (

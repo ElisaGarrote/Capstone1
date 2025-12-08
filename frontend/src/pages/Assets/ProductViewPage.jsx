@@ -3,13 +3,13 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
 import "../../styles/Products/ProductViewPage.css";
 import "../../styles/Assets/AssetViewPage.css";
 import "../../styles/Assets/Assets.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
+import SystemLoading from "../../components/Loading/SystemLoading";
 
 import { getProductDetails, getProductTabs } from "../../data/mockData/products/productDetailsData";
 import Status from "../../components/Status";
@@ -18,7 +18,7 @@ import Pagination from "../../components/Pagination";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import AssetFilterModal from "../../components/Modals/AssetFilterModal";
-import { fetchAssetsByProduct } from "../../services/assets-service";
+import { fetchProductById, fetchAssetsByProduct } from "../../services/assets-service";
 
 function ProductViewPage() {
   const { id } = useParams();
@@ -36,50 +36,51 @@ function ProductViewPage() {
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [selectedAssetIds, setSelectedAssetIds] = useState([]);
 
   // Filter modal state for Assets tab
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  // Alert state for asset actions in Assets tab
-  const [assetSuccessMessage, setAssetSuccessMessage] = useState("");
+  // Alert state for actions
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isAssetDeleteModalOpen, setAssetDeleteModalOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState(null);
 
   useEffect(() => {
     const loadProductData = async () => {
-      // Get product from location state (passed from Products page)
-      const passedProduct = location.state?.product;
+      setIsLoading(true);
+      try {
+        // Get product from API
+        const apiProduct = await fetchProductById(id);
 
-      if (passedProduct) {
-        setProduct(passedProduct);
+        if (apiProduct) {
+          setProduct(apiProduct);
+          setManufacturer(apiProduct.manufacturer_details);
 
-        // Find manufacturer using manufacturer_id from passed product
-        const foundManufacturer = ManufacturersMockupData.find(
-          (m) => m.id === passedProduct.manufacturer_id
-        );
-        setManufacturer(foundManufacturer);
-
-        // Fetch assets for this product from API
-        try {
-          const assets = await fetchAssetsByProduct(passedProduct.id);
-          setProductAssets(assets);
-          setFilteredAssets(assets);
-        } catch (error) {
-          console.error("Error fetching assets for product:", error);
-          setProductAssets([]);
-          setFilteredAssets([]);
+          // Fetch assets for this product
+          try {
+            const assets = await fetchAssetsByProduct(id);
+            setProductAssets(assets);
+            setFilteredAssets(assets);
+          } catch (error) {
+            console.error("Error fetching assets for product:", error);
+            setProductAssets([]);
+            setFilteredAssets([]);
+          }
         }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     loadProductData();
   }, [id, location.state]);
 
   if (isLoading) {
-    return null; // Don't render anything while loading
+    return <SystemLoading />;
   }
 
   if (!product) {
@@ -281,20 +282,16 @@ function ProductViewPage() {
     setAssetToDelete(null);
   };
 
-  const confirmAssetDelete = () => {
-    if (assetToDelete) {
-      // Remove from local assets collections
-      const updatedAssets = productAssets.filter((asset) => asset.id !== assetToDelete);
-      setProductAssets(updatedAssets);
+  const handleAssetDeleteSuccess = (deletedId) => {
+    setProductAssets((prev) => prev.filter((asset) => asset.id !== deletedId));
+    setFilteredAssets((prev) => prev.filter((asset) => asset.id !== deletedId));
+    setSuccessMessage("Asset deleted successfully!");
+    setTimeout(() => setSuccessMessage(""), 5000);
+  };
 
-      const updatedFiltered = filteredAssets.filter((asset) => asset.id !== assetToDelete);
-      setFilteredAssets(updatedFiltered);
-
-      setAssetSuccessMessage("Asset deleted successfully!");
-      setTimeout(() => setAssetSuccessMessage(""), 5000);
-      console.log("Deleting asset:", assetToDelete);
-    }
-    closeAssetDeleteModal();
+  const handleAssetDeleteError = (error) => {
+    setErrorMessage(error.response?.data?.detail || "Failed to delete asset.");
+    setTimeout(() => setErrorMessage(""), 5000);
   };
 
   // Pagination logic
@@ -436,11 +433,13 @@ function ProductViewPage() {
     setDeleteModalOpen(false);
   };
 
-  const confirmDelete = () => {
-    // Handle product deletion logic here
-    console.log("Deleting product:", product.id);
-    closeDeleteModal();
+  const handleProductDeleteSuccess = () => {
     navigate("/products");
+  };
+
+  const handleProductDeleteError = (error) => {
+    setErrorMessage(error.response?.data?.detail || "Failed to delete product.");
+    setTimeout(() => setErrorMessage(""), 5000);
   };
 
   // Button action handlers
@@ -511,24 +510,31 @@ function ProductViewPage() {
   return (
     <>
       <NavBar />
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
           actionType="delete"
-          onConfirm={confirmDelete}
+          entityType="product"
+          targetId={product?.id}
+          onSuccess={handleProductDeleteSuccess}
+          onError={handleProductDeleteError}
         />
       )}
 
       {isAssetDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isAssetDeleteModalOpen}
           closeModal={closeAssetDeleteModal}
           actionType="delete"
-          onConfirm={confirmAssetDelete}
+          entityType="asset"
+          targetId={assetToDelete}
+          onSuccess={handleAssetDeleteSuccess}
+          onError={handleAssetDeleteError}
         />
-      )}
-
-      {assetSuccessMessage && (
-        <Alert message={assetSuccessMessage} type="success" />
       )}
 
       <AssetFilterModal
@@ -538,7 +544,7 @@ function ProductViewPage() {
         initialFilters={appliedFilters}
       />
       <DetailedViewPage
-        {...getProductDetails(product, manufacturer)}
+        {...getProductDetails(product)}
         assetImage={imageSrc}
         tabs={tabs}
         activeTab={activeTab}

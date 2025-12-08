@@ -62,6 +62,11 @@ class ProductListSerializer(serializers.ModelSerializer):
             return {"warning": "Contexts service unreachable for suppliers."}
             
 class ProductSerializer(serializers.ModelSerializer):
+    # Include handy context details from the Contexts service for the frontend
+    category_details = serializers.SerializerMethodField()
+    manufacturer_details = serializers.SerializerMethodField()
+    depreciation_details = serializers.SerializerMethodField()
+    default_supplier_details = serializers.SerializerMethodField()
     class Meta:
         model = Product
         fields = '__all__'
@@ -90,6 +95,42 @@ class ProductSerializer(serializers.ModelSerializer):
             })
         
         return data
+    
+    def get_category_details(self, obj):
+        try:
+            if not getattr(obj, 'category', None):
+                return None
+            data = get_category_by_id(obj.category)
+            return {"id": data.get("id"), "name": data.get("name")}
+        except Exception:
+            return {"warning": "Contexts service unreachable for categories."}
+
+    def get_manufacturer_details(self, obj):
+        try:
+            if not getattr(obj, 'manufacturer', None):
+                return None
+            data = get_manufacturer_by_id(obj.manufacturer)
+            return {"id": data.get("id"), "name": data.get("name")}
+        except Exception:
+            return {"warning": "Contexts service unreachable for manufacturers."}
+
+    def get_depreciation_details(self, obj):
+        try:
+            if not getattr(obj, 'depreciation', None):
+                return None
+            data = get_depreciation_by_id(obj.depreciation)
+            return {"id": data.get("id"), "name": data.get("name")}
+        except Exception:
+            return {"warning": "Contexts service unreachable for depreciations."}
+    
+    def get_default_supplier_details(self, obj):
+        try:
+            if not getattr(obj, 'default_supplier', None):
+                return None
+            data = get_supplier_by_id(obj.default_supplier)
+            return {"id": data.get("id"), "name": data.get("name")}
+        except Exception:
+            return {"warning": "Contexts service unreachable for suppliers."}
       
 class ProductAssetRegistrationSerializer(serializers.ModelSerializer):
     class Meta:

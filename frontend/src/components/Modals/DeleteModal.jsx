@@ -1,12 +1,21 @@
 import { useEffect, useState } from "react";
 import LoadingButton from "../LoadingButton";
 import "../../styles/DeleteModal.css";
+import {
+  deleteProduct,
+  bulkDeleteProducts,
+  deleteAsset,
+} from "../../services/assets-service";
 
 export default function ConfirmationModal({
   closeModal,
-  onConfirm, 
   isOpen,
-  actionType,      // "delete", "bulk delete", "activate", etc.
+  actionType,      // "delete", "bulk-delete", "activate", etc.
+  entityType,      // "product", "asset"
+  targetId,        // single ID for delete
+  targetIds,       // array of IDs for bulk-delete
+  onSuccess,       // callback after successful delete (receives deleted id(s))
+  onError,         // callback on error (receives error)
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -15,16 +24,32 @@ export default function ConfirmationModal({
   };
 
   const handleConfirm = async () => {
-    if (onConfirm) {
-      setIsProcessing(true);
-      try {
-        await onConfirm(); // parent handles API call
-      } catch (error) {
-        console.error("Action failed:", error);
-      } finally {
-        setIsProcessing(false);
-        handleClose();
+    setIsProcessing(true);
+    try {
+      if (actionType === "delete" && targetId) {
+        // Single delete
+        if (entityType === "product") {
+          await deleteProduct(targetId);
+        } else if (entityType === "asset") {
+          await deleteAsset(targetId);
+        }
+        if (onSuccess) onSuccess(targetId);
+      } else if (actionType === "bulk-delete" && targetIds?.length > 0) {
+        // Bulk delete
+        if (entityType === "product") {
+          await bulkDeleteProducts({ ids: targetIds });
+        } else if (entityType === "asset") {
+          // Add bulkDeleteAssets when available
+          throw new Error("Bulk delete for assets not implemented yet");
+        }
+        if (onSuccess) onSuccess(targetIds);
       }
+    } catch (error) {
+      console.error("Action failed:", error);
+      if (onError) onError(error);
+    } finally {
+      setIsProcessing(false);
+      handleClose();
     }
   };
 
@@ -73,7 +98,9 @@ export default function ConfirmationModal({
           <h2 className="modal-title">{getActionText()} Confirmation</h2>
           <p className="modal-message">
             Are you sure you want to {getActionText().toLowerCase()}{" "}
-            {actionType === "bulk-delete" ? "selected items" : "this item"}? 
+            {actionType === "bulk-delete"
+              ? `these ${targetIds?.length || 0} ${entityType}(s)`
+              : `this ${entityType}`}?
             This action cannot be undone.
           </p>
           <div className="modal-actions">
