@@ -5,17 +5,20 @@ import Select from "react-select";
 // react
 import { useState } from "react";
 
-export default function FilterPanel({ filters = [], onReset }) {
+export default function FilterPanel({ filters = [], onReset, onFilter }) {
   const [showFilter, setShowFilter] = useState(false);
   const [values, setValues] = useState({});
 
   const handleChange = (name, value) => {
-    setValues((prev) => ({ ...prev, [name]: value }));
+    const newValues = { ...values, [name]: value };
+    setValues(newValues);
+    onFilter?.(newValues); // notify parent of filter changes
   };
 
   const handleReset = () => {
     setValues({});
     onReset?.(); // optional callback for parent
+    onFilter?.({}); // notify parent that filters were reset
   };
 
   return (
@@ -100,7 +103,7 @@ export default function FilterPanel({ filters = [], onReset }) {
                       onChange={(e) =>
                         handleChange(`${filter.name}_from`, e.target.value)
                       }
-                      max={values[`${filter.name}_to`] || undefined} 
+                      max={values[`${filter.name}_to`] || undefined}
                     />
                   </div>
 
@@ -121,7 +124,7 @@ export default function FilterPanel({ filters = [], onReset }) {
                       onChange={(e) =>
                         handleChange(`${filter.name}_to`, e.target.value)
                       }
-                      min={values[`${filter.name}_from`] || undefined} 
+                      min={values[`${filter.name}_from`] || undefined}
                     />
                   </div>
                 </div>
@@ -135,9 +138,13 @@ export default function FilterPanel({ filters = [], onReset }) {
                   placeholder={`Select ${filter.label}`}
                   options={filter.options}
                   value={
-                    filter.options.find((opt) => opt.value === values[filter.name]) || null
+                    filter.options.find(
+                      (opt) => opt.value === values[filter.name]
+                    ) || null
                   }
-                  onChange={(selected) => handleChange(filter.name, selected?.value || "")}
+                  onChange={(selected) =>
+                    handleChange(filter.name, selected?.value || "")
+                  }
                   isClearable
                   isSearchable
                   menuPortalTarget={document.body}

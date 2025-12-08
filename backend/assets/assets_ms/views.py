@@ -15,6 +15,12 @@ from datetime import datetime
 from django.db import transaction
 import logging
 from assets_ms.services.contexts import resolve_ticket, fetch_resource_list
+from assets_ms.services.activity_logger import (
+    log_asset_activity,
+    log_component_activity,
+    log_audit_activity,
+    log_repair_activity,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +180,14 @@ class AssetViewSet(viewsets.ModelViewSet):
         # Otherwise, perform soft delete
         instance.is_deleted = True
         instance.save()
-    
+
+        # Log activity
+        log_asset_activity(
+            action='Delete',
+            asset=instance,
+            notes=f"Asset '{instance.name}' deleted"
+        )
+
     def perform_create(self, serializer):
         validated = serializer.validated_data
 
@@ -190,9 +203,26 @@ class AssetViewSet(viewsets.ModelViewSet):
         if purchase_cost is None and product and product.default_purchase_cost is not None:
             purchase_cost = product.default_purchase_cost
 
-        serializer.save(
+        asset = serializer.save(
             supplier=supplier,
             purchase_cost=purchase_cost
+        )
+
+        # Log activity
+        log_asset_activity(
+            action='Create',
+            asset=asset,
+            notes=f"Asset '{asset.name}' created"
+        )
+
+    def perform_update(self, serializer):
+        asset = serializer.save()
+
+        # Log activity
+        log_asset_activity(
+            action='Update',
+            asset=asset,
+            notes=f"Asset '{asset.name}' updated"
         )
 
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
@@ -252,6 +282,16 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
 
                 # 4. Resolve overlapping tickets for the same asset
                 self._resolve_overlapping_tickets(checkout, ticket_id)
+
+                # 5. Log activity
+                target_name = checkout.checkout_to_employee_name or checkout.checkout_to_location_name or ''
+                log_asset_activity(
+                    action='Checkout',
+                    asset=asset,
+                    target_id=checkout.checkout_to_employee_id or checkout.checkout_to_location_id,
+                    target_name=target_name,
+                    notes=f"Asset '{asset.name}' checked out to {target_name}"
+                )
 
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -349,6 +389,17 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
                 asset.status = status_id
                 asset.save(update_fields=["status"])
 
+                # Log activity
+                checkout = checkin.asset_checkout
+                target_name = checkout.checkout_to_employee_name or checkout.checkout_to_location_name or ''
+                log_asset_activity(
+                    action='Checkin',
+                    asset=asset,
+                    target_id=checkout.checkout_to_employee_id or checkout.checkout_to_location_id,
+                    target_name=target_name,
+                    notes=f"Asset '{asset.name}' checked in from {target_name}"
+                )
+
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -396,26 +447,82 @@ class ComponentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    def perform_destroy(self, instance): 
-        # Check if the component has an active checkout (no checkin yet) 
+    def perform_destroy(self, instance):
+        # Check if the component has an active checkout (no checkin yet)
         if instance.component_checkouts.filter(component_checkins__isnull=True).exists():
             raise ValidationError({ "detail": "Cannot delete this component, it's currently checked out." })
-        
-        # Otherwise, perform soft delete 
+
+        # Otherwise, perform soft delete
         instance.is_deleted = True
         instance.save()
 
+        # Log activity
+        log_component_activity(
+            action='Delete',
+            component=instance,
+            notes=f"Component '{instance.name}' deleted"
+        )
+
+    def perform_create(self, serializer):
+        component = serializer.save()
+
+        # Log activity
+        log_component_activity(
+            action='Create',
+            component=component,
+            notes=f"Component '{component.name}' created"
+        )
+
+    def perform_update(self, serializer):
+        component = serializer.save()
+
+        # Log activity
+        log_component_activity(
+            action='Update',
+            component=component,
+            notes=f"Component '{component.name}' updated"
+        )
+
 class ComponentCheckoutViewSet(viewsets.ModelViewSet):
     serializer_class = ComponentCheckoutSerializer
-    
+
     def get_queryset(self):
         # Only checkouts that have NOT been checked in
         return ComponentCheckout.objects.select_related('component', 'asset').filter(
             component_checkins__isnull=True
         ).order_by('-checkout_date')
 
+    def perform_create(self, serializer):
+        checkout = serializer.save()
+        component = checkout.component
+
+        # Log activity
+        target_name = checkout.asset.name if checkout.asset else ''
+        log_component_activity(
+            action='Checkout',
+            component=component,
+            target_id=checkout.asset.id if checkout.asset else None,
+            target_name=target_name,
+            notes=f"Component '{component.name}' checked out to asset '{target_name}'"
+        )
+
 class ComponentCheckinViewSet(viewsets.ModelViewSet):
     serializer_class = ComponentCheckinSerializer
+
+    def perform_create(self, serializer):
+        checkin = serializer.save()
+        checkout = checkin.component_checkout
+        component = checkout.component
+
+        # Log activity
+        target_name = checkout.asset.name if checkout.asset else ''
+        log_component_activity(
+            action='Checkin',
+            component=component,
+            target_id=checkout.asset.id if checkout.asset else None,
+            target_name=target_name,
+            notes=f"Component '{component.name}' checked in from asset '{target_name}'"
+        )
 
     def get_queryset(self):
         return ComponentCheckin.objects.select_related('component_checkout', 'component_checkout__component').order_by('-checkin_date')
@@ -425,7 +532,7 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return AuditSchedule.objects.filter(is_deleted=False).order_by('date')
-    
+
     def perform_destroy(self, instance):
         # Check if the schedule already has an audit
         if hasattr(instance, 'audit') and instance.audit is not None and not instance.audit.is_deleted:
@@ -436,6 +543,33 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
         # Otherwise, perform soft delete
         instance.is_deleted = True
         instance.save()
+
+        # Log activity
+        log_audit_activity(
+            action='Delete',
+            audit_or_schedule=instance,
+            notes=f"Audit schedule deleted"
+        )
+
+    def perform_create(self, serializer):
+        schedule = serializer.save()
+
+        # Log activity
+        log_audit_activity(
+            action='Schedule',
+            audit_or_schedule=schedule,
+            notes=f"Audit scheduled for {schedule.date}"
+        )
+
+    def perform_update(self, serializer):
+        schedule = serializer.save()
+
+        # Log activity
+        log_audit_activity(
+            action='Update',
+            audit_or_schedule=schedule,
+            notes=f"Audit schedule updated"
+        )
 
     @action(detail=False, methods=['get'])
     def scheduled(self, request):
@@ -489,6 +623,37 @@ class AuditViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Audit.objects.filter(is_deleted=False).order_by('-created_at')
 
+    def perform_create(self, serializer):
+        audit = serializer.save()
+
+        # Log activity - when an audit is created, it means the audit was completed
+        log_audit_activity(
+            action='Create',
+            audit_or_schedule=audit,
+            notes=f"Audit completed on {audit.audit_date}"
+        )
+
+    def perform_update(self, serializer):
+        audit = serializer.save()
+
+        # Log activity
+        log_audit_activity(
+            action='Update',
+            audit_or_schedule=audit,
+            notes=f"Audit updated"
+        )
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save()
+
+        # Log activity
+        log_audit_activity(
+            action='Delete',
+            audit_or_schedule=instance,
+            notes=f"Audit deleted"
+        )
+
 class AuditFileViewSet(viewsets.ModelViewSet):
     serializer_class = AuditFileSerializer
 
@@ -505,6 +670,33 @@ class RepairViewSet(viewsets.ModelViewSet):
         instance.is_deleted = True
         instance.save()
 
+        # Log activity
+        log_repair_activity(
+            action='Delete',
+            repair=instance,
+            notes=f"Repair '{instance.name}' deleted"
+        )
+
+    def perform_create(self, serializer):
+        repair = serializer.save()
+
+        # Log activity
+        log_repair_activity(
+            action='Create',
+            repair=repair,
+            notes=f"Repair '{repair.name}' created"
+        )
+
+    def perform_update(self, serializer):
+        repair = serializer.save()
+
+        # Log activity
+        log_repair_activity(
+            action='Update',
+            repair=repair,
+            notes=f"Repair '{repair.name}' updated"
+        )
+
     @action(detail=True, methods=['patch'])
     def soft_delete(self, request, pk=None):
         """Soft delete a repair."""
@@ -512,6 +704,14 @@ class RepairViewSet(viewsets.ModelViewSet):
             repair = self.get_object()
             repair.is_deleted = True
             repair.save()
+
+            # Log activity
+            log_repair_activity(
+                action='Delete',
+                repair=repair,
+                notes=f"Repair '{repair.name}' soft-deleted"
+            )
+
             return Response({'detail': 'Repair soft-deleted'}, status=status.HTTP_200_OK)
         except Repair.DoesNotExist:
             return Response({'detail': 'Repair not found'}, status=status.HTTP_404_NOT_FOUND)

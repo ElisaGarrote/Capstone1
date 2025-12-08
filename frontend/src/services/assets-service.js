@@ -316,3 +316,75 @@ export async function updateReportTemplate(templateId, templateData) {
 export async function deleteReportTemplate(templateId) {
   await assetsAxios.delete(`report-templates/${templateId}/`);
 }
+
+/* ===============================
+        ACTIVITY REPORT
+================================= */
+
+/**
+ * Fetch activity report data
+ * @param {Object} filters - Filter parameters
+ * @param {string} filters.start_date - Start date (YYYY-MM-DD)
+ * @param {string} filters.end_date - End date (YYYY-MM-DD)
+ * @param {string} filters.activity_type - Activity type (Asset, Component, Audit, Repair)
+ * @param {string} filters.action - Action type (Create, Update, Delete, Checkout, Checkin, Schedule, Passed, Failed)
+ * @param {number} filters.user_id - Filter by user ID
+ * @param {string} filters.search - Search term
+ * @param {number} filters.limit - Max number of records
+ * @param {string} filters.export_format - Response format: 'json' or 'xlsx'
+ * @returns {Promise} - Report data or blob for Excel download
+ */
+export async function fetchActivityReport(filters = {}) {
+  const params = new URLSearchParams();
+
+  if (filters.start_date) params.append("start_date", filters.start_date);
+  if (filters.end_date) params.append("end_date", filters.end_date);
+  if (filters.activity_type)
+    params.append("activity_type", filters.activity_type);
+  if (filters.action) params.append("action", filters.action);
+  if (filters.user_id) params.append("user_id", filters.user_id);
+  if (filters.search) params.append("search", filters.search);
+  if (filters.limit) params.append("limit", filters.limit);
+  if (filters.export_format)
+    params.append("export_format", filters.export_format);
+
+  const queryString = params.toString();
+  const url = `reports/activity/${queryString ? "?" + queryString : ""}`;
+
+  // If requesting Excel format, return as blob
+  if (filters.export_format === "xlsx" || !filters.export_format) {
+    const res = await assetsAxios.get(url, {
+      responseType: "blob",
+      timeout: 60000,
+    });
+    return res.data;
+  }
+
+  // JSON format
+  const res = await assetsAxios.get(url, { timeout: 60000 });
+  return res.data;
+}
+
+/**
+ * Download activity report as Excel file
+ * @param {Object} filters - Filter parameters
+ * @param {string} filename - Optional custom filename
+ */
+export async function downloadActivityReportExcel(
+  filters = {},
+  filename = null
+) {
+  const params = { ...filters, export_format: "xlsx" };
+  const blob = await fetchActivityReport(params);
+
+  // Create download link
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download =
+    filename || `ActivityReport_${new Date().toISOString().split("T")[0]}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(downloadUrl);
+}

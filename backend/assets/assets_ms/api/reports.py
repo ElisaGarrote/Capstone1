@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from ..services.depreciation_report import generate_depreciation_report
 from ..services.asset_report import generate_asset_report
+from ..services.activity_report import generate_activity_report, get_activity_summary
 
 # No ticket resolution here — report will only include status fields per request
 
@@ -267,3 +268,158 @@ class AssetReportAPIView(APIView):
             'updatedAt': 'Updated At',
         }
         return [header_map.get(f, f) for f in fieldnames]
+
+
+class ActivityReportAPIView(APIView):
+    """Return activity report as XLSX (default) or JSON.
+
+    Query params:
+      - start_date: Filter activities from this date (YYYY-MM-DD format)
+      - end_date: Filter activities up to this date (YYYY-MM-DD format)
+      - activity_type: Filter by activity type (Asset, Component, Audit, Repair)
+      - action: Filter by action (Create, Update, Delete, Checkout, Checkin, etc.)
+      - user_id: Filter by the user who performed the action
+      - item_id: Filter by the item ID affected
+      - search: Search term to filter by item name/identifier, user name, or notes
+      - limit: Maximum number of records to return
+      - export_format: 'xlsx' (default) or 'json'
+    """
+
+    # Fieldnames for the report
+    FIELDNAMES = ['date', 'user', 'type', 'action', 'item', 'to_from', 'notes']
+
+    def get(self, request):
+        # Parse filter parameters
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+        activity_type = request.query_params.get('activity_type')
+        action = request.query_params.get('action')
+        user_id_param = request.query_params.get('user_id')
+        item_id_param = request.query_params.get('item_id')
+        search = request.query_params.get('search')
+        limit_param = request.query_params.get('limit')
+        fmt = request.query_params.get('export_format', '').lower()
+
+        # Parse and validate date parameters
+        start_date = None
+        end_date = None
+        try:
+            if start_date_str:
+                start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            if end_date_str:
+                end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response(
+                {"detail": "Invalid date format. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate and convert integer parameters
+        try:
+            user_id = int(user_id_param) if user_id_param else None
+            item_id = int(item_id_param) if item_id_param else None
+            limit = int(limit_param) if limit_param else None
+        except ValueError:
+            return Response(
+                {"detail": "Invalid parameter. user_id, item_id, and limit must be integers."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Generate the report data
+        rows = generate_activity_report(
+            start_date=start_date,
+            end_date=end_date,
+            activity_type=activity_type,
+            action=action,
+            user_id=user_id,
+            item_id=item_id,
+            search=search,
+            limit=limit,
+        )
+
+        # JSON format
+        if fmt == 'json':
+            return Response({
+                'results': rows,
+                'count': len(rows),
+            })
+
+        # CSV not supported
+        if fmt == 'csv':
+            return Response(
+                {'detail': 'CSV export is not supported. Use export_format=xlsx or omit export_format to download an XLSX file.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Default: XLSX export
+        try:
+            from openpyxl.workbook import Workbook
+        except ImportError:
+            return Response({
+                'detail': 'openpyxl is not installed in the running Python environment.',
+                'install_instructions': (
+                    'Add openpyxl to backend/assets/requirements.txt and rebuild the assets image.'
+                )
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'ActivityReport'
+
+        # Header row
+        header_names = ['Date', 'User', 'Type', 'Event', 'Item', 'To/From', 'Notes']
+        ws.append(header_names)
+
+        for r in rows:
+            row = [
+                r.get('date', ''),
+                r.get('user', ''),
+                r.get('type', ''),
+                r.get('action', ''),
+                r.get('item', ''),
+                r.get('to_from', ''),
+                r.get('notes', ''),
+            ]
+            ws.append(row)
+
+        bio = BytesIO()
+        wb.save(bio)
+        bio.seek(0)
+
+        filename = f"activity_report_{datetime.date.today().isoformat()}.xlsx"
+        response = HttpResponse(
+            bio.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+
+class ActivityReportSummaryAPIView(APIView):
+    """Return activity report summary statistics.
+
+    Query params:
+      - start_date: Filter activities from this date (YYYY-MM-DD format)
+      - end_date: Filter activities up to this date (YYYY-MM-DD format)
+    """
+
+    def get(self, request):
+        start_date_str = request.query_params.get('start_date')
+        end_date_str = request.query_params.get('end_date')
+
+        # Parse and validate date parameters
+        start_date = None
+        end_date = None
+        try:
+            if start_date_str:
+                start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            if end_date_str:
+                end_date = datetime.datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return Response(
+                {"detail": "Invalid date format. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        summary = get_activity_summary(start_date=start_date, end_date=end_date)
+        return Response(summary)
