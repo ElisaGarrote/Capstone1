@@ -9,13 +9,59 @@ from django.utils import timezone
 from datetime import datetime
 
 # Product
-class ProductSerializer(serializers.ModelSerializer):
+class ProductListSerializer(serializers.ModelSerializer):
     # Include handy context details from the Contexts service for the frontend
     category_details = serializers.SerializerMethodField()
     manufacturer_details = serializers.SerializerMethodField()
     depreciation_details = serializers.SerializerMethodField()
     default_supplier_details = serializers.SerializerMethodField()
+    has_assets = serializers.SerializerMethodField()
 
+    class Meta:
+        model = Product
+        fields = ['id', 'image', 'name', 'category_details', 'model_number', 'end_of_life', 'manufacturer_details', 'depreciation_details', 'default_purchase_cost', 'default_supplier_details', 'minimum_quantity', 'has_assets']
+
+    def get_has_assets(self, obj):
+        """Check if this product is referenced by any active (non-deleted) assets."""
+        return obj.product_assets.filter(is_deleted=False).exists()
+
+    def get_category_details(self, obj):
+        try:
+            if not getattr(obj, 'category', None):
+                return None
+            data = get_category_by_id(obj.category)
+            return {"id": data.get("id"), "name": data.get("name")}
+        except Exception:
+            return {"warning": "Contexts service unreachable for categories."}
+
+    def get_manufacturer_details(self, obj):
+        try:
+            if not getattr(obj, 'manufacturer', None):
+                return None
+            data = get_manufacturer_by_id(obj.manufacturer)
+            return {"id": data.get("id"), "name": data.get("name")}
+        except Exception:
+            return {"warning": "Contexts service unreachable for manufacturers."}
+
+    def get_depreciation_details(self, obj):
+        try:
+            if not getattr(obj, 'depreciation', None):
+                return None
+            data = get_depreciation_by_id(obj.depreciation)
+            return {"id": data.get("id"), "name": data.get("name")}
+        except Exception:
+            return {"warning": "Contexts service unreachable for depreciations."}
+    
+    def get_default_supplier_details(self, obj):
+        try:
+            if not getattr(obj, 'default_supplier', None):
+                return None
+            data = get_supplier_by_id(obj.default_supplier)
+            return {"id": data.get("id"), "name": data.get("name")}
+        except Exception:
+            return {"warning": "Contexts service unreachable for suppliers."}
+            
+class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = '__all__'
@@ -44,38 +90,11 @@ class ProductSerializer(serializers.ModelSerializer):
             })
         
         return data
-
-    def get_category_details(self, obj):
-        try:
-            if not getattr(obj, 'category', None):
-                return None
-            return get_category_by_id(obj.category)
-        except Exception:
-            return {"warning": "Contexts service unreachable for categories."}
-
-    def get_manufacturer_details(self, obj):
-        try:
-            if not getattr(obj, 'manufacturer', None):
-                return None
-            return get_manufacturer_by_id(obj.manufacturer)
-        except Exception:
-            return {"warning": "Contexts service unreachable for manufacturers."}
-
-    def get_depreciation_details(self, obj):
-        try:
-            if not getattr(obj, 'depreciation', None):
-                return None
-            return get_depreciation_by_id(obj.depreciation)
-        except Exception:
-            return {"warning": "Contexts service unreachable for depreciations."}
-    
-    def get_default_supplier_details(self, obj):
-        try:
-            if not getattr(obj, 'default_supplier', None):
-                return None
-            return get_supplier_by_id(obj.default_supplier)
-        except Exception:
-            return {"warning": "Contexts service unreachable for suppliers."}
+      
+class ProductAssetRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'default_purchase_cost', 'default_supplier']
 
 # Asset
 class AssetSerializer(serializers.ModelSerializer):
@@ -193,6 +212,8 @@ class AssetSerializer(serializers.ModelSerializer):
             return get_unresolved_ticket_by_asset_id(obj.id)
         except Exception:
             return None
+
+
 
 class AssetCheckoutFileSerializer(serializers.ModelSerializer):
     class Meta:

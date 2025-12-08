@@ -1,64 +1,37 @@
 import { useEffect, useState } from "react";
 import LoadingButton from "../LoadingButton";
-
 import "../../styles/DeleteModal.css";
 
 export default function ConfirmationModal({
   closeModal,
-  confirmDelete,
-  endPoint,
-  onDeleteFail,
+  onConfirm, 
   isOpen,
-  onConfirm,
-  onCancel,
-  actionType,
+  actionType,      // "delete", "bulk delete", "activate", etc.
 }) {
-  /*
-  Action Type includes the following:
-    - delete
-    - activate
-    - deactivate
-    - recover
-  */
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const [isDeleting, setDeleting] = useState(false);
-
-  // Handle compatibility with different prop patterns
-  const handleClose = closeModal || onCancel;
-  const handleConfirm = async () => {
-    if (confirmDelete) {
-      setDeleting(true);
-      const success = await handleDelete(endPoint);
-      if (success) {
-        await confirmDelete();
-        if (closeModal) closeModal();
-      } else {
-        if (onDeleteFail) onDeleteFail();
-        if (closeModal) closeModal(); // Always close the modal even on failure
-      }
-    } else if (onConfirm) {
-      onConfirm();
-    }
+  const handleClose = () => {
+    if (closeModal) closeModal();
   };
-  const handleDelete = async (endPoint) => {
-    try {
-      const response = await fetch(endPoint, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) throw new Error("Delete failed");
-      return true;
-    } catch (error) {
-      console.error("Delete error:", error);
-      return false;
+
+  const handleConfirm = async () => {
+    if (onConfirm) {
+      setIsProcessing(true);
+      try {
+        await onConfirm(); // parent handles API call
+      } catch (error) {
+        console.error("Action failed:", error);
+      } finally {
+        setIsProcessing(false);
+        handleClose();
+      }
     }
   };
 
   const getActionText = () => {
     switch (actionType) {
       case "delete":
+      case "bulk-delete":
         return "Delete";
       case "activate":
         return "Activate";
@@ -74,6 +47,7 @@ export default function ConfirmationModal({
   const getProcessingText = () => {
     switch (actionType) {
       case "delete":
+      case "bulk-delete":
         return "Deleting...";
       case "activate":
         return "Activating...";
@@ -95,26 +69,23 @@ export default function ConfirmationModal({
   return (
     <section className="delete-modal">
       <div className="overlay" onClick={handleClose}>
-        <div className="content">
+        <div className="content" onClick={(e) => e.stopPropagation()}>
           <h2 className="modal-title">{getActionText()} Confirmation</h2>
           <p className="modal-message">
-            Are you sure you want to {getActionText().toLowerCase()} this{" "}
-            {actionType != "activate" && actionType != "deactivate"
-              ? "item"
-              : "user"}
-            ? This action cannot be undone.
+            Are you sure you want to {getActionText().toLowerCase()}{" "}
+            {actionType === "bulk-delete" ? "selected items" : "this item"}? 
+            This action cannot be undone.
           </p>
           <div className="modal-actions">
-            <button className="cancel-btn" onClick={handleClose}>
+            <button className="cancel-btn" onClick={handleClose} disabled={isProcessing}>
               Cancel
             </button>
             <button
               className={`confirm-action-btn ${actionType}-btn`}
               onClick={handleConfirm}
-              disabled={isDeleting}
+              disabled={isProcessing}
             >
-              {isDeleting && <LoadingButton />}
-              {!isDeleting ? getActionText() : getProcessingText()}
+              {isProcessing ? <LoadingButton /> : getActionText()}
             </button>
           </div>
         </div>

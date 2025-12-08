@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from .models import *
 from .serializer import *
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils.timezone import now
@@ -21,11 +21,22 @@ logger = logging.getLogger(__name__)
 # If will add more views later or functionality, please create file on api folder or services folder
 # Only viewsets here
 class ProductViewSet(viewsets.ModelViewSet):
-    serializer_class = ProductSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Product.objects.filter(is_deleted=False).order_by('name')
+
+    def get_serializer_class(self):
+        # 1. Products Table (list)
+        if self.action == "list":
+            return ProductListSerializer
+
+        # 2. Asset Registration dropdown
+        if self.action == "asset_registration":
+            return ProductAssetRegistrationSerializer
+
+        # 3. Create, Update, Retrieve → full serializer
+        return ProductSerializer
 
     def perform_destroy(self, instance):
         # Check for referencing assets that are not deleted
@@ -37,6 +48,42 @@ class ProductViewSet(viewsets.ModelViewSet):
         # If no active assets, allow soft delete
         instance.is_deleted = True
         instance.save()
+        
+    @action(detail=False, methods=["get"], url_path='asset-registration')
+    def asset_registration(self, request):
+        """
+        Returns minimal product list for Asset Registration.
+        """
+        products = Product.objects.filter(is_deleted=False)
+        serializer = self.get_serializer(products, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["post"], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        """
+        Soft delete multiple products by IDs.
+        Expects payload: { "ids": [1, 2, 3] }
+        """
+        ids = request.data.get("ids", [])
+        if not ids:
+            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        products = Product.objects.filter(id__in=ids, is_deleted=False)
+        failed = []
+
+        for product in products:
+            try:
+                self.perform_destroy(product)
+            except ValidationError as e:
+                failed.append({"id": product.id, "error": str(e.detail)})
+
+        if failed:
+            return Response({
+                "detail": "Some products could not be deleted. Some of them might be used by active assets.",
+                "failed": failed
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"detail": "Products soft-deleted successfully."}, status=status.HTTP_200_OK)
 
 class AssetViewSet(viewsets.ModelViewSet):
     serializer_class = AssetSerializer

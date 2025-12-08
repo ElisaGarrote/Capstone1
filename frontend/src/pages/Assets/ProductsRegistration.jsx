@@ -1,17 +1,19 @@
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import NavBar from '../../components/NavBar';
 import Footer from "../../components/Footer";
-import '../../styles/Registration.css';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import TopSecFormPage from '../../components/TopSecFormPage';
-import { useState, useEffect } from 'react';
-import { set, useForm } from 'react-hook-form';
 import CloseIcon from '../../assets/icons/close.svg';
 import PlusIcon from '../../assets/icons/plus.svg';
+import AddEntryModal from "../../components/Modals/AddEntryModal";
+import SystemLoading from "../../components/Loading/SystemLoading";
 import Alert from "../../components/Alert";
+import '../../styles/Registration.css';
 import { fetchProductById, createProduct, updateProduct } from "../../services/assets-service";
 import { fetchAllDropdowns, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
-import SystemLoading from "../../components/Loading/SystemLoading";
-import AddEntryModal from "../../components/Modals/AddEntryModal";
+
+
 
 export default function ProductsRegistration() {
   const [suppliers, setSuppliers] = useState([]);

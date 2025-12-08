@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm } from "react-hook-form";
-import "../../styles/Registration.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
-import Alert from "../../components/Alert";
-import { fetchAllProducts, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
-import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
-import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import Alert from "../../components/Alert";
+import "../../styles/Registration.css";
+import { getNextAssetId, fetchAllProducts, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
+import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
+import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
+
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
@@ -25,6 +26,9 @@ export default function AssetsRegistration() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+
+  // Import file state
+  const [importFile, setImportFile] = useState(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,7 +64,9 @@ export default function AssetsRegistration() {
     const initialize = async () => {
       try {
         setIsLoading(true);
-
+        // Generate asset ID
+        const nextAssetId = await getNextAssetId();
+        
         // Fetch dropdown options for assets (filter statuses by asset category)
         const contextDropdowns = await fetchAllDropdowns("asset", { category: "asset" });
         setStatuses(contextDropdowns.statuses || []);

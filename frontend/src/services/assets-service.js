@@ -33,18 +33,13 @@ export async function deleteProduct(id) {
   return res.data;
 }
 
-/* ===============================
-          ASSET CHECKOUT
-================================= */
-// Create asset checkout
-export async function createAssetCheckout(data) {
-  const res = await assetsAxios.post("asset-checkout/", data);
-  return res.data;
-}
-
-// Create asset checkout with status (atomic)
-export async function createAssetCheckoutWithStatus(data) {
-  const res = await assetsAxios.post("asset-checkout/checkout-with-status/", data);
+// BULK DELETE products
+export async function bulkDeleteProducts(data) {
+  const res = await assetsAxios.post("products/bulk-delete/", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   return res.data;
 }
 
@@ -97,6 +92,21 @@ export async function deleteAsset(id) {
 // UPDATE asset status
 export async function updateAssetStatus(id, data) {
   const res = await assetsAxios.patch(`assets/${id}/update-status/`, data);
+  return res.data;
+}
+
+/* ===============================
+          ASSET CHECKOUT
+================================= */
+// Create asset checkout
+export async function createAssetCheckout(data) {
+  const res = await assetsAxios.post("asset-checkout/", data);
+  return res.data;
+}
+
+// Create asset checkout with status (atomic)
+export async function createAssetCheckoutWithStatus(data) {
+  const res = await assetsAxios.post("asset-checkout/checkout-with-status/", data);
   return res.data;
 }
 
