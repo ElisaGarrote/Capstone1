@@ -43,7 +43,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each product row
-function TableItem({ product, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+function TableItem({ product, isSelected, onRowChange, onViewClick, onDeleteClick }) {
   const baseImage = product.image || DefaultImage;
 
   return (
@@ -80,12 +80,12 @@ function TableItem({ product, isSelected, onRowChange, onDeleteClick, onViewClic
       <td>{product.minimum_quantity || 'N/A'}</td>
       <td>
         <ActionButtons
+          showView
           showEdit
           showDelete
-          showView
+          onViewClick={onViewClick} 
           editPath={`/products/edit/${product.id}`}
-          onDeleteClick={() => onDeleteClick(product.id)}
-          onViewClick={() => onViewClick(product.id)}
+          onDeleteClick={onDeleteClick}
         />
       </td>
     </tr>
@@ -238,6 +238,10 @@ export default function Products() {
   // Add view handler
   const handleViewClick = (product) => {
     navigate(`/products/view/${product}`);
+  };
+
+  const handleEditClick = (product) => {
+    navigate(`/products/edit/${product}`);
   };
 
   // Apply filters to data
@@ -527,11 +531,12 @@ export default function Products() {
                     paginatedProducts.map((product) => (
                       <TableItem
                       key={product.id} 
-                      product={product}
                       isSelected={selectedIds.includes(product.id)}
                       onRowChange={handleRowChange}
-                      onDeleteClick={() => openDeleteModal(product.id)}
+                      product={product}
                       onViewClick={() => handleViewClick(product.id)}
+                      onEditClick={() => handleEditClick(product.id)}
+                      onDeleteClick={() => openDeleteModal(product.id)}
                       />
                     ))
                   ) : (

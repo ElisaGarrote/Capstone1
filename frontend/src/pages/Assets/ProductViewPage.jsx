@@ -88,9 +88,7 @@ function ProductViewPage() {
     );
   }
 
-  const imageSrc = product.image
-    ? `${ASSETS_API_URL.replace(/\/$/, '')}${product.image}`
-    : DefaultImage;
+  const imageSrc = product.image || DefaultImage;
 
   const tabs = getProductTabs();
 
@@ -610,7 +608,7 @@ function ProductViewPage() {
 
                 <div className="detail-row">
                   <label>Operating System</label>
-                  <span>{product.operating_system || "N/A"}</span>
+                  <span>{product.os || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
@@ -620,12 +618,12 @@ function ProductViewPage() {
 
                 <div className="detail-row">
                   <label>Screen Size</label>
-                  <span>{product.screen_size || "N/A"}</span>
+                  <span>{product.size || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
                   <label>Storage Size</label>
-                  <span>{product.storage_size || "N/A"}</span>
+                  <span>{product.storage || "N/A"}</span>
                 </div>
               </div>
             </div>

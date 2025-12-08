@@ -265,8 +265,6 @@ def get_statuses_list(q=None, limit=50):
         cache.set(key, result, LIST_CACHE_TTL)
     return result
 
-
-
     
 def get_category_names():
     key = f"contexts:list:categories:names"

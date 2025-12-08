@@ -13,13 +13,11 @@ import '../../styles/Registration.css';
 import { fetchProductById, createProduct, updateProduct } from "../../services/assets-service";
 import { fetchAllDropdowns, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
 
-
-
 export default function ProductsRegistration() {
-  const [suppliers, setSuppliers] = useState([]);
-  const [manufacturers, setManufacturers] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
   const [depreciations, setDepreciations] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [product, setProduct] = useState(null);
   const [isClone, setIsClone] = useState(false);
 
@@ -77,8 +75,8 @@ export default function ProductsRegistration() {
           setSuppliers(dropdowns.suppliers);
           setDepreciations(dropdowns.depreciations);
 
-        // Get product data - prioritize state, then fetch from API
-        let productData = location.state?.product;
+        // Get product data from API
+        let productData = await fetchProductById(id);
         const cloneMode = location.state?.isClone === true;
         setIsClone(cloneMode);
 
@@ -520,6 +518,7 @@ export default function ProductsRegistration() {
               />
             </fieldset>
 
+            {/* Default Purchase Cost */}
             <fieldset className="cost-field">
               <label htmlFor="defaultPurchaseCost">Default Purchase Cost</label>
               <div className="cost-input-group">
@@ -775,13 +774,13 @@ export default function ProductsRegistration() {
 
         {/* Add Supplier Modal */}
         <AddEntryModal
-        isOpen={showSupplierModal}
-        onClose={() => setShowSupplierModal(false)}
-        onSave={handleSaveSupplier}
-        title="New Supplier"
-        fields={supplierFields}
-        type="supplier"
-      />
+          isOpen={showSupplierModal}
+          onClose={() => setShowSupplierModal(false)}
+          onSave={handleSaveSupplier}
+          title="New Supplier"
+          fields={supplierFields}
+          type="supplier"
+        />
       </main>
       <Footer />
       </section>

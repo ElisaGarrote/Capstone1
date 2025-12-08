@@ -37,13 +37,19 @@ class ProductViewSet(viewsets.ModelViewSet):
         # 2. Asset Registration dropdown
         if self.action == "asset_registration":
             return ProductAssetRegistrationSerializer
-
+        
+        # 3. Product View
         if self.action == "retrieve":
             return ProductInstanceSerializer
         
-        # 3. Create, Update, Destroy
+        # 4. Product Names
+        if self.action == "names":
+            return ProductNameSerializer
+        
+        # 5. Create, Update, Destroy
         return ProductSerializer
     
+    # Build context maps for serializers
     def _build_context_maps(self):
         # categories
         category_map = cache.get("categories:map")
@@ -80,30 +86,46 @@ class ProductViewSet(viewsets.ModelViewSet):
             "depreciation_map": depreciation_map,
         }
     
-    def list(self, request, *args, **kwargs):
-        cached = cache.get("products:list")
-        if cached:
-            return Response(cached)
-        products = self.get_queryset()
-
-        context_maps = self._build_context_maps()
-        serializer = self.get_serializer(products, many=True, context=context_maps)
-        cache.set("products:list", serializer.data, 300)
-        return Response(serializer.data)
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-
-        cache_key = f"products:detail:{instance.id}"
+    # Helper function for cached responses
+    def cached_response(self, cache_key, queryset, serializer_class, many=True, context=None):
         cached = cache.get(cache_key)
         if cached:
             return Response(cached)
-        
-        context_maps = self._build_context_maps()
-        serializer = self.get_serializer(instance, context=context_maps)
-        cache.set(cache_key, serializer.data, 300)  # cache the detail response
 
+        context = context or {}
+        serializer = serializer_class(queryset, many=many, context=context)
+        cache.set(cache_key, serializer.data, 300)
         return Response(serializer.data)
+    
+    def list(self, request, *args, **kwargs):
+        quesryset = self.get_queryset()
+
+        context_maps = self._build_context_maps()
+        return self.cached_response(
+            "products:list",
+            quesryset,
+            self.get_serializer_class(),
+            many=True,
+            context={**context_maps, 'request': request}
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        context_maps = self._build_context_maps()
+        cache_key = f"products:detail:{instance.id}"
+        return self.cached_response(
+            cache_key,
+            instance,
+            self.get_serializer_class(),
+            many=False,
+            context={**context_maps, 'request': request}
+        )
+    
+    def invalidate_product_cache(self, product_id):
+        cache.delete("products:list")
+        cache.delete("products:names")
+        cache.delete("products:asset-registration")
+        cache.delete(f"products:detail:{product_id}")
 
     def perform_destroy(self, instance):
         # Check for referencing assets that are not deleted
@@ -115,19 +137,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         # If no active assets, allow soft delete
         instance.is_deleted = True
         instance.save()
-
-        cache.delete("products:list")
-        cache.delete(f"products:detail:{instance.id}")
+        self.invalidate_product_cache(instance.id)
 
     def perform_create(self, serializer):
         instance = serializer.save()
-        cache.delete("products:list")
-        cache.delete(f"products:detail:{instance.id}")
+        self.invalidate_product_cache(instance.id)
 
     def perform_update(self, serializer):
         instance = serializer.save()
-        cache.delete("products:list")
-        cache.delete(f"products:detail:{instance.id}")
+        self.invalidate_product_cache(instance.id)
 
     # Bulk delete
     # Receive list of IDs and soft delete all products that are not referenced by active assets, else return error
@@ -154,11 +172,41 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         if failed:
             return Response({
-                "detail": "Some products could not be deleted. Some of them might be used by active assets.",
+                "detail": "Some products could not be deleted. Please check if they are assigned to active assets before trying again.",
                 "failed": failed
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"detail": "Products soft-deleted successfully."}, status=status.HTTP_200_OK)
+    
+    # Product names and image for bulk edit
+    @action(detail=False, methods=["get"], url_path='names')
+    def names(self, request):
+        """
+        Return products with only id, name, and image.
+        Optional query param: ?ids=1,2,3
+        """
+        ids_param = request.query_params.get("ids")
+        queryset = self.get_queryset()
+
+        # Filter by IDs if provided
+        if ids_param:
+            try:
+                ids = [int(i) for i in ids_param.split(",") if i.strip().isdigit()]
+                queryset = queryset.filter(id__in=ids)
+            except ValueError:
+                return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Build a cache key specific for this set of IDs
+        cache_key = "products:names"
+        if ids_param:
+            cache_key += f":{','.join(map(str, ids))}"
+
+        return self.cached_response(
+            cache_key,
+            queryset,
+            ProductNameSerializer,
+            many=True
+    )
     
     # Bulk edit
     # Receive list of IDs and partially or fully update all products with the same data, else return error
@@ -195,13 +243,21 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         products = Product.objects.filter(id__in=ids, is_deleted=False)
 
-        updated = []
-        failed = []
+        updated, failed = [], []
 
-        for product in products:
+        # Check if name is being updated for multiple products
+        base_name = safe_data.get("name")
+        has_name_update = base_name is not None and len(ids) > 1
+
+        for index, product in enumerate(products):
+            # Create product-specific data with unique name suffix if needed
+            product_data = safe_data.copy()
+            if has_name_update:
+                product_data["name"] = f"{base_name} ({index + 1})"
+
             serializer = ProductSerializer(
                 product,
-                data=safe_data,
+                data=product_data,
                 partial=True  # important so blank fields won’t cause validation errors
             )
 
@@ -214,7 +270,10 @@ class ProductViewSet(viewsets.ModelViewSet):
                     "id": product.id,
                     "errors": serializer.errors
                 })
+        
         cache.delete("products:list")
+        cache.delete("products:names")
+        cache.delete("products:asset-registration")
 
         return Response({
             "updated": updated,
@@ -223,12 +282,13 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path='asset-registration')
     def asset_registration(self, request):
-        """
-        Returns minimal product list for Asset Registration.
-        """
-        products = Product.objects.filter(is_deleted=False)
-        serializer = self.get_serializer(products, many=True)
-        return Response(serializer.data)
+        queryset = self.get_queryset()
+        return self.cached_response(
+            "products:asset-registration",
+            queryset,
+            self.get_serializer_class(),
+            many=True,
+        )
 
 class AssetViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
@@ -244,8 +304,60 @@ class AssetViewSet(viewsets.ModelViewSet):
         # 1. Assets Table (list)
         if self.action == "list":
             return AssetListSerializer
-        # 2. Create, Update, Retrieve → full serializer
+        if self.action == "retrieve":
+            return AssetInstanceSerializer
+        # 3. Create, Update, Destroy
         return AssetSerializer
+    
+    def _build_asset_context_maps(self):
+        # statuses
+        status_map = cache.get("statuses:map")
+        if not status_map:
+            statuses = get_status_names()
+            status_map = {s['id']: s for s in statuses}
+            cache.set("statuses:map", status_map, 300)
+        
+        # products
+        product_map = cache.get("products:map")
+        if not product_map:
+            products = Product.objects.filter(is_deleted=False)
+            product_map = {p.id: p.name for p in products}
+            cache.set("products:map", product_map, 300)
+
+        # tickets
+        ticket_map = cache.get("tickets:map")
+        if not ticket_map:
+            tickets = get_tickets_list()
+            ticket_map = {t["asset"]: t for t in tickets}
+            cache.set("tickets:map", ticket_map, 300)
+            
+        return {
+            "status_map": status_map,
+            "product_map": product_map,
+            "ticket_map": ticket_map,
+        }
+    
+    def list(self, request, *args, **kwargs):
+        assets = self.get_queryset()
+        
+        context_maps = self._build_asset_context_maps()
+        
+        serializer = self.get_serializer(assets, many=True, context=context_maps)
+        return Response(serializer.data)
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        cache_key = f"assets:detail:{instance.id}"
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+        
+        context_maps = self._build_asset_context_maps()
+        serializer = self.get_serializer(instance, context=context_maps)
+        cache.set(cache_key, serializer.data, 300)  # cache the detail response
+
+        return Response(serializer.data)
     
     @action(detail=False, methods=['get'], url_path='by-product/(?P<product_id>\d+)')
     def by_product(self, request, product_id=None):

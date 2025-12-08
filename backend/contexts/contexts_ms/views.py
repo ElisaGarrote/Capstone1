@@ -264,7 +264,11 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all().order_by('-created_at')
-    serializer_class = TicketSerializer
+
+    def get_serializer_class(self):
+        if self.action == "unresolved":
+            return TicketTypeSerializer
+        return TicketSerializer
 
     # GET /tickets/resolved/
     @action(detail=False, methods=['get'])

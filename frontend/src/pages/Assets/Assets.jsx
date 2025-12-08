@@ -40,20 +40,37 @@ function TableHeader({ allSelected, onHeaderChange }) {
   );
 }
 
+// Helper to determine action button state
+function getActionState(asset) {
+  const status = asset.status_details?.type;
+  const hasTicket = !!asset.ticket_details;
+
+  // No actions for undeployable or archived
+  if (status === "undeployable" || status === "archived") {
+    return {
+      showCheckin: false,
+      showCheckout: false,
+      checkoutDisabled: false,
+    };
+  }
+
+  return {
+    showCheckin: status === "deployed",
+
+    showCheckout:
+      status === "pending" || status === "deployable",
+
+    checkoutDisabled:
+      (status === "pending" || status === "deployable") && !hasTicket,
+  };
+}
+
+
 // TableItem component to render each asset row
 function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
   const baseImage = asset.image || DefaultImage;
 
-  const statusType = asset.status_details?.type?.toLowerCase();
-
-  // Check-In button: Shows when asset is deployed (no ticket required)
-  const showCheckIn = statusType === "deployed";
-
-  // Check-Out button: Shows when asset is deployable AND has a checkout ticket
-  const showCheckOut = 
-    (statusType === "deployable" || statusType === "pending") &&
-    asset.ticket &&
-    asset.ticket.ticket_type === "checkout";
+  const actions = getActionState(asset);
 
   return (
     <tr>
@@ -85,8 +102,9 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       {/* Check-in/Check-out Column */}
       <td>
         <ActionButtons
-          showCheckout={showCheckOut}
-          showCheckin={showCheckIn}
+          showCheckin={actions.showCheckin}
+          showCheckout={actions.showCheckout}
+          disableCheckout={actions.checkoutDisabled}
           onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
           onCheckinClick={() => onCheckInOut(asset, 'checkin')}
         />

@@ -27,7 +27,7 @@ export default function Status({
   */
 
   return (
-    <div className={`status-${type.split(" ").join("-")}`}>
+    <div className={`status-${(type || "").split(" ").join("-")}`}>
       <div className="circle"></div>
       {name}
       {/* Below will be rendered when any of these (i.e personName or location)

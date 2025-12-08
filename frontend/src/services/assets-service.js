@@ -33,6 +33,23 @@ export async function deleteProduct(id) {
   return res.data;
 }
 
+// GET product names and images for bulk edit
+export const fetchProductNames = (ids = []) =>
+  assetsAxios.get("products/names/", {
+      params: ids.length ? { ids: ids.join(",") } : {},
+    })
+    .then(res => res.data);
+
+// BULK EDIT products
+export async function bulkEditProducts(data) {
+  const res = await assetsAxios.patch("products/bulk-edit/", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return res.data;
+}
+
 // BULK DELETE products
 export async function bulkDeleteProducts(data) {
   const res = await assetsAxios.post("products/bulk-delete/", data, {

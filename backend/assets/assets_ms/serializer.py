@@ -43,6 +43,8 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 # Serializer for product create, update, and destroy
 class ProductSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Product
@@ -116,52 +118,40 @@ class ProductAssetRegistrationSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'name', 'default_purchase_cost', 'default_supplier']
 
+class ProductNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'image' , 'name']
+
 # Asset
 class AssetListSerializer(serializers.ModelSerializer):
     status_details = serializers.SerializerMethodField()
     product_details = serializers.SerializerMethodField()
     ticket_details = serializers.SerializerMethodField()
+    active_checkout = serializers.SerializerMethodField()
     class Meta:
         model = Asset
-        fields = ['id', 'image', 'asset_id', 'name', 'status_details', 'warranty_expiration', 'product_details', 'ticket_details']
+        fields = [
+            'id', 'image', 'asset_id', 'name', 'serial_number',
+            'status_details', 'warranty_expiration',
+            'product_details', 'ticket_details', 'active_checkout'
+        ]
 
     def get_status_details(self, obj):
-        try:
-            if not getattr(obj, 'status', None):
-                return None
-            data = get_status_names()
-            return data.get(obj.status)
-            
-        except Exception:
-            return {"warning": "Contexts service unreachable for statuses."}
-    
+        return self.context.get("status_map", {}).get(obj.status)
+
     def get_product_details(self, obj):
-        try:
-            if not getattr(obj, 'product', None):
-                return None
-            return {"id": obj.product.id, "end_of_life": obj.product.end_of_life}
-        except Exception:
-            return {"warning": "Product not found."}
-        
+        return self.context.get("product_map", {}).get(obj.product_id)
+    
     def get_ticket_details(self, obj):
-        try:
-            if not getattr(obj, 'id', None):
-                return None
-            data = get_unresolved_ticket_by_asset_id(obj.id)
-            return {"id": data.get("id"), "asset_checkout": data.get("asset_checkout")}
-        except Exception:
-            return None
-
+        return self.context.get("ticket_map", {}).get(obj.id)
+    
+    def get_active_checkout(self, obj):
+        checkout = obj.asset_checkouts.filter(asset_checkin__isnull=True).first()
+        return checkout.id if checkout else None
+    
 class AssetSerializer(serializers.ModelSerializer):
-    # Include context details for frontend convenience
-    status_details = serializers.SerializerMethodField()
-    location_details = serializers.SerializerMethodField()
-    supplier_details = serializers.SerializerMethodField()
-    # Active checkout (checkout without a check-in)
-    active_checkout = serializers.SerializerMethodField()
-    # Unresolved ticket referencing this asset
-    unresolved_ticket = serializers.SerializerMethodField()
-
+    
     class Meta:
         model = Asset
         fields = '__all__'
@@ -205,70 +195,19 @@ class AssetSerializer(serializers.ModelSerializer):
 
         return data
 
-    def get_status_details(self, obj):
-        """Return status details fetched from Contexts service."""
-        try:
-            if not getattr(obj, 'status', None):
-                return None
-            # import here to avoid circular import at module import time
-            from assets_ms.services.contexts import get_status_by_id
-            return get_status_by_id(obj.status)
-        except Exception:
-            return {"warning": "Contexts service unreachable for statuses."}
-
-    def get_location_details(self, obj):
-        """Return location details fetched from Help Desk service."""
-        try:
-            if not getattr(obj, 'location', None):
-                return None
-            from assets_ms.services.integration_help_desk import get_location_by_id
-            return get_location_by_id(obj.location)
-        except Exception:
-            return {"warning": "Help Desk service unreachable for locations."}
-
-    def get_supplier_details(self, obj):
-        """Return supplier details fetched from Contexts service."""
-        try:
-            if not getattr(obj, 'supplier', None):
-                return None
-            from assets_ms.services.contexts import get_supplier_by_id
-            return get_supplier_by_id(obj.supplier)
-        except Exception:
-            return {"warning": "Contexts service unreachable for suppliers."}
-
+class AssetInstanceSerializer(serializers.ModelSerializer):
+    active_checkout = serializers.SerializerMethodField()
+    ticket_details = serializers.SerializerMethodField()
+    class Meta:
+        model = Asset
+        fields = '__all__'
+    
+    def get_ticket_details(self, obj):
+        return self.context.get("ticket_map", {}).get(obj.id)
+    
     def get_active_checkout(self, obj):
-        """Return the active checkout (without a check-in) for this asset."""
-        try:
-            if not obj.id:
-                return None
-            checkout = AssetCheckout.objects.filter(
-                asset=obj,
-                asset_checkin__isnull=True  # No check-in yet
-            ).first()
-            if checkout:
-                return {
-                    "id": checkout.id,
-                    "checkout_date": checkout.checkout_date,
-                    "return_date": checkout.return_date,
-                    "checkout_to": checkout.checkout_to,
-                    "location": checkout.location,
-                    "ticket_id": checkout.ticket_id,
-                }
-            return None
-        except Exception:
-            return None
-
-    def get_unresolved_ticket(self, obj):
-        """Return unresolved ticket referencing this asset from Ticket Tracking service."""
-        try:
-            if not obj.id:
-                return None
-            from assets_ms.services.integration_ticket_tracking import get_unresolved_ticket_by_asset_id
-            return get_unresolved_ticket_by_asset_id(obj.id)
-        except Exception:
-            return None
-
-
+        checkout = obj.asset_checkouts.filter(asset_checkin__isnull=True).first()
+        return checkout.id if checkout else None
 
 class AssetCheckoutFileSerializer(serializers.ModelSerializer):
     class Meta:

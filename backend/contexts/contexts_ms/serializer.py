@@ -448,3 +448,8 @@ class LocationNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = ['id', 'city']
+
+class TicketTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ['id', 'asset', 'asset_checkout']
