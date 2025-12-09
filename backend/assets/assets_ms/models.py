@@ -86,7 +86,7 @@ class Product(models.Model):
         return self.name
 
 class Asset(models.Model):
-    asset_id = models.CharField(max_length=23, unique=True, blank=True, editable=False)
+    asset_id = models.CharField(max_length=23, unique=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets', limit_choices_to={'is_deleted': False})
     status = models.PositiveIntegerField()
     supplier = models.PositiveIntegerField(blank=True, null=True)

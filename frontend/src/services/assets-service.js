@@ -112,6 +112,33 @@ export async function deleteAsset(id) {
   return res.data;
 }
 
+// BULK DELETE assets
+export async function bulkDeleteAssets(data) {
+  const res = await assetsAxios.post("assets/bulk-delete/", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return res.data;
+}
+
+// BULK EDIT assets
+export async function bulkEditAssets(data, useFormData = false) {
+  const headers = useFormData
+    ? { "Content-Type": "multipart/form-data" }
+    : { "Content-Type": "application/json" };
+
+  const res = await assetsAxios.patch("assets/bulk-edit/", data, { headers });
+  return res.data;
+}
+
+// GET asset names for bulk edit
+export async function fetchAssetNames(ids) {
+  const idsParam = ids ? ids.join(",") : "";
+  const res = await assetsAxios.get(`assets/names/?ids=${idsParam}`);
+  return res.data;
+}
+
 // UPDATE asset status
 export async function updateAssetStatus(id, data) {
   const res = await assetsAxios.patch(`assets/${id}/update-status/`, data);

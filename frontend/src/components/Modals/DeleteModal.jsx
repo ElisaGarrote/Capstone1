@@ -5,6 +5,7 @@ import {
   deleteProduct,
   bulkDeleteProducts,
   deleteAsset,
+  bulkDeleteAssets,
 } from "../../services/assets-service";
 
 export default function ConfirmationModal({
@@ -39,8 +40,7 @@ export default function ConfirmationModal({
         if (entityType === "product") {
           await bulkDeleteProducts({ ids: targetIds });
         } else if (entityType === "asset") {
-          // Add bulkDeleteAssets when available
-          throw new Error("Bulk delete for assets not implemented yet");
+          await bulkDeleteAssets({ ids: targetIds });
         }
         if (onSuccess) onSuccess(targetIds);
       }

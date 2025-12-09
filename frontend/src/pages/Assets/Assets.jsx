@@ -399,9 +399,14 @@ export default function Assets() {
 
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
+          actionType={deleteTarget ? "delete" : "bulk-delete"}
+          entityType="asset"
+          targetId={deleteTarget}
+          targetIds={selectedIds}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 

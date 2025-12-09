@@ -297,6 +297,8 @@ export default function AssetsRegistration() {
       const formData = new FormData();
 
       // Append asset data to FormData object - only include non-empty values
+      // Send asset_id only on create (new or clone), not on update
+      if (!isUpdate && data.assetId) formData.append('asset_id', data.assetId);
       if (data.product) formData.append('product', data.product);
       if (data.status) formData.append('status', data.status);
       if (data.supplier) formData.append('supplier', data.supplier);

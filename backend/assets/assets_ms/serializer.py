@@ -154,10 +154,16 @@ class AssetListSerializer(serializers.ModelSerializer):
 class AssetSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
-    
+
     class Meta:
         model = Asset
         fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make asset_id read-only on update (editable only on create)
+        if self.instance:
+            self.fields['asset_id'].read_only = True
 
     def validate(self, data):
         product = data.get('product')
@@ -366,10 +372,11 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
 
         return audits
 
-class AssetNamesSerializer (serializers.ModelSerializer):
+# Serializer for asset bulk edit selected items
+class AssetNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
-        fields = ['id', 'name']
+        fields = ['id', 'asset_id', 'name', 'image']
 
 class AssetCheckoutFileSerializer(serializers.ModelSerializer):
     file_from = serializers.CharField(default="asset_checkout", read_only=True)

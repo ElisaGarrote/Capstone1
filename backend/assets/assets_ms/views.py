@@ -86,47 +86,8 @@ class ProductViewSet(viewsets.ModelViewSet):
             "depreciation_map": depreciation_map,
         }
     
-    # Helper function for cached responses
-    def cached_response(self, cache_key, queryset, serializer_class, many=True, context=None):
-        cached = cache.get(cache_key)
-        if cached:
-            return Response(cached)
-
-        context = context or {}
-        serializer = serializer_class(queryset, many=many, context=context)
-        cache.set(cache_key, serializer.data, 300)
-        return Response(serializer.data)
-    
-    def list(self, request, *args, **kwargs):
-        quesryset = self.get_queryset()
-
-        context_maps = self._build_context_maps()
-        return self.cached_response(
-            "products:list",
-            quesryset,
-            self.get_serializer_class(),
-            many=True,
-            context={**context_maps, 'request': request}
-        )
-
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        context_maps = self._build_context_maps()
-        asset_context_maps = self._build_asset_context_maps()
-        cache_key = f"products:detail:{instance.id}"
-        return self.cached_response(
-            cache_key,
-            instance,
-            self.get_serializer_class(),
-            many=False,
-            context={**context_maps, **asset_context_maps, 'request': request}
-        )
-
     def _build_asset_context_maps(self):
         """Build context maps needed for nested AssetListSerializer in ProductInstanceSerializer."""
-        from assets_ms.services.contexts import get_status_names
-        from assets_ms.services.integration_ticket_tracking import get_tickets_list
-
         # statuses
         status_map = cache.get("statuses:map")
         if not status_map:
@@ -153,7 +114,44 @@ class ProductViewSet(viewsets.ModelViewSet):
             "product_map": product_map,
             "ticket_map": ticket_map,
         }
+
+    # Helper function for cached responses
+    def cached_response(self, cache_key, queryset, serializer_class, many=True, context=None):
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        context = context or {}
+        serializer = serializer_class(queryset, many=many, context=context)
+        cache.set(cache_key, serializer.data, 300)
+        return Response(serializer.data)
     
+    
+    def list(self, request, *args, **kwargs):
+        quesryset = self.get_queryset()
+
+        context_maps = self._build_context_maps()
+        return self.cached_response(
+            "products:list",
+            quesryset,
+            self.get_serializer_class(),
+            many=True,
+            context={**context_maps, 'request': request}
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        context_maps = self._build_context_maps()
+        asset_context_maps = self._build_asset_context_maps()
+        cache_key = f"products:detail:{instance.id}"
+        return self.cached_response(
+            cache_key,
+            instance,
+            self.get_serializer_class(),
+            many=False,
+            context={**context_maps, **asset_context_maps, 'request': request}
+        )
+
     def invalidate_product_cache(self, product_id):
         cache.delete("products:list")
         cache.delete("products:names")
@@ -179,37 +177,6 @@ class ProductViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         instance = serializer.save()
         self.invalidate_product_cache(instance.id)
-
-    # Bulk delete
-    # Receive list of IDs and soft delete all products that are not referenced by active assets, else return error
-    @action(detail=False, methods=["post"], url_path='bulk-delete')
-    def bulk_delete(self, request):
-        """
-        Soft delete multiple products by IDs.
-        Expects payload: { "ids": [1, 2, 3] }
-        """
-        ids = request.data.get("ids", [])
-        if not ids:
-            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
-
-        products = Product.objects.filter(id__in=ids, is_deleted=False)
-        failed = []
-
-        for product in products:
-            try:
-                self.perform_destroy(product)
-            except ValidationError as e:
-                failed.append({"id": product.id, "error": str(e.detail)})
-        
-        cache.delete("products:list")
-
-        if failed:
-            return Response({
-                "detail": "Some products could not be deleted. Please check if they are assigned to active assets before trying again.",
-                "failed": failed
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"detail": "Products soft-deleted successfully."}, status=status.HTTP_200_OK)
     
     # Product names and image for bulk edit
     @action(detail=False, methods=["get"], url_path='names')
@@ -353,6 +320,37 @@ class ProductViewSet(viewsets.ModelViewSet):
             "updated": updated,
             "failed": failed
         })
+    
+    # Bulk delete
+    # Receive list of IDs and soft delete all products that are not referenced by active assets, else return error
+    @action(detail=False, methods=["post"], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        """
+        Soft delete multiple products by IDs.
+        Expects payload: { "ids": [1, 2, 3] }
+        """
+        ids = request.data.get("ids", [])
+        if not ids:
+            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        products = Product.objects.filter(id__in=ids, is_deleted=False)
+        failed = []
+
+        for product in products:
+            try:
+                self.perform_destroy(product)
+            except ValidationError as e:
+                failed.append({"id": product.id, "error": str(e.detail)})
+        
+        cache.delete("products:list")
+
+        if failed:
+            return Response({
+                "detail": "Some products could not be deleted. Please check if they are assigned to active assets before trying again.",
+                "failed": failed
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"detail": "Products soft-deleted successfully."}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path='asset-registration')
     def asset_registration(self, request):
@@ -365,11 +363,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         )
 
 class AssetViewSet(viewsets.ModelViewSet):
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         queryset = Asset.objects.filter(is_deleted=False).order_by('name')
-     # Optional: allow query param ?show_deleted=true
+        # Optional: allow query param ?show_deleted=true
         if self.request.query_params.get('show_deleted') == 'true':
             queryset = Asset.objects.filter(is_deleted=True).order_by('name')
         return queryset
@@ -403,41 +401,103 @@ class AssetViewSet(viewsets.ModelViewSet):
                 product_map = {p['id']: p for p in serialized}
                 cache.set("products:map", product_map, 300)
 
-        # tickets
-        ticket_map = cache.get("tickets:map")
-        if not ticket_map:
-            tickets = get_tickets_list()
-            ticket_map = {t["asset"]: t for t in tickets}
-            cache.set("tickets:map", ticket_map, 300)
-            
+        # locations
+        location_map = cache.get("locations:map")
+        if not location_map:
+            locations = get_locations_list()
+            location_map = {l['id']: l for l in locations}
+            cache.set("locations:map", location_map, 300)
+        
         return {
             "status_map": status_map,
             "product_map": product_map,
-            "ticket_map": ticket_map,
+            "location_map": location_map,
         }
     
-    def list(self, request, *args, **kwargs):
-        assets = self.get_queryset()
-        
-        context_maps = self._build_asset_context_maps()
-        
-        serializer = self.get_serializer(assets, many=True, context=context_maps)
-        return Response(serializer.data)
-    
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-
-        cache_key = f"assets:detail:{instance.id}"
+    # Helper function for cached responses
+    def cached_response(self, cache_key, queryset, serializer_class, many=True, context=None):
         cached = cache.get(cache_key)
         if cached:
             return Response(cached)
 
-        context_maps = self._build_asset_context_maps()
-        # Include request in context so ImageField returns full URL
-        serializer = self.get_serializer(instance, context={**context_maps, 'request': request})
-        cache.set(cache_key, serializer.data, 300)  # cache the detail response
-
+        context = context or {}
+        serializer = serializer_class(queryset, many=many, context=context)
+        cache.set(cache_key, serializer.data, 300)
         return Response(serializer.data)
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        
+        context_maps = self._build_asset_context_maps()
+        return self.cached_response(
+            "assets:list",
+            queryset,
+            self.get_serializer_class(),
+            many=True,
+            context={**context_maps, 'request': request}
+        )
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        context_maps = self._build_asset_context_maps()
+        cache_key = f"assets:detail:{instance.id}"
+        return self.cached_response(
+            cache_key,
+            instance,
+            self.get_serializer_class(),
+            many=False,
+            context={**context_maps, 'request': request}
+        )
+    
+    def invalidate_asset_cache(self, asset_id):
+        cache.delete("assets:list")
+        cache.delete(f"assets:detail:{asset_id}")
+        cache.delete("assets:names")
+
+    def perform_destroy(self, instance):
+        errors = []
+
+        # Check for active checkouts (no checkin yet)
+        if instance.asset_checkouts.filter(asset_checkin__isnull=True).exists():
+            errors.append("This asset is currently checked out and not yet checked in. Please check in the asset before deleting it or perform a check-in and delete checkout.")
+
+        # If any blocking relationships exist, raise error
+        if errors:
+            raise ValidationError({
+                "detail": "Cannot delete this asset because:\n- " + "\n- ".join(errors)
+            })
+
+        # Otherwise, perform soft delete
+        instance.is_deleted = True
+        instance.save()
+        self.invalidate_asset_cache(instance.id)
+
+    def perform_create(self, serializer):
+        validated = serializer.validated_data
+
+        product = validated.get("product")
+        supplier = validated.get("supplier")
+        purchase_cost = validated.get("purchase_cost")
+
+        # Auto-assign supplier from product.default_supplier
+        if supplier is None and product and product.default_supplier:
+            supplier = product.default_supplier
+
+        # Auto-assign purchase_cost from product.default_purchase_cost
+        if purchase_cost is None and product and product.default_purchase_cost is not None:
+            purchase_cost = product.default_purchase_cost
+
+        serializer.save(
+            supplier=supplier,
+            purchase_cost=purchase_cost
+        )
+
+        self.invalidate_asset_cache(serializer.instance.id)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        self.invalidate_asset_cache(instance.id)
     
     @action(detail=False, methods=['get'], url_path='by-product/(?P<product_id>\d+)')
     def by_product(self, request, product_id=None):
@@ -554,53 +614,181 @@ class AssetViewSet(viewsets.ModelViewSet):
         asset.save(update_fields=['status'])
 
         # Invalidate cache
-        cache.delete(f"assets:detail:{asset.id}")
+        self.invalidate_asset_cache(asset.id)
 
         serializer = self.get_serializer(asset)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    def perform_destroy(self, instance):
-        errors = []
 
-        # Check for active checkouts (no checkin yet)
-        if instance.asset_checkouts.filter(asset_checkin__isnull=True).exists():
-            errors.append("This asset is currently checked out and not yet checked in. Please check in the asset before deleting it or perform a check-in and delete checkout.")
+    # Asset names for bulk edit
+    @action(detail=False, methods=["get"], url_path='names')
+    def names(self, request):
+        """
+        Return assets with only id, asset_id, name, and image.
+        Optional query param: ?ids=1,2,3
+        """
+        ids_param = request.query_params.get("ids")
+        queryset = self.get_queryset()
 
-        # If any blocking relationships exist, raise error
-        if errors:
-            raise ValidationError({
-                "detail": "Cannot delete this asset because:\n- " + "\n- ".join(errors)
-            })
+        # Filter by IDs if provided
+        if ids_param:
+            try:
+                ids = [int(i) for i in ids_param.split(",") if i.strip().isdigit()]
+                queryset = queryset.filter(id__in=ids)
+            except ValueError:
+                return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Build a cache key specific for this set of IDs
+        cache_key = "assets:names"
+        if ids_param:
+            cache_key += f":{','.join(map(str, ids))}"
 
-        # Otherwise, perform soft delete
-        instance.is_deleted = True
-        instance.save()
-        cache.delete(f"assets:detail:{instance.id}")
-
-    def perform_create(self, serializer):
-        validated = serializer.validated_data
-
-        product = validated.get("product")
-        supplier = validated.get("supplier")
-        purchase_cost = validated.get("purchase_cost")
-
-        # Auto-assign supplier from product.default_supplier
-        if supplier is None and product and product.default_supplier:
-            supplier = product.default_supplier
-
-        # Auto-assign purchase_cost from product.default_purchase_cost
-        if purchase_cost is None and product and product.default_purchase_cost is not None:
-            purchase_cost = product.default_purchase_cost
-
-        serializer.save(
-            supplier=supplier,
-            purchase_cost=purchase_cost
+        return self.cached_response(
+            cache_key,
+            queryset,
+            AssetNameSerializer,
+            many=True,
+            context={'request': request}
         )
+    
+    # Bulk edit
+    @action(detail=False, methods=["patch"], url_path='bulk-edit')
+    def bulk_edit(self, request):
+        """
+        Bulk edit multiple assets.
+        Payload (JSON):
+        {
+            "ids": [1, 2, 3],
+            "data": {
+                "status": 5,
+                "supplier": 2,
+                "location": 3,
+                "notes": "Updated in bulk"
+            }
+        }
+        Or FormData with 'ids' (JSON string), 'data' (JSON string), and optional 'image' file.
+        Only non-empty fields will be updated.
+        """
+        import json
+        from django.core.files.base import ContentFile
 
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        # Invalidate the cached asset detail
-        cache.delete(f"assets:detail:{instance.id}")
+        # Handle both JSON and FormData
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            ids_raw = request.data.get("ids", "[]")
+            data_raw = request.data.get("data", "{}")
+            try:
+                ids = json.loads(ids_raw) if isinstance(ids_raw, str) else ids_raw
+                update_data = json.loads(data_raw) if isinstance(data_raw, str) else data_raw
+            except json.JSONDecodeError:
+                return Response({"detail": "Invalid JSON in ids or data."}, status=status.HTTP_400_BAD_REQUEST)
+
+            uploaded_image = request.FILES.get("image")
+            if uploaded_image:
+                image_content = uploaded_image.read()
+                image_name = uploaded_image.name
+            else:
+                image_content = None
+                image_name = None
+            remove_image = request.data.get("remove_image") == "true"
+        else:
+            ids = request.data.get("ids", [])
+            update_data = request.data.get("data", {})
+            image_content = None
+            image_name = None
+            remove_image = False
+
+        if not ids:
+            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Remove blank values so they won't overwrite existing fields
+        safe_data = {k: v for k, v in update_data.items() if v not in [None, "", [], {}]}
+
+        # Check if there's anything to update (fields, image, or remove_image)
+        has_field_updates = bool(safe_data)
+        has_image_update = image_content is not None or remove_image
+
+        if not has_field_updates and not has_image_update:
+            return Response(
+                {"detail": "No valid fields to update."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        assets = Asset.objects.filter(id__in=ids, is_deleted=False)
+        updated, failed = [], []
+
+        # Check if name is being updated for multiple assets
+        base_name = safe_data.get("name")
+        has_name_update = base_name is not None and len(ids) > 1
+
+        # Process each asset
+        for index, asset in enumerate(assets):
+            # Create asset-specific data with unique name suffix if needed
+            asset_data = safe_data.copy()
+            if has_name_update:
+                asset_data["name"] = f"{base_name} ({index + 1})"
+
+            serializer = AssetSerializer(
+                asset,
+                data=asset_data,
+                partial=True
+            )
+
+            if serializer.is_valid():
+                instance = serializer.save()
+
+                # Handle image update
+                if image_content:
+                    instance.image.save(image_name, ContentFile(image_content), save=True)
+                elif remove_image and instance.image:
+                    instance.image.delete(save=False)
+                    instance.image = None
+                    instance.save()
+
+                updated.append(asset.id)
+                cache.delete(f"assets:detail:{asset.id}")
+            else:
+                failed.append({
+                    "id": asset.id,
+                    "errors": serializer.errors
+                })
+
+        cache.delete("assets:list")
+        cache.delete("assets:names")
+
+        return Response({
+            "updated": updated,
+            "failed": failed
+        })
+
+    # Bulk delete
+    @action(detail=False, methods=["post"], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        """
+        Soft delete multiple assets by IDs.
+        Expects payload: { "ids": [1, 2, 3] }
+        """
+        ids = request.data.get("ids", [])
+        if not ids:
+            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        assets = Asset.objects.filter(id__in=ids, is_deleted=False)
+        failed = []
+
+        for asset in assets:
+            try:
+                self.perform_destroy(asset)
+            except ValidationError as e:
+                failed.append({"id": asset.id, "error": str(e.detail)})
+        
+        cache.delete("assets:list")
+
+        if failed:
+            return Response({
+                "detail": "Some assets could not be deleted.",
+                "failed": failed
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"detail": "Assets deleted successfully."}, status=status.HTTP_200_OK)
+    
 
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
