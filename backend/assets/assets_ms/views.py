@@ -388,7 +388,7 @@ class AssetViewSet(viewsets.ModelViewSet):
             statuses = get_status_names()
             status_map = {s['id']: s for s in statuses}
             cache.set("statuses:map", status_map, 300)
-        
+
         # products
         product_map = cache.get("products:map")
         if not product_map:
@@ -407,11 +407,22 @@ class AssetViewSet(viewsets.ModelViewSet):
             locations = get_locations_list()
             location_map = {l['id']: l for l in locations}
             cache.set("locations:map", location_map, 300)
-        
+
+        # tickets (unresolved)
+        ticket_map = cache.get("tickets:map")
+        if not ticket_map:
+            tickets = get_tickets_list()
+            if isinstance(tickets, list):
+                ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
+            else:
+                ticket_map = {}
+            cache.set("tickets:map", ticket_map, 300)
+
         return {
             "status_map": status_map,
             "product_map": product_map,
             "location_map": location_map,
+            "ticket_map": ticket_map,
         }
     
     # Helper function for cached responses
