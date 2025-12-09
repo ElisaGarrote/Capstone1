@@ -11,7 +11,6 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
-
 import "../../styles/Products/Products.css";
 import "../../styles/ProductFilterModal.css";
 import { fetchAllProducts } from "../../services/assets-service";
@@ -431,7 +430,7 @@ export default function Products() {
     const dataToExport = filteredData.length > 0 ? filteredData : products;
     exportToExcel(dataToExport, "AssetModels_Records.xlsx");
   };
-
+  
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}

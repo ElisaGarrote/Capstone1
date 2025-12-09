@@ -431,9 +431,10 @@ class AssetViewSet(viewsets.ModelViewSet):
         cached = cache.get(cache_key)
         if cached:
             return Response(cached)
-        
+
         context_maps = self._build_asset_context_maps()
-        serializer = self.get_serializer(instance, context=context_maps)
+        # Include request in context so ImageField returns full URL
+        serializer = self.get_serializer(instance, context={**context_maps, 'request': request})
         cache.set(cache_key, serializer.data, 300)  # cache the detail response
 
         return Response(serializer.data)
@@ -595,6 +596,11 @@ class AssetViewSet(viewsets.ModelViewSet):
             supplier=supplier,
             purchase_cost=purchase_cost
         )
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        # Invalidate the cached asset detail
+        cache.delete(f"assets:detail:{instance.id}")
 
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]

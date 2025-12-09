@@ -15,6 +15,12 @@ export async function fetchProductById(id) {
   return res.data;
 }
 
+// GET product list for asset registration
+export async function fetchProductsForAssetRegistration() {
+  const res = await assetsAxios.get("products/asset-registration/");
+  return res.data;
+}
+
 // CREATE product
 export async function createProduct(data) {
   const res = await assetsAxios.post("products/", data);
@@ -85,7 +91,7 @@ export async function fetchAssetById(id) {
 // GET next asset ID
 export async function getNextAssetId() {
   const res = await assetsAxios.get("assets/generate-asset-id/");
-  return res.data;
+  return res.data.asset_id;
 }
 
 // CREATE asset

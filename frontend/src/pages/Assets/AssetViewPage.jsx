@@ -60,14 +60,10 @@ function AssetViewPage() {
 
   const checkedOutTo = getCheckedOutToInfo(asset);
   const handleCloneClick = () => {
-    console.log('Clone button clicked, asset:', asset);
     if (asset) {
-      console.log('Navigating to registration with cloned name:', `${asset.name} (cloned)`);
-      navigate('/assets/registration', {
-        state: { clonedAssetName: `${asset.name} (cloned)` }
+      navigate(`/assets/edit/${asset.id}`, {
+        state: { isClone: true }
       });
-    } else {
-      console.log('No asset found for cloning');
     }
   };
 

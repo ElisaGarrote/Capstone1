@@ -400,7 +400,7 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
             data["depreciations"] = DepreciationNameSerializer(Depreciation.objects.filter(is_deleted=False), many=True).data
 
         if entity == "asset":
-            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False), many=True).data
+            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.ASSET), many=True).data
 
         # individual dropdowns
         if entity == "category":
