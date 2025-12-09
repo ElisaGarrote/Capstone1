@@ -459,6 +459,7 @@ class AssetViewSet(viewsets.ModelViewSet):
             asset = Asset.objects.get(pk=pk, is_deleted=True)
             asset.is_deleted = False
             asset.save()
+            cache.delete(f"assets:detail:{asset.id}")
             serializer = self.get_serializer(asset)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Asset.DoesNotExist:
@@ -551,6 +552,9 @@ class AssetViewSet(viewsets.ModelViewSet):
         asset.status = status_id
         asset.save(update_fields=['status'])
 
+        # Invalidate cache
+        cache.delete(f"assets:detail:{asset.id}")
+
         serializer = self.get_serializer(asset)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -570,7 +574,8 @@ class AssetViewSet(viewsets.ModelViewSet):
         # Otherwise, perform soft delete
         instance.is_deleted = True
         instance.save()
-    
+        cache.delete(f"assets:detail:{instance.id}")
+
     def perform_create(self, serializer):
         validated = serializer.validated_data
 
@@ -592,7 +597,12 @@ class AssetViewSet(viewsets.ModelViewSet):
         )
 
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
-    serializer_class = AssetCheckoutSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
+    def get_serializer_class(self):
+        if self.action == "list":
+            return AssetCheckoutListSerializer
+        return AssetCheckoutSerializer
 
     def get_queryset(self):
         # All checkouts (excluding deleted assets)
@@ -651,6 +661,9 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Invalidate cache
+        cache.delete(f"assets:detail:{asset.id}")
 
         return Response(
             {"success": "Checkout, attachments, and status update completed successfully."},
@@ -747,6 +760,9 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Invalidate cache
+        cache.delete(f"assets:detail:{asset.id}")
 
         # Resolve ticket (optional, outside transaction)
         ticket_id = request.data.get("ticket_id")

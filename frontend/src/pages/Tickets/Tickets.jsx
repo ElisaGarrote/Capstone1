@@ -10,7 +10,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
-import { fetchAssetById, fetchAssetCheckoutById } from "../../services/assets-service";
+import { fetchAssetById } from "../../services/assets-service";
 import { fetchAllEmployees, fetchEmployeeById } from "../../services/integration-auth-service";
 
 import "../../styles/Tickets/Tickets.css";
@@ -263,23 +263,15 @@ const Tickets = () => {
     }
   }, [location]);
 
-  const handleCheckInOut = async (ticket) => {
-    try {
-      const asset = await fetchAssetById(ticket.asset);
-
-      if (ticket.isCheckInOrOut === "Check-In") {
-        const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
-        navigate(`/assets/check-in/${ticket.asset}`, {
-          state: { ticket, asset, checkout, fromAsset: false },
-        });
-      } else {
-        navigate(`/assets/check-out/${ticket.asset}`, {
-          state: { ticket, asset, employeeName: ticket.employeeName, fromAsset: false },
-        });
-      }
-    } catch (error) {
-      console.error("Failed to fetch asset/checkout data:", error);
-      setErrorMessage("Failed to fetch asset data. Please try again later.");
+  const handleCheckInOut = (ticket) => {
+    if (ticket.isCheckInOrOut === "Check-In") {
+      navigate(`/assets/check-in/${ticket.asset}`, {
+        state: { ticketId: ticket.id, fromAsset: false },
+      });
+    } else {
+      navigate(`/assets/check-out/${ticket.asset}`, {
+        state: { ticketId: ticket.id, fromAsset: false },
+      });
     }
   };
 

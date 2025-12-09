@@ -13,44 +13,34 @@ import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { createAssetCheckinWithStatus } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
+import { fetchTicketById } from "../../services/integration-ticket-tracking-service";
 
 export default function CheckInAsset() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  // Form state
+
+  // State
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  // Dropdowns state
   const [statuses, setStatuses] = useState([]);
   const [locations, setLocations] = useState([]);
-  // Modal states for adding new entries
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  // File upload state
   const [attachmentFiles, setAttachmentFiles] = useState([]);
 
-  // Extract data from state, store in variables
-  const ticket = state?.ticket || {};
-  const asset = state?.asset || {};
-  const checkout = state?.checkout || {};
+  // Ticket data fetched from API
+  const [ticket, setTicket] = useState(null);
+
+  // Extract from navigation state
+  const ticketId = state?.ticketId;
   const fromAsset = state?.fromAsset || false;
 
-  //Only allow asset statuses with these types for checkin (excludes 'deployed')
+  // Only allow asset statuses with these types for checkin (excludes 'deployed')
   const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";
 
-  // Declare variables for destructuring
-  const {
-    id: ticketId,
-    checkin_date: checkinDate,
-  } = ticket;
-  const {
-    asset_id: assetId,
-    name: assetName
-  } = asset;
-  const { checkout_date: checkoutDate } = checkout;
   const currentDate = new Date().toISOString().split("T")[0];
 
-  // Form handling initializations
+  // Form handling
   const {
     register,
     handleSubmit,
@@ -59,38 +49,48 @@ export default function CheckInAsset() {
   } = useForm({
     mode: "all",
     defaultValues: {
-      checkinDate: ticket.checkin_date || currentDate,
+      checkinDate: currentDate,
       status: '',
       condition: '',
-      location: ticket.location || '',
+      location: '',
       notes: '',
     }
   });
- 
-  // Initialize dropdowns
+
+  // Initialize: fetch ticket and dropdowns
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
-      console.log("states:", state);
       try {
+        // Fetch ticket details
+        if (ticketId) {
+          const ticketData = await fetchTicketById(ticketId);
+          setTicket(ticketData);
+
+          // Fill form with ticket data
+          setValue("checkinDate", ticketData.checkin_date || currentDate);
+          setValue("location", ticketData.location || "");
+        }
+
+        // Fetch dropdowns
         const dropdowns = await fetchAllDropdowns("status", {
           category: "asset",
           types: CHECKIN_STATUS_TYPES
         });
         setStatuses(dropdowns.statuses || []);
 
-        const locations = await fetchAllLocations();
-        setLocations(locations || []);
+        const locationsData = await fetchAllLocations();
+        setLocations(locationsData || []);
       } catch (error) {
-        console.error("Error fetching dropdowns:", error);
-        setErrorMessage("Failed to load dropdowns. Please try again.");
+        console.error("Error initializing checkin form:", error);
+        setErrorMessage("Failed to load form data. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
     initialize();
-  }, []);
+  }, [ticketId, setValue]);
 
   const conditionOptions = [
       { value: "1", label: "1 - Unserviceable" },
@@ -238,17 +238,13 @@ export default function CheckInAsset() {
     setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Form submission
+  // Form submission - user inputs are what gets saved
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      console.log("FINAL FORM DATA:");
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
 
-      // Required fields
-      formData.append("asset_checkout", asset.active_checkout.id);
+      // Required fields - all from user input
+      formData.append("asset_checkout", ticket?.asset_checkout);
       formData.append("checkin_date", data.checkinDate);
       formData.append("status", data.status);
       formData.append("condition", data.condition);
@@ -259,44 +255,48 @@ export default function CheckInAsset() {
       formData.append("notes", data.notes || "");
 
       // Append attachment files if any
-      attachmentFiles.forEach((file, index) => {
+      attachmentFiles.forEach((file) => {
         formData.append("attachments", file);
       });
 
       await createAssetCheckinWithStatus(formData);
 
-      // Navigate to asset view page after successful check-in
+      // Navigate to approved tickets after successful check-in
       navigate(`/approved-tickets`, {
         state: { successMessage: "Asset has been checked in successfully!" }
       });
     } catch (error) {
-        console.error("Error checking in asset:", error);
+      console.error("Error checking in asset:", error);
 
-        let message = "An error occurred while checking in the asset.";
+      let message = "An error occurred while checking in the asset.";
 
-        if (error.response && error.response.data) {
-          const data = error.response.data;
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        const messages = [];
 
-          // Collect all errors from all keys
-          const messages = [];
-
-          Object.entries(data).forEach(([key, value]) => {
-            if (Array.isArray(value)) {
-              messages.push(...value);
-            } else if (typeof value === "string") {
-              messages.push(value);
-            }
-          });
-
-          if (messages.length > 0) {
-            message = messages.join(" ");
+        Object.entries(errorData).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            messages.push(...value);
+          } else if (typeof value === "string") {
+            messages.push(value);
           }
-        }
+        });
 
-        setErrorMessage(message);
-        setTimeout(() => setErrorMessage(""), 5000);
+        if (messages.length > 0) {
+          message = messages.join(" ");
+        }
       }
+
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
   };
+
+  // Get asset display info from ticket
+  const assetDisplayId = ticket?.asset_details?.asset_id || "";
+  const assetName = ticket?.asset_details?.name || "";
+  const pageTitle = assetName ? `${assetDisplayId} - ${assetName}` : assetDisplayId;
+  const checkoutDate = ticket?.checkout_date || "";
 
   return (
     <>
@@ -308,7 +308,7 @@ export default function CheckInAsset() {
             root={fromAsset ? "Assets" : "Tickets"}
             currentPage="Check-In Asset"
             rootNavigatePage={fromAsset ? "/assets" : "/approved-tickets"}
-            title={assetName ? `${assetId} - ${assetName}` : assetId}
+            title={pageTitle}
           />
         </section>
         <section className="registration-form">
@@ -332,14 +332,13 @@ export default function CheckInAsset() {
                 type="date"
                 id="checkinDate"
                 className={errors.checkinDate ? 'input-error' : ''}
-                {...register("checkinDate", { 
+                {...register("checkinDate", {
                   required: "Check-in date is required",
                   validate: (value) =>
-                    new Date(value) >= new Date(checkoutDate) ||
+                    !checkoutDate || new Date(value) >= new Date(checkoutDate) ||
                     "Check-in date cannot be earlier than checkout date."
                 })}
                 min={checkoutDate}
-                defaultValue={checkinDate || currentDate}
               />
               {errors.checkinDate && (
                 <span className="error-message">{errors.checkinDate.message}</span>

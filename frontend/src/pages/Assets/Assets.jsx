@@ -372,50 +372,17 @@ export default function Assets() {
 
 
   const handleCheckInOut = (asset, action) => {
-    const baseImage = asset.image
-      ? `https://assets-service-production.up.railway.app${asset.image}`
-      : DefaultImage;
-
-    const checkout = asset.checkoutRecord;
-    console.log("checkout:", checkout);
-    console.log("action:", action);
-
     // Determine action: use passed parameter or asset property
     const isCheckIn = action === 'checkin' || asset.isCheckInOrOut === "Check-In";
+    const ticketId = asset.ticket_details?.id;
 
     if (isCheckIn) {
       navigate(`/assets/check-in/${asset.id}`, {
-        state: {
-          id: asset.id,
-          assetId: asset.displayed_id,
-          product: asset.product,
-          image: baseImage,
-          employee: checkout?.requestor || "Not assigned",
-          empLocation: checkout?.requestor_location || "Unknown",
-          checkOutDate: checkout?.checkout_date || "Unknown",
-          returnDate: checkout?.return_date || "Unknown",
-          checkoutId: checkout?.checkout_ref_id || "Unknown",
-          checkinDate: checkout?.checkin_date || "Unknown",
-          condition: checkout?.condition || "Unknown",
-          ticketId: checkout?.ticket_id,
-          fromAsset: true,
-        },
+        state: { ticketId, fromAsset: true },
       });
     } else {
       navigate(`/assets/check-out/${asset.id}`, {
-        state: {
-          id: asset.id,
-          assetId: asset.displayed_id,
-          product: asset.product,
-          image: baseImage,
-          ticketId: checkout?.ticket_id,
-          empId: checkout?.requestor_id,
-          employee: checkout?.requestor || "Not assigned",
-          empLocation: checkout?.requestor_location || "Unknown",
-          checkoutDate: checkout?.checkout_date || "Unknown",
-          returnDate: checkout?.return_date || "Unknown",
-          fromAsset: true,
-        },
+        state: { ticketId, fromAsset: true },
       });
     }
   };

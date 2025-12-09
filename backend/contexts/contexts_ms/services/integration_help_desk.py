@@ -57,6 +57,24 @@ def get_location_by_id(location_id):
     return result
 
 
+def get_employee_by_id(employee_id):
+    """Fetch an employee resource from the Help Desk service by ID with caching."""
+    if not employee_id:
+        return None
+    key = f"contexts:employee:{employee_id}"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+
+    result = fetch_resource_by_id('employees', employee_id)
+    # If result is a warning dict, cache for a short time
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LOCATION_WARNING_TTL)
+    else:
+        cache.set(key, result, LOCATION_CACHE_TTL)
+    return result
+
+
 def fetch_resource_list(resource_name, params=None, skip_api_prefix=False):
     """Fetch a list endpoint from the Contexts service."""
     params = params or {}
