@@ -98,7 +98,7 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
         <Status type={asset.status_details.type.toLowerCase()} name={asset.status_details.name} />
       </td>
       <td>{asset.warranty_expiration || 'N/A'}</td>
-      <td>{asset.end_of_life || 'N/A'}</td>
+      <td>{asset.product_details.end_of_life || 'N/A'}</td>
       {/* Check-in/Check-out Column */}
       <td>
         <ActionButtons

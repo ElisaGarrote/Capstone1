@@ -106,6 +106,19 @@ export default function ProductsRegistration() {
           setProduct(productData);
           if (productData.image) {
             setPreviewImage(productData.image);
+
+            // For cloning, fetch the image as a file so it can be uploaded with the new product
+            if (cloneMode) {
+              try {
+                const response = await fetch(productData.image);
+                const blob = await response.blob();
+                const fileName = productData.image.split('/').pop() || 'cloned-image.jpg';
+                const file = new File([blob], fileName, { type: blob.type });
+                setSelectedImage(file);
+              } catch (imgError) {
+                console.error("Failed to fetch image for cloning:", imgError);
+              }
+            }
           }
         }
       } catch (error) {

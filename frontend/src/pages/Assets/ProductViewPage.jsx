@@ -286,6 +286,31 @@ function ProductViewPage() {
     setTimeout(() => setErrorMessage(""), 5000);
   };
 
+  // Helper to determine action button state
+function getActionState(asset) {
+  const status = asset.status_details?.type;
+  const hasTicket = !!asset.ticket_details;
+
+  // No actions for undeployable or archived
+  if (status === "undeployable" || status === "archived") {
+    return {
+      showCheckin: false,
+      showCheckout: false,
+      checkoutDisabled: false,
+    };
+  }
+
+  return {
+    showCheckin: status === "deployed",
+
+    showCheckout:
+      status === "pending" || status === "deployable",
+
+    checkoutDisabled:
+      (status === "pending" || status === "deployable") && !hasTicket,
+  };
+}
+
   // Pagination logic
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -342,20 +367,9 @@ function ProductViewPage() {
           <tbody>
             {paginatedAssets.length > 0 ? (
               paginatedAssets.map((asset) => {
-                const baseImage = asset.image
-                  ? `${ASSETS_API_URL.replace(/\/$/, '')}${asset.image}`
-                  : DefaultImage;
-
-                const statusType = asset.status_details?.type?.toLowerCase();
-
-                // Check-In button: Shows when asset is deployed (no ticket required)
-                const showCheckIn = statusType === "deployed";
-
-                // Check-Out button: Shows when asset is deployable AND has a checkout ticket
-                const showCheckOut =
-                  (statusType === "deployable" || statusType === "pending") &&
-                  asset.ticket &&
-                  asset.ticket.ticket_type === "checkout";
+                const baseImage = asset.image || DefaultImage;
+                
+                const actions = getActionState(asset);
 
                 return (
                   <tr key={asset.id}>
@@ -373,12 +387,12 @@ function ProductViewPage() {
                     <td>{asset.name || 'N/A'}</td>
                     <td>{asset.serial_number || 'N/A'}</td>
                     <td>
-                      <Status type={asset.status_details?.type?.toLowerCase()} name={asset.status_details?.name} />
+                      <Status type={asset.status_details?.type?.toLowerCase() || 'unknown'} name={asset.status_details?.name || 'Unknown'} />
                     </td>
                     <td>
                       <ActionButtons
-                        showCheckout={showCheckOut}
-                        showCheckin={showCheckIn}
+                        showCheckout={actions.showCheckout}
+                        showCheckin={actions.showCheckin}
                         onCheckoutClick={() => handleCheckInOut(asset, 'checkout')}
                         onCheckinClick={() => handleCheckInOut(asset, 'checkin')}
                       />
@@ -426,7 +440,9 @@ function ProductViewPage() {
   };
 
   const handleProductDeleteSuccess = () => {
-    navigate("/products");
+    navigate("/products", {
+      state: { successMessage: "Product deleted successfully!" }
+    });
   };
 
   const handleProductDeleteError = (error) => {
@@ -436,14 +452,10 @@ function ProductViewPage() {
 
   // Button action handlers
   const handleCloneClick = () => {
-    console.log('Clone button clicked, product:', product);
     if (product) {
-      console.log('Navigating to registration with cloned name:', `${product.name} (cloned)`);
-      navigate('/products/registration', {
+      navigate(`/products/edit/${product.id}`, {
         state: { product, isClone: true }
       });
-    } else {
-      console.log('No product found for cloning');
     }
   };
 

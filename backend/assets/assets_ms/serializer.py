@@ -121,7 +121,7 @@ class ProductAssetRegistrationSerializer(serializers.ModelSerializer):
 class ProductNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'image' , 'name']
+        fields = ['id', 'image' , 'name', 'end_of_life']
 
 # Asset
 class AssetListSerializer(serializers.ModelSerializer):
@@ -196,11 +196,15 @@ class AssetSerializer(serializers.ModelSerializer):
         return data
 
 class AssetInstanceSerializer(serializers.ModelSerializer):
+    status_details = serializers.SerializerMethodField()
     active_checkout = serializers.SerializerMethodField()
     ticket_details = serializers.SerializerMethodField()
     class Meta:
         model = Asset
         fields = '__all__'
+
+    def get_status_details(self, obj):
+        return self.context.get("status_map", {}).get(obj.status)
     
     def get_ticket_details(self, obj):
         return self.context.get("ticket_map", {}).get(obj.id)

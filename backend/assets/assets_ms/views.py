@@ -112,14 +112,47 @@ class ProductViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         context_maps = self._build_context_maps()
+        asset_context_maps = self._build_asset_context_maps()
         cache_key = f"products:detail:{instance.id}"
         return self.cached_response(
             cache_key,
             instance,
             self.get_serializer_class(),
             many=False,
-            context={**context_maps, 'request': request}
+            context={**context_maps, **asset_context_maps, 'request': request}
         )
+
+    def _build_asset_context_maps(self):
+        """Build context maps needed for nested AssetListSerializer in ProductInstanceSerializer."""
+        from assets_ms.services.contexts import get_status_names
+        from assets_ms.services.integration_ticket_tracking import get_tickets_list
+
+        # statuses
+        status_map = cache.get("statuses:map")
+        if not status_map:
+            statuses = get_status_names()
+            status_map = {s['id']: s for s in statuses}
+            cache.set("statuses:map", status_map, 300)
+
+        # products (for product_details - though in product view we already know the product)
+        product_map = cache.get("products:map")
+        if not product_map:
+            products = Product.objects.filter(is_deleted=False)
+            product_map = {p.id: p.name for p in products}
+            cache.set("products:map", product_map, 300)
+
+        # tickets
+        ticket_map = cache.get("tickets:map")
+        if not ticket_map:
+            tickets = get_tickets_list()
+            ticket_map = {t["asset"]: t for t in tickets}
+            cache.set("tickets:map", ticket_map, 300)
+
+        return {
+            "status_map": status_map,
+            "product_map": product_map,
+            "ticket_map": ticket_map,
+        }
     
     def invalidate_product_cache(self, product_id):
         cache.delete("products:list")
@@ -362,8 +395,13 @@ class AssetViewSet(viewsets.ModelViewSet):
         product_map = cache.get("products:map")
         if not product_map:
             products = Product.objects.filter(is_deleted=False)
-            product_map = {p.id: p.name for p in products}
-            cache.set("products:map", product_map, 300)
+            # products
+            product_map = cache.get("products:map")
+            if not product_map:
+                products = Product.objects.filter(is_deleted=False)
+                serialized = ProductNameSerializer(products, many=True).data
+                product_map = {p['id']: p for p in serialized}
+                cache.set("products:map", product_map, 300)
 
         # tickets
         ticket_map = cache.get("tickets:map")
