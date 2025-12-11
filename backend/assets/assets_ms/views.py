@@ -179,7 +179,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         self.invalidate_product_cache(instance.id)
     
     # Product names and image for bulk edit
-    # names/search?search=keyword
+    # names/?ids=1,2,3
+    # names/?search=keyword
+    # names/?ids=1,2,3&search=Lenovo
     @action(detail=False, methods=["get"], url_path='names')
     def names(self, request):
         """

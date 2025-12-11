@@ -377,17 +377,19 @@ export default function Assets() {
   };
   
   const handleCheckInOut = (asset) => {
-    // Determine action: use passed parameter or asset property
-    const isCheckIn = asset.active_checkout != null;
+    const assetId = asset.id;
+    const assetDisplayId = asset.asset_id;
+    const assetName = asset.name;
+    const checkoutId = asset.active_checkout;
     const ticketId = asset.ticket_details?.id;
 
-    if (isCheckIn) {
-      navigate(`/assets/check-in/${asset.id}`, {
-        state: { ticketId, fromAsset: true },
+    if (checkoutId) {
+      navigate(`/assets/check-in/${assetId}`, {
+        state: { assetDisplayId, assetName, checkoutId, ticketId },
       });
     } else {
       navigate(`/assets/check-out/${asset.id}`, {
-        state: { ticketId, fromAsset: true },
+        state: { assetDisplayId, assetName, assetId, ticketId },
       });
     }
   };

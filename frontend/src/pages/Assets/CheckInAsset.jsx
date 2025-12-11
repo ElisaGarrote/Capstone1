@@ -32,6 +32,8 @@ export default function CheckInAsset() {
   const [ticket, setTicket] = useState(null);
 
   // Extract from navigation state
+  const assetId = state?.assetId;
+  const assetName = state?.assetName;
   const ticketId = state?.ticketId;
   const fromAsset = state?.fromAsset || false;
 
@@ -294,7 +296,6 @@ export default function CheckInAsset() {
 
   // Get asset display info from ticket
   const assetDisplayId = ticket?.asset_details?.asset_id || "";
-  const assetName = ticket?.asset_details?.name || "";
   const pageTitle = assetName ? `${assetDisplayId} - ${assetName}` : assetDisplayId;
   const checkoutDate = ticket?.checkout_date || "";
 

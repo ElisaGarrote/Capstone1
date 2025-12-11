@@ -398,6 +398,12 @@ class AssetCheckoutListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AssetCheckoutSerializer(serializers.ModelSerializer):
+    # These fields are populated from ticket data, not from form input
+    asset = serializers.PrimaryKeyRelatedField(queryset=Asset.objects.all(), required=False)
+    checkout_to = serializers.IntegerField(required=False)
+    location = serializers.IntegerField(required=False)
+    checkout_date = serializers.DateField(required=False)
+    return_date = serializers.DateField(required=False)
 
     class Meta:
         model = AssetCheckout
@@ -405,7 +411,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         ticket_id = data.get('ticket_id')
-        status_id = self.get('status') or self.context.get('request').data.get('status')
+        status_id = data.get('status') or self.context.get('request').data.get('status')
 
         # --- Ticket Validations ---
         if not ticket_id:
