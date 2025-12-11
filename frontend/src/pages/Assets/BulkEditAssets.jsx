@@ -69,7 +69,7 @@ export default function BulkEditAssets() {
         }
 
         setLoading(true);
-        const assets = await fetchAssetNames(selectedIds);
+        const assets = await fetchAssetNames({ ids: selectedIds });
         setSelectedAssets(assets);
 
         // Update currentSelectedIds to only include IDs that exist

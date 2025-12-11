@@ -51,7 +51,7 @@ export default function BulkEditAssetModels() {
         }
 
         setLoading(true);
-        const models = await fetchProductNames(selectedIds);
+        const models = await fetchProductNames({ ids: selectedIds });
         setSelectedModels(models);
 
         // Fetch dropdown options

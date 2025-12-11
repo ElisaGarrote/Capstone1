@@ -61,6 +61,8 @@ class ProductSerializer(serializers.ModelSerializer):
         if name:
             # Normalize spacing and apply Title Case for consistent storage and comparisons
             normalized_name = " ".join(name.split()).strip().title()
+            # Keep "(clone)" lowercase
+            normalized_name = normalized_name.replace("(Clone)", "(clone)")
             data['name'] = normalized_name
         else:
             normalized_name = None
@@ -72,7 +74,7 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "name": "An asset model with this name already exists."
             })
-        
+
         return data
 
 # Serializer for product instance retrieve
@@ -190,6 +192,8 @@ class AssetSerializer(serializers.ModelSerializer):
         if name:
             # Normalize spacing and apply Title Case
             normalized_name = " ".join(name.split()).strip().title()
+            # Keep "(clone)" lowercase
+            normalized_name = normalized_name.replace("(Clone)", "(clone)")
             data['name'] = normalized_name
         else:
             normalized_name = None

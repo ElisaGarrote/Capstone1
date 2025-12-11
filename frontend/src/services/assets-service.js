@@ -40,11 +40,16 @@ export async function deleteProduct(id) {
 }
 
 // GET product names and images for bulk edit
-export const fetchProductNames = (ids = []) =>
-  assetsAxios.get("products/names/", {
-      params: ids.length ? { ids: ids.join(",") } : {},
-    })
+export const fetchProductNames = ({ids = [], search = "" }) => {
+  const params = {};
+
+  if (ids.length) params.ids = ids.join(",");
+  if (search) params.search = search;
+
+  return assetsAxios
+    .get("products/names/", { params })
     .then(res => res.data);
+}
 
 // BULK EDIT products
 export async function bulkEditProducts(data, useFormData = false) {
@@ -122,6 +127,19 @@ export async function bulkDeleteAssets(data) {
   return res.data;
 }
 
+// GET product names and images for bulk edit
+export const fetchAssetNames = ({ids = [], search = "" }) => {
+  const params = {};
+
+  if (ids.length) params.ids = ids.join(",");
+
+  if (search) params.search = search;
+
+  return assetsAxios
+    .get("assets/names/", { params })
+    .then(res => res.data);
+}
+
 // BULK EDIT assets
 export async function bulkEditAssets(data, useFormData = false) {
   const headers = useFormData
@@ -129,13 +147,6 @@ export async function bulkEditAssets(data, useFormData = false) {
     : { "Content-Type": "application/json" };
 
   const res = await assetsAxios.patch("assets/bulk-edit/", data, { headers });
-  return res.data;
-}
-
-// GET asset names for bulk edit
-export async function fetchAssetNames(ids) {
-  const idsParam = ids ? ids.join(",") : "";
-  const res = await assetsAxios.get(`assets/names/?ids=${idsParam}`);
   return res.data;
 }
 

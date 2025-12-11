@@ -10,7 +10,7 @@ import AddEntryModal from "../../components/Modals/AddEntryModal";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Alert from "../../components/Alert";
 import "../../styles/Registration.css";
-import { getNextAssetId, fetchProductsForAssetRegistration, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
+import { getNextAssetId, fetchAssetNames, fetchProductsForAssetRegistration, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 
@@ -61,6 +61,40 @@ export default function AssetsRegistration() {
   // Determine mode: clone mode passed from AssetViewPage
   const cloneMode = location.state?.isClone === true;
 
+  const generateCloneName = async (baseName) => {
+    // 1. Fetch all existing asset names that contain the base name
+    const existing = await fetchAssetNames({ search: baseName });
+    const existingNames = existing.map(a => a.name);
+
+    // 2. Pattern matches: "BaseName (clone)" or "BaseName (clone) (N)" - case insensitive
+    const clonePattern = new RegExp(`^${escapeRegExp(baseName)} \\(clone\\)(?: \\((\\d+)\\))?$`, 'i');
+
+    // 3. Find the highest existing clone index
+    let maxIndex = -1; // -1 means no clones exist yet
+    existingNames.forEach(name => {
+      const match = name.match(clonePattern);
+      if (match) {
+        // If no number group, it's the first clone (index 0)
+        // If number group exists, that's the index
+        const index = match[1] ? parseInt(match[1], 10) : 0;
+        if (index > maxIndex) maxIndex = index;
+      }
+    });
+
+    // 4. Generate clone name
+    if (maxIndex === -1) {
+      // No clones exist, return first clone name
+      return `${baseName} (clone)`;
+    }
+    // Clones exist, return next number
+    return `${baseName} (clone) (${maxIndex + 1})`;
+  };
+
+  // Utility to escape regex special chars in base name
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -93,12 +127,19 @@ export default function AssetsRegistration() {
             setAsset(assetData);
 
             // Fill form with asset data
-            setValue("assetId", assetData.asset_id || "");
+            if (!cloneMode) {
+              setValue("assetId", assetData.asset_id || "");
+            }
             setValue("product", assetData.product || "");
             setValue("status", assetData.status || "");
             setValue("supplier", assetData.supplier || "");
             setValue("location", assetData.location || "");
-            setValue("assetName", assetData.name || "");
+            if (cloneMode) {
+              const clonedName = await generateCloneName(assetData.name);
+              setValue("assetName", clonedName);
+            } else {
+              setValue("assetName", assetData.name || "");
+            }
             setValue("serialNumber", assetData.serial_number || "");
             setValue("warrantyExpiration", assetData.warranty_expiration || "");
             setValue("orderNumber", assetData.order_number || "");

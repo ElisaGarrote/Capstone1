@@ -10,7 +10,7 @@ import AddEntryModal from "../../components/Modals/AddEntryModal";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Alert from "../../components/Alert";
 import '../../styles/Registration.css';
-import { fetchProductById, createProduct, updateProduct } from "../../services/assets-service";
+import { fetchProductById, fetchProductNames, createProduct, updateProduct } from "../../services/assets-service";
 import { fetchAllDropdowns, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
 
 export default function ProductsRegistration() {
@@ -63,6 +63,41 @@ export default function ProductsRegistration() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
+  // Generate a non-conflicting clone name
+  const generateCloneName = async (baseName) => {
+    // 1. Fetch all existing product names that contain the base name
+    const existing = await fetchProductNames({ search: baseName });
+    const existingNames = existing.map(p => p.name);
+
+    // 2. Pattern matches: "BaseName (clone)" or "BaseName (clone) (N)" - case insensitive
+    const clonePattern = new RegExp(`^${escapeRegExp(baseName)} \\(clone\\)(?: \\((\\d+)\\))?$`, 'i');
+
+    // 3. Find the highest existing clone index
+    let maxIndex = -1; // -1 means no clones exist yet
+    existingNames.forEach(name => {
+      const match = name.match(clonePattern);
+      if (match) {
+        // If no number group, it's the first clone (index 0)
+        // If number group exists, that's the index
+        const index = match[1] ? parseInt(match[1], 10) : 0;
+        if (index > maxIndex) maxIndex = index;
+      }
+    });
+
+    // 4. Generate clone name
+    if (maxIndex === -1) {
+      // No clones exist, return first clone name
+      return `${baseName} (clone)`;
+    }
+    // Clones exist, return next number
+    return `${baseName} (clone) (${maxIndex + 1})`;
+  };
+
+  // Utility to escape regex special chars in base name
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -87,7 +122,13 @@ export default function ProductsRegistration() {
 
         // Initialize form if editing
         if (productData) {
-          setValue("productName", cloneMode ? `${productData.name} (cloned)` : productData.name || "");
+          if (cloneMode) {
+            const cloneName = await generateCloneName(productData.name);
+            setValue("productName", cloneName);
+          } else {
+            setValue("productName", productData.name || "");
+          }
+
           setValue("category", productData.category || "");
           setValue("manufacturer", productData.manufacturer || "");
           setValue("depreciation", productData.depreciation || "");

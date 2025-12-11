@@ -179,13 +179,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         self.invalidate_product_cache(instance.id)
     
     # Product names and image for bulk edit
+    # names/search?search=keyword
     @action(detail=False, methods=["get"], url_path='names')
     def names(self, request):
         """
         Return products with only id, name, and image.
-        Optional query param: ?ids=1,2,3
+        Optional query param: ?ids=1,2,3 or ?search=keyword
         """
         ids_param = request.query_params.get("ids")
+        search = request.query_params.get("search")
         queryset = self.get_queryset()
 
         # Filter by IDs if provided
@@ -195,6 +197,14 @@ class ProductViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(id__in=ids)
             except ValueError:
                 return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+
+        # Don't cache search results - they need to be real-time for clone name generation
+        if search:
+            serializer = ProductNameSerializer(queryset, many=True)
+            return Response(serializer.data)
 
         # Build a cache key specific for this set of IDs
         cache_key = "products:names"
@@ -635,9 +645,10 @@ class AssetViewSet(viewsets.ModelViewSet):
     def names(self, request):
         """
         Return assets with only id, asset_id, name, and image.
-        Optional query param: ?ids=1,2,3
+        Optional query param: ?ids=1,2,3 or ?search=keyword
         """
         ids_param = request.query_params.get("ids")
+        search = request.query_params.get("search")
         queryset = self.get_queryset()
 
         # Filter by IDs if provided
@@ -647,7 +658,15 @@ class AssetViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(id__in=ids)
             except ValueError:
                 return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
-            
+
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+
+        # Don't cache search results - they need to be real-time for clone name generation
+        if search:
+            serializer = AssetNameSerializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data)
+
         # Build a cache key specific for this set of IDs
         cache_key = "assets:names"
         if ids_param:
