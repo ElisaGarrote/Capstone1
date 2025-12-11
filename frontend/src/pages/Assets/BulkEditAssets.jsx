@@ -31,6 +31,10 @@ export default function BulkEditAssets() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
+
   // Modal states for adding new entries
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
@@ -162,6 +166,26 @@ export default function BulkEditAssets() {
     }
   };
 
+  const handleImageSelection = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage("Image size exceeds 5MB. Please choose a smaller file.");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+
+      setSelectedImage(file);
+      setValue('image', file);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const onSubmit = async (data) => {
     try {
       if (currentSelectedIds.length === 0) {
@@ -184,18 +208,40 @@ export default function BulkEditAssets() {
         }
       });
 
-      if (Object.keys(updateData).length === 0) {
+      // Check if there's anything to update (including image)
+      const hasFieldUpdates = Object.keys(updateData).length > 0;
+      const hasImageUpdate = selectedImage !== null || removeImage;
+
+      if (!hasFieldUpdates && !hasImageUpdate) {
         setErrorMessage("Please fill in at least one field to update");
         return;
       }
 
       setLoading(true);
 
-      const payload = {
-        ids: currentSelectedIds,
-        data: updateData,
-      };
-      const result = await bulkEditAssets(payload, false);
+      let result;
+
+      // If image is selected, we need to use FormData
+      if (hasImageUpdate) {
+        const formData = new FormData();
+        formData.append('ids', JSON.stringify(currentSelectedIds));
+        formData.append('data', JSON.stringify(updateData));
+
+        if (selectedImage) {
+          formData.append('image', selectedImage);
+        }
+        if (removeImage) {
+          formData.append('remove_image', 'true');
+        }
+
+        result = await bulkEditAssets(formData, true); // true = use FormData
+      } else {
+        const payload = {
+          ids: currentSelectedIds,
+          data: updateData,
+        };
+        result = await bulkEditAssets(payload, false);
+      }
 
       if (result.failed && result.failed.length > 0) {
         setErrorMessage(
@@ -268,7 +314,7 @@ export default function BulkEditAssets() {
             </div>
           </section>
 
-          <section className="bulk-edit-form-section">
+          <section className="bulk-edit-form-section registration">
             <form onSubmit={handleSubmit(onSubmit)} className="bulk-edit-form">
               {/* Product Dropdown */}
               <fieldset className="form-field">
@@ -468,6 +514,44 @@ export default function BulkEditAssets() {
                   rows='4'
                 />
                 {errors.notes && <span className='error-message'>{errors.notes.message}</span>}
+              </fieldset>
+
+              {/* Image */}
+              <fieldset>
+                <label>Image</label>
+                {previewImage ? (
+                  <div className="image-selected">
+                    <img src={previewImage} alt="Selected image" />
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setPreviewImage(null);
+                        setSelectedImage(null);
+                        setValue('image', null);
+                        document.getElementById('image').value = '';
+                        setRemoveImage(true);
+                        console.log("Remove image flag set to:", true);
+                      }}
+                    >
+                      <img src={CloseIcon} alt="Remove" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="image"
+                      accept="image/*"
+                      onChange={handleImageSelection}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                )}
+                <small className="file-size-info">
+                  Maximum file size must be 5MB
+                </small>
               </fieldset>
 
               {/* Form Actions */}
