@@ -347,3 +347,31 @@ class AssetReportTemplate(models.Model):
 
     def __str__(self):
         return self.name
+
+class ActivityLog(models.Model):
+    ACTION_CHOICE = [
+        ("CREATE", "Create"),
+        ("UPDATE", "Update"),
+        ("DELETE", "Delete"),
+        ("LOGIN", "Login"),
+        ("LOGOUT", "Logout"),
+        ("CHECKIN", "Check-in"),
+        ("CHECKOUT", "Check-out"),
+        ("SCHEDULE", "Schedule"),
+        ("PERFORM", "Perform"),
+    ]
+    
+    user_id = models.PositiveIntegerField()
+    module = models.CharField(max_length=100)
+    action = models.CharField(max_length=15, choices=ACTION_CHOICE)
+    item_id = models.PositiveIntegerField()
+    item_name = models.CharField(max_length=100)
+    target_user_id = models.PositiveIntegerField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.action} - {self.item_name}"
