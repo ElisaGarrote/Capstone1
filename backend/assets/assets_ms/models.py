@@ -348,69 +348,30 @@ class AssetReportTemplate(models.Model):
     def __str__(self):
         return self.name
 
-
 class ActivityLog(models.Model):
-    """Model to track all activity events in the system for reporting purposes."""
-
-    # Activity types - what kind of entity the activity is on
-    ACTIVITY_TYPE_CHOICES = [
-        ('Asset', 'Asset'),
-        ('Component', 'Component'),
-        ('Audit', 'Audit'),
-        ('Repair', 'Repair'),
+    ACTION_CHOICE = [
+        ("CREATE", "Create"),
+        ("UPDATE", "Update"),
+        ("DELETE", "Delete"),
+        ("LOGIN", "Login"),
+        ("LOGOUT", "Logout"),
+        ("CHECKIN", "Check-in"),
+        ("CHECKOUT", "Check-out"),
+        ("SCHEDULE", "Schedule"),
+        ("PERFORM", "Perform"),
     ]
-
-    # Action types - what kind of action was performed
-    # - Create/Update/Delete: Standard CRUD for all entity types
-    # - Checkout/Checkin: For Asset and Component checkout/checkin operations
-    # - Schedule: For scheduling an audit (AuditSchedule creation)
-    # - Passed/Failed: For recording audit results
-    ACTION_CHOICES = [
-        ('Create', 'Create'),
-        ('Update', 'Update'),
-        ('Delete', 'Delete'),
-        ('Checkout', 'Checkout'),
-        ('Checkin', 'Checkin'),
-        ('Schedule', 'Schedule'),
-        ('Passed', 'Passed'),
-        ('Failed', 'Failed'),
-    ]
-
-    # When the activity occurred
-    datetime = models.DateTimeField(default=timezone.now)
-
-    # Who performed the action (user_id from auth service)
-    user_id = models.PositiveIntegerField(blank=True, null=True)
-    user_name = models.CharField(max_length=200, blank=True, null=True)  # Cached user name for reporting
-
-    # What type of entity and action
-    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPE_CHOICES)
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
-
-    # The item affected (reference to the entity)
-    item_id = models.PositiveIntegerField()  # ID of the asset, component, audit, etc.
-    item_identifier = models.CharField(max_length=100, blank=True, null=True)  # e.g., asset_id like "AST-20251208-00001-ABCD"
-    item_name = models.CharField(max_length=200, blank=True, null=True)  # Cached name for reporting
-
-    # For checkout/checkin actions - the person/entity involved
-    target_id = models.PositiveIntegerField(blank=True, null=True)  # e.g., checkout_to user ID
-    target_name = models.CharField(max_length=200, blank=True, null=True)  # Cached name like "John Doe"
-
-    # Additional notes or changes description
+    
+    user_id = models.PositiveIntegerField()
+    module = models.CharField(max_length=100)
+    action = models.CharField(max_length=15, choices=ACTION_CHOICE)
+    item_id = models.PositiveIntegerField()
+    item_name = models.CharField(max_length=100)
+    target_user_id = models.PositiveIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-
-    # Soft delete
-    is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-datetime']
-        indexes = [
-            models.Index(fields=['-datetime']),
-            models.Index(fields=['activity_type']),
-            models.Index(fields=['action']),
-            models.Index(fields=['user_id']),
-            models.Index(fields=['item_id']),
-        ]
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.action} {self.activity_type} - {self.item_identifier or self.item_id} by User {self.user_id}"
+        return f"{self.action} - {self.item_name}"
