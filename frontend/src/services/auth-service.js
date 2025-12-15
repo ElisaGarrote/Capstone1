@@ -31,13 +31,15 @@ class AuthService {
 
         // Store the user info in session storage
         const currentUser = await this.getCurrrentUser();
-        sessionStorage.setItem("user", JSON.stringify(currentUser));
-        console.log("User info stored in session storage!");
+        // sessionStorage.setItem("user", JSON.stringify(currentUser));
+        // console.log("User info stored in session storage!");
+
+        return currentUser;
       } else {
         console.log("No access token in response!");
       }
 
-      return true;
+      return false;
     } catch (error) {
       console.error("Login failed", error);
       throw error;
@@ -114,7 +116,6 @@ class AuthService {
   // Get the Autorization headers
   getAuthHeader() {
     const token = this.getAccessToken();
-
     return {
       "Content-Type": "application/json",
       Accept: "application/json",

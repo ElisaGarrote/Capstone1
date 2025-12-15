@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { selectUser } from "../features/counter/userSlice";
 import NavBar from "../components/NavBar";
 import authService from "../services/auth-service";
 import DefaultProfile from "../assets/img/default-profile.svg";
@@ -14,30 +16,32 @@ export default function ManageProfile() {
     department: "",
     email: "",
     password: "",
-    image: null
+    image: null,
   });
+
+  const user = useSelector(selectUser);
 
   useEffect(() => {
     // Load user information from auth service
-    const currentUser = authService.getUserInfo();
+    // const currentUser = authService.getUserInfo();
     setUserInfo({
-      first_name: currentUser.first_name || "",
-      middle_name: currentUser.middle_name || "",
-      last_name: currentUser.last_name || "",
-      suffix: currentUser.suffix || "",
-      company_id: currentUser.company_id || "",
-      department: currentUser.department || "",
-      email: currentUser.email || "",
+      first_name: user.firstName || "",
+      middle_name: user.middleName || "",
+      last_name: user.lastName || "",
+      suffix: user.suffix || "",
+      company_id: user.company_id || "",
+      department: user.department || "",
+      email: user.email || "",
       password: "",
-      image: currentUser.image || null
+      image: user.image || null,
     });
   }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setUserInfo(prev => ({
+    setUserInfo((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -46,9 +50,9 @@ export default function ManageProfile() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setUserInfo(prev => ({
+        setUserInfo((prev) => ({
           ...prev,
-          image: e.target.result
+          image: e.target.result,
         }));
       };
       reader.readAsDataURL(file);
@@ -68,15 +72,15 @@ export default function ManageProfile() {
       <main className="manage-profile-page">
         <div className="manage-profile-container">
           <h1>Manage Profile</h1>
-          
+
           <div className="profile-content">
             <div className="profile-left">
               <div className="profile-card">
                 <div className="profile-image-section">
                   <div className="profile-image-container">
-                    <img 
-                      src={userInfo.image || DefaultProfile} 
-                      alt="Profile" 
+                    <img
+                      src={userInfo.image || DefaultProfile}
+                      alt="Profile"
                       className="profile-image"
                     />
                   </div>
@@ -85,19 +89,28 @@ export default function ManageProfile() {
                     id="profile-image-input"
                     accept="image/*"
                     onChange={handleImageChange}
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                   />
-                  <label htmlFor="profile-image-input" className="change-image-btn">
+                  <label
+                    htmlFor="profile-image-input"
+                    className="change-image-btn"
+                  >
                     Change Photo
                   </label>
                 </div>
-                
+
                 <div className="profile-info">
-                  <h3>{userInfo.first_name} {userInfo.last_name}</h3>
+                  <h3>
+                    {userInfo.first_name} {userInfo.last_name}
+                  </h3>
                   <div className="profile-details">
-                    <p><strong>Position:</strong></p>
+                    <p>
+                      <strong>Position:</strong>
+                    </p>
                     <p>{userInfo.department || "Not specified"}</p>
-                    <p><strong>Department:</strong></p>
+                    <p>
+                      <strong>Department:</strong>
+                    </p>
                     <p>{userInfo.department || "Not specified"}</p>
                   </div>
                 </div>
@@ -108,7 +121,7 @@ export default function ManageProfile() {
               <form onSubmit={handleSaveChanges}>
                 <div className="profile-settings-card">
                   <h2>Profile Settings</h2>
-                  
+
                   <div className="form-grid">
                     <div className="form-group">
                       <label>First Name</label>
@@ -184,7 +197,7 @@ export default function ManageProfile() {
 
                 <div className="authentication-card">
                   <h2>Authentication Details</h2>
-                  
+
                   <div className="form-group">
                     <label>Email Address</label>
                     <input
