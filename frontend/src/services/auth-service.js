@@ -1,7 +1,7 @@
-//const API_URL_AUTH = "https://authentication-service-production-d804.up.railway.app/auth/";
-//const API_URL_USER = "https://authentication-service-production-d804.up.railway.app/users/";
-const API_URL_AUTH = "http://127.0.0.1:8001/auth/";
-const API_URL_USER = "http://127.0.0.1:8001/users/";
+// Authentication service URLs - uses environment variable for API Gateway support
+const AUTH_BASE_URL = import.meta.env.VITE_AUTH_API_URL || "http://127.0.0.1:8001/";
+const API_URL_AUTH = `${AUTH_BASE_URL}auth/`;
+const API_URL_USER = `${AUTH_BASE_URL}users/`;
 
 class AuthService {
   // Login user and store tokens

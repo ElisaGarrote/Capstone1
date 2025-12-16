@@ -7,10 +7,6 @@
 # Use seed_all command
 docker exec -it backend-dev python manage.py seed_all --clear
 
-# Or seed individually (assets will auto-seed products if needed)
-docker exec -it backend-dev python manage.py seed_assets --clear
-```
-
 ### Seed Specific Data
 ```bash
 # Products only
