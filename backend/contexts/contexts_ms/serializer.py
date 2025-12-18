@@ -82,31 +82,34 @@ class CategorySerializer(serializers.ModelSerializer):
         """Return number of assets referencing this category, or None if unknown."""
         # Prefer batched counts supplied by the view via serializer context
         try:
-            if getattr(obj, 'type', None) != 'asset':
-                return None
             usage_map = self.context.get('category_usage') if isinstance(self.context, dict) else None
             if isinstance(usage_map, dict) and obj.id in usage_map:
                 val = usage_map.get(obj.id)
                 # asset_count expected in the assets service response
-                return val.get('asset_count') if isinstance(val, dict) else None
+                if isinstance(val, dict) and 'asset_count' in val:
+                    return int(val.get('asset_count') or 0)
+                # older responses might include asset_ids array
+                if isinstance(val, dict) and 'asset_ids' in val:
+                    return int(len(val.get('asset_ids') or []))
+                return 0
             # Fallback to per-item call
-            return count_assets_by_category(obj.id)
+            return int(count_assets_by_category(obj.id) or 0)
         except Exception:
             return None
 
     def get_component_count(self, obj):
         """Return number of components referencing this category, or None if unknown."""
         try:
-            if getattr(obj, 'type', None) != 'component':
-                return None
             usage_map = self.context.get('category_usage') if isinstance(self.context, dict) else None
             if isinstance(usage_map, dict) and obj.id in usage_map:
                 val = usage_map.get(obj.id)
                 # component_ids is an array in the assets response
                 if isinstance(val, dict) and 'component_ids' in val:
-                    return len(val.get('component_ids') or [])
-                return None
-            return count_components_by_category(obj.id)
+                    return int(len(val.get('component_ids') or []))
+                if isinstance(val, dict) and 'component_count' in val:
+                    return int(val.get('component_count') or 0)
+                return 0
+            return int(count_components_by_category(obj.id) or 0)
         except Exception:
             return None
 
@@ -429,6 +432,7 @@ class SupplierNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
         fields = ['id', 'name']
+        
 class ManufacturerNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Manufacturer

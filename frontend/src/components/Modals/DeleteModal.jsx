@@ -22,22 +22,80 @@ export default function ConfirmationModal({
   */
 
   const [isDeleting, setDeleting] = useState(false);
+  const [serverMessage, setServerMessage] = useState(null);
 
   // Handle compatibility with different prop patterns
   const handleClose = closeModal || onCancel;
   const handleConfirm = async () => {
+    setServerMessage(null);
+    // Prefer the modern `onConfirm` callback (page provides deletion logic)
+    if (onConfirm) {
+      setDeleting(true);
+      try {
+        const result = await onConfirm();
+        // If the handler returns a structured result, show server message and keep modal open on failure
+        if (result && (result.ok === false || (result.data && result.data.skipped && Object.keys(result.data.skipped).length))) {
+          const payload = result.data || result;
+          const msg = payload.message || payload.detail || payload.error || JSON.stringify(payload);
+          setServerMessage(msg);
+          if (onDeleteFail) onDeleteFail(payload);
+          return;
+        }
+        // success path: close modal
+        if (closeModal) closeModal();
+      } catch (err) {
+        console.error("onConfirm failed", err);
+        setServerMessage(err?.message || "Delete failed");
+        if (onDeleteFail) onDeleteFail(err);
+      } finally {
+        setDeleting(false);
+      }
+      return;
+    }
+
+    // Backwards-compat: if a confirmDelete prop exists, call it and interpret structured result
     if (confirmDelete) {
       setDeleting(true);
+      try {
+        const result = await confirmDelete();
+        if (result && (result.ok === false || (result.data && result.data.skipped && Object.keys(result.data.skipped).length))) {
+          const payload = result.data || result;
+          const msg = payload.message || payload.detail || payload.error || JSON.stringify(payload);
+          setServerMessage(msg);
+          if (onDeleteFail) onDeleteFail(payload);
+          return;
+        }
+        if (closeModal) closeModal();
+      } catch (err) {
+        console.error("confirmDelete failed", err);
+        setServerMessage(err?.message || "Delete failed");
+        if (onDeleteFail) onDeleteFail(err);
+      } finally {
+        setDeleting(false);
+      }
+      return;
+    }
+
+    // Last resort: attempt to call the endpoint directly only if provided
+    if (!endPoint) {
+      setServerMessage("No endpoint provided for delete action.");
+      return;
+    }
+    setDeleting(true);
+    try {
       const success = await handleDelete(endPoint);
       if (success) {
-        await confirmDelete();
         if (closeModal) closeModal();
       } else {
+        setServerMessage("Delete failed");
         if (onDeleteFail) onDeleteFail();
-        if (closeModal) closeModal(); // Always close the modal even on failure
       }
-    } else if (onConfirm) {
-      onConfirm();
+    } catch (err) {
+      console.error("handleConfirm fallback failed", err);
+      setServerMessage(err?.message || "Delete failed");
+      if (onDeleteFail) onDeleteFail(err);
+    } finally {
+      setDeleting(false);
     }
   };
   const handleDelete = async (endPoint) => {
@@ -95,7 +153,7 @@ export default function ConfirmationModal({
   return (
     <section className="delete-modal">
       <div className="overlay" onClick={handleClose}>
-        <div className="content">
+        <div className="content" onClick={(e) => e.stopPropagation()}>
           <h2 className="modal-title">{getActionText()} Confirmation</h2>
           <p className="modal-message">
             Are you sure you want to {getActionText().toLowerCase()} this{" "}
@@ -104,6 +162,9 @@ export default function ConfirmationModal({
               : "user"}
             ? This action cannot be undone.
           </p>
+          {serverMessage && (
+            <div className="server-message">{serverMessage}</div>
+          )}
           <div className="modal-actions">
             <button className="cancel-btn" onClick={handleClose}>
               Cancel

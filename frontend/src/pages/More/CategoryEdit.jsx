@@ -6,7 +6,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
 import DeleteModal from "../../components/Modals/DeleteModal";
-
+import { updateCategory, getCategory, contextsBase } from '../../api/contextsApi'
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
 
@@ -14,24 +14,27 @@ const CategoryEdit = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Retrieve the "category" data value passed from the navigation state.
+  // If the "category" data is not exist, the default value for this is undefined.
+  const category = location.state?.category;
+
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [initialAttachment, setInitialAttachment] = useState(true);
+  const [categoryData, setCategoryData] = useState(category ?? null);
+  const [isInUse, setIsInUse] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-
-  // Retrieve the "category" data value passed from the navigation state.
-  // If the "category" data is not exist, the default value for this is "undifiend".
-  const category = location.state?.category;
 
   console.log("attachment:", attachmentFile);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
-      categoryName: category.name,
-      categoryType: category.type.toLowerCase(),
+      categoryName: category?.name ?? '',
+      categoryType: category?.type ? category.type.toLowerCase() : '',
     },
     mode: "all",
   });
@@ -54,11 +57,23 @@ const CategoryEdit = () => {
   };
 
   const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log("Form submitted:", data, attachmentFile);
+    const form = new FormData()
+    form.append('name', data.categoryName)
+    // type is not editable here, but include for completeness
+    form.append('type', data.categoryType)
+    if (attachmentFile) form.append('logo', attachmentFile)
 
-    // Optional: navigate back to categories view after successful submission
-    navigate("/More/ViewCategories", { state: { updatedCategory: true } });
+    if (category && category.id) {
+      updateCategory(category.id, form)
+        .then(() => navigate('/More/ViewCategories', { state: { updatedCategory: true } }))
+        .catch((err) => {
+          console.error('Failed to update category', err)
+          alert('Failed to update category: ' + (err?.response?.data?.detail || err.message))
+        })
+    } else {
+      // Fallback: navigate back
+      navigate('/More/ViewCategories', { state: { updatedCategory: true } })
+    }
   };
 
   console.log("initial:", initialAttachment);
@@ -68,6 +83,40 @@ const CategoryEdit = () => {
     console.log("Deleting category:", category.id);
     navigate("/More/ViewCategories");
   };
+
+  // Build an absolute image URL for logos returned as relative paths
+  const buildImageUrl = (logoPath) => {
+    if (!logoPath) return null
+    if (typeof logoPath !== 'string') return null
+    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) return logoPath
+    // Ensure no double-slash when joining
+    const base = contextsBase ? contextsBase.replace(/\/$/, '') : ''
+    return base + (logoPath.startsWith('/') ? logoPath : '/' + logoPath)
+  }
+
+  // Fetch fresh category details (including asset/component counts) to decide if type is editable
+  useEffect(() => {
+    let mounted = true
+    const id = category?.id
+    if (!id) return
+    getCategory(id)
+      .then((data) => {
+        if (!mounted) return
+        setCategoryData(data)
+        // reset form values in case we fetched newer values
+        reset({
+          categoryName: data.name || '',
+          categoryType: data.type ? data.type.toLowerCase() : '',
+        })
+        const assetCount = Number(data.asset_count || 0)
+        const compCount = Number(data.component_count || 0)
+        setIsInUse(assetCount > 0 || compCount > 0)
+      })
+      .catch((err) => {
+        console.error('Failed to load category details', err)
+      })
+    return () => { mounted = false }
+  }, [category, reset])
 
   return (
     <>
@@ -120,8 +169,8 @@ const CategoryEdit = () => {
                   <span className="required-asterisk">*</span>
                 </label>
                 <select
-                  disabled
-                  title="Cannot change category type"
+                  disabled={isInUse}
+                  title={isInUse ? "Cannot change category type while category is in use" : ""}
                   className={errors.categoryType ? "input-error" : ""}
                   {...register("categoryType", {
                     required: "Category Type is required",
@@ -143,28 +192,30 @@ const CategoryEdit = () => {
 
               <fieldset>
                 <label>Icon</label>
-                {attachmentFile || initialAttachment ? (
-                  <div className="image-selected">
-                    <img
-                      // src={category.icon}
-                      src={
-                        initialAttachment
-                          ? category.icon
-                          : URL.createObjectURL(attachmentFile)
-                      }
-                      alt="Selected icon"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAttachmentFile(null);
-                        setInitialAttachment(false);
-                      }}
-                    >
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
-                ) : (
+                {(() => {
+                  const existingImage = (categoryData?.logo ?? categoryData?.icon ?? category?.logo ?? category?.icon)
+                  const imageSrc = attachmentFile
+                    ? URL.createObjectURL(attachmentFile)
+                    : (initialAttachment ? buildImageUrl(existingImage) : null)
+
+                  if (imageSrc) {
+                    return (
+                      <div className="image-selected">
+                        <img src={imageSrc} alt="Selected icon" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAttachmentFile(null);
+                            setInitialAttachment(false);
+                          }}
+                        >
+                          <img src={CloseIcon} alt="Remove" />
+                        </button>
+                      </div>
+                    )
+                  }
+
+                  return (
                   <label className="upload-image-btn">
                     Choose File
                     <input
@@ -174,7 +225,8 @@ const CategoryEdit = () => {
                       style={{ display: "none" }}
                     />
                   </label>
-                )}
+                  )
+                })()}
                 <small className="file-size-info">
                   Maximum file size must be 5MB
                 </small>

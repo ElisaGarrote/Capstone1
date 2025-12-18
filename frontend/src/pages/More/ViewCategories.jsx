@@ -7,98 +7,11 @@ import CategoryFilterModal from "../../components/Modals/CategoryFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
-
 import Footer from "../../components/Footer";
-
 import "../../styles/Category.css";
+import { fetchCategories, contextsBase, deleteCategory, bulkDeleteCategories } from '../../api/contextsApi'
 
-// icons
-import keyboardIcon from "../../assets/img/keyboard_Icon.png";
-import chargerIcon from "../../assets/img/charger_Icon.png";
-import cablesIcon from "../../assets/img/cables_Icon.png";
-import paperprinterIcon from "../../assets/img/paperprinter_Icon.png";
-import printerinkIcon from "../../assets/img/printerink_Icon.png";
-
-// mock data
-const categories = [
-  {
-    id: 1,
-    icon: cablesIcon,
-    name: "Cables",
-    type: "Accessory",
-    quantity: 2,
-  },
-  {
-    id: 2,
-    icon: chargerIcon,
-    name: "Charger",
-    type: "Accessory",
-    quantity: 1,
-  },
-  {
-    id: 3,
-    icon: keyboardIcon,
-    name: "Keyboards",
-    type: "Accessory",
-    quantity: 2,
-  },
-  {
-    id: 4,
-    icon: paperprinterIcon,
-    name: "Printer Paper",
-    type: "Consumable",
-    quantity: 262,
-  },
-  {
-    id: 5,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 6,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 7,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 8,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 9,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 10,
-    icon: printerinkIcon,
-    name: "Printer Ink",
-    type: "Consumable",
-    quantity: 95,
-  },
-  {
-    id: 11,
-    icon: printerinkIcon,
-    name: "Printer",
-    type: "Consumable",
-    quantity: 95,
-  },
-];
+// categories will be fetched from contexts backend
 
 const filterConfig = [
   {
@@ -141,6 +54,23 @@ function TableHeader({ allSelected, onSelectAll }) {
 function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  // Build image URL: API returns field `logo` (not `icon`).
+  // If `logo` is a relative path, prefix it with `contextsBase` so the browser
+  // requests the image from the contexts service rather than the frontend origin.
+  const rawLogo = category.logo ?? category.icon ?? null
+  let logoUrl = null
+  if (rawLogo) {
+    // Absolute URLs (http(s)://) should be used as-is
+    if (/^https?:\/\//i.test(rawLogo)) {
+      logoUrl = rawLogo
+    } else if (rawLogo.startsWith('/')) {
+      // contextsBase may be empty or end with a slash
+      logoUrl = (contextsBase || '').replace(/\/$/, '') + rawLogo
+    } else {
+      // relative path without leading slash — treat similarly
+      logoUrl = (contextsBase || '').replace(/\/$/, '') + '/' + rawLogo
+    }
+  }
 
   return (
     <tr>
@@ -153,19 +83,21 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
       </td>
       <td>
         <div className="category-name">
-          <img src={category.icon} alt={category.name} />
+          <img src={logoUrl ?? DefaultImage} alt={category.name} />
           {category.name}
         </div>
       </td>
       <td>{category.type}</td>
-      <td>{category.quantity}</td>
+      <td>
+        {category.type === 'asset' ? (category.asset_count ?? 0) : category.type === 'component' ? (category.component_count ?? 0) : ''}
+      </td>
       <td>
         <section className="action-button-section">
           <button
             title="Edit"
             className="action-button"
             onClick={() =>
-              navigate("/More/CategoryEdit", { state: { category } })
+              navigate('/More/CategoryEdit', { state: { category } })
             }
           >
             <i className="fas fa-edit"></i>
@@ -180,7 +112,7 @@ function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
         </section>
       </td>
     </tr>
-  );
+  )
 }
 
 export default function Category() {
@@ -202,23 +134,43 @@ export default function Category() {
 
   // filter state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState(categories);
+  const [fetchedCategories, setFetchedCategories] = useState([])
+  const [filteredData, setFilteredData] = useState([]);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Fetch categories from contexts backend (minimal fields)
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+          // Request both counts; serializer will provide numeric values (0 when none)
+          const data = await fetchCategories({ fields: 'id,name,type,asset_count,component_count', page_size: 500 })
+        if (!mounted) return
+        setFetchedCategories(data)
+        setFilteredData(data)
+      } catch (err) {
+        console.error('Failed to fetch categories', err)
+        setFetchedCategories([])
+        setFilteredData([])
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
+
   // Apply filters to data
   const applyFilters = (filters) => {
-    let filtered = [...categories];
+    let filtered = [...fetchedCategories]
 
     // Filter by Name
-    if (filters.name && filters.name.trim() !== "") {
+    if (filters.name && filters.name.trim() !== '') {
       filtered = filtered.filter((category) =>
-        category.name?.toLowerCase().includes(filters.name.toLowerCase())
-      );
+        (category.name || '').toLowerCase().includes(filters.name.toLowerCase())
+      )
     }
 
-    return filtered;
-  };
+    return filtered
+  }
 
   // Handle filter apply
   const handleApplyFilter = (filters) => {
@@ -328,19 +280,36 @@ export default function Category() {
     setDeleteTarget(null);
   };
 
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single category id:", deleteTarget);
-      setSuccessMessage("Category deleted successfully!");
-    } else {
-      console.log("Deleting multiple category ids:", selectedIds);
-      if (selectedIds.length > 0) {
-        setSuccessMessage("Categories deleted successfully!");
+  const confirmDelete = async () => {
+    try {
+      if (deleteTarget) {
+        await deleteCategory(deleteTarget);
+        setSuccessMessage("Category deleted successfully!");
+      } else {
+        if (selectedIds.length > 0) {
+          await bulkDeleteCategories(selectedIds);
+          setSuccessMessage("Categories deleted successfully!");
+        }
+        setSelectedIds([]);
       }
-      setSelectedIds([]);
+
+      // Refresh the local list after deletion
+      try {
+        const data = await fetchCategories({ fields: 'id,name,type,asset_count,component_count', page_size: 500 })
+        setFetchedCategories(data)
+        setFilteredData(data)
+      } catch (err) {
+        console.error('Failed to refresh categories after delete', err)
+      }
+    } catch (err) {
+      console.error('Delete failed', err)
+      const msg = err?.response?.data?.detail || err?.response?.data || err.message || 'Delete failed.'
+      setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg))
+      setTimeout(() => setErrorMessage(''), 5000)
+    } finally {
+      closeDeleteModal();
+      setTimeout(() => setSuccessMessage(""), 5000);
     }
-    setTimeout(() => setSuccessMessage(""), 5000);
-    closeDeleteModal();
   };
 
   // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.

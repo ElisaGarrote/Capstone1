@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { createCategory } from '../../api/contextsApi'
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -57,11 +58,20 @@ const CategoryRegistration = () => {
   };
 
   const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log("Form submitted:", data, attachmentFile);
+    // Build payload as FormData to support file upload
+    const form = new FormData()
+    form.append('name', data.categoryName)
+    form.append('type', data.categoryType)
+    if (attachmentFile) form.append('logo', attachmentFile)
 
-    // Optional: navigate back to categories view after successful submission
-    navigate("/More/ViewCategories", { state: { addedCategory: true } });
+    createCategory(form)
+      .then(() => {
+        navigate("/More/ViewCategories", { state: { addedCategory: true } })
+      })
+      .catch((err) => {
+        console.error('Failed to create category', err)
+        alert('Failed to create category: ' + (err?.response?.data?.detail || err.message))
+      })
   };
 
   const handleImportFile = (e) => {

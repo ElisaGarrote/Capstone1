@@ -19,7 +19,7 @@ function Dashboard() {
   useEffect(() => {
     async function loadDashboardStats() {
       try {
-        const stats = await assetsService.fetchDashboardStats();
+        const stats = await fetchDashboardStats();
 
         const cards = [
           { number: stats.due_for_return, title: 'Due for Return' },
