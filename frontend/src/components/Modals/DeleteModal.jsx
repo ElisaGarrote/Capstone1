@@ -36,6 +36,12 @@ export default function ConfirmationModal({
         // If the handler returns a structured result, show server message and keep modal open on failure
         if (result && (result.ok === false || (result.data && result.data.skipped && Object.keys(result.data.skipped).length))) {
           const payload = result.data || result;
+          // If the backend signals 'in_use' or 'skipped', do not show message in modal.
+          if (payload && (payload.in_use || (payload.skipped && Object.keys(payload.skipped).length))) {
+            if (onDeleteFail) onDeleteFail(payload);
+            if (closeModal) closeModal();
+            return;
+          }
           const msg = payload.message || payload.detail || payload.error || JSON.stringify(payload);
           setServerMessage(msg);
           if (onDeleteFail) onDeleteFail(payload);
@@ -60,6 +66,11 @@ export default function ConfirmationModal({
         const result = await confirmDelete();
         if (result && (result.ok === false || (result.data && result.data.skipped && Object.keys(result.data.skipped).length))) {
           const payload = result.data || result;
+          if (payload && (payload.in_use || (payload.skipped && Object.keys(payload.skipped).length))) {
+            if (onDeleteFail) onDeleteFail(payload);
+            if (closeModal) closeModal();
+            return;
+          }
           const msg = payload.message || payload.detail || payload.error || JSON.stringify(payload);
           setServerMessage(msg);
           if (onDeleteFail) onDeleteFail(payload);

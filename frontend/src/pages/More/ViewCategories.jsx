@@ -283,11 +283,26 @@ export default function Category() {
   const confirmDelete = async () => {
     try {
       if (deleteTarget) {
-        await deleteCategory(deleteTarget);
+        const resp = await deleteCategory(deleteTarget);
+        // If backend indicates the item is in use or skipped, show singular in-use alert
+        if (resp && (resp.in_use || (resp.skipped && Object.keys(resp.skipped).length))) {
+          const msg = `The selected category cannot be deleted. Currently in use!`;
+          setErrorMessage(msg);
+          setTimeout(() => setErrorMessage(''), 5000);
+          return { ok: false, data: { in_use: true } };
+        }
         setSuccessMessage("Category deleted successfully!");
       } else {
         if (selectedIds.length > 0) {
-          await bulkDeleteCategories(selectedIds);
+          const resp = await bulkDeleteCategories(selectedIds);
+          // If backend skipped some items, signal the modal to display usage message
+          if (resp && resp.skipped && Object.keys(resp.skipped).length > 0) {
+            // Show generic in-use alert (plural since multiple selected)
+            const msg = `The selected categories cannot be deleted. Currently in use!`;
+            setErrorMessage(msg);
+            setTimeout(() => setErrorMessage(''), 5000);
+            return { ok: false, data: { in_use: true } };
+          }
           setSuccessMessage("Categories deleted successfully!");
         }
         setSelectedIds([]);
@@ -301,14 +316,32 @@ export default function Category() {
       } catch (err) {
         console.error('Failed to refresh categories after delete', err)
       }
-    } catch (err) {
-      console.error('Delete failed', err)
-      const msg = err?.response?.data?.detail || err?.response?.data || err.message || 'Delete failed.'
-      setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg))
-      setTimeout(() => setErrorMessage(''), 5000)
-    } finally {
+
+      // Success — close modal and return ok
       closeDeleteModal();
       setTimeout(() => setSuccessMessage(""), 5000);
+      return { ok: true, data: null };
+    } catch (err) {
+      console.error('Delete failed', err)
+      const respData = err?.response?.data;
+      // Detect usage-related errors (backend returns ValidationError with 'error' or 'detail')
+      const isUsage = respData && (respData.in_use || respData.skipped || (respData.error && typeof respData.error === 'string' && respData.error.toLowerCase().includes('use')) || (respData.detail && typeof respData.detail === 'string' && respData.detail.toLowerCase().includes('use')));
+      if (isUsage) {
+        // Set page-level generic in-use alert. Use singular/plural depending on context.
+        const isMultiple = !deleteTarget && selectedIds && selectedIds.length > 1;
+        const msg = isMultiple
+          ? `The selected categories cannot be deleted. Currently in use!`
+          : `The selected category cannot be deleted. Currently in use!`;
+        setErrorMessage(msg);
+        setTimeout(() => setErrorMessage(''), 5000);
+        // Tell the modal/page that deletion was blocked
+        return { ok: false, data: { in_use: true } };
+      }
+
+      const msg = respData?.detail || respData || err.message || 'Delete failed.'
+      setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg))
+      setTimeout(() => setErrorMessage(''), 5000)
+      return { ok: false, data: { error: msg } };
     }
   };
 
