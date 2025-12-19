@@ -10,6 +10,7 @@ import PlusIcon from "../../assets/icons/plus.svg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import CloseIcon from "../../assets/icons/close.svg";
+import { fetchSupplierById, createSupplier, updateSupplier } from "../../services/contexts-service";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -40,6 +41,7 @@ const SupplierRegistration = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
@@ -92,6 +94,38 @@ const SupplierRegistration = () => {
     initialize();
   }, [id, setValue]);
   */
+  useEffect(() => {
+    const initialize = async () => {
+      if (!id) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        setIsLoading(true);
+        const supplierData = await fetchSupplierById(id);
+        if (!supplierData) throw new Error('Failed to fetch supplier details');
+
+        setValue('name', supplierData.name || '');
+        setValue('address', supplierData.address || '');
+        setValue('city', supplierData.city || '');
+        setValue('zip', supplierData.zip || '');
+        setValue('state', supplierData.state_province || '');
+        setValue('country', supplierData.country || '');
+        setValue('contact_name', supplierData.contact_name || '');
+        setValue('phone_number', supplierData.phone_number || '');
+        setValue('fax', supplierData.fax || '');
+        setValue('email', supplierData.email || '');
+        setValue('URL', supplierData.url || supplierData.URL || '');
+        setValue('notes', supplierData.notes || '');
+        if (supplierData.logo) setPreviewImage(supplierData.logo);
+      } catch (err) {
+        setErrorMessage(err?.message || 'Failed to initialize form');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    initialize();
+  }, [id, setValue]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -119,64 +153,45 @@ const SupplierRegistration = () => {
   const state = supplier ? { updatedSupplier: true } : { addedSupplier: true };
 
   const onSubmit = async (data) => {
-    /* BACKEND INTEGRATION HERE
     try {
-      if (!id) {
-        const existingSuppliers = await contextsService.fetchAllSupplierNames();
-        if (!existingSuppliers)
-          throw new Error("Failed to fetch supplier names for duplicate check");
-
-        const isDuplicate = existingSuppliers.suppliers.some(
-          (supplier) => supplier.name.toLowerCase() === data.name.toLowerCase()
-        );
-        if (isDuplicate) {
-          setErrorMessage(
-            "A supplier with this name already exists. Please use a different name."
-          );
-          setTimeout(() => setErrorMessage(""), 5000);
-          return;
-        }
-      }
-
+      setIsLoading(true);
       const formData = new FormData();
-      formData.append("name", data.name);
-      formData.append("address", data.address);
-      formData.append("city", data.city);
-      formData.append("zip", data.zip);
-      formData.append("contact_name", data.contact_name);
-      formData.append("phone_number", data.phone_number);
-      formData.append("email", data.email);
-      formData.append("URL", data.URL || "");
-      formData.append("notes", data.notes || "");
-
-      if (selectedImage) formData.append("logo", selectedImage);
-      if (removeImage) formData.append("remove_logo", "true");
+      formData.append('name', data.name);
+      formData.append('address', data.address || '');
+      formData.append('city', data.city || '');
+      formData.append('zip', data.zip || '');
+      formData.append('state_province', data.state || '');
+      formData.append('country', data.country || '');
+      formData.append('contact_name', data.contact_name || '');
+      formData.append('phone_number', data.phone_number || '');
+      formData.append('fax', data.fax || '');
+      formData.append('email', data.email || '');
+      formData.append('url', data.URL || '');
+      formData.append('notes', data.notes || '');
+      if (selectedImage) formData.append('logo', selectedImage);
+      if (removeImage) formData.append('remove_logo', 'true');
 
       let result;
       if (id) {
-        result = await contextsService.updateSupplier(id, formData);
+        result = await updateSupplier(id, formData);
       } else {
-        result = await contextsService.createSupplier(formData);
+        result = await createSupplier(formData);
       }
 
-      if (!result) throw new Error("Failed to save supplier");
+      if (!result) throw new Error('Failed to save supplier');
 
-      navigate("/More/ViewSupplier", {
-        state: {
-          successMessage: `Supplier successfully ${id ? "updated" : "created"}`,
-        },
+      navigate('/More/ViewSupplier', {
+        state: { successMessage: `Supplier successfully ${id ? 'updated' : 'created'}` },
       });
     } catch (error) {
-      const message =
-        typeof error === "string"
-          ? error
-          : error?.error || error?.message || "An unexpected error occurred";
-
+      console.error('Supplier save error', error?.response || error);
+      const payload = error?.response?.data || error?.message || 'An unexpected error occurred';
+      const message = typeof payload === 'object' ? JSON.stringify(payload) : payload;
       setErrorMessage(message);
-      setTimeout(() => setErrorMessage(""), 5000);
+      setTimeout(() => setErrorMessage(''), 8000);
+    } finally {
+      setIsLoading(false);
     }
-    */
-    navigate("/More/ViewSupplier", { state });
   };
 
   const handleImportFile = (e) => {

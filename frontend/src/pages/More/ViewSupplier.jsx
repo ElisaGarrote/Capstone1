@@ -9,8 +9,7 @@ import Alert from "../../components/Alert";
 import Pagination from "../../components/Pagination";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import MockupData from "../../data/mockData/more/supplier-mockup-data.json";
-import { fetchAllCategories } from "../../services/contexts-service";
+import { fetchAllSuppliers, deleteSupplier, bulkDeleteSuppliers } from "../../services/contexts-service";
 import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/ViewSupplier.css";
@@ -146,7 +145,7 @@ export default function ViewSupplier() {
 
   // filter state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState(MockupData);
+  const [filteredData, setFilteredData] = useState([]);
   const [appliedFilters, setAppliedFilters] = useState({});
 
 
@@ -259,30 +258,29 @@ export default function ViewSupplier() {
   const addedSupplier = location.state?.addedSupplier;
   const updatedSupplier = location.state?.updatedSupplier;
 
-  /* BACKEND INTEGRATION HERE
-  const contextServiceUrl =
-    "https://contexts-service-production.up.railway.app";
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const suppRes = await fetchAllCategories();
+        const suppRes = await fetchAllSuppliers();
         const mapped = (suppRes || []).map((supp) => ({
           id: supp.id,
           name: supp.name,
-          address: supp.address,
-          city: supp.city,
-          zip: supp.zip,
-          contactName: supp.contact_name,
-          phoneNumber: supp.phone_number,
-          email: supp.email,
-          url: supp.URL,
-          notes: supp.notes,
-          logo: supp.logo,
+          address: supp.address || supp.street || "",
+          city: supp.city || "",
+          state: supp.state_province || supp.state || "",
+          zip: supp.zip || "",
+          country: supp.country || "",
+          contactName: supp.contact_name || supp.contactName || "",
+          phoneNumber: supp.phone_number || supp.phoneNumber || "",
+          email: supp.email || "",
+          url: supp.url || supp.URL || supp.website || "",
+          notes: supp.notes || "",
+          logo: supp.logo || null,
         }));
-        const sorted = mapped.sort((a, b) => a.name.localeCompare(b.name));
+        const sorted = mapped.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
         setSuppliers(sorted);
+        setFilteredData(sorted);
       } catch (error) {
         console.error("Fetch error:", error);
         setErrorMessage("Failed to load data.");
@@ -316,7 +314,7 @@ export default function ViewSupplier() {
   const fetchSuppliers = async () => {
     setLoading(true);
     try {
-      const res = await contextsService.fetchAllSuppliers();
+      const res = await fetchAllSuppliers();
       const mapped = (res || []).map((supp) => ({
         id: supp.id,
         name: supp.name,
@@ -336,7 +334,7 @@ export default function ViewSupplier() {
       setLoading(false);
     }
   };
-  */
+  
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -392,18 +390,56 @@ export default function ViewSupplier() {
   };
 
   const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single supplier id:", deleteTarget);
-      setSuccessMessage("Supplier deleted successfully!");
-    } else {
-      console.log("Deleting multiple supplier ids:", checkedItems);
-      if (checkedItems.length > 0) {
-        setSuccessMessage("Suppliers deleted successfully!");
+    return (async () => {
+      try {
+        if (deleteTarget) {
+          // Single delete: call API and only remove from table on success
+          const res = await deleteSupplier(deleteTarget);
+          // deleteSupplier resolves on 2xx; if backend returned structured payload, try to use it
+          setSuppliers((prev) => prev.filter((s) => s.id !== deleteTarget));
+          setFilteredData((prev) => prev.filter((s) => s.id !== deleteTarget));
+          setSuccessMessage(res?.detail || 'Supplier deleted successfully!');
+        } else {
+          if (!checkedItems || checkedItems.length === 0) {
+            return { ok: false, data: { detail: 'No suppliers selected to delete' } };
+          }
+          const res = await bulkDeleteSuppliers(checkedItems);
+          // Remove only ids reported as deleted by backend; keep skipped ones
+          const deletedIds = (res && Array.isArray(res.deleted)) ? res.deleted : [];
+          const skippedCount = res && res.skipped ? Object.keys(res.skipped).length : 0;
+
+          if (deletedIds.length > 0) {
+            setSuppliers((prev) => prev.filter((s) => !deletedIds.includes(s.id)));
+            setFilteredData((prev) => prev.filter((s) => !deletedIds.includes(s.id)));
+          }
+
+          // If there are any skipped items, do NOT set success/error here; return structured result
+          // so DeleteModal's onDeleteFail will render the combined message (deleted+skipped).
+          if (skippedCount > 0) {
+            setCheckedItems([]);
+            return { ok: false, data: res };
+          }
+
+          // No skipped items -> show success for deleted count
+          const deletedCount = deletedIds.length || 0;
+          if (deletedCount > 0) {
+            setSuccessMessage(`${deletedCount} supplier(s) deleted successfully!`);
+            setTimeout(() => setSuccessMessage(''), 5000);
+          }
+          setCheckedItems([]);
+        }
+        setTimeout(() => setSuccessMessage(''), 5000);
+        return { ok: true };
+      } catch (err) {
+        console.error('Delete error', err?.response || err);
+        const payload = err?.response?.data || { detail: err?.message || 'Delete failed' };
+        setErrorMessage(typeof payload === 'object' ? JSON.stringify(payload) : payload);
+        setTimeout(() => setErrorMessage(''), 8000);
+        return { ok: false, data: payload };
+      } finally {
+        closeDeleteModal();
       }
-      setCheckedItems([]);
-    }
-    setTimeout(() => setSuccessMessage(""), 5000);
-    closeDeleteModal();
+    })();
   };
 
   const handleExport = () => {
@@ -450,6 +486,66 @@ export default function ViewSupplier() {
           closeModal={closeDeleteModal}
           actionType="delete"
           onConfirm={confirmDelete}
+          onDeleteFail={(payload) => {
+            // Normalize payload (handlers sometimes return { ok:false, data: ... })
+            let body = payload;
+            if (payload && payload.data) body = payload.data;
+
+            // If this is a bulk delete summary with deleted/skipped, show a single combined alert
+            if (body && (body.deleted || body.skipped)) {
+              const deletedCount = (body.deleted && body.deleted.length) || 0;
+              const skippedCount = body.skipped ? Object.keys(body.skipped).length : 0;
+              const deletedLabel = deletedCount === 1 ? 'supplier' : 'suppliers';
+              const skippedLabel = skippedCount === 1 ? 'skipped (in use)' : 'skipped (in use)';
+              const parts = [];
+              if (deletedCount > 0) parts.push(`${deletedCount} ${deletedLabel} deleted successfully`);
+              if (skippedCount > 0) parts.push(`${skippedCount} ${skippedLabel}`);
+              const msg = parts.length ? parts.join('; ') + '.' : 'Delete failed.';
+              // Show as successMessage when there were deletions, otherwise errorMessage
+              if (deletedCount > 0) {
+                setSuccessMessage(msg);
+                setTimeout(() => setSuccessMessage(''), 5000);
+              } else {
+                setErrorMessage(msg);
+                setTimeout(() => setErrorMessage(''), 5000);
+              }
+              return;
+            }
+
+            // If backend returned an explicit in-use or cannot-delete message, normalize to short client-friendly message
+            try {
+              const text = (body && (body.detail || body.error || body.message)) || (typeof body === 'string' ? body : null);
+              if (text && /in use|cannot be deleted|cannot delete|currently in use/i.test(text)) {
+                setErrorMessage('The selected supplier cannot be deleted. Currently in use!');
+                setTimeout(() => setErrorMessage(''), 5000);
+                return;
+              }
+            } catch (e) {
+              // fallthrough to generic handling
+            }
+
+            // Fallback: prefer common fields, then skipped map, then fallback to JSON string
+            let msg = null;
+            try {
+              if (!payload) msg = 'Delete failed';
+              else if (typeof payload === 'string') msg = payload;
+              else if (body.detail) msg = body.detail;
+              else if (body.message) msg = body.message;
+              else if (body.error) msg = body.error;
+              else if (body.skipped && typeof body.skipped === 'object') {
+                const vals = Object.values(body.skipped).filter(Boolean);
+                msg = vals.length ? vals.join('; ') : 'Some items could not be deleted.';
+              } else {
+                msg = JSON.stringify(body);
+              }
+            } catch (e) {
+              msg = 'Delete failed';
+            }
+
+            setErrorMessage(msg);
+            setTimeout(() => setErrorMessage(''), 5000);
+          }}
+          selectedCount={deleteTarget ? 1 : checkedItems.length}
           /* BACKEND INTEGRATION HERE
           confirmDelete={async () => {
             await fetchSuppliers();

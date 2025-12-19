@@ -53,6 +53,23 @@ export async function createSupplier(data) {
   const res = await contextsAxios.post("suppliers/", data);
   return res.data;
 }
+// UPDATE supplier
+export async function updateSupplier(id, data) {
+  const res = await contextsAxios.put(`suppliers/${id}/`, data);
+  return res.data;
+}
+
+// DELETE supplier
+export async function deleteSupplier(id) {
+  const res = await contextsAxios.delete(`suppliers/${id}/`);
+  return res.data;
+}
+
+// BULK DELETE suppliers
+export async function bulkDeleteSuppliers(ids) {
+  const res = await contextsAxios.post(`suppliers/bulk_delete/`, { ids });
+  return res.data;
+}
 
 /* ===============================
           MANUFACTURER CRUD
