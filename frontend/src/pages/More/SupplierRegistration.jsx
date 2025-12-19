@@ -10,7 +10,7 @@ import PlusIcon from "../../assets/icons/plus.svg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import CloseIcon from "../../assets/icons/close.svg";
-import { fetchSupplierById, createSupplier, updateSupplier } from "../../services/contexts-service";
+import { fetchSupplierById, createSupplier, updateSupplier, importSuppliers } from "../../services/contexts-service";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -21,6 +21,8 @@ const SupplierRegistration = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   // Delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -205,9 +207,36 @@ const SupplierRegistration = () => {
         setTimeout(() => setErrorMessage(""), 5000);
         return;
       }
-      setImportFile(file);
-      // Here you would typically process the Excel file
-      console.log("Import file selected:", file.name);
+      // Upload immediately to the backend import endpoint
+      const formData = new FormData();
+      formData.append('file', file);
+
+      (async () => {
+        try {
+          setIsImporting(true);
+          setSuccessMessage('');
+          setErrorMessage('');
+          const res = await importSuppliers(formData);
+          const created = res?.created || 0;
+          const updated = res?.updated || 0;
+          const errors = res?.errors || [];
+          let msg = `Import complete. Created ${created}. Updated ${updated}.`;
+          if (Array.isArray(errors) && errors.length) {
+            msg += ` ${errors.length} rows failed.`;
+            setErrorMessage(msg);
+          } else {
+            setSuccessMessage(msg);
+          }
+        } catch (err) {
+          const payload = err?.response?.data || err?.message || 'Import failed';
+          const message = typeof payload === 'object' ? JSON.stringify(payload) : payload;
+          setErrorMessage(message);
+        } finally {
+          setIsImporting(false);
+          setImportFile(null);
+          if (typeof e.target !== 'undefined') e.target.value = '';
+        }
+      })();
     }
   };
 
@@ -254,7 +283,20 @@ const SupplierRegistration = () => {
             />
           </section>
 
-          {errorMessage && <Alert type="danger" message={errorMessage} />}
+            {/* Left-side import status: match Manufacturer import UI */}
+            <div style={{ padding: '0 24px', marginTop: 8 }}>
+              <div className="import-status-left" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {isImporting && <span style={{ fontSize: 13, fontWeight: 500 }}>Uploading...</span>}
+                {!isImporting && successMessage && (
+                  <div className="success-message" style={{ fontSize: 13, color: 'green' }}>{successMessage}</div>
+                )}
+                {!isImporting && errorMessage && (
+                  <div className="error-message" style={{ fontSize: 13, color: '#d32f2f' }}>{errorMessage}</div>
+                )}
+              </div>
+            </div>
+
+            {false && errorMessage && <Alert type="danger" message={errorMessage} />}
 
           <form onSubmit={handleSubmit(onSubmit)} className="registration-form">
             <fieldset>
