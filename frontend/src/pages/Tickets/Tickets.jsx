@@ -68,9 +68,8 @@ function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick
       <td>
         <ActionButtons
           showEdit={false}
-          showDelete
+          showDelete={false}
           showView
-          onDeleteClick={() => onDeleteClick(ticket.id)}
           onViewClick={() => onViewClick(ticket)}
         />
       </td>
@@ -364,15 +363,9 @@ const Tickets = () => {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Tickets ({filteredTickets.length})</h2>
+              <h2 className="h2">Approve Tickets ({filteredTickets.length})</h2>
               <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
-                )}
+                  {/* Bulk delete removed for approval workflow */}
                 <input
                   type="search"
                   placeholder="Search..."

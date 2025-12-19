@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
 import ComponentData from "../../data/mockData/components/component-mockup-data.json";
 import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/Registration.css";
@@ -87,15 +88,25 @@ export default function BulkEditComponents() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
-        <main className="main-with-table">
-          <TopSecFormPage
-            root="Components"
-            currentPage="Bulk Edit Components"
-            rootNavigatePage="/components"
-            title="Bulk Edit Components"
-          />
+
+        <main className="registration bulk-edit-components-page">
+          <section className="top">
+            <TopSecFormPage
+              root="Components"
+              currentPage="Bulk Edit Components"
+              rootNavigatePage="/components"
+              title="Bulk Edit Components"
+              rightComponent={
+                <div className="import-section">
+                  <span style={{ fontSize: '0.875rem', color: '#666' }}>
+                    {currentSelectedIds.length} Component{currentSelectedIds.length !== 1 ? 's' : ''} Selected
+                  </span>
+                </div>
+              }
+            />
+          </section>
 
           <section className="components-bulk-selected">
             <h3>Selected Components ({currentSelectedIds.length})</h3>
@@ -120,6 +131,10 @@ export default function BulkEditComponents() {
               )}
             </div>
           </section>
+
+          <p className="components-bulk-note">
+            Note: Fill in only the fields you want to change. Fields left empty will stay unchanged. Use the Remove toggle to clear existing values.
+          </p>
 
           <section className="components-bulk-form-section">
             <form
@@ -237,6 +252,8 @@ export default function BulkEditComponents() {
           </section>
         </main>
       </section>
+
+      <Footer />
     </>
   );
 }

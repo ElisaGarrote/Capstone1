@@ -17,6 +17,7 @@ import { exportToExcel } from "../../utils/exportToExcel";
 import "../../styles/components/Components.css";
 
 function TableHeader({ allSelected, onHeaderChange }) {
+  const navigate = useNavigate();
   return (
     <tr>
       <th>
@@ -28,7 +29,9 @@ function TableHeader({ allSelected, onHeaderChange }) {
       </th>
       <th>IMAGE</th>
       <th>NAME</th>
-      <th>CATEGORY</th>
+      <th>
+        <a className="category-link" onClick={() => navigate("/More/ViewCategories")} role="button">CATEGORY</a>
+      </th>
       <th>MANUFACTURER</th>
       <th>DEPRECIATION</th>
       <th>CHECK-OUT / CHECK-IN</th>
@@ -39,6 +42,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 
 // TableItem component to render each asset row
 function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+  const navigate = useNavigate();
   const baseImage = asset.image
     ? `https://assets-service-production.up.railway.app${asset.image}`
     : DefaultImage;
@@ -63,7 +67,15 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
         />
       </td>
       <td>{asset.name}</td>
-      <td>{asset.category || 'N/A'}</td>
+      <td>
+        <a
+          className="category-link"
+          onClick={() => navigate("/More/ViewCategories", { state: { selectedCategory: asset.category } })}
+          role="button"
+        >
+          {asset.category || 'N/A'}
+        </a>
+      </td>
       <td>{asset.manufacturer || 'N/A'}</td>
       <td>{asset.depreciation || 'N/A'}</td>
 

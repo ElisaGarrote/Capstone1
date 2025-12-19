@@ -206,6 +206,16 @@ export default function Category() {
   const [appliedFilters, setAppliedFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
 
+  // If navigated here with a selectedCategory, pre-fill the search to show it
+  useEffect(() => {
+    const preselected = location.state?.selectedCategory;
+    if (preselected && typeof preselected === "string") {
+      setSearchQuery(preselected);
+      setCurrentPage(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...categories];

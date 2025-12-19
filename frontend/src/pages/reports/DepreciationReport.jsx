@@ -5,7 +5,7 @@ import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Pagination from "../../components/Pagination";
 import DeleteModal from "../../components/Modals/DeleteModal";
-import DepreciationFilter from "../../components/FilterPanel";
+import DepreciationFilterModal from "../../components/Modals/DepreciationFilterModal";
 import Footer from "../../components/Footer";
 import MockupData from "../../data/mockData/reports/depreciation-mockup-data.json";
 
@@ -112,14 +112,63 @@ export default function DepreciationReport() {
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
 
+  // filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState(MockupData);
+
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    if (filters?.status) {
+      filtered = filtered.filter(
+        (row) =>
+          row.statusType?.toLowerCase() === filters.status.value?.toLowerCase()
+      );
+    }
+
+    if (filters?.depreciation) {
+      filtered = filtered.filter(
+        (row) =>
+          row.depreciationName?.toLowerCase() ===
+          String(filters.depreciation.value || "").toLowerCase()
+      );
+    }
+
+    if (
+      filters?.durationMonths &&
+      String(filters.durationMonths).trim() !== ""
+    ) {
+      const duration = parseInt(filters.durationMonths, 10);
+      if (!Number.isNaN(duration)) {
+        filtered = filtered.filter((row) => row.duration === duration);
+      }
+    }
+
+    if (filters?.monthsLeft && String(filters.monthsLeft).trim() !== "") {
+      const monthsLeft = parseInt(filters.monthsLeft, 10);
+      if (!Number.isNaN(monthsLeft)) {
+        filtered = filtered.filter((row) => row.monthsLeft === monthsLeft);
+      }
+    }
+
+    return filtered;
+  };
+
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    setFilteredData(applyFilters(filters));
+    setCurrentPage(1);
+  };
+
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
-  // paginate the data
+  // paginate the data (use filteredData so filters apply)
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedDepreciation = MockupData.slice(startIndex, endIndex);
+  const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -149,6 +198,13 @@ export default function DepreciationReport() {
         />
       )}
 
+      <DepreciationFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
+
       <section className="page-layout-with-table">
         <NavBar />
 
@@ -158,19 +214,25 @@ export default function DepreciationReport() {
             <h1>Depreciation Report</h1>
           </section>
 
-          {/* Table Filter */}
-          <DepreciationFilter filters={filterConfig} />
+          {/* Table Filter removed - modal is used via the Filter button in header */}
 
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Asset Depreciation ({MockupData.length})</h2>
+              <h2 className="h2">Asset Depreciation ({filteredData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
                   placeholder="Search..."
                   className="search"
                 />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"
@@ -218,7 +280,7 @@ export default function DepreciationReport() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={MockupData.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

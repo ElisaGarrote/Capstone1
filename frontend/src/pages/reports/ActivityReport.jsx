@@ -3,7 +3,7 @@ import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import MockupData from "../../data/mockData/reports/activity-report-mockup-data.json";
-import DepreciationFilter from "../../components/FilterPanel";
+import ActivityFilterModal from "../../components/Modals/ActivityFilterModal";
 import Pagination from "../../components/Pagination";
 import Footer from "../../components/Footer";
 import { BsKeyboard } from "react-icons/bs";
@@ -124,15 +124,57 @@ export default function ActivityReport() {
   const [exportToggle, setExportToggle] = useState(false);
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
+  const handleToggleFilter = () => setIsFilterModalOpen(true);
+
+  // filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState(MockupData);
+
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    if (filters?.type) {
+      filtered = filtered.filter(
+        (row) => String(row.type || "").toLowerCase() === String(filters.type || "").toLowerCase()
+      );
+    }
+
+    if (filters?.event) {
+      filtered = filtered.filter(
+        (row) => String(row.action || "").toLowerCase() === String(filters.event || "").toLowerCase()
+      );
+    }
+
+    if (filters?.user && String(filters.user).trim() !== "") {
+      filtered = filtered.filter((row) =>
+        String(row.user || "").toLowerCase().includes(String(filters.user).toLowerCase())
+      );
+    }
+
+    if (filters?.tofrom && String(filters.tofrom).trim() !== "") {
+      filtered = filtered.filter((row) =>
+        String(row.to_from || "").toLowerCase().includes(String(filters.tofrom).toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    setFilteredData(applyFilters(filters));
+    setCurrentPage(1);
+  };
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
-  // paginate the data
+  // paginate the data (use filteredData)
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = MockupData.slice(startIndex, endIndex);
+  const paginatedActivity = filteredData.slice(startIndex, endIndex);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -163,15 +205,27 @@ export default function ActivityReport() {
           <h1>Activity Report</h1>
         </section>
 
-        {/* Table Filter */}
-        <DepreciationFilter filters={filterConfig} />
+        {/* Table Filter (modal used via Filter button) */}
 
         <section className="table-layout">
           {/* Table Header */}
           <section className="table-header">
-            <h2 className="h2">Activity Log ({MockupData.length})</h2>
+            <h2 className="h2">Activity Log ({filteredData.length})</h2>
             <section className="table-actions">
               <input type="search" placeholder="Search..." className="search" />
+              <button
+                type="button"
+                className="medium-button-filter"
+                onClick={handleToggleFilter}
+              >
+                Filter
+              </button>
+              <ActivityFilterModal
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+                onApplyFilter={handleApplyFilter}
+                initialFilters={appliedFilters}
+              />
               <div ref={toggleRef}>
                 <MediumButtons
                   type="export"
@@ -219,7 +273,7 @@ export default function ActivityReport() {
             <Pagination
               currentPage={currentPage}
               pageSize={pageSize}
-              totalItems={MockupData.length}
+              totalItems={filteredData.length}
               onPageChange={setCurrentPage}
               onPageSizeChange={setPageSize}
             />

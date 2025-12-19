@@ -71,6 +71,8 @@ export default function CheckOutAsset() {
     fromAsset
   });
 
+  const headerLabel = ticketId ? "Ticket Check-Out" : "Check-Out Asset";
+
 
   const {
     register,
@@ -195,7 +197,7 @@ export default function CheckOutAsset() {
         <section className="top">
           <TopSecFormPage
             root={passedState?.fromAsset ? "Assets" : "Approved Tickets"}
-            currentPage="Check-Out Asset"
+            currentPage={headerLabel}
             rootNavigatePage={passedState?.fromAsset ? "/assets" : "/approved-tickets"}
             title={assetId}
           />

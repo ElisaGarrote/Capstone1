@@ -41,8 +41,8 @@ import CompletedAudits from "./pages/asset-audit/CompletedAudits";
 import PerformAudits from "./pages/asset-audit/PerformAudits";
 import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
 import ViewAudits from "./pages/asset-audit/ViewAudits";
-import Repairs from "./pages/Repair/Repairs";
-import RepairRegistration from "./pages/Repair/RepairRegistration";
+import Repairs from "./pages/Repairs/Repairs";
+import RepairRegistration from "./pages/Repairs/RepairRegistration";
 import Consumables from "./pages/Consumables/Consumables";
 import ConsumablesRegistration from "./pages/Consumables/ConsumablesRegistration";
 import PasswordResetRequest from "./pages/PasswordResetRequest";
@@ -51,11 +51,11 @@ import UpcomingEndOfLife from "./pages/UpcomingEndOfLife";
 import ExpiringWarranties from "./pages/ExpiringWarranties";
 import ReachedEndOfLife from "./pages/ReachedEndOfLife";
 import ExpiredWarranties from "./pages/ExpiredWarranties";
-import AssetReport from "./pages/reports/AssetReport";
-import DepreciationReport from "./pages/reports/DepreciationReport";
-import DueBackReport from "./pages/reports/DueBackReport";
-import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
-import ActivityReport from "./pages/reports/ActivityReport";
+import AssetReport from "./pages/Reports/AssetReport";
+import DepreciationReport from "./pages/Reports/DepreciationReport";
+import DueBackReport from "./pages/Reports/DueBackReport";
+import EndOfLifeWarrantyReport from "./pages/Reports/EndOfLifeWarrantyReport";
+import ActivityReport from "./pages/Reports/ActivityReport";
 import ManageProfile from "./pages/ManageProfile";
 import UserManagement from "./pages/UserManagement";
 import UserManagementViewPage from "./pages/UserManagementViewPage";
@@ -82,6 +82,7 @@ import Depreciations from "./pages/More/Depreciations";
 import DepreciationRegistration from "./pages/More/DepreciationRegistration";
 import DepreciationDetails from "./pages/More/depreciation-details/DepreciationDetails";
 import RecycleBin from "./pages/More/RecycleBin";
+import BulkEditRepairs from "./pages/Repairs/BulkEditRepairs";
 
 function Logout() {
   localStorage.clear();
@@ -292,6 +293,7 @@ function App() {
             path="/repairs/edit/:id"
             element={<RepairRegistration />}
           />
+          <Route path="/repairs/bulk-edit" element={<BulkEditRepairs />} />
           <Route path="/audits/" element={<AssetAudits />} />
           <Route path="/audits/overdue" element={<OverdueAudits />} />
           <Route path="/audits/scheduled" element={<ScheduledAudits />} />

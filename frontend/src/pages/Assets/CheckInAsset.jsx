@@ -61,6 +61,8 @@ export default function CheckInAsset() {
     fromAsset
   } = location.state || {};
 
+  const headerLabel = ticketId ? "Ticket Check-in" : "Check-In Asset";
+
   const {
     register,
     handleSubmit,
@@ -159,7 +161,7 @@ export default function CheckInAsset() {
         <section className="top">
           <TopSecFormPage
             root="Assets"
-            currentPage="Check-In Asset"
+            currentPage={headerLabel}
             rootNavigatePage="/assets"
             title={assetId}
           />

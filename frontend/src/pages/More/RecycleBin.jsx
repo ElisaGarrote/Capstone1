@@ -315,6 +315,10 @@ export default function RecycleBin() {
         <NavBar />
 
         <main className="main-with-table">
+          <section className="page-header">
+            <h1 className="page-title">Recycle Bin</h1>
+          </section>
+
           { /* Tab Navigation */}
           <div className="tab-nav">
             <ul>

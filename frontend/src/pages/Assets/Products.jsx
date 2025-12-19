@@ -20,6 +20,8 @@ import "../../styles/ProductFilterModal.css";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
+  const navigate = useNavigate();
+
   return (
     <tr>
       <th>
@@ -31,7 +33,15 @@ function TableHeader({ allSelected, onHeaderChange }) {
       </th>
       <th>IMAGE</th>
       <th>NAME</th>
-      <th>CATEGORY</th>
+      <th>
+        <a
+          className="category-link"
+          role="button"
+          onClick={() => navigate("/More/ViewCategories")}
+        >
+          CATEGORY
+        </a>
+      </th>
       <th>MODEL NUMBER</th>
       <th>END OF LIFE</th>
       <th>MANUFACTURER</th>
@@ -46,6 +56,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 
 // TableItem component to render each product row
 function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+  const navigate = useNavigate();
   const baseImage = product.image
     ? `https://assets-service-production.up.railway.app${product.image}`
     : DefaultImage;
@@ -70,7 +81,15 @@ function TableItem({ product, manufacturer, isSelected, onRowChange, onDeleteCli
         />
       </td>
       <td>{product.name}</td>
-      <td>{product.category}</td>
+      <td>
+        <a
+          className="category-link"
+          onClick={() => navigate("/More/ViewCategories", { state: { selectedCategory: product.category } })}
+          role="button"
+        >
+          {product.category}
+        </a>
+      </td>
       <td>{product.model || 'N/A'}</td>
       <td>{product.end_of_life || 'N/A'}</td>
       <td>{manufacturer}</td>

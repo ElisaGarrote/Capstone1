@@ -157,6 +157,7 @@ button:disabled {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   border: 1px solid #cccccc;
   width: 100%;
+  position: relative;
 
   .table-header {
     display: flex;
@@ -174,7 +175,7 @@ button:disabled {
   .table-actions {
     display: flex;
     gap: 10px;
-
+    align-items: center;
     input[type="search"] {
       display: flex;
       align-items: center;

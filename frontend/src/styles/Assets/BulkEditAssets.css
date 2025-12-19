@@ -1,19 +1,30 @@
-/* Selected Assets Section */
+.selected-assets-section,
+.bulk-edit-form-section {
+  width: 60vw;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
 .selected-assets-section {
   background: white;
   border-radius: 25px;
   padding: 2rem;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   margin-bottom: 1rem;
   border: 1px solid #f0f0f0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: stretch;
 }
 
 .selected-assets-section h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #333;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 0.5rem 0;
 }
 
 .selected-assets-tags {
@@ -74,16 +85,34 @@
 }
 
 .no-assets-message {
-  color: #999;
-  font-size: 0.875rem;
-  margin: 0;
-  padding: 1rem;
+  color: #7a7a7a;
+  font-size: 0.8125rem;
+  margin: 0 auto;
+  padding: 0;
   text-align: center;
-  background: #f9f9f9;
-  border-radius: 8px;
+  background: none;
+  border-radius: 0;
+  font-style: italic;
+  display: inline-block;
 }
 
-/* Bulk Edit Form Section */
+.bulk-edit-page .selected-assets-note {
+  width: 60vw;
+  max-width: 1200px;
+  margin: 0.5rem auto 1rem auto;
+  color: #6b6b6b;
+  font-size: 0.875rem;
+  font-style: italic;
+  text-align: center;
+}
+
+.bulk-edit-page .registration-form {
+  width: 60vw;
+  max-width: 1200px;
+  margin: 0.5rem auto 0 auto;
+  box-sizing: border-box;
+}
+
 .bulk-edit-form-section {
   background: white;
   border-radius: 25px;
@@ -206,14 +235,13 @@
   margin-top: 1rem;
 }
 
-/* Form Actions */
 .form-actions {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid #f0f0f0;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: none;
 }
 
 .cancel-btn {

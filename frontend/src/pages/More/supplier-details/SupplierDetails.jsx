@@ -5,16 +5,19 @@ import DetailedViewPage from "../../../components/DetailedViewPage/DetailedViewP
 import MediumButtons from "../../../components/buttons/MediumButtons";
 import { getSupplierDetails, getSupplierTabs } from "../../../data/mockData/more/supplierDetailsData";
 import AssetsMockupData from "../../../data/mockData/assets/assets-mockup-data.json";
+import ComponentsMockupData from "../../../data/mockData/components/component-mockup-data.json";
 import Status from "../../../components/Status";
 import ActionButtons from "../../../components/ActionButtons";
 import Pagination from "../../../components/Pagination";
 import DefaultImage from "../../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../../utils/exportToExcel";
 import "../../../styles/Assets/Assets.css";
+import "../../../styles/components/Components.css";
 import "../../../styles/more/supplier/SupplierDetails.css";
 import ConfirmationModal from "../../../components/Modals/DeleteModal";
 import AssetFilterModal from "../../../components/Modals/AssetFilterModal";
 import Alert from "../../../components/Alert";
+import ComponentFilterModal from "../../../components/Modals/ComponentFilterModal";
 
 function SupplierDetails() {
   const location = useLocation();
@@ -25,6 +28,25 @@ function SupplierDetails() {
   const [assetsPageSize, setAssetsPageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [supplierAssets, setSupplierAssets] = useState(AssetsMockupData);
+  const [componentsCurrentPage, setComponentsCurrentPage] = useState(1);
+  const [componentsPageSize, setComponentsPageSize] = useState(5);
+  const [componentsSearchTerm, setComponentsSearchTerm] = useState("");
+  const [componentFilters, setComponentFilters] = useState({});
+  const [isComponentFilterModalOpen, setIsComponentFilterModalOpen] = useState(false);
+  const [supplierComponents, setSupplierComponents] = useState(() =>
+    (ComponentsMockupData || []).map((component) => {
+      const available = component.available_quantity ?? 0;
+      const checkedOut = component.checked_out_quantity ?? 0;
+      return {
+        ...component,
+        showCheckout: available > 0,
+        showCheckin: checkedOut > 0,
+      };
+    })
+  );
+  const [selectedComponentIds, setSelectedComponentIds] = useState([]);
+  const [isComponentDeleteModalOpen, setIsComponentDeleteModalOpen] = useState(false);
+  const [componentDeleteTarget, setComponentDeleteTarget] = useState(null); // null = bulk, id = single
   const [assetToDelete, setAssetToDelete] = useState(null);
   const [isAssetDeleteModalOpen, setAssetDeleteModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -247,6 +269,173 @@ function SupplierDetails() {
   const handleExport = () => {
     const dataToExport = filteredAssets.length > 0 ? filteredAssets : [];
     exportToExcel(dataToExport, "Supplier_Assets.xlsx");
+  };
+
+  const applyComponentFilters = (data, filters) => {
+    let filtered = [...data];
+
+    if (filters.category && filters.category.label) {
+      const categoryLabel = filters.category.label.toLowerCase();
+      filtered = filtered.filter((component) =>
+        component.category?.toLowerCase().includes(categoryLabel)
+      );
+    }
+
+    if (filters.manufacturer && filters.manufacturer.label) {
+      const manufacturerLabel = filters.manufacturer.label.toLowerCase();
+      filtered = filtered.filter((component) =>
+        component.manufacturer?.toLowerCase().includes(manufacturerLabel)
+      );
+    }
+
+    if (filters.supplier && filters.supplier.label) {
+      const supplierLabel = filters.supplier.label.toLowerCase();
+      filtered = filtered.filter((component) =>
+        component.supplier?.toLowerCase().includes(supplierLabel)
+      );
+    }
+
+    if (filters.location && filters.location.label) {
+      const locationLabel = filters.location.label.toLowerCase();
+      filtered = filtered.filter((component) =>
+        component.location?.toLowerCase().includes(locationLabel)
+      );
+    }
+
+    return filtered;
+  };
+
+  const applyComponentsFiltersAndSearch = (filters, term) => {
+    let filtered = applyComponentFilters(supplierComponents, filters || {});
+
+    if (term && term.trim() !== "") {
+      const lowerTerm = term.toLowerCase();
+      filtered = filtered.filter((component) =>
+        (component.name && component.name.toLowerCase().includes(lowerTerm)) ||
+        (component.category && component.category.toLowerCase().includes(lowerTerm)) ||
+        (component.manufacturer && component.manufacturer.toLowerCase().includes(lowerTerm)) ||
+        (component.supplier && component.supplier.toLowerCase().includes(lowerTerm)) ||
+        (component.location && component.location.toLowerCase().includes(lowerTerm))
+      );
+    }
+
+    return filtered;
+  };
+
+  const filteredComponents = applyComponentsFiltersAndSearch(
+    componentFilters,
+    componentsSearchTerm
+  );
+
+  const componentsStartIndex = (componentsCurrentPage - 1) * componentsPageSize;
+  const componentsEndIndex = componentsStartIndex + componentsPageSize;
+  const paginatedComponents = filteredComponents.slice(
+    componentsStartIndex,
+    componentsEndIndex
+  );
+
+  // Components selection logic (Supplier tab)
+  const allComponentsSelected =
+    paginatedComponents.length > 0 &&
+    paginatedComponents.every((item) => selectedComponentIds.includes(item.id));
+
+  const handleComponentsHeaderChange = (e) => {
+    if (e.target.checked) {
+      setSelectedComponentIds((prev) => [
+        ...prev,
+        ...paginatedComponents
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedComponentIds((prev) =>
+        prev.filter(
+          (id) => !paginatedComponents.map((item) => item.id).includes(id)
+        )
+      );
+    }
+  };
+
+  const handleComponentsRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedComponentIds((prev) => [...prev, id]);
+    } else {
+      setSelectedComponentIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
+
+  const openComponentDeleteModal = (id = null) => {
+    setComponentDeleteTarget(id);
+    setIsComponentDeleteModalOpen(true);
+  };
+
+  const closeComponentDeleteModal = () => {
+    setIsComponentDeleteModalOpen(false);
+    setComponentDeleteTarget(null);
+  };
+
+  const confirmComponentDelete = () => {
+    if (componentDeleteTarget) {
+      setSupplierComponents((prev) =>
+        prev.filter((component) => component.id !== componentDeleteTarget)
+      );
+      setSelectedComponentIds((prev) =>
+        prev.filter((id) => id !== componentDeleteTarget)
+      );
+    } else {
+      setSupplierComponents((prev) =>
+        prev.filter((component) => !selectedComponentIds.includes(component.id))
+      );
+      setSelectedComponentIds([]);
+    }
+    closeComponentDeleteModal();
+  };
+
+  const handleSearchComponents = (e) => {
+    const term = e.target.value;
+    setComponentsSearchTerm(term);
+    setComponentsCurrentPage(1);
+  };
+
+  const handleApplyComponentFilter = (filters) => {
+    setComponentFilters(filters);
+    setComponentsCurrentPage(1);
+  };
+
+  const handleExportComponents = () => {
+    const dataToExport = filteredComponents.length > 0 ? filteredComponents : [];
+    exportToExcel(dataToExport, "Supplier_Components.xlsx");
+  };
+
+  const handleComponentCheckInOut = (component, action) => {
+    const available_quantity = component.available_quantity ?? 0;
+    const remaining_quantity = component.available_quantity ?? 0;
+
+    const item = {
+      id: component.id,
+      name: component.name,
+      available_quantity,
+      remaining_quantity,
+    };
+
+    if (action === "checkin") {
+      navigate(`/components/check-in/${component.id}`, {
+        state: {
+          item,
+          componentName: component.name,
+        },
+      });
+    } else {
+      navigate(`/components/check-out/${component.id}`, {
+        state: { item },
+      });
+    }
+  };
+
+  const handleViewComponent = (component) => {
+    navigate(`/components/view/${component.id}`, {
+      state: { component },
+    });
   };
 
   const closeDeleteModal = () => {
@@ -529,6 +718,160 @@ function SupplierDetails() {
     </div>
   );
 
+  const componentsTabContent = (
+    <div className="history-tab-wrapper supplier-components-tab-wrapper">
+      <section className="product-assets-header">
+        <h2 className="product-assets-title">Components ({filteredComponents.length})</h2>
+        <section className="product-assets-actions">
+          {selectedComponentIds.length > 0 && (
+            <>
+              <MediumButtons
+                type="edit"
+                onClick={() =>
+                  navigate("/components/bulk-edit", { state: { selectedIds: selectedComponentIds } })
+                }
+              />
+              <MediumButtons type="delete" onClick={() => openComponentDeleteModal(null)} />
+            </>
+          )}
+          <input
+            type="search"
+            placeholder="Search..."
+            className="product-assets-search"
+            value={componentsSearchTerm}
+            onChange={handleSearchComponents}
+          />
+          <button
+            type="button"
+            className="medium-button-filter"
+            onClick={() => setIsComponentFilterModalOpen(true)}
+          >
+            Filter
+          </button>
+          <MediumButtons type="export" onClick={handleExportComponents} />
+          <MediumButtons type="new" navigatePage="/components/registration" />
+        </section>
+      </section>
+
+      <section className="assets-table-section">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <input
+                  type="checkbox"
+                  checked={allComponentsSelected}
+                  onChange={handleComponentsHeaderChange}
+                />
+              </th>
+              <th>IMAGE</th>
+              <th>NAME</th>
+              <th>
+                <a
+                  className="category-link"
+                  onClick={() => navigate("/More/ViewCategories")}
+                  role="button"
+                >
+                  CATEGORY
+                </a>
+              </th>
+              <th>MANUFACTURER</th>
+              <th>DEPRECIATION</th>
+              <th>CHECK-OUT / CHECK-IN</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedComponents.length > 0 ? (
+              paginatedComponents.map((component) => (
+                <tr key={component.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedComponentIds.includes(component.id)}
+                      onChange={(e) =>
+                        handleComponentsRowChange(component.id, e.target.checked)
+                      }
+                    />
+                  </td>
+                  <td>
+                    {(() => {
+                      const baseImage = component.image
+                        ? `https://assets-service-production.up.railway.app${component.image}`
+                        : DefaultImage;
+
+                      return (
+                        <img
+                          src={baseImage}
+                          alt={component.name}
+                          className="table-img"
+                          onError={(e) => {
+                            e.target.src = DefaultImage;
+                          }}
+                        />
+                      );
+                    })()}
+                  </td>
+                  <td>{component.name || "N/A"}</td>
+                  <td>
+                    <a
+                      className="category-link"
+                      onClick={() =>
+                        navigate("/More/ViewCategories", {
+                          state: { selectedCategory: component.category },
+                        })
+                      }
+                      role="button"
+                    >
+                      {component.category || "N/A"}
+                    </a>
+                  </td>
+                  <td>{component.manufacturer || "N/A"}</td>
+                  <td>{component.depreciation || "N/A"}</td>
+                  <td>
+                    <ActionButtons
+                      showCheckout={component.showCheckout}
+                      showCheckin={component.showCheckin}
+                      onCheckoutClick={() => handleComponentCheckInOut(component, "checkout")}
+                      onCheckinClick={() => handleComponentCheckInOut(component, "checkin")}
+                    />
+                  </td>
+                  <td>
+                    <ActionButtons
+                      showEdit
+                      showDelete
+                      showView
+                      editPath={`/components/edit/${component.id}`}
+                      editState={{ item: component }}
+                      onDeleteClick={() => openComponentDeleteModal(component.id)}
+                      onViewClick={() => handleViewComponent(component)}
+                    />
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={8} className="no-data-message">
+                  No Components Found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </section>
+
+      <section className="table-pagination">
+        <Pagination
+          currentPage={componentsCurrentPage}
+          pageSize={componentsPageSize}
+          totalItems={filteredComponents.length}
+          onPageChange={setComponentsCurrentPage}
+          onPageSizeChange={setComponentsPageSize}
+        />
+      </section>
+    </div>
+  );
+
 
   return (
     <>
@@ -552,11 +895,25 @@ function SupplierDetails() {
           isOpen={isAssetDeleteModalOpen}
         />
       )}
+      {isComponentDeleteModalOpen && (
+        <ConfirmationModal
+          closeModal={closeComponentDeleteModal}
+          actionType="delete"
+          onConfirm={confirmComponentDelete}
+          isOpen={isComponentDeleteModalOpen}
+        />
+      )}
       <AssetFilterModal
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
         initialFilters={appliedFilters}
+      />
+      <ComponentFilterModal
+        isOpen={isComponentFilterModalOpen}
+        onClose={() => setIsComponentFilterModalOpen(false)}
+        onApplyFilter={handleApplyComponentFilter}
+        initialFilters={componentFilters}
       />
       <DetailedViewPage
         {...getSupplierDetails(supplierDetails)}
@@ -564,7 +921,13 @@ function SupplierDetails() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         actionButtons={actionButtons}
-        customTabContent={activeTab === 1 ? assetsTabContent : null}
+        customTabContent={
+          activeTab === 1
+            ? assetsTabContent
+            : activeTab === 2
+              ? componentsTabContent
+              : null
+        }
       >
         {activeTab === 0 && aboutContent}
       </DetailedViewPage>

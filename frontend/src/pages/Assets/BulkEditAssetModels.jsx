@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/Registration.css";
@@ -99,16 +100,25 @@ export default function BulkEditAssetModels() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
 
-        <main className="main-with-table">
-          <TopSecFormPage
-            root="Asset Models"
-            currentPage="Bulk Edit Asset Models"
-            rootNavigatePage="/products"
-            title="Bulk Edit Asset Models"
-          />
+        <main className="registration bulk-edit-models-page">
+          <section className="top">
+            <TopSecFormPage
+              root="Asset Models"
+              currentPage="Bulk Edit Asset Models"
+              rootNavigatePage="/products"
+              title="Bulk Edit Asset Models"
+              rightComponent={
+                <div className="import-section">
+                  <span style={{ fontSize: '0.875rem', color: '#666' }}>
+                    {currentSelectedIds.length} Model{currentSelectedIds.length !== 1 ? 's' : ''} Selected
+                  </span>
+                </div>
+              }
+            />
+          </section>
 
           {/* Selected Asset Models */}
           <section className="asset-models-selected-section">
@@ -136,6 +146,10 @@ export default function BulkEditAssetModels() {
               )}
             </div>
           </section>
+
+          <p className="asset-models-note">
+            Note: Fill in only the fields you want to change. Fields left empty will stay unchanged. Use the Remove toggle to clear existing values.
+          </p>
 
           {/* Bulk Edit Form */}
           <section className="asset-models-bulk-form-section">
@@ -286,6 +300,8 @@ export default function BulkEditAssetModels() {
           </section>
         </main>
       </section>
+
+      <Footer />
     </>
   );
 }

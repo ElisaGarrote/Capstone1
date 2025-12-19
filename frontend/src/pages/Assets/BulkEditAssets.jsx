@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
 import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
@@ -155,16 +156,25 @@ export default function BulkEditAssets() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
 
-        <main className="main-with-table">
-          <TopSecFormPage
-            root="Assets"
-            currentPage="Bulk Edit Assets"
-            rootNavigatePage="/assets"
-            title="Bulk Edit Assets"
-          />
+        <main className="registration bulk-edit-page">
+          <section className="top">
+            <TopSecFormPage
+              root="Assets"
+              currentPage="Bulk Edit Assets"
+              rootNavigatePage="/assets"
+              title="Bulk Edit Assets"
+              rightComponent={
+                <div className="import-section">
+                  <span style={{ fontSize: '0.875rem', color: '#666' }}>
+                    {currentSelectedIds.length} Asset{currentSelectedIds.length !== 1 ? 's' : ''} Selected
+                  </span>
+                </div>
+              }
+            />
+          </section>
 
           {/* Selected Assets Section */}
           <section className="selected-assets-section">
@@ -191,11 +201,15 @@ export default function BulkEditAssets() {
             </div>
           </section>
 
-          <section className="bulk-edit-form-section">
-            <form onSubmit={handleSubmit(onSubmit)} className="bulk-edit-form">
+          <p className="selected-assets-note">
+            Note: Fill in only the fields you want to change. Fields left empty will stay unchanged. Use the Remove toggle to clear existing values.
+          </p>
+
+          <section className="registration-form">
+            <form onSubmit={handleSubmit(onSubmit)}>
               {/* Product Dropdown */}
               <fieldset className="form-field">
-                <label htmlFor='product'>Product <span className="required">*</span></label>
+                <label htmlFor='product'>Product</label>
                 <select
                   id="product"
                   {...register("product")}
@@ -213,7 +227,7 @@ export default function BulkEditAssets() {
 
               {/* Status Dropdown with Add Button */}
               <fieldset className="form-field">
-                <label htmlFor='status'>Status <span className="required">*</span></label>
+                <label htmlFor='status'>Status</label>
                 <div className="dropdown-with-add">
                   <select
                     id="status"
@@ -442,6 +456,8 @@ export default function BulkEditAssets() {
           </section>
         </main>
       </section>
+
+      <Footer />
 
       {/* Modals */}
       {showStatusModal && (
