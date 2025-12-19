@@ -11,7 +11,6 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
-
 import "../../styles/Products/Products.css";
 import "../../styles/ProductFilterModal.css";
 import { fetchAllProducts } from "../../services/assets-service";
@@ -43,7 +42,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each product row
-function TableItem({ product, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+function TableItem({ product, isSelected, onRowChange, onViewClick, onDeleteClick }) {
   const baseImage = product.image || DefaultImage;
 
   return (
@@ -80,13 +79,12 @@ function TableItem({ product, isSelected, onRowChange, onDeleteClick, onViewClic
       <td>{product.minimum_quantity || 'N/A'}</td>
       <td>
         <ActionButtons
+          showView
           showEdit
           showDelete
-          showView
+          onViewClick={onViewClick} 
           editPath={`/products/edit/${product.id}`}
-          editState={{ product }}
-          onDeleteClick={() => onDeleteClick(product.id)}
-          onViewClick={() => onViewClick(product)}
+          onDeleteClick={onDeleteClick}
         />
       </td>
     </tr>
@@ -169,22 +167,36 @@ export default function Products() {
 
   const handleHeaderChange = (e) => {
     if (e.target.checked) {
-      setSelectedIds((prev) => [
-        ...prev,
-        ...paginatedProducts.map((item) => item.id).filter((id) => !prev.includes(id)),
-      ]);
+      setSelectedIds((prev) => {
+        const newIds = [
+          ...prev,
+          ...paginatedProducts.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ];
+        console.log("Selected ids:", newIds);
+        return newIds;
+      });
     } else {
-      setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedProducts.map((item) => item.id).includes(id))
-      );
+      setSelectedIds((prev) => {
+        const newIds = prev.filter((id) => !paginatedProducts.map((item) => item.id).includes(id));
+        console.log("Selected ids:", newIds);
+        return newIds;
+      });
     }
   };
 
   const handleRowChange = (id, checked) => {
     if (checked) {
-      setSelectedIds((prev) => [...prev, id]);
+      setSelectedIds((prev) => {
+        const newIds = [...prev, id];
+        console.log("Selected ids:", newIds);
+        return newIds;
+      });
     } else {
-      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+      setSelectedIds((prev) => {
+        const newIds = prev.filter((itemId) => itemId !== id);
+        console.log("Selected ids:", newIds);
+        return newIds;
+      });
     }
   };
 
@@ -201,21 +213,34 @@ export default function Products() {
     setDeleteTarget(null);
   };
 
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single id:", deleteTarget);
-      // remove from mock data / API call
+  const handleDeleteSuccess = (deletedIds) => {
+    if (Array.isArray(deletedIds)) {
+      // Bulk delete
+      setProducts((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+      setFilteredData((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+      setSuccessMessage(`${deletedIds.length} products deleted successfully!`);
+      setSelectedIds([]);
     } else {
-      console.log("Deleting multiple ids:", selectedIds);
-      // remove multiple
-      setSelectedIds([]); // clear selection
+      // Single delete
+      setProducts((prev) => prev.filter((p) => p.id !== deletedIds));
+      setFilteredData((prev) => prev.filter((p) => p.id !== deletedIds));
+      setSuccessMessage("Product deleted successfully!");
     }
-    closeDeleteModal();
+    setTimeout(() => setSuccessMessage(""), 5000);
+  };
+
+  const handleDeleteError = (error) => {
+    setErrorMessage(error.response?.data?.detail || "Failed to delete product(s).");
+    setTimeout(() => setErrorMessage(""), 5000);
   };
 
   // Add view handler
   const handleViewClick = (product) => {
-    navigate(`/products/view/${product.id}`);
+    navigate(`/products/view/${product}`);
+  };
+
+  const handleEditClick = (product) => {
+    navigate(`/products/edit/${product}`);
   };
 
   // Apply filters to data
@@ -405,7 +430,7 @@ export default function Products() {
     const dataToExport = filteredData.length > 0 ? filteredData : products;
     exportToExcel(dataToExport, "AssetModels_Records.xlsx");
   };
-
+  
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -413,9 +438,14 @@ export default function Products() {
 
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
+          actionType={deleteTarget ? "delete" : "bulk-delete"}
+          entityType="product"
+          targetId={deleteTarget}
+          targetIds={selectedIds}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 
@@ -500,11 +530,12 @@ export default function Products() {
                     paginatedProducts.map((product) => (
                       <TableItem
                       key={product.id} 
-                      product={product}
                       isSelected={selectedIds.includes(product.id)}
                       onRowChange={handleRowChange}
-                      onDeleteClick={openDeleteModal}
-                      onViewClick={handleViewClick}
+                      product={product}
+                      onViewClick={() => handleViewClick(product.id)}
+                      onEditClick={() => handleEditClick(product.id)}
+                      onDeleteClick={() => openDeleteModal(product.id)}
                       />
                     ))
                   ) : (

@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm } from "react-hook-form";
-import "../../styles/Registration.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
-import Alert from "../../components/Alert";
-import { fetchAllProducts, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
-import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
-import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import Alert from "../../components/Alert";
+import "../../styles/Registration.css";
+import { getNextAssetId, fetchAssetNames, fetchProductsForAssetRegistration, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
+import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
+import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
+
 
 export default function AssetsRegistration() {
   const [products, setProducts] = useState([]);
@@ -20,6 +21,7 @@ export default function AssetsRegistration() {
   const [suppliers, setSuppliers] = useState([]);
   const [locations, setLocations] = useState([]);
   const [asset, setAsset] = useState(null);
+  const [isClone, setIsClone] = useState(false);
 
   // Modal states for adding new entries
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -56,48 +58,116 @@ export default function AssetsRegistration() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
+  // Determine mode: clone mode passed from AssetViewPage
+  const cloneMode = location.state?.isClone === true;
+
+  const generateCloneName = async (baseName) => {
+    // 1. Fetch all existing asset names that contain the base name
+    const existing = await fetchAssetNames({ search: baseName });
+    const existingNames = existing.map(a => a.name);
+
+    // 2. Pattern matches: "BaseName (clone)" or "BaseName (clone) (N)" - case insensitive
+    const clonePattern = new RegExp(`^${escapeRegExp(baseName)} \\(clone\\)(?: \\((\\d+)\\))?$`, 'i');
+
+    // 3. Find the highest existing clone index
+    let maxIndex = -1; // -1 means no clones exist yet
+    existingNames.forEach(name => {
+      const match = name.match(clonePattern);
+      if (match) {
+        // If no number group, it's the first clone (index 0)
+        // If number group exists, that's the index
+        const index = match[1] ? parseInt(match[1], 10) : 0;
+        if (index > maxIndex) maxIndex = index;
+      }
+    });
+
+    // 4. Generate clone name
+    if (maxIndex === -1) {
+      // No clones exist, return first clone name
+      return `${baseName} (clone)`;
+    }
+    // Clones exist, return next number
+    return `${baseName} (clone) (${maxIndex + 1})`;
+  };
+
+  // Utility to escape regex special chars in base name
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   useEffect(() => {
     const initialize = async () => {
       try {
         setIsLoading(true);
+        setIsClone(cloneMode);
+
+        // Generate new asset ID for clone mode or new registration
+        if (cloneMode || !id) {
+          const nextAssetId = await getNextAssetId();
+          setValue("assetId", nextAssetId || "");
+        }
 
         // Fetch dropdown options for assets (filter statuses by asset category)
         const contextDropdowns = await fetchAllDropdowns("asset", { category: "asset" });
         setStatuses(contextDropdowns.statuses || []);
         setSuppliers(contextDropdowns.suppliers || []);
 
+        // Fetch dropdown options for locations from Help Desk service
         const helpDeskDropdowns = await fetchAllLocations();
         setLocations(helpDeskDropdowns || []);
 
-        // Get asset data - prioritize state, then fetch from API
-        let assetData = location.state?.asset;
+        // Fetch products for asset registration (includes default_purchase_cost and default_supplier)
+        const productsData = await fetchProductsForAssetRegistration();
+        setProducts(productsData || []);
 
-        // If no asset in state but we have an ID, fetch from API
-        if (!assetData && id) {
-          assetData = await fetchAssetById(id);
-        }
+        // If editing or cloning, fetch the asset data
+        if (id) {
+          const assetData = await fetchAssetById(id);
+          if (assetData) {
+            setAsset(assetData);
 
-        // Initialize form if editing
-        if (assetData) {
-          setValue("assetId", assetData.asset_id || "");
-          setValue("product", assetData.product || "");
-          setValue("status", assetData.status || "");
-          setValue("supplier", assetData.supplier || "");
-          setValue("location", assetData.location || "");
-          setValue("assetName", assetData.name || "");
-          setValue("serialNumber", assetData.serial_number || "");
-          setValue("warrantyExpiration", assetData.warranty_expiration || "");
-          setValue("orderNumber", assetData.order_number || "");
-          setValue("purchaseDate", assetData.purchase_date || "");
-          setValue("purchaseCost", assetData.purchase_cost || "");
-          setValue("notes", assetData.notes || "");
-          setAsset(assetData);
-          if (assetData.image) {
-            setPreviewImage(assetData.image);
+            // Fill form with asset data
+            if (!cloneMode) {
+              setValue("assetId", assetData.asset_id || "");
+            }
+            setValue("product", assetData.product || "");
+            setValue("status", assetData.status || "");
+            setValue("supplier", assetData.supplier || "");
+            setValue("location", assetData.location || "");
+            if (cloneMode) {
+              const clonedName = await generateCloneName(assetData.name);
+              setValue("assetName", clonedName);
+            } else {
+              setValue("assetName", assetData.name || "");
+            }
+            setValue("serialNumber", assetData.serial_number || "");
+            setValue("warrantyExpiration", assetData.warranty_expiration || "");
+            setValue("orderNumber", assetData.order_number || "");
+            setValue("purchaseDate", assetData.purchase_date || "");
+            setValue("purchaseCost", assetData.purchase_cost || "");
+            setValue("notes", assetData.notes || "");
+
+            if (assetData.image) {
+              setPreviewImage(assetData.image);
+
+              // For cloning, fetch the image as a file so it can be uploaded with the new asset
+              if (cloneMode) {
+                try {
+                  const response = await fetch(assetData.image);
+                  const blob = await response.blob();
+                  const fileName = assetData.image.split('/').pop() || 'cloned-image.jpg';
+                  const file = new File([blob], fileName, { type: blob.type });
+                  setSelectedImage(file);
+                } catch (imgError) {
+                  console.error("Failed to fetch image for cloning:", imgError);
+                }
+              }
+            }
           }
-        } else if (location.state?.nextAssetId) {
-          // Set generated asset ID for new asset
-          setValue("assetId", location.state.nextAssetId);
+        } else {
+          // New registration - generate new asset ID
+          const nextAssetId = await getNextAssetId();
+          setValue("assetId", nextAssetId || "");
         }
       } catch (error) {
         console.error("Error initializing:", error);
@@ -107,7 +177,7 @@ export default function AssetsRegistration() {
       }
     };
     initialize();
-  }, [id, location.state, setValue]);
+  }, [id, cloneMode, setValue]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -260,20 +330,27 @@ export default function AssetsRegistration() {
 
   const onSubmit = async (data) => {
     setErrorMessage("");
+
+    // Determine if this is an edit (id present and not cloning) or create (new or clone)
+    const isUpdate = id && !isClone;
+
     try {
       const formData = new FormData();
 
-      // Append asset data to FormData object
-      formData.append('product', data.product || '');
-      formData.append('status', data.status || '');
-      formData.append('supplier', data.supplier || '');
-      formData.append('location', data.location || '');
-      formData.append('name', data.assetName || '');
-      formData.append('serial_number', data.serialNumber || '');
-      formData.append('warranty_expiration', data.warrantyExpiration || '');
-      formData.append('order_number', data.orderNumber || '');
-      formData.append('purchase_date', data.purchaseDate || '');
-      formData.append('purchase_cost', data.purchaseCost || '');
+      // Append asset data to FormData object - only include non-empty values
+      // Send asset_id only on create (new or clone), not on update
+      if (!isUpdate && data.assetId) formData.append('asset_id', data.assetId);
+      if (data.product) formData.append('product', data.product);
+      if (data.status) formData.append('status', data.status);
+      if (data.supplier) formData.append('supplier', data.supplier);
+      if (data.location) formData.append('location', data.location);
+      if (data.assetName) formData.append('name', data.assetName);
+      if (data.serialNumber) formData.append('serial_number', data.serialNumber);
+      if (data.warrantyExpiration) formData.append('warranty_expiration', data.warrantyExpiration);
+      if (data.orderNumber) formData.append('order_number', data.orderNumber);
+      if (data.purchaseDate) formData.append('purchase_date', data.purchaseDate);
+      if (data.purchaseCost) formData.append('purchase_cost', data.purchaseCost);
+      // Notes can be empty string
       formData.append('notes', data.notes || '');
 
       // Handle image upload
@@ -281,8 +358,8 @@ export default function AssetsRegistration() {
         formData.append('image', selectedImage);
       }
 
-      // Handle image removal
-      if (removeImage) {
+      // Handle image removal (only for edit mode)
+      if (removeImage && isUpdate) {
         formData.append('remove_image', 'true');
         console.log("Removing image: remove_image flag set to true");
       }
@@ -291,40 +368,43 @@ export default function AssetsRegistration() {
       for (let pair of formData.entries()) {
         console.log(pair[0] + ': ' + pair[1]);
       }
+      console.log("isUpdate:", isUpdate, "id:", id, "isClone:", isClone);
 
       let result;
 
-      if (id) {
+      if (isUpdate) {
         // Update existing asset
         result = await updateAsset(id, formData);
       } else {
-        // Create new asset
+        // Create new asset (registration or clone)
         result = await createAsset(formData);
       }
 
       if (!result) {
-        throw new Error(`Failed to ${id ? 'update' : 'create'} asset.`);
+        throw new Error(`Failed to ${isUpdate ? 'update' : 'create'} asset.`);
       }
 
-      console.log(`${id ? 'Updated' : 'Created'} asset:`, result);
+      const action = isClone ? 'cloned' : (isUpdate ? 'updated' : 'created');
+      console.log(`${action} asset:`, result);
       navigate('/assets', {
         state: {
-          successMessage: `Asset has been ${id ? 'updated' : 'created'} successfully!`
+          successMessage: `Asset has been ${action} successfully!`
         }
       });
     } catch (error) {
-      console.error(`Error ${id ? 'updating' : 'creating'} asset:`, error);
+      const action = isClone ? 'cloning' : (id && !isClone ? 'updating' : 'creating');
+      console.error(`Error ${action} asset:`, error);
 
-      let message = `An error occurred while ${id ? 'updating' : 'creating'} the asset`;
+      let message = `An error occurred while ${action} the asset`;
 
       if (error.response && error.response.data) {
-        const data = error.response.data;
+        const errorData = error.response.data;
 
         // Extract the first message from the first key
-        if (typeof data === "object") {
-          const firstKey = Object.keys(data)[0];
-          if (Array.isArray(data[firstKey]) && data[firstKey].length > 0) {
-            message = data[firstKey][0];
+        if (typeof errorData === "object") {
+          const firstKey = Object.keys(errorData)[0];
+          if (Array.isArray(errorData[firstKey]) && errorData[firstKey].length > 0) {
+            message = errorData[firstKey][0];
           }
         }
       }
@@ -335,31 +415,34 @@ export default function AssetsRegistration() {
 
 
 
-  // Handle product selection to auto-fill default values
-  const handleProductChange = async (event) => {
+  // Handle product selection to auto-fill default values from products list
+  // Only apply defaults when the product is actually changed from the original
+  const handleProductChange = (event) => {
     const productId = event.target.value;
     setValue('product', productId);
 
-    if (productId) {
-      try {
-        // Fetch the product to get default values
-        const product = await assetsService.fetchProductById(productId);
+    // Only apply product defaults if:
+    // 1. A product is selected AND
+    // 2. It's either a new registration OR the product is different from the original asset's product
+    const originalProductId = asset?.product;
+    const isProductChanged = !originalProductId || parseInt(productId) !== originalProductId;
 
-        if (product) {
-          console.log("Product defaults:", product);
+    if (productId && isProductChanged) {
+      // Find the product from the already-loaded products list
+      const product = products.find(p => p.id === parseInt(productId));
 
-          // Set purchase cost if available
-          if (product.default_purchase_cost) {
-            setValue('purchaseCost', product.default_purchase_cost);
-          }
+      if (product) {
+        console.log("Product changed, applying defaults:", product);
 
-          // Set supplier if available
-          if (product.default_supplier) {
-            setValue('supplier', product.default_supplier);
-          }
+        // Set purchase cost if available
+        if (product.default_purchase_cost) {
+          setValue('purchaseCost', product.default_purchase_cost);
         }
-      } catch (error) {
-        console.error("Error fetching product defaults:", error);
+
+        // Set supplier if available
+        if (product.default_supplier) {
+          setValue('supplier', String(product.default_supplier));
+        }
       }
     }
   };
@@ -378,9 +461,9 @@ export default function AssetsRegistration() {
         <section className="top">
           <TopSecFormPage
             root="Assets"
-            currentPage={id ? "Edit Asset" : "New Asset"}
+            currentPage={isClone ? "Clone Asset" : (id ? "Edit Asset" : "New Asset")}
             rootNavigatePage="/assets"
-            title={id ? 'Edit' + ' ' + (asset?.name || 'Asset') : 'New Asset'}
+            title={isClone ? `Clone ${asset?.name || 'Asset'}` : (id ? `Edit ${asset?.name || 'Asset'}` : 'New Asset')}
             rightComponent={
               <div className="import-section">
                 <label htmlFor="import-file" className="import-btn">

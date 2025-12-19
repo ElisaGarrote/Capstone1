@@ -10,37 +10,35 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { createAssetCheckoutWithStatus } from "../../services/assets-service";
+import { createAssetCheckoutWithStatus, fetchAssetNames } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
+import { fetchTicketById } from "../../services/integration-ticket-tracking-service";
 
 export default function CheckOutAsset() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  // Form state
+
+  // State
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  // Dropdowns state
   const [statuses, setStatuses] = useState([]);
-  // Modal states for adding new entries
   const [showStatusModal, setShowStatusModal] = useState(false);
-  // File upload state
   const [attachmentFiles, setAttachmentFiles] = useState([]);
 
-  // Extract data from state, store in variables
-  const ticket = state?.ticket || {};
-  const asset = state?.asset || {};
-  const employeeName = state?.employeeName || "";
-  const fromAsset = state?.fromAsset || false;
+  const [assetName, setAssetName] = useState("");
+  const [assetDisplayId, setAssetDisplayId] = useState("");
+  const [fromAssets, setFromAssets] = useState(false);
 
-  // Declare variables for destructuring
-  const { 
-    id: ticketId,
-    asset: assetId,
-    location: location,
-  } = ticket;
-  const { asset_id: assetDisplayedId, name: assetName } = asset;
+  // Extract from navigation state
+  // From Assets page: { assetId (db id), assetDisplayId, assetName, ticketId }
+  // From Tickets page: { ticket (full ticket object) }
+  const assetIdFromState = state?.assetId;
+  const assetDisplayIdFromState = state?.assetDisplayId;
+  const assetNameFromState = state?.assetName;
+  const ticketIdFromState = state?.ticketId;
+  const ticketFromState = state?.ticket;
 
-  // Form handling initializations
+  // Form handling
   const {
     register,
     handleSubmit,
@@ -59,27 +57,61 @@ export default function CheckOutAsset() {
     },
   });
 
-  // Initialize dropdowns
+  // Initialize: fetch ticket and dropdowns
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
-      console.log("states:", state);
       try {
+        let ticket = null;
+
+        // Scenario 1: Coming from Assets page with assetId, assetDisplayId, assetName, ticketId
+        if (assetIdFromState && ticketIdFromState) {
+          setFromAssets(true);
+          setAssetName(assetNameFromState || "");
+          setAssetDisplayId(assetDisplayIdFromState || "");
+
+          // Fetch ticket details
+          ticket = await fetchTicketById(ticketIdFromState);
+        }
+        // Scenario 2: Coming from Tickets page with full ticket object
+        else if (ticketFromState) {
+          setFromAssets(false);
+          ticket = ticketFromState;
+
+          // Fetch asset details using asset id from ticket
+          if (ticket.asset) {
+            const assetData = await fetchAssetNames({ ids: [ticket.asset] });
+            if (assetData) {
+              setAssetName(assetData.name || "");
+              setAssetDisplayId(assetData.asset_id || "");
+            }
+          }
+        }
+
+        if (ticket) {
+          // Fill form with ticket data (read-only fields)
+          setValue("employeeName", ticket.requestor_details?.name || "Unknown");
+          setValue("empLocation", ticket.location_details?.city || "Unknown");
+          setValue("checkoutDate", ticket.checkout_date || "");
+          setValue("expectedReturnDate", ticket.return_date || "");
+        }
+
+        // Fetch status dropdown (deployed statuses for checkout)
         const dropdowns = await fetchAllDropdowns("status", {
           category: "asset",
           types: "deployed",
         });
         setStatuses(dropdowns.statuses || []);
       } catch (error) {
-        console.error("Error fetching dropdowns:", error);
-        setErrorMessage("Failed to load dropdowns. Please try again.");
+        console.error("Error initializing checkout form:", error);
+        setErrorMessage("Failed to load form data. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
     initialize();
-  }, []);
+  }, [assetIdFromState, assetDisplayIdFromState, assetNameFromState, ticketIdFromState, ticketFromState, setValue]);
 
   const conditionOptions = [
     { value: "1", label: "1 - Unserviceable" },
@@ -94,24 +126,7 @@ export default function CheckOutAsset() {
     { value: "10", label: "10 - Brand New" }
   ];
 
-  useEffect(() => {
-    if (state?.ticket && state?.asset) {
-      const ticketData = state.ticket;
-
-      const employeeName = state.employeeName || "Unknown";
-      const locationCity = ticketData.location_details?.city || "";
-      const checkoutDate = ticketData.checkout_date || "";
-      const returnDate = ticketData.return_date || "";
-
-      setValue("employeeName", employeeName);
-      setValue("empLocation", locationCity);
-      setValue("checkoutDate", checkoutDate);
-      setValue("returnDate", returnDate);
-    }
-  }, [state, setValue]);
-
   if (isLoading) {
-    console.log("isLoading triggered — showing loading screen");
     return <SystemLoading />;
   }
 
@@ -140,7 +155,8 @@ export default function CheckOutAsset() {
       options: [
         { value: 'deployed', label: 'Deployed' },
       ],
-      validation: { required: 'Status Type is required' }
+      validation: { required: 'Status Type is required' },
+      defaultValue: 'deployed'
     }
   ];
 
@@ -202,16 +218,27 @@ export default function CheckOutAsset() {
       const formData = new FormData();
 
       // Required fields
+      // asset - backend fetches from ticket
+      // checkout_to - backend fetches from ticket
+      // location - backend fetches from ticket
+      // checkout_date - backend fetches from ticket
+      // return_date - backend fetches from ticket
+      const ticketId = ticketIdFromState || ticketFromState?.id;
       formData.append('ticket_id', ticketId);
+      // Status sent to backend for asset status update not checkout
       formData.append('status', data.status);
       formData.append("condition", data.condition);
 
       // Optional fields
-      formData.append('revenue', data.revenue || 0);
-      formData.append('notes', data.notes || '');
+      if (data.revenue) {
+        formData.append('revenue', data.revenue);
+      }
+      if (data.notes) {
+        formData.append('notes', data.notes);
+      }
 
       // Append attachment files if any
-      attachmentFiles.forEach((file, index) => {
+      attachmentFiles.forEach((file) => {
         formData.append("attachments", file);
       });
 
@@ -227,12 +254,19 @@ export default function CheckOutAsset() {
       await createAssetCheckoutWithStatus(formData);
 
       // Navigate to approved tickets after successful checkout
-      navigate(`/approved-tickets`, {
-        state: {
-          successMessage: "Asset has been checked out successfully!"
-        }
-      });
-
+      if (fromAssets) {
+        navigate(`/assets`, {
+          state: {
+            successMessage: "Asset has been checked out successfully!"
+          }
+        });
+      } else {
+        navigate(`/approved-tickets`, {
+          state: {
+            successMessage: "Asset has been checked out successfully!"
+          }
+        });
+      }
     } catch (error) {
       console.error("Error occurred while checking out the asset:", error);
 
@@ -257,6 +291,11 @@ export default function CheckOutAsset() {
     }
   };
 
+  // Build page title from asset info
+  const pageTitle = assetName
+    ? `${assetDisplayId} - ${assetName}`
+    : (assetDisplayId || "Check-Out Asset");
+
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -264,10 +303,10 @@ export default function CheckOutAsset() {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root={fromAsset ? "Assets" : "Tickets"}
+            root={fromAssets ? "Assets" : "Tickets"}
             currentPage="Check-Out Asset"
-            rootNavigatePage={fromAsset ? "/assets" : "/approved-tickets"}
-            title={assetName ? `${assetDisplayedId} - ${assetName}` : assetId}
+            rootNavigatePage={fromAssets ? "/assets" : "/approved-tickets"}
+            title={pageTitle}
           />
         </section>
         <section className="registration-form">
@@ -324,7 +363,7 @@ export default function CheckOutAsset() {
                 type="text"
                 id="returnDate"
                 readOnly
-                {...register("returnDate")}
+                {...register("expectedReturnDate")}
               />
             </fieldset>
 

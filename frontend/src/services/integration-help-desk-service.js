@@ -9,6 +9,12 @@ export async function fetchAllLocations() {
   return res.data;
 }
 
+// GET location by ID
+export async function fetchLocationById(id) {
+  const res = await helpDeskAxios.get(`locations/${id}/`);
+  return res.data;
+}
+
 // create location
 export async function createLocation(data) {
   const res = await helpDeskAxios.post("locations/", data);

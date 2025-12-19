@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// Authentication service
-//const baseUrl = 'https://authentication-service-production-d804.up.railway.app/'
-// Local development
-const baseUrl = "http://127.0.0.1:8001/";
+// Authentication service - uses environment variable for API Gateway support
+const baseUrl = import.meta.env.VITE_AUTH_API_URL || "http://127.0.0.1:8001/";
 
 const axiosInstance = axios.create({
     baseURL: baseUrl,

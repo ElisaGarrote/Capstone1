@@ -17,7 +17,8 @@ const AddEntryModal = ({
     register, 
     handleSubmit, 
     formState: { errors, isValid }, 
-    reset 
+    reset,
+    setValue
   } = useForm({
     mode: "all"
   });
@@ -51,6 +52,17 @@ const AddEntryModal = ({
       document.body.classList.remove('modal-open');
     };
   }, [isOpen]);
+
+  useEffect(() => {
+  if (isOpen) {
+    // initialize fields with defaultValue if provided
+    fields.forEach(field => {
+      if (field.defaultValue) {
+        setValue(field.name, field.defaultValue);
+      }
+    });
+  }
+}, [isOpen, fields, setValue]);
 
   if (!isOpen) return null;
 

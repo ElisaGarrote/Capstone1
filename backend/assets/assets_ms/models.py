@@ -79,12 +79,14 @@ class Product(models.Model):
         validators=[validate_image]
     )
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return self.name
 
 class Asset(models.Model):
-    asset_id = models.CharField(max_length=23, unique=True, blank=True, editable=False)
+    asset_id = models.CharField(max_length=23, unique=True, blank=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_assets', limit_choices_to={'is_deleted': False})
     status = models.PositiveIntegerField()
     supplier = models.PositiveIntegerField(blank=True, null=True)
@@ -103,6 +105,8 @@ class Asset(models.Model):
         validators=[validate_image]
     )
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.asset_id
@@ -139,6 +143,7 @@ class AssetCheckout(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     notes = models.TextField(max_length=500, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
     
     def __str__(self):
         return f"Checkout of {self.asset.asset_id} by user {self.checkout_to}"
@@ -147,6 +152,7 @@ class AssetCheckoutFile(models.Model):
     asset_checkout = models.ForeignKey(AssetCheckout, on_delete=models.CASCADE, related_name='files')
     file = models.FileField(upload_to='asset_checkout_files/', validators=[validate_file])
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
         return f"AssetCheckout #{self.asset_checkin.id} - {self.file.name}"
@@ -160,6 +166,7 @@ class AssetCheckin(models.Model):
     )
     location = models.PositiveIntegerField()
     notes = models.TextField(max_length=500, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
         return f"Checkin of {self.asset_checkout.asset.asset_id} by user {self.asset_checkout.checkout_to}" 
@@ -168,6 +175,7 @@ class AssetCheckinFile(models.Model):
     asset_checkin = models.ForeignKey(AssetCheckin, on_delete=models.CASCADE, related_name='files')
     file = models.FileField(upload_to='asset_checkin_files/', validators=[validate_file])
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
         return f"AssetCheckin #{self.asset_checkin.id} - {self.file.name}"
@@ -193,6 +201,8 @@ class Component(models.Model):
         validators=[validate_image]
     )
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return self.name
@@ -225,6 +235,7 @@ class ComponentCheckout(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     checkout_date = models.DateField()
     notes = models.TextField(max_length=500, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
         return f"Checkout of {self.component.name} to {self.asset.asset_id}"
@@ -246,6 +257,7 @@ class ComponentCheckin(models.Model):
     checkin_date = models.DateField()
     quantity = models.PositiveIntegerField(default=1)
     notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
         return f"Checkin of {self.component_checkout.component.name} from {self.component_checkout.asset.asset_id}"
@@ -279,6 +291,8 @@ class Repair(models.Model):
     notes = models.TextField(blank=True, null=True)
     status_id = models.PositiveIntegerField()
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Repairs on {self.asset.displayed_id} at {self.start_date}"
@@ -287,6 +301,8 @@ class RepairFile(models.Model):
     repair = models.ForeignKey(Repair, on_delete=models.CASCADE, related_name='files')
     file = models.FileField(upload_to='repair_files/')
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"File for repair: {self.repair.name}"
@@ -297,6 +313,7 @@ class AuditSchedule(models.Model):
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now(), editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Audit Schedule for {self.asset.asset_id} on {self.date}"
@@ -320,6 +337,7 @@ class AuditFile(models.Model):
         validators=[validate_file]
     )
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
         return f"File(s) for audit on {self.audit.created_at} for {self.audit.audit_schedule.asset.asset_id}"
@@ -348,69 +366,30 @@ class AssetReportTemplate(models.Model):
     def __str__(self):
         return self.name
 
-
 class ActivityLog(models.Model):
-    """Model to track all activity events in the system for reporting purposes."""
-
-    # Activity types - what kind of entity the activity is on
-    ACTIVITY_TYPE_CHOICES = [
-        ('Asset', 'Asset'),
-        ('Component', 'Component'),
-        ('Audit', 'Audit'),
-        ('Repair', 'Repair'),
+    ACTION_CHOICE = [
+        ("CREATE", "Create"),
+        ("UPDATE", "Update"),
+        ("DELETE", "Delete"),
+        ("LOGIN", "Login"),
+        ("LOGOUT", "Logout"),
+        ("CHECKIN", "Check-in"),
+        ("CHECKOUT", "Check-out"),
+        ("SCHEDULE", "Schedule"),
+        ("PERFORM", "Perform"),
     ]
-
-    # Action types - what kind of action was performed
-    # - Create/Update/Delete: Standard CRUD for all entity types
-    # - Checkout/Checkin: For Asset and Component checkout/checkin operations
-    # - Schedule: For scheduling an audit (AuditSchedule creation)
-    # - Passed/Failed: For recording audit results
-    ACTION_CHOICES = [
-        ('Create', 'Create'),
-        ('Update', 'Update'),
-        ('Delete', 'Delete'),
-        ('Checkout', 'Checkout'),
-        ('Checkin', 'Checkin'),
-        ('Schedule', 'Schedule'),
-        ('Passed', 'Passed'),
-        ('Failed', 'Failed'),
-    ]
-
-    # When the activity occurred
-    datetime = models.DateTimeField(default=timezone.now)
-
-    # Who performed the action (user_id from auth service)
-    user_id = models.PositiveIntegerField(blank=True, null=True)
-    user_name = models.CharField(max_length=200, blank=True, null=True)  # Cached user name for reporting
-
-    # What type of entity and action
-    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPE_CHOICES)
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
-
-    # The item affected (reference to the entity)
-    item_id = models.PositiveIntegerField()  # ID of the asset, component, audit, etc.
-    item_identifier = models.CharField(max_length=100, blank=True, null=True)  # e.g., asset_id like "AST-20251208-00001-ABCD"
-    item_name = models.CharField(max_length=200, blank=True, null=True)  # Cached name for reporting
-
-    # For checkout/checkin actions - the person/entity involved
-    target_id = models.PositiveIntegerField(blank=True, null=True)  # e.g., checkout_to user ID
-    target_name = models.CharField(max_length=200, blank=True, null=True)  # Cached name like "John Doe"
-
-    # Additional notes or changes description
+    
+    user_id = models.PositiveIntegerField()
+    module = models.CharField(max_length=100)
+    action = models.CharField(max_length=15, choices=ACTION_CHOICE)
+    item_id = models.PositiveIntegerField()
+    item_name = models.CharField(max_length=100)
+    target_user_id = models.PositiveIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-
-    # Soft delete
-    is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-datetime']
-        indexes = [
-            models.Index(fields=['-datetime']),
-            models.Index(fields=['activity_type']),
-            models.Index(fields=['action']),
-            models.Index(fields=['user_id']),
-            models.Index(fields=['item_id']),
-        ]
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.action} {self.activity_type} - {self.item_identifier or self.item_id} by User {self.user_id}"
+        return f"{self.action} - {self.item_name}"
