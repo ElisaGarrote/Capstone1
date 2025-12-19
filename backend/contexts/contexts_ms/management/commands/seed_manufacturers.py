@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from contexts_ms.models import Manufacturer
+import re
 
 
 class Command(BaseCommand):
@@ -11,6 +12,12 @@ class Command(BaseCommand):
             action='store_true',
             help='Clear existing manufacturers before seeding',
         )
+        parser.add_argument(
+            '--count',
+            type=int,
+            default=10,
+            help='Number of manufacturers to seed (default: 10)'
+        )
 
     def handle(self, *args, **options):
         if options['clear']:
@@ -18,9 +25,10 @@ class Command(BaseCommand):
             Manufacturer.objects.all().delete()
             self.stdout.write(self.style.SUCCESS('Existing manufacturers cleared.'))
 
-        self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding 10 Manufacturers ==='))
+        count = int(options.get('count') or 10)
+        self.stdout.write(self.style.MIGRATE_HEADING(f'\n=== Seeding {count} Manufacturers ==='))
 
-        manufacturers_data = self.get_manufacturers_data()
+        manufacturers_data = self.get_manufacturers_data(count)
         created_count = 0
 
         for manufacturer_data in manufacturers_data:
@@ -36,94 +44,65 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'\n✓ Manufacturers seeding complete: {created_count} created'))
 
-    def get_manufacturers_data(self):
-        """Generate 10 major IT equipment manufacturers
+    def get_manufacturers_data(self, count=10):
+        """Return a list of manufacturer dicts sized to `count`.
 
-        Note: support_phone field is limited to 13 characters in the database
+        Produces realistic manufacturer names for the first block and then
+        synthetic but realistic-looking local vendors to reach the requested
+        count. Phone numbers use Philippine mobile-style E.164 (+63...) values
+        which fit the `support_phone` max length.
         """
 
-        manufacturers = [
-            {
-                'name': 'Dell Technologies',
-                'manu_url': 'https://www.dell.com',
-                'support_url': 'https://www.dell.com/support',
-                'support_phone': '800-624-9896',
-                'support_email': 'support@dell.com',
-                'notes': 'Leading manufacturer of laptops, desktops, and servers',
-            },
-            {
-                'name': 'HP Inc.',
-                'manu_url': 'https://www.hp.com',
-                'support_url': 'https://support.hp.com',
-                'support_phone': '800-474-6836',
-                'support_email': 'support@hp.com',
-                'notes': 'Computers, printers, and enterprise solutions',
-            },
-            {
-                'name': 'Lenovo',
-                'manu_url': 'https://www.lenovo.com',
-                'support_url': 'https://support.lenovo.com',
-                'support_phone': '855-253-6686',
-                'support_email': 'support@lenovo.com',
-                'notes': 'ThinkPad, ThinkCentre, and IdeaPad product lines',
-            },
-            {
-                'name': 'Apple Inc.',
-                'manu_url': 'https://www.apple.com',
-                'support_url': 'https://support.apple.com',
-                'support_phone': '800-275-2273',
-                'support_email': 'support@apple.com',
-                'notes': 'MacBook, iMac, Mac Pro, and accessories',
-            },
-            {
-                'name': 'ASUS',
-                'manu_url': 'https://www.asus.com',
-                'support_url': 'https://www.asus.com/support',
-                'support_phone': '888-678-3688',
-                'support_email': 'support@asus.com',
-                'notes': 'Laptops, motherboards, and computer components',
-            },
-            {
-                'name': 'Cisco Systems',
-                'manu_url': 'https://www.cisco.com',
-                'support_url': 'https://www.cisco.com/c/en/us/support',
-                'support_phone': '800-553-2447',
-                'support_email': 'support@cisco.com',
-                'notes': 'Network equipment, switches, routers, and firewalls',
-            },
-            {
-                'name': 'Ubiquiti Networks',
-                'manu_url': 'https://www.ui.com',
-                'support_url': 'https://help.ui.com',
-                'support_phone': '408-942-4140',
-                'support_email': 'support@ui.com',
-                'notes': 'UniFi network equipment and wireless solutions',
-            },
-            {
-                'name': 'Samsung Electronics',
-                'manu_url': 'https://www.samsung.com',
-                'support_url': 'https://www.samsung.com/support',
-                'support_phone': '800-726-7864',
-                'support_email': 'support@samsung.com',
-                'notes': 'Monitors, SSDs, memory, and mobile devices',
-            },
-            {
-                'name': 'LG Electronics',
-                'manu_url': 'https://www.lg.com',
-                'support_url': 'https://www.lg.com/support',
-                'support_phone': '800-243-0000',
-                'support_email': 'support@lg.com',
-                'notes': 'Monitors and display solutions',
-            },
-            {
-                'name': 'Canon Inc.',
-                'manu_url': 'https://www.canon.com',
-                'support_url': 'https://www.canon.com/support',
-                'support_phone': '800-652-2666',
-                'support_email': 'support@canon.com',
-                'notes': 'Printers, scanners, and imaging equipment',
-            },
+        # Curated list of 50 distinct manufacturer/vendor names (no repeated generic
+        # placeholders). We'll construct reasonable website/support info and
+        # produce unique +63 phone numbers for each.
+        names = [
+            'Dell Technologies','HP Inc.','Lenovo','Apple Inc.','ASUS','Cisco Systems',
+            'Ubiquiti Networks','Samsung Electronics','LG Electronics','Canon Inc.',
+            'Microsoft','Acer','Seagate Technology','Western Digital','Intel Corporation',
+            'AMD','Kingston','Netgear','TP-Link','Razer','Sennheiser','Epson','Brother',
+            'Philips','BenQ','MSI','Gigabyte','Zotac','HyperX','Anker','Belkin','Logitech',
+            'Sony','Panasonic','Toshiba','Sharp','Olympus','Fujitsu','HPE','Motorola',
+            'BlackBerry','Alcatel','Xiaomi','Oppo','Vivo','Realme','Huawei','Dyson','Corsair'
         ]
 
-        return manufacturers
+        manufacturers = []
+        for idx, name in enumerate(names[:count]):
+            slug = re.sub(r"[^a-z0-9]", '', name.lower()) or f'manufacturer{idx+1}'
+            website = f'https://{slug}.com'
+            support_url = f'https://{slug}.com/support'
+            email = f'support@{slug}.com'
+            # Generate unique +63 mobile-like E.164 numbers: +6399xxxxxxx
+            phone = f'+63{9}{8000000 + idx}'
+            phone = phone[:16]
+            manufacturers.append({
+                'name': name,
+                'website_url': website,
+                'support_url': support_url,
+                'support_phone': phone,
+                'support_email': email,
+                'notes': 'Seeded manufacturer entry',
+            })
+
+        # If count requested > len(names), generate additional unique names
+        i = len(manufacturers)
+        while len(manufacturers) < count:
+            n = len(manufacturers) + 1
+            name = f'Local Manufacturer {n}'
+            slug = f'localmanufacturer{n}'
+            website = f'https://{slug}.ph'
+            support_url = f'{website}/support'
+            email = f'contact@{slug}.ph'
+            phone = f'+63{9}{8000000 + len(manufacturers)}'
+            phone = phone[:16]
+            manufacturers.append({
+                'name': name,
+                'website_url': website,
+                'support_url': support_url,
+                'support_phone': phone,
+                'support_email': email,
+                'notes': 'Generated local manufacturer',
+            })
+
+        return manufacturers[:count]
 

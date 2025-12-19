@@ -93,6 +93,20 @@ export async function bulkDeleteManufacturers(ids) {
   return res.data;
 }
 
+// IMPORT manufacturers via XLSX upload
+export async function importManufacturers(formData, options = {}) {
+  // options: { allowUpdate: boolean, upsertBy: 'natural'|'id', apiKey: string }
+  const params = {};
+  if (options.allowUpdate) params.allow_update = 'true';
+  if (options.upsertBy) params.upsert_by = options.upsertBy;
+
+  const headers = {};
+  if (options.apiKey) headers['X-IMPORT-API-KEY'] = options.apiKey;
+
+  const res = await contextsAxios.post(`import/manufacturers/`, formData, { params, headers });
+  return res.data;
+}
+
 /* ===============================
             STATUS CRUD
 ================================= */

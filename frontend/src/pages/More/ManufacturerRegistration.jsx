@@ -10,6 +10,7 @@ import {
   createManufacturer,
   updateManufacturer,
 } from "../../services/contexts-service";
+import { importManufacturers } from "../../services/contexts-service";
 import Footer from "../../components/Footer";
 import PlusIcon from "../../assets/icons/plus.svg";
 
@@ -48,6 +49,8 @@ const ManufacturerRegistration = () => {
   const [removeImage, setRemoveImage] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [importFile, setImportFile] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   const navigate = useNavigate();
 
@@ -129,8 +132,35 @@ const ManufacturerRegistration = () => {
         return;
       }
       setImportFile(file);
-      // Here you would typically process the Excel file
-      console.log("Import file selected:", file.name);
+      // Upload immediately and show result (inline messages like Category import)
+      (async () => {
+        try {
+          setIsImporting(true);
+          setSuccessMessage('');
+          setErrorMessage('');
+          const fd = new FormData();
+          fd.append('file', file, file.name);
+          const res = await importManufacturers(fd);
+          const created = res?.created || 0;
+          const updated = res?.updated || 0;
+          const errors = res?.errors || [];
+          let msg = `Import complete. Created ${created}. Updated ${updated}.`;
+          if (Array.isArray(errors) && errors.length) {
+            msg += ` ${errors.length} rows failed.`;
+            setErrorMessage(msg);
+          } else {
+            setSuccessMessage(msg);
+          }
+        } catch (err) {
+          console.error('Import failed', err);
+          const detail = err?.response?.data?.detail || err?.message || 'Import failed';
+          setErrorMessage(detail);
+        } finally {
+          setIsImporting(false);
+          setImportFile(null);
+          if (typeof e.target !== 'undefined') e.target.value = '';
+        }
+      })();
     }
   };
 
@@ -214,6 +244,18 @@ const ManufacturerRegistration = () => {
               }
             />
           </section>
+          {/* Left-side import status: matches Category import UI */}
+          <div style={{ padding: '0 24px', marginTop: 8 }}>
+            <div className="import-status-left" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {isImporting && <span style={{ fontSize: 13, fontWeight: 500 }}>Uploading...</span>}
+              {!isImporting && successMessage && (
+                <div className="success-message" style={{ fontSize: 13, color: 'green' }}>{successMessage}</div>
+              )}
+              {!isImporting && errorMessage && (
+                <div className="error-message" style={{ fontSize: 13, color: '#d32f2f' }}>{errorMessage}</div>
+              )}
+            </div>
+          </div>
           <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
