@@ -12,6 +12,7 @@ export default function ConfirmationModal({
   onConfirm,
   onCancel,
   actionType,
+  selectedCount,
 }) {
   /*
   Action Type includes the following:
@@ -166,12 +167,12 @@ export default function ConfirmationModal({
       <div className="overlay" onClick={handleClose}>
         <div className="content" onClick={(e) => e.stopPropagation()}>
           <h2 className="modal-title">{getActionText()} Confirmation</h2>
+
           <p className="modal-message">
-            Are you sure you want to {getActionText().toLowerCase()} this{" "}
-            {actionType != "activate" && actionType != "deactivate"
-              ? "item"
-              : "user"}
-            ? This action cannot be undone.
+            {((selectedCount || 0) > 1)
+              ? `Are you sure you want to ${getActionText().toLowerCase()} these ${selectedCount} items? This action cannot be undone.`
+              : <>Are you sure you want to {getActionText().toLowerCase()} this {actionType != "activate" && actionType != "deactivate" ? "item" : "user"}? This action cannot be undone.</>
+            }
           </p>
           {serverMessage && (
             <div className="server-message">{serverMessage}</div>

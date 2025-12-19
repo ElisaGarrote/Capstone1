@@ -41,4 +41,18 @@ export async function bulkDeleteCategories(ids = []) {
   return res.data
 }
 
+export async function importCategories(file, options = {}) {
+  // file: File object (xlsx)
+  const form = new FormData()
+  form.append('file', file)
+  // allow_update and upsert_by can be provided in options
+  const params = {}
+  if (options.allow_update) params.allow_update = options.allow_update
+  if (options.upsert_by) params.upsert_by = options.upsert_by
+
+  const headers = { 'Content-Type': 'multipart/form-data' }
+  const res = await contextsApi.post(`/import/categories/`, form, { params, headers })
+  return res.data
+}
+
 export default contextsApi

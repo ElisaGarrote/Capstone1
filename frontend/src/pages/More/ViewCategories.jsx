@@ -185,6 +185,18 @@ export default function Category() {
     setCurrentPage(1);
   };
 
+  // Handle page size changes from Pagination: update page size and
+  // ensure currentPage is within the new valid range so table shows data.
+  const handlePageSizeChangeLocal = (newSize) => {
+    const size = Number(newSize) || pageSize;
+    const newTotalPages = Math.max(1, Math.ceil(searchedData.length / size));
+    setPageSize(size);
+    setCurrentPage((prev) => Math.min(prev, newTotalPages));
+    if (typeof window !== 'undefined' && window.scrollTo) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const searchedData =
     normalizedQuery === ""
@@ -375,6 +387,7 @@ export default function Category() {
           closeModal={closeDeleteModal}
           actionType="delete"
           onConfirm={confirmDelete}
+          selectedCount={deleteTarget ? 1 : selectedIds.length}
         />
       )}
 
@@ -452,7 +465,7 @@ export default function Category() {
                 pageSize={pageSize}
                 totalItems={searchedData.length}
                 onPageChange={setCurrentPage}
-                onPageSizeChange={setPageSize}
+                onPageSizeChange={handlePageSizeChangeLocal}
               />
             </section>
           </section>
