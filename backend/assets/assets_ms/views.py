@@ -27,6 +27,29 @@ from assets_ms.services.activity_logger import (
 
 logger = logging.getLogger(__name__)
 
+
+def _format_validation_detail(detail):
+    """Return a user-friendly string from a DRF ValidationError.detail value."""
+    try:
+        # dict with 'detail' or other keys
+        if isinstance(detail, dict):
+            # common pattern: { 'detail': 'message' }
+            if "detail" in detail:
+                val = detail.get("detail")
+            else:
+                # pick first value
+                val = next(iter(detail.values()))
+        else:
+            val = detail
+
+        # If it's a list, join
+        if isinstance(val, (list, tuple)):
+            return " ".join(str(x) for x in val)
+
+        return str(val)
+    except Exception:
+        return str(detail)
+
 # If will add more views later or functionality, please create file on api folder or services folder
 # Only viewsets here
 class ProductViewSet(viewsets.ModelViewSet):
@@ -353,22 +376,25 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         products = Product.objects.filter(id__in=ids, is_deleted=False)
         failed = []
+        deleted = []
 
         for product in products:
             try:
                 self.perform_destroy(product)
+                deleted.append(product.id)
             except ValidationError as e:
-                failed.append({"id": product.id, "error": str(e.detail)})
-        
+                # Format DRF ValidationError.detail into a readable message
+                msg = _format_validation_detail(getattr(e, 'detail', str(e)))
+                failed.append({"id": product.id, "message": msg})
+
         cache.delete("products:list")
 
-        if failed:
-            return Response({
-                "detail": "Some products could not be deleted. Please check if they are assigned to active assets before trying again.",
-                "failed": failed
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"detail": "Products soft-deleted successfully."}, status=status.HTTP_200_OK)
+        return Response({
+            "deleted_count": len(deleted),
+            "skipped_count": len(failed),
+            "deleted_ids": deleted,
+            "failed": failed
+        }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path='asset-registration')
     def asset_registration(self, request):
@@ -404,7 +430,23 @@ class AssetViewSet(viewsets.ModelViewSet):
         status_map = cache.get("statuses:map")
         if not status_map:
             statuses = get_status_names()
-            status_map = {s['id']: s for s in statuses}
+            # Handle list, dict with 'results', dict with 'warning', or other formats
+            if isinstance(statuses, list):
+                status_map = {s.get('id'): s for s in statuses if isinstance(s, dict) and s.get('id') is not None}
+            elif isinstance(statuses, dict):
+                if statuses.get('warning'):
+                    # Service unavailable, use empty map
+                    status_map = {}
+                elif isinstance(statuses.get('results'), list):
+                    # Paginated response
+                    status_map = {s.get('id'): s for s in statuses['results'] if isinstance(s, dict) and s.get('id') is not None}
+                elif statuses.get('id') is not None:
+                    # Single item response
+                    status_map = {statuses.get('id'): statuses}
+                else:
+                    status_map = {}
+            else:
+                status_map = {}
             cache.set("statuses:map", status_map, 300)
 
         # products
@@ -487,8 +529,8 @@ class AssetViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         errors = []
 
-        # Check for active checkouts (no checkin yet)
-        if instance.asset_checkouts.filter(asset_checkin__isnull=True).exists():
+        # Check for active checkouts (no checkin yet) that haven't been deleted
+        if instance.asset_checkouts.filter(asset_checkin__isnull=True, is_deleted=False).exists():
             errors.append("This asset is currently checked out and not yet checked in. Please check in the asset before deleting it or perform a check-in and delete checkout.")
 
         # If any blocking relationships exist, raise error
@@ -501,6 +543,15 @@ class AssetViewSet(viewsets.ModelViewSet):
         instance.is_deleted = True
         instance.save()
         self.invalidate_asset_cache(instance.id)
+        # Log activity
+        try:
+            log_asset_activity(
+                action='Delete',
+                asset=instance,
+                notes=f"Asset '{instance.name}' deleted"
+            )
+        except Exception:
+            logger.exception("Failed to log asset delete activity")
 
     def perform_create(self, serializer):
         validated = serializer.validated_data
@@ -523,6 +574,15 @@ class AssetViewSet(viewsets.ModelViewSet):
         )
 
         self.invalidate_asset_cache(serializer.instance.id)
+        # Log activity for create
+        try:
+            log_asset_activity(
+                action='Create',
+                asset=serializer.instance,
+                notes=f"Asset '{serializer.instance.name}' created"
+            )
+        except Exception:
+            logger.exception("Failed to log asset create activity")
 
     def perform_update(self, serializer):
         instance = serializer.save()
@@ -810,30 +870,26 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         assets = Asset.objects.filter(id__in=ids, is_deleted=False)
         failed = []
+        deleted = []
 
         for asset in assets:
             try:
                 self.perform_destroy(asset)
+                deleted.append(asset.id)
             except ValidationError as e:
-                failed.append({"id": asset.id, "error": str(e.detail)})
-        
+                msg = _format_validation_detail(getattr(e, 'detail', str(e)))
+                failed.append({"id": asset.id, "message": msg})
+
         cache.delete("assets:list")
 
-        if failed:
-            return Response({
-                "detail": "Some assets could not be deleted.",
-                "failed": failed
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"detail": "Assets deleted successfully."}, status=status.HTTP_200_OK)
+        return Response({
+            "deleted_count": len(deleted),
+            "skipped_count": len(failed),
+            "deleted_ids": deleted,
+            "failed": failed
+        }, status=status.HTTP_200_OK)
     
-
-        # Log activity
-        log_asset_activity(
-            action='Create',
-            asset=asset,
-            notes=f"Asset '{asset.name}' created"
-        )
+        
 
     def perform_update(self, serializer):
         asset = serializer.save()
@@ -1079,8 +1135,8 @@ class ComponentViewSet(viewsets.ModelViewSet):
             )
 
     def perform_destroy(self, instance):
-        # Check if the component has an active checkout (no checkin yet)
-        if instance.component_checkouts.filter(component_checkins__isnull=True).exists():
+        # Check if the component has an active checkout (no checkin yet) that hasn't been deleted
+        if instance.component_checkouts.filter(component_checkin__isnull=True, is_deleted=False).exists():
             raise ValidationError({ "detail": "Cannot delete this component, it's currently checked out." })
 
         # Otherwise, perform soft delete
@@ -1386,9 +1442,7 @@ def check_supplier_usage(request, pk):
     in_use = (
         Asset.objects.filter(supplier=pk, is_deleted=False).exists()
         or Component.objects.filter(supplier=pk, is_deleted=False).exists()
-        or Product.objects.filter(is_deleted=False).filter(
-            manufacturer=pk
-        ).exists()  # some products may use manufacturer ID equal to supplier if reused
+        or Product.objects.filter(default_supplier=pk, is_deleted=False).exists()
         or Repair.objects.filter(supplier_id=pk, is_deleted=False).exists()
     )
     return Response({"in_use": in_use})

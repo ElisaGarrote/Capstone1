@@ -457,12 +457,15 @@ export default function Assets() {
                   type="export"
                   onClick={handleExport}
                 />
-                {authService.getUserInfo().role === "Admin" && (
-                  <MediumButtons
-                    type="new"
-                    navigatePage="/components/registration"
-                  />
-                )}
+                {(() => {
+                  const user = authService.getUserInfo();
+                  return user?.role === "Admin" ? (
+                    <MediumButtons
+                      type="new"
+                      navigatePage="/components/registration"
+                    />
+                  ) : null;
+                })()}
               </section>
             </section>
 

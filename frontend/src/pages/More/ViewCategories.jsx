@@ -308,18 +308,31 @@ export default function Category() {
         if (selectedIds.length > 0) {
           const resp = await bulkDeleteCategories(selectedIds);
           // If backend skipped some items, signal the modal to display usage message
-          if (resp && resp.skipped && Object.keys(resp.skipped).length > 0) {
-            const deletedCount = (resp && resp.deleted && resp.deleted.length) || 0;
-            const skippedCount = Object.keys(resp.skipped).length;
+          // Normalize response shapes: support legacy {deleted, skipped} and new {deleted_count, skipped_count, deleted_ids, failed}
+          const deletedCount = resp?.deleted_count ?? (resp?.deleted ? resp.deleted.length : 0) ?? 0;
+          const skippedCount = resp?.skipped_count ?? (resp?.skipped ? Object.keys(resp.skipped).length : (resp?.failed ? resp.failed.length : 0)) ?? 0;
 
+          if (skippedCount > 0) {
             if (deletedCount > 0) {
               const parts = [`${deletedCount} categories deleted successfully`];
-              if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
+              parts.push(`${skippedCount} skipped (in use)`);
               const msg = parts.join('; ') + '.';
               setSuccessMessage(msg);
               setErrorMessage('');
               setTimeout(() => setSuccessMessage(''), 5000);
-              return { ok: false, data: resp };
+              // Mixed result: some deleted, some skipped — update local UI to remove deleted items
+              try {
+                const deletedIds = resp?.deleted_ids ?? (Array.isArray(resp?.deleted) ? resp.deleted : []);
+                if (deletedIds && deletedIds.length) {
+                  setFetchedCategories((prev) => (prev || []).filter((c) => !deletedIds.includes(c.id)));
+                  setFilteredData((prev) => (prev || []).filter((c) => !deletedIds.includes(c.id)));
+                  setSelectedIds((prev) => (prev || []).filter((id) => !deletedIds.includes(id)));
+                }
+              } catch (e) {
+                console.error('Failed to update local list after mixed delete', e);
+              }
+              // Return success but include payload for modal to display skipped info
+              return { ok: true, data: resp };
             }
 
             // Only skipped
@@ -344,6 +357,11 @@ export default function Category() {
       }
 
       // Success — close modal and return ok
+      // If this was a bulk delete (no single deleteTarget), reload to ensure list consistency
+      if (!deleteTarget) {
+        // reload the page so parent state and any server-side pagination is synchronized
+        window.location.reload();
+      }
       closeDeleteModal();
       setTimeout(() => setSuccessMessage(""), 5000);
       return { ok: true, data: null };
@@ -399,9 +417,11 @@ export default function Category() {
       {isDeleteModalOpen && (
         <DeleteModal
           closeModal={closeDeleteModal}
-          actionType="delete"
+          actionType={deleteTarget ? "delete" : "bulk-delete"}
           onConfirm={confirmDelete}
+          targetIds={deleteTarget ? [deleteTarget] : selectedIds}
           selectedCount={deleteTarget ? 1 : selectedIds.length}
+          entityType="category"
         />
       )}
 

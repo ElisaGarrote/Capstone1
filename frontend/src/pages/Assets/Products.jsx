@@ -446,6 +446,33 @@ export default function Products() {
           targetIds={selectedIds}
           onSuccess={handleDeleteSuccess}
           onError={handleDeleteError}
+          onDeleteFail={(payload) => {
+            // payload may be { deleted_count, skipped_count, deleted_ids, failed }
+            const deletedCount = payload?.deleted_count ?? 0;
+            const skippedCount = payload?.skipped_count ?? payload?.skipped ?? 0;
+            const deletedIds = payload?.deleted_ids ?? [];
+            const failed = payload?.failed ?? [];
+
+            if (deletedCount > 0) {
+              setSuccessMessage(`${deletedCount} products deleted successfully.`);
+              // remove deleted items from lists
+              if (deletedIds.length) {
+                setProducts((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+                setFilteredData((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+                setSelectedIds([]);
+              }
+            }
+
+            if (skippedCount > 0 || (Array.isArray(failed) && failed.length > 0)) {
+              const firstError = Array.isArray(failed) && failed.length > 0 ? (failed[0].message || failed[0].error || JSON.stringify(failed[0])) : null;
+              setErrorMessage(`${skippedCount} items skipped (in use). ${firstError || ''}`.trim());
+            }
+
+            setTimeout(() => {
+              setSuccessMessage("");
+              setErrorMessage("");
+            }, 6000);
+          }}
         />
       )}
 
@@ -501,12 +528,16 @@ export default function Products() {
                   type="export"
                   onClick={handleExport}
                 />
-                {authService.getUserInfo().role === "Admin" && (
-                  <MediumButtons
-                    type="new"
-                    navigatePage="/products/registration"
-                  />
-                )}
+                {(() => {
+                  const user = authService.getUserInfo();
+                  return user?.role === "Admin" ? (
+                    <MediumButtons
+                      type="new"
+                      navigatePage="/products/registration"
+                    />
+                  ) : null;
+                })()}
+                
               </section>
             </section>
 

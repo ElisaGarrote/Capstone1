@@ -249,3 +249,128 @@ export async function fetchDashboardStats() {
   const res = await assetsAxios.get("dashboard/");
   return res.data;
 }
+
+/* ===============================
+        REPORT TEMPLATES
+================================= */
+
+// GET all report templates
+export async function fetchReportTemplates() {
+  const res = await assetsAxios.get("report-templates/");
+  return res.data;
+}
+
+// CREATE report template
+export async function createReportTemplate(data) {
+  const res = await assetsAxios.post("report-templates/", data);
+  return res.data;
+}
+
+// DELETE report template
+export async function deleteReportTemplate(id) {
+  const res = await assetsAxios.delete(`report-templates/${id}/`);
+  return res.data;
+}
+
+// DOWNLOAD asset report Excel
+export async function downloadAssetReportExcel(filters) {
+  const res = await assetsAxios.post("reports/asset-report/", filters, {
+    responseType: "blob",
+  });
+  return res.data;
+}
+
+/* ===============================
+        ACTIVITY REPORT
+================================= */
+
+// GET activity report data (JSON)
+export async function fetchActivityReport(params = {}) {
+  const res = await assetsAxios.get("reports/activity/", {
+    params,
+  });
+  return res.data;
+}
+
+// DOWNLOAD activity report as Excel file
+export async function downloadActivityReportExcel(filters = {}, fileName = "ActivityReport.xlsx") {
+  const res = await assetsAxios.get("reports/activity/", {
+    params: { ...filters, export_format: filters.export_format || "xlsx" },
+    responseType: "blob",
+  });
+
+  const blob = new Blob([res.data], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+// Utility: return full URL for an uploaded audit file path
+export function auditFileUrl(filePath) {
+  // filePath may be a path like "media/audit_files/xxx.pdf" or "/media/.." - normalize
+  const base = assetsAxios.defaults.baseURL || "";
+  const cleanBase = String(base).replace(/\/$/, "");
+  const cleanPath = String(filePath).replace(/^\//, "");
+  return `${cleanBase}/${cleanPath}`;
+}
+
+// Convenience counts for legacy code that expects an assetsService object
+export async function countAllScheduleAudits() {
+  try {
+    const stats = await fetchDashboardStats();
+    return stats.upcoming_audits ?? 0;
+  } catch (err) {
+    return 0;
+  }
+}
+
+export async function countAllOverdueAudits() {
+  try {
+    const stats = await fetchDashboardStats();
+    return stats.overdue_audits ?? 0;
+  } catch (err) {
+    return 0;
+  }
+}
+
+export async function countAllAudits() {
+  try {
+    const stats = await fetchDashboardStats();
+    // If backend doesn't provide completed count, return 0
+    return stats.completed_audits ?? 0;
+  } catch (err) {
+    return 0;
+  }
+}
+
+// Default export for legacy imports expecting an `assetsService` object
+const assetsService = {
+  fetchAllProducts,
+  fetchAllAssets,
+  fetchAssetById,
+  fetchProductsForAssetRegistration,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  fetchReportTemplates,
+  createReportTemplate,
+  deleteReportTemplate,
+  downloadAssetReportExcel,
+  fetchActivityReport,
+  downloadActivityReportExcel,
+  fetchDashboardStats,
+  auditFileUrl,
+  countAllScheduleAudits,
+  countAllOverdueAudits,
+  countAllAudits,
+};
+
+export default assetsService;

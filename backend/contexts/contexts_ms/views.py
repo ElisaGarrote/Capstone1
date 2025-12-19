@@ -57,7 +57,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("category", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -90,7 +90,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("supplier", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -122,7 +122,7 @@ class DepreciationViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("depreciation", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -154,7 +154,7 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("manufacturer", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -209,7 +209,7 @@ class StatusViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("status", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -241,7 +241,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("location", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.delete()
 
     @action(detail=False, methods=['post'])

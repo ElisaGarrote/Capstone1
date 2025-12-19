@@ -1,6 +1,7 @@
 import "../styles/TabNavBar.css";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { fetchDashboardStats } from "../services/assets-service";
 
 export default function TabNavBar() {
   const navigate = useNavigate();
@@ -11,13 +12,17 @@ export default function TabNavBar() {
   // Retrieve the count of all the schedule audits, audits, and overdue audits.
   useEffect(() => {
     const makeRequest = async () => {
-      const countScheduleAudits = await assetsService.countAllScheduleAudits();
-      const countAudits = await assetsService.countAllAudits();
-      const countOverdueAudits = await assetsService.countAllOverdueAudits();
+      try {
+        const stats = await fetchDashboardStats();
 
-      setCountScheduleAudits(countScheduleAudits);
-      setCountAudits(countAudits);
-      setCountOverdueAudits(countOverdueAudits);
+        // Map backend dashboard keys to the UI counters. Use safe defaults.
+        setCountScheduleAudits(stats.upcoming_audits ?? 0);
+        setCountOverdueAudits(stats.overdue_audits ?? 0);
+        setCountAudits(stats.completed_audits ?? 0);
+      } catch (err) {
+        // If dashboard endpoint fails, keep counts at zero and avoid crashing
+        console.error("Failed to load dashboard stats for TabNavBar:", err);
+      }
     };
 
     makeRequest();

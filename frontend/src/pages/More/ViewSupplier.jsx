@@ -404,29 +404,35 @@ export default function ViewSupplier() {
             return { ok: false, data: { detail: 'No suppliers selected to delete' } };
           }
           const res = await bulkDeleteSuppliers(checkedItems);
-          // Remove only ids reported as deleted by backend; keep skipped ones
-          const deletedIds = (res && Array.isArray(res.deleted)) ? res.deleted : [];
-          const skippedCount = res && res.skipped ? Object.keys(res.skipped).length : 0;
+          // Determine deleted and skipped ids without clearing selection yet
+          const deletedIds = res?.deleted_ids ?? (Array.isArray(res?.deleted) ? res.deleted : []);
+          const failedEntries = Array.isArray(res?.failed) ? res.failed : [];
+          const skippedIds = res?.skipped ? Object.keys(res.skipped).map((k) => (isNaN(Number(k)) ? k : Number(k))) : (failedEntries.length ? failedEntries.map((f) => f.id).filter(Boolean) : []);
+          const deletedCount = deletedIds ? deletedIds.length : 0;
+          const skippedCount = skippedIds ? skippedIds.length : 0;
 
           if (deletedIds.length > 0) {
             setSuppliers((prev) => prev.filter((s) => !deletedIds.includes(s.id)));
             setFilteredData((prev) => prev.filter((s) => !deletedIds.includes(s.id)));
           }
 
-          // If there are any skipped items, do NOT set success/error here; return structured result
-          // so DeleteModal's onDeleteFail will render the combined message (deleted+skipped).
+          // If there are any skipped items, keep them selected and return structured result
           if (skippedCount > 0) {
-            setCheckedItems([]);
+            try { if (skippedIds && skippedIds.length) setCheckedItems(skippedIds); } catch (e) {}
             return { ok: false, data: res };
           }
 
-          // No skipped items -> show success for deleted count
-          const deletedCount = deletedIds.length || 0;
+          // No skipped items -> show success for deleted count and clear selection
           if (deletedCount > 0) {
             setSuccessMessage(`${deletedCount} supplier(s) deleted successfully!`);
             setTimeout(() => setSuccessMessage(''), 5000);
           }
           setCheckedItems([]);
+          // If bulk delete removed items and there were no skipped items, reload page
+          if (deletedCount > 0 && skippedCount === 0 && !deleteTarget) {
+            // ensure UI and server are fully synchronized
+            window.location.reload();
+          }
         }
         setTimeout(() => setSuccessMessage(''), 5000);
         return { ok: true };
@@ -484,22 +490,59 @@ export default function ViewSupplier() {
         <DeleteModal
           endPoint={endPoint}
           closeModal={closeDeleteModal}
-          actionType="delete"
+          actionType={deleteTarget ? "delete" : "bulk-delete"}
           onConfirm={confirmDelete}
+          targetIds={deleteTarget ? [deleteTarget] : checkedItems}
+          entityType="supplier"
           onDeleteFail={(payload) => {
             // Normalize payload (handlers sometimes return { ok:false, data: ... })
             let body = payload;
             if (payload && payload.data) body = payload.data;
 
-            // If this is a bulk delete summary with deleted/skipped, show a single combined alert
-            if (body && (body.deleted || body.skipped)) {
-              const deletedCount = (body.deleted && body.deleted.length) || 0;
-              const skippedCount = body.skipped ? Object.keys(body.skipped).length : 0;
-              const deletedLabel = deletedCount === 1 ? 'supplier' : 'suppliers';
-              const skippedLabel = skippedCount === 1 ? 'skipped (in use)' : 'skipped (in use)';
+            // Support unified response: {deleted_count, skipped_count, deleted_ids, failed}
+            const deletedIds = body?.deleted_ids ?? (Array.isArray(body?.deleted) ? body.deleted : []);
+            const deletedCount = body?.deleted_count ?? (deletedIds ? deletedIds.length : 0) ?? 0;
+            const skippedCount = body?.skipped_count ?? (body?.skipped ? Object.keys(body.skipped).length : 0) ?? 0;
+
+            // If failed array exists, extract messages. But still prefer to show combined
+            // deleted/skipped summary when present, and remove deleted ids from UI.
+            const failedMsgs = Array.isArray(body?.failed) ? body.failed.map((f) => f && f.message ? f.message : JSON.stringify(f)).filter(Boolean) : [];
+            if (failedMsgs.length > 0) {
+              if (deletedCount > 0 || skippedCount > 0) {
+                const parts = [];
+                const deletedLabel = deletedCount === 1 ? 'supplier' : 'suppliers';
+                if (deletedCount > 0) parts.push(`${deletedCount} ${deletedLabel} deleted successfully`);
+                if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
+                const summary = parts.length ? parts.join('; ') + '.' : 'Delete completed with issues.';
+                if (deletedCount > 0) {
+                  setSuccessMessage(summary);
+                  setTimeout(() => setSuccessMessage(''), 5000);
+                } else {
+                  setErrorMessage(summary);
+                  setTimeout(() => setErrorMessage(''), 7000);
+                }
+              } else {
+                const msg = failedMsgs.join('; ');
+                setErrorMessage(msg);
+                setTimeout(() => setErrorMessage(''), 7000);
+              }
+              // Remove any successfully deleted ids from UI
+              try {
+                if (deletedIds && deletedIds.length) {
+                  setSuppliers((prev) => (prev || []).filter((s) => !deletedIds.includes(s.id)));
+                  setFilteredData((prev) => (prev || []).filter((s) => !deletedIds.includes(s.id)));
+                  setCheckedItems((prev) => (prev || []).filter((id) => !deletedIds.includes(id)));
+                }
+              } catch (e) { console.error('Failed to apply partial-delete UI update', e); }
+              return;
+            }
+
+            // Mixed summary (legacy or new shape) — show combined message and update UI
+            if (deletedCount > 0 || skippedCount > 0) {
               const parts = [];
+              const deletedLabel = deletedCount === 1 ? 'supplier' : 'suppliers';
               if (deletedCount > 0) parts.push(`${deletedCount} ${deletedLabel} deleted successfully`);
-              if (skippedCount > 0) parts.push(`${skippedCount} ${skippedLabel}`);
+              if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
               const msg = parts.length ? parts.join('; ') + '.' : 'Delete failed.';
               // Show as successMessage when there were deletions, otherwise errorMessage
               if (deletedCount > 0) {
@@ -507,8 +550,16 @@ export default function ViewSupplier() {
                 setTimeout(() => setSuccessMessage(''), 5000);
               } else {
                 setErrorMessage(msg);
-                setTimeout(() => setErrorMessage(''), 5000);
+                setTimeout(() => setErrorMessage(''), 7000);
               }
+              // Remove deleted ids from UI
+              try {
+                if (deletedIds && deletedIds.length) {
+                  setSuppliers((prev) => (prev || []).filter((s) => !deletedIds.includes(s.id)));
+                  setFilteredData((prev) => (prev || []).filter((s) => !deletedIds.includes(s.id)));
+                  setCheckedItems((prev) => (prev || []).filter((id) => !deletedIds.includes(id)));
+                }
+              } catch (e) { console.error('Failed to apply mixed-delete UI update', e); }
               return;
             }
 

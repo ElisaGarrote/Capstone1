@@ -380,13 +380,13 @@ class ActivityLog(models.Model):
     ]
     
     user_id = models.PositiveIntegerField()
-    module = models.CharField(max_length=100)
+    module = models.CharField(max_length=100, default='')
     action = models.CharField(max_length=15, choices=ACTION_CHOICE)
     item_id = models.PositiveIntegerField()
     item_name = models.CharField(max_length=100)
     target_user_id = models.PositiveIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     class Meta:
         ordering = ["-created_at"]

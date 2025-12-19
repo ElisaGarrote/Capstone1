@@ -187,7 +187,9 @@ def is_item_in_use(item_type, item_id):
                                 # product doesn't actually reference this context value
                                 continue
                         try:
-                            ar = client_get('assets/', params={'product': pid}, timeout=5)
+                            # Use by-product endpoint to get assets with full product info,
+                            # since the generic assets list serializer omits the product field
+                            ar = client_get(f'assets/by-product/{pid}/', timeout=5)
                             if ar.status_code != 200:
                                 continue
                             ajson = ar.json()

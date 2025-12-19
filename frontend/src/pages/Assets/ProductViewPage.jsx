@@ -341,12 +341,15 @@ function getActionState(asset) {
             type="export"
             onClick={handleExport}
           />
-          {authService.getUserInfo().role === "Admin" && (
-            <MediumButtons
-              type="new"
-              navigatePage="/assets/registration"
-            />
-          )}
+          {(() => {
+            const user = authService.getUserInfo();
+            return user?.role === "Admin" ? (
+              <MediumButtons
+                type="new"
+                navigatePage="/assets/registration"
+              />
+            ) : null;
+          })()}
         </section>
       </section>
 

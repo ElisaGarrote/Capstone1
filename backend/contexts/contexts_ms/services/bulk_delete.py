@@ -111,7 +111,12 @@ def _bulk_delete_handler(request, item_type, hard_delete=False):
     """Handle bulk delete for a given context item type.
 
     Request body: { "ids": [1,2,3,...] }
-    Response: {"deleted": [ids], "skipped": { id: "reason" }}
+    Response: {
+        "deleted_count": <int>,
+        "skipped_count": <int>,
+        "deleted_ids": [<ids>],
+        "failed": [{"id": <id>, "message": "reason"}, ...]
+    }
     """
     ids = request.data.get('ids')
     if not isinstance(ids, list):
@@ -123,7 +128,12 @@ def _bulk_delete_handler(request, item_type, hard_delete=False):
         return Response({"detail": "All ids must be integers."}, status=status.HTTP_400_BAD_REQUEST)
 
     if len(ids) == 0:
-        return Response({"deleted": [], "skipped": {}}, status=status.HTTP_200_OK)
+        return Response({
+            "deleted_count": 0,
+            "skipped_count": 0,
+            "deleted_ids": [],
+            "failed": []
+        }, status=status.HTTP_200_OK)
 
     if len(ids) > MAX_BULK_DELETE:
         return Response({"detail": f"Too many ids: limit is {MAX_BULK_DELETE}."}, status=status.HTTP_400_BAD_REQUEST)
@@ -186,4 +196,12 @@ def _bulk_delete_handler(request, item_type, hard_delete=False):
                         deleted.remove(pk)
                         skipped[pk] = f"Soft-delete failed: {str(exc2)}"
 
-    return Response({"deleted": deleted, "skipped": skipped}, status=status.HTTP_200_OK)
+    # Convert skipped dict to failed array format matching assets service
+    failed = [{"id": pk, "message": reason} for pk, reason in skipped.items()]
+
+    return Response({
+        "deleted_count": len(deleted),
+        "skipped_count": len(failed),
+        "deleted_ids": deleted,
+        "failed": failed
+    }, status=status.HTTP_200_OK)
