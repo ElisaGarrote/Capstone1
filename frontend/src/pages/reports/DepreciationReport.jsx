@@ -65,7 +65,6 @@ function TableHeader() {
   );
 }
 
-// TableItem component to render each ticket row
 function TableItem({ asset, onDeleteClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -161,11 +160,8 @@ export default function DepreciationReport() {
     setCurrentPage(1);
   };
 
-  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
-
-  // paginate the data (use filteredData so filters apply)
+  const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
@@ -212,9 +208,8 @@ export default function DepreciationReport() {
           {/* Title of the Page */}
           <section className="title-page-section">
             <h1>Depreciation Report</h1>
+            <div className="title-underline" />
           </section>
-
-          {/* Table Filter removed - modal is used via the Filter button in header */}
 
           <section className="table-layout">
             {/* Table Header */}
