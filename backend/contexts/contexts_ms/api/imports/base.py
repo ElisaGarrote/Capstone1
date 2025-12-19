@@ -38,7 +38,11 @@ def normalize_header_to_field(header: str):
         'updatedat': 'updated_at',
         'updated_at': 'updated_at',
         # manufacturer
-        'manuurl': 'manu_url',
+        'manuurl': 'website_url',
+        'manu_url': 'website_url',
+        'website': 'website_url',
+        'websiteurl': 'website_url',
+        'website_url': 'website_url',
         'supporturl': 'support_url',
         'supportphone': 'support_phone',
         'supportemail': 'support_email',

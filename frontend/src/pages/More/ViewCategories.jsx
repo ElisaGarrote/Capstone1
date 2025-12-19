@@ -309,11 +309,25 @@ export default function Category() {
           const resp = await bulkDeleteCategories(selectedIds);
           // If backend skipped some items, signal the modal to display usage message
           if (resp && resp.skipped && Object.keys(resp.skipped).length > 0) {
-            // Show generic in-use alert (plural since multiple selected)
-            const msg = `The selected categories cannot be deleted. Currently in use!`;
+            const deletedCount = (resp && resp.deleted && resp.deleted.length) || 0;
+            const skippedCount = Object.keys(resp.skipped).length;
+
+            if (deletedCount > 0) {
+              const parts = [`${deletedCount} categories deleted successfully`];
+              if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
+              const msg = parts.join('; ') + '.';
+              setSuccessMessage(msg);
+              setErrorMessage('');
+              setTimeout(() => setSuccessMessage(''), 5000);
+              return { ok: false, data: resp };
+            }
+
+            // Only skipped
+            const msg = `${skippedCount} categories skipped (currently in use).`;
             setErrorMessage(msg);
+            setSuccessMessage('');
             setTimeout(() => setErrorMessage(''), 5000);
-            return { ok: false, data: { in_use: true } };
+            return { ok: false, data: resp };
           }
           setSuccessMessage("Categories deleted successfully!");
         }

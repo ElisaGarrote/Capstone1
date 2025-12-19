@@ -23,12 +23,11 @@ export default function ConfirmationModal({
   */
 
   const [isDeleting, setDeleting] = useState(false);
-  const [serverMessage, setServerMessage] = useState(null);
+  
 
   // Handle compatibility with different prop patterns
   const handleClose = closeModal || onCancel;
   const handleConfirm = async () => {
-    setServerMessage(null);
     // Prefer the modern `onConfirm` callback (page provides deletion logic)
     if (onConfirm) {
       setDeleting(true);
@@ -37,23 +36,16 @@ export default function ConfirmationModal({
         // If the handler returns a structured result, show server message and keep modal open on failure
         if (result && (result.ok === false || (result.data && result.data.skipped && Object.keys(result.data.skipped).length))) {
           const payload = result.data || result;
-          // If the backend signals 'in_use' or 'skipped', do not show message in modal.
-          if (payload && (payload.in_use || (payload.skipped && Object.keys(payload.skipped).length))) {
-            if (onDeleteFail) onDeleteFail(payload);
-            if (closeModal) closeModal();
-            return;
-          }
-          const msg = payload.message || payload.detail || payload.error || JSON.stringify(payload);
-          setServerMessage(msg);
           if (onDeleteFail) onDeleteFail(payload);
+          if (closeModal) closeModal();
           return;
         }
         // success path: close modal
         if (closeModal) closeModal();
       } catch (err) {
         console.error("onConfirm failed", err);
-        setServerMessage(err?.message || "Delete failed");
-        if (onDeleteFail) onDeleteFail(err);
+        if (onDeleteFail) onDeleteFail(err?.response?.data || err);
+        if (closeModal) closeModal();
       } finally {
         setDeleting(false);
       }
@@ -67,21 +59,15 @@ export default function ConfirmationModal({
         const result = await confirmDelete();
         if (result && (result.ok === false || (result.data && result.data.skipped && Object.keys(result.data.skipped).length))) {
           const payload = result.data || result;
-          if (payload && (payload.in_use || (payload.skipped && Object.keys(payload.skipped).length))) {
-            if (onDeleteFail) onDeleteFail(payload);
-            if (closeModal) closeModal();
-            return;
-          }
-          const msg = payload.message || payload.detail || payload.error || JSON.stringify(payload);
-          setServerMessage(msg);
           if (onDeleteFail) onDeleteFail(payload);
+          if (closeModal) closeModal();
           return;
         }
         if (closeModal) closeModal();
       } catch (err) {
         console.error("confirmDelete failed", err);
-        setServerMessage(err?.message || "Delete failed");
-        if (onDeleteFail) onDeleteFail(err);
+        if (onDeleteFail) onDeleteFail(err?.response?.data || err);
+        if (closeModal) closeModal();
       } finally {
         setDeleting(false);
       }
@@ -174,9 +160,7 @@ export default function ConfirmationModal({
               : <>Are you sure you want to {getActionText().toLowerCase()} this {actionType != "activate" && actionType != "deactivate" ? "item" : "user"}? This action cannot be undone.</>
             }
           </p>
-          {serverMessage && (
-            <div className="server-message">{serverMessage}</div>
-          )}
+          {/* Server messages are shown via the page-level Alert; hide inside modal */}
           <div className="modal-actions">
             <button className="cancel-btn" onClick={handleClose}>
               Cancel

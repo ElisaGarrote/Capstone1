@@ -75,6 +75,24 @@ export async function createManufacturer(data) {
   return res.data;
 }
 
+// UPDATE manufacturer
+export async function updateManufacturer(id, data) {
+  const res = await contextsAxios.put(`manufacturers/${id}/`, data);
+  return res.data;
+}
+
+// DELETE manufacturer (soft-delete via API)
+export async function deleteManufacturer(id) {
+  const res = await contextsAxios.delete(`manufacturers/${id}/`);
+  return res.data;
+}
+
+// BULK DELETE manufacturers
+export async function bulkDeleteManufacturers(ids) {
+  const res = await contextsAxios.post(`manufacturers/bulk_delete/`, { ids });
+  return res.data;
+}
+
 /* ===============================
             STATUS CRUD
 ================================= */

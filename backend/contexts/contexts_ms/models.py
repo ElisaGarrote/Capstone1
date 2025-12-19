@@ -39,7 +39,7 @@ class Supplier(models.Model):
     zip = models.CharField(max_length=4, blank=True, null=True)
 
     contact_name = models.CharField(max_length=100, blank=True, null=True)
-    phone_number = models.CharField(max_length=13, blank=True, null=True)
+    phone_number = models.CharField(max_length=16, blank=True, null=True)
     fax = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     url = models.URLField(blank=True, null=True)
@@ -54,10 +54,10 @@ class Supplier(models.Model):
 
 class Manufacturer(models.Model):
     name = models.CharField(max_length=50)
-    manu_url = models.URLField(blank=True, null=True)
+    website_url = models.URLField(blank=True, null=True)
 
     support_url = models.URLField(blank=True, null=True)
-    support_phone = models.CharField(max_length=13, blank=True, null=True)
+    support_phone = models.CharField(max_length=16, blank=True, null=True)
     support_email = models.EmailField(blank=True, null=True)
     
     notes = models.TextField(blank=True, null=True)

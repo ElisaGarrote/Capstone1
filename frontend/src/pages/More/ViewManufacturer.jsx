@@ -8,7 +8,11 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Footer from "../../components/Footer";
-import MockupData from "../../data/mockData/more/manufacturer-mockup-data.json";
+import {
+  fetchAllManufacturers,
+  deleteManufacturer,
+  bulkDeleteManufacturers,
+} from "../../services/contexts-service";
 import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/Manufacturer.css";
@@ -119,12 +123,12 @@ export default function ViewManuDraft() {
 
   // filter state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState(MockupData);
+  const [filteredData, setFilteredData] = useState([]);
   const [appliedFilters, setAppliedFilters] = useState({});
 
   // Apply filters to data
   const applyFilters = (filters) => {
-    let filtered = [...MockupData];
+    let filtered = [...manufacturers];
 
     // Filter by Name
     if (filters.name && filters.name.trim() !== "") {
@@ -224,27 +228,25 @@ export default function ViewManuDraft() {
 
   console.log("value", addedManufacturer);
 
-  /* BACKEND INTEGRATION HERE
-  const contextServiceUrl =
-    "https://contexts-service-production.up.railway.app";
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const manufacturerRes = await fetchAllCategories();
-        const mapped = (manufacturerRes || []).map((manu) => ({
-          id: manu.id,
-          name: manu.name,
-          url: manu.manu_url,
-          supportUrl: manu.support_url,
-          phone: manu.support_phone,
-          email: manu.support_email,
-          notes: manu.notes,
-          logo: manu.logo,
+        const res = await fetchAllManufacturers();
+        const mapped = (res || []).map((m) => ({
+          id: m.id,
+          name: m.name,
+          url: m.website_url || m.url || m.manu_url || "",
+          support_url: m.support_url || "",
+          support_phone: m.support_phone || "",
+          phone_number: m.phone_number || m.support_phone || "",
+          email: m.support_email || m.email || "",
+          notes: m.notes || "",
+          logo: m.logo || "",
         }));
         const sorted = mapped.sort((a, b) => a.name.localeCompare(b.name));
         setManufacturers(sorted);
+        setFilteredData(sorted);
       } catch (error) {
         console.error("Fetch error:", error);
         setErrorMessage("Failed to load data.");
@@ -278,26 +280,29 @@ export default function ViewManuDraft() {
   const fetchManufacturers = async () => {
     setLoading(true);
     try {
-      const res = await fetchAllCategories();
-      const mapped = (res || []).map((manu) => ({
-        id: manu.id,
-        name: manu.name,
-        url: manu.manu_url,
-        supportUrl: manu.support_url,
-        phone: manu.support_phone,
-        email: manu.support_email,
-        notes: manu.notes,
-        logo: manu.logo,
+      const res = await fetchAllManufacturers();
+      const mapped = (res || []).map((m) => ({
+        id: m.id,
+        name: m.name,
+        url: m.website_url || m.url || m.manu_url || "",
+        support_url: m.support_url || "",
+        support_phone: m.support_phone || "",
+        phone_number: m.phone_number || m.support_phone || "",
+        email: m.support_email || m.email || "",
+        notes: m.notes || "",
+        logo: m.logo || "",
       }));
-      setManufacturers(mapped);
+      const sorted = mapped.sort((a, b) => a.name.localeCompare(b.name));
+      setManufacturers(sorted);
+      setFilteredData(sorted);
     } catch (e) {
       console.error("Error refreshing manufacturers:", e);
+      setErrorMessage("Failed to refresh manufacturers.");
+      setTimeout(() => setErrorMessage(""), 5000);
     } finally {
       setLoading(false);
     }
   };
-
-  */
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -351,18 +356,68 @@ export default function ViewManuDraft() {
   };
 
   const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single manufacturer id:", deleteTarget);
-      setSuccessMessage("Manufacturer deleted successfully!");
-    } else {
-      console.log("Deleting multiple manufacturer ids:", checkedItems);
-      if (checkedItems.length > 0) {
-        setSuccessMessage("Manufacturers deleted successfully!");
-      }
-      setCheckedItems([]);
-    }
-    setTimeout(() => setSuccessMessage(""), 5000);
+    // keep backward-compat: this function no longer performs network calls
+    // actual deletion is performed by DeleteModal via `onConfirm` prop
     closeDeleteModal();
+  };
+
+  // Handler invoked by DeleteModal's onConfirm. Returns structured result
+  const handleDeleteOnConfirm = async () => {
+    // single delete
+    if (deleteTarget) {
+      try {
+        await deleteManufacturer(deleteTarget);
+        await fetchManufacturers();
+        setSuccessMessage("Manufacturer deleted successfully!");
+        setTimeout(() => setSuccessMessage(""), 5000);
+        return true;
+      } catch (err) {
+        console.error("Delete failed", err);
+        const payload = err?.response?.data || { ok: false, detail: err?.message || "Delete failed" };
+        return { ok: false, data: payload };
+      }
+    }
+
+    // bulk delete
+    if (!checkedItems || checkedItems.length === 0) {
+      return { ok: false, detail: "No items selected" };
+    }
+    try {
+      const res = await bulkDeleteManufacturers(checkedItems);
+      // refresh list and clear selection
+      await fetchManufacturers();
+      setCheckedItems([]);
+      const deletedCount = (res && res.deleted && res.deleted.length) || 0;
+      const skippedCount = res && res.skipped ? Object.keys(res.skipped).length : 0;
+
+      // Compose a single alert message showing both deleted and skipped counts.
+      if (deletedCount > 0) {
+        const parts = [`${deletedCount} manufacturer(s) deleted successfully`];
+        if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
+        const msg = parts.join('; ') + '.';
+        setSuccessMessage(msg);
+        setErrorMessage('');
+        setTimeout(() => setSuccessMessage(''), 5000);
+        // If some were skipped, return failure so modal handler can treat accordingly
+        if (skippedCount > 0) return { ok: false, data: res };
+        return res;
+      }
+
+      // No deletions, only skipped
+      if (skippedCount > 0) {
+        const msg = `${skippedCount} manufacturer(s) skipped (currently in use).`;
+        setErrorMessage(msg);
+        setSuccessMessage('');
+        setTimeout(() => setErrorMessage(''), 5000);
+        return { ok: false, data: res };
+      }
+
+      return res;
+    } catch (err) {
+      console.error("Bulk delete failed", err);
+      const payload = err?.response?.data || { ok: false, detail: err?.message || "Bulk delete failed" };
+      return { ok: false, data: payload };
+    }
   };
 
   const handleExport = () => {
@@ -400,7 +455,53 @@ export default function ViewManuDraft() {
           endPoint={endPoint}
           closeModal={closeDeleteModal}
           actionType={"delete"}
-          onConfirm={confirmDelete}
+          onConfirm={handleDeleteOnConfirm}
+            onDeleteFail={(payload) => {
+              // Normalize payload (handlers sometimes return { ok:false, data: ... })
+              let body = payload;
+              if (payload && payload.data) body = payload.data;
+
+              // If this is a bulk delete summary with deleted/skipped, show a single combined alert
+              if (body && (body.deleted || body.skipped)) {
+                const deletedCount = (body.deleted && body.deleted.length) || 0;
+                const skippedCount = body.skipped ? Object.keys(body.skipped).length : 0;
+                const parts = [];
+                if (deletedCount > 0) parts.push(`${deletedCount} manufacturer(s) deleted successfully`);
+                if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
+                const msg = parts.length ? parts.join('; ') + '.' : 'Delete failed.';
+                // Show as successMessage when there were deletions, otherwise errorMessage
+                if (deletedCount > 0) {
+                  setSuccessMessage(msg);
+                  setTimeout(() => setSuccessMessage(''), 5000);
+                } else {
+                  setErrorMessage(msg);
+                  setTimeout(() => setErrorMessage(''), 5000);
+                }
+                return;
+              }
+
+              // Fallback: prefer common fields, then skipped map, then fallback to JSON string
+              let msg = null;
+              try {
+                if (!payload) msg = 'Delete failed';
+                else if (typeof payload === 'string') msg = payload;
+                else if (body.detail) msg = body.detail;
+                else if (body.message) msg = body.message;
+                else if (body.error) msg = body.error;
+                else if (body.skipped && typeof body.skipped === 'object') {
+                  const vals = Object.values(body.skipped).filter(Boolean);
+                  msg = vals.length ? vals.join('; ') : 'Some items could not be deleted.';
+                } else {
+                  msg = JSON.stringify(body);
+                }
+              } catch (e) {
+                msg = 'Delete failed';
+              }
+
+              setErrorMessage(msg);
+              setTimeout(() => setErrorMessage(''), 5000);
+            }}
+          selectedCount={checkedItems.length}
           /* BACKEND INTEGRATION HERE
           confirmDelete={async () => {
             await fetchManufacturers();

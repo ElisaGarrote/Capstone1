@@ -5,6 +5,11 @@ import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import Alert from "../../components/Alert";
+import {
+  fetchManufacturerById,
+  createManufacturer,
+  updateManufacturer,
+} from "../../services/contexts-service";
 import Footer from "../../components/Footer";
 import PlusIcon from "../../assets/icons/plus.svg";
 
@@ -46,34 +51,31 @@ const ManufacturerRegistration = () => {
 
   const navigate = useNavigate();
 
-  /* BACKEND INTEGRATION HERE
-  const contextServiceUrl =
-    "https://contexts-service-production.up.railway.app";
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const initialize = async () => {
+      if (!id) return;
       try {
         setIsLoading(true);
-        if (id) {
-          const manufacturerData = await contextsService.fetchManufacturerById(
-            id
-          );
-          if (!manufacturerData) {
-            setErrorMessage("Failed to fetch manufacturer details");
-            setIsLoading(false);
-            return;
-          }
-          console.log("Manufacturer Details:", manufacturerData);
-          setValue("manufacturerName", manufacturerData.name || "");
-          setValue("url", manufacturerData.manu_url || "");
-          setValue("supportUrl", manufacturerData.support_url || "");
-          setValue("supportPhone", manufacturerData.support_phone || "");
-          setValue("supportEmail", manufacturerData.support_email || "");
-          setValue("notes", manufacturerData.notes || "");
-          if (manufacturerData.logo) {
-            setPreviewImage(`${contextServiceUrl}${manufacturerData.logo}`);
-            setSelectedImage(null);
-          }
+        const manufacturerData = await fetchManufacturerById(id);
+        if (!manufacturerData) {
+          setErrorMessage("Failed to fetch manufacturer details");
+          return;
+        }
+        setValue("manufacturerName", manufacturerData.name || "");
+        // support both new and legacy field names
+        setValue(
+          "url",
+          manufacturerData.website_url || manufacturerData.manu_url || manufacturerData.url || ""
+        );
+        setValue("supportUrl", manufacturerData.support_url || "");
+        setValue("supportPhone", manufacturerData.support_phone || "");
+        setValue("supportEmail", manufacturerData.support_email || manufacturerData.email || "");
+        setValue("notes", manufacturerData.notes || "");
+        if (manufacturerData.logo) {
+          setPreviewImage(manufacturerData.logo);
+          setSelectedImage(null);
         }
       } catch (error) {
         console.error("Error initializing:", error);
@@ -84,8 +86,6 @@ const ManufacturerRegistration = () => {
     };
     initialize();
   }, [id, setValue]);
-
-  */
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -139,34 +139,15 @@ const ManufacturerRegistration = () => {
     : { addedManufacturer: true };
 
   const onSubmit = async (data) => {
-    /* BACKEND INTEGRATION HERE
     try {
-      // Duplicate name check for creation
-      if (!id) {
-        const existingManufacturers =
-          await contextsService.fetchAllManufacturerNames();
-        if (!existingManufacturers) {
-          throw new Error(
-            "Failed to fetch manufacturer names for duplicate check"
-          );
-        }
-        const isDuplicate = existingManufacturers.manufacturers.some(
-          (manufacturer) =>
-            manufacturer.name.toLowerCase() ===
-            data.manufacturerName.toLowerCase()
-        );
-        if (isDuplicate) {
-          setErrorMessage(
-            "A manufacturer with this name already exists. Please use a different name."
-          );
-          setTimeout(() => setErrorMessage(""), 5000);
-          return;
-        }
-      }
+      setIsLoading(true);
+
+      // Duplicate name check using fetchAllManufacturers is optional; skip to keep UX fast
 
       const formData = new FormData();
       formData.append("name", data.manufacturerName);
-      formData.append("manu_url", data.url || "");
+      // server expects `website_url`
+      formData.append("website_url", data.url || "");
       formData.append("support_url", data.supportUrl || "");
       formData.append("support_phone", data.supportPhone || "");
       formData.append("support_email", data.supportEmail || "");
@@ -178,52 +159,27 @@ const ManufacturerRegistration = () => {
 
       if (removeImage) {
         formData.append("remove_logo", "true");
-        console.log("Removing logo: remove_logo flag set to true");
-      }
-
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Form data before submission:");
-        for (let pair of formData.entries()) {
-          console.log(`${pair[0]}: ${pair[1]}`);
-        }
       }
 
       let result;
       if (id) {
-        result = await contextsService.updateManufacturer(id, formData);
+        result = await updateManufacturer(id, formData);
       } else {
-        result = await contextsService.createManufacturer(formData);
+        result = await createManufacturer(formData);
       }
 
-      if (!result) {
-        throw new Error(`Failed to ${id ? "update" : "create"} manufacturer.`);
-      }
+      if (!result) throw new Error("Server did not return a result.");
 
-      console.log(`${id ? "Updated" : "Created"} manufacturer:`, result);
       navigate("/More/ViewManufacturer", {
-        state: {
-          successMessage: `Manufacturer has been ${
-            id ? "updated" : "created"
-          } successfully!`,
-        },
+        state: { successMessage: `Manufacturer has been ${id ? "updated" : "created"} successfully!` },
       });
     } catch (error) {
-      console.error(
-        `Error ${id ? "updating" : "creating"} manufacturer:`,
-        error
-      );
-      setErrorMessage(
-        error.message.includes("Failed to create manufacturer")
-          ? "Failed to create manufacturer. Please check the server configuration or endpoint."
-          : error.message ||
-              `An error occurred while ${
-                id ? "updating" : "creating"
-              } the manufacturer`
-      );
+      console.error(`Error ${id ? "updating" : "creating"} manufacturer:`, error);
+      setErrorMessage(error?.message || "Failed to save manufacturer.");
       setTimeout(() => setErrorMessage(""), 5000);
+    } finally {
+      setIsLoading(false);
     }
-    */
-    navigate("/More/ViewManufacturer", { state });
   };
 
   return (

@@ -26,6 +26,13 @@ def _build_cant_delete_message(instance, usage):
     asset_ids = usage.get('asset_ids') or []
     comp_ids = usage.get('component_ids') or []
     repair_ids = usage.get('repair_ids') or []
+    # If the blocked instance is a Manufacturer and assets reference it,
+    # return the specific short message requested by the frontend.
+    try:
+        if instance.__class__.__name__ == 'Manufacturer' and asset_ids:
+            return "The selected manufacturer cannot be deleted. Currently in use by asset!"
+    except Exception:
+        pass
     display = None
     for attr in ('name', 'city', 'title'):
         val = getattr(instance, attr, None)
