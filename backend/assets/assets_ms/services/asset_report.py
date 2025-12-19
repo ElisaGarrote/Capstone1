@@ -5,9 +5,9 @@ from .contexts import (
     get_categories_list,
     get_suppliers_list,
     get_manufacturers_list,
-    get_locations_list,
     get_depreciations_list,
 )
+from .integration_help_desk import *
 
 
 def _build_lookup_dict(data) -> Dict[int, Dict]:
