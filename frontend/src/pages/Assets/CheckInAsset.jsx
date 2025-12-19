@@ -10,47 +10,46 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { createAssetCheckinWithStatus } from "../../services/assets-service";
+import { createAssetCheckinWithStatus, fetchAssetNames } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
+import { fetchTicketById } from "../../services/integration-ticket-tracking-service";
 
 export default function CheckInAsset() {
   const { state } = useLocation();
   const navigate = useNavigate();
-  // Form state
+
+  // State
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  // Dropdowns state
   const [statuses, setStatuses] = useState([]);
   const [locations, setLocations] = useState([]);
-  // Modal states for adding new entries
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-  // File upload state
   const [attachmentFiles, setAttachmentFiles] = useState([]);
 
-  // Extract data from state, store in variables
-  const ticket = state?.ticket || {};
-  const asset = state?.asset || {};
-  const checkout = state?.checkout || {};
-  const fromAsset = state?.fromAsset || false;
+  // Ticket and asset data
+  const [ticket, setTicket] = useState(null);
+  const [assetName, setAssetName] = useState("");
+  const [assetDisplayId, setAssetDisplayId] = useState("");
+  const [fromAssets, setFromAssets] = useState(false);
 
-  //Only allow asset statuses with these types for checkin (excludes 'deployed')
+  // Extract from navigation state
+  // From Assets page: { assetId (db id), assetDisplayId, assetName, ticketId, checkoutId }
+  // From Tickets page: { ticket (full ticket object) }
+  const assetIdFromState = state?.assetId;
+  const assetDisplayIdFromState = state?.assetDisplayId;
+  const assetNameFromState = state?.assetName;
+  const ticketIdFromState = state?.ticketId;
+  const checkoutIdFromState = state?.checkoutId;
+  const ticketFromState = state?.ticket;
+
+  // Only allow asset statuses with these types for checkin (excludes 'deployed')
   const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";
 
-  // Declare variables for destructuring
-  const {
-    id: ticketId,
-    checkin_date: checkinDate,
-  } = ticket;
-  const {
-    asset_id: assetId,
-    name: assetName
-  } = asset;
-  const { checkout_date: checkoutDate } = checkout;
   const currentDate = new Date().toISOString().split("T")[0];
 
-  // Form handling initializations
+  // Form handling
   const {
     register,
     handleSubmit,
@@ -59,38 +58,95 @@ export default function CheckInAsset() {
   } = useForm({
     mode: "all",
     defaultValues: {
-      checkinDate: ticket.checkin_date || currentDate,
+      checkinDate: currentDate,
       status: '',
       condition: '',
-      location: ticket.location || '',
+      location: '',
       notes: '',
     }
   });
- 
-  // Initialize dropdowns
+
+  // Helper to determine check-in date based on ticket return_date
+  const getCheckinDate = (ticketData) => {
+    if (!ticketData || !ticketData.return_date) {
+      return currentDate;
+    }
+
+    const returnDate = new Date(ticketData.return_date);
+    const today = new Date(currentDate);
+
+    // If return_date is in the past, use current date
+    if (returnDate < today) {
+      return currentDate;
+    }
+
+    return ticketData.return_date;
+  };
+
+  // Initialize: fetch ticket and dropdowns
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
-      console.log("states:", state);
       try {
+        let ticketData = null;
+
+        // Scenario 1: Coming from Assets page with assetId, assetDisplayId, assetName
+        // Ticket is optional - may or may not have ticketId
+        if (assetIdFromState) {
+          setFromAssets(true);
+          setAssetName(assetNameFromState || "");
+          setAssetDisplayId(assetDisplayIdFromState || "");
+
+          // Fetch ticket details only if ticketId is provided
+          if (ticketIdFromState) {
+            ticketData = await fetchTicketById(ticketIdFromState);
+          }
+        }
+        // Scenario 2: Coming from Tickets page with full ticket object
+        else if (ticketFromState) {
+          setFromAssets(false);
+          ticketData = ticketFromState;
+
+          // Fetch asset details using asset id from ticket
+          if (ticketData.asset) {
+            const assetData = await fetchAssetNames({ ids: [ticketData.asset] });
+            if (assetData && assetData.length > 0) {
+              setAssetName(assetData[0].name || "");
+              setAssetDisplayId(assetData[0].asset_id || "");
+            }
+          }
+        }
+
+        setTicket(ticketData);
+
+        // Set check-in date based on ticket or default to current date
+        const checkinDate = getCheckinDate(ticketData);
+        setValue("checkinDate", checkinDate);
+
+        // Set location from ticket if available
+        if (ticketData?.location) {
+          setValue("location", ticketData.location);
+        }
+
+        // Fetch dropdowns
         const dropdowns = await fetchAllDropdowns("status", {
           category: "asset",
           types: CHECKIN_STATUS_TYPES
         });
         setStatuses(dropdowns.statuses || []);
 
-        const locations = await fetchAllLocations();
-        setLocations(locations || []);
+        const locationsData = await fetchAllLocations();
+        setLocations(locationsData || []);
       } catch (error) {
-        console.error("Error fetching dropdowns:", error);
-        setErrorMessage("Failed to load dropdowns. Please try again.");
+        console.error("Error initializing checkin form:", error);
+        setErrorMessage("Failed to load form data. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
     initialize();
-  }, []);
+  }, [assetIdFromState, assetDisplayIdFromState, assetNameFromState, ticketIdFromState, ticketFromState, setValue]);
 
   const conditionOptions = [
       { value: "1", label: "1 - Unserviceable" },
@@ -238,65 +294,79 @@ export default function CheckInAsset() {
     setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Form submission
+  // Form submission - user inputs are what gets saved
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      console.log("FINAL FORM DATA:");
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
 
-      // Required fields
-      formData.append("asset_checkout", asset.active_checkout.id);
+      // Get checkout ID from ticket or state
+      const checkoutId = checkoutIdFromState || ticket?.asset_checkout;
+
+      // Required fields - all from user input
+      formData.append("asset_checkout", checkoutId);
       formData.append("checkin_date", data.checkinDate);
       formData.append("status", data.status);
       formData.append("condition", data.condition);
       formData.append("location", data.location);
 
       // Optional fields
-      formData.append("ticket_id", ticketId || "");
-      formData.append("notes", data.notes || "");
+      const ticketId = ticketIdFromState || ticketFromState?.id;
+      if (ticketId) {
+        formData.append("ticket_id", ticketId);
+      }
+      if (data.notes) {
+        formData.append("notes", data.notes);
+      }
 
       // Append attachment files if any
-      attachmentFiles.forEach((file, index) => {
+      attachmentFiles.forEach((file) => {
         formData.append("attachments", file);
       });
 
       await createAssetCheckinWithStatus(formData);
 
-      // Navigate to asset view page after successful check-in
-      navigate(`/approved-tickets`, {
-        state: { successMessage: "Asset has been checked in successfully!" }
-      });
-    } catch (error) {
-        console.error("Error checking in asset:", error);
-
-        let message = "An error occurred while checking in the asset.";
-
-        if (error.response && error.response.data) {
-          const data = error.response.data;
-
-          // Collect all errors from all keys
-          const messages = [];
-
-          Object.entries(data).forEach(([key, value]) => {
-            if (Array.isArray(value)) {
-              messages.push(...value);
-            } else if (typeof value === "string") {
-              messages.push(value);
-            }
-          });
-
-          if (messages.length > 0) {
-            message = messages.join(" ");
-          }
-        }
-
-        setErrorMessage(message);
-        setTimeout(() => setErrorMessage(""), 5000);
+      // Navigate back based on where user came from
+      if (fromAssets) {
+        navigate(`/assets`, {
+          state: { successMessage: "Asset has been checked in successfully!" }
+        });
+      } else {
+        navigate(`/approved-tickets`, {
+          state: { successMessage: "Asset has been checked in successfully!" }
+        });
       }
+    } catch (error) {
+      console.error("Error checking in asset:", error);
+
+      let message = "An error occurred while checking in the asset.";
+
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+        const messages = [];
+
+        Object.entries(errorData).forEach(([, value]) => {
+          if (Array.isArray(value)) {
+            messages.push(...value);
+          } else if (typeof value === "string") {
+            messages.push(value);
+          }
+        });
+
+        if (messages.length > 0) {
+          message = messages.join(" ");
+        }
+      }
+
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
   };
+
+  // Build page title from asset info
+  const pageTitle = assetName
+    ? `${assetDisplayId} - ${assetName}`
+    : (assetDisplayId || "Check-In Asset");
+  const checkoutDate = ticket?.checkout_date || "";
 
   return (
     <>
@@ -305,10 +375,10 @@ export default function CheckInAsset() {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root={fromAsset ? "Assets" : "Tickets"}
+            root={fromAssets ? "Assets" : "Tickets"}
             currentPage="Check-In Asset"
-            rootNavigatePage={fromAsset ? "/assets" : "/approved-tickets"}
-            title={assetName ? `${assetId} - ${assetName}` : assetId}
+            rootNavigatePage={fromAssets ? "/assets" : "/approved-tickets"}
+            title={pageTitle}
           />
         </section>
         <section className="registration-form">
@@ -332,14 +402,13 @@ export default function CheckInAsset() {
                 type="date"
                 id="checkinDate"
                 className={errors.checkinDate ? 'input-error' : ''}
-                {...register("checkinDate", { 
+                {...register("checkinDate", {
                   required: "Check-in date is required",
                   validate: (value) =>
-                    new Date(value) >= new Date(checkoutDate) ||
+                    !checkoutDate || new Date(value) >= new Date(checkoutDate) ||
                     "Check-in date cannot be earlier than checkout date."
                 })}
                 min={checkoutDate}
-                defaultValue={checkinDate || currentDate}
               />
               {errors.checkinDate && (
                 <span className="error-message">{errors.checkinDate.message}</span>

@@ -3,6 +3,7 @@
 .medium-button-schedule-audits,
 .medium-button-perform-audits,
 .medium-button-delete,
+.medium-button-bulk-delete,
 .medium-button-sort,
 .medium-button-filter,
 .medium-button-recover,
@@ -28,6 +29,7 @@
 
 .medium-button-new img,
 .medium-button-delete img,
+.medium-button-bulk-delete img,
 .medium-button-recover img,
 .medium-button-clone img,
 .medium-button-edit img {
@@ -98,13 +100,15 @@
   background-color: var(--primary-color-hover);
 }
 
-.medium-button-delete {
+.medium-button-delete,
+.medium-button-bulk-delete {
   background-color: red;
   color: var(--bg-color);
   transition: 0.5s ease;
 }
 
-.medium-button-delete:hover {
+.medium-button-delete:hover,
+.medium-button-bulk-delete:hover {
   background-color: darkred;
 }
 

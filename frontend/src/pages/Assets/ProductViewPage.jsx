@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
-import ManufacturersMockupData from "../../data/mockData/products/manufacturers-mockup-data.json";
-import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import "../../styles/Products/ProductViewPage.css";
 import "../../styles/Assets/AssetViewPage.css";
 import "../../styles/Assets/Assets.css";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
+import SystemLoading from "../../components/Loading/SystemLoading";
 
 import { getProductDetails, getProductTabs } from "../../data/mockData/products/productDetailsData";
 import Status from "../../components/Status";
@@ -20,10 +18,12 @@ import Pagination from "../../components/Pagination";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import AssetFilterModal from "../../components/Modals/AssetFilterModal";
+import { fetchProductById, fetchAssetsByProduct } from "../../services/assets-service";
 
 function ProductViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [product, setProduct] = useState(null);
   const [manufacturer, setManufacturer] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,41 +36,45 @@ function ProductViewPage() {
   const [filteredAssets, setFilteredAssets] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [selectedAssetIds, setSelectedAssetIds] = useState([]);
 
   // Filter modal state for Assets tab
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
 
-  // Alert state for asset actions in Assets tab
-  const [assetSuccessMessage, setAssetSuccessMessage] = useState("");
+  // Alert state for actions
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [isAssetDeleteModalOpen, setAssetDeleteModalOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState(null);
 
   useEffect(() => {
-    // Find product from mockup data
-    const foundProduct = ProductsMockupData.find((p) => p.id === parseInt(id));
-    if (foundProduct) {
-      setProduct(foundProduct);
+    const loadProductData = async () => {
+      setIsLoading(true);
+      try {
+        // Get product from API
+        const apiProduct = await fetchProductById(id);
 
-      // Find manufacturer
-      const foundManufacturer = ManufacturersMockupData.find(
-        (m) => m.id === foundProduct.manufacturer_id
-      );
-      setManufacturer(foundManufacturer);
+        if (apiProduct) {
+          setProduct(apiProduct);
+          setManufacturer(apiProduct.manufacturer_details);
 
-      // Filter assets for this product (base dataset for this page)
-      const productAssetsForModel = AssetsMockupData.filter(
-        (asset) => asset.product === foundProduct.model || asset.name === foundProduct.name
-      );
-      setProductAssets(productAssetsForModel);
-      setFilteredAssets(productAssetsForModel);
-    }
-    setIsLoading(false);
-  }, [id]);
+          // Use assets directly from apiProduct response
+          const assets = apiProduct.assets || [];
+          setProductAssets(assets);
+          setFilteredAssets(assets);
+        }
+      } catch (error) {
+        console.error("Error fetching product:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProductData();
+  }, [id, location.state]);
 
   if (isLoading) {
-    return null; // Don't render anything while loading
+    return <SystemLoading />;
   }
 
   if (!product) {
@@ -84,9 +88,7 @@ function ProductViewPage() {
     );
   }
 
-  const imageSrc = product.image
-    ? `https://assets-service-production.up.railway.app${product.image}`
-    : DefaultImage;
+  const imageSrc = product.image || DefaultImage;
 
   const tabs = getProductTabs();
 
@@ -272,21 +274,42 @@ function ProductViewPage() {
     setAssetToDelete(null);
   };
 
-  const confirmAssetDelete = () => {
-    if (assetToDelete) {
-      // Remove from local assets collections
-      const updatedAssets = productAssets.filter((asset) => asset.id !== assetToDelete);
-      setProductAssets(updatedAssets);
-
-      const updatedFiltered = filteredAssets.filter((asset) => asset.id !== assetToDelete);
-      setFilteredAssets(updatedFiltered);
-
-      setAssetSuccessMessage("Asset deleted successfully!");
-      setTimeout(() => setAssetSuccessMessage(""), 5000);
-      console.log("Deleting asset:", assetToDelete);
-    }
-    closeAssetDeleteModal();
+  const handleAssetDeleteSuccess = (deletedId) => {
+    setProductAssets((prev) => prev.filter((asset) => asset.id !== deletedId));
+    setFilteredAssets((prev) => prev.filter((asset) => asset.id !== deletedId));
+    setSuccessMessage("Asset deleted successfully!");
+    setTimeout(() => setSuccessMessage(""), 5000);
   };
+
+  const handleAssetDeleteError = (error) => {
+    setErrorMessage(error.response?.data?.detail || "Failed to delete asset.");
+    setTimeout(() => setErrorMessage(""), 5000);
+  };
+
+  // Helper to determine action button state
+function getActionState(asset) {
+  const status = asset.status_details?.type;
+  const hasTicket = !!asset.ticket_details;
+
+  // No actions for undeployable or archived
+  if (status === "undeployable" || status === "archived") {
+    return {
+      showCheckin: false,
+      showCheckout: false,
+      checkoutDisabled: false,
+    };
+  }
+
+  return {
+    showCheckin: status === "deployed",
+
+    showCheckout:
+      status === "pending" || status === "deployable",
+
+    checkoutDisabled:
+      (status === "pending" || status === "deployable") && !hasTicket,
+  };
+}
 
   // Pagination logic
   const startIndex = (currentPage - 1) * pageSize;
@@ -335,7 +358,7 @@ function ProductViewPage() {
               <th>IMAGE</th>
               <th>ID</th>
               <th>NAME</th>
-              <th>CATEGORY</th>
+              <th>SERIAL</th>
               <th>STATUS</th>
               <th>CHECK-IN / CHECK-OUT</th>
               <th>ACTION</th>
@@ -344,9 +367,9 @@ function ProductViewPage() {
           <tbody>
             {paginatedAssets.length > 0 ? (
               paginatedAssets.map((asset) => {
-                const baseImage = asset.image
-                  ? `https://assets-service-production.up.railway.app${asset.image}`
-                  : DefaultImage;
+                const baseImage = asset.image || DefaultImage;
+                
+                const actions = getActionState(asset);
 
                 return (
                   <tr key={asset.id}>
@@ -360,21 +383,16 @@ function ProductViewPage() {
                         }}
                       />
                     </td>
-                    <td>{asset.displayed_id}</td>
-                    <td>{asset.name}</td>
-                    <td>{asset.category || 'N/A'}</td>
+                    <td>{asset.asset_id}</td>
+                    <td>{asset.name || 'N/A'}</td>
+                    <td>{asset.serial_number || 'N/A'}</td>
                     <td>
-                      <Status type={asset.status.toLowerCase()} name={asset.status} />
+                      <Status type={asset.status_details?.type?.toLowerCase() || 'unknown'} name={asset.status_details?.name || 'Unknown'} />
                     </td>
                     <td>
                       <ActionButtons
-                        showCheckout={
-                          asset.status.toLowerCase() === 'ready to deploy' ||
-                          asset.status.toLowerCase() === 'readytodeploy' ||
-                          asset.status.toLowerCase() === 'archived' ||
-                          asset.status.toLowerCase() === 'pending'
-                        }
-                        showCheckin={asset.status.toLowerCase() === 'deployed'}
+                        showCheckout={actions.showCheckout}
+                        showCheckin={actions.showCheckin}
                         onCheckoutClick={() => handleCheckInOut(asset, 'checkout')}
                         onCheckinClick={() => handleCheckInOut(asset, 'checkin')}
                       />
@@ -421,28 +439,30 @@ function ProductViewPage() {
     setDeleteModalOpen(false);
   };
 
-  const confirmDelete = () => {
-    // Handle product deletion logic here
-    console.log("Deleting product:", product.id);
-    closeDeleteModal();
-    navigate("/products");
+  const handleProductDeleteSuccess = () => {
+    navigate("/products", {
+      state: { successMessage: "Product deleted successfully!" }
+    });
+  };
+
+  const handleProductDeleteError = (error) => {
+    setErrorMessage(error.response?.data?.detail || "Failed to delete product.");
+    setTimeout(() => setErrorMessage(""), 5000);
   };
 
   // Button action handlers
   const handleCloneClick = () => {
-    console.log('Clone button clicked, product:', product);
     if (product) {
-      console.log('Navigating to registration with cloned name:', `${product.name} (cloned)`);
-      navigate('/products/registration', {
-        state: { clonedProductName: `${product.name} (cloned)` }
+      navigate(`/products/edit/${product.id}`, {
+        state: { product, isClone: true }
       });
-    } else {
-      console.log('No product found for cloning');
     }
   };
 
   const handleEditClick = () => {
-    navigate(`/products/registration/${product.id}`);
+    navigate(`/products/edit/${product.id}`, {
+      state: { product }
+    });
   };
 
   const handleDeleteClick = () => {
@@ -494,24 +514,31 @@ function ProductViewPage() {
   return (
     <>
       <NavBar />
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
           actionType="delete"
-          onConfirm={confirmDelete}
+          entityType="product"
+          targetId={product?.id}
+          onSuccess={handleProductDeleteSuccess}
+          onError={handleProductDeleteError}
         />
       )}
 
       {isAssetDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isAssetDeleteModalOpen}
           closeModal={closeAssetDeleteModal}
           actionType="delete"
-          onConfirm={confirmAssetDelete}
+          entityType="asset"
+          targetId={assetToDelete}
+          onSuccess={handleAssetDeleteSuccess}
+          onError={handleAssetDeleteError}
         />
-      )}
-
-      {assetSuccessMessage && (
-        <Alert message={assetSuccessMessage} type="success" />
       )}
 
       <AssetFilterModal
@@ -521,7 +548,7 @@ function ProductViewPage() {
         initialFilters={appliedFilters}
       />
       <DetailedViewPage
-        {...getProductDetails(product, manufacturer)}
+        {...getProductDetails(product)}
         assetImage={imageSrc}
         tabs={tabs}
         activeTab={activeTab}
@@ -543,22 +570,22 @@ function ProductViewPage() {
 
                 <div className="detail-row">
                   <label>Model Number</label>
-                  <span>{product.model || "N/A"}</span>
+                  <span>{product.model_number || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
                   <label>Category</label>
-                  <span>{product.category || "N/A"}</span>
+                  <span>{product.category_details?.name || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
                   <label>Manufacturer</label>
-                  <span>{manufacturer?.name || "N/A"}</span>
+                  <span>{product.manufacturer_details?.name || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
                   <label>Depreciation</label>
-                  <span>{product.depreciation || "N/A"}</span>
+                  <span>{product.depreciation_details?.name || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
@@ -568,7 +595,12 @@ function ProductViewPage() {
 
                 <div className="detail-row">
                   <label>Default Purchase Cost</label>
-                  <span>{product.purchase_cost ? `PHP ${product.purchase_cost}` : "N/A"}</span>
+                  <span>{product.default_purchase_cost ? `₱${Number(product.default_purchase_cost).toLocaleString()}` : "N/A"}</span>
+                </div>
+
+                <div className="detail-row">
+                  <label>Default Supplier</label>
+                  <span>{product.default_supplier_details?.name || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
@@ -588,7 +620,7 @@ function ProductViewPage() {
 
                 <div className="detail-row">
                   <label>Operating System</label>
-                  <span>{product.operating_system || "N/A"}</span>
+                  <span>{product.os || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
@@ -598,12 +630,12 @@ function ProductViewPage() {
 
                 <div className="detail-row">
                   <label>Screen Size</label>
-                  <span>{product.screen_size || "N/A"}</span>
+                  <span>{product.size || "N/A"}</span>
                 </div>
 
                 <div className="detail-row">
                   <label>Storage Size</label>
-                  <span>{product.storage_size || "N/A"}</span>
+                  <span>{product.storage || "N/A"}</span>
                 </div>
               </div>
             </div>

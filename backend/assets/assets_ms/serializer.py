@@ -9,12 +9,42 @@ from django.utils import timezone
 from datetime import datetime
 
 # Product
-class ProductSerializer(serializers.ModelSerializer):
-    # Include handy context details from the Contexts service for the frontend
+
+# Serializer for product list view
+class ProductListSerializer(serializers.ModelSerializer):
     category_details = serializers.SerializerMethodField()
     manufacturer_details = serializers.SerializerMethodField()
     depreciation_details = serializers.SerializerMethodField()
     default_supplier_details = serializers.SerializerMethodField()
+    has_assets = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'image', 'name', 'category_details', 'model_number', 'end_of_life',
+            'manufacturer_details', 'depreciation_details', 'default_purchase_cost',
+            'default_supplier_details', 'minimum_quantity', 'has_assets'
+        ]
+
+    def get_has_assets(self, obj):
+        return obj.product_assets.filter(is_deleted=False).exists()
+
+    def get_category_details(self, obj):
+        return self.context.get("category_map", {}).get(obj.category)
+
+    def get_manufacturer_details(self, obj):
+        return self.context.get("manufacturer_map", {}).get(obj.manufacturer)
+
+    def get_depreciation_details(self, obj):
+        return self.context.get("depreciation_map", {}).get(obj.depreciation)
+
+    def get_default_supplier_details(self, obj):
+        return self.context.get("supplier_map", {}).get(obj.default_supplier)
+
+# Serializer for product create, update, and destroy
+class ProductSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Product
@@ -31,6 +61,8 @@ class ProductSerializer(serializers.ModelSerializer):
         if name:
             # Normalize spacing and apply Title Case for consistent storage and comparisons
             normalized_name = " ".join(name.split()).strip().title()
+            # Keep "(clone)" lowercase
+            normalized_name = normalized_name.replace("(Clone)", "(clone)")
             data['name'] = normalized_name
         else:
             normalized_name = None
@@ -42,55 +74,98 @@ class ProductSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "name": "An asset model with this name already exists."
             })
-        
+
         return data
 
+# Serializer for product instance retrieve
+class ProductInstanceSerializer(serializers.ModelSerializer):
+    category_details = serializers.SerializerMethodField()
+    manufacturer_details = serializers.SerializerMethodField()
+    depreciation_details = serializers.SerializerMethodField()
+    default_supplier_details = serializers.SerializerMethodField()
+    assets = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+    def get_has_assets(self, obj):
+        return obj.product_assets.filter(is_deleted=False).exists()
+
     def get_category_details(self, obj):
-        try:
-            if not getattr(obj, 'category', None):
-                return None
-            return get_category_by_id(obj.category)
-        except Exception:
-            return {"warning": "Contexts service unreachable for categories."}
+        return self.context.get("category_map", {}).get(obj.category)
 
     def get_manufacturer_details(self, obj):
-        try:
-            if not getattr(obj, 'manufacturer', None):
-                return None
-            return get_manufacturer_by_id(obj.manufacturer)
-        except Exception:
-            return {"warning": "Contexts service unreachable for manufacturers."}
+        return self.context.get("manufacturer_map", {}).get(obj.manufacturer)
 
     def get_depreciation_details(self, obj):
-        try:
-            if not getattr(obj, 'depreciation', None):
-                return None
-            return get_depreciation_by_id(obj.depreciation)
-        except Exception:
-            return {"warning": "Contexts service unreachable for depreciations."}
-    
+        return self.context.get("depreciation_map", {}).get(obj.depreciation)
+
     def get_default_supplier_details(self, obj):
-        try:
-            if not getattr(obj, 'default_supplier', None):
-                return None
-            return get_supplier_by_id(obj.default_supplier)
-        except Exception:
-            return {"warning": "Contexts service unreachable for suppliers."}
+        return self.context.get("supplier_map", {}).get(obj.default_supplier)
+
+    def get_assets(self, obj):
+        assets = obj.product_assets.filter(is_deleted=False).order_by('name')
+
+        # Reuse full list serializer
+        serializer = AssetListSerializer(
+            assets,
+            many=True,
+            context=self.context   # pass context so ticket/status mappings work
+        )
+        return serializer.data
+# Serializer for filling data in asset registration that is default in product
+class ProductAssetRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'default_purchase_cost', 'default_supplier']
+
+# Serializer for product bulk edit selected items
+class ProductNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'image' , 'name', 'end_of_life']
 
 # Asset
-class AssetSerializer(serializers.ModelSerializer):
-    # Include context details for frontend convenience
+class AssetListSerializer(serializers.ModelSerializer):
     status_details = serializers.SerializerMethodField()
-    location_details = serializers.SerializerMethodField()
-    supplier_details = serializers.SerializerMethodField()
-    # Active checkout (checkout without a check-in)
+    product_details = serializers.SerializerMethodField()
+    ticket_details = serializers.SerializerMethodField()
     active_checkout = serializers.SerializerMethodField()
-    # Unresolved ticket referencing this asset
-    unresolved_ticket = serializers.SerializerMethodField()
+    class Meta:
+        model = Asset
+        fields = [
+            'id', 'image', 'asset_id', 'name', 'serial_number',
+            'status_details', 'warranty_expiration',
+            'product_details', 'ticket_details', 'active_checkout'
+        ]
+
+    def get_status_details(self, obj):
+        return self.context.get("status_map", {}).get(obj.status)
+
+    def get_product_details(self, obj):
+        return self.context.get("product_map", {}).get(obj.product_id)
+    
+    def get_ticket_details(self, obj):
+        return self.context.get("ticket_map", {}).get(obj.id)
+    
+    def get_active_checkout(self, obj):
+        checkout = obj.asset_checkouts.filter(asset_checkin__isnull=True).first()
+        return checkout.id if checkout else None
+    
+class AssetSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Asset
         fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make asset_id read-only on update (editable only on create)
+        if self.instance:
+            self.fields['asset_id'].read_only = True
 
     def validate(self, data):
         product = data.get('product')
@@ -117,6 +192,8 @@ class AssetSerializer(serializers.ModelSerializer):
         if name:
             # Normalize spacing and apply Title Case
             normalized_name = " ".join(name.split()).strip().title()
+            # Keep "(clone)" lowercase
+            normalized_name = normalized_name.replace("(Clone)", "(clone)")
             data['name'] = normalized_name
         else:
             normalized_name = None
@@ -131,86 +208,202 @@ class AssetSerializer(serializers.ModelSerializer):
 
         return data
 
+class AssetInstanceSerializer(serializers.ModelSerializer):
+    status_details = serializers.SerializerMethodField()
+    ticket_details = serializers.SerializerMethodField()
+    history = serializers.SerializerMethodField()
+    components = serializers.SerializerMethodField()
+    repairs = serializers.SerializerMethodField()
+    audits = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Asset
+        fields = '__all__'
+
     def get_status_details(self, obj):
-        """Return status details fetched from Contexts service."""
-        try:
-            if not getattr(obj, 'status', None):
-                return None
-            # import here to avoid circular import at module import time
-            from assets_ms.services.contexts import get_status_by_id
-            return get_status_by_id(obj.status)
-        except Exception:
-            return {"warning": "Contexts service unreachable for statuses."}
+        return self.context.get("status_map", {}).get(obj.status)
 
-    def get_location_details(self, obj):
-        """Return location details fetched from Help Desk service."""
-        try:
-            if not getattr(obj, 'location', None):
-                return None
-            from assets_ms.services.integration_help_desk import get_location_by_id
-            return get_location_by_id(obj.location)
-        except Exception:
-            return {"warning": "Help Desk service unreachable for locations."}
+    def get_ticket_details(self, obj):
+        return self.context.get("ticket_map", {}).get(obj.id)
 
-    def get_supplier_details(self, obj):
-        """Return supplier details fetched from Contexts service."""
-        try:
-            if not getattr(obj, 'supplier', None):
-                return None
-            from assets_ms.services.contexts import get_supplier_by_id
-            return get_supplier_by_id(obj.supplier)
-        except Exception:
-            return {"warning": "Contexts service unreachable for suppliers."}
+    def get_history(self, obj):
+        """
+        Returns checkout/checkin history.
+        Active checkout on top, then checkout/checkin pairs ordered by recent checkin.
+        """
+        history = []
+        # Get all checkouts, active first (no checkin), then by checkin date desc
+        checkouts = obj.asset_checkouts.all().select_related('asset_checkin').prefetch_related(
+            'files', 'asset_checkin__files'
+        ).order_by('asset_checkin', '-created_at')
 
-    def get_active_checkout(self, obj):
-        """Return the active checkout (without a check-in) for this asset."""
-        try:
-            if not obj.id:
-                return None
-            checkout = AssetCheckout.objects.filter(
-                asset=obj,
-                asset_checkin__isnull=True  # No check-in yet
-            ).first()
-            if checkout:
-                return {
-                    "id": checkout.id,
-                    "checkout_date": checkout.checkout_date,
-                    "return_date": checkout.return_date,
-                    "checkout_to": checkout.checkout_to,
-                    "location": checkout.location,
-                    "ticket_id": checkout.ticket_id,
-                }
-            return None
-        except Exception:
-            return None
+        for checkout in checkouts:
+            # Add checkout entry
+            checkout_files = [{
+                'id': f.id,
+                'file': f.file.url if f.file else None,
+                'from': 'asset_checkout'
+            } for f in checkout.files.filter(is_deleted=False)]
 
-    def get_unresolved_ticket(self, obj):
-        """Return unresolved ticket referencing this asset from Ticket Tracking service."""
-        try:
-            if not obj.id:
-                return None
-            from assets_ms.services.integration_ticket_tracking import get_unresolved_ticket_by_asset_id
-            return get_unresolved_ticket_by_asset_id(obj.id)
-        except Exception:
-            return None
+            history.append({
+                'type': 'checkout',
+                'id': checkout.id,
+                'ticket_id': checkout.ticket_id,
+                'checkout_to': checkout.checkout_to,
+                'location': checkout.location,
+                'checkout_date': checkout.checkout_date,
+                'return_date': checkout.return_date,
+                'condition': checkout.condition,
+                'revenue': str(checkout.revenue) if checkout.revenue else None,
+                'notes': checkout.notes,
+                'created_at': checkout.created_at,
+                'files': checkout_files,
+                'is_active': not hasattr(checkout, 'asset_checkin') or checkout.asset_checkin is None
+            })
+
+            # Add checkin entry if exists
+            try:
+                checkin = checkout.asset_checkin
+                if checkin:
+                    checkin_files = [{
+                        'id': f.id,
+                        'file': f.file.url if f.file else None,
+                        'from': 'asset_checkin'
+                    } for f in checkin.files.filter(is_deleted=False)]
+
+                    history.append({
+                        'type': 'checkin',
+                        'id': checkin.id,
+                        'checkout_id': checkout.id,
+                        'ticket_id': checkin.ticket_id,
+                        'checkin_date': checkin.checkin_date,
+                        'condition': checkin.condition,
+                        'notes': checkin.notes,
+                        'files': checkin_files
+                    })
+            except AssetCheckin.DoesNotExist:
+                pass
+
+        return history
+
+    def get_components(self, obj):
+        """
+        Returns components checked out to this asset with their checkin history.
+        """
+        components = []
+        # Get component checkouts where this asset is the target
+        component_checkouts = ComponentCheckout.objects.filter(asset=obj).select_related(
+            'component'
+        ).prefetch_related('component_checkins').order_by('-checkout_date')
+
+        for checkout in component_checkouts:
+            checkins = [{
+                'id': ci.id,
+                'checkin_date': ci.checkin_date,
+                'quantity': ci.quantity,
+                'notes': ci.notes
+            } for ci in checkout.component_checkins.all().order_by('-checkin_date')]
+
+            components.append({
+                'id': checkout.id,
+                'component_id': checkout.component.id,
+                'component_name': checkout.component.name,
+                'quantity': checkout.quantity,
+                'checkout_date': checkout.checkout_date,
+                'notes': checkout.notes,
+                'remaining_quantity': checkout.remaining_quantity,
+                'is_fully_returned': checkout.is_fully_returned,
+                'checkins': checkins
+            })
+
+        return components
+
+    def get_repairs(self, obj):
+        """
+        Returns repairs for this asset with files.
+        """
+        repairs = []
+        for repair in obj.repair_assets.filter(is_deleted=False).order_by('-start_date'):
+            repair_files = [{
+                'id': f.id,
+                'file': f.file.url if f.file else None,
+                'from': 'repair'
+            } for f in repair.files.filter(is_deleted=False)]
+
+            repairs.append({
+                'id': repair.id,
+                'supplier_id': repair.supplier_id,
+                'type': repair.type,
+                'name': repair.name,
+                'start_date': repair.start_date,
+                'end_date': repair.end_date,
+                'cost': str(repair.cost) if repair.cost else None,
+                'notes': repair.notes,
+                'files': repair_files
+            })
+
+        return repairs
+
+    def get_audits(self, obj):
+        """
+        Returns completed audits for this asset with files.
+        """
+        audits = []
+        # Get audit schedules that have been completed (have an audit)
+        for schedule in obj.audit_schedules.filter(is_deleted=False).select_related('audit').prefetch_related('audit__audit_files').order_by('-date'):
+            try:
+                audit = schedule.audit
+                if audit and not audit.is_deleted:
+                    audit_files = [{
+                        'id': f.id,
+                        'file': f.file.url if f.file else None,
+                        'from': 'audit'
+                    } for f in audit.audit_files.filter(is_deleted=False)]
+
+                    audits.append({
+                        'id': audit.id,
+                        'schedule_id': schedule.id,
+                        'scheduled_date': schedule.date,
+                        'audit_date': audit.audit_date,
+                        'location': audit.location,
+                        'user_id': audit.user_id,
+                        'notes': audit.notes,
+                        'created_at': audit.created_at,
+                        'files': audit_files
+                    })
+            except Audit.DoesNotExist:
+                pass
+
+        return audits
+
+# Serializer for asset bulk edit selected items
+class AssetNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Asset
+        fields = ['id', 'asset_id', 'name', 'image']
 
 class AssetCheckoutFileSerializer(serializers.ModelSerializer):
+    file_from = serializers.CharField(default="asset_checkout", read_only=True)
+
     class Meta:
         model = AssetCheckoutFile
         fields = '__all__'
 
+class AssetCheckoutListSerializer(serializers.ModelSerializer):
+    """Read-only serializer for checkout details in asset instance view."""
+    files = AssetCheckoutFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = AssetCheckout
+        fields = '__all__'
+
 class AssetCheckoutSerializer(serializers.ModelSerializer):
-    """
-    Form data: ticket_id, condition, revenue (optional), notes (optional), status, attachments (optional)
-    Ticket provides: asset, checkout_to, location, checkout_date, return_date
-    """
-    # Read-only fields (derived from ticket)
-    asset = serializers.PrimaryKeyRelatedField(read_only=True)
-    checkout_to = serializers.IntegerField(read_only=True)
-    location = serializers.IntegerField(read_only=True)
-    checkout_date = serializers.DateField(read_only=True)
-    return_date = serializers.DateField(read_only=True)
-    files = AssetCheckoutFileSerializer(many=True, required=False)
+    # These fields are populated from ticket data, not from form input
+    asset = serializers.PrimaryKeyRelatedField(queryset=Asset.objects.all(), required=False)
+    checkout_to = serializers.IntegerField(required=False)
+    location = serializers.IntegerField(required=False)
+    checkout_date = serializers.DateField(required=False)
+    return_date = serializers.DateField(required=False)
 
     class Meta:
         model = AssetCheckout
@@ -218,7 +411,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         ticket_id = data.get('ticket_id')
-        status_id = self.context.get('request').data.get('status') if self.context.get('request') else None
+        status_id = data.get('status') or self.context.get('request').data.get('status')
 
         # --- Ticket Validations ---
         if not ticket_id:

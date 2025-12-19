@@ -97,3 +97,16 @@ def get_locations_list(q=None, limit=50):
     else:
         cache.set(key, result, LIST_CACHE_TTL)
     return result
+
+def get_locations_names():
+    key = f"contexts:list:locations:names"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    
+    result = fetch_resource_list('locations/names', skip_api_prefix=True)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result

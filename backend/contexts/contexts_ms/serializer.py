@@ -373,6 +373,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     location_details = serializers.SerializerMethodField()
+    requestor_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Ticket
@@ -456,6 +457,26 @@ class TicketSerializer(serializers.ModelSerializer):
         except Exception:
             return {"warning": "Help Desk service unreachable for locations."}
 
+    def get_requestor_details(self, obj):
+        """Return requestor/employee details fetched from Help Desk service."""
+        try:
+            if not getattr(obj, 'employee', None):
+                return None
+            from contexts_ms.services.integration_help_desk import get_employee_by_id
+            employee = get_employee_by_id(obj.employee)
+            if employee:
+                firstname = employee.get('firstname', '')
+                lastname = employee.get('lastname', '')
+                return {
+                    'id': employee.get('id'),
+                    'name': f"{firstname} {lastname}".strip(),
+                    'firstname': firstname,
+                    'lastname': lastname,
+                }
+            return None
+        except Exception:
+            return {"warning": "Help Desk service unreachable for employees."}
+
 
 class CategoryNameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -486,3 +507,8 @@ class LocationNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = ['id', 'city']
+
+class TicketTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ticket
+        fields = ['id', 'asset', 'asset_checkout']

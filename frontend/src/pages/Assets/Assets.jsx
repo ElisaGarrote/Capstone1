@@ -4,17 +4,16 @@ import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import AssetFilterModal from "../../components/Modals/AssetFilterModal";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import AssetFilterModal from "../../components/Modals/AssetFilterModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
-import { fetchAllAssets, getNextAssetId } from "../../services/assets-service";
-
 import "../../styles/Assets/Assets.css";
+import { fetchAllAssets } from "../../services/assets-service";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -40,20 +39,37 @@ function TableHeader({ allSelected, onHeaderChange }) {
   );
 }
 
+// Helper to determine action button state
+function getActionState(asset) {
+  const status = asset.status_details?.type;
+  const hasTicket = !!asset.ticket_details;
+
+  // No actions for undeployable or archived
+  if (status === "undeployable" || status === "archived") {
+    return {
+      showCheckin: false,
+      showCheckout: false,
+      checkoutDisabled: false,
+    };
+  }
+
+  return {
+    showCheckin: status === "deployed",
+
+    showCheckout:
+      status === "pending" || status === "deployable",
+
+    checkoutDisabled:
+      (status === "pending" || status === "deployable") && !hasTicket,
+  };
+}
+
+
 // TableItem component to render each asset row
 function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
   const baseImage = asset.image || DefaultImage;
 
-  const statusType = asset.status_details?.type?.toLowerCase();
-
-  // Check-In button: Shows when asset is deployed (no ticket required)
-  const showCheckIn = statusType === "deployed";
-
-  // Check-Out button: Shows when asset is deployable AND has a checkout ticket
-  const showCheckOut = 
-    (statusType === "deployable" || statusType === "pending") &&
-    asset.ticket &&
-    asset.ticket.ticket_type === "checkout";
+  const actions = getActionState(asset);
 
   return (
     <tr>
@@ -81,26 +97,26 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
         <Status type={asset.status_details.type.toLowerCase()} name={asset.status_details.name} />
       </td>
       <td>{asset.warranty_expiration || 'N/A'}</td>
-      <td>{asset.end_of_life || 'N/A'}</td>
+      <td>{asset.product_details.end_of_life || 'N/A'}</td>
       {/* Check-in/Check-out Column */}
       <td>
         <ActionButtons
-          showCheckout={showCheckOut}
-          showCheckin={showCheckIn}
-          onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
-          onCheckinClick={() => onCheckInOut(asset, 'checkin')}
+          showCheckin={actions.showCheckin}
+          showCheckout={actions.showCheckout}
+          disableCheckout={actions.checkoutDisabled}
+          onCheckoutClick={() => onCheckInOut(asset)}
+          onCheckinClick={() => onCheckInOut(asset)}
         />
       </td>
 
       <td>
         <ActionButtons
+          showView
           showEdit
           showDelete
-          showView
+          onViewClick={() => onViewClick(asset.id)}
           editPath={`/assets/edit/${asset.id}`}
-          editState={{ asset }}
           onDeleteClick={() => onDeleteClick(asset.id)}
-          onViewClick={() => onViewClick(asset)}
         />
       </td>
     </tr>
@@ -112,6 +128,10 @@ export default function Assets() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
   // Assets state
   const [assets, setAssets] = useState([]);
 
@@ -120,13 +140,39 @@ export default function Assets() {
   const [appliedFilters, setAppliedFilters] = useState({});
   const [filteredData, setFilteredData] = useState(assets);
 
+  // Load success message from navigation state
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      setTimeout(() => {
+        setSuccessMessage("");
+        window.history.replaceState({}, document.title);
+      }, 5000);
+    }
+  }, [location]);
+
+  // Fetch assets on component mount
+  useEffect(() => {
+    const loadAssets = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchAllAssets();
+        setAssets(data);
+        setFilteredData(data);
+        setErrorMessage("");
+      } catch (error) {
+        console.error("Error fetching assets:", error);
+        setErrorMessage("Failed to load assets. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAssets();
+  }, []);
+
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Debug: Monitor filter modal state changes
-  useEffect(() => {
-    console.log("🔍 Filter Modal State Changed:", isFilterModalOpen);
-  }, [isFilterModalOpen]);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -134,6 +180,79 @@ export default function Assets() {
 
   // selection state
   const [selectedIds, setSelectedIds] = useState([]);
+
+  // paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedAssets = filteredData.slice(startIndex, endIndex);
+
+  // selection logic
+  const allSelected =
+    paginatedAssets.length > 0 &&
+    paginatedAssets.every((item) => selectedIds.includes(item.id));
+
+  const handleHeaderChange = (e) => {
+    if (e.target.checked) {
+      setSelectedIds((prev) => [
+        ...prev,
+        ...paginatedAssets.map((item) => item.id).filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !paginatedAssets.map((item) => item.id).includes(id))
+      );
+    }
+  };
+
+  const handleRowChange = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
+
+  // delete modal state
+  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  const handleDeleteSuccess = (deletedIds) => {
+    if (Array.isArray(deletedIds)) {
+      // Bulk delete
+      setAssets((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+      setFilteredData((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+      setSuccessMessage(`${deletedIds.length} assets deleted successfully!`);
+      setSelectedIds([]);
+    } else {
+      // Single delete
+      setAssets((prev) => prev.filter((p) => p.id !== deletedIds));
+      setFilteredData((prev) => prev.filter((p) => p.id !== deletedIds));
+      setSuccessMessage("Asset deleted successfully!");
+    }
+    setTimeout(() => setSuccessMessage(""), 5000);
+  };
+
+  const handleDeleteError = (error) => {
+    setErrorMessage(error.response?.data?.detail || "Failed to delete product(s).");
+    setTimeout(() => setErrorMessage(""), 5000);
+  };
+
+  const handleViewClick = (assetId) => {
+    navigate(`/assets/view/${assetId}`);
+  };
+
+  const handleEditClick = (assetId) => {
+    navigate(`/assets/edit/${assetId}`);
+  };
 
   // Apply filters to data (base: all assets)
   const applyFilters = (filters) => {
@@ -252,177 +371,28 @@ export default function Assets() {
     setFilteredData(filtered);
   };
 
-  // paginate the data
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedAssets = filteredData.slice(startIndex, endIndex);
-
-  // selection logic
-  const allSelected =
-    paginatedAssets.length > 0 &&
-    paginatedAssets.every((item) => selectedIds.includes(item.id));
-
-  const handleHeaderChange = (e) => {
-    if (e.target.checked) {
-      setSelectedIds((prev) => [
-        ...prev,
-        ...paginatedAssets.map((item) => item.id).filter((id) => !prev.includes(id)),
-      ]);
-    } else {
-      setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedAssets.map((item) => item.id).includes(id))
-      );
-    }
-  };
-
-  const handleRowChange = (id, checked) => {
-    if (checked) {
-      setSelectedIds((prev) => [...prev, id]);
-    } else {
-      setSelectedIds((prev) => prev.filter((itemId) => itemId !== id));
-    }
-  };
-
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-
-  // delete modal state
-  const [deleteTarget, setDeleteTarget] = useState(null); // null = bulk, id = single
-
-  const openDeleteModal = (id = null) => {
-    setDeleteTarget(id);
-    setDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteModalOpen(false);
-    setDeleteTarget(null);
-  };
-
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single id:", deleteTarget);
-      // remove from mock data / API call
-      setSuccessMessage("Asset deleted successfully!");
-    } else {
-      console.log("Deleting multiple ids:", selectedIds);
-      if (selectedIds.length > 0) {
-        setSuccessMessage("Assets deleted successfully!");
-      }
-      // remove multiple
-      setSelectedIds([]); // clear selection
-    }
-
-    // Auto-hide success message after 5 seconds
-    setTimeout(() => setSuccessMessage(""), 5000);
-    closeDeleteModal();
-  };
-
-
-  const handleViewClick = (asset) => {
-    navigate(`/assets/view/${asset.id}`);
-  };
-
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-
-  useEffect(() => {
-    if (location.state?.successMessage) {
-      setSuccessMessage(location.state.successMessage);
-      setTimeout(() => {
-        setSuccessMessage("");
-        window.history.replaceState({}, document.title);
-      }, 5000);
-    }
-  }, [location]);
-
   const handleExport = () => {
     const dataToExport = filteredData.length > 0 ? filteredData : assets;
     exportToExcel(dataToExport, "Assets_Records.xlsx");
   };
+  
+  const handleCheckInOut = (asset) => {
+    const assetId = asset.id;
+    const assetDisplayId = asset.asset_id;
+    const assetName = asset.name;
+    const checkoutId = asset.active_checkout;
+    const ticketId = asset.ticket_details?.id;
 
-  const handleCreateNewAsset = async () => {
-    try {
-      const nextId = await getNextAssetId();
-      navigate("/assets/registration", {
-        state: { nextAssetId: nextId }
-      });
-    } catch (error) {
-      console.error("Error fetching next asset ID:", error);
-      setErrorMessage("Failed to prepare new asset form. Try again.");
-    }
-  };
-
-
-  const handleCheckInOut = (asset, action) => {
-    const baseImage = asset.image
-      ? `https://assets-service-production.up.railway.app${asset.image}`
-      : DefaultImage;
-
-    const checkout = asset.checkoutRecord;
-    console.log("checkout:", checkout);
-    console.log("action:", action);
-
-    // Determine action: use passed parameter or asset property
-    const isCheckIn = action === 'checkin' || asset.isCheckInOrOut === "Check-In";
-
-    if (isCheckIn) {
-      navigate(`/assets/check-in/${asset.id}`, {
-        state: {
-          id: asset.id,
-          assetId: asset.displayed_id,
-          product: asset.product,
-          image: baseImage,
-          employee: checkout?.requestor || "Not assigned",
-          empLocation: checkout?.requestor_location || "Unknown",
-          checkOutDate: checkout?.checkout_date || "Unknown",
-          returnDate: checkout?.return_date || "Unknown",
-          checkoutId: checkout?.checkout_ref_id || "Unknown",
-          checkinDate: checkout?.checkin_date || "Unknown",
-          condition: checkout?.condition || "Unknown",
-          ticketId: checkout?.ticket_id,
-          fromAsset: true,
-        },
+    if (checkoutId) {
+      navigate(`/assets/check-in/${assetId}`, {
+        state: { assetDisplayId, assetName, checkoutId, ticketId },
       });
     } else {
       navigate(`/assets/check-out/${asset.id}`, {
-        state: {
-          id: asset.id,
-          assetId: asset.displayed_id,
-          product: asset.product,
-          image: baseImage,
-          ticketId: checkout?.ticket_id,
-          empId: checkout?.requestor_id,
-          employee: checkout?.requestor || "Not assigned",
-          empLocation: checkout?.requestor_location || "Unknown",
-          checkoutDate: checkout?.checkout_date || "Unknown",
-          returnDate: checkout?.return_date || "Unknown",
-          fromAsset: true,
-        },
+        state: { assetDisplayId, assetName, assetId, ticketId },
       });
     }
   };
-
-  // Fetch assets on component mount
-  useEffect(() => {
-    const loadAssets = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchAllAssets();
-        setAssets(data);
-        setFilteredData(data);
-        setErrorMessage("");
-      } catch (error) {
-        console.error("Error fetching assets:", error);
-        setErrorMessage("Failed to load assets. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadAssets();
-  }, []);
-
-
 
   return (
     <>
@@ -431,9 +401,14 @@ export default function Assets() {
 
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
+          actionType={deleteTarget ? "delete" : "bulk-delete"}
+          entityType="asset"
+          targetId={deleteTarget}
+          targetIds={selectedIds}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 
@@ -491,7 +466,7 @@ export default function Assets() {
                 {authService.getUserInfo().role === "Admin" && (
                   <MediumButtons
                     type="new"
-                    onClick={handleCreateNewAsset}
+                    onClick={() => navigate('/assets/registration')}
                   />
                 )}
               </section>
