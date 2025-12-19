@@ -134,28 +134,6 @@ def get_depreciation_by_id(depreciation_id):
         cache.set(key, result, DEPRECIATION_CACHE_TTL)
     return result
 
-def get_location_by_id(location_id):
-    """Fetch a location resource from the Contexts service by ID with caching.
-
-    Caches successful lookups for LOCATION_CACHE_TTL seconds. If the
-    Contexts service returns a warning dict (unreachable or 404), cache it
-    for a short period to avoid hammering the remote service.
-    """
-    if not location_id:
-        return None
-    key = f"contexts:location:{location_id}"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-
-    result = fetch_resource_by_id('locations', location_id)
-    # If result is a warning dict, cache for a short time
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LOCATION_WARNING_TTL)
-    else:
-        cache.set(key, result, LOCATION_CACHE_TTL)
-    return result
-
 def get_status_by_id(status_id):
     """Fetch a status resource from the Contexts service by ID with caching.
 
@@ -335,3 +313,69 @@ def resolve_ticket(ticket_id, asset_checkout_id=None, asset_checkin_id=None):
         return resp.json()
     except RequestException:
         return {"warning": "Failed to resolve ticket. Contexts service unreachable."}
+    
+def get_category_names():
+    key = f"contexts:list:categories:names"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    
+    result = fetch_resource_list('categories/names', skip_api_prefix=True)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+def get_supplier_names():
+    key = f"contexts:list:suppliers:names"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    
+    result = fetch_resource_list('suppliers/names', skip_api_prefix=True)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+def get_manufacturer_names():
+    key = f"contexts:list:manufacturers:names"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    
+    result = fetch_resource_list('manufacturers/names', skip_api_prefix=True)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+def get_status_names():
+    key = f"contexts:list:statuses:names"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    
+    result = fetch_resource_list('statuses/names', skip_api_prefix=True)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+
+def get_depreciation_names():
+    key = f"contexts:list:depreciations:names"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+    
+    result = fetch_resource_list('depreciations/names', skip_api_prefix=True)
+    if isinstance(result, dict) and result.get('warning'):
+        cache.set(key, result, LIST_WARNING_TTL)
+    else:
+        cache.set(key, result, LIST_CACHE_TTL)
+    return result
+

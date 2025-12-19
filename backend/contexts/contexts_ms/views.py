@@ -16,20 +16,17 @@ from django.db import transaction
 
 # If will add more views later or functionality, please create file on api folder or services folder
 # Only viewsets here
-
-@api_view(['GET'])
-def get_all_location(request):
-    locations = Location.objects.all()
-    serializer = LocationSerializer(locations, many=True)
-    return Response(serializer.data)
-
 #CATEGORY
 class CategoryViewSet(viewsets.ModelViewSet):
-    serializer_class = CategorySerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Category.objects.filter(is_deleted=False).order_by('name')
+    
+    def get_serializer_class(self):
+        if self.action == "names":
+            return CategoryNameSerializer
+        return CategorySerializer
 
     def list(self, request, *args, **kwargs):
         """Override list to fetch batched usage counts from assets service and pass into serializer context."""
@@ -67,15 +64,26 @@ class CategoryViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def bulk_delete(self, request):
         return _bulk_delete_handler(request, 'category', hard_delete=False)
+    
+    @action(detail=False, methods=['get'], url_path='names')
+    def names(self, request):
+        """Return all categories with only name and id."""
+        categories = self.get_queryset()
+        serializer = self.get_serializer(categories, many=True)
+        return Response(serializer.data)
 #END
 
 #SUPPLIER 
 class SupplierViewSet(viewsets.ModelViewSet):
-    serializer_class = SupplierSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Supplier.objects.filter(is_deleted=False).order_by('name')
+    
+    def get_serializer_class(self):
+        if self.action == "names":
+            return SupplierNameSerializer
+        return SupplierSerializer
 
     def perform_destroy(self, instance):
         # Check if supplier is still used in assets-service
@@ -89,15 +97,26 @@ class SupplierViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def bulk_delete(self, request):
         return _bulk_delete_handler(request, 'supplier', hard_delete=False)
+    
+    @action(detail=False, methods=['get'], url_path='names')
+    def names(self, request):
+        """Return all suppliers with only name and id."""
+        suppliers = self.get_queryset()
+        serializer = self.get_serializer(suppliers, many=True)
+        return Response(serializer.data)
 #END
 
 #DEPRECIATION
 class DepreciationViewSet(viewsets.ModelViewSet):
-    serializer_class = DepreciationSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Depreciation.objects.filter(is_deleted=False).order_by('name')
+    
+    def get_serializer_class(self):
+        if self.action == "names":
+            return DepreciationNameSerializer
+        return DepreciationSerializer
 
     def perform_destroy(self, instance):
         usage = is_item_in_use("depreciation", instance.id)
@@ -110,15 +129,26 @@ class DepreciationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def bulk_delete(self, request):
         return _bulk_delete_handler(request, 'depreciation', hard_delete=False)
+
+    @action(detail=False, methods=['get'], url_path='names')
+    def names(self, request):
+        """Return all depreciations with only name and id."""
+        depreciations = self.get_queryset()
+        serializer = self.get_serializer(depreciations, many=True)
+        return Response(serializer.data)
 #END
 
 #MANUFACTURER
 class ManufacturerViewSet(viewsets.ModelViewSet):
-    serializer_class = ManufacturerSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Manufacturer.objects.filter(is_deleted=False).order_by('name')
+    
+    def get_serializer_class(self):
+        if self.action == "names":
+            return ManufacturerNameSerializer
+        return ManufacturerSerializer
 
     def perform_destroy(self, instance):
         usage = is_item_in_use("manufacturer", instance.id)
@@ -131,15 +161,26 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def bulk_delete(self, request):
         return _bulk_delete_handler(request, 'manufacturer', hard_delete=False)
+    
+    @action(detail=False, methods=['get'], url_path='names')
+    def names(self, request):
+        """Return all manufacturers with only name and id."""
+        manufacturers = self.get_queryset()
+        serializer = self.get_serializer(manufacturers, many=True)
+        return Response(serializer.data)
 
 # STATUS
 class StatusViewSet(viewsets.ModelViewSet):
-    serializer_class = StatusSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Status.objects.filter(is_deleted=False).order_by('name')
-
+    
+    def get_serializer_class(self):
+        if self.action == "names":
+            return StatusNameSerializer
+        return StatusSerializer
+    
     def list(self, request, *args, **kwargs):
         qs = self.filter_queryset(self.get_queryset())
         ids = list(qs.values_list('id', flat=True))
@@ -175,14 +216,25 @@ class StatusViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def bulk_delete(self, request):
         return _bulk_delete_handler(request, 'status', hard_delete=False)
+    
+    @action(detail=False, methods=['get'], url_path='names')
+    def names(self, request):
+        """Return all statuses with only name and id."""
+        statuses = self.get_queryset()
+        serializer = self.get_serializer(statuses, many=True)
+        return Response(serializer.data)
 
 # LOCATION
 class LocationViewSet(viewsets.ModelViewSet):
-    serializer_class = LocationSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return Location.objects.all().order_by('city')
+    
+    def get_serializer_class(self):
+        if self.action == "names":
+            return LocationNameSerializer
+        return LocationSerializer
 
     def perform_destroy(self, instance):
         # Location has no is_deleted flag; perform hard delete only if not referenced.
@@ -195,6 +247,13 @@ class LocationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def bulk_delete(self, request):
         return _bulk_delete_handler(request, 'location', hard_delete=True)
+    
+    @action(detail=False, methods=['get'], url_path='names')
+    def names(self, request):
+        """Return all locations with only name and id."""
+        locations = self.get_queryset()
+        serializer = self.get_serializer(locations, many=True)
+        return Response(serializer.data)
 
 class EmployeeViewSet(viewsets.ModelViewSet):
     serializer_class = EmployeeSerializer
@@ -203,48 +262,13 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Employee.objects.all().order_by('firstname')
     
-# Get all manufacturer's names
-@api_view(['GET'])
-def get_manaufacturers_names(request):
-    manufacturers = Manufacturer.objects.filter(is_deleted=False)
-    serializedManufacturer = ManufacturerNameSerializer(manufacturers, many=True).data
-
-    data = {
-        'manufacturers': serializedManufacturer,
-    }
-    return Response(data)
-
-# Get context names
-@api_view(['GET'])
-def get_contexts_names(request):
-    manufacturers = Manufacturer.objects.filter(is_deleted=False)
-    serializedManufacturer = ManufacturerNameSerializer(manufacturers, many=True).data
-    data = {
-        'manufacturers': serializedManufacturer,
-    }
-    return Response(data)
-
-#Get manufacturer name by id
-@api_view(['GET'])
-def get_manu_name_by_id(request, id):
-    try:
-        manufacturer = Manufacturer.objects.get(pk=id, is_deleted=False)
-    except Manufacturer.DoesNotExist:
-        return Response({'detail': 'Manufacturer not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    serializedData = ManufacturerNameSerializer(manufacturer)
-
-    data = {
-        'manufacturer': serializedData.data,
-    }
-
-    return Response(data)
-
-#END
-
 class TicketViewSet(viewsets.ModelViewSet):
     queryset = Ticket.objects.all().order_by('-created_at')
-    serializer_class = TicketSerializer
+
+    def get_serializer_class(self):
+        if self.action == "unresolved":
+            return TicketTypeSerializer
+        return TicketSerializer
 
     # GET /tickets/resolved/
     @action(detail=False, methods=['get'])
@@ -376,7 +400,7 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
             data["depreciations"] = DepreciationNameSerializer(Depreciation.objects.filter(is_deleted=False), many=True).data
 
         if entity == "asset":
-            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False), many=True).data
+            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.ASSET), many=True).data
 
         # individual dropdowns
         if entity == "category":

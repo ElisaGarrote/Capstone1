@@ -113,11 +113,13 @@
 
 /* Contextual Color Classes */
 .confirm-action-btn.delete-btn,
+.confirm-action-btn.bulk-delete-btn,
 .confirm-action-btn.deactivate-btn {
   background-color: var(--error-color);
 }
 
 .confirm-action-btn.delete-btn:hover,
+.confirm-action-btn.bulk-delete-btn:hover,
 .confirm-action-btn.deactivate-btn:hover {
   background-color: var(--error-color-hover);
 }

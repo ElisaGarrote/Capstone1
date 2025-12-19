@@ -15,6 +15,12 @@ export async function fetchProductById(id) {
   return res.data;
 }
 
+// GET product list for asset registration
+export async function fetchProductsForAssetRegistration() {
+  const res = await assetsAxios.get("products/asset-registration/");
+  return res.data;
+}
+
 // CREATE product
 export async function createProduct(data) {
   const res = await assetsAxios.post("products/", data);
@@ -33,21 +39,35 @@ export async function deleteProduct(id) {
   return res.data;
 }
 
-/* ===============================
-          ASSET CHECKOUT
-================================= */
-// Create asset checkout
-export async function createAssetCheckout(data) {
-  const res = await assetsAxios.post("asset-checkout/", data);
+// GET product names and images for bulk edit
+export const fetchProductNames = ({ids = [], search = "" }) => {
+  const params = {};
+
+  if (ids.length) params.ids = ids.join(",");
+  if (search) params.search = search;
+
+  return assetsAxios
+    .get("products/names/", { params })
+    .then(res => res.data);
+}
+
+// BULK EDIT products
+export async function bulkEditProducts(data, useFormData = false) {
+  const headers = useFormData
+    ? { "Content-Type": "multipart/form-data" }
+    : { "Content-Type": "application/json" };
+
+  const res = await assetsAxios.patch("products/bulk-edit/", data, { headers });
   return res.data;
 }
 
-// Create asset checkout with status (atomic)
-export async function createAssetCheckoutWithStatus(data) {
-  const res = await assetsAxios.post(
-    "asset-checkout/checkout-with-status/",
-    data
-  );
+// BULK DELETE products
+export async function bulkDeleteProducts(data) {
+  const res = await assetsAxios.post("products/bulk-delete/", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   return res.data;
 }
 
@@ -61,6 +81,12 @@ export async function fetchAllAssets() {
   return res.data;
 }
 
+// GET all assets for a product
+export async function fetchAssetsByProduct(productId) {
+  const res = await assetsAxios.get(`assets/by-product/${productId}/`);
+  return res.data;
+}
+
 // GET asset by ID
 export async function fetchAssetById(id) {
   const res = await assetsAxios.get(`assets/${id}/`);
@@ -70,7 +96,7 @@ export async function fetchAssetById(id) {
 // GET next asset ID
 export async function getNextAssetId() {
   const res = await assetsAxios.get("assets/generate-asset-id/");
-  return res.data;
+  return res.data.asset_id;
 }
 
 // CREATE asset
@@ -91,9 +117,57 @@ export async function deleteAsset(id) {
   return res.data;
 }
 
+// BULK DELETE assets
+export async function bulkDeleteAssets(data) {
+  const res = await assetsAxios.post("assets/bulk-delete/", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return res.data;
+}
+
+// GET product names and images for bulk edit
+export const fetchAssetNames = ({ids = [], search = "" }) => {
+  const params = {};
+
+  if (ids.length) params.ids = ids.join(",");
+
+  if (search) params.search = search;
+
+  return assetsAxios
+    .get("assets/names/", { params })
+    .then(res => res.data);
+}
+
+// BULK EDIT assets
+export async function bulkEditAssets(data, useFormData = false) {
+  const headers = useFormData
+    ? { "Content-Type": "multipart/form-data" }
+    : { "Content-Type": "application/json" };
+
+  const res = await assetsAxios.patch("assets/bulk-edit/", data, { headers });
+  return res.data;
+}
+
 // UPDATE asset status
 export async function updateAssetStatus(id, data) {
   const res = await assetsAxios.patch(`assets/${id}/update-status/`, data);
+  return res.data;
+}
+
+/* ===============================
+          ASSET CHECKOUT
+================================= */
+// Create asset checkout
+export async function createAssetCheckout(data) {
+  const res = await assetsAxios.post("asset-checkout/", data);
+  return res.data;
+}
+
+// Create asset checkout with status (atomic)
+export async function createAssetCheckoutWithStatus(data) {
+  const res = await assetsAxios.post("asset-checkout/checkout-with-status/", data);
   return res.data;
 }
 
@@ -102,10 +176,7 @@ export async function updateAssetStatus(id, data) {
 ================================= */
 // Checkin with status
 export async function createAssetCheckinWithStatus(data) {
-  const res = await assetsAxios.post(
-    "asset-checkin/checkin-with-status/",
-    data
-  );
+  const res = await assetsAxios.post("asset-checkin/checkin-with-status/", data);
   return res.data;
 }
 
@@ -177,214 +248,4 @@ export async function createAuditSchedule(data) {
 export async function fetchDashboardStats() {
   const res = await assetsAxios.get("dashboard/");
   return res.data;
-}
-
-/* ===============================
-          ASSET REPORT
-================================= */
-
-/**
- * Fetch asset report data with optional filters
- * @param {Object} filters - Filter parameters
- * @param {number} filters.status_id - Filter by status ID
- * @param {number} filters.category_id - Filter by category ID
- * @param {number} filters.supplier_id - Filter by supplier ID
- * @param {number} filters.location_id - Filter by location ID
- * @param {string} filters.format - Response format: 'json' or 'xlsx'
- * @returns {Promise} - Report data or blob for Excel download
- */
-export async function fetchAssetReport(filters = {}) {
-  const params = new URLSearchParams();
-
-  if (filters.status_id) params.append("status_id", filters.status_id);
-  if (filters.category_id) params.append("category_id", filters.category_id);
-  if (filters.supplier_id) params.append("supplier_id", filters.supplier_id);
-  if (filters.location_id) params.append("location_id", filters.location_id);
-  if (filters.product_id) params.append("product_id", filters.product_id);
-  if (filters.manufacturer_id)
-    params.append("manufacturer_id", filters.manufacturer_id);
-  // Use 'export_format' instead of 'format' to avoid conflict with DRF's format suffix
-  if (filters.export_format)
-    params.append("export_format", filters.export_format);
-  // Add columns parameter for selective column export
-  if (filters.columns) params.append("columns", filters.columns);
-
-  const queryString = params.toString();
-  const url = `reports/assets/${queryString ? "?" + queryString : ""}`;
-
-  // If requesting Excel format, return as blob
-  // Use longer timeout (60 seconds) for report generation as it may take time
-  if (filters.export_format === "xlsx" || !filters.export_format) {
-    const res = await assetsAxios.get(url, {
-      responseType: "blob",
-      timeout: 60000,
-    });
-    return res.data;
-  }
-
-  // Use longer timeout for JSON report as well
-  const res = await assetsAxios.get(url, { timeout: 60000 });
-  return res.data;
-}
-
-/**
- * Download asset report as Excel file
- * @param {Object} filters - Filter parameters
- * @param {string} filename - Optional custom filename
- * @param {Array} columns - Optional array of column IDs to include
- */
-export async function downloadAssetReportExcel(
-  filters = {},
-  filename = null,
-  columns = []
-) {
-  const params = { ...filters, export_format: "xlsx" };
-  if (columns && columns.length > 0) {
-    params.columns = columns.join(",");
-  }
-  const blob = await fetchAssetReport(params);
-
-  // Create download link
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download =
-    filename || `asset_report_${new Date().toISOString().split("T")[0]}.xlsx`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
-}
-
-/* ===============================
-      ASSET REPORT TEMPLATES
-================================= */
-
-/**
- * Fetch all report templates
- * @param {number} userId - Optional user ID to filter templates
- * @returns {Promise<Array>} - List of templates
- */
-export async function fetchReportTemplates(userId = null) {
-  let url = "report-templates/";
-  if (userId) {
-    url += `?user_id=${userId}`;
-  }
-  const res = await assetsAxios.get(url);
-  return res.data;
-}
-
-/**
- * Fetch a single report template by ID
- * @param {number} templateId - Template ID
- * @returns {Promise<Object>} - Template data
- */
-export async function fetchReportTemplateById(templateId) {
-  const res = await assetsAxios.get(`report-templates/${templateId}/`);
-  return res.data;
-}
-
-/**
- * Create a new report template
- * @param {Object} templateData - Template data (name, filters, columns, user_id)
- * @returns {Promise<Object>} - Created template
- */
-export async function createReportTemplate(templateData) {
-  const res = await assetsAxios.post("report-templates/", templateData);
-  return res.data;
-}
-
-/**
- * Update an existing report template
- * @param {number} templateId - Template ID
- * @param {Object} templateData - Updated template data
- * @returns {Promise<Object>} - Updated template
- */
-export async function updateReportTemplate(templateId, templateData) {
-  const res = await assetsAxios.put(
-    `report-templates/${templateId}/`,
-    templateData
-  );
-  return res.data;
-}
-
-/**
- * Delete a report template (soft delete)
- * @param {number} templateId - Template ID
- * @returns {Promise<void>}
- */
-export async function deleteReportTemplate(templateId) {
-  await assetsAxios.delete(`report-templates/${templateId}/`);
-}
-
-/* ===============================
-        ACTIVITY REPORT
-================================= */
-
-/**
- * Fetch activity report data
- * @param {Object} filters - Filter parameters
- * @param {string} filters.start_date - Start date (YYYY-MM-DD)
- * @param {string} filters.end_date - End date (YYYY-MM-DD)
- * @param {string} filters.activity_type - Activity type (Asset, Component, Audit, Repair)
- * @param {string} filters.action - Action type (Create, Update, Delete, Checkout, Checkin, Schedule, Passed, Failed)
- * @param {number} filters.user_id - Filter by user ID
- * @param {string} filters.search - Search term
- * @param {number} filters.limit - Max number of records
- * @param {string} filters.export_format - Response format: 'json' or 'xlsx'
- * @returns {Promise} - Report data or blob for Excel download
- */
-export async function fetchActivityReport(filters = {}) {
-  const params = new URLSearchParams();
-
-  if (filters.start_date) params.append("start_date", filters.start_date);
-  if (filters.end_date) params.append("end_date", filters.end_date);
-  if (filters.activity_type)
-    params.append("activity_type", filters.activity_type);
-  if (filters.action) params.append("action", filters.action);
-  if (filters.user_id) params.append("user_id", filters.user_id);
-  if (filters.search) params.append("search", filters.search);
-  if (filters.limit) params.append("limit", filters.limit);
-  if (filters.export_format)
-    params.append("export_format", filters.export_format);
-
-  const queryString = params.toString();
-  const url = `reports/activity/${queryString ? "?" + queryString : ""}`;
-
-  // If requesting Excel format, return as blob
-  if (filters.export_format === "xlsx" || !filters.export_format) {
-    const res = await assetsAxios.get(url, {
-      responseType: "blob",
-      timeout: 60000,
-    });
-    return res.data;
-  }
-
-  // JSON format
-  const res = await assetsAxios.get(url, { timeout: 60000 });
-  return res.data;
-}
-
-/**
- * Download activity report as Excel file
- * @param {Object} filters - Filter parameters
- * @param {string} filename - Optional custom filename
- */
-export async function downloadActivityReportExcel(
-  filters = {},
-  filename = null
-) {
-  const params = { ...filters, export_format: "xlsx" };
-  const blob = await fetchActivityReport(params);
-
-  // Create download link
-  const downloadUrl = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = downloadUrl;
-  link.download =
-    filename || `ActivityReport_${new Date().toISOString().split("T")[0]}.xlsx`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(downloadUrl);
 }
