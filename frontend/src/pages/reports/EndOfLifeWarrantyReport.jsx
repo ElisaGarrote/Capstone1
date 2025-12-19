@@ -38,7 +38,6 @@ const filterConfig = [
   },
 ];
 
-// TableHeader component to render the table header
 function TableHeader() {
   return (
     <tr>
@@ -51,7 +50,6 @@ function TableHeader() {
   );
 }
 
-// TableItem component to render each ticket row
 function TableItem({ asset, onDeleteClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -81,8 +79,6 @@ export default function EndOfLifeWarrantyReport() {
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
   const handleToggleFilter = () => setIsFilterModalOpen(true);
-
-  // filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [filteredData, setFilteredData] = useState(MockupData);
@@ -119,11 +115,8 @@ export default function EndOfLifeWarrantyReport() {
     setCurrentPage(1);
   };
 
-  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
-
-  // paginate the data (use filteredData)
+  const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
@@ -156,8 +149,6 @@ export default function EndOfLifeWarrantyReport() {
         <section className="title-page-section">
           <h1>End of Life & Warranty Report</h1>
         </section>
-
-        {/* Table Filter (modal used via Filter button) */}
 
         <section className="table-layout">
           {/* Table Header */}

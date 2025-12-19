@@ -73,7 +73,6 @@ const getTypeIcon = (type) => {
   }
 };
 
-// TableHeader component to render the table header
 function TableHeader() {
   return (
     <tr>
@@ -88,7 +87,6 @@ function TableHeader() {
   );
 }
 
-// TableItem component to render each ticket row
 function TableItem({ activity }) {
   return (
     <tr>
@@ -167,11 +165,8 @@ export default function ActivityReport() {
     setCurrentPage(1);
   };
 
-  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
-
-  // paginate the data (use filteredData)
+  const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedActivity = filteredData.slice(startIndex, endIndex);
@@ -204,8 +199,6 @@ export default function ActivityReport() {
         <section className="title-page-section">
           <h1>Activity Report</h1>
         </section>
-
-        {/* Table Filter (modal used via Filter button) */}
 
         <section className="table-layout">
           {/* Table Header */}
