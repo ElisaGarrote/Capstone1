@@ -75,6 +75,38 @@ export async function createManufacturer(data) {
   return res.data;
 }
 
+// UPDATE manufacturer
+export async function updateManufacturer(id, data) {
+  const res = await contextsAxios.put(`manufacturers/${id}/`, data);
+  return res.data;
+}
+
+// DELETE manufacturer (soft-delete via API)
+export async function deleteManufacturer(id) {
+  const res = await contextsAxios.delete(`manufacturers/${id}/`);
+  return res.data;
+}
+
+// BULK DELETE manufacturers
+export async function bulkDeleteManufacturers(ids) {
+  const res = await contextsAxios.post(`manufacturers/bulk_delete/`, { ids });
+  return res.data;
+}
+
+// IMPORT manufacturers via XLSX upload
+export async function importManufacturers(formData, options = {}) {
+  // options: { allowUpdate: boolean, upsertBy: 'natural'|'id', apiKey: string }
+  const params = {};
+  if (options.allowUpdate) params.allow_update = 'true';
+  if (options.upsertBy) params.upsert_by = options.upsertBy;
+
+  const headers = {};
+  if (options.apiKey) headers['X-IMPORT-API-KEY'] = options.apiKey;
+
+  const res = await contextsAxios.post(`import/manufacturers/`, formData, { params, headers });
+  return res.data;
+}
+
 /* ===============================
             STATUS CRUD
 ================================= */

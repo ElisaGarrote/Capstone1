@@ -21,6 +21,10 @@ def normalize_name_smart(name: str) -> str:
 
     s = " ".join(name.split()).strip()
 
+    letters_only = re.sub(r"[^A-Za-z]", "", s)
+    all_upper_input = bool(letters_only) and letters_only.isupper()
+    all_lower_input = bool(letters_only) and letters_only.islower()
+
     def fix_token(tok: str) -> str:
         # handle trailing possessive 's or ’s
         lower_tok = tok
@@ -28,20 +32,32 @@ def normalize_name_smart(name: str) -> str:
             base = tok[:-2]
             suffix = tok[-2:]
             letters = re.sub(r"[^A-Za-z]", "", base)
-            if 2 <= len(letters) <= 4:
-                # uppercase alphabetic groups, keep suffix as "'s"
-                base_fixed = re.sub(r"[A-Za-z]+", lambda m: m.group(0).upper(), base)
-                return base_fixed + "'s"
-            else:
+            # ALL-CAPS input: treat short alphabetic bases as acronyms, title-case others
+            if all_upper_input:
+                if 1 <= len(letters) <= 3:
+                    return re.sub(r"[A-Za-z]+", lambda m: m.group(0).upper(), base) + "'s"
                 return base.title() + "'s"
+            # all-lowercase input: convert to Title Case
+            if all_lower_input:
+                return base.title() + "'s"
+            # mixed-case input: preserve user's casing for mixed tokens
+            return base + "'s"
 
         # general token handling
         letters = re.sub(r"[^A-Za-z]", "", tok)
-        if 2 <= len(letters) <= 4:
-            # treat as acronym -> uppercase alphabetic groups
-            return re.sub(r"[A-Za-z]+", lambda m: m.group(0).upper(), tok)
-        # default: title case
-        return tok.title()
+        # If the whole input was ALL-CAPS, convert to Title Case except short
+        # alphabetic tokens (<=3 letters) which we keep uppercased as acronyms.
+        if all_upper_input:
+            if 1 <= len(letters) <= 3:
+                return re.sub(r"[A-Za-z]+", lambda m: m.group(0).upper(), tok)
+            return tok.title()
+
+        # If the whole input was all-lowercase, convert tokens to Title Case.
+        if all_lower_input:
+            return tok.title()
+
+        # Mixed-case input: preserve user's intended casing (do not force acronyms).
+        return tok
 
     tokens = s.split(' ')
     fixed = [fix_token(t) for t in tokens]

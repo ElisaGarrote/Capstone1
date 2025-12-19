@@ -82,31 +82,34 @@ class CategorySerializer(serializers.ModelSerializer):
         """Return number of assets referencing this category, or None if unknown."""
         # Prefer batched counts supplied by the view via serializer context
         try:
-            if getattr(obj, 'type', None) != 'asset':
-                return None
             usage_map = self.context.get('category_usage') if isinstance(self.context, dict) else None
             if isinstance(usage_map, dict) and obj.id in usage_map:
                 val = usage_map.get(obj.id)
                 # asset_count expected in the assets service response
-                return val.get('asset_count') if isinstance(val, dict) else None
+                if isinstance(val, dict) and 'asset_count' in val:
+                    return int(val.get('asset_count') or 0)
+                # older responses might include asset_ids array
+                if isinstance(val, dict) and 'asset_ids' in val:
+                    return int(len(val.get('asset_ids') or []))
+                return 0
             # Fallback to per-item call
-            return count_assets_by_category(obj.id)
+            return int(count_assets_by_category(obj.id) or 0)
         except Exception:
             return None
 
     def get_component_count(self, obj):
         """Return number of components referencing this category, or None if unknown."""
         try:
-            if getattr(obj, 'type', None) != 'component':
-                return None
             usage_map = self.context.get('category_usage') if isinstance(self.context, dict) else None
             if isinstance(usage_map, dict) and obj.id in usage_map:
                 val = usage_map.get(obj.id)
                 # component_ids is an array in the assets response
                 if isinstance(val, dict) and 'component_ids' in val:
-                    return len(val.get('component_ids') or [])
-                return None
-            return count_components_by_category(obj.id)
+                    return int(len(val.get('component_ids') or []))
+                if isinstance(val, dict) and 'component_count' in val:
+                    return int(val.get('component_count') or 0)
+                return 0
+            return int(count_components_by_category(obj.id) or 0)
         except Exception:
             return None
 
@@ -162,16 +165,12 @@ class SupplierSerializer(serializers.ModelSerializer):
             if not digits.isdigit() or len(digits) < 7 or len(digits) > 20:
                 raise serializers.ValidationError({'fax': 'Fax must contain 7-20 digits.'})
 
-        # Validate phone number: only digits and formatting chars; require reasonable digit count
+        # Validate phone number: require E.164 format (e.g. +15551234567)
         phone = attrs.get('phone_number') if 'phone_number' in attrs else (self.instance.phone_number if self.instance else None)
         if phone:
-            if len(phone) > 13:
-                raise serializers.ValidationError({'phone_number': 'Phone number must be 13 characters or fewer.'})
-            if not re.match(r'^[\d\s\-\+\(\)]+$', phone):
-                raise serializers.ValidationError({'phone_number': 'Phone number contains invalid characters.'})
-            digits_phone = re.sub(r'\D', '', phone)
-            if not digits_phone.isdigit() or len(digits_phone) < 7 or len(digits_phone) > 13:
-                raise serializers.ValidationError({'phone_number': 'Phone number must contain 7-13 digits.'})
+            # Accept only E.164: leading '+' followed by 7-15 digits
+            if not re.match(r'^\+\d{7,15}$', str(phone).strip()):
+                raise serializers.ValidationError({'phone_number': "Phone number must be in E.164 format, e.g. '+15551234567'."})
 
         # Allow import-time bypass when the import flow provides a set of names
         # already created/updated in this run (to avoid false-positive conflicts
@@ -210,6 +209,44 @@ class ManufacturerSerializer(serializers.ModelSerializer):
 
     def validate_logo(self, value):
         return validate_image_file(value)
+    
+    def validate_support_phone(self, value):
+        """Ensure manufacturer support phone uses E.164 format."""
+        if value in (None, ''):
+            return value
+        if not re.match(r'^\+\d{7,15}$', str(value).strip()):
+            raise serializers.ValidationError("Support phone must be in E.164 format, e.g. '+15551234567'.")
+        return value
+
+    def validate(self, attrs):
+        """Enforce unique manufacturer name among non-deleted records.
+
+        Allows import-time bypass using `context['import_seen_names']` similar
+        to other serializers.
+        """
+        name = attrs.get('name') if 'name' in attrs else (self.instance.name if self.instance else None)
+        if not name:
+            return attrs
+
+        normalized_name = normalize_name_smart(name)
+        attrs['name'] = normalized_name
+
+        seen = None
+        try:
+            seen = self.context.get('import_seen_names') if isinstance(self.context, dict) else None
+        except Exception:
+            seen = None
+
+        qs = Manufacturer.objects.filter(name__iexact=normalized_name, is_deleted=False)
+        if self.instance:
+            qs = qs.exclude(pk=self.instance.pk)
+
+        if qs.exists():
+            if seen and normalized_name in seen:
+                return attrs
+            raise serializers.ValidationError({'name': 'A Manufacturer with this name already exists.'})
+
+        return attrs
 
 class StatusSerializer(serializers.ModelSerializer):
     asset_count = serializers.SerializerMethodField(read_only=True)
@@ -429,6 +466,7 @@ class SupplierNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
         fields = ['id', 'name']
+        
 class ManufacturerNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Manufacturer

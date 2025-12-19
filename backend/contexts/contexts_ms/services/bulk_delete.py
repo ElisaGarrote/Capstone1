@@ -26,7 +26,13 @@ def _build_cant_delete_message(instance, usage):
     asset_ids = usage.get('asset_ids') or []
     comp_ids = usage.get('component_ids') or []
     repair_ids = usage.get('repair_ids') or []
-
+    # If the blocked instance is a Manufacturer and assets reference it,
+    # return the specific short message requested by the frontend.
+    try:
+        if instance.__class__.__name__ == 'Manufacturer' and asset_ids:
+            return "The selected manufacturer cannot be deleted. Currently in use by asset!"
+    except Exception:
+        pass
     display = None
     for attr in ('name', 'city', 'title'):
         val = getattr(instance, attr, None)
@@ -39,27 +45,63 @@ def _build_cant_delete_message(instance, usage):
             return f"{label} '{display}'"
         return label
 
-    if asset_ids:
-        total = len(asset_ids)
-        if total <= 5:
-            samples = ', '.join(map(str, asset_ids))
-            return f"Cannot delete {label_with_display()}. Currently used by Asset(s): {samples}."
+    # Helper to render sample ids or counts with examples
+    def render_usage(kind_label, ids, count=None):
+        # ids: list of example ids (may be empty)
+        # count: optional total count reported by upstream
+        total = None
+        if isinstance(count, int):
+            total = count
         else:
-            return f"Cannot delete {label_with_display()}. Currently used by assets."
+            total = len(ids) if ids else 0
 
-    parts = []
-    if comp_ids:
-        parts.append('component(s)')
+        if total == 0:
+            return None
+
+        examples = ids[:5] if ids else []
+        if total <= 5 and examples:
+            return f"{kind_label}(s): {', '.join(map(str, examples))}"
+        if examples:
+            return f"{kind_label}(s): {total} (e.g. {', '.join(map(str, examples))})"
+        return f"{kind_label}(s): {total}"
+
+    # If this is a Category, prefer the category's own `type` to determine primary wording
+    primary_kind = None
+    try:
+        kind_attr = getattr(instance, 'type', None)
+        if kind_attr in ('asset', 'component'):
+            primary_kind = kind_attr
+    except Exception:
+        primary_kind = None
+
+    # Build usage pieces
+    pieces = []
+
+    # Prefer asset info when primary_kind is asset or when asset_ids present
+    if primary_kind == 'asset' or asset_ids:
+        # upstream may provide counts like 'asset_count'
+        total_assets = usage.get('asset_count')
+        part = render_usage('Asset', asset_ids, total_assets)
+        if part:
+            pieces.append(part)
+
+    # Prefer component info when primary_kind is component.
+    # If primary_kind is explicitly 'asset', do NOT include component usages even if present.
+    if primary_kind == 'component' or (primary_kind is None and comp_ids):
+        total_comps = usage.get('component_count')
+        part = render_usage('Component', comp_ids, total_comps)
+        if part:
+            pieces.append(part)
+
+    # Repairs
     if repair_ids:
-        parts.append('repair(s)')
+        part = render_usage('Repair', repair_ids, len(repair_ids))
+        if part:
+            pieces.append(part)
 
-    if parts:
-        if len(parts) == 1:
-            body = parts[0]
-        elif len(parts) == 2:
-            body = f"{parts[0]} and {parts[1]}"
-        else:
-            body = ', '.join(parts[:-1]) + f", and {parts[-1]}"
+    if pieces:
+        # Join pieces with ' and ' for readability
+        body = ' and '.join(pieces)
         return f"Cannot delete {label_with_display()}. Currently used by {body}."
 
     return f"Cannot delete {label_with_display()}. It is referenced by other records."

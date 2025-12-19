@@ -762,3 +762,66 @@ class AssetReportTemplateSerializer(serializers.ModelSerializer):
         if not isinstance(value, dict):
             raise serializers.ValidationError("Filters must be an object/dictionary.")
         return value
+
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    """Serializer for ActivityLog model for activity report API responses."""
+
+    # Format datetime as string for frontend display
+    date = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    type = serializers.CharField(source='activity_type')
+    item = serializers.SerializerMethodField()
+    to_from = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ActivityLog
+        fields = ['id', 'date', 'user', 'type', 'action', 'item', 'to_from', 'notes',
+                  'datetime', 'user_id', 'activity_type', 'item_id',
+                  'item_identifier', 'item_name', 'target_id', 'target_name']
+        read_only_fields = ['id', 'date', 'user', 'item', 'to_from']
+
+    def get_date(self, obj):
+        """Format datetime for display."""
+        if obj.datetime:
+            return obj.datetime.strftime('%Y-%m-%d %I:%M:%S %p')
+        return ''
+
+    def get_user(self, obj):
+        """Return user name or fallback to user_id."""
+        if obj.user_name:
+            return obj.user_name
+        if obj.user_id:
+            return f'User {obj.user_id}'
+        return 'System'
+
+    def get_item(self, obj):
+        """Return formatted item string."""
+        identifier = obj.item_identifier or str(obj.item_id)
+        name = obj.item_name or ''
+        if name:
+            return f"{identifier} - {name}"
+        return identifier
+
+    def get_to_from(self, obj):
+        """Return target name for checkout/checkin actions."""
+        return obj.target_name or ''
+
+
+class ActivityLogCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating ActivityLog entries."""
+
+    class Meta:
+        model = ActivityLog
+        fields = ['user_id', 'user_name', 'activity_type', 'action',
+                  'item_id', 'item_identifier', 'item_name',
+                  'target_id', 'target_name', 'notes', 'datetime']
+        extra_kwargs = {
+            'datetime': {'required': False},
+            'user_name': {'required': False},
+            'item_identifier': {'required': False},
+            'item_name': {'required': False},
+            'target_id': {'required': False},
+            'target_name': {'required': False},
+            'notes': {'required': False},
+        }

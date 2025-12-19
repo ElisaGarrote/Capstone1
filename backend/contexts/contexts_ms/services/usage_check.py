@@ -7,15 +7,28 @@ def _extract_ids_from_response(resp_json):
     ids = []
     if isinstance(resp_json, list):
         for item in resp_json:
-            if isinstance(item, dict) and 'id' in item:
-                ids.append(item['id'])
+            if isinstance(item, dict):
+                # Prefer human-readable name/title when available (components, statuses, etc.)
+                for key in ('name', 'title', 'component_name', 'label'):
+                    if key in item and item.get(key):
+                        ids.append(str(item.get(key)))
+                        break
+                else:
+                    if 'id' in item:
+                        ids.append(item['id'])
     elif isinstance(resp_json, dict):
         # DRF paginated responses often have 'results'
         results = resp_json.get('results') or resp_json.get('data') or None
         if isinstance(results, list):
             for item in results:
-                if isinstance(item, dict) and 'id' in item:
-                    ids.append(item['id'])
+                if isinstance(item, dict):
+                    for key in ('name', 'title', 'component_name', 'label'):
+                        if key in item and item.get(key):
+                            ids.append(str(item.get(key)))
+                            break
+                    else:
+                        if 'id' in item:
+                            ids.append(item['id'])
     return ids
 
 

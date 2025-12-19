@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { createCategory, importCategories } from '../../api/contextsApi'
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
 import PlusIcon from "../../assets/icons/plus.svg";
-
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
 
@@ -16,7 +16,10 @@ const CategoryRegistration = () => {
   const [attachmentFile, setAttachmentFile] = useState(null);
 
   // Import file state
-  const [importFile, setImportFile] = useState(null);
+  const [importFile, setImportFile] = useState(null)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [isImporting, setIsImporting] = useState(false)
 
   const {
     register,
@@ -57,28 +60,78 @@ const CategoryRegistration = () => {
   };
 
   const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log("Form submitted:", data, attachmentFile);
+    // Build payload as FormData to support file upload
+    const form = new FormData()
+    form.append('name', data.categoryName)
+    form.append('type', data.categoryType)
+    if (attachmentFile) form.append('logo', attachmentFile)
 
-    // Optional: navigate back to categories view after successful submission
-    navigate("/More/ViewCategories", { state: { addedCategory: true } });
+    createCategory(form)
+      .then(() => {
+        navigate("/More/ViewCategories", { state: { addedCategory: true } })
+      })
+      .catch((err) => {
+        console.error('Failed to create category', err)
+        alert('Failed to create category: ' + (err?.response?.data?.detail || err.message))
+      })
   };
 
   const handleImportFile = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (
-        file.type !==
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      ) {
-        setErrorMessage("Please select a valid .xlsx file");
-        setTimeout(() => setErrorMessage(""), 5000);
-        return;
-      }
-      setImportFile(file);
-      // Here you would typically process the Excel file
-      console.log("Import file selected:", file.name);
+    const file = e.target.files[0]
+    setErrorMessage('')
+    setSuccessMessage('')
+    if (!file) return
+
+    // Validate size (max 5MB) and extension
+    const maxSize = 5 * 1024 * 1024
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/octet-stream',
+    ]
+
+    const name = (file.name || '').toLowerCase()
+    const extOk = name.endsWith('.xlsx')
+    const typeOk = !!file.type ? allowedTypes.includes(file.type) : true
+
+    if (file.size > maxSize) {
+      setErrorMessage('Please select a file smaller than 5MB')
+      setTimeout(() => setErrorMessage(''), 6000)
+      e.target.value = ''
+      return
     }
+
+    if (!extOk && !typeOk) {
+      setErrorMessage('Please select a valid .xlsx file')
+      setTimeout(() => setErrorMessage(''), 6000)
+      e.target.value = ''
+      return
+    }
+
+    // Upload immediately
+    setIsImporting(true)
+    setImportFile(file)
+    importCategories(file)
+      .then((resp) => {
+        // resp expected: { created, updated, errors }
+        const created = resp?.created ?? 0
+        const updated = resp?.updated ?? 0
+        const errors = resp?.errors ?? []
+        let msg = `Import complete. Created ${created}. Updated ${updated}.`
+        if (Array.isArray(errors) && errors.length) {
+          msg += ` ${errors.length} rows failed.`
+        }
+        setSuccessMessage(msg)
+      })
+      .catch((err) => {
+        console.error('Import failed', err)
+        const detail = err?.response?.data?.detail || err?.message || 'Import failed'
+        setErrorMessage(detail)
+      })
+      .finally(() => {
+        setIsImporting(false)
+        e.target.value = ''
+        setImportFile(null)
+      })
   };
 
   return (
@@ -109,6 +162,20 @@ const CategoryRegistration = () => {
               }
             />
           </section>
+
+          {/* Left-side import status: shows uploading first, then result messages */}
+          <div style={{ padding: '0 24px', marginTop: 8 }}>
+            <div className="import-status-left" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {isImporting && <span style={{ fontSize: 13, fontWeight: 500 }}>Uploading...</span>}
+              {!isImporting && successMessage && (
+                <div className="success-message" style={{ fontSize: 13, color: 'green' }}>{successMessage}</div>
+              )}
+              {!isImporting && errorMessage && (
+                <div className="error-message" style={{ fontSize: 13, color: '#d32f2f' }}>{errorMessage}</div>
+              )}
+            </div>
+          </div>
+
           <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
