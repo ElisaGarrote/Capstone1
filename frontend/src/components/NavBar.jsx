@@ -352,160 +352,162 @@ export default function NavBar() {
               Tickets
             </a>
           </li>
-          <li
-            className={`dropdown-container reports-dropdown-container ${
-              showReportsMenu ? "open" : ""
-            }`}
-          >
-            <div
-              className={`dropdown-trigger ${
-                activeMenu === "reports" ? "active" : ""
-              }`}
-              onClick={() => toggleDropdown("reports")}
-            >
-              <span className="dropdown-text">{selectedReport}</span>{" "}
-              <IoIosArrowDown />
-            </div>
-            {showReportsMenu && (
-              <div className="custom-dropdown reports-dropdown">
-                <div className="dropdown-menu">
-                  <button
-                    onClick={() => {
-                      navigate("/reports/asset");
-                      setSelectedReport("Asset Reports");
-                      setShowReportsMenu(false);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    Asset Reports
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate("/reports/depreciation");
-                      setSelectedReport("Depreciation Reports");
-                      setShowReportsMenu(false);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    Depreciation Reports
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate("/reports/due-back");
-                      setSelectedReport("Due Back Reports");
-                      setShowReportsMenu(false);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    Due Back Reports
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate("/reports/eol-warranty");
-                      setSelectedReport("EoL & Warranty Reports");
-                      setShowReportsMenu(false);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    EoL & Warranty Reports
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate("/reports/activity");
-                      setSelectedReport("Activity Reports");
-                      setShowReportsMenu(false);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    Activity Reports
-                  </button>
-                </div>
-              </div>
-            )}
-          </li>
 
           {authService.getUserInfo().role === "Admin" && (
-            <li
-              className={`dropdown-container more-dropdown-container ${
-                showMoreMenu ? "open" : ""
-              }`}
-            >
-              <div
-                className={`dropdown-trigger ${
-                  activeMenu === "more" ? "active" : ""
+            <>
+              <li
+                className={`dropdown-container reports-dropdown-container ${
+                  showReportsMenu ? "open" : ""
                 }`}
-                onClick={() => toggleDropdown("more")}
               >
-                <span className="dropdown-text">{selectedMore}</span>{" "}
-                <IoIosArrowDown />
-              </div>
-              {showMoreMenu && (
-                <div className="custom-dropdown more-dropdown">
-                  <div className="dropdown-menu">
-                    <button
-                      onClick={() => {
-                        navigate("/More/ViewCategories");
-                        setSelectedMore("Categories");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Categories
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/ViewManufacturer");
-                        setSelectedMore("Manufacturers");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Manufacturers
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/ViewSupplier");
-                        setSelectedMore("Suppliers");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Suppliers
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/ViewStatus");
-                        setSelectedMore("Statuses");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Statuses
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/Depreciations");
-                        setSelectedMore("Depreciations");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Depreciations
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/RecycleBin");
-                        setSelectedMore("Recycle Bin");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Recycle Bin
-                    </button>
-                  </div>
+                <div
+                  className={`dropdown-trigger ${
+                    activeMenu === "reports" ? "active" : ""
+                  }`}
+                  onClick={() => toggleDropdown("reports")}
+                >
+                  <span className="dropdown-text">{selectedReport}</span>{" "}
+                  <IoIosArrowDown />
                 </div>
-              )}
-            </li>
+                {showReportsMenu && (
+                  <div className="custom-dropdown reports-dropdown">
+                    <div className="dropdown-menu">
+                      <button
+                        onClick={() => {
+                          navigate("/reports/asset");
+                          setSelectedReport("Asset Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Asset Reports
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/reports/depreciation");
+                          setSelectedReport("Depreciation Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Depreciation Reports
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/reports/due-back");
+                          setSelectedReport("Due Back Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Due Back Reports
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/reports/eol-warranty");
+                          setSelectedReport("EoL & Warranty Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        EoL & Warranty Reports
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/reports/activity");
+                          setSelectedReport("Activity Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Activity Reports
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+              <li
+                className={`dropdown-container more-dropdown-container ${
+                  showMoreMenu ? "open" : ""
+                }`}
+              >
+                <div
+                  className={`dropdown-trigger ${
+                    activeMenu === "more" ? "active" : ""
+                  }`}
+                  onClick={() => toggleDropdown("more")}
+                >
+                  <span className="dropdown-text">{selectedMore}</span>{" "}
+                  <IoIosArrowDown />
+                </div>
+                {showMoreMenu && (
+                  <div className="custom-dropdown more-dropdown">
+                    <div className="dropdown-menu">
+                      <button
+                        onClick={() => {
+                          navigate("/More/ViewCategories");
+                          setSelectedMore("Categories");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Categories
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/ViewManufacturer");
+                          setSelectedMore("Manufacturers");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Manufacturers
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/ViewSupplier");
+                          setSelectedMore("Suppliers");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Suppliers
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/ViewStatus");
+                          setSelectedMore("Statuses");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Statuses
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/Depreciations");
+                          setSelectedMore("Depreciations");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Depreciations
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/RecycleBin");
+                          setSelectedMore("Recycle Bin");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Recycle Bin
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            </>
           )}
         </ul>
       </section>
