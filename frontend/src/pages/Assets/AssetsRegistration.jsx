@@ -274,13 +274,13 @@ export default function AssetsRegistration() {
 
   const locationFields = [
     {
-      name: 'name',
-      label: 'Location Name',
+      name: 'city',
+      label: 'City',
       type: 'text',
-      placeholder: 'Location Name',
+      placeholder: 'City Name',
       required: true,
-      maxLength: 100,
-      validation: { required: 'Location Name is required' }
+      maxLength: 50,
+      validation: { required: 'City is required' }
     }
   ];
 
@@ -315,10 +315,7 @@ export default function AssetsRegistration() {
     try {
       // For now, just add to local state (location API not available)
       console.log('Creating location:', data);
-      const newLocation = {
-        id: locations.length + 1,
-        city: data.name
-      };
+      const newLocation = await createLocation(data);
       setLocations(prev => [...prev, newLocation]);
       setShowLocationModal(false);
     } catch (error) {

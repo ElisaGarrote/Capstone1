@@ -14,13 +14,17 @@ import {
   fetchAllStatuses,
 } from "../../services/contexts-service";
 import { fetchAllLocations } from "../../services/integration-help-desk-service";
+
 import {
   fetchAllProducts,
+} from "../../services/assets-service";
+
+import {
   downloadAssetReportExcel,
   fetchReportTemplates,
   createReportTemplate,
   deleteReportTemplate,
-} from "../../services/assets-service";
+} from "../../services/reports-service";
 
 // FilterForm component for handling filter selections
 function FilterForm({

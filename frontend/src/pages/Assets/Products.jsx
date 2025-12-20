@@ -501,7 +501,7 @@ export default function Products() {
                   type="export"
                   onClick={handleExport}
                 />
-                {authService.getUserInfo().role === "Admin" && (
+                {authService.getUserInfo()?.role === "Admin" && (
                   <MediumButtons
                     type="new"
                     navigatePage="/products/registration"

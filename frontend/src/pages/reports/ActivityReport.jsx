@@ -1,18 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import FilterPanel from "../../components/FilterPanel";
+import MockupData from "../../data/mockData/reports/activity-report-mockup-data.json";
+import DepreciationFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import Footer from "../../components/Footer";
+import { BsKeyboard } from "react-icons/bs";
+import { LuDroplet } from "react-icons/lu";
 import { HiOutlineTag } from "react-icons/hi";
-import { RxPerson, RxComponent1 } from "react-icons/rx";
+import { RxPerson } from "react-icons/rx";
 import { AiOutlineAudit } from "react-icons/ai";
-import { GiAutoRepair } from "react-icons/gi";
-import {
-  fetchActivityReport,
-  downloadActivityReportExcel,
-} from "../../services/assets-service";
+import { RxComponent1 } from "react-icons/rx";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/reports/ActivityReport.css";
 
@@ -37,37 +37,42 @@ const getFormattedDate = () => {
 
 const filterConfig = [
   {
-    type: "dateRange",
-    name: "date",
-    label: "Date Range",
-    fromLabel: "Start Date",
-    toLabel: "End Date",
-  },
-  {
     type: "select",
-    name: "activity_type",
+    name: "type",
     label: "Type",
     options: [
-      { value: "Asset", label: "Asset" },
-      { value: "Component", label: "Component" },
-      { value: "Audit", label: "Audit" },
-      { value: "Repair", label: "Repair" },
+      { value: "accessory", label: "Accessory" },
+      { value: "asset", label: "Asset" },
+      { value: "audit", label: "Audit" },
+      { value: "component", label: "Component" },
+      { value: "consumable", label: "Consumable" },
     ],
   },
   {
     type: "select",
-    name: "action",
+    name: "event",
     label: "Event",
     options: [
-      { value: "Create", label: "Create" },
-      { value: "Update", label: "Update" },
-      { value: "Delete", label: "Delete" },
-      { value: "Checkout", label: "Checkout" },
-      { value: "Checkin", label: "Checkin" },
-      { value: "Schedule", label: "Schedule" },
-      { value: "Passed", label: "Passed" },
-      { value: "Failed", label: "Failed" },
+      { value: "checkin", label: "Checkin" },
+      { value: "checkout", label: "Checkout" },
+      { value: "create", label: "Create" },
+      { value: "delete", label: "Delete" },
+      { value: "failed", label: "Failed" },
+      { value: "passed", label: "Passed" },
+      { value: "repair", label: "Repair" },
+      { value: "schedule", label: "Schedule" },
+      { value: "update", label: "Update" },
     ],
+  },
+  {
+    type: "text",
+    name: "user",
+    label: "User",
+  },
+  {
+    type: "text",
+    name: "tofrom",
+    label: "To/From",
   },
 ];
 
@@ -75,12 +80,14 @@ const getTypeIcon = (type) => {
   switch (type) {
     case "Asset":
       return <HiOutlineTag className="type-icon" />;
-    case "Component":
-      return <RxComponent1 className="type-icon" />;
+    case "Accessory":
+      return <BsKeyboard className="type-icon" />;
+    case "Consumable":
+      return <LuDroplet className="type-icon" />;
     case "Audit":
       return <AiOutlineAudit className="type-icon" />;
-    case "Repair":
-      return <GiAutoRepair className="type-icon" />;
+    case "Component":
+      return <RxComponent1 className="type-icon" />;
     default:
       return <HiOutlineTag className="type-icon" />;
   }
@@ -134,107 +141,23 @@ function TableItem({ activity }) {
 }
 
 export default function ActivityReport() {
-  // Data state
-  const [activityData, setActivityData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [exporting, setExporting] = useState(false);
-
-  // Filter state
-  const [filters, setFilters] = useState({});
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Pagination state
+  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
-  // Build API filters from panel filters and search
-  const buildApiFilters = useCallback(() => {
-    const apiFilters = {};
-
-    // Date range filters
-    if (filters.date_from) apiFilters.start_date = filters.date_from;
-    if (filters.date_to) apiFilters.end_date = filters.date_to;
-
-    // Type and action filters
-    if (filters.activity_type) apiFilters.activity_type = filters.activity_type;
-    if (filters.action) apiFilters.action = filters.action;
-
-    // Search term
-    if (searchTerm.trim()) apiFilters.search = searchTerm.trim();
-
-    return apiFilters;
-  }, [filters, searchTerm]);
-
-  // Fetch activity data from backend
-  const loadActivityData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const apiFilters = buildApiFilters();
-      apiFilters.export_format = "json";
-
-      const response = await fetchActivityReport(apiFilters);
-      setActivityData(response.results || []);
-    } catch (err) {
-      console.error("Error fetching activity report:", err);
-      setError("Failed to load activity data. Please try again.");
-      setActivityData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [buildApiFilters]);
-
-  // Load data on mount and when filters change
-  useEffect(() => {
-    loadActivityData();
-  }, [loadActivityData]);
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filters, searchTerm]);
-
-  // Handle filter changes from FilterPanel
-  const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
-  };
-
-  // Handle search input
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Handle search on Enter key
-  const handleSearchKeyDown = (e) => {
-    if (e.key === "Enter") {
-      loadActivityData();
-    }
-  };
-
-  // Paginate the data
+  // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = activityData.slice(startIndex, endIndex);
+  const paginatedActivity = MockupData.slice(startIndex, endIndex);
 
-  // Handle export to Excel
-  const handleExportExcel = async () => {
-    setExporting(true);
-    try {
-      const apiFilters = buildApiFilters();
-      const name = "ActivityReport";
-      const dateGenerated = getFormattedDate();
-      const token = generateToken();
-      const fileName = `${name}_${dateGenerated}_${token}.xlsx`;
+  // Handle export to Excel with format: [Name]_[DateGenerated]_[7DigitToken].xlsx
+  const handleExportExcel = () => {
+    const name = "ActivityReport";
+    const dateGenerated = getFormattedDate();
+    const token = generateToken();
+    const fileName = `${name}_${dateGenerated}_${token}.xlsx`;
 
-      await downloadActivityReportExcel(apiFilters, fileName);
-    } catch (err) {
-      console.error("Error exporting activity report:", err);
-      setError("Failed to export report. Please try again.");
-    } finally {
-      setExporting(false);
-    }
+    exportToExcel(MockupData, fileName);
   };
 
   return (
@@ -248,39 +171,15 @@ export default function ActivityReport() {
         </section>
 
         {/* Table Filter */}
-        <FilterPanel filters={filterConfig} onFilter={handleFilterChange} />
-
-        {/* Error message */}
-        {error && (
-          <div
-            className="error-message"
-            style={{ color: "red", padding: "10px" }}
-          >
-            {error}
-          </div>
-        )}
+        <DepreciationFilter filters={filterConfig} />
 
         <section className="table-layout">
           {/* Table Header */}
           <section className="table-header">
-            <h2 className="h2">
-              Activity Log{" "}
-              {loading ? "(Loading...)" : `(${activityData.length})`}
-            </h2>
+            <h2 className="h2">Activity Log ({MockupData.length})</h2>
             <section className="table-actions">
-              <input
-                type="search"
-                placeholder="Search..."
-                className="search"
-                value={searchTerm}
-                onChange={handleSearchChange}
-                onKeyDown={handleSearchKeyDown}
-              />
-              <MediumButtons
-                type="export"
-                onClick={handleExportExcel}
-                disabled={exporting || loading}
-              />
+              <input type="search" placeholder="Search..." className="search" />
+              <MediumButtons type="export" onClick={handleExportExcel} />
             </section>
           </section>
 
@@ -291,15 +190,13 @@ export default function ActivityReport() {
                 <TableHeader />
               </thead>
               <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="no-data-message">
-                      Loading activity logs...
-                    </td>
-                  </tr>
-                ) : paginatedActivity.length > 0 ? (
+                {paginatedActivity.length > 0 ? (
                   paginatedActivity.map((activity, index) => (
-                    <TableItem key={activity.id || index} activity={activity} />
+                    <TableItem
+                      key={index}
+                      activity={activity}
+                      onDeleteClick={() => setDeleteModalOpen(true)}
+                    />
                   ))
                 ) : (
                   <tr>
@@ -317,7 +214,7 @@ export default function ActivityReport() {
             <Pagination
               currentPage={currentPage}
               pageSize={pageSize}
-              totalItems={activityData.length}
+              totalItems={MockupData.length}
               onPageChange={setCurrentPage}
               onPageSizeChange={setPageSize}
             />

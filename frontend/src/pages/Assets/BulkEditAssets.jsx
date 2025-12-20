@@ -647,4 +647,3 @@ export default function BulkEditAssets() {
     </>
   );
 }
-

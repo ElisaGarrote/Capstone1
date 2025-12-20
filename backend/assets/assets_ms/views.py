@@ -522,11 +522,26 @@ class AssetViewSet(viewsets.ModelViewSet):
             purchase_cost=purchase_cost
         )
 
-        self.invalidate_asset_cache(serializer.instance.id)
+        asset = serializer.instance
+        self.invalidate_asset_cache(asset.id)
+
+        # Log activity
+        log_asset_activity(
+            action='Create',
+            asset=asset,
+            notes=f"Asset '{asset.name}' created"
+        )
 
     def perform_update(self, serializer):
         instance = serializer.save()
         self.invalidate_asset_cache(instance.id)
+
+        # Log activity
+        log_asset_activity(
+            action='Update',
+            asset=instance,
+            notes=f"Asset '{instance.name}' updated"
+        )
     
     @action(detail=False, methods=['get'], url_path='by-product/(?P<product_id>\d+)')
     def by_product(self, request, product_id=None):
@@ -826,24 +841,6 @@ class AssetViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"detail": "Assets deleted successfully."}, status=status.HTTP_200_OK)
-    
-
-        # Log activity
-        log_asset_activity(
-            action='Create',
-            asset=asset,
-            notes=f"Asset '{asset.name}' created"
-        )
-
-    def perform_update(self, serializer):
-        asset = serializer.save()
-
-        # Log activity
-        log_asset_activity(
-            action='Update',
-            asset=asset,
-            notes=f"Asset '{asset.name}' updated"
-        )
 
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -913,8 +910,7 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
                 log_asset_activity(
                     action='Checkout',
                     asset=asset,
-                    target_id=checkout.checkout_to_employee_id or checkout.checkout_to_location_id,
-                    target_name=target_name,
+                    target_user_id=checkout.checkout_to_employee_id,
                     notes=f"Asset '{asset.name}' checked out to {target_name}"
                 )
 
@@ -1023,8 +1019,7 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
                 log_asset_activity(
                     action='Checkin',
                     asset=asset,
-                    target_id=checkout.checkout_to_employee_id or checkout.checkout_to_location_id,
-                    target_name=target_name,
+                    target_user_id=checkout.checkout_to_employee_id,
                     notes=f"Asset '{asset.name}' checked in from {target_name}"
                 )
 
@@ -1132,8 +1127,6 @@ class ComponentCheckoutViewSet(viewsets.ModelViewSet):
         log_component_activity(
             action='Checkout',
             component=component,
-            target_id=checkout.asset.id if checkout.asset else None,
-            target_name=target_name,
             notes=f"Component '{component.name}' checked out to asset '{target_name}'"
         )
 
@@ -1150,8 +1143,6 @@ class ComponentCheckinViewSet(viewsets.ModelViewSet):
         log_component_activity(
             action='Checkin',
             component=component,
-            target_id=checkout.asset.id if checkout.asset else None,
-            target_name=target_name,
             notes=f"Component '{component.name}' checked in from asset '{target_name}'"
         )
 

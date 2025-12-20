@@ -31,7 +31,7 @@ class AuthService {
 
         // Store the user info in session storage
         const currentUser = await this.getCurrrentUser();
-        // sessionStorage.setItem("user", JSON.stringify(currentUser));
+        sessionStorage.setItem("user", JSON.stringify(currentUser));
         // console.log("User info stored in session storage!");
 
         return currentUser;
@@ -124,7 +124,12 @@ class AuthService {
   }
 
   getUserInfo() {
-    return JSON.parse(sessionStorage.getItem("user"));
+    const user = sessionStorage.getItem("user");
+    try {
+      return user ? JSON.parse(user) : null;
+    } catch {
+      return null;
+    }
   }
 
   // Logout and clear the tokens
