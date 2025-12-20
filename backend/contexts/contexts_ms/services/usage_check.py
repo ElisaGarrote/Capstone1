@@ -1,5 +1,6 @@
 import requests
 from .http_client import get as client_get
+from .assets import bulk_check_usage
 
 
 def _extract_ids_from_response(resp_json):
@@ -97,6 +98,24 @@ def is_item_in_use(item_type, item_id):
     }
 
     try:
+        # For 'status' items prefer the assets service bulk usage endpoint
+        # which returns a concise usage summary and avoids multiple list calls.
+        if item_type == 'status':
+            try:
+                usage_map = bulk_check_usage('status', [item_id], sample_limit=0, timeout=5)
+                entry = usage_map.get(int(item_id)) if isinstance(usage_map, dict) else None
+                if entry:
+                    # assets service returns keys like 'asset_count' or 'asset_ids'
+                    asset_count = entry.get('asset_count') if isinstance(entry, dict) else None
+                    asset_ids = entry.get('asset_ids') if isinstance(entry, dict) else None
+                    if (isinstance(asset_count, int) and asset_count > 0) or (isinstance(asset_ids, list) and len(asset_ids) > 0):
+                        return {'in_use': True, 'asset_ids': asset_ids or [], 'component_ids': [], 'repair_ids': []}
+                    # no usage reported -> safe to delete
+                    return {'in_use': False, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}
+            except Exception:
+                # fallthrough to conservative checks below if bulk check fails
+                pass
+
         had_network_error = False
         check_path = endpoint_map.get(item_type)
         if check_path:

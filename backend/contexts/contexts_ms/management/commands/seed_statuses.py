@@ -48,115 +48,41 @@ class Command(BaseCommand):
 
     def get_statuses_data(self):
         """Generate statuses: 10 asset statuses (2 per type) + 5 repair statuses"""
-
+        # Create 20 asset statuses and 10 repair statuses for seeding
         statuses = [
-            # =====================
-            # ASSET STATUSES (10)
-            # =====================
-            # Deployable statuses (2) - IDs 1-2
-            {
-                'category': Status.Category.ASSET,
-                'name': 'Ready to Deploy',
-                'type': Status.AssetStatusType.DEPLOYABLE,
-                'notes': 'Asset is ready to be assigned to an employee',
-            },
-            {
-                'category': Status.Category.ASSET,
-                'name': 'Available',
-                'type': Status.AssetStatusType.DEPLOYABLE,
-                'notes': 'Asset is available in inventory',
-            },
+            # ASSET STATUSES (20)
+            {'category': Status.Category.ASSET, 'name': 'Ready to Deploy', 'type': Status.AssetStatusType.DEPLOYABLE, 'notes': 'Asset ready for assignment.'},
+            {'category': Status.Category.ASSET, 'name': 'Available', 'type': Status.AssetStatusType.DEPLOYABLE, 'notes': 'Available in inventory.'},
+            {'category': Status.Category.ASSET, 'name': 'In Use', 'type': Status.AssetStatusType.DEPLOYED, 'notes': 'Assigned to a user.'},
+            {'category': Status.Category.ASSET, 'name': 'Checked Out', 'type': Status.AssetStatusType.DEPLOYED, 'notes': 'Checked out to staff.'},
+            {'category': Status.Category.ASSET, 'name': 'Under Repair', 'type': Status.AssetStatusType.UNDEPLOYABLE, 'notes': 'Currently under repair.'},
+            {'category': Status.Category.ASSET, 'name': 'Broken', 'type': Status.AssetStatusType.UNDEPLOYABLE, 'notes': 'Requires replacement or repair.'},
+            {'category': Status.Category.ASSET, 'name': 'Pending Approval', 'type': Status.AssetStatusType.PENDING, 'notes': 'Awaiting approval for use.'},
+            {'category': Status.Category.ASSET, 'name': 'In Transit', 'type': Status.AssetStatusType.PENDING, 'notes': 'Being transferred between locations.'},
+            {'category': Status.Category.ASSET, 'name': 'Retired', 'type': Status.AssetStatusType.ARCHIVED, 'notes': 'Retired from active service.'},
+            {'category': Status.Category.ASSET, 'name': 'Lost or Stolen', 'type': Status.AssetStatusType.ARCHIVED, 'notes': 'Marked as lost or stolen.'},
+            {'category': Status.Category.ASSET, 'name': 'Maintenance', 'type': Status.AssetStatusType.UNDEPLOYABLE, 'notes': 'Scheduled maintenance.'},
+            {'category': Status.Category.ASSET, 'name': 'Reserved', 'type': Status.AssetStatusType.DEPLOYABLE, 'notes': 'Reserved for a future assignment.'},
+            {'category': Status.Category.ASSET, 'name': 'Awaiting Calibration', 'type': Status.AssetStatusType.UNDEPLOYABLE, 'notes': 'Requires calibration before use.'},
+            {'category': Status.Category.ASSET, 'name': 'Calibration Due', 'type': Status.AssetStatusType.PENDING, 'notes': 'Calibration is due soon.'},
+            {'category': Status.Category.ASSET, 'name': 'Warranty', 'type': Status.AssetStatusType.DEPLOYABLE, 'notes': 'Covered under warranty.'},
+            {'category': Status.Category.ASSET, 'name': 'Out for Service', 'type': Status.AssetStatusType.UNDEPLOYABLE, 'notes': 'Sent to external service provider.'},
+            {'category': Status.Category.ASSET, 'name': 'Quarantined', 'type': Status.AssetStatusType.UNDEPLOYABLE, 'notes': 'Isolated due to issues.'},
+            {'category': Status.Category.ASSET, 'name': 'Decommissioned', 'type': Status.AssetStatusType.ARCHIVED, 'notes': 'Decommissioned and removed.'},
+            {'category': Status.Category.ASSET, 'name': 'Replacement Pending', 'type': Status.AssetStatusType.PENDING, 'notes': 'Replacement has been requested.'},
+            {'category': Status.Category.ASSET, 'name': 'Inspection Required', 'type': Status.AssetStatusType.PENDING, 'notes': 'Requires safety inspection.'},
 
-            # Deployed statuses (2) - IDs 3-4
-            {
-                'category': Status.Category.ASSET,
-                'name': 'In Use',
-                'type': Status.AssetStatusType.DEPLOYED,
-                'notes': 'Asset is currently assigned and in use',
-            },
-            {
-                'category': Status.Category.ASSET,
-                'name': 'Checked Out',
-                'type': Status.AssetStatusType.DEPLOYED,
-                'notes': 'Asset has been checked out to an employee',
-            },
-
-            # Undeployable statuses (2) - IDs 5-6
-            {
-                'category': Status.Category.ASSET,
-                'name': 'Under Repair',
-                'type': Status.AssetStatusType.UNDEPLOYABLE,
-                'notes': 'Asset is being repaired and cannot be deployed',
-            },
-            {
-                'category': Status.Category.ASSET,
-                'name': 'Broken',
-                'type': Status.AssetStatusType.UNDEPLOYABLE,
-                'notes': 'Asset is damaged and needs repair or replacement',
-            },
-
-            # Pending statuses (2) - IDs 7-8
-            {
-                'category': Status.Category.ASSET,
-                'name': 'Pending Approval',
-                'type': Status.AssetStatusType.PENDING,
-                'notes': 'Asset purchase or deployment is pending approval',
-            },
-            {
-                'category': Status.Category.ASSET,
-                'name': 'In Transit',
-                'type': Status.AssetStatusType.PENDING,
-                'notes': 'Asset is being shipped or transferred',
-            },
-
-            # Archived statuses (2) - IDs 9-10
-            {
-                'category': Status.Category.ASSET,
-                'name': 'Retired',
-                'type': Status.AssetStatusType.ARCHIVED,
-                'notes': 'Asset has been retired from service',
-            },
-            {
-                'category': Status.Category.ASSET,
-                'name': 'Lost/Stolen',
-                'type': Status.AssetStatusType.ARCHIVED,
-                'notes': 'Asset is lost or has been stolen',
-            },
-
-            # =====================
-            # REPAIR STATUSES (5)
-            # =====================
-            # IDs 11-15
-            {
-                'category': Status.Category.REPAIR,
-                'name': 'Pending',
-                'type': None,
-                'notes': 'Repair request is pending review',
-            },
-            {
-                'category': Status.Category.REPAIR,
-                'name': 'In Progress',
-                'type': None,
-                'notes': 'Repair is currently being worked on',
-            },
-            {
-                'category': Status.Category.REPAIR,
-                'name': 'Awaiting Parts',
-                'type': None,
-                'notes': 'Repair is waiting for replacement parts',
-            },
-            {
-                'category': Status.Category.REPAIR,
-                'name': 'Completed',
-                'type': None,
-                'notes': 'Repair has been completed successfully',
-            },
-            {
-                'category': Status.Category.REPAIR,
-                'name': 'Cancelled',
-                'type': None,
-                'notes': 'Repair request has been cancelled',
-            },
+            # REPAIR STATUSES (10)
+            {'category': Status.Category.REPAIR, 'name': 'Repair Pending', 'type': None, 'notes': 'Repair request logged and pending.'},
+            {'category': Status.Category.REPAIR, 'name': 'In Repair', 'type': None, 'notes': 'Currently being repaired.'},
+            {'category': Status.Category.REPAIR, 'name': 'Awaiting Parts', 'type': None, 'notes': 'Waiting for replacement parts.'},
+            {'category': Status.Category.REPAIR, 'name': 'Repair Completed', 'type': None, 'notes': 'Repair work finished.'},
+            {'category': Status.Category.REPAIR, 'name': 'Repair Cancelled', 'type': None, 'notes': 'Repair request was cancelled.'},
+            {'category': Status.Category.REPAIR, 'name': 'Awaiting Approval', 'type': None, 'notes': 'Repair estimate awaiting approval.'},
+            {'category': Status.Category.REPAIR, 'name': 'Diagnosed', 'type': None, 'notes': 'Fault diagnosed; awaiting next steps.'},
+            {'category': Status.Category.REPAIR, 'name': 'On Hold', 'type': None, 'notes': 'Repair is temporarily on hold.'},
+            {'category': Status.Category.REPAIR, 'name': 'Parts Ordered', 'type': None, 'notes': 'Parts for repair have been ordered.'},
+            {'category': Status.Category.REPAIR, 'name': 'Returned to Service', 'type': None, 'notes': 'Item returned to service after repair.'},
         ]
 
         return statuses
