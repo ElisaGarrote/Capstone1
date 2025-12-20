@@ -15,6 +15,7 @@ export default function ConfirmationModal({
   entityType,      // "product", "asset"
   targetId,        // single ID for delete
   targetIds,       // array of IDs for bulk-delete
+  selectedCount,   // optional explicit count to show in modal
   onSuccess,       // callback after successful delete (receives deleted id(s))
   onError,         // callback on error (receives error)
   // Optional parent-driven confirm flow: some pages pass `onConfirm` which
@@ -146,11 +147,11 @@ export default function ConfirmationModal({
         <div className="content" onClick={(e) => e.stopPropagation()}>
           <h2 className="modal-title">{getActionText()} Confirmation</h2>
           <p className="modal-message">
-            Are you sure you want to {getActionText().toLowerCase()}{" "}
-            {actionType === "bulk-delete"
-              ? `these ${targetIds?.length || 0} ${entityType}(s)`
-              : `this ${entityType}`}?
-            This action cannot be undone.
+            {actionType === "bulk-delete" ? (
+              <>Are you sure you want to delete these {selectedCount ?? (targetIds?.length || 0)} {entityType || 'item'}(s)? This action cannot be undone.</>
+            ) : (
+              <>Are you sure you want to delete this {entityType || 'item'}? This action cannot be undone.</>
+            )}
           </p>
           <div className="modal-actions">
             <button className="cancel-btn" onClick={handleClose} disabled={isProcessing}>
