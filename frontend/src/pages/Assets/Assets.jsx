@@ -94,7 +94,7 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       <td>{asset.name}</td>
       <td>{asset.serial_number || 'N/A'}</td>
       <td>
-        <Status type={asset.status_details.type.toLowerCase()} name={asset.status_details.name} />
+        <Status type={asset.status_details?.type?.toLowerCase()} name={asset.status_details?.name} />
       </td>
       <td>{asset.warranty_expiration || 'N/A'}</td>
       <td>{asset.product_details.end_of_life || 'N/A'}</td>

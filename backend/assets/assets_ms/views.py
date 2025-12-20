@@ -905,15 +905,6 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
                 # 4. Resolve overlapping tickets for the same asset
                 self._resolve_overlapping_tickets(checkout, ticket_id)
 
-                # 5. Log activity
-                target_name = checkout.checkout_to_employee_name or checkout.checkout_to_location_name or ''
-                log_asset_activity(
-                    action='Checkout',
-                    asset=asset,
-                    target_user_id=checkout.checkout_to_employee_id,
-                    notes=f"Asset '{asset.name}' checked out to {target_name}"
-                )
-
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1012,16 +1003,6 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
                 # Update asset status if valid
                 asset.status = status_id
                 asset.save(update_fields=["status"])
-
-                # Log activity
-                checkout = checkin.asset_checkout
-                target_name = checkout.checkout_to_employee_name or checkout.checkout_to_location_name or ''
-                log_asset_activity(
-                    action='Checkin',
-                    asset=asset,
-                    target_user_id=checkout.checkout_to_employee_id,
-                    notes=f"Asset '{asset.name}' checked in from {target_name}"
-                )
 
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)

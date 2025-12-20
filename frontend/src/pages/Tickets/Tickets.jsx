@@ -284,7 +284,7 @@ const Tickets = () => {
       ticket.formattedDate?.toLowerCase() || "",
       ticket.employeeName?.toLowerCase() || "",
       ticket.subject?.toLowerCase() || "",
-      ticket.location_details?.city.toLowerCase() || "",
+      ticket.location_details?.city?.toLowerCase() || "",
     ];
 
     // Every word in search query must match at least one field
