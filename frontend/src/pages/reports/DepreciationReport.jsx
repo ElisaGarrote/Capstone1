@@ -208,7 +208,6 @@ export default function DepreciationReport() {
           {/* Title of the Page */}
           <section className="title-page-section">
             <h1>Depreciation Report</h1>
-            <div className="title-underline" />
           </section>
 
           <section className="table-layout">

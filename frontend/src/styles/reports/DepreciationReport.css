@@ -73,11 +73,6 @@
 }
 
 .page-layout-with-table .title-underline {
-  display: block;
-  height: 3px;
-  width: 120px;
-  background-color: var(--primary-color, #0d6efd);
-  border-radius: 2px;
-  margin-top: 6px;
-  margin-bottom: 10px;
+  /* Removed visual underline for Depreciation Report header */
+  display: none;
 }
