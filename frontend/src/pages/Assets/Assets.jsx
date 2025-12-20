@@ -56,17 +56,22 @@ function getActionState(asset) {
   return {
     showCheckin: status === "deployed",
 
-    showCheckout:
-      status === "pending" || status === "deployable",
+    showCheckout: status === "pending" || status === "deployable",
 
     checkoutDisabled:
       (status === "pending" || status === "deployable") && !hasTicket,
   };
 }
 
-
 // TableItem component to render each asset row
-function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+function TableItem({
+  asset,
+  isSelected,
+  onRowChange,
+  onDeleteClick,
+  onViewClick,
+  onCheckInOut,
+}) {
   const baseImage = asset.image || DefaultImage;
 
   const actions = getActionState(asset);
@@ -92,12 +97,15 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       </td>
       <td>{asset.asset_id}</td>
       <td>{asset.name}</td>
-      <td>{asset.serial_number || 'N/A'}</td>
+      <td>{asset.serial_number || "N/A"}</td>
       <td>
-        <Status type={asset.status_details?.type?.toLowerCase()} name={asset.status_details?.name} />
+        <Status
+          type={asset.status_details?.type?.toLowerCase()}
+          name={asset.status_details?.name}
+        />
       </td>
-      <td>{asset.warranty_expiration || 'N/A'}</td>
-      <td>{asset.product_details.end_of_life || 'N/A'}</td>
+      <td>{asset.warranty_expiration || "N/A"}</td>
+      <td>{asset.product_details.end_of_life || "N/A"}</td>
       {/* Check-in/Check-out Column */}
       <td>
         <ActionButtons
@@ -195,11 +203,15 @@ export default function Assets() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedAssets.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedAssets
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedAssets.map((item) => item.id).includes(id))
+        prev.filter(
+          (id) => !paginatedAssets.map((item) => item.id).includes(id)
+        )
       );
     }
   };
@@ -242,7 +254,9 @@ export default function Assets() {
   };
 
   const handleDeleteError = (error) => {
-    setErrorMessage(error.response?.data?.detail || "Failed to delete product(s).");
+    setErrorMessage(
+      error.response?.data?.detail || "Failed to delete product(s)."
+    );
     setTimeout(() => setErrorMessage(""), 5000);
   };
 
@@ -274,22 +288,27 @@ export default function Assets() {
 
     // Filter by Status
     if (filters.status) {
-      filtered = filtered.filter((asset) =>
-        asset.status.toLowerCase() === filters.status.value.toLowerCase()
+      filtered = filtered.filter(
+        (asset) =>
+          asset.status.toLowerCase() === filters.status.value.toLowerCase()
       );
     }
 
     // Filter by Supplier
     if (filters.supplier) {
       filtered = filtered.filter((asset) =>
-        asset.supplier?.toLowerCase().includes(filters.supplier.label.toLowerCase())
+        asset.supplier
+          ?.toLowerCase()
+          .includes(filters.supplier.label.toLowerCase())
       );
     }
 
     // Filter by Location
     if (filters.location) {
       filtered = filtered.filter((asset) =>
-        asset.location?.toLowerCase().includes(filters.location.label.toLowerCase())
+        asset.location
+          ?.toLowerCase()
+          .includes(filters.location.label.toLowerCase())
       );
     }
 
@@ -303,51 +322,58 @@ export default function Assets() {
     // Filter by Serial Number
     if (filters.serialNumber && filters.serialNumber.trim() !== "") {
       filtered = filtered.filter((asset) =>
-        asset.serial_number?.toLowerCase().includes(filters.serialNumber.toLowerCase())
+        asset.serial_number
+          ?.toLowerCase()
+          .includes(filters.serialNumber.toLowerCase())
       );
     }
 
     // Filter by Warranty Expiration
-    if (filters.warrantyExpiration && filters.warrantyExpiration.trim() !== "") {
-      filtered = filtered.filter((asset) =>
-        asset.warranty_expiration_date === filters.warrantyExpiration
+    if (
+      filters.warrantyExpiration &&
+      filters.warrantyExpiration.trim() !== ""
+    ) {
+      filtered = filtered.filter(
+        (asset) => asset.warranty_expiration_date === filters.warrantyExpiration
       );
     }
 
     // Filter by Order Number
     if (filters.orderNumber && filters.orderNumber.trim() !== "") {
       filtered = filtered.filter((asset) =>
-        asset.order_number?.toLowerCase().includes(filters.orderNumber.toLowerCase())
+        asset.order_number
+          ?.toLowerCase()
+          .includes(filters.orderNumber.toLowerCase())
       );
     }
 
     // Filter by Purchase Date
     if (filters.purchaseDate && filters.purchaseDate.trim() !== "") {
-      filtered = filtered.filter((asset) =>
-        asset.purchase_date === filters.purchaseDate
+      filtered = filtered.filter(
+        (asset) => asset.purchase_date === filters.purchaseDate
       );
     }
 
     // Filter by Purchase Cost
     if (filters.purchaseCost && filters.purchaseCost.trim() !== "") {
       const cost = parseFloat(filters.purchaseCost);
-      filtered = filtered.filter((asset) =>
-        asset.purchase_cost === cost
-      );
+      filtered = filtered.filter((asset) => asset.purchase_cost === cost);
     }
 
     return filtered;
   };
-  
+
   const applyFiltersAndSearch = (filters, term) => {
     let filtered = applyFilters(filters || {});
 
     if (term && term.trim() !== "") {
       const lowerTerm = term.toLowerCase();
-      filtered = filtered.filter((asset) =>
-        (asset.name && asset.name.toLowerCase().includes(lowerTerm)) ||
-        (asset.displayed_id && asset.displayed_id.toLowerCase().includes(lowerTerm)) ||
-        (asset.category && asset.category.toLowerCase().includes(lowerTerm))
+      filtered = filtered.filter(
+        (asset) =>
+          (asset.name && asset.name.toLowerCase().includes(lowerTerm)) ||
+          (asset.displayed_id &&
+            asset.displayed_id.toLowerCase().includes(lowerTerm)) ||
+          (asset.category && asset.category.toLowerCase().includes(lowerTerm))
       );
     }
 
@@ -375,7 +401,7 @@ export default function Assets() {
     const dataToExport = filteredData.length > 0 ? filteredData : assets;
     exportToExcel(dataToExport, "Assets_Records.xlsx");
   };
-  
+
   const handleCheckInOut = (asset) => {
     const assetId = asset.id;
     const assetDisplayId = asset.asset_id;
@@ -434,7 +460,11 @@ export default function Assets() {
                   <>
                     <MediumButtons
                       type="edit"
-                      onClick={() => navigate('/assets/bulk-edit', { state: { selectedIds } })}
+                      onClick={() =>
+                        navigate("/assets/bulk-edit", {
+                          state: { selectedIds },
+                        })
+                      }
                     />
                     <MediumButtons
                       type="delete"
@@ -459,15 +489,14 @@ export default function Assets() {
                 >
                   Filter
                 </button>
-                <MediumButtons
-                  type="export"
-                  onClick={handleExport}
-                />
                 {authService.getUserInfo().role === "Admin" && (
-                  <MediumButtons
-                    type="new"
-                    onClick={() => navigate('/assets/registration')}
-                  />
+                  <>
+                    <MediumButtons type="export" onClick={handleExport} />
+                    <MediumButtons
+                      type="new"
+                      onClick={() => navigate("/assets/registration")}
+                    />
+                  </>
                 )}
               </section>
             </section>

@@ -11,7 +11,11 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
 import { fetchAssetById } from "../../services/assets-service";
-import { fetchAllEmployees, fetchEmployeeById } from "../../services/integration-auth-service";
+import {
+  fetchAllEmployees,
+  fetchEmployeeById,
+} from "../../services/integration-auth-service";
+import authService from "../../services/auth-service";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -38,7 +42,14 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each ticket row
-function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+function TableItem({
+  ticket,
+  isSelected,
+  onRowChange,
+  onDeleteClick,
+  onViewClick,
+  onCheckInOut,
+}) {
   return (
     <tr>
       <td>
@@ -122,26 +133,28 @@ const Tickets = () => {
 
         const employeesList = Array.isArray(employeesResponse)
           ? employeesResponse
-          : (employeesResponse?.results || []);
+          : employeesResponse?.results || [];
         setEmployees(employeesList);
 
         // Map API response to component format
         const mappedTickets = ticketsData.map((ticket) => {
           // Determine if ticket needs check-in or check-out action
           // Logic: If checkin_date is null, it's a Check-Out ticket, otherwise Check-In
-          const isCheckInOrOut =
-            !ticket.is_resolved
-              ? ticket.checkin_date === null || ticket.checkin_date === undefined
-                ? "Check-Out"
-                : "Check-In"
-              : null;
+          const isCheckInOrOut = !ticket.is_resolved
+            ? ticket.checkin_date === null || ticket.checkin_date === undefined
+              ? "Check-Out"
+              : "Check-In"
+            : null;
 
-          const formattedDate = isCheckInOrOut === "Check-In"
-            ? ticket.checkin_date?.slice(0, 10)
-            : ticket.checkout_date?.slice(0, 10);
+          const formattedDate =
+            isCheckInOrOut === "Check-In"
+              ? ticket.checkin_date?.slice(0, 10)
+              : ticket.checkout_date?.slice(0, 10);
 
           // Find employee name
-          const employee = employeesList.find(e => Number(e.id) === Number(ticket.employee));
+          const employee = employeesList.find(
+            (e) => Number(e.id) === Number(ticket.employee)
+          );
 
           const employeeName = employee
             ? `${employee.firstname} ${employee.lastname}`
@@ -159,7 +172,9 @@ const Tickets = () => {
         setFilteredData(mappedTickets);
       } catch (error) {
         console.error("Error loading tickets:", error);
-        setErrorMessage("Failed to load tickets from server. Please try again later.");
+        setErrorMessage(
+          "Failed to load tickets from server. Please try again later."
+        );
         setTicketItems([]);
         setFilteredData([]);
       } finally {
@@ -177,7 +192,9 @@ const Tickets = () => {
     // Filter by Ticket Number
     if (filters.ticketNumber && filters.ticketNumber.trim() !== "") {
       filtered = filtered.filter((ticket) =>
-        ticket.ticketNumber?.toLowerCase().includes(filters.ticketNumber.toLowerCase())
+        ticket.ticketNumber
+          ?.toLowerCase()
+          .includes(filters.ticketNumber.toLowerCase())
       );
     }
 
@@ -191,7 +208,9 @@ const Tickets = () => {
     // Filter by Requestor
     if (filters.requestor && filters.requestor.trim() !== "") {
       filtered = filtered.filter((ticket) =>
-        ticket.requestor?.toLowerCase().includes(filters.requestor.toLowerCase())
+        ticket.requestor
+          ?.toLowerCase()
+          .includes(filters.requestor.toLowerCase())
       );
     }
 
@@ -205,14 +224,16 @@ const Tickets = () => {
     // Filter by Location
     if (filters.location && filters.location.trim() !== "") {
       filtered = filtered.filter((ticket) =>
-        ticket.requestorLocation?.toLowerCase().includes(filters.location.toLowerCase())
+        ticket.requestorLocation
+          ?.toLowerCase()
+          .includes(filters.location.toLowerCase())
       );
     }
 
     // Filter by Check-In / Check-Out
     if (filters.checkInOut && filters.checkInOut.value !== "All") {
-      filtered = filtered.filter((ticket) =>
-        ticket.isCheckInOrOut === filters.checkInOut.value
+      filtered = filtered.filter(
+        (ticket) => ticket.isCheckInOrOut === filters.checkInOut.value
       );
     }
 
@@ -276,10 +297,9 @@ const Tickets = () => {
   };
 
   // Filter tickets based on search query and applied filters
-  let filteredTickets = filteredData.filter(ticket => {
+  let filteredTickets = filteredData.filter((ticket) => {
     const qWords = searchQuery.toLowerCase().trim().split(/\s+/); // split by space
     const fields = [
-
       ticket.ticketNumber?.toLowerCase() || "",
       ticket.formattedDate?.toLowerCase() || "",
       ticket.employeeName?.toLowerCase() || "",
@@ -288,7 +308,7 @@ const Tickets = () => {
     ];
 
     // Every word in search query must match at least one field
-    return qWords.every(word => fields.some(f => f.includes(word)));
+    return qWords.every((word) => fields.some((f) => f.includes(word)));
   });
 
   // Pagination logic
@@ -303,7 +323,10 @@ const Tickets = () => {
 
   const handleHeaderChange = (e) => {
     if (e.target.checked) {
-      const newSelectedIds = [...selectedIds, ...paginatedTickets.map((ticket) => ticket.id)];
+      const newSelectedIds = [
+        ...selectedIds,
+        ...paginatedTickets.map((ticket) => ticket.id),
+      ];
       setSelectedIds([...new Set(newSelectedIds)]);
     } else {
       const paginatedIds = paginatedTickets.map((ticket) => ticket.id);
@@ -332,20 +355,22 @@ const Tickets = () => {
   const confirmDelete = () => {
     if (deleteTargetId) {
       // Delete single ticket
-      const updatedTickets = ticketItems.filter(ticket => ticket.id !== deleteTargetId);
+      const updatedTickets = ticketItems.filter(
+        (ticket) => ticket.id !== deleteTargetId
+      );
       setTicketItems(updatedTickets);
       setSuccessMessage("Ticket deleted successfully");
     } else {
       // Bulk delete
-      const updatedTickets = ticketItems.filter(ticket => !selectedIds.includes(ticket.id));
+      const updatedTickets = ticketItems.filter(
+        (ticket) => !selectedIds.includes(ticket.id)
+      );
       setTicketItems(updatedTickets);
       setSelectedIds([]);
       setSuccessMessage(`${selectedIds.length} ticket(s) deleted successfully`);
     }
     closeDeleteModal();
   };
-
-
 
   return (
     <>
@@ -398,12 +423,14 @@ const Tickets = () => {
                 >
                   Filter
                 </button>
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+                {authService.getUserInfo().role === "Admin" && (
+                  <div ref={toggleRef}>
+                    <MediumButtons
+                      type="export"
+                      onClick={() => setExportToggle(!exportToggle)}
+                    />
+                  </div>
+                )}
               </section>
             </section>
 

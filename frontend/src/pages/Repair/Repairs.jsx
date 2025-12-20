@@ -11,6 +11,7 @@ import RepairFilterModal from "../../components/Modals/RepairFilterModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import { exportToExcel } from "../../utils/exportToExcel";
+import authService from "../../services/auth-service";
 
 import "../../styles/Repairs/Repairs.css";
 
@@ -41,11 +42,19 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each repair row
-function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick }) {
+function TableItem({
+  repair,
+  isSelected,
+  onRowChange,
+  onDeleteClick,
+  onViewClick,
+}) {
   const assetLabel = repair.asset || "";
   const assetParts = assetLabel.split(" ");
-  const assetId = assetParts.length > 1 ? assetParts[assetParts.length - 1] : "-";
-  const assetName = assetParts.length > 1 ? assetParts.slice(0, -1).join(" ") : assetLabel;
+  const assetId =
+    assetParts.length > 1 ? assetParts[assetParts.length - 1] : "-";
+  const assetName =
+    assetParts.length > 1 ? assetParts.slice(0, -1).join(" ") : assetLabel;
 
   return (
     <tr>
@@ -65,7 +74,11 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
       <td>{repair.cost}</td>
       <td>{repair.supplier || "N/A"}</td>
       <td>{repair.notes || "N/A"}</td>
-      <td>{repair.attachments?.length ? `${repair.attachments.length} file(s)` : "N/A"}</td>
+      <td>
+        {repair.attachments?.length
+          ? `${repair.attachments.length} file(s)`
+          : "N/A"}
+      </td>
       <td>
         <ActionButtons
           showEdit
@@ -117,7 +130,6 @@ export default function AssetRepairs() {
     }
   }, [location]);
 
-
   // Paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -132,11 +144,15 @@ export default function AssetRepairs() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedRepairs.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedRepairs
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedRepairs.map((item) => item.id).includes(id))
+        prev.filter(
+          (id) => !paginatedRepairs.map((item) => item.id).includes(id)
+        )
       );
     }
   };
@@ -216,8 +232,9 @@ export default function AssetRepairs() {
 
     // Filter by Type
     if (filters.type) {
-      filtered = filtered.filter((repair) =>
-        repair.type?.toLowerCase() === filters.type.value?.toLowerCase()
+      filtered = filtered.filter(
+        (repair) =>
+          repair.type?.toLowerCase() === filters.type.value?.toLowerCase()
       );
     }
 
@@ -230,30 +247,30 @@ export default function AssetRepairs() {
 
     // Filter by Start Date
     if (filters.startDate && filters.startDate.trim() !== "") {
-      filtered = filtered.filter((repair) =>
-        repair.start_date === filters.startDate
+      filtered = filtered.filter(
+        (repair) => repair.start_date === filters.startDate
       );
     }
 
     // Filter by End Date
     if (filters.endDate && filters.endDate.trim() !== "") {
-      filtered = filtered.filter((repair) =>
-        repair.end_date === filters.endDate
+      filtered = filtered.filter(
+        (repair) => repair.end_date === filters.endDate
       );
     }
 
     // Filter by Cost
     if (filters.cost && filters.cost.trim() !== "") {
       const cost = parseFloat(filters.cost);
-      filtered = filtered.filter((repair) =>
-        repair.cost === cost
-      );
+      filtered = filtered.filter((repair) => repair.cost === cost);
     }
 
     // Filter by Status
     if (filters.status) {
-      filtered = filtered.filter((repair) =>
-        repair.statusType?.toLowerCase() === filters.status.value?.toLowerCase()
+      filtered = filtered.filter(
+        (repair) =>
+          repair.statusType?.toLowerCase() ===
+          filters.status.value?.toLowerCase()
       );
     }
 
@@ -311,7 +328,11 @@ export default function AssetRepairs() {
                     />
                   </>
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                />
                 <button
                   type="button"
                   className="medium-button-filter"
@@ -321,10 +342,10 @@ export default function AssetRepairs() {
                 >
                   Filter
                 </button>
-                <MediumButtons
-                  type="export"
-                  onClick={handleExport}
-                />
+                {authService.getUserInfo().role === "Admin" && (
+                  <MediumButtons type="export" onClick={handleExport} />
+                )}
+
                 <MediumButtons
                   type="new"
                   navigatePage="/repairs/registration"
@@ -381,4 +402,3 @@ export default function AssetRepairs() {
     </>
   );
 }
-

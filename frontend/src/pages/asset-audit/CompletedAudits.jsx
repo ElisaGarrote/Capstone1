@@ -12,6 +12,7 @@ import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import CompletedAuditFilterModal from "../../components/Modals/CompletedAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
+import authService from "../../services/auth-service";
 
 // TableHeader
 function TableHeader() {
@@ -31,14 +32,14 @@ function TableItem({ item, onViewClick }) {
   return (
     <tr>
       <td>{item.audit_date}</td>
-      <td>{item.audit_schedule.asset.displayed_id} - {item.audit_schedule.asset.name}</td>
+      <td>
+        {item.audit_schedule.asset.displayed_id} -{" "}
+        {item.audit_schedule.asset.name}
+      </td>
       <td>{item.location}</td>
       <td>{item.performed_by}</td>
       <td>
-        <ActionButtons
-          showView
-          onViewClick={() => onViewClick(item)}
-        />
+        <ActionButtons showView onViewClick={() => onViewClick(item)} />
       </td>
     </tr>
   );
@@ -57,7 +58,10 @@ export default function CompletedAudits() {
   const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = filteredData.length > 0 ? filteredData.slice(startIndex, endIndex) : data.slice(startIndex, endIndex);
+  const paginatedActivity =
+    filteredData.length > 0
+      ? filteredData.slice(startIndex, endIndex)
+      : data.slice(startIndex, endIndex);
 
   // Add state for view modal
   const [isViewModalOpen, setViewModalOpen] = useState(false);
@@ -90,7 +94,9 @@ export default function CompletedAudits() {
     // Filter by Asset
     if (filters.asset && filters.asset.trim() !== "") {
       filtered = filtered.filter((audit) =>
-        audit.audit_schedule?.asset?.name?.toLowerCase().includes(filters.asset.toLowerCase())
+        audit.audit_schedule?.asset?.name
+          ?.toLowerCase()
+          .includes(filters.asset.toLowerCase())
       );
     }
 
@@ -104,7 +110,9 @@ export default function CompletedAudits() {
     // Filter by Performed By
     if (filters.performedBy && filters.performedBy.trim() !== "") {
       filtered = filtered.filter((audit) =>
-        audit.performed_by?.toLowerCase().includes(filters.performedBy.toLowerCase())
+        audit.performed_by
+          ?.toLowerCase()
+          .includes(filters.performedBy.toLowerCase())
       );
     }
 
@@ -131,14 +139,20 @@ export default function CompletedAudits() {
         <View
           title={`${selectedItem.audit_schedule.asset.name} : ${selectedItem.audit_date}`}
           data={[
-            { label: "Asset", value: `${selectedItem.audit_schedule.asset.displayed_id} - ${selectedItem.audit_schedule.asset.name}` },
+            {
+              label: "Asset",
+              value: `${selectedItem.audit_schedule.asset.displayed_id} - ${selectedItem.audit_schedule.asset.name}`,
+            },
             { label: "Location", value: selectedItem.location },
             { label: "Performed By", value: selectedItem.performed_by },
             { label: "Audit Date", value: selectedItem.audit_date },
             { label: "Next Audit Date", value: selectedItem.next_audit_date },
             { label: "Created At", value: selectedItem.created_at },
             { label: "Notes", value: selectedItem.notes },
-            { label: "Files", value: selectedItem.files.map(f => f.file).join(", ") },
+            {
+              label: "Files",
+              value: selectedItem.files.map((f) => f.file).join(", "),
+            },
           ]}
           closeModal={closeViewModal}
         />
@@ -179,9 +193,16 @@ export default function CompletedAudits() {
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Completed Audits ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
+              <h2 className="h2">
+                Completed Audits (
+                {filteredData.length > 0 ? filteredData.length : data.length})
+              </h2>
               <section className="table-actions">
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                />
                 <button
                   type="button"
                   className="medium-button-filter"
@@ -189,10 +210,9 @@ export default function CompletedAudits() {
                 >
                   Filter
                 </button>
-                <MediumButtons
-                  type="export"
-                  onClick={handleExport}
-                />
+                {authService.getUserInfo().role === "Admin" && (
+                  <MediumButtons type="export" onClick={handleExport} />
+                )}
               </section>
             </section>
 
