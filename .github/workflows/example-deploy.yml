@@ -1,0 +1,85 @@
+# Example Deployment Workflow
+# This is a template for adding deployment steps to your CD workflow
+# Copy relevant sections to .github/workflows/cd.yml
+
+name: Example Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy-to-railway:
+    name: Deploy to Railway
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: |
+          npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up --service ${{ github.event.inputs.environment }}
+
+  # Alternative: Deploy using Docker Compose on a remote server
+  deploy-via-ssh:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Deploy to server
+        run: |
+          ssh user@your-server.com << 'EOF'
+            cd /path/to/your/app
+            git pull
+            docker-compose -f docker-compose.yml pull
+            docker-compose -f docker-compose.yml up -d
+            docker-compose -f docker-compose.yml exec -T app python manage.py migrate
+          EOF
+
+  # Alternative: Deploy to Kubernetes
+  deploy-to-k8s:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Deploy
+        run: |
+          kubectl set image deployment/frontend frontend=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/frontend:latest
+          kubectl set image deployment/authentication authentication=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/authentication:latest
+          kubectl set image deployment/assets assets=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/assets:latest
+          kubectl set image deployment/contexts contexts=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/contexts:latest
+          kubectl rollout status deployment/frontend
+          kubectl rollout status deployment/authentication
+          kubectl rollout status deployment/assets
+          kubectl rollout status deployment/contexts
+

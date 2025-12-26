@@ -1,0 +1,290 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, master ]
+  pull_request:
+    branches: [ main, develop, master ]
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  # Frontend Linting and Build
+  frontend-lint:
+    name: Frontend Lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    needs: frontend-lint
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist
+          retention-days: 1
+
+  # Backend Services Testing
+  backend-authentication-test:
+    name: Authentication Service Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend/authentication
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: ams_authentication_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/authentication/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        env:
+          AUTH_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_authentication_test
+          AUTH_SECRET_KEY: test-secret-key-for-ci
+          AUTH_DEBUG: "False"
+        run: |
+          python manage.py migrate --noinput
+
+      - name: Run tests
+        env:
+          AUTH_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_authentication_test
+          AUTH_SECRET_KEY: test-secret-key-for-ci
+          AUTH_DEBUG: "False"
+        run: |
+          python manage.py test --noinput
+
+  backend-assets-test:
+    name: Assets Service Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend/assets
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: ams_assets_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/assets/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        env:
+          ASSETS_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_assets_test
+          ASSETS_SECRET_KEY: test-secret-key-for-ci
+          ASSETS_DEBUG: "False"
+        run: |
+          python manage.py migrate --noinput
+
+      - name: Run tests
+        env:
+          ASSETS_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_assets_test
+          ASSETS_SECRET_KEY: test-secret-key-for-ci
+          ASSETS_DEBUG: "False"
+        run: |
+          python manage.py test --noinput
+
+  backend-contexts-test:
+    name: Contexts Service Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend/contexts
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: ams_contexts_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/contexts/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        env:
+          CONTEXTS_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_contexts_test
+          CONTEXTS_SECRET_KEY: test-secret-key-for-ci
+          CONTEXTS_DEBUG: "False"
+        run: |
+          python manage.py migrate --noinput
+
+      - name: Run tests
+        env:
+          CONTEXTS_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_contexts_test
+          CONTEXTS_SECRET_KEY: test-secret-key-for-ci
+          CONTEXTS_DEBUG: "False"
+        run: |
+          python manage.py test --noinput
+
+  # Docker Build Tests
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    needs: [frontend-build, backend-authentication-test, backend-assets-test, backend-contexts-test]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          target: production
+          push: false
+          tags: frontend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build authentication service image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/authentication
+          file: ./backend/authentication/Dockerfile
+          target: production
+          push: false
+          tags: authentication:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build assets service image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/assets
+          file: ./backend/assets/Dockerfile
+          target: production
+          push: false
+          tags: assets:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build contexts service image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/contexts
+          file: ./backend/contexts/Dockerfile
+          target: production
+          push: false
+          tags: contexts:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
