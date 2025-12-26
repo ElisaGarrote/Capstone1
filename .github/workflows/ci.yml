@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop, master ]
+    branches: [ main, develop, master, benj/test ]
   pull_request:
-    branches: [ main, develop, master ]
+    branches: [ main, develop, master, benj/test ]
 
 env:
   PYTHON_VERSION: '3.11'
