@@ -215,29 +215,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Check migration status
+      - name: Run tests (with migrations)
         env:
           CONTEXTS_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_contexts_test
           CONTEXTS_SECRET_KEY: test-secret-key-for-ci
           CONTEXTS_DEBUG: "False"
         run: |
+          # Show migration status for debugging
           python manage.py showmigrations
-
-      - name: Run migrations
-        env:
-          CONTEXTS_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_contexts_test
-          CONTEXTS_SECRET_KEY: test-secret-key-for-ci
-          CONTEXTS_DEBUG: "False"
-        run: |
-          python manage.py migrate --noinput --verbosity=2
-
-      - name: Run tests
-        env:
-          CONTEXTS_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_contexts_test
-          CONTEXTS_SECRET_KEY: test-secret-key-for-ci
-          CONTEXTS_DEBUG: "False"
-        run: |
-          python manage.py test --noinput
+          # Run tests - Django will create test database and apply migrations automatically
+          python manage.py test --noinput --verbosity=2
 
   # Docker Build Tests
   docker-build:
