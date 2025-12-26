@@ -215,6 +215,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Check migration status
+        env:
+          CONTEXTS_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_contexts_test
+          CONTEXTS_SECRET_KEY: test-secret-key-for-ci
+          CONTEXTS_DEBUG: "False"
+        run: |
+          python manage.py showmigrations
+
       - name: Run migrations
         env:
           CONTEXTS_DATABASE_URL: postgresql://postgres:test_password@localhost:5432/ams_contexts_test
