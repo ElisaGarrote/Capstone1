@@ -25,13 +25,14 @@ class TestBuildCantDeleteMessage(SimpleTestCase):
     def test_many_assets_generic(self):
         inst = Category()
         inst.name = 'Laptops'
-        # 6 assets -> should produce generic phrasing
+        # 6 assets -> should produce count with examples
         usage = {'asset_ids': [f'AST-{i}' for i in range(6)]}
         msg = _build_cant_delete_message(inst, usage)
         self.assertIn("Cannot delete category 'Laptops'.", msg)
-        self.assertIn('Currently used by assets', msg)
-        # should not inline specific identifiers when >5
-        self.assertNotIn('AST-0', msg)
+        self.assertIn('Asset(s): 6', msg)
+        self.assertIn('e.g.', msg)
+        # should show examples but not all identifiers
+        self.assertIn('AST-0', msg)  # Examples are shown
 
     def test_components_and_repairs(self):
         inst = Supplier()

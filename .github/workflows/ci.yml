@@ -221,7 +221,7 @@ jobs:
           CONTEXTS_SECRET_KEY: test-secret-key-for-ci
           CONTEXTS_DEBUG: "False"
         run: |
-          python manage.py migrate --noinput
+          python manage.py migrate --noinput --verbosity=2
 
       - name: Run tests
         env:

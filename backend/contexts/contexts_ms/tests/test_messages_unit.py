@@ -22,17 +22,19 @@ class BuildMessageTests(SimpleTestCase):
         usage = { 'asset_ids': ['AST-1', 'AST-2'] }
         msg = _build_cant_delete_message(inst, usage)
         self.assertIn('Asset(s): AST-1, AST-2', msg)
-        self.assertIn("supplier 'SupplierOne'", msg)
+        self.assertIn("dummy 'SupplierOne'", msg)  # Dummy class becomes 'dummy'
 
     def test_asset_generic_when_many(self):
         inst = Dummy(name='CatBig')
         usage = { 'asset_ids': [f'A{i}' for i in range(10)] }
         msg = _build_cant_delete_message(inst, usage)
-        # for many assets the message should not list all ids
-        self.assertIn('Currently used by assets', msg)
+        # for many assets the message shows count with examples
+        self.assertIn('Asset(s): 10', msg)
+        self.assertIn('e.g.', msg)
 
     def test_components_and_repairs(self):
         inst = Dummy(title='T1')
         usage = { 'component_ids': [1], 'repair_ids': [2] }
         msg = _build_cant_delete_message(inst, usage)
-        self.assertIn('component(s) and repair(s)', msg)
+        self.assertIn('Component(s): 1', msg)
+        self.assertIn('Repair(s): 2', msg)
