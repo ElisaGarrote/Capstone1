@@ -509,6 +509,17 @@ class LocationNameSerializer(serializers.ModelSerializer):
         fields = ['id', 'city']
 
 class TicketTypeSerializer(serializers.ModelSerializer):
+    location_details = serializers.SerializerMethodField()
     class Meta:
         model = Ticket
-        fields = ['id', 'asset', 'asset_checkout']
+        fields = ['id', 'asset', 'asset_checkout', 'ticket_number', 'checkout_date', 'return_date', ]
+
+    def get_location_details(self, obj):
+        """Return location details fetched from Help Desk service."""
+        try:
+            if not getattr(obj, 'location', None):
+                return None
+            from contexts_ms.services.integration_help_desk import get_location_by_id
+            return get_location_by_id(obj.location)
+        except Exception:
+            return {"warning": "Help Desk service unreachable for locations."}

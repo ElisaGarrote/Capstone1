@@ -14,6 +14,7 @@ import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import OverdueAuditFilterModal from "../../components/Modals/OverdueAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
+import authService from "../../services/auth-service";
 
 // TableHeader
 function TableHeader() {
@@ -35,7 +36,9 @@ function TableItem({ item, onDeleteClick, onViewClick }) {
     <tr>
       <td>{item.date}</td>
       <td>{item.overdue_by} day/s</td>
-      <td>{item.asset.displayed_id} - {item.asset.name}</td>
+      <td>
+        {item.asset.displayed_id} - {item.asset.name}
+      </td>
       <td>{new Date(item.created_at).toLocaleDateString()}</td>
       <td>
         <TableBtn
@@ -75,7 +78,10 @@ export default function OverdueAudits() {
   const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = filteredData.length > 0 ? filteredData.slice(startIndex, endIndex) : data.slice(startIndex, endIndex);
+  const paginatedActivity =
+    filteredData.length > 0
+      ? filteredData.slice(startIndex, endIndex)
+      : data.slice(startIndex, endIndex);
 
   // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -128,8 +134,8 @@ export default function OverdueAudits() {
     // Filter by Overdue By
     if (filters.overdueBy && filters.overdueBy.trim() !== "") {
       const overdueByValue = parseInt(filters.overdueBy);
-      filtered = filtered.filter((audit) =>
-        audit.overdue_by === overdueByValue
+      filtered = filtered.filter(
+        (audit) => audit.overdue_by === overdueByValue
       );
     }
 
@@ -189,7 +195,10 @@ export default function OverdueAudits() {
           data={[
             { label: "Due Date", value: selectedItem.date },
             { label: "Overdue By", value: `${selectedItem.overdue_by} day/s` },
-            { label: "Asset", value: `${selectedItem.asset.displayed_id} - ${selectedItem.asset.name}` },
+            {
+              label: "Asset",
+              value: `${selectedItem.asset.displayed_id} - ${selectedItem.asset.name}`,
+            },
             { label: "Created At", value: selectedItem.created_at },
             { label: "Notes", value: selectedItem.notes },
           ]}
@@ -232,9 +241,16 @@ export default function OverdueAudits() {
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Overdue for Audits ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
+              <h2 className="h2">
+                Overdue for Audits (
+                {filteredData.length > 0 ? filteredData.length : data.length})
+              </h2>
               <section className="table-actions">
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                />
                 <button
                   type="button"
                   className="medium-button-filter"
@@ -242,10 +258,9 @@ export default function OverdueAudits() {
                 >
                   Filter
                 </button>
-                <MediumButtons
-                  type="export"
-                  onClick={handleExport}
-                />
+                {authService.getUserInfo().role === "Admin" && (
+                  <MediumButtons type="export" onClick={handleExport} />
+                )}
               </section>
             </section>
 

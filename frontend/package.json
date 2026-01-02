@@ -30,7 +30,8 @@
     "react-select": "^5.10.2",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.3",
-    
+    "redux": "^5.0.1",
+    "redux-persist": "^6.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

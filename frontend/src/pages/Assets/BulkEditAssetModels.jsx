@@ -842,4 +842,3 @@ export default function BulkEditAssetModels() {
     </>
   );
 }
-

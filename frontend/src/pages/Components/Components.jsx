@@ -40,9 +40,16 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each asset row
-function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+function TableItem({
+  asset,
+  isSelected,
+  onRowChange,
+  onDeleteClick,
+  onViewClick,
+  onCheckInOut,
+}) {
   const baseImage = asset.image
-    ? `${ASSETS_API_URL.replace(/\/$/, '')}${asset.image}`
+    ? `${ASSETS_API_URL.replace(/\/$/, "")}${asset.image}`
     : DefaultImage;
 
   return (
@@ -65,15 +72,15 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
         />
       </td>
       <td>{asset.name}</td>
-      <td>{asset.category || 'N/A'}</td>
-      <td>{asset.manufacturer || 'N/A'}</td>
-      <td>{asset.depreciation || 'N/A'}</td>
+      <td>{asset.category || "N/A"}</td>
+      <td>{asset.manufacturer || "N/A"}</td>
+      <td>{asset.depreciation || "N/A"}</td>
 
       {/* Check-out Column */}
       <td>
         <ActionButtons
           showCheckout
-          onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
+          onCheckoutClick={() => onCheckInOut(asset, "checkout")}
         />
       </td>
 
@@ -81,7 +88,7 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       <td>
         <ActionButtons
           showCheckin
-          onCheckinClick={() => onCheckInOut(asset, 'checkin')}
+          onCheckinClick={() => onCheckInOut(asset, "checkin")}
         />
       </td>
 
@@ -249,12 +256,18 @@ export default function Assets() {
 
     if (term && term.trim() !== "") {
       const lowerTerm = term.toLowerCase();
-      filtered = filtered.filter((component) =>
-        (component.name && component.name.toLowerCase().includes(lowerTerm)) ||
-        (component.category && component.category.toLowerCase().includes(lowerTerm)) ||
-        (component.manufacturer && component.manufacturer.toLowerCase().includes(lowerTerm)) ||
-        (component.supplier && component.supplier.toLowerCase().includes(lowerTerm)) ||
-        (component.location && component.location.toLowerCase().includes(lowerTerm))
+      filtered = filtered.filter(
+        (component) =>
+          (component.name &&
+            component.name.toLowerCase().includes(lowerTerm)) ||
+          (component.category &&
+            component.category.toLowerCase().includes(lowerTerm)) ||
+          (component.manufacturer &&
+            component.manufacturer.toLowerCase().includes(lowerTerm)) ||
+          (component.supplier &&
+            component.supplier.toLowerCase().includes(lowerTerm)) ||
+          (component.location &&
+            component.location.toLowerCase().includes(lowerTerm))
       );
     }
 
@@ -292,11 +305,15 @@ export default function Assets() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedAssets.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedAssets
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter((id) => !paginatedAssets.map((item) => item.id).includes(id))
+        prev.filter(
+          (id) => !paginatedAssets.map((item) => item.id).includes(id)
+        )
       );
     }
   };
@@ -336,7 +353,6 @@ export default function Assets() {
     closeDeleteModal();
   };
 
-
   const handleViewClick = (component) => {
     navigate(`/components/view/${component.id}`, {
       state: { component },
@@ -345,8 +361,6 @@ export default function Assets() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
-
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -375,7 +389,7 @@ export default function Assets() {
       remaining_quantity,
     };
 
-    if (action === 'checkin') {
+    if (action === "checkin") {
       navigate(`/components/check-in/${asset.id}`, {
         state: {
           item,
@@ -388,8 +402,6 @@ export default function Assets() {
       });
     }
   };
-
-
 
   return (
     <>
@@ -427,7 +439,9 @@ export default function Assets() {
                     <MediumButtons
                       type="edit"
                       onClick={() =>
-                        navigate("/components/bulk-edit", { state: { selectedIds } })
+                        navigate("/components/bulk-edit", {
+                          state: { selectedIds },
+                        })
                       }
                     />
                     <MediumButtons
@@ -453,19 +467,15 @@ export default function Assets() {
                 >
                   Filter
                 </button>
-                <MediumButtons
-                  type="export"
-                  onClick={handleExport}
-                />
-                {(() => {
-                  const user = authService.getUserInfo();
-                  return user?.role === "Admin" ? (
+                {authService.getUserInfo().role === "Admin" && (
+                  <>
+                    <MediumButtons type="export" onClick={handleExport} />
                     <MediumButtons
                       type="new"
                       navigatePage="/components/registration"
                     />
-                  ) : null;
-                })()}
+                  </>
+                )}
               </section>
             </section>
 

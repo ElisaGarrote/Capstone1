@@ -4,51 +4,41 @@ Activity Logger Service
 Helper functions to log activity events to the ActivityLog model.
 """
 
-from django.utils import timezone
 from ..models import ActivityLog
 
 
 def log_activity(
-    activity_type: str,
+    module: str,
     action: str,
     item_id: int,
-    item_identifier: str = '',
     item_name: str = '',
     user_id: int = None,
-    user_name: str = '',
-    target_id: int = None,
-    target_name: str = '',
+    target_user_id: int = None,
     notes: str = '',
 ):
     """
     Create an ActivityLog entry.
-    
+
     Args:
-        activity_type: Type of entity (Asset, Component, Audit, Repair)
-        action: Type of action (Create, Update, Delete, Checkout, Checkin, Schedule, Passed, Failed)
+        module: Type of entity (Asset, Component, Audit, Repair)
+        action: Type of action (Create, Update, Delete, Checkout, Checkin, Schedule, Perform)
         item_id: ID of the affected item
-        item_identifier: Display identifier of the item (e.g., asset_id, component serial)
         item_name: Name of the item
         user_id: ID of the user who performed the action
-        user_name: Name of the user
-        target_id: ID of the target (for checkout/checkin - employee/location)
-        target_name: Name of the target
+        target_user_id: ID of the target user (for checkout/checkin)
         notes: Additional notes about the activity
-    
+
     Returns:
         The created ActivityLog instance
     """
+    # user_id is required by the model, default to 0 if not provided
     return ActivityLog.objects.create(
-        datetime=timezone.now(),
-        activity_type=activity_type,
-        action=action,
+        user_id=user_id or 0,
+        module=module,
+        action=action.upper(),
         item_id=item_id,
-        item_identifier=item_identifier or '',
         item_name=item_name or '',
-        user_id=user_id,
-        user_name=user_name or '',
-        target_id=target_id,
-        target_name=target_name or '',
+        target_user_id=target_user_id,
         notes=notes or '',
     )
 
@@ -57,22 +47,17 @@ def log_asset_activity(
     action: str,
     asset,
     user_id: int = None,
-    user_name: str = '',
-    target_id: int = None,
-    target_name: str = '',
+    target_user_id: int = None,
     notes: str = '',
 ):
     """Log an activity for an Asset."""
     return log_activity(
-        activity_type='Asset',
+        module='Asset',
         action=action,
         item_id=asset.id,
-        item_identifier=asset.displayed_id or asset.asset_id or str(asset.id),
-        item_name=asset.name or '',
+        item_name=asset.name or asset.asset_id or '',
         user_id=user_id,
-        user_name=user_name,
-        target_id=target_id,
-        target_name=target_name,
+        target_user_id=target_user_id,
         notes=notes,
     )
 
@@ -81,22 +66,17 @@ def log_component_activity(
     action: str,
     component,
     user_id: int = None,
-    user_name: str = '',
-    target_id: int = None,
-    target_name: str = '',
+    target_user_id: int = None,
     notes: str = '',
 ):
     """Log an activity for a Component."""
     return log_activity(
-        activity_type='Component',
+        module='Component',
         action=action,
         item_id=component.id,
-        item_identifier=component.serial or str(component.id),
         item_name=component.name or '',
         user_id=user_id,
-        user_name=user_name,
-        target_id=target_id,
-        target_name=target_name,
+        target_user_id=target_user_id,
         notes=notes,
     )
 
@@ -106,7 +86,6 @@ def log_audit_activity(
     audit_or_schedule,
     asset=None,
     user_id: int = None,
-    user_name: str = '',
     notes: str = '',
 ):
     """Log an activity for an Audit or AuditSchedule."""
@@ -116,18 +95,15 @@ def log_audit_activity(
             asset = audit_or_schedule.asset
         elif hasattr(audit_or_schedule, 'audit_schedule'):
             asset = audit_or_schedule.audit_schedule.asset
-    
-    item_identifier = asset.displayed_id if asset else str(audit_or_schedule.id)
+
     item_name = f"Audit - {asset.name}" if asset else f"Audit {audit_or_schedule.id}"
-    
+
     return log_activity(
-        activity_type='Audit',
+        module='Audit',
         action=action,
         item_id=audit_or_schedule.id,
-        item_identifier=item_identifier,
         item_name=item_name,
         user_id=user_id,
-        user_name=user_name,
         notes=notes,
     )
 
@@ -136,19 +112,15 @@ def log_repair_activity(
     action: str,
     repair,
     user_id: int = None,
-    user_name: str = '',
     notes: str = '',
 ):
     """Log an activity for a Repair."""
-    asset = repair.asset
     return log_activity(
-        activity_type='Repair',
+        module='Repair',
         action=action,
         item_id=repair.id,
-        item_identifier=asset.displayed_id if asset else str(repair.id),
         item_name=repair.name or '',
         user_id=user_id,
-        user_name=user_name,
         notes=notes,
     )
 

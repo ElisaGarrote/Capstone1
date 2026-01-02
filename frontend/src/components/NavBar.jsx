@@ -5,12 +5,11 @@ import "../styles/NavBar.css";
 import Logo from "../assets/img/Logo.png";
 import SampleProfile from "../assets/img/do.png";
 import { IoIosArrowDown } from "react-icons/io";
+import { FaBars, FaChevronLeft } from "react-icons/fa";
 import NotificationOverlay from "./NotificationOverlay";
 import SystemLogo from "../assets/icons/Map-LogoNew.svg";
 import authService from "../services/auth-service";
 import DefaultProfile from "../assets/img/default-profile.svg";
-import { clearUser, selectUser } from "../features/counter/userSlice";
-import { useDispatch, useSelector } from "react-redux";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -21,6 +20,7 @@ export default function NavBar() {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(4);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // State for selected items in each dropdown
   const [selectedAsset, setSelectedAsset] = useState("Assets");
@@ -30,14 +30,14 @@ export default function NavBar() {
   // State to track which menu item is active
   const [activeMenu, setActiveMenu] = useState("");
 
-  const dispatch = useDispatch();
-  const user = useSelector(selectUser);
-
   // Close all dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
         !event.target.closest(".dropdown-container") &&
+        !event.target.closest(".nav-links") &&
+        !event.target.closest(".mobile-menu-btn") &&
+        !event.target.closest(".nav-brand") &&
         !event.target.closest(".profile-container") &&
         !event.target.closest(".notification-container") &&
         !event.target.closest(".notification-icon-container")
@@ -47,6 +47,7 @@ export default function NavBar() {
         setShowMoreMenu(false);
         setShowProfileMenu(false);
         setShowNotifications(false);
+        setMobileOpen(false);
       }
     };
 
@@ -55,6 +56,11 @@ export default function NavBar() {
       document.removeEventListener("click", handleClickOutside);
     };
   }, []);
+
+  // Close mobile sidebar when navigating
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   // Function to toggle a dropdown and close others
   const toggleDropdown = (dropdown) => {
@@ -167,67 +173,117 @@ export default function NavBar() {
     }
   }, [location.pathname]);
 
-  const handleLogout = () => {
+  const logout = () => {
     authService.logout();
-    dispatch(clearUser());
     navigate("/login");
   };
 
   return (
     <nav className="main-nav-bar">
-      <img src={SystemLogo} alt="Logo" />
-      <h1>MapAMS</h1>
-      <section className="logo">
-        <section>
-          <ul>
-            <li>
-              <a
-                onClick={() => {
-                  navigate("/dashboard");
-                  setActiveMenu("dashboard");
-                }}
-                className={activeMenu === "dashboard" ? "active" : ""}
-              >
-                Dashboard
-              </a>
-            </li>
-            <li
-              className={`dropdown-container assets-dropdown-container ${
-                showAssetsMenu ? "open" : ""
-              }`}
-            >
-              <div
-                className={`dropdown-trigger ${
-                  activeMenu === "assets" ? "active" : ""
-                }`}
-                onClick={() => toggleDropdown("assets")}
-              >
-                <span className="dropdown-text">{selectedAsset}</span>{" "}
-                <IoIosArrowDown />
-              </div>
-              {showAssetsMenu && (
-                <div className="custom-dropdown assets-dropdown">
-                  <div className="dropdown-menu">
-                    <button
-                      onClick={() => {
-                        navigate("/products");
-                        setSelectedAsset("Asset Models");
-                        setShowAssetsMenu(false);
-                      }}
-                    >
-                      Asset Models
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/assets");
-                        setSelectedAsset("Assets");
-                        setShowAssetsMenu(false);
-                      }}
-                    >
-                      Assets
-                    </button>
+      <div
+        className="nav-brand"
+        onClick={() => {
+          navigate("/dashboard");
+          setActiveMenu("dashboard");
+          setMobileOpen(false);
+        }}
+      >
+        <img src={SystemLogo} alt="Logo" />
+        <h1>MapAMS</h1>
+      </div>
 
-                    {/* <button
+      {!mobileOpen && (
+        <button
+          className="mobile-menu-btn"
+          type="button"
+          aria-label="Open menu"
+          aria-expanded={mobileOpen}
+          aria-controls="main-nav-links"
+          onClick={() => setMobileOpen(true)}
+        >
+          <FaBars />
+        </button>
+      )}
+
+      {mobileOpen && (
+        <div
+          className="nav-overlay"
+          role="presentation"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <section className="nav-menu">
+        <ul
+          id="main-nav-links"
+          className={`nav-links ${mobileOpen ? "open" : ""}`}
+        >
+          {/* Sidebar Header */}
+          <li className="sidebar-header">
+            <div className="sidebar-brand">
+              <img src={SystemLogo} alt="Logo" />
+              <span>MapAMS</span>
+            </div>
+            <button
+              className="sidebar-close-btn"
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setMobileOpen(false)}
+            >
+              <FaChevronLeft />
+            </button>
+          </li>
+          <li>
+            <a
+              onClick={() => {
+                navigate("/dashboard");
+                setActiveMenu("dashboard");
+                setMobileOpen(false);
+              }}
+              className={activeMenu === "dashboard" ? "active" : ""}
+            >
+              Dashboard
+            </a>
+          </li>
+          <li
+            className={`dropdown-container assets-dropdown-container ${
+              showAssetsMenu ? "open" : ""
+            }`}
+          >
+            <div
+              className={`dropdown-trigger ${
+                activeMenu === "assets" ? "active" : ""
+              }`}
+              onClick={() => toggleDropdown("assets")}
+            >
+              <span className="dropdown-text">{selectedAsset}</span>{" "}
+              <IoIosArrowDown />
+            </div>
+            {showAssetsMenu && (
+              <div className="custom-dropdown assets-dropdown">
+                <div className="dropdown-menu">
+                  <button
+                    onClick={() => {
+                      navigate("/products");
+                      setSelectedAsset("Asset Models");
+                      setShowAssetsMenu(false);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    Asset Models
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/assets");
+                      setSelectedAsset("Assets");
+                      setShowAssetsMenu(false);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    Assets
+                  </button>
+
+                  {/* <button
                     onClick={() => {
                       navigate("/accessories");
                       setSelectedAsset("Accessories");
@@ -246,120 +302,130 @@ export default function NavBar() {
                     Consumable
                   </button> */}
 
-                    <button
-                      onClick={() => {
-                        navigate("/components");
-                        setSelectedAsset("Components");
-                        setShowAssetsMenu(false);
-                      }}
-                    >
-                      Components
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => {
+                      navigate("/components");
+                      setSelectedAsset("Components");
+                      setShowAssetsMenu(false);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    Components
+                  </button>
                 </div>
-              )}
-            </li>
-            <li>
-              <a
-                onClick={() => {
-                  navigate("/repairs");
-                  setActiveMenu("repairs");
-                }}
-                className={activeMenu === "repairs" ? "active" : ""}
-              >
-                Repairs
-              </a>
-            </li>
-            <li>
-              <a
-                className={activeMenu === "audits" ? "active" : ""}
-                onClick={() => {
-                  navigate("/audits");
-                  setActiveMenu("audits");
-                }}
-              >
-                Audit
-              </a>
-            </li>
-            <li>
-              <a
-                className={activeMenu === "tickets" ? "active" : ""}
-                onClick={() => {
-                  navigate("/approved-tickets");
-                  setActiveMenu("tickets");
-                }}
-              >
-                Tickets
-              </a>
-            </li>
-            <li
-              className={`dropdown-container reports-dropdown-container ${
-                showReportsMenu ? "open" : ""
-              }`}
-            >
-              <div
-                className={`dropdown-trigger ${
-                  activeMenu === "reports" ? "active" : ""
-                }`}
-                onClick={() => toggleDropdown("reports")}
-              >
-                <span className="dropdown-text">{selectedReport}</span>{" "}
-                <IoIosArrowDown />
               </div>
-              {showReportsMenu && (
-                <div className="custom-dropdown reports-dropdown">
-                  <div className="dropdown-menu">
-                    <button
-                      onClick={() => {
-                        navigate("/reports/asset");
-                        setSelectedReport("Asset Reports");
-                        setShowReportsMenu(false);
-                      }}
-                    >
-                      Asset Reports
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/reports/depreciation");
-                        setSelectedReport("Depreciation Reports");
-                        setShowReportsMenu(false);
-                      }}
-                    >
-                      Depreciation Reports
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/reports/due-back");
-                        setSelectedReport("Due Back Reports");
-                        setShowReportsMenu(false);
-                      }}
-                    >
-                      Due Back Reports
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/reports/eol-warranty");
-                        setSelectedReport("EoL & Warranty Reports");
-                        setShowReportsMenu(false);
-                      }}
-                    >
-                      EoL & Warranty Reports
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/reports/activity");
-                        setSelectedReport("Activity Reports");
-                        setShowReportsMenu(false);
-                      }}
-                    >
-                      Activity Reports
-                    </button>
-                  </div>
-                </div>
-              )}
-            </li>
+            )}
+          </li>
+          <li>
+            <a
+              onClick={() => {
+                navigate("/repairs");
+                setActiveMenu("repairs");
+                setMobileOpen(false);
+              }}
+              className={activeMenu === "repairs" ? "active" : ""}
+            >
+              Repairs
+            </a>
+          </li>
+          <li>
+            <a
+              className={activeMenu === "audits" ? "active" : ""}
+              onClick={() => {
+                navigate("/audits");
+                setActiveMenu("audits");
+                setMobileOpen(false);
+              }}
+            >
+              Audit
+            </a>
+          </li>
+          <li>
+            <a
+              className={activeMenu === "tickets" ? "active" : ""}
+              onClick={() => {
+                navigate("/approved-tickets");
+                setActiveMenu("tickets");
+                setMobileOpen(false);
+              }}
+            >
+              Tickets
+            </a>
+          </li>
 
-            {user.role === "Admin" && (
+          {authService.getUserInfo().role === "Admin" && (
+            <>
+              <li
+                className={`dropdown-container reports-dropdown-container ${
+                  showReportsMenu ? "open" : ""
+                }`}
+              >
+                <div
+                  className={`dropdown-trigger ${
+                    activeMenu === "reports" ? "active" : ""
+                  }`}
+                  onClick={() => toggleDropdown("reports")}
+                >
+                  <span className="dropdown-text">{selectedReport}</span>{" "}
+                  <IoIosArrowDown />
+                </div>
+                {showReportsMenu && (
+                  <div className="custom-dropdown reports-dropdown">
+                    <div className="dropdown-menu">
+                      <button
+                        onClick={() => {
+                          navigate("/reports/asset");
+                          setSelectedReport("Asset Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Asset Reports
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/reports/depreciation");
+                          setSelectedReport("Depreciation Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Depreciation Reports
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/reports/due-back");
+                          setSelectedReport("Due Back Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Due Back Reports
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/reports/eol-warranty");
+                          setSelectedReport("EoL & Warranty Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        EoL & Warranty Reports
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/reports/activity");
+                          setSelectedReport("Activity Reports");
+                          setShowReportsMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Activity Reports
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
               <li
                 className={`dropdown-container more-dropdown-container ${
                   showMoreMenu ? "open" : ""
@@ -382,6 +448,7 @@ export default function NavBar() {
                           navigate("/More/ViewCategories");
                           setSelectedMore("Categories");
                           setShowMoreMenu(false);
+                          setMobileOpen(false);
                         }}
                       >
                         Categories
@@ -391,6 +458,7 @@ export default function NavBar() {
                           navigate("/More/ViewManufacturer");
                           setSelectedMore("Manufacturers");
                           setShowMoreMenu(false);
+                          setMobileOpen(false);
                         }}
                       >
                         Manufacturers
@@ -400,6 +468,7 @@ export default function NavBar() {
                           navigate("/More/ViewSupplier");
                           setSelectedMore("Suppliers");
                           setShowMoreMenu(false);
+                          setMobileOpen(false);
                         }}
                       >
                         Suppliers
@@ -409,6 +478,7 @@ export default function NavBar() {
                           navigate("/More/ViewStatus");
                           setSelectedMore("Statuses");
                           setShowMoreMenu(false);
+                          setMobileOpen(false);
                         }}
                       >
                         Statuses
@@ -418,6 +488,7 @@ export default function NavBar() {
                           navigate("/More/Depreciations");
                           setSelectedMore("Depreciations");
                           setShowMoreMenu(false);
+                          setMobileOpen(false);
                         }}
                       >
                         Depreciations
@@ -427,6 +498,7 @@ export default function NavBar() {
                           navigate("/More/RecycleBin");
                           setSelectedMore("Recycle Bin");
                           setShowMoreMenu(false);
+                          setMobileOpen(false);
                         }}
                       >
                         Recycle Bin
@@ -435,15 +507,19 @@ export default function NavBar() {
                   </div>
                 )}
               </li>
-            )}
-          </ul>
-        </section>
+            </>
+          )}
+        </ul>
       </section>
-      <section>
+
+      <section className="nav-actions">
         <div className="notification-icon-container">
           <div
             className="notification-icon-wrapper"
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => {
+              setShowNotifications(!showNotifications);
+              setShowProfileMenu(false);
+            }}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -470,29 +546,28 @@ export default function NavBar() {
         </div>
         <div className="profile-container">
           <img
-            // src={authService.getUserInfo().image || DefaultProfile}
-            src={user.image || DefaultProfile}
+            src={authService.getUserInfo().image || DefaultProfile}
             alt="sample-profile"
             className="sample-profile"
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            onClick={() => {
+              setShowProfileMenu(!showProfileMenu);
+              setShowNotifications(false);
+            }}
           />
           {showProfileMenu && (
             <div className="profile-dropdown">
               <div className="profile-header">
                 <img
-                  src={user.image || DefaultProfile}
-                  // src={authService.getUserInfo().image || DefaultProfile}
+                  src={authService.getUserInfo().image || DefaultProfile}
                   alt="profile"
                 />
                 <div className="profile-info">
                   <h3>
-                    {user.firstName} {user.lastName}
-                    {/* {authService.getUserInfo().first_name}{" "}
-                    {authService.getUserInfo().last_name} */}
+                    {authService.getUserInfo().first_name}{" "}
+                    {authService.getUserInfo().last_name}
                   </h3>
                   <span className="admin-badge">
-                    {/* {authService.getUserInfo().role} */}
-                    {user.role}
+                    {authService.getUserInfo().role}
                   </span>
                 </div>
               </div>
@@ -500,12 +575,12 @@ export default function NavBar() {
                 <button onClick={() => navigate("/manage-profile")}>
                   Manage Profile
                 </button>
-                {user.role === "Admin" && (
+                {authService.getUserInfo().role === "Admin" && (
                   <button onClick={() => navigate("/user-management")}>
                     User Management
                   </button>
                 )}
-                <button onClick={handleLogout} className="logout-btn">
+                <button onClick={logout} className="logout-btn">
                   Log Out
                 </button>
               </div>

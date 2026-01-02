@@ -267,7 +267,7 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == "unresolved":
-            return TicketTypeSerializer
+            return TicketSerializer
         return TicketSerializer
 
     # GET /tickets/resolved/

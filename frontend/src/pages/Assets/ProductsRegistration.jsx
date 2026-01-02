@@ -110,13 +110,13 @@ export default function ProductsRegistration() {
           setSuppliers(dropdowns.suppliers);
           setDepreciations(dropdowns.depreciations);
 
-        // Get product data from API
-        let productData = await fetchProductById(id);
+        // Get product data from API (only if editing/cloning)
+        let productData = null;
         const cloneMode = location.state?.isClone === true;
         setIsClone(cloneMode);
 
-        // If no product in state but we have an ID, fetch from API
-        if (!productData && id) {
+        // Only fetch product if we have an ID (editing or cloning)
+        if (id) {
           productData = await fetchProductById(id);
         }
 

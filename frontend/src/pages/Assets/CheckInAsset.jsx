@@ -116,6 +116,20 @@ export default function CheckInAsset() {
             }
           }
         }
+        // Scenario 3: Coming from Tickets page with only ticketId
+        else if (ticketIdFromState) {
+          setFromAssets(false);
+          ticketData = await fetchTicketById(ticketIdFromState);
+
+          // Fetch asset details using asset id from ticket
+          if (ticketData?.asset) {
+            const assetData = await fetchAssetNames({ ids: [ticketData.asset] });
+            if (assetData && assetData.length > 0) {
+              setAssetName(assetData[0].name || "");
+              setAssetDisplayId(assetData[0].asset_id || "");
+            }
+          }
+        }
 
         setTicket(ticketData);
 
@@ -299,8 +313,16 @@ export default function CheckInAsset() {
     try {
       const formData = new FormData();
 
-      // Get checkout ID from ticket or state
-      const checkoutId = checkoutIdFromState || ticket?.asset_checkout;
+      // Get checkout ID from ticket or state - ensure it's an integer
+      const rawCheckoutId = checkoutIdFromState || ticket?.asset_checkout;
+      const checkoutId = parseInt(rawCheckoutId, 10);
+
+      console.log("Checkout ID debug:", { checkoutIdFromState, ticketAssetCheckout: ticket?.asset_checkout, rawCheckoutId, checkoutId });
+
+      if (!checkoutId || isNaN(checkoutId)) {
+        setErrorMessage("Missing checkout ID. Cannot complete check-in.");
+        return;
+      }
 
       // Required fields - all from user input
       formData.append("asset_checkout", checkoutId);

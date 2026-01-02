@@ -14,6 +14,7 @@ import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import DueAuditFilterModal from "../../components/Modals/DueAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
+import authService from "../../services/auth-service";
 
 // TableHeader
 function TableHeader() {
@@ -33,7 +34,9 @@ function TableItem({ item, onDeleteClick, onViewClick }) {
   return (
     <tr>
       <td>{item.date}</td>
-      <td>{item.asset.displayed_id} - {item.asset.name}</td>
+      <td>
+        {item.asset.displayed_id} - {item.asset.name}
+      </td>
       <td>{new Date(item.created_at).toLocaleDateString()}</td>
       <td>
         <TableBtn
@@ -73,7 +76,10 @@ export default function ScheduledAudits() {
   const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = filteredData.length > 0 ? filteredData.slice(startIndex, endIndex) : data.slice(startIndex, endIndex);
+  const paginatedActivity =
+    filteredData.length > 0
+      ? filteredData.slice(startIndex, endIndex)
+      : data.slice(startIndex, endIndex);
 
   // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -172,13 +178,16 @@ export default function ScheduledAudits() {
           onConfirm={confirmDelete}
         />
       )}
-      
+
       {isViewModalOpen && selectedItem && (
         <View
           title={`${selectedItem.asset.name} : ${selectedItem.date}`}
           data={[
             { label: "Due Date", value: selectedItem.date },
-            { label: "Asset", value: `${selectedItem.asset.displayed_id} - ${selectedItem.asset.name}` },
+            {
+              label: "Asset",
+              value: `${selectedItem.asset.displayed_id} - ${selectedItem.asset.name}`,
+            },
             { label: "Created At", value: selectedItem.created_at },
             { label: "Notes", value: selectedItem.notes },
           ]}
@@ -221,9 +230,16 @@ export default function ScheduledAudits() {
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Scheduled Audits ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
+              <h2 className="h2">
+                Scheduled Audits (
+                {filteredData.length > 0 ? filteredData.length : data.length})
+              </h2>
               <section className="table-actions">
-                <input type="search" placeholder="Search..." className="search" />
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
+                />
                 <button
                   type="button"
                   className="medium-button-filter"
@@ -231,10 +247,9 @@ export default function ScheduledAudits() {
                 >
                   Filter
                 </button>
-                <MediumButtons
-                  type="export"
-                  onClick={handleExport}
-                />
+                {authService.getUserInfo().role === "Admin" && (
+                  <MediumButtons type="export" onClick={handleExport} />
+                )}
               </section>
             </section>
 

@@ -42,7 +42,13 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem component to render each product row
-function TableItem({ product, isSelected, onRowChange, onViewClick, onDeleteClick }) {
+function TableItem({
+  product,
+  isSelected,
+  onRowChange,
+  onViewClick,
+  onDeleteClick,
+}) {
   const baseImage = product.image || DefaultImage;
 
   return (
@@ -65,24 +71,24 @@ function TableItem({ product, isSelected, onRowChange, onViewClick, onDeleteClic
         />
       </td>
       <td>{product.name}</td>
-      <td>{product.category_details?.name || 'N/A'}</td>
-      <td>{product.model_number || 'N/A'}</td>
-      <td>{product.end_of_life || 'N/A'}</td>
-      <td>{product.manufacturer_details?.name || 'N/A'}</td>
-      <td>{product.depreciation_details?.name || 'N/A'}</td>
+      <td>{product.category_details?.name || "N/A"}</td>
+      <td>{product.model_number || "N/A"}</td>
+      <td>{product.end_of_life || "N/A"}</td>
+      <td>{product.manufacturer_details?.name || "N/A"}</td>
+      <td>{product.depreciation_details?.name || "N/A"}</td>
       <td>
         {product.default_purchase_cost
           ? `₱${Number(product.default_purchase_cost).toLocaleString()}`
-          : 'N/A'}
+          : "N/A"}
       </td>
-      <td>{product.default_supplier_details?.name || 'N/A'}</td>
-      <td>{product.minimum_quantity || 'N/A'}</td>
+      <td>{product.default_supplier_details?.name || "N/A"}</td>
+      <td>{product.minimum_quantity || "N/A"}</td>
       <td>
         <ActionButtons
           showView
           showEdit
           showDelete
-          onViewClick={onViewClick} 
+          onViewClick={onViewClick}
           editPath={`/products/edit/${product.id}`}
           onDeleteClick={onDeleteClick}
         />
@@ -144,7 +150,6 @@ export default function Products() {
     loadProducts();
   }, []);
 
-  
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -170,14 +175,18 @@ export default function Products() {
       setSelectedIds((prev) => {
         const newIds = [
           ...prev,
-          ...paginatedProducts.map((item) => item.id).filter((id) => !prev.includes(id)),
+          ...paginatedProducts
+            .map((item) => item.id)
+            .filter((id) => !prev.includes(id)),
         ];
         console.log("Selected ids:", newIds);
         return newIds;
       });
     } else {
       setSelectedIds((prev) => {
-        const newIds = prev.filter((id) => !paginatedProducts.map((item) => item.id).includes(id));
+        const newIds = prev.filter(
+          (id) => !paginatedProducts.map((item) => item.id).includes(id)
+        );
         console.log("Selected ids:", newIds);
         return newIds;
       });
@@ -230,7 +239,9 @@ export default function Products() {
   };
 
   const handleDeleteError = (error) => {
-    setErrorMessage(error.response?.data?.detail || "Failed to delete product(s).");
+    setErrorMessage(
+      error.response?.data?.detail || "Failed to delete product(s)."
+    );
     setTimeout(() => setErrorMessage(""), 5000);
   };
 
@@ -271,17 +282,18 @@ export default function Products() {
     if (filters.manufacturer && filters.manufacturer.toString().trim() !== "") {
       filtered = filtered.filter(
         (product) =>
-          product.manufacturer_id?.toString() === filters.manufacturer.toString()
+          product.manufacturer_id?.toString() ===
+          filters.manufacturer.toString()
       );
     }
 
     // Filter by Depreciation
-    if (filters.depreciation && filters.depreciation.trim() !== ""
-    ) {
+    if (filters.depreciation && filters.depreciation.trim() !== "") {
       filtered = filtered.filter(
         (product) =>
           product.depreciation &&
-          product.depreciation.toLowerCase() === filters.depreciation.toLowerCase()
+          product.depreciation.toLowerCase() ===
+            filters.depreciation.toLowerCase()
       );
     }
 
@@ -294,14 +306,20 @@ export default function Products() {
 
     // Filter by In used by Asset flag
     if (filters.inUseByAsset === "yes") {
-      filtered = filtered.filter((product) => productsInUseSet.has(product.name));
+      filtered = filtered.filter((product) =>
+        productsInUseSet.has(product.name)
+      );
     } else if (filters.inUseByAsset === "no") {
-      filtered = filtered.filter((product) => !productsInUseSet.has(product.name));
+      filtered = filtered.filter(
+        (product) => !productsInUseSet.has(product.name)
+      );
     }
 
     // Filter by Created At range
     if (filters.createdAtFrom || filters.createdAtTo) {
-      const from = filters.createdAtFrom ? new Date(filters.createdAtFrom) : null;
+      const from = filters.createdAtFrom
+        ? new Date(filters.createdAtFrom)
+        : null;
       const to = filters.createdAtTo ? new Date(filters.createdAtTo) : null;
 
       filtered = filtered.filter((product) => {
@@ -316,7 +334,9 @@ export default function Products() {
 
     // Filter by Updated At range
     if (filters.updatedAtFrom || filters.updatedAtTo) {
-      const from = filters.updatedAtFrom ? new Date(filters.updatedAtFrom) : null;
+      const from = filters.updatedAtFrom
+        ? new Date(filters.updatedAtFrom)
+        : null;
       const to = filters.updatedAtTo ? new Date(filters.updatedAtTo) : null;
 
       filtered = filtered.filter((product) => {
@@ -334,7 +354,8 @@ export default function Products() {
       filtered = filtered.filter(
         (product) =>
           product.connectivity &&
-          product.connectivity.toLowerCase() === filters.connectivity.toLowerCase()
+          product.connectivity.toLowerCase() ===
+            filters.connectivity.toLowerCase()
       );
     }
 
@@ -367,7 +388,8 @@ export default function Products() {
       filtered = filtered.filter(
         (product) =>
           product.operating_system &&
-          product.operating_system.toLowerCase() === filters.operatingSystem.toLowerCase()
+          product.operating_system.toLowerCase() ===
+            filters.operatingSystem.toLowerCase()
       );
     }
 
@@ -385,7 +407,8 @@ export default function Products() {
       filtered = filtered.filter(
         (product) =>
           product.storage_size &&
-          product.storage_size.toLowerCase() === filters.storageSize.toLowerCase()
+          product.storage_size.toLowerCase() ===
+            filters.storageSize.toLowerCase()
       );
     }
 
@@ -398,11 +421,14 @@ export default function Products() {
 
     if (term && term.trim() !== "") {
       const lowerTerm = term.toLowerCase();
-      filtered = filtered.filter((product) =>
-        (product.name && product.name.toLowerCase().includes(lowerTerm)) ||
-        (product.category && product.category.toLowerCase().includes(lowerTerm)) ||
-        (product.model && product.model.toLowerCase().includes(lowerTerm)) ||
-        (product.default_supplier && product.default_supplier.toLowerCase().includes(lowerTerm))
+      filtered = filtered.filter(
+        (product) =>
+          (product.name && product.name.toLowerCase().includes(lowerTerm)) ||
+          (product.category &&
+            product.category.toLowerCase().includes(lowerTerm)) ||
+          (product.model && product.model.toLowerCase().includes(lowerTerm)) ||
+          (product.default_supplier &&
+            product.default_supplier.toLowerCase().includes(lowerTerm))
       );
     }
 
@@ -430,7 +456,7 @@ export default function Products() {
     const dataToExport = filteredData.length > 0 ? filteredData : products;
     exportToExcel(dataToExport, "AssetModels_Records.xlsx");
   };
-  
+
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -499,7 +525,9 @@ export default function Products() {
                     <MediumButtons
                       type="edit"
                       onClick={() =>
-                        navigate("/products/bulk-edit", { state: { selectedIds } })
+                        navigate("/products/bulk-edit", {
+                          state: { selectedIds },
+                        })
                       }
                     />
                     <MediumButtons
@@ -524,20 +552,15 @@ export default function Products() {
                 >
                   Filter
                 </button>
-                <MediumButtons
-                  type="export"
-                  onClick={handleExport}
-                />
-                {(() => {
-                  const user = authService.getUserInfo();
-                  return user?.role === "Admin" ? (
+                {authService.getUserInfo()?.role === "Admin" && (
+                  <>
+                    <MediumButtons type="export" onClick={handleExport} />
                     <MediumButtons
                       type="new"
                       navigatePage="/products/registration"
                     />
-                  ) : null;
-                })()}
-                
+                  </>
+                )}
               </section>
             </section>
 
@@ -560,13 +583,13 @@ export default function Products() {
                   ) : paginatedProducts.length > 0 ? (
                     paginatedProducts.map((product) => (
                       <TableItem
-                      key={product.id} 
-                      isSelected={selectedIds.includes(product.id)}
-                      onRowChange={handleRowChange}
-                      product={product}
-                      onViewClick={() => handleViewClick(product.id)}
-                      onEditClick={() => handleEditClick(product.id)}
-                      onDeleteClick={() => openDeleteModal(product.id)}
+                        key={product.id}
+                        isSelected={selectedIds.includes(product.id)}
+                        onRowChange={handleRowChange}
+                        product={product}
+                        onViewClick={() => handleViewClick(product.id)}
+                        onEditClick={() => handleEditClick(product.id)}
+                        onDeleteClick={() => openDeleteModal(product.id)}
                       />
                     ))
                   ) : (

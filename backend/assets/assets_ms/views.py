@@ -573,20 +573,26 @@ class AssetViewSet(viewsets.ModelViewSet):
             purchase_cost=purchase_cost
         )
 
-        self.invalidate_asset_cache(serializer.instance.id)
-        # Log activity for create
-        try:
-            log_asset_activity(
-                action='Create',
-                asset=serializer.instance,
-                notes=f"Asset '{serializer.instance.name}' created"
-            )
-        except Exception:
-            logger.exception("Failed to log asset create activity")
+        asset = serializer.instance
+        self.invalidate_asset_cache(asset.id)
+
+        # Log activity
+        log_asset_activity(
+            action='Create',
+            asset=asset,
+            notes=f"Asset '{asset.name}' created"
+        )
 
     def perform_update(self, serializer):
         instance = serializer.save()
         self.invalidate_asset_cache(instance.id)
+
+        # Log activity
+        log_asset_activity(
+            action='Update',
+            asset=instance,
+            notes=f"Asset '{instance.name}' updated"
+        )
     
     @action(detail=False, methods=['get'], url_path='by-product/(?P<product_id>\d+)')
     def by_product(self, request, product_id=None):
@@ -882,24 +888,13 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         cache.delete("assets:list")
 
-        return Response({
-            "deleted_count": len(deleted),
-            "skipped_count": len(failed),
-            "deleted_ids": deleted,
-            "failed": failed
-        }, status=status.HTTP_200_OK)
-    
-        
+        if failed:
+            return Response({
+                "detail": "Some assets could not be deleted.",
+                "failed": failed
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_update(self, serializer):
-        asset = serializer.save()
-
-        # Log activity
-        log_asset_activity(
-            action='Update',
-            asset=asset,
-            notes=f"Asset '{asset.name}' updated"
-        )
+        return Response({"detail": "Assets deleted successfully."}, status=status.HTTP_200_OK)
 
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -963,16 +958,6 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
 
                 # 4. Resolve overlapping tickets for the same asset
                 self._resolve_overlapping_tickets(checkout, ticket_id)
-
-                # 5. Log activity
-                target_name = checkout.checkout_to_employee_name or checkout.checkout_to_location_name or ''
-                log_asset_activity(
-                    action='Checkout',
-                    asset=asset,
-                    target_id=checkout.checkout_to_employee_id or checkout.checkout_to_location_id,
-                    target_name=target_name,
-                    notes=f"Asset '{asset.name}' checked out to {target_name}"
-                )
 
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -1072,17 +1057,6 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
                 # Update asset status if valid
                 asset.status = status_id
                 asset.save(update_fields=["status"])
-
-                # Log activity
-                checkout = checkin.asset_checkout
-                target_name = checkout.checkout_to_employee_name or checkout.checkout_to_location_name or ''
-                log_asset_activity(
-                    action='Checkin',
-                    asset=asset,
-                    target_id=checkout.checkout_to_employee_id or checkout.checkout_to_location_id,
-                    target_name=target_name,
-                    notes=f"Asset '{asset.name}' checked in from {target_name}"
-                )
 
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -1188,8 +1162,6 @@ class ComponentCheckoutViewSet(viewsets.ModelViewSet):
         log_component_activity(
             action='Checkout',
             component=component,
-            target_id=checkout.asset.id if checkout.asset else None,
-            target_name=target_name,
             notes=f"Component '{component.name}' checked out to asset '{target_name}'"
         )
 
@@ -1206,8 +1178,6 @@ class ComponentCheckinViewSet(viewsets.ModelViewSet):
         log_component_activity(
             action='Checkin',
             component=component,
-            target_id=checkout.asset.id if checkout.asset else None,
-            target_name=target_name,
             notes=f"Component '{component.name}' checked in from asset '{target_name}'"
         )
 
