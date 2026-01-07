@@ -8,6 +8,7 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import DepreciationFilterModal from "../../components/Modals/DepreciationFilterModal";
 import Footer from "../../components/Footer";
 import MockupData from "../../data/mockData/reports/depreciation-mockup-data.json";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/reports/DepreciationReport.css";
 
@@ -47,7 +48,6 @@ const filterConfig = [
   },
 ];
 
-// TableHeader component to render the table header
 function TableHeader() {
   return (
     <tr>
@@ -107,9 +107,6 @@ function TableItem({ asset, onDeleteClick }) {
 
 export default function DepreciationReport() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
 
   // filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -167,23 +164,12 @@ export default function DepreciationReport() {
   const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
+  }, []);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "Depreciation_Report.xlsx");
+  };
 
   return (
     <>
@@ -227,29 +213,19 @@ export default function DepreciationReport() {
                 >
                   Filter
                 </button>
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
+                <div>
+                  <MediumButtons type="export" onClick={handleExport} />
                 </div>
               </section>
             </section>
 
             {/* Table Structure */}
             <section className="depreciation-table-section">
-              {exportToggle && (
-                <section className="export-button-section" ref={exportRef}>
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
               <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
+                  <thead>
+                    <TableHeader />
+                  </thead>
+                  <tbody>
                   {paginatedDepreciation.length > 0 ? (
                     paginatedDepreciation.map((asset, index) => (
                       <TableItem
@@ -266,7 +242,7 @@ export default function DepreciationReport() {
                     </tr>
                   )}
                 </tbody>
-              </table>
+                </table>
             </section>
 
             {/* Table pagination */}

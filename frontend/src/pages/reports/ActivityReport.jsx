@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import { exportToExcel } from "../../utils/exportToExcel";
 import MockupData from "../../data/mockData/reports/activity-report-mockup-data.json";
 import ActivityFilterModal from "../../components/Modals/ActivityFilterModal";
 import Pagination from "../../components/Pagination";
@@ -119,9 +120,6 @@ function TableItem({ activity }) {
 }
 
 export default function ActivityReport() {
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
   const handleToggleFilter = () => setIsFilterModalOpen(true);
 
   // filter modal state
@@ -172,23 +170,12 @@ export default function ActivityReport() {
   const paginatedActivity = filteredData.slice(startIndex, endIndex);
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
+  }, []);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "Activity_Report.xlsx");
+  };
 
   return (
     <section className="page-layout-with-table">
@@ -219,24 +206,14 @@ export default function ActivityReport() {
                 onApplyFilter={handleApplyFilter}
                 initialFilters={appliedFilters}
               />
-              <div ref={toggleRef}>
-                <MediumButtons
-                  type="export"
-                  onClick={() => setExportToggle(!exportToggle)}
-                />
+              <div>
+                <MediumButtons type="export" onClick={handleExport} />
               </div>
             </section>
           </section>
 
           {/* Table Structure */}
           <section className="activity-report-table-section">
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
             <table>
               <thead>
                 <TableHeader />

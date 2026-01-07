@@ -1,4 +1,3 @@
-/* Global styles for the application */
 a,
 a:hover,
 a:focus,
@@ -255,7 +254,7 @@ button:disabled {
     flex-direction: column;
     justify-content: start;
     width: 100%;
-    max-width: 1200px;
+    max-width: 5000px;
     margin: 0 auto;
     padding: 65px 20px 40px 20px;
     overflow: auto;
@@ -294,8 +293,6 @@ footer {
         height: 100%;
         overflow-y: auto;
         background-color: white;
-
-        /* Prevent affecting the parent when scrolling. */
         overscroll-behavior: contain;
       }
 
@@ -313,9 +310,7 @@ footer {
           border-top: 1px solid #cccccc;
           border-bottom: 1px solid #cccccc;
           background-color: #f0f1f2;
-
           height: 50px;
-
           position: sticky;
           top: 0;
           z-index: 1;
@@ -327,11 +322,9 @@ footer {
           font-size: 0.8125rem;
           color: var(--text-color);
           border-bottom: 1px solid #cccccc;
-
           height: 50px;
         }
 
-        /* Ensure empty-state row spans correctly across all columns */
         td.no-data-message {
           display: table-cell !important;
           width: 100% !important;

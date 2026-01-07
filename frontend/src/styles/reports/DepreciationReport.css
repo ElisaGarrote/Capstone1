@@ -17,21 +17,10 @@
       border-top: 1px solid #cccccc;
       border-bottom: 1px solid #cccccc;
       background-color: #f0f1f2;
-
       height: 50px;
-
       position: sticky;
       top: 0;
       z-index: 1;
-    }
-
-    th:first-child {
-      width: 200px;
-    }
-
-    th:nth-child(2) {
-      min-width: 200px;
-      max-width: fit-content;
     }
 
     td {
@@ -40,7 +29,6 @@
       font-size: 0.8125rem;
       color: var(--text-color);
       border-bottom: 1px solid #cccccc;
-
       height: 50px;
     }
 
@@ -61,15 +49,15 @@
   }
 }
 
-.page-layout-with-table .title-page-section {
-  margin-bottom: 8px;
+.depreciation-table-section table th:nth-last-child(1),
+.depreciation-table-section table th:nth-last-child(2),
+.depreciation-table-section table th:nth-last-child(3),
+.depreciation-table-section table td:nth-last-child(1),
+.depreciation-table-section table td:nth-last-child(2),
+.depreciation-table-section table td:nth-last-child(3) {
+  text-align: left !important;
 }
 
-.page-layout-with-table .title-page-section h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.page-layout-with-table .title-underline {
-  display: none;
+.depreciation-table-section .icon-td {
+  justify-content: flex-start;
 }

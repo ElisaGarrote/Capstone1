@@ -11,13 +11,13 @@ import ActionButtons from "../../../components/ActionButtons";
 import Pagination from "../../../components/Pagination";
 import DefaultImage from "../../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../../utils/exportToExcel";
-import "../../../styles/Assets/Assets.css";
-import "../../../styles/components/Components.css";
-import "../../../styles/more/supplier/SupplierDetails.css";
 import ConfirmationModal from "../../../components/Modals/DeleteModal";
 import AssetFilterModal from "../../../components/Modals/AssetFilterModal";
 import Alert from "../../../components/Alert";
 import ComponentFilterModal from "../../../components/Modals/ComponentFilterModal";
+import "../../../styles/Assets/Assets.css";
+import "../../../styles/components/Components.css";
+import "../../../styles/more/supplier/SupplierDetails.css";
 
 function SupplierDetails() {
   const location = useLocation();
@@ -52,8 +52,6 @@ function SupplierDetails() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [assetSuccessMessage, setAssetSuccessMessage] = useState("");
-
-  // Retrieve the "supplier" data value passed from the navigation state.
   const supplierDetails = location.state?.supplier;
 
   if (!supplierDetails) {
@@ -67,12 +65,7 @@ function SupplierDetails() {
       </>
     );
   }
-
-  // Get tabs configuration from data
   const tabs = getSupplierTabs();
-
-  // Assets data and pagination for the Assets tab
-
   const applyAssetFilters = (data, filters) => {
     let filtered = [...data];
 

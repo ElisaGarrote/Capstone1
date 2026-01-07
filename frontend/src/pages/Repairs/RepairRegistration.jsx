@@ -13,20 +13,17 @@ import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.jso
 
 const RepairRegistration = () => {
   const navigate = useNavigate();
-
   const location = useLocation();
   const editState = location.state?.repair || null;
   const isEdit = !!editState;
 
   const [attachmentFiles, setAttachmentFiles] = useState([]);
+  const [selectedImageForModal, setSelectedImageForModal] = useState(null);
   const [importFile, setImportFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-
-  // Extract unique values from mock data
   const assets = Array.from(new Set(MockupData.map((item) => item.asset)));
   const suppliers = Array.from(new Set(MockupData.map((item) => item.supplier)));
   const repairTypes = Array.from(new Set(MockupData.map((item) => item.type)));
-
   const {
     register,
     handleSubmit,
@@ -57,7 +54,6 @@ const RepairRegistration = () => {
       setValue("endDate", editState.end_date || "");
       setValue("cost", editState.cost || "");
       setValue("notes", editState.notes || "");
-      // setAttachmentFiles(editState.attachments || []);
     }
   }, [editState, setValue]);
 
@@ -304,6 +300,23 @@ const RepairRegistration = () => {
     });
 
     setAttachmentFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  const isImageFile = (file) => {
+    return file && file.type && file.type.startsWith("image/");
+  };
+
+  const handleImageClick = (file) => {
+    if (!isImageFile(file)) return;
+    const url = URL.createObjectURL(file);
+    setSelectedImageForModal({ url, name: file.name });
+  };
+
+  const closeImageModal = () => {
+    if (selectedImageForModal && selectedImageForModal.url) {
+      URL.revokeObjectURL(selectedImageForModal.url);
+    }
+    setSelectedImageForModal(null);
   };
 
   const removeFile = (index) => {
@@ -565,7 +578,17 @@ const RepairRegistration = () => {
                 <div className="upload-right">
                   {attachmentFiles.map((file, index) => (
                     <div className="file-uploaded" key={index}>
-                      <span title={file.name}>{file.name}</span>
+                      {isImageFile(file) ? (
+                        <button
+                          type="button"
+                          className="file-name-btn"
+                          onClick={() => handleImageClick(file)}
+                        >
+                          <span title={file.name}>{file.name}</span>
+                        </button>
+                      ) : (
+                        <span title={file.name}>{file.name}</span>
+                      )}
                       <button type="button" onClick={() => removeFile(index)}>
                         <img src={CloseIcon} alt="Remove" />
                       </button>
@@ -574,6 +597,63 @@ const RepairRegistration = () => {
                 </div>
               </div>
             </fieldset>
+
+            {selectedImageForModal && (
+              <div
+                className="image-modal-overlay"
+                onClick={closeImageModal}
+                style={{
+                  position: "fixed",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "rgba(0,0,0,0.6)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 9999,
+                }}
+              >
+                <div
+                  className="image-modal-content"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    background: "#fff",
+                    padding: "18px",
+                    borderRadius: "8px",
+                    width: "600px",
+                    maxWidth: "80%",
+                    maxHeight: "70vh",
+                    boxSizing: "border-box",
+                    position: "relative",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={closeImageModal}
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      right: "10px",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                    }}
+                  >
+                    <img src={CloseIcon} alt="Close" />
+                  </button>
+                  <div style={{ paddingTop: "28px", textAlign: "center" }}>
+                    <img
+                      src={selectedImageForModal.url}
+                      alt={selectedImageForModal.name}
+                      style={{ maxHeight: "60vh", maxWidth: "100%" }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Submit */}
             <button type="submit" className="primary-button" disabled={!isValid}>

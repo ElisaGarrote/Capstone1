@@ -5,6 +5,7 @@ import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
+import Select from 'react-select';
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
@@ -17,6 +18,7 @@ const ComponentRegistration = () => {
   const isEdit = !!editState;
 
   const [attachmentFile, setAttachmentFile] = useState(null);
+  const [selectedImageForModal, setSelectedImageForModal] = useState(null);
 
   const {
     register,
@@ -29,10 +31,10 @@ const ComponentRegistration = () => {
     mode: "all",
     defaultValues: {
       componentName: editState?.name || "",
-      category: editState?.category || "",
-      manufacturer: editState?.manufacturer || "",
-      supplier: editState?.supplier || "",
-      location: editState?.location || "",
+      category: editState?.category ?? null,
+      manufacturer: editState?.manufacturer ?? null,
+      supplier: editState?.supplier ?? null,
+      location: editState?.location ?? null,
       modelNumber: editState?.model_number || "",
       orderNumber: editState?.order_number || "",
       purchaseCost: editState?.purchase_cost || "",
@@ -43,13 +45,45 @@ const ComponentRegistration = () => {
     },
   });
 
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      width: '100%',
+      minHeight: '48px',
+      height: '48px',
+      borderRadius: '25px',
+      fontSize: '0.875rem',
+      padding: '0 8px',
+      border: state.isFocused ? '1px solid #007bff' : '1px solid #ccc',
+      boxShadow: state.isFocused ? '0 0 0 1px #007bff' : 'none',
+      cursor: 'pointer',
+      '&:hover': { borderColor: '#007bff' },
+    }),
+    valueContainer: (provided) => ({ ...provided, height: '46px', padding: '0 8px' }),
+    input: (provided) => ({ ...provided, margin: 0, padding: 0 }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'block', backgroundColor: '#ccc', width: '1px', marginTop: '10px', marginBottom: '10px' }),
+    indicatorsContainer: (provided) => ({ ...provided, height: '46px' }),
+    container: (provided) => ({ ...provided, width: '100%' }),
+    menu: (provided) => ({ ...provided, zIndex: 9999, position: 'absolute', width: '100%', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? 'white' : '#333',
+      fontSize: '0.875rem',
+      padding: '10px 16px',
+      backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
+      cursor: 'pointer',
+    }),
+    singleValue: (provided) => ({ ...provided, color: '#333' }),
+    placeholder: (provided) => ({ ...provided, color: '#999' }),
+  };
+
   useEffect(() => {
     if (isEdit && editState) {
       setValue("componentName", editState.name || "");
-      setValue("category", editState.category || "");
-      setValue("manufacturer", editState.manufacturer || "");
-      setValue("supplier", editState.supplier || "");
-      setValue("location", editState.location || "");
+      setValue("category", editState.category ?? null);
+      setValue("manufacturer", editState.manufacturer ?? null);
+      setValue("supplier", editState.supplier ?? null);
+      setValue("location", editState.location ?? null);
       setValue("modelNumber", editState.model_number || "");
       setValue("orderNumber", editState.order_number || "");
       setValue("purchaseCost", editState.purchase_cost || "");
@@ -182,6 +216,21 @@ const ComponentRegistration = () => {
     }
   };
 
+  const handleImageClick = () => {
+    if (attachmentFile) {
+      const url = URL.createObjectURL(attachmentFile);
+      setSelectedImageForModal(url);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    if (selectedImageForModal) {
+      URL.revokeObjectURL(selectedImageForModal);
+      setSelectedImageForModal(null);
+    }
+    setAttachmentFile(null);
+  };
+
   const onSubmit = (data) => {
     console.log("Form submitted:", data, attachmentFile);
     navigate("/components");
@@ -229,17 +278,25 @@ const ComponentRegistration = () => {
                 Category<span className="required-asterisk">*</span>
               </label>
               <div className="select-with-button">
-                <select
-                  className={errors.category ? "input-error" : ""}
-                  {...register("category", { required: "Category is required" })}
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="category"
+                  control={control}
+                  rules={{ required: 'Category is required' }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="category"
+                      options={categories.map(c => ({ value: c, label: c }))}
+                      value={categories.map(c => ({ value: c, label: c })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Category"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                      className={errors.category ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -258,14 +315,23 @@ const ComponentRegistration = () => {
             <fieldset>
               <label htmlFor="manufacturer">Manufacturer</label>
               <div className="select-with-button">
-                <select {...register("manufacturer")}>
-                  <option value="">Select Manufacturer</option>
-                  {manufacturers.map((manufacturer) => (
-                    <option key={manufacturer} value={manufacturer}>
-                      {manufacturer}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="manufacturer"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="manufacturer"
+                      options={manufacturers.map(m => ({ value: m, label: m }))}
+                      value={manufacturers.map(m => ({ value: m, label: m })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Manufacturer"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -281,14 +347,23 @@ const ComponentRegistration = () => {
             <fieldset>
               <label htmlFor="supplier">Supplier</label>
               <div className="select-with-button">
-                <select {...register("supplier")}>
-                  <option value="">Select Supplier</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier} value={supplier}>
-                      {supplier}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="supplier"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="supplier"
+                      options={suppliers.map(s => ({ value: s, label: s }))}
+                      value={suppliers.map(s => ({ value: s, label: s })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Supplier"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -304,14 +379,23 @@ const ComponentRegistration = () => {
             <fieldset>
               <label htmlFor="location">Location</label>
               <div className="select-with-button">
-                <select {...register("location")}>
-                  <option value="">Select Location</option>
-                  {locations.map((locationOption) => (
-                    <option key={locationOption} value={locationOption}>
-                      {locationOption}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="location"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="location"
+                      options={locations.map(l => ({ value: l, label: l }))}
+                      value={locations.map(l => ({ value: l, label: l })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Location"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -424,31 +508,39 @@ const ComponentRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label>Image</label>
-              {attachmentFile ? (
-                <div className="image-selected">
-                  <img
-                    src={URL.createObjectURL(attachmentFile)}
-                    alt="Selected icon"
-                  />
-                  <button type="button" onClick={() => setAttachmentFile(null)}>
-                    <img src={CloseIcon} alt="Remove" />
-                  </button>
+              <label>Image Upload</label>
+              <div className="attachments-wrapper">
+                <div className="upload-left">
+                  <label htmlFor="component-image" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="component-image"
+                      accept="image/png,image/jpeg"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  <small className="file-size-info">Maximum file size must be 5MB</small>
                 </div>
-              ) : (
-                <label className="upload-image-btn">
-                  Choose File
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    onChange={handleFileSelection}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              )}
-              <small className="file-size-info">
-                Maximum file size must be 5MB
-              </small>
+
+                <div className="upload-right">
+                  {attachmentFile && (
+                    <div className="file-uploaded">
+                      <span
+                        title={attachmentFile.name}
+                        onClick={handleImageClick}
+                        style={{ cursor: 'pointer', textDecoration: 'underline', color: '#007bff' }}
+                      >
+                        {attachmentFile.name}
+                      </span>
+                      <button type="button" onClick={handleRemoveImage}>
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </fieldset>
 
             {/* Submit */}
@@ -496,6 +588,78 @@ const ComponentRegistration = () => {
         fields={locationFields}
         type="location"
       />
+
+      {/* Image Preview Modal */}
+      {selectedImageForModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            URL.revokeObjectURL(selectedImageForModal);
+            setSelectedImageForModal(null);
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '40px 20px 20px 20px',
+              width: '600px',
+              maxWidth: '80%',
+              maxHeight: '70vh',
+              overflow: 'auto',
+              position: 'relative'
+            }}
+          >
+            <button
+              onClick={() => {
+                URL.revokeObjectURL(selectedImageForModal);
+                setSelectedImageForModal(null);
+              }}
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                background: 'none',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: '#333',
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+            <img
+              src={selectedImageForModal}
+              alt="Preview"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '60vh',
+                display: 'block',
+                margin: '0 auto'
+              }}
+            />
+          </div>
+        </div>
+      )}
 
 
     </>

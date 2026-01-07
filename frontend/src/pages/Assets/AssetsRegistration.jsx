@@ -70,20 +70,15 @@ export default function AssetsRegistration() {
   });
 
   const [attachmentFiles, setAttachmentFiles] = useState([]);
-
+  const [selectedImageForModal, setSelectedImageForModal] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-
-  // Modal states for adding new entries
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
-
-  // Import file state
   const [importFile, setImportFile] = useState(null);
 
   useEffect(() => {
-    // Only fetch the next asset ID if we're creating a new asset (no ID provided)
     if (!id) {
       const fetchNextAssetId = async () => {
         try {
@@ -112,10 +107,6 @@ export default function AssetsRegistration() {
       try {
         let assetContextsData = {};
         let contextsData = {};
-
-        // Try to fetch real contexts; fall back to mock data if the backend
-        // is unavailable or returns empty arrays so the dropdowns always
-        // have usable options in demo mode.
         try {
           [assetContextsData, contextsData] = await Promise.all([
             assetsService.fetchAssetContexts(),
@@ -133,7 +124,6 @@ export default function AssetsRegistration() {
         setStatuses(apiStatuses.length ? apiStatuses : StatusMockData);
         setSuppliers(apiSuppliers.length ? apiSuppliers : SupplierMockData);
 
-        // If ID is present, fetch the asset details
         if (id) {
           try {
             const assetData = await assetsService.fetchAssetById(id);
@@ -144,8 +134,6 @@ export default function AssetsRegistration() {
 
             setAsset(assetData);
             console.log("Asset Details:", assetData);
-
-            // Set form values from retrieved asset data
             setValue('assetId', assetData.displayed_id);
             setValue('product', assetData.product_id || '');
             setValue('status', assetData.status_id || '');
@@ -180,7 +168,6 @@ export default function AssetsRegistration() {
     initialize();
   }, [id, setValue]);
 
-  // Handle cloned asset name from location state
   useEffect(() => {
     console.log('AssetsRegistration location.state:', location.state);
     if (location.state?.clonedAssetName && !id) {
@@ -208,6 +195,21 @@ export default function AssetsRegistration() {
     setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const isImageFile = (file) => {
+    const imageExtensions = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    return imageExtensions.includes(file.type);
+  };
+
+  const handleImageClick = (file) => {
+    if (isImageFile(file)) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImageForModal(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleImportFile = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -217,12 +219,9 @@ export default function AssetsRegistration() {
         return;
       }
       setImportFile(file);
-      // Here you would typically process the Excel file
       console.log("Import file selected:", file.name);
     }
   };
-
-  // Modal field configurations
   const statusFields = [
     {
       name: 'name',
@@ -289,13 +288,9 @@ export default function AssetsRegistration() {
       validation: { required: 'Location Name is required' }
     }
   ];
-
-  // Modal save handlers
   const handleSaveStatus = async (data) => {
     try {
-      // Here you would call the API to create a new status
       console.log('Creating status:', data);
-      // For now, just add to local state
       const newStatus = {
         id: statuses.length + 1,
         name: data.name,
@@ -310,9 +305,7 @@ export default function AssetsRegistration() {
 
   const handleSaveSupplier = async (data) => {
     try {
-      // Here you would call the API to create a new supplier
       console.log('Creating supplier:', data);
-      // For now, just add to local state
       const newSupplier = {
         id: suppliers.length + 1,
         name: data.name,
@@ -328,9 +321,7 @@ export default function AssetsRegistration() {
 
   const handleSaveLocation = async (data) => {
     try {
-      // Here you would call the API to create a new location
       console.log('Creating location:', data);
-      // For now, just add to local state
       const newLocation = {
         id: locations.length + 1,
         name: data.name
@@ -345,8 +336,6 @@ export default function AssetsRegistration() {
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-
-      // Append asset data to FormData object
       formData.append('displayed_id', data.assetId);
       formData.append('product', data.product || '');
       formData.append('status', data.status || '');
@@ -362,12 +351,10 @@ export default function AssetsRegistration() {
       formData.append('schedule_audit_date', data.scheduleAuditDate || '');
       formData.append('notes', data.notes || '');
 
-      // Handle image upload
       if (selectedImage) {
         formData.append('image', selectedImage);
       }
 
-      // Handle image removal
       if (removeImage) {
         formData.append('remove_image', 'true');
       }
@@ -380,10 +367,8 @@ export default function AssetsRegistration() {
       let result;
 
       if (id) {
-        // Update existing asset
         result = await assetsService.updateAsset(id, formData);
       } else {
-        // Create new asset
         result = await assetsService.createAsset(formData);
       }
 
@@ -392,8 +377,6 @@ export default function AssetsRegistration() {
       }
 
       console.log(`${id ? 'Updated' : 'Created'} asset:`, result);
-
-      // Navigate to assets page with success message
       navigate('/assets', {
         state: {
           successMessage: `Asset has been ${id ? 'updated' : 'created'} successfully!`
@@ -405,25 +388,17 @@ export default function AssetsRegistration() {
     }
   };
 
-
-
-  // Add this function to handle product selection
   const handleProductChange = async (event) => {
     const productId = event.target.value;
     if (productId) {
       try {
-        // Fetch the product defaults
         const productDefaults = await assetsService.fetchProductDefaults(productId);
 
         if (productDefaults) {
           console.log("Product defaults:", productDefaults);
-
-          // Set purchase cost if available
           if (productDefaults.default_purchase_cost) {
             setValue('purchaseCost', productDefaults.default_purchase_cost);
           }
-
-          // Set supplier if available
           if (productDefaults.default_supplier_id) {
             setValue('supplier', productDefaults.default_supplier_id);
           }
@@ -710,7 +685,7 @@ export default function AssetsRegistration() {
                     <input
                       type="file"
                       id="attachments"
-                      accept="image/*,.pdf,.doc,.docx"
+                      accept="image/*"
                       onChange={handleFileSelection}
                       style={{ display: "none" }}
                       multiple
@@ -725,7 +700,13 @@ export default function AssetsRegistration() {
                 <div className="upload-right">
                   {attachmentFiles.map((file, index) => (
                     <div className="file-uploaded" key={index}>
-                      <span title={file.name}>{file.name}</span>
+                      <span 
+                        title={file.name}
+                        onClick={() => handleImageClick(file)}
+                        style={isImageFile(file) ? { cursor: 'pointer', textDecoration: 'underline', color: '#007bff' } : {}}
+                      >
+                        {file.name}
+                      </span>
                       <button type="button" onClick={() => removeFile(index)}>
                         <img src={CloseIcon} alt="Remove" />
                       </button>
@@ -769,6 +750,72 @@ export default function AssetsRegistration() {
         fields={locationFields}
         type="location"
       />
+
+      {/* Image Preview Modal */}
+      {selectedImageForModal && (
+        <div 
+          className="modal-overlay"
+          onClick={() => setSelectedImageForModal(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999
+          }}
+        >
+          <div 
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '40px 20px 20px 20px',
+              width: '600px',
+              maxWidth: '80%',
+              maxHeight: '70vh',
+              overflow: 'auto',
+              position: 'relative'
+            }}
+          >
+            <button
+              onClick={() => setSelectedImageForModal(null)}
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                background: 'none',
+                border: 'none',
+                fontSize: '24px',
+                cursor: 'pointer',
+                color: '#333',
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              ✕
+            </button>
+            <img 
+              src={selectedImageForModal} 
+              alt="Preview" 
+              style={{
+                maxWidth: '100%',
+                maxHeight: '60vh',
+                display: 'block',
+                margin: '0 auto'
+              }}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }

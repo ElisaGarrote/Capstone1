@@ -54,30 +54,33 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
 
   const columnTitles = getColumnTitles();
 
+  // Force left alignment - overrides GlobalTableStyles.css
+  const cellStyle = { textAlign: 'left', paddingLeft: '0.75rem', paddingRight: '0.75rem' };
+
   const renderTableContent = () => {
     if (title === 'Low Stock') {
       return (
         <>
           <thead>
             <tr>
-              <th>{columnTitles.category}</th>
-              <th>{columnTitles.minimum}</th>
-              <th>{columnTitles.available}</th>
+              <th style={cellStyle}>{columnTitles.category}</th>
+              <th style={cellStyle}>{columnTitles.minimum}</th>
+              <th style={cellStyle}>{columnTitles.available}</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item, index) => (
               <tr key={index}>
-                <td>
+                <td style={cellStyle}>
                   <div className="category-info">
                     {getCategoryIcon(item.category)}
                     <span className="category-name">{item.category}</span>
                   </div>
                 </td>
-                <td>
+                <td style={cellStyle}>
                   <span className="quantity">{item.minimumQuantity}</span>
                 </td>
-                <td>
+                <td style={cellStyle}>
                   <span className="available">{item.available}</span>
                 </td>
               </tr>
@@ -91,34 +94,34 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
       <>
         <thead>
           <tr>
-            <th>{columnTitles.asset}</th>
-            <th>{columnTitles.assignee}</th>
-            <th className="date-header">{columnTitles.date}</th>
+            <th style={cellStyle}>{columnTitles.asset}</th>
+            <th style={cellStyle}>{columnTitles.assignee}</th>
+            <th style={cellStyle}>{columnTitles.date}</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item, index) => (
             <tr key={index}>
-              <td>
+              <td style={cellStyle}>
                 <div className="asset-info">
                   <HiOutlineTag className="asset-icon" />
                   <span>{item.assetId} - {item.assetName}</span>
                 </div>
               </td>
-              <td>
+              <td style={cellStyle}>
                 {item.location ? (
-                  <div className="location-info">
-                    <IoLocationOutline style={{ color: '#0D6EFD' }} />
-                    <span className="location-name">{item.location}</span>
+                  <div className="location-info" style={{ cursor: 'default' }}>
+                    <IoLocationOutline style={{ color: '#0C0C0C', width: '1rem', height: '1rem' }} />
+                    <span style={{ color: '#0C0C0C', fontWeight: 400, textDecoration: 'none' }}>{item.location}</span>
                   </div>
                 ) : (
-                  <div className="user-info">
-                    <RxPerson className="user-icon" />
-                    <span className="user-name">{item.checkedOutTo}</span>
+                  <div className="user-info" style={{ cursor: 'default' }}>
+                    <RxPerson style={{ color: '#0C0C0C', width: '1rem', height: '1rem' }} />
+                    <span style={{ color: '#0C0C0C', fontWeight: 400, textDecoration: 'none' }}>{item.checkedOutTo}</span>
                   </div>
                 )}
               </td>
-              <td className="date-cell">{item.expectedReturnDate}</td>
+              <td style={{ ...cellStyle, color: '#0C0C0C' }}>{item.expectedReturnDate}</td>
             </tr>
           ))}
         </tbody>

@@ -9,12 +9,12 @@ import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import RepairFilterModal from "../../components/Modals/RepairFilterModal";
 import Alert from "../../components/Alert";
+import Status from "../../components/Status";
 import Footer from "../../components/Footer";
 import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/Repairs/Repairs.css";
 
-// TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
@@ -25,28 +25,19 @@ function TableHeader({ allSelected, onHeaderChange }) {
           onChange={onHeaderChange}
         />
       </th>
-      <th>ASSET ID</th>
-      <th>ASSET NAME</th>
-      <th>REPAIR TYPE</th>
-      <th>REPAIR NAME</th>
+      <th>ASSET</th>
+      <th>TYPE</th>
+      <th>NAME</th>
       <th>START DATE</th>
       <th>END DATE</th>
       <th>COST</th>
-      <th>SUPPLIER</th>
-      <th>NOTES</th>
-      <th>ATTACHMENT</th>
+      <th>STATUS</th>
       <th>ACTION</th>
     </tr>
   );
 }
 
-// TableItem component to render each repair row
 function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick }) {
-  const assetLabel = repair.asset || "";
-  const assetParts = assetLabel.split(" ");
-  const assetId = assetParts.length > 1 ? assetParts[assetParts.length - 1] : "-";
-  const assetName = assetParts.length > 1 ? assetParts.slice(0, -1).join(" ") : assetLabel;
-
   return (
     <tr>
       <td>
@@ -56,16 +47,18 @@ function TableItem({ repair, isSelected, onRowChange, onDeleteClick, onViewClick
           onChange={(e) => onRowChange(repair.id, e.target.checked)}
         />
       </td>
-      <td>{assetId}</td>
-      <td>{assetName}</td>
-      <td>{repair.type}</td>
-      <td>{repair.name}</td>
-      <td>{repair.start_date}</td>
+      <td>{repair.asset || "-"}</td>
+      <td>{repair.type || "-"}</td>
+      <td>{repair.name || "-"}</td>
+      <td>{repair.start_date || "-"}</td>
       <td>{repair.end_date || "N/A"}</td>
-      <td>{repair.cost}</td>
-      <td>{repair.supplier || "N/A"}</td>
-      <td>{repair.notes || "N/A"}</td>
-      <td>{repair.attachments?.length ? `${repair.attachments.length} file(s)` : "N/A"}</td>
+      <td>{repair.cost || "-"}</td>
+      <td>
+        <Status 
+          type={repair.statusType || "pending"} 
+          name={repair.status_name || "Pending"} 
+        />
+      </td>
       <td>
         <ActionButtons
           showEdit
@@ -162,11 +155,9 @@ export default function AssetRepairs() {
   const confirmDelete = () => {
     if (deleteTarget) {
       console.log("Deleting single id:", deleteTarget);
-      // remove from mock data / API call
     } else {
       console.log("Deleting multiple ids:", selectedIds);
-      // remove multiple
-      setSelectedIds([]); // clear selection
+      setSelectedIds([]);
     }
     closeDeleteModal();
   };
@@ -183,8 +174,6 @@ export default function AssetRepairs() {
         (assetLabel && assetLabel.includes(displayedId))
       );
     });
-
-    // Fallback: for mock data, try matching by id so View always opens an Asset view page
     if (!matchedAsset) {
       matchedAsset = AssetsMockupData.find((asset) => asset.id === repair.id);
     }
@@ -192,7 +181,6 @@ export default function AssetRepairs() {
     if (matchedAsset) {
       navigate(`/assets/view/${matchedAsset.id}`);
     } else {
-      // No linked asset found in mock data; surface a friendly message
       setErrorMessage("No linked asset found for this repair in mock data.");
       setTimeout(() => setErrorMessage(""), 4000);
     }
@@ -355,7 +343,7 @@ export default function AssetRepairs() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={12} className="no-data-message">
+                      <td colSpan={9} className="no-data-message">
                         No Repairs Found.
                       </td>
                     </tr>

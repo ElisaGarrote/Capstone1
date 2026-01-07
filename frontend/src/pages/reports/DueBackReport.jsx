@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import { exportToExcel } from "../../utils/exportToExcel";
 import MockupData from "../../data/mockData/reports/due-for-checkin-mockup-data.json";
 import Pagination from "../../components/Pagination";
 import DueBackFilterModal from "../../components/Modals/DueBackFilterModal";
@@ -38,11 +39,9 @@ function TableHeader() {
   );
 }
 
-// TableItem component to render each ticket row
 function TableItem({ asset }) {
   const [currentDate, setCurrentDate] = useState("");
 
-  // Handle current date
   useEffect(() => {
     const today = new Date();
     const options = {
@@ -75,7 +74,7 @@ function TableItem({ asset }) {
         </div>
       </td>
       <td>
-        <div className="icon-td">
+        <div className="icon-td" style={{ justifyContent: 'flex-start' }}>
           <RxPerson className="user-icon" />
           <span>{asset.checked_out_to}</span>
         </div>
@@ -106,14 +105,10 @@ function TableItem({ asset }) {
 
 export default function DueBackReport() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
   const handleToggleFilter = () => {
     setIsFilterModalOpen(true);
   };
 
-  // filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [filteredData, setFilteredData] = useState(MockupData);
@@ -151,23 +146,12 @@ export default function DueBackReport() {
   const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
+  }, []);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "DueForCheckin_Report.xlsx");
+  };
 
   return (
     <>
@@ -203,24 +187,14 @@ export default function DueBackReport() {
                   onApplyFilter={handleApplyFilter}
                   initialFilters={appliedFilters}
                 />
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
+                <div>
+                  <MediumButtons type="export" onClick={handleExport} />
                 </div>
               </section>
             </section>
 
             {/* Table Structure */}
             <section className="due-back-report-table-section">
-              {exportToggle && (
-                <section className="export-button-section" ref={exportRef}>
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
               <table>
                 <thead>
                   <TableHeader />

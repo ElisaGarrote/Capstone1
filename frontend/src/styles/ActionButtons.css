@@ -111,10 +111,10 @@
 .action-button.disabled {
   background-color: var(--disabled-color) !important;
   cursor: not-allowed;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .action-button:disabled:hover,
 .action-button.disabled:hover {
-  background-color: inherit !important;
+  background-color: var(--disabled-color) !important;
 }

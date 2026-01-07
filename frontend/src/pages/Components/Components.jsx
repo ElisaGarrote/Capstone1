@@ -82,8 +82,10 @@ function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick,
       {/* Check-out / Check-in Column */}
       <td>
         <ActionButtons
-          showCheckout={asset.showCheckout}
-          showCheckin={asset.showCheckin}
+          showCheckout={true}
+          showCheckin={true}
+          disableCheckout={asset.disableCheckout}
+          disableCheckin={asset.disableCheckin}
           onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
           onCheckinClick={() => onCheckInOut(asset, 'checkin')}
         />
@@ -111,11 +113,9 @@ export default function Assets() {
     MockupData.map((asset) => {
       const available = asset.available_quantity ?? 0;
       const checkedOut = asset.checked_out_quantity ?? 0;
-
-      const showCheckout = available > 0;
-      const showCheckin = checkedOut > 0;
-
-      return { ...asset, showCheckout, showCheckin };
+      const disableCheckout = available <= 0;
+      const disableCheckin = checkedOut <= 0;
+      return { ...asset, disableCheckout, disableCheckin };
     })
   );
 
@@ -132,20 +132,15 @@ export default function Assets() {
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+  const [pageSize, setPageSize] = useState(5);
 
   // selection state
   const [selectedIds, setSelectedIds] = useState([]);
-
-  // Helper to normalise date strings (YYYY-MM-DD) for comparison
   const toDate = (value) => {
     if (!value) return null;
     const d = new Date(value);
-    // Guard against invalid dates from bad mock data
     return Number.isNaN(d.getTime()) ? null : d;
   };
-
-  // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...baseData];
 
@@ -193,13 +188,6 @@ export default function Assets() {
         return true;
       });
     }
-
-    // Due for Check-in range
-    // NOTE: components list does not have a direct "due for check-in" field.
-    // For now, we treat this as a no-op so the UI remains consistent
-    // and can be wired to real data once available.
-
-    // Created At range (front-end only; not present in current mock data)
     const createdFrom = toDate(filters.createdAtFrom);
     const createdTo = toDate(filters.createdAtTo);
     if (createdFrom || createdTo) {
@@ -211,8 +199,6 @@ export default function Assets() {
         return true;
       });
     }
-
-    // Updated At range (front-end only; not present in current mock data)
     const updatedFrom = toDate(filters.updatedAtFrom);
     const updatedTo = toDate(filters.updatedAtTo);
     if (updatedFrom || updatedTo) {
@@ -228,7 +214,6 @@ export default function Assets() {
     return filtered;
   };
 
-  // Combine modal filters and search term
   const applyFiltersAndSearch = (filters, term) => {
     let filtered = applyFilters(filters || {});
 
@@ -246,15 +231,13 @@ export default function Assets() {
     return filtered;
   };
 
-  // Handle filter apply
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
     const filtered = applyFiltersAndSearch(filters, searchTerm);
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
-  // Handle search input
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
@@ -312,11 +295,9 @@ export default function Assets() {
   const confirmDelete = () => {
     if (deleteTarget) {
       console.log("Deleting single id:", deleteTarget);
-      // remove from mock data / API call
     } else {
       console.log("Deleting multiple ids:", selectedIds);
-      // remove multiple
-      setSelectedIds([]); // clear selection
+      setSelectedIds([]);
     }
     closeDeleteModal();
   };
@@ -349,7 +330,6 @@ export default function Assets() {
   };
 
   const handleCheckInOut = (asset, action) => {
-    // Build minimal mock item data expected by ComponentCheckout/ComponentCheckin
     const available_quantity = asset.available_quantity ?? 10;
     const remaining_quantity = asset.remaining_quantity ?? available_quantity;
 
