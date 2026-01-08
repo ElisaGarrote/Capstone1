@@ -305,18 +305,28 @@ def get_manufacturer_names():
         cache.set(key, result, LIST_CACHE_TTL)
     return result
 
-def get_status_names():
-    key = f"contexts:list:statuses:names"
+def get_status_names(category=None):
+    """Fetch all status names, optionally filtered by category (asset or repair)."""
+    key = f"contexts:list:statuses:names:{category or 'all'}"
     cached = cache.get(key)
     if cached is not None:
         return cached
-    
-    result = fetch_resource_list('statuses/names', skip_api_prefix=True)
+
+    params = {'category': category} if category else None
+    result = fetch_resource_list('statuses/names', params=params, skip_api_prefix=True)
     if isinstance(result, dict) and result.get('warning'):
         cache.set(key, result, LIST_WARNING_TTL)
     else:
         cache.set(key, result, LIST_CACHE_TTL)
     return result
+
+def get_status_names_assets():
+    """Fetch status names for asset category only."""
+    return get_status_names(category='asset')
+
+def get_status_names_repairs():
+    """Fetch status names for repair category only."""
+    return get_status_names(category='repair')
 
 def get_depreciation_names():
     key = f"contexts:list:depreciations:names"

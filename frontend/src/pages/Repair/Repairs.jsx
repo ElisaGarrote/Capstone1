@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
-import AssetsMockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import Pagination from "../../components/Pagination";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
@@ -12,8 +10,8 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
-
 import "../../styles/Repairs/Repairs.css";
+import { fetchAllRepairs } from "../../services/assets-service";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -28,14 +26,12 @@ function TableHeader({ allSelected, onHeaderChange }) {
       </th>
       <th>ASSET ID</th>
       <th>ASSET NAME</th>
+      <th>STATUS</th>
       <th>REPAIR TYPE</th>
       <th>REPAIR NAME</th>
       <th>START DATE</th>
       <th>END DATE</th>
       <th>COST</th>
-      <th>SUPPLIER</th>
-      <th>NOTES</th>
-      <th>ATTACHMENT</th>
       <th>ACTION</th>
     </tr>
   );
@@ -49,13 +45,6 @@ function TableItem({
   onDeleteClick,
   onViewClick,
 }) {
-  const assetLabel = repair.asset || "";
-  const assetParts = assetLabel.split(" ");
-  const assetId =
-    assetParts.length > 1 ? assetParts[assetParts.length - 1] : "-";
-  const assetName =
-    assetParts.length > 1 ? assetParts.slice(0, -1).join(" ") : assetLabel;
-
   return (
     <tr>
       <td>
@@ -65,29 +54,22 @@ function TableItem({
           onChange={(e) => onRowChange(repair.id, e.target.checked)}
         />
       </td>
-      <td>{assetId}</td>
-      <td>{assetName}</td>
+      <td>{repair.asset_details?.asset_id}</td>
+      <td>{repair.asset_details?.name}</td>
+      <td>{repair.status_details?.name}</td>
       <td>{repair.type}</td>
       <td>{repair.name}</td>
       <td>{repair.start_date}</td>
       <td>{repair.end_date || "N/A"}</td>
       <td>{repair.cost}</td>
-      <td>{repair.supplier || "N/A"}</td>
-      <td>{repair.notes || "N/A"}</td>
-      <td>
-        {repair.attachments?.length
-          ? `${repair.attachments.length} file(s)`
-          : "N/A"}
-      </td>
       <td>
         <ActionButtons
+          showView
           showEdit
           showDelete
-          showView
+          onViewClick={() => onViewClick(repair.id)}
           editPath={`/repairs/edit/${repair.id}`}
-          editState={{ repair }}
           onDeleteClick={() => onDeleteClick(repair.id)}
-          onViewClick={() => onViewClick(repair)}
         />
       </td>
     </tr>
@@ -97,9 +79,15 @@ function TableItem({
 export default function AssetRepairs() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [repairs, setRepairs] = useState([]);
 
   // Filter and data state
-  const [filteredData, setFilteredData] = useState(MockupData);
+  const [filteredData, setFilteredData] = useState(repairs);
+
+  // Search state
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -129,6 +117,24 @@ export default function AssetRepairs() {
       }, 5000);
     }
   }, [location]);
+
+  // Fetch repairs on component mount
+  useEffect(() => {
+    const loadRepairs = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchAllRepairs();
+        setRepairs(data);
+        setFilteredData(data);
+      } catch (error) {
+        setErrorMessage("Failed to load repairs.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadRepairs();
+  }, []);
 
   // Paginate the data
   const startIndex = (currentPage - 1) * pageSize;
@@ -165,6 +171,7 @@ export default function AssetRepairs() {
     }
   };
 
+  // Delete logic
   const openDeleteModal = (id = null) => {
     setDeleteTarget(id);
     setDeleteModalOpen(true);
@@ -175,58 +182,53 @@ export default function AssetRepairs() {
     setDeleteTarget(null);
   };
 
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single id:", deleteTarget);
-      // remove from mock data / API call
+  const handleDeleteSuccess = (deletedIds) => {
+    if (Array.isArray(deletedIds)) {
+      // Bulk delete
+      setRepairs((prev) => prev.filter((r) => !deletedIds.includes(r.id)));
+      setFilteredData((prev) => prev.filter((r) => !deletedIds.includes(r.id)));
+      setSuccessMessage(`${deletedIds.length} repairs deleted successfully!`);
+      setSelectedIds([]);
     } else {
-      console.log("Deleting multiple ids:", selectedIds);
-      // remove multiple
-      setSelectedIds([]); // clear selection
+      // Single delete
+      setRepairs((prev) => prev.filter((r) => r.id !== deletedIds));
+      setFilteredData((prev) => prev.filter((r) => r.id !== deletedIds));
+      setSuccessMessage("Repair deleted successfully!");
     }
-    closeDeleteModal();
+    setTimeout(() => setSuccessMessage(""), 5000);
   };
 
-  const handleViewClick = (repair) => {
-    // Try to find the related asset based on the repair's asset field
-    const assetLabel = (repair.asset || "").toLowerCase();
+  const handleDeleteError = (error) => {
+    setErrorMessage(
+      error.response?.data?.detail || "Failed to delete repair(s)."
+    );
+    setTimeout(() => setErrorMessage(""), 5000);
+  };
 
-    let matchedAsset = AssetsMockupData.find((asset) => {
-      const name = (asset.name || "").toLowerCase();
-      const displayedId = (asset.displayed_id || "").toLowerCase();
-      return (
-        (assetLabel && name.includes(assetLabel)) ||
-        (assetLabel && assetLabel.includes(displayedId))
-      );
-    });
-
-    // Fallback: for mock data, try matching by id so View always opens an Asset view page
-    if (!matchedAsset) {
-      matchedAsset = AssetsMockupData.find((asset) => asset.id === repair.id);
-    }
-
-    if (matchedAsset) {
-      navigate(`/assets/view/${matchedAsset.id}`);
+  // View handler - navigates to the linked asset's view page
+  const handleViewClick = (repairId) => {
+    const repair = repairs.find((r) => r.id === repairId);
+    if (repair && repair.asset) {
+      navigate(`/assets/view/${repair.asset}`);
     } else {
-      // No linked asset found in mock data; surface a friendly message
-      setErrorMessage("No linked asset found for this repair in mock data.");
+      setErrorMessage("No linked asset found for this repair.");
       setTimeout(() => setErrorMessage(""), 4000);
     }
   };
 
   const handleExport = () => {
-    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    const dataToExport = filteredData.length > 0 ? filteredData : repairs;
     exportToExcel(dataToExport, "Repairs_Records.xlsx");
   };
 
   // Apply filters to data
   const applyFilters = (filters) => {
-    let filtered = [...MockupData];
+    let filtered = [...repairs];
 
     // Filter by Asset
     if (filters.asset && filters.asset.trim() !== "") {
       filtered = filtered.filter((repair) =>
-        repair.asset?.toLowerCase().includes(filters.asset.toLowerCase())
+        repair.asset_details?.name?.toLowerCase().includes(filters.asset.toLowerCase())
       );
     }
 
@@ -262,15 +264,33 @@ export default function AssetRepairs() {
     // Filter by Cost
     if (filters.cost && filters.cost.trim() !== "") {
       const cost = parseFloat(filters.cost);
-      filtered = filtered.filter((repair) => repair.cost === cost);
+      filtered = filtered.filter((repair) => parseFloat(repair.cost) === cost);
     }
 
-    // Filter by Status
+    // Filter by Status (compare status_details.id with filter value which is the status ID)
     if (filters.status) {
       filtered = filtered.filter(
+        (repair) => repair.status_details?.id === filters.status.value
+      );
+    }
+
+    return filtered;
+  };
+
+  // Combine modal filters and search term
+  const applyFiltersAndSearch = (filters, term) => {
+    let filtered = applyFilters(filters || {});
+
+    if (term && term.trim() !== "") {
+      const lowerTerm = term.toLowerCase();
+      filtered = filtered.filter(
         (repair) =>
-          repair.statusType?.toLowerCase() ===
-          filters.status.value?.toLowerCase()
+          (repair.name && repair.name.toLowerCase().includes(lowerTerm)) ||
+          (repair.type && repair.type.toLowerCase().includes(lowerTerm)) ||
+          (repair.asset_details?.name &&
+            repair.asset_details.name.toLowerCase().includes(lowerTerm)) ||
+          (repair.asset_details?.asset_id &&
+            repair.asset_details.asset_id.toLowerCase().includes(lowerTerm))
       );
     }
 
@@ -280,9 +300,18 @@ export default function AssetRepairs() {
   // Handle filter apply
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    const filtered = applyFilters(filters);
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // Handle search input
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
   };
 
   return (
@@ -292,9 +321,14 @@ export default function AssetRepairs() {
 
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
+          actionType={deleteTarget ? "delete" : "bulk-delete"}
+          entityType="repair"
+          targetId={deleteTarget}
+          targetIds={selectedIds}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 
@@ -319,10 +353,6 @@ export default function AssetRepairs() {
                 {selectedIds.length > 0 && (
                   <>
                     <MediumButtons
-                      type="edit"
-                      onClick={() => console.log("Bulk edit repairs")}
-                    />
-                    <MediumButtons
                       type="delete"
                       onClick={() => openDeleteModal(null)}
                     />
@@ -332,6 +362,8 @@ export default function AssetRepairs() {
                   type="search"
                   placeholder="Search..."
                   className="search"
+                  value={searchTerm}
+                  onChange={handleSearch}
                 />
                 <button
                   type="button"
@@ -363,7 +395,13 @@ export default function AssetRepairs() {
                   />
                 </thead>
                 <tbody>
-                  {paginatedRepairs.length > 0 ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={9} className="no-data-message">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : paginatedRepairs.length > 0 ? (
                     paginatedRepairs.map((repair) => (
                       <TableItem
                         key={repair.id}
@@ -376,7 +414,7 @@ export default function AssetRepairs() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={12} className="no-data-message">
+                      <td colSpan={9} className="no-data-message">
                         No Repairs Found.
                       </td>
                     </tr>

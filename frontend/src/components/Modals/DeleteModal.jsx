@@ -6,6 +6,8 @@ import {
   bulkDeleteProducts,
   deleteAsset,
   bulkDeleteAssets,
+  deleteRepair,
+  bulkDeleteRepairs,
 } from "../../services/assets-service";
 
 export default function ConfirmationModal({
@@ -33,6 +35,8 @@ export default function ConfirmationModal({
           await deleteProduct(targetId);
         } else if (entityType === "asset") {
           await deleteAsset(targetId);
+        } else if (entityType === "repair") {
+          await deleteRepair(targetId);
         }
         if (onSuccess) onSuccess(targetId);
       } else if (actionType === "bulk-delete" && targetIds?.length > 0) {
@@ -41,6 +45,8 @@ export default function ConfirmationModal({
           await bulkDeleteProducts({ ids: targetIds });
         } else if (entityType === "asset") {
           await bulkDeleteAssets({ ids: targetIds });
+        } else if (entityType === "repair") {
+          await bulkDeleteRepairs({ ids: targetIds });
         }
         if (onSuccess) onSuccess(targetIds);
       }

@@ -128,7 +128,7 @@ export async function bulkDeleteAssets(data) {
 }
 
 // GET product names and images for bulk edit
-export const fetchAssetNames = ({ids = [], search = "" }) => {
+export const fetchAssetNames = ({ids = [], search = "" } = {}) => {
   const params = {};
 
   if (ids.length) params.ids = ids.join(",");
@@ -238,6 +238,52 @@ export async function deleteComponent(id) {
 // Create audit schedule
 export async function createAuditSchedule(data) {
   const res = await assetsAxios.post("audit-schedule/", data);
+  return res.data;
+}
+
+/* ===============================
+              REPAIRS
+================================= */
+export async function fetchAllRepairs() {
+  const res = await assetsAxios.get("repairs/");
+  return res.data;
+}
+
+export async function fetchRepairById(id) {
+  const res = await assetsAxios.get(`repairs/${id}/`);
+  return res.data;
+}
+
+export async function createRepair(data) {
+  const res = await assetsAxios.post("repairs/", data);
+  return res.data;
+}
+
+export async function updateRepair(id, data) {
+  const res = await assetsAxios.put(`repairs/${id}/`, data);
+  return res.data;
+}
+
+export async function bulkEditRepairs(data, useFormData = false) {
+  const headers = useFormData
+    ? { "Content-Type": "multipart/form-data" }
+    : { "Content-Type": "application/json" };
+
+  const res = await assetsAxios.patch("repairs/bulk-edit/", data, { headers });
+  return res.data;
+}
+
+export async function deleteRepair(id) {
+  const res = await assetsAxios.delete(`repairs/${id}/`);
+  return res.data;
+}
+
+export async function bulkDeleteRepairs(data) {
+  const res = await assetsAxios.post("repairs/bulk-delete/", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
   return res.data;
 }
 

@@ -97,7 +97,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         # statuses
         status_map = cache.get("statuses:map")
         if not status_map:
-            statuses = get_status_names()
+            statuses = get_status_names_assets()
             status_map = {s['id']: s for s in statuses}
             cache.set("statuses:map", status_map, 300)
 
@@ -403,7 +403,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         # statuses
         status_map = cache.get("statuses:map")
         if not status_map:
-            statuses = get_status_names()
+            statuses = get_status_names_assets()
             status_map = {s['id']: s for s in statuses}
             cache.set("statuses:map", status_map, 300)
 
@@ -1264,14 +1264,95 @@ class AuditFileViewSet(viewsets.ModelViewSet):
         return AuditFile.objects.filter(is_deleted=False)
 
 class RepairViewSet(viewsets.ModelViewSet):
-    serializer_class = RepairSerializer
-
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    
     def get_queryset(self):
-        return Repair.objects.filter(is_deleted=False).order_by('-id')
+        return Repair.objects.filter(is_deleted=False).order_by('name')
+
+    def get_serializer_class(self):
+        # 1. Repairs Table (list)
+        if self.action == "list":
+            return RepairListSerializer
+
+        # 2. Repair View
+        if self.action == "retrieve":
+            return RepairInstanceSerializer
+        
+        # 3. Create, Update, Destroy
+        return RepairSerializer
+
+    def _build_repair_context_maps(self):
+        # assets
+        asset_map = cache.get("assets:map")
+        if not asset_map:
+            assets = Asset.objects.filter(is_deleted=False)
+            serialized = AssetNameSerializer(assets, many=True).data
+            asset_map = {a['id']: a for a in serialized}
+            cache.set("assets:map", asset_map, 300)
+
+        # suppliers
+        supplier_map = cache.get("suppliers:map")
+        if not supplier_map:
+            suppliers = get_supplier_names()
+            supplier_map = {s['id']: s for s in suppliers}
+            cache.set("suppliers:map", supplier_map, 300)
+
+        # statuses (repair category only)
+        status_map = cache.get("statuses:repair:map")
+        if not status_map:
+            statuses = get_status_names_repairs()
+            status_map = {s['id']: s for s in statuses}
+            cache.set("statuses:repair:map", status_map, 300)
+
+        return {
+            "asset_map": asset_map,
+            "supplier_map": supplier_map,
+            "status_map": status_map,
+        }
+
+   # Helper function for cached responses
+    def cached_response(self, cache_key, queryset, serializer_class, many=True, context=None):
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
+
+        context = context or {}
+        serializer = serializer_class(queryset, many=many, context=context)
+        cache.set(cache_key, serializer.data, 300)
+        return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        
+        context_maps = self._build_repair_context_maps()
+        return self.cached_response(
+            "repairs:list",
+            queryset,
+            self.get_serializer_class(),
+            many=True,
+            context={**context_maps, 'request': request}
+        )
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        context_maps = self._build_repair_context_maps()
+        cache_key = f"repairs:detail:{instance.id}"
+        return self.cached_response(
+            cache_key,
+            instance,
+            self.get_serializer_class(),
+            many=False,
+            context={**context_maps, 'request': request}
+        )
+    
+    def invalidate_repair_cache(self, repair_id):
+        cache.delete("repairs:list")
+        cache.delete(f"repairs:detail:{repair_id}")
 
     def perform_destroy(self, instance):
         instance.is_deleted = True
         instance.save()
+        self.invalidate_repair_cache(instance.id)
 
         # Log activity
         log_repair_activity(
@@ -1282,6 +1363,7 @@ class RepairViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         repair = serializer.save()
+        self.invalidate_repair_cache(repair.id)
 
         # Log activity
         log_repair_activity(
@@ -1292,6 +1374,7 @@ class RepairViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         repair = serializer.save()
+        self.invalidate_repair_cache(repair.id)
 
         # Log activity
         log_repair_activity(
@@ -1300,53 +1383,36 @@ class RepairViewSet(viewsets.ModelViewSet):
             notes=f"Repair '{repair.name}' updated"
         )
 
-    @action(detail=True, methods=['patch'])
-    def soft_delete(self, request, pk=None):
-        """Soft delete a repair."""
-        try:
-            repair = self.get_object()
+    # Bulk delete
+    @action(detail=False, methods=["post"], url_path='bulk-delete')
+    def bulk_delete(self, request):
+        """
+        Soft delete multiple repairs by IDs.
+        Expects payload: { "ids": [1, 2, 3] }
+        """
+        ids = request.data.get("ids", [])
+        if not ids:
+            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        repairs = Repair.objects.filter(id__in=ids, is_deleted=False)
+        deleted_count = 0
+
+        for repair in repairs:
             repair.is_deleted = True
             repair.save()
+            self.invalidate_repair_cache(repair.id)
 
             # Log activity
             log_repair_activity(
                 action='Delete',
                 repair=repair,
-                notes=f"Repair '{repair.name}' soft-deleted"
+                notes=f"Repair '{repair.name}' deleted (bulk)"
             )
+            deleted_count += 1
 
-            return Response({'detail': 'Repair soft-deleted'}, status=status.HTTP_200_OK)
-        except Repair.DoesNotExist:
-            return Response({'detail': 'Repair not found'}, status=status.HTTP_404_NOT_FOUND)
-
-    @action(detail=False, methods=['post'])
-    def create_repair_file(self, request):
-        """Create a repair file."""
-        serializer = RepairFileSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['patch'])
-    def soft_delete_repair_file(self, request, pk=None):
-        """Soft delete a repair file by ID."""
-        try:
-            repair_file = RepairFile.objects.get(pk=pk, is_deleted=False)
-            repair_file.is_deleted = True
-            repair_file.save()
-            return Response({'detail': 'Repair file soft-deleted'}, status=status.HTTP_200_OK)
-        except RepairFile.DoesNotExist:
-            return Response({'detail': 'Repair file not found'}, status=status.HTTP_404_NOT_FOUND)
-
-    @action(detail=True, methods=['patch'])
-    def soft_delete_repair_files_by_repair(self, request, pk=None):
-        """Soft delete all repair files by repair ID."""
-        repair_files = RepairFile.objects.filter(repair=pk, is_deleted=False)
-        if not repair_files.exists():
-            return Response({'detail': 'Repair files not found'}, status=status.HTTP_404_NOT_FOUND)
-        repair_files.update(is_deleted=True)
-        return Response({'detail': 'Repair files soft-deleted'}, status=status.HTTP_200_OK)
+        return Response({
+            "detail": f"{deleted_count} repair(s) deleted successfully."
+        }, status=status.HTTP_200_OK)
 # END REPAIR
 
 #USAGE CHECK

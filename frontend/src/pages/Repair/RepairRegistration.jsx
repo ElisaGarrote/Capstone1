@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
@@ -8,24 +8,41 @@ import { useForm } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import Alert from "../../components/Alert";
+import SystemLoading from "../../components/Loading/SystemLoading";
+import AddEntryModal from "../../components/Modals/AddEntryModal";
 import * as XLSX from "xlsx";
-import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
+import {
+  fetchAssetNames,
+  fetchRepairById,
+  createRepair,
+  updateRepair
+} from "../../services/assets-service";
+import { fetchAllDropdowns, createSupplier, createStatus } from "../../services/contexts-service";
 
 const RepairRegistration = () => {
+  const [assets, setAssets] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+
+  // Modal states for adding new entries
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+
   const navigate = useNavigate();
-
   const location = useLocation();
-  const editState = location.state?.repair || null;
-  const isEdit = !!editState;
+  const { id } = useParams();
+  const isEdit = !!id;
+  const currentDate = new Date().toISOString().split("T")[0];
 
-  const [attachmentFiles, setAttachmentFiles] = useState([]);
-  const [importFile, setImportFile] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  // Extract unique values from mock data
-  const assets = Array.from(new Set(MockupData.map((item) => item.asset)));
-  const suppliers = Array.from(new Set(MockupData.map((item) => item.supplier)));
-  const repairTypes = Array.from(new Set(MockupData.map((item) => item.type)));
+  // Repair types (static choices matching backend)
+  const repairTypes = [
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'repair', label: 'Repair' },
+    { value: 'upgrade', label: 'Upgrade' },
+    { value: 'test', label: 'Test' },
+    { value: 'hardware', label: 'Hardware' },
+    { value: 'software', label: 'Software' },
+  ];
 
   const {
     register,
@@ -36,31 +53,64 @@ const RepairRegistration = () => {
   } = useForm({
     mode: "all",
     defaultValues: {
-      asset: editState?.asset || "",
-      supplier: editState?.supplier || "",
-      repairType: editState?.type || "",
-      repairName: editState?.name || "",
-      startDate: editState?.start_date || "",
-      endDate: editState?.end_date || "",
-      cost: editState?.cost || "",
-      notes: editState?.notes || "",
+      asset: "",
+      status: "",
+      supplier: "",
+      repairType: "",
+      repairName: "",
+      startDate: "",
+      endDate: "",
+      cost: "",
+      notes: "",
     },
   });
 
-  useEffect(() => {
-    if (editState) {
-      setValue("asset", editState.asset || "");
-      setValue("supplier", editState.supplier || "");
-      setValue("repairType", editState.type || "");
-      setValue("repairName", editState.name || "");
-      setValue("startDate", editState.start_date || "");
-      setValue("endDate", editState.end_date || "");
-      setValue("cost", editState.cost || "");
-      setValue("notes", editState.notes || "");
-      // setAttachmentFiles(editState.attachments || []);
-    }
-  }, [editState, setValue]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
 
+  // Initialize dropdowns and load repair data if editing
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        setIsLoading(true);
+
+        // Fetch dropdown options
+        const assetsData = await fetchAssetNames({});
+        setAssets(assetsData || []);
+
+        const contextDropdowns = await fetchAllDropdowns("repair");
+        setStatuses(contextDropdowns.statuses || []);
+        setSuppliers(contextDropdowns.suppliers || []);
+
+        // If editing, fetch repair data by ID
+        if (id) {
+          const repairData = await fetchRepairById(id);
+          if (repairData) {
+            setValue("asset", repairData.asset || "");
+            setValue("status", repairData.status_id || "");
+            setValue("supplier", repairData.supplier_id || "");
+            setValue("repairType", repairData.type || "");
+            setValue("repairName", repairData.name || "");
+            setValue("startDate", repairData.start_date || "");
+            setValue("endDate", repairData.end_date || "");
+            setValue("cost", repairData.cost || "");
+            setValue("notes", repairData.notes || "");
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing form:", error);
+        setErrorMessage("Failed to load form data. Please try again.");
+        setTimeout(() => setErrorMessage(""), 5000);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+  }, [id, setValue]);
+
+  // Import system
   const EXPECTED_IMPORT_COLUMNS = [
     "Asset",
     "Supplier",
@@ -291,6 +341,8 @@ const RepairRegistration = () => {
     reader.readAsArrayBuffer(file);
   };
 
+  // File upload
+  // Handle file selection
   const handleFileSelection = (e) => {
     const files = Array.from(e.target.files);
     const maxSize = 300 * 1024 * 1024; // 300MB
@@ -306,50 +358,134 @@ const RepairRegistration = () => {
     setAttachmentFiles((prev) => [...prev, ...validFiles]);
   };
 
+  // Remove file from selection
   const removeFile = (index) => {
     setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const onSubmit = (data) => {
-    if (!data.asset || !data.repairType || !data.repairName || !data.startDate) {
+  // Modal field configurations
+  const statusFields = [
+    {
+      name: 'name',
+      label: 'Status Label',
+      type: 'text',
+      placeholder: 'Status Label',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Status Label is required' }
+    },
+    {
+      name: 'category',
+      type: 'hidden',
+      defaultValue: 'repair'
+    }
+  ];
+
+  const supplierFields = [
+    {
+      name: 'name',
+      label: 'Supplier Name',
+      type: 'text',
+      placeholder: 'Supplier Name',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Supplier Name is required' }
+    }
+  ];
+
+  // Modal save handlers
+  const handleSaveStatus = async (data) => {
+    try {
+      const newStatus = await createStatus(data);
+      setStatuses([...statuses, newStatus]);
+      setShowStatusModal(false);
+    } catch (error) {
+      console.error('Error creating status:', error);
+      setErrorMessage("Failed to create status");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
+  const handleSaveSupplier = async (data) => {
+    try {
+      const newSupplier = await createSupplier(data);
+      setSuppliers([...suppliers, newSupplier]);
+      setShowSupplierModal(false);
+    } catch (error) {
+      console.error('Error creating supplier:', error);
+      setErrorMessage("Failed to create supplier");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
+  const onSubmit = async (data) => {
+    if (!data.asset || !data.repairType || !data.repairName || !data.startDate || !data.status) {
       setErrorMessage("Please fill in all required fields before saving.");
       setTimeout(() => setErrorMessage(""), 5000);
       return;
     }
 
-    const normalizedAsset = data.asset.trim().toLowerCase();
-    const normalizedType = data.repairType.trim().toLowerCase();
-    const normalizedName = data.repairName.trim().toLowerCase();
-    const normalizedStart = data.startDate;
+    try {
+      // Build payload matching backend Repair model
+      const payload = {
+        asset: parseInt(data.asset),
+        supplier_id: data.supplier ? parseInt(data.supplier) : null,
+        status_id: parseInt(data.status),
+        type: data.repairType,
+        name: data.repairName.trim(),
+        start_date: data.startDate,
+        end_date: data.endDate || null,
+        cost: data.cost || 0,
+        notes: data.notes || "",
+      };
 
-    const duplicate = MockupData.some((repair) => {
-      if (isEdit && repair.id === editState.id) {
-        return false;
+      let result;
+      if (isEdit) {
+        result = await updateRepair(id, payload);
+      } else {
+        result = await createRepair(payload);
       }
-      return (
-        (repair.asset || "").trim().toLowerCase() === normalizedAsset &&
-        (repair.type || "").trim().toLowerCase() === normalizedType &&
-        (repair.name || "").trim().toLowerCase() === normalizedName &&
-        (repair.start_date || "") === normalizedStart
-      );
-    });
 
-    if (duplicate) {
-      setErrorMessage(
-        "Asset Repair already exists for this Asset, Repair Type, Repair Name, and Start Date."
-      );
+      if (!result) {
+        throw new Error(`Failed to ${isEdit ? 'update' : 'create'} repair.`);
+      }
+
+      const successMessage = isEdit
+        ? "Asset Repair updated successfully."
+        : "Asset Repair successfully registered.";
+
+      navigate("/repairs", { state: { successMessage } });
+    } catch (error) {
+      console.error(`Error ${isEdit ? 'updating' : 'creating'} repair:`, error);
+
+      let message = `An error occurred while ${isEdit ? 'updating' : 'creating'} the repair.`;
+
+      if (error.response && error.response.data) {
+        const errData = error.response.data;
+        if (typeof errData === "object") {
+          // Check for non_field_errors first
+          if (errData.non_field_errors && errData.non_field_errors.length > 0) {
+            message = errData.non_field_errors[0];
+          } else {
+            // Get first error from any field
+            const firstKey = Object.keys(errData)[0];
+            if (Array.isArray(errData[firstKey]) && errData[firstKey].length > 0) {
+              message = errData[firstKey][0];
+            } else if (typeof errData[firstKey] === "string") {
+              message = errData[firstKey];
+            }
+          }
+        }
+      }
+
+      setErrorMessage(message);
       setTimeout(() => setErrorMessage(""), 5000);
-      return;
     }
-
-    console.log("Form submitted:", data, attachmentFiles);
-
-    const successMessage = isEdit
-      ? "Asset Repair updated successfully."
-      : "Asset Repair successfully registered.";
-
-    navigate("/repairs", { state: { successMessage } });
   };
+
+  if (isLoading) {
+    return <SystemLoading />;
+  }
 
   return (
     <>
@@ -364,7 +500,7 @@ const RepairRegistration = () => {
             root="Repairs"
             currentPage={isEdit ? "Update Repair" : "New Repair"}
             rootNavigatePage="/repairs"
-            title={isEdit ? editState?.name || "Repair" : "New Repair"}
+            title={isEdit ? "Edit Repair" : "New Repair"}
             rightComponent={
               <div className="import-section">
                 <label htmlFor="repairs-import-file" className="import-btn">
@@ -397,7 +533,9 @@ const RepairRegistration = () => {
               >
                 <option value="">Select Asset</option>
                 {assets.map((asset) => (
-                  <option key={asset} value={asset}>{asset}</option>
+                  <option key={asset.id} value={asset.id}>
+                    {asset.asset_id} - {asset.name}
+                  </option>
                 ))}
               </select>
               {errors.asset && (
@@ -410,15 +548,60 @@ const RepairRegistration = () => {
             {/* Supplier */}
             <fieldset>
               <label htmlFor="supplier">Supplier</label>
-              <select
-                className={errors.supplier ? "input-error" : ""}
-                {...register("supplier")}
-              >
-                <option value="">Select Supplier</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier} value={supplier}>{supplier}</option>
-                ))}
-              </select>
+              <div className="input-add-container">
+                <select
+                  className={errors.supplier ? "input-error" : ""}
+                  {...register("supplier")}
+                >
+                  <option value="">Select Supplier</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-btn"
+                  onClick={() => setShowSupplierModal(true)}
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
+            </fieldset>
+
+            {/* Status */}
+            <fieldset>
+              <label htmlFor="status">
+                Status<span className="required-asterisk">*</span>
+              </label>
+              <div className="input-add-container">
+                <select
+                  className={errors.status ? "input-error" : ""}
+                  {...register("status", {
+                    required: "Status is required",
+                  })}
+                >
+                  <option value="">Select Status</option>
+                  {statuses.map((status) => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="add-btn"
+                  onClick={() => setShowStatusModal(true)}
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
+              {errors.status && (
+                <span className="error-message">
+                  {errors.status.message}
+                </span>
+              )}
             </fieldset>
 
             {/* Repair Type */}
@@ -434,7 +617,9 @@ const RepairRegistration = () => {
               >
                 <option value="">Select Repair Type</option>
                 {repairTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
                 ))}
               </select>
               {errors.repairType && (
@@ -583,6 +768,26 @@ const RepairRegistration = () => {
         </section>
       </main>
       <Footer />
+
+      {/* Add Status Modal */}
+      <AddEntryModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        onSave={handleSaveStatus}
+        title="New Status Label"
+        fields={statusFields}
+        type="status"
+      />
+
+      {/* Add Supplier Modal */}
+      <AddEntryModal
+        isOpen={showSupplierModal}
+        onClose={() => setShowSupplierModal(false)}
+        onSave={handleSaveSupplier}
+        title="New Supplier"
+        fields={supplierFields}
+        type="supplier"
+      />
     </>
   );
 };

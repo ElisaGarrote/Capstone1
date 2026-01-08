@@ -156,6 +156,8 @@ export async function fetchAllDropdowns(entity, options = {}) {
   let url = `contexts-dropdowns/all/?entity=${entity}`;
 
   // For status filtering: ?category=asset or repair
+  // await fetchAllDropdowns("asset", { category: "asset" });
+  // await fetchAllDropdowns("status", { category: "repair" });
   if (options.category) {
     url += `&category=${options.category}`;
   }

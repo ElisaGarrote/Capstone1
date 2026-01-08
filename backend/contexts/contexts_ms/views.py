@@ -219,8 +219,14 @@ class StatusViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='names')
     def names(self, request):
-        """Return all statuses with only name and id."""
+        """Return all statuses with only name and id.
+
+        Supports optional category filter: ?category=asset or ?category=repair
+        """
         statuses = self.get_queryset()
+        category = request.query_params.get('category')
+        if category:
+            statuses = statuses.filter(category=category)
         serializer = self.get_serializer(statuses, many=True)
         return Response(serializer.data)
 
@@ -387,7 +393,7 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
         entity = request.query_params.get("entity", "").lower()
         data = {}
 
-        if entity in ["product", "asset", "component"]:
+        if entity in ["product", "asset", "component", "repair"]:
             # common dropdowns
             data["suppliers"] = SupplierNameSerializer(Supplier.objects.filter(is_deleted=False), many=True).data
         
@@ -402,6 +408,9 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
         if entity == "asset":
             data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.ASSET), many=True).data
 
+        if entity == "repair":
+            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.REPAIR), many=True).data
+            
         # individual dropdowns
         if entity == "category":
             category_type = request.query_params.get("type")  # asset or component

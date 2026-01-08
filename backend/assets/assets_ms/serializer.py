@@ -389,6 +389,7 @@ class AssetCheckoutFileSerializer(serializers.ModelSerializer):
         model = AssetCheckoutFile
         fields = '__all__'
 
+
 class AssetCheckoutListSerializer(serializers.ModelSerializer):
     """Read-only serializer for checkout details in asset instance view."""
     files = AssetCheckoutFileSerializer(many=True, read_only=True)
@@ -792,39 +793,32 @@ class AuditSerializer(serializers.ModelSerializer):
                 })
 
         return data
+
+class RepairListSerializer(serializers.ModelSerializer):
+    asset_details = serializers.SerializerMethodField()
+    status_details = serializers.SerializerMethodField()
+    class Meta:
+        model = Repair
+        fields = [
+            'id', 'asset_details', 'status_details', 'type', 'name',
+            'start_date', 'end_date', 'cost'
+        ]
+
+    def get_asset_details(self, obj):
+        return self.context.get("asset_map", {}).get(obj.asset_id)
+    
+    def get_status_details(self, obj):
+        return self.context.get("status_map", {}).get(obj.status_id)
+    
     
 class RepairSerializer(serializers.ModelSerializer):
-    supplier_details = serializers.SerializerMethodField()
-    status_details = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Repair
         fields = '__all__'
-
-    def get_supplier_details(self, obj):
-        """Fetch supplier details from the Contexts service."""
-        try:
-            if not obj.supplier_id:
-                return None
-            supplier = get_supplier_by_id(obj.supplier_id)
-            return supplier
-        except Exception:
-            return {
-                "warning": "Supplier service unreachable. Make sure 'contexts-service' is running and accessible."
-            }
-
-    def get_status_details(self, obj):
-        """Fetch status details from the Contexts service."""
-        try:
-            if not getattr(obj, 'status_id', None):
-                return None
-            status = get_status_by_id(obj.status_id)
-            return status
-        except Exception:
-            return {
-                "warning": "Statuses service unreachable. Make sure 'contexts-service' is running and accessible."
-            }
-
+    
     def validate(self, attrs):
         """Validate repair data including status category and prevent duplicates."""
         asset = attrs.get('asset') or getattr(self.instance, 'asset', None)
@@ -848,7 +842,7 @@ class RepairSerializer(serializers.ModelSerializer):
         if isinstance(start_date, timezone.datetime):
             start_date = start_date.date()
 
-        # 🔍 Check for existing repair with same asset, name, and date
+        # heck for existing repair with same asset, name, and date
         # Normalize the repair name for comparison/storage (Title Case)
         if name:
             normalized_name = " ".join(name.split()).strip().title()
@@ -878,19 +872,27 @@ class RepairSerializer(serializers.ModelSerializer):
 
         attrs['start_date'] = start_date
         return attrs
-
-    def create(self, validated_data):
-        start_date = validated_data.get('start_date', timezone.localdate())
-        if isinstance(start_date, timezone.datetime):
-            start_date = start_date.date()
-        validated_data['start_date'] = start_date
-        return super().create(validated_data)
     
 class RepairFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = RepairFile
         fields = '__all__'
-        
+
+class RepairInstanceSerializer(serializers.ModelSerializer):
+    files = RepairFileSerializer(many=True, read_only=True)
+    asset_details = serializers.SerializerMethodField()
+    supplier_details = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Repair
+        fields = '__all__'
+
+    def get_asset_details(self, obj):
+        return self.context.get("asset_map", {}).get(obj.asset_id)
+    
+    def get_supplier_details(self, obj):
+        return self.context.get("supplier_map", {}).get(obj.supplier_id)
+
 class DashboardStatsSerializer(serializers.Serializer):
     due_for_return = serializers.IntegerField()
     overdue_for_return = serializers.IntegerField()
