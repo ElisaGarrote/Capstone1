@@ -84,6 +84,8 @@ services:
       - "8002"
     env_file:
       - ./backend/assets/.env.prod
+    environment:
+      - TZ=Asia/Manila
     networks:
       - app-network
 

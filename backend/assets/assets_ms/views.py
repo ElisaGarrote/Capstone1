@@ -4,7 +4,7 @@ from .serializer import *
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.utils.timezone import now
+from django.utils.timezone import now, localdate
 from datetime import timedelta
 from django.db.models import Sum, Value, F
 from django.db.models.functions import Coalesce
@@ -1136,6 +1136,27 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return AuditSchedule.objects.filter(is_deleted=False).order_by('date')
 
+    def get_serializer_class(self):
+        if self.action in ['list', 'scheduled', 'due', 'overdue']:
+            return AuditScheduleListSerializer
+        return AuditScheduleSerializer
+
+    def _build_audit_schedule_context(self):
+        """Build context maps for audit schedule serializers."""
+        # Asset map
+        asset_map = cache.get("assets:name:map")
+        if not asset_map:
+            assets = Asset.objects.filter(is_deleted=False).values('id', 'asset_id', 'name', 'image')
+            asset_map = {a['id']: {'id': a['id'], 'asset_id': a['asset_id'], 'name': a['name'], 'image': a['image']} for a in assets}
+            cache.set("assets:name:map", asset_map, 300)
+        return {"asset_map": asset_map}
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        context = self._build_audit_schedule_context()
+        serializer = self.get_serializer(queryset, many=True, context=context)
+        return Response(serializer.data)
+
     def perform_destroy(self, instance):
         # Check if the schedule already has an audit
         if hasattr(instance, 'audit') and instance.audit is not None and not instance.audit.is_deleted:
@@ -1177,54 +1198,133 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def scheduled(self, request):
         """Future audits not yet completed"""
-        today = now().date()
+        today = localdate()
         qs = AuditSchedule.objects.filter(
             is_deleted=False,
-            date__gt=today
-        ).exclude(audit__isnull=False)
-        serializer = AuditScheduleSerializer(qs, many=True)
+            date__gt=today,
+            audit__isnull=True
+        ).order_by('date')
+        context = self._build_audit_schedule_context()
+        serializer = self.get_serializer(qs, many=True, context=context)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def due(self, request):
-        """Audits due today or earlier, not yet completed"""
-        today = now().date()
+        """Audits due today, not yet completed"""
+        today = localdate()
         qs = AuditSchedule.objects.filter(
             is_deleted=False,
-            date__lte=today,
+            date=today,
             audit__isnull=True
-        )
-        serializer = AuditScheduleSerializer(qs, many=True)
+        ).order_by('date')
+        context = self._build_audit_schedule_context()
+        serializer = self.get_serializer(qs, many=True, context=context)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def overdue(self, request):
         """Audits past due dates, not yet completed"""
-        today = now().date()
+        today = localdate()
         qs = AuditSchedule.objects.filter(
             is_deleted=False,
             date__lt=today,
             audit__isnull=True
-        )
-        serializer = AuditScheduleSerializer(qs, many=True)
+        ).order_by('date')
+        context = self._build_audit_schedule_context()
+        serializer = self.get_serializer(qs, many=True, context=context)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'])
-    def completed(self, request):
-        """Return schedules with their completed audit"""
-        qs = AuditSchedule.objects.filter(
-            is_deleted=False,
-            audit__isnull=False,  # only schedules that have an audit
-            audit__is_deleted=False
-        )
-        serializer = CompletedAuditSerializer(qs, many=True)
-        return Response(serializer.data)
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        """Bulk delete audit schedules (only those without audits)."""
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({"error": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        schedules = AuditSchedule.objects.filter(id__in=ids, is_deleted=False)
+        deleted_ids = []
+        errors = []
+
+        for schedule in schedules:
+            if hasattr(schedule, 'audit') and schedule.audit and not schedule.audit.is_deleted:
+                errors.append(f"Schedule {schedule.id} has an audit and cannot be deleted.")
+            else:
+                schedule.is_deleted = True
+                schedule.save()
+                deleted_ids.append(schedule.id)
+                log_audit_activity(action='Delete', audit_or_schedule=schedule, notes="Bulk deleted")
+
+        return Response({
+            "deleted": deleted_ids,
+            "errors": errors
+        }, status=status.HTTP_200_OK)
 
 class AuditViewSet(viewsets.ModelViewSet):
     serializer_class = AuditSerializer
 
     def get_queryset(self):
-        return Audit.objects.filter(is_deleted=False).order_by('-created_at')
+        return Audit.objects.filter(is_deleted=False).select_related('audit_schedule').prefetch_related('audit_files').order_by('-created_at')
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return AuditListSerializer
+        return AuditSerializer
+
+    def _build_audit_context(self, audits):
+        """Build context maps for audit list serializer."""
+        # Get asset IDs from audit schedules
+        asset_ids = set()
+        location_ids = set()
+        user_ids = set()
+
+        for audit in audits:
+            if audit.audit_schedule:
+                asset_ids.add(audit.audit_schedule.asset_id)
+            if audit.location:
+                location_ids.add(audit.location)
+            if audit.user_id:
+                user_ids.add(audit.user_id)
+
+        # Asset map
+        asset_map = {}
+        if asset_ids:
+            assets = Asset.objects.filter(id__in=asset_ids, is_deleted=False).values('id', 'asset_id', 'name', 'image')
+            asset_map = {a['id']: {'id': a['id'], 'asset_id': a['asset_id'], 'name': a['name'], 'image': a['image']} for a in assets}
+
+        # Location map (from contexts service)
+        location_map = {}
+        if location_ids:
+            locations = get_locations_names()
+            if isinstance(locations, list):
+                location_map = {loc['id']: {'id': loc['id'], 'name': loc.get('city', loc.get('name', ''))} for loc in locations if loc['id'] in location_ids}
+
+        # User map (from auth service)
+        user_map = {}
+        if user_ids:
+            users = get_user_names()
+            user_map = {u['id']: u for u in users if u['id'] in user_ids}
+
+        return {
+            "asset_map": asset_map,
+            "location_map": location_map,
+            "user_map": user_map
+        }
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        context = self._build_audit_context(queryset)
+        serializer = self.get_serializer(queryset, many=True, context=context)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        print(f"Audit create request data: {request.data}")
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print(f"Audit validation errors: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
         audit = serializer.save()

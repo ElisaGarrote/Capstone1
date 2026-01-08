@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -9,12 +9,12 @@ import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
 import "../../styles/AuditsOverdue.css";
-import overdueAudit from "../../data/mockData/audits/overdue-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import OverdueAuditFilterModal from "../../components/Modals/OverdueAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
+import { fetchOverdueAudits } from "../../services/assets-service";
 
 // TableHeader
 function TableHeader() {
@@ -30,14 +30,26 @@ function TableHeader() {
   );
 }
 
+// Helper to calculate overdue days
+function calculateOverdueDays(dateStr) {
+  const dueDate = new Date(dateStr);
+  const today = new Date();
+  const diffTime = today - dueDate;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays > 0 ? diffDays : 0;
+}
+
 // TableItem
 function TableItem({ item, onDeleteClick, onViewClick }) {
+  const assetDetails = item.asset_details || {};
+  const overdueDays = calculateOverdueDays(item.date);
+
   return (
     <tr>
       <td>{item.date}</td>
-      <td>{item.overdue_by} day/s</td>
+      <td>{overdueDays} day/s</td>
       <td>
-        {item.asset.displayed_id} - {item.asset.name}
+        {assetDetails.asset_id || "N/A"} - {assetDetails.name || "Unknown Asset"}
       </td>
       <td>{new Date(item.created_at).toLocaleDateString()}</td>
       <td>
@@ -66,7 +78,27 @@ function TableItem({ item, onDeleteClick, onViewClick }) {
 export default function OverdueAudits() {
   const navigate = useNavigate();
 
-  const data = overdueAudit;
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Fetch overdue audits on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchOverdueAudits();
+        setData(result);
+      } catch (err) {
+        console.error("Error fetching overdue audits:", err);
+        setError("Failed to load overdue audits");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -97,10 +129,15 @@ export default function OverdueAudits() {
     setDeleteId(null);
   };
 
-  const confirmDelete = () => {
-    console.log("Deleting ID:", deleteId);
-    // perform delete action here (API or filter)
+  const handleDeleteSuccess = (deletedId) => {
+    setData(data.filter((item) => item.id !== deletedId));
+    setRefreshKey((prev) => prev + 1); // Trigger TabNavBar refresh
     closeDeleteModal();
+  };
+
+  const handleDeleteError = (err) => {
+    console.error("Error deleting audit schedule:", err);
+    alert("Failed to delete audit schedule");
   };
 
   // Add state for view modal
@@ -135,14 +172,14 @@ export default function OverdueAudits() {
     if (filters.overdueBy && filters.overdueBy.trim() !== "") {
       const overdueByValue = parseInt(filters.overdueBy);
       filtered = filtered.filter(
-        (audit) => audit.overdue_by === overdueByValue
+        (audit) => calculateOverdueDays(audit.date) === overdueByValue
       );
     }
 
     // Filter by Asset
     if (filters.asset && filters.asset.trim() !== "") {
       filtered = filtered.filter((audit) =>
-        audit.asset?.name?.toLowerCase().includes(filters.asset.toLowerCase())
+        audit.asset_details?.name?.toLowerCase().includes(filters.asset.toLowerCase())
       );
     }
 
@@ -185,22 +222,25 @@ export default function OverdueAudits() {
         <ConfirmationModal
           closeModal={closeDeleteModal}
           actionType="delete"
-          onConfirm={confirmDelete}
+          entityType="audit-schedule"
+          targetId={deleteId}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 
       {isViewModalOpen && selectedItem && (
         <View
-          title={`${selectedItem.asset.name} : ${selectedItem.overdue_by} day/s overdue`}
+          title={`${selectedItem.asset_details?.name || "Unknown"} : ${calculateOverdueDays(selectedItem.date)} day/s overdue`}
           data={[
             { label: "Due Date", value: selectedItem.date },
-            { label: "Overdue By", value: `${selectedItem.overdue_by} day/s` },
+            { label: "Overdue By", value: `${calculateOverdueDays(selectedItem.date)} day/s` },
             {
               label: "Asset",
-              value: `${selectedItem.asset.displayed_id} - ${selectedItem.asset.name}`,
+              value: `${selectedItem.asset_details?.asset_id || "N/A"} - ${selectedItem.asset_details?.name || "Unknown"}`,
             },
-            { label: "Created At", value: selectedItem.created_at },
-            { label: "Notes", value: selectedItem.notes },
+            { label: "Created At", value: new Date(selectedItem.created_at).toLocaleDateString() },
+            { label: "Notes", value: selectedItem.notes || "N/A" },
           ]}
           closeModal={closeViewModal}
         />
@@ -236,7 +276,7 @@ export default function OverdueAudits() {
           </section>
 
           <section>
-            <TabNavBar />
+            <TabNavBar refreshKey={refreshKey} />
           </section>
 
           <section className="table-layout">
@@ -265,31 +305,37 @@ export default function OverdueAudits() {
             </section>
 
             <section className="overdue-audit-table-section">
-              <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
-                  {paginatedActivity.length > 0 ? (
-                    paginatedActivity.map((item) => (
-                      <TableItem
-                        key={item.id}
-                        item={item}
-                        onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
-                        navigate={navigate}
-                        location={location}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={9} className="no-data-message">
-                        No Overdue Audits Found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {loading ? (
+                <p className="loading-message">Loading overdue audits...</p>
+              ) : error ? (
+                <p className="error-message">{error}</p>
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader />
+                  </thead>
+                  <tbody>
+                    {paginatedActivity.length > 0 ? (
+                      paginatedActivity.map((item) => (
+                        <TableItem
+                          key={item.id}
+                          item={item}
+                          onDeleteClick={openDeleteModal}
+                          onViewClick={handleViewClick}
+                          navigate={navigate}
+                          location={location}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="no-data-message">
+                          No Overdue Audits Found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             <section className="table-pagination">

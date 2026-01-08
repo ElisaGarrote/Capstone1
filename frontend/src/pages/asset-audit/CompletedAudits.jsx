@@ -1,18 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
-import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TabNavBar from "../../components/TabNavBar";
 import "../../styles/AuditsCompleted.css";
-import completedAudit from "../../data/mockData/audits/completed-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import CompletedAuditFilterModal from "../../components/Modals/CompletedAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
+import { fetchAllAudits } from "../../services/assets-service";
 
 // TableHeader
 function TableHeader() {
@@ -29,15 +28,18 @@ function TableHeader() {
 
 // TableItem
 function TableItem({ item, onViewClick }) {
+  const assetDetails = item.asset_details || {};
+  const locationDetails = item.location_details || {};
+  const userDetails = item.user_details || {};
+
   return (
     <tr>
       <td>{item.audit_date}</td>
       <td>
-        {item.audit_schedule.asset.displayed_id} -{" "}
-        {item.audit_schedule.asset.name}
+        {assetDetails.asset_id || "N/A"} - {assetDetails.name || "Unknown Asset"}
       </td>
-      <td>{item.location}</td>
-      <td>{item.performed_by}</td>
+      <td>{locationDetails.name || "N/A"}</td>
+      <td>{userDetails.first_name ? `${userDetails.first_name} ${userDetails.last_name || ""}` : "N/A"}</td>
       <td>
         <ActionButtons showView onViewClick={() => onViewClick(item)} />
       </td>
@@ -46,7 +48,26 @@ function TableItem({ item, onViewClick }) {
 }
 
 export default function CompletedAudits() {
-  const data = completedAudit;
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch completed audits on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchAllAudits();
+        setData(result);
+      } catch (err) {
+        console.error("Error fetching completed audits:", err);
+        setError("Failed to load completed audits");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -94,7 +115,7 @@ export default function CompletedAudits() {
     // Filter by Asset
     if (filters.asset && filters.asset.trim() !== "") {
       filtered = filtered.filter((audit) =>
-        audit.audit_schedule?.asset?.name
+        audit.asset_details?.name
           ?.toLowerCase()
           .includes(filters.asset.toLowerCase())
       );
@@ -103,17 +124,17 @@ export default function CompletedAudits() {
     // Filter by Location
     if (filters.location && filters.location.trim() !== "") {
       filtered = filtered.filter((audit) =>
-        audit.location?.toLowerCase().includes(filters.location.toLowerCase())
+        audit.location_details?.name?.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
     // Filter by Performed By
     if (filters.performedBy && filters.performedBy.trim() !== "") {
-      filtered = filtered.filter((audit) =>
-        audit.performed_by
-          ?.toLowerCase()
-          .includes(filters.performedBy.toLowerCase())
-      );
+      const searchTerm = filters.performedBy.toLowerCase();
+      filtered = filtered.filter((audit) => {
+        const fullName = `${audit.user_details?.first_name || ""} ${audit.user_details?.last_name || ""}`.toLowerCase();
+        return fullName.includes(searchTerm);
+      });
     }
 
     return filtered;
@@ -137,21 +158,21 @@ export default function CompletedAudits() {
     <>
       {isViewModalOpen && selectedItem && (
         <View
-          title={`${selectedItem.audit_schedule.asset.name} : ${selectedItem.audit_date}`}
+          title={`${selectedItem.asset_details?.name || "Unknown"} : ${selectedItem.audit_date}`}
           data={[
             {
               label: "Asset",
-              value: `${selectedItem.audit_schedule.asset.displayed_id} - ${selectedItem.audit_schedule.asset.name}`,
+              value: `${selectedItem.asset_details?.asset_id || "N/A"} - ${selectedItem.asset_details?.name || "Unknown"}`,
             },
-            { label: "Location", value: selectedItem.location },
-            { label: "Performed By", value: selectedItem.performed_by },
+            { label: "Location", value: selectedItem.location_details?.name || "N/A" },
+            { label: "Performed By", value: selectedItem.user_details?.first_name ? `${selectedItem.user_details.first_name} ${selectedItem.user_details.last_name || ""}` : "N/A" },
             { label: "Audit Date", value: selectedItem.audit_date },
-            { label: "Next Audit Date", value: selectedItem.next_audit_date },
-            { label: "Created At", value: selectedItem.created_at },
-            { label: "Notes", value: selectedItem.notes },
+            { label: "Scheduled Date", value: selectedItem.schedule_date || "N/A" },
+            { label: "Created At", value: new Date(selectedItem.created_at).toLocaleDateString() },
+            { label: "Notes", value: selectedItem.notes || "N/A" },
             {
               label: "Files",
-              value: selectedItem.files.map((f) => f.file).join(", "),
+              value: selectedItem.files?.length > 0 ? selectedItem.files.map((f) => f.file).join(", ") : "No files",
             },
           ]}
           closeModal={closeViewModal}
@@ -217,28 +238,34 @@ export default function CompletedAudits() {
             </section>
 
             <section className="completed-audit-table-section">
-              <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
-                  {paginatedActivity.length > 0 ? (
-                    paginatedActivity.map((item) => (
-                      <TableItem
-                        key={item.id}
-                        item={item}
-                        onViewClick={handleViewClick}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={9} className="no-data-message">
-                        No Completed Audits Found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {loading ? (
+                <p className="loading-message">Loading completed audits...</p>
+              ) : error ? (
+                <p className="error-message">{error}</p>
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader />
+                  </thead>
+                  <tbody>
+                    {paginatedActivity.length > 0 ? (
+                      paginatedActivity.map((item) => (
+                        <TableItem
+                          key={item.id}
+                          item={item}
+                          onViewClick={handleViewClick}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="no-data-message">
+                          No Completed Audits Found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             <section className="table-pagination">

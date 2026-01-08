@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -9,12 +9,12 @@ import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
 import "../../styles/Audits.css";
-import scheduledAudit from "../../data/mockData/audits/scheduled-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import DueAuditFilterModal from "../../components/Modals/DueAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
+import { fetchScheduledAudits } from "../../services/assets-service";
 
 // TableHeader
 function TableHeader() {
@@ -31,11 +31,12 @@ function TableHeader() {
 
 // TableItem
 function TableItem({ item, onDeleteClick, onViewClick }) {
+  const assetDetails = item.asset_details || {};
   return (
     <tr>
       <td>{item.date}</td>
       <td>
-        {item.asset.displayed_id} - {item.asset.name}
+        {assetDetails.asset_id || "N/A"} - {assetDetails.name || "Unknown Asset"}
       </td>
       <td>{new Date(item.created_at).toLocaleDateString()}</td>
       <td>
@@ -64,7 +65,27 @@ function TableItem({ item, onDeleteClick, onViewClick }) {
 export default function ScheduledAudits() {
   const navigate = useNavigate();
 
-  const data = scheduledAudit;
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Fetch scheduled audits on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchScheduledAudits();
+        setData(result);
+      } catch (err) {
+        console.error("Error fetching scheduled audits:", err);
+        setError("Failed to load scheduled audits");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -95,10 +116,15 @@ export default function ScheduledAudits() {
     setDeleteId(null);
   };
 
-  const confirmDelete = () => {
-    console.log("Deleting ID:", deleteId);
-    // perform delete action here (API or filter)
+  const handleDeleteSuccess = (deletedId) => {
+    setData(data.filter((item) => item.id !== deletedId));
+    setRefreshKey((prev) => prev + 1); // Trigger TabNavBar refresh
     closeDeleteModal();
+  };
+
+  const handleDeleteError = (err) => {
+    console.error("Error deleting audit schedule:", err);
+    alert("Failed to delete audit schedule");
   };
 
   // Add state for view modal
@@ -132,7 +158,7 @@ export default function ScheduledAudits() {
     // Filter by Asset
     if (filters.asset && filters.asset.trim() !== "") {
       filtered = filtered.filter((audit) =>
-        audit.asset?.name?.toLowerCase().includes(filters.asset.toLowerCase())
+        audit.asset_details?.name?.toLowerCase().includes(filters.asset.toLowerCase())
       );
     }
 
@@ -175,21 +201,24 @@ export default function ScheduledAudits() {
         <ConfirmationModal
           closeModal={closeDeleteModal}
           actionType="delete"
-          onConfirm={confirmDelete}
+          entityType="audit-schedule"
+          targetId={deleteId}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 
       {isViewModalOpen && selectedItem && (
         <View
-          title={`${selectedItem.asset.name} : ${selectedItem.date}`}
+          title={`${selectedItem.asset_details?.name || "Unknown"} : ${selectedItem.date}`}
           data={[
             { label: "Due Date", value: selectedItem.date },
             {
               label: "Asset",
-              value: `${selectedItem.asset.displayed_id} - ${selectedItem.asset.name}`,
+              value: `${selectedItem.asset_details?.asset_id || "N/A"} - ${selectedItem.asset_details?.name || "Unknown"}`,
             },
-            { label: "Created At", value: selectedItem.created_at },
-            { label: "Notes", value: selectedItem.notes },
+            { label: "Created At", value: new Date(selectedItem.created_at).toLocaleDateString() },
+            { label: "Notes", value: selectedItem.notes || "N/A" },
           ]}
           closeModal={closeViewModal}
         />
@@ -225,7 +254,7 @@ export default function ScheduledAudits() {
           </section>
 
           <section>
-            <TabNavBar />
+            <TabNavBar refreshKey={refreshKey} />
           </section>
 
           <section className="table-layout">
@@ -254,31 +283,37 @@ export default function ScheduledAudits() {
             </section>
 
             <section className="audit-table-section">
-              <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
-                  {paginatedActivity.length > 0 ? (
-                    paginatedActivity.map((item) => (
-                      <TableItem
-                        key={item.id}
-                        item={item}
-                        onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
-                        navigate={navigate}
-                        location={location}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={9} className="no-data-message">
-                        No Scheduled Audits Found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {loading ? (
+                <p className="loading-message">Loading scheduled audits...</p>
+              ) : error ? (
+                <p className="error-message">{error}</p>
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader />
+                  </thead>
+                  <tbody>
+                    {paginatedActivity.length > 0 ? (
+                      paginatedActivity.map((item) => (
+                        <TableItem
+                          key={item.id}
+                          item={item}
+                          onDeleteClick={openDeleteModal}
+                          onViewClick={handleViewClick}
+                          navigate={navigate}
+                          location={location}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="no-data-message">
+                          No Scheduled Audits Found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             <section className="table-pagination">

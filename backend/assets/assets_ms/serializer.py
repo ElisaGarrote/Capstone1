@@ -751,36 +751,34 @@ class AuditScheduleSerializer(serializers.ModelSerializer):
 
         return data
 
-class CompletedAuditSerializer(serializers.ModelSerializer):
-    audit = serializers.SerializerMethodField()
+
+class AuditScheduleListSerializer(serializers.ModelSerializer):
+    """List serializer for audit schedules with asset details."""
+    asset_details = serializers.SerializerMethodField()
+    has_audit = serializers.SerializerMethodField()
 
     class Meta:
         model = AuditSchedule
-        fields = '__all__'
+        fields = ['id', 'asset', 'asset_details', 'date', 'notes', 'has_audit', 'created_at', 'updated_at']
 
-    def get_audit(self, obj):
-        """Return audit data if it exists"""
-        if hasattr(obj, 'audit') and obj.audit and not obj.audit.is_deleted:
-            return {
-                "id": obj.audit.id,
-                "location": obj.audit.location,
-                "user_id": obj.audit.user_id,
-                "audit_date": obj.audit.audit_date,
-                "notes": obj.audit.notes,
-                "created_at": obj.audit.created_at
-            }
-        return None
+    def get_asset_details(self, obj):
+        return self.context.get("asset_map", {}).get(obj.asset_id)
+
+    def get_has_audit(self, obj):
+        return hasattr(obj, 'audit') and obj.audit is not None and not obj.audit.is_deleted
+
 
 class AuditFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuditFile
         fields = '__all__'
-        
+
+
 class AuditSerializer(serializers.ModelSerializer):
     class Meta:
         model = Audit
         fields = '__all__'
-    
+
     def validate(self, data):
         audit_date = data.get('audit_date')
         audit_schedule = data.get('audit_schedule')
@@ -793,6 +791,45 @@ class AuditSerializer(serializers.ModelSerializer):
                 })
 
         return data
+
+
+class AuditListSerializer(serializers.ModelSerializer):
+    """List serializer for completed audits with asset, location, user details."""
+    asset_details = serializers.SerializerMethodField()
+    location_details = serializers.SerializerMethodField()
+    user_details = serializers.SerializerMethodField()
+    schedule_date = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Audit
+        fields = [
+            'id', 'audit_schedule', 'asset_details', 'location', 'location_details',
+            'user_id', 'user_details', 'audit_date', 'schedule_date', 'notes',
+            'files', 'created_at'
+        ]
+
+    def get_asset_details(self, obj):
+        if obj.audit_schedule:
+            return self.context.get("asset_map", {}).get(obj.audit_schedule.asset_id)
+        return None
+
+    def get_location_details(self, obj):
+        return self.context.get("location_map", {}).get(obj.location)
+
+    def get_user_details(self, obj):
+        return self.context.get("user_map", {}).get(obj.user_id)
+
+    def get_schedule_date(self, obj):
+        if obj.audit_schedule:
+            return obj.audit_schedule.date
+        return None
+
+    def get_files(self, obj):
+        return [{
+            'id': f.id,
+            'file': f.file.url if f.file else None
+        } for f in obj.audit_files.filter(is_deleted=False)]
 
 class RepairListSerializer(serializers.ModelSerializer):
     asset_details = serializers.SerializerMethodField()

@@ -103,10 +103,40 @@ def get_locations_names():
     cached = cache.get(key)
     if cached is not None:
         return cached
-    
+
     result = fetch_resource_list('locations/names', skip_api_prefix=True)
     if isinstance(result, dict) and result.get('warning'):
         cache.set(key, result, LIST_WARNING_TTL)
     else:
         cache.set(key, result, LIST_CACHE_TTL)
     return result
+
+
+# Auth service integration
+AUTH_API_URL = getattr(settings, "AUTH_API_URL", os.getenv("AUTH_API_URL", "http://authentication-service:8001/"))
+USER_CACHE_TTL = 300
+USER_WARNING_TTL = 60
+
+
+def get_user_names():
+    """Fetch all active users with id and fullname from the auth service."""
+    key = "auth:list:users:names"
+    cached = cache.get(key)
+    if cached is not None:
+        return cached
+
+    url = f"{AUTH_API_URL.rstrip('/')}/users/get_all_users/"
+    try:
+        import requests
+        resp = requests.get(url, timeout=8)
+        if resp.status_code == 404:
+            return []
+        resp.raise_for_status()
+        data = resp.json()
+        # Expected format: [{'id': 1, 'fullname': 'John Doe'}, ...]
+        if isinstance(data, list):
+            cache.set(key, data, USER_CACHE_TTL)
+            return data
+        return []
+    except RequestException:
+        return []

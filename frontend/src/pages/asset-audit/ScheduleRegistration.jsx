@@ -1,67 +1,91 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm, Controller } from "react-hook-form";
-import overdueAudits from "../../data/mockData/audits/overdue-audit-mockup-data.json";
-import dueAudits from "../../data/mockData/audits/due-audit-mockup-data.json";
-import scheduledAudits from "../../data/mockData/audits/scheduled-audit-mockup-data.json";
+import { useForm } from "react-hook-form";
 import Footer from "../../components/Footer";
+import { fetchAssetNames, fetchAuditScheduleById, createAuditSchedule, updateAuditSchedule } from "../../services/assets-service";
 
 const ScheduleRegistration = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const item = location.state?.item || {};
+  const { id } = useParams();
   const previousPage = location.state?.previousPage || null;
 
-  const extractAssets = (auditArray) => auditArray.map(a => a.asset.name);
-  const allAssets = [
-    ...extractAssets(overdueAudits),
-    ...extractAssets(dueAudits),
-    ...extractAssets(scheduledAudits),
-  ];
-  const uniqueAssets = Array.from(new Set(allAssets));
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [scheduleData, setScheduleData] = useState(null);
 
   const {
     register,
     handleSubmit,
-    control,
-    watch,
     setValue,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
     defaultValues: {
-      asset: item.asset?.name || "",
-      auditDueDate: item.date || "",
-      notes: item.notes || "",
-      },
+      asset: "",
+      auditDueDate: "",
+      notes: "",
+    },
   });
 
+  // Fetch assets and schedule data (if editing) on mount
   useEffect(() => {
-  if (item) {
-    setValue("asset", item.asset?.name || "");
-    setValue("auditDueDate", item.date || "");
-    setValue("notes", item.notes || "");
-  }
-}, [item, setValue]);
+    const loadData = async () => {
+      try {
+        // Fetch assets
+        const assetsResult = await fetchAssetNames();
+        setAssets(assetsResult);
 
+        // If editing, fetch the audit schedule by ID
+        if (id) {
+          const scheduleResult = await fetchAuditScheduleById(id);
+          setScheduleData(scheduleResult);
 
-  const onSubmit = (data) => {
-    if (item?.id) {
-      console.log("Updating audit:", { id: item.id, ...data });
-      // Call your update API or state logic here
-    } else {
-      console.log("Creating new audit:", data);
-      // Call your create API or state logic here
+          // Populate form with fetched data
+          setValue("asset", scheduleResult.asset || "");
+          setValue("auditDueDate", scheduleResult.date || "");
+          setValue("notes", scheduleResult.notes || "");
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [id, setValue]);
+
+  const onSubmit = async (data) => {
+    setSubmitting(true);
+    try {
+      const payload = {
+        asset: parseInt(data.asset),
+        date: data.auditDueDate,
+        notes: data.notes || "",
+      };
+
+      if (id) {
+        await updateAuditSchedule(id, payload);
+      } else {
+        await createAuditSchedule(payload);
+      }
+
+      // Redirect to scheduled audits section if coming from asset view, otherwise go back to previous page
+      const redirectPage = previousPage === "/asset-view" ? "/audits/scheduled" : previousPage;
+      navigate(redirectPage || "/audits/scheduled");
+    } catch (err) {
+      console.error("Error saving audit schedule:", err);
+      alert("Failed to save audit schedule. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-
-    // Redirect to scheduled audits section if coming from asset view, otherwise go back to previous page
-    const redirectPage = previousPage === "/asset-view" ? "/audits/scheduled" : previousPage;
-    navigate(redirectPage);
   };
 
+  const isEdit = Boolean(id);
 
   const getRootPage = () => {
     switch (previousPage) {
@@ -89,25 +113,28 @@ const ScheduleRegistration = () => {
         <section className="top">
           <TopSecFormPage
             root={getRootPage()}
-            currentPage="Schedule Audit"
-            rootNavigatePage={previousPage === "/asset-view" ? "/audits/scheduled" : previousPage}
-            title="Schedule Audit"
+            currentPage={isEdit ? "Edit Schedule" : "Schedule Audit"}
+            rootNavigatePage={previousPage === "/asset-view" ? "/audits/scheduled" : (previousPage || "/audits/scheduled")}
+            title={isEdit ? "Edit Schedule" : "Schedule Audit"}
           />
         </section>
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Asset */}
             <fieldset>
-              <label htmlFor="asset">Check-out To<span className="required-asterisk">*</span></label>
+              <label htmlFor="asset">Asset<span className="required-asterisk">*</span></label>
               <select
                 className={errors.asset ? "input-error" : ""}
+                disabled={loading}
                 {...register("asset", {
                   required: "Asset is required",
                 })}
               >
-                <option value="">Select Asset</option>
-                {uniqueAssets.map((asset) => (
-                  <option key={asset} value={asset}>{asset}</option>
+                <option value="">{loading ? "Loading assets..." : "Select Asset"}</option>
+                {assets.map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.asset_id} - {asset.name}
+                  </option>
                 ))}
               </select>
               {errors.asset && (
@@ -144,8 +171,8 @@ const ScheduleRegistration = () => {
             </fieldset>
 
             {/* Submit */}
-            <button type="submit" className="primary-button" disabled={!isValid}>
-              Save
+            <button type="submit" className="primary-button" disabled={!isValid || submitting}>
+              {submitting ? "Saving..." : "Save"}
             </button>
           </form>
         </section>

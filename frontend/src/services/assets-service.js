@@ -235,9 +235,90 @@ export async function deleteComponent(id) {
 /* ===============================
           AUDIT SCHEDULE
 ================================= */
+// Fetch all audit schedules
+export async function fetchAllAuditSchedules() {
+  const res = await assetsAxios.get("audit-schedule/");
+  return res.data;
+}
+
+// Fetch scheduled audits (future, not completed)
+export async function fetchScheduledAudits() {
+  const res = await assetsAxios.get("audit-schedule/scheduled/");
+  return res.data;
+}
+
+// Fetch due audits (today, not completed)
+export async function fetchDueAudits() {
+  const res = await assetsAxios.get("audit-schedule/due/");
+  return res.data;
+}
+
+// Fetch overdue audits (past date, not completed)
+export async function fetchOverdueAudits() {
+  const res = await assetsAxios.get("audit-schedule/overdue/");
+  return res.data;
+}
+
+// Fetch audit schedule by ID
+export async function fetchAuditScheduleById(id) {
+  const res = await assetsAxios.get(`audit-schedule/${id}/`);
+  return res.data;
+}
+
 // Create audit schedule
 export async function createAuditSchedule(data) {
   const res = await assetsAxios.post("audit-schedule/", data);
+  return res.data;
+}
+
+// Update audit schedule
+export async function updateAuditSchedule(id, data) {
+  const res = await assetsAxios.put(`audit-schedule/${id}/`, data);
+  return res.data;
+}
+
+// Delete audit schedule
+export async function deleteAuditSchedule(id) {
+  const res = await assetsAxios.delete(`audit-schedule/${id}/`);
+  return res.data;
+}
+
+// Bulk delete audit schedules
+export async function bulkDeleteAuditSchedules(ids) {
+  const res = await assetsAxios.post("audit-schedule/bulk_delete/", { ids });
+  return res.data;
+}
+
+/* ===============================
+              AUDITS
+================================= */
+// Fetch all completed audits
+export async function fetchAllAudits() {
+  const res = await assetsAxios.get("audits/");
+  return res.data;
+}
+
+// Fetch audit by ID
+export async function fetchAuditById(id) {
+  const res = await assetsAxios.get(`audits/${id}/`);
+  return res.data;
+}
+
+// Create audit (perform/complete an audit)
+export async function createAudit(data) {
+  const res = await assetsAxios.post("audits/", data);
+  return res.data;
+}
+
+// Update audit
+export async function updateAudit(id, data) {
+  const res = await assetsAxios.put(`audits/${id}/`, data);
+  return res.data;
+}
+
+// Delete audit
+export async function deleteAudit(id) {
+  const res = await assetsAxios.delete(`audits/${id}/`);
   return res.data;
 }
 
@@ -294,4 +375,14 @@ export async function bulkDeleteRepairs(data) {
 export async function fetchDashboardStats() {
   const res = await assetsAxios.get("dashboard/");
   return res.data;
+}
+
+/* ===============================
+            FILE URLS
+================================= */
+
+// Get full URL for audit file
+export function auditFileUrl(filePath) {
+  const baseUrl = import.meta.env.VITE_ASSETS_API_URL || "http://localhost:8000/api/assets/";
+  return `${baseUrl}${filePath}`;
 }

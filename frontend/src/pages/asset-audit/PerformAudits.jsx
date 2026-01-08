@@ -3,51 +3,74 @@ import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
-import overdueAudits from "../../data/mockData/audits/overdue-audit-mockup-data.json";
-import dueAudits from "../../data/mockData/audits/due-audit-mockup-data.json";
-import scheduledAudits from "../../data/mockData/audits/scheduled-audit-mockup-data.json";
-import completedAudits from "../../data/mockData/audits/completed-audit-mockup-data.json";
 import Footer from "../../components/Footer";
+import { fetchDueAudits, fetchOverdueAudits, fetchScheduledAudits, createAudit, createAuditSchedule } from "../../services/assets-service";
+import { fetchAllLocations } from "../../api/contextsApi";
+import authService from "../../services/auth-service";
+import Alert from "../../components/Alert";
+
 const PerformAudits = () => {
   const navigate = useNavigate();
-
   const location = useLocation();
-  const item = location.state?.item || null;
-
+  // TableBtn passes 'data', ActionButtons passes 'item'
+  const item = location.state?.item || location.state?.data || null;
   const previousPage = location.state?.previousPage || null;
 
   const [attachmentFiles, setAttachmentFiles] = useState([]);
+  const [auditSchedules, setAuditSchedules] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const currentUser = authService.getUserInfo();
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const extractAssets = (auditArray) => auditArray.map(a => a.asset.name);
-  const allAssets = [
-    ...extractAssets(overdueAudits),
-    ...extractAssets(dueAudits),
-    ...extractAssets(scheduledAudits),
-  ];
-  const uniqueAssets = Array.from(new Set(allAssets));
-  const locations = Array.from(new Set(completedAudits.map(item => item.location)));
-  const users = Array.from(new Set(completedAudits.map(item => item.performed_by)));
+  // Fetch audit schedules and locations on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [due, overdue, scheduled, locs] = await Promise.all([
+          fetchDueAudits(),
+          fetchOverdueAudits(),
+          fetchScheduledAudits(),
+          fetchAllLocations()
+        ]);
+        // Combine all pending audit schedules
+        const allSchedules = [...due, ...overdue, ...scheduled];
+        setAuditSchedules(allSchedules);
+        setLocations(locs);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const {
     register,
     handleSubmit,
-    control,
     setValue,
-    watch,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
     defaultValues: {
-      asset: "",
+      auditSchedule: item?.id ? String(item.id) : "",
       location: "",
-      performBy: "John Doe" || "",
       auditDate: new Date().toISOString().split("T")[0],
       nextAuditDate: "",
       notes: "",
     },
   });
+
+  // Pre-fill form if item is passed (after data is loaded)
+  useEffect(() => {
+    if (item?.id && !loading) {
+      setValue("auditSchedule", String(item.id));
+    }
+  }, [item, setValue, loading]);
 
   const handleFileSelection = (e) => {
     const files = Array.from(e.target.files);
@@ -68,12 +91,57 @@ const PerformAudits = () => {
     setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const onSubmit = (data) => {
-    console.log("Form submitted:", data, attachmentFiles);
+  const onSubmit = async (data) => {
+    setSubmitting(true);
+    setErrorMessage(""); // Clear previous error
+    try {
+      // Create the audit
+      const auditPayload = {
+        audit_schedule: parseInt(data.auditSchedule),
+        location: parseInt(data.location),
+        user_id: parseInt(currentUser?.id),
+        audit_date: data.auditDate,
+        notes: data.notes || "",
+      };
 
-    // Redirect to completed audits section if coming from asset view, otherwise go back to previous page
-    const redirectPage = previousPage === "/asset-view" ? "/audits/completed" : previousPage;
-    navigate(redirectPage);
+      console.log("Audit payload:", auditPayload);
+      await createAudit(auditPayload);
+
+      // If next audit date is provided, create a new schedule
+      if (data.nextAuditDate) {
+        const selectedSchedule = auditSchedules.find(s => s.id === parseInt(data.auditSchedule));
+        if (selectedSchedule) {
+          await createAuditSchedule({
+            asset: selectedSchedule.asset,
+            date: data.nextAuditDate,
+            notes: "Auto-scheduled from previous audit",
+          });
+        }
+      }
+
+      // Redirect to completed audits section
+      const redirectPage = previousPage === "/asset-view" ? "/audits/completed" : "/audits/completed";
+      navigate(redirectPage);
+    } catch (err) {
+      console.error("Error performing audit:", err);
+      // Extract error message from API response
+      let message = "Failed to save audit. Please try again.";
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        if (typeof errorData === 'object') {
+          // Format validation errors - only show the message, not the field name
+          const messages = Object.values(errorData)
+            .map(errors => Array.isArray(errors) ? errors.join(', ') : errors)
+            .join(' | ');
+          message = messages || message;
+        } else if (typeof errorData === 'string') {
+          message = errorData;
+        }
+      }
+      setErrorMessage(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getRootPage = () => {
@@ -95,6 +163,7 @@ const PerformAudits = () => {
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav>
         <NavBar />
       </nav>
@@ -109,23 +178,26 @@ const PerformAudits = () => {
         </section>
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
-            {/* Asset */}
+            {/* Audit Schedule (Asset) */}
             <fieldset>
-              <label htmlFor="asset">Select Asset<span className="required-asterisk">*</span></label>
+              <label htmlFor="auditSchedule">Select Scheduled Audit<span className="required-asterisk">*</span></label>
               <select
-                className={errors.asset ? "input-error" : ""}
-                {...register("asset", {
-                  required: "Asset is required",
+                className={errors.auditSchedule ? "input-error" : ""}
+                disabled={loading}
+                {...register("auditSchedule", {
+                  required: "Audit schedule is required",
                 })}
               >
-                <option value="">Select Asset</option>
-                {uniqueAssets.map((asset) => (
-                  <option key={asset} value={asset}>{asset}</option>
+                <option value="">{loading ? "Loading..." : "Select Scheduled Audit"}</option>
+                {auditSchedules.map((schedule) => (
+                  <option key={schedule.id} value={schedule.id}>
+                    {schedule.asset_details?.asset_id || "N/A"} - {schedule.asset_details?.name || "Unknown"} (Due: {schedule.date})
+                  </option>
                 ))}
               </select>
-              {errors.asset && (
+              {errors.auditSchedule && (
                 <span className="error-message">
-                  {errors.asset.message}
+                  {errors.auditSchedule.message}
                 </span>
               )}
             </fieldset>
@@ -135,13 +207,14 @@ const PerformAudits = () => {
               <label htmlFor="location">Location<span className="required-asterisk">*</span></label>
               <select
                 className={errors.location ? "input-error" : ""}
+                disabled={loading}
                 {...register("location", {
                   required: "Location is required",
                 })}
               >
-                <option value="">Select Location</option>
-                {locations.map((location) => (
-                  <option key={location} value={location}>{location}</option>
+                <option value="">{loading ? "Loading..." : "Select Location"}</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>{loc.name}</option>
                 ))}
               </select>
               {errors.location && (
@@ -156,7 +229,7 @@ const PerformAudits = () => {
               <label htmlFor="performBy">Performed By</label>
               <input
                 type="text"
-                value="John Doe"
+                value={`${currentUser.first_name || ""} ${currentUser.last_name || ""}`.trim() || currentUser.email}
                 readOnly
               />
             </fieldset>
@@ -166,7 +239,7 @@ const PerformAudits = () => {
               <label htmlFor="auditDate">Audit Date<span className="required-asterisk">*</span></label>
               <input
                 type="date"
-                className={errors.checkoutDate ? "input-error" : ""}
+                className={errors.auditDate ? "input-error" : ""}
                 defaultValue={new Date().toISOString().split("T")[0]}
                 {...register("auditDate", {
                   required: "Audit date is required",
@@ -238,8 +311,8 @@ const PerformAudits = () => {
             </fieldset>
 
             {/* Submit */}
-            <button type="submit" className="primary-button" disabled={!isValid}>
-              Save
+            <button type="submit" className="primary-button" disabled={!isValid || submitting}>
+              {submitting ? "Saving..." : "Save"}
             </button>
           </form>
         </section>
