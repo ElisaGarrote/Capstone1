@@ -1254,10 +1254,15 @@ class ComponentCheckoutViewSet(viewsets.ModelViewSet):
     serializer_class = ComponentCheckoutSerializer
 
     def get_queryset(self):
-        # Only checkouts that have NOT been checked in
-        return ComponentCheckout.objects.select_related('component', 'asset').filter(
-            component_checkins__isnull=True
+        # All checkouts ordered by date
+        return ComponentCheckout.objects.select_related('component', 'asset').prefetch_related(
+            'component_checkins'
         ).order_by('-checkout_date')
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'active', 'by_component', 'by_asset']:
+            return ComponentCheckoutListSerializer
+        return ComponentCheckoutSerializer
 
     def perform_create(self, serializer):
         checkout = serializer.save()
@@ -1268,11 +1273,50 @@ class ComponentCheckoutViewSet(viewsets.ModelViewSet):
         log_component_activity(
             action='Checkout',
             component=component,
-            notes=f"Component '{component.name}' checked out to asset '{target_name}'"
+            notes=f"Checked out {checkout.quantity} unit(s) of '{component.name}' to asset '{target_name}'"
         )
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """List only active checkouts (not fully returned)"""
+        all_checkouts = self.get_queryset()
+        active_checkouts = [c for c in all_checkouts if not c.is_fully_returned]
+        checkout_ids = [c.id for c in active_checkouts]
+        queryset = ComponentCheckout.objects.filter(id__in=checkout_ids).select_related(
+            'component', 'asset'
+        ).prefetch_related('component_checkins').order_by('-checkout_date')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='by-component/(?P<component_id>[^/.]+)')
+    def by_component(self, request, component_id=None):
+        """List all checkouts for a specific component"""
+        queryset = self.get_queryset().filter(component_id=component_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='by-asset/(?P<asset_id>[^/.]+)')
+    def by_asset(self, request, asset_id=None):
+        """List all checkouts to a specific asset"""
+        queryset = self.get_queryset().filter(asset_id=asset_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class ComponentCheckinViewSet(viewsets.ModelViewSet):
     serializer_class = ComponentCheckinSerializer
+
+    def get_queryset(self):
+        return ComponentCheckin.objects.select_related(
+            'component_checkout',
+            'component_checkout__component',
+            'component_checkout__asset'
+        ).order_by('-checkin_date')
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ComponentCheckinListSerializer
+        return ComponentCheckinSerializer
 
     def perform_create(self, serializer):
         checkin = serializer.save()
@@ -1284,11 +1328,15 @@ class ComponentCheckinViewSet(viewsets.ModelViewSet):
         log_component_activity(
             action='Checkin',
             component=component,
-            notes=f"Component '{component.name}' checked in from asset '{target_name}'"
+            notes=f"Checked in {checkin.quantity} unit(s) of '{component.name}' from asset '{target_name}'"
         )
 
-    def get_queryset(self):
-        return ComponentCheckin.objects.select_related('component_checkout', 'component_checkout__component').order_by('-checkin_date')
+    @action(detail=False, methods=['get'], url_path='by-checkout/(?P<checkout_id>[^/.]+)')
+    def by_checkout(self, request, checkout_id=None):
+        """List all checkins for a specific checkout"""
+        queryset = self.get_queryset().filter(component_checkout_id=checkout_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class AuditScheduleViewSet(viewsets.ModelViewSet):
     serializer_class = AuditScheduleSerializer

@@ -4,43 +4,90 @@ import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm, Controller } from "react-hook-form";
-import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
+import { useForm } from "react-hook-form";
+import Alert from "../../components/Alert";
+import SystemLoading from "../../components/Loading/SystemLoading";
+import { createComponentCheckout, fetchAssetNames } from "../../services/assets-service";
 
 const ComponentCheckout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const item = location.state?.item || {};
 
-  // Extract unique values from mock data
-  const assets = Array.from(new Set(MockupData.map(item => item.asset)));
+  const [assets, setAssets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [alert, setAlert] = useState({ message: "", type: "" });
+
+  // Fetch assets for dropdown
+  useEffect(() => {
+    const loadAssets = async () => {
+      try {
+        const data = await fetchAssetNames();
+        setAssets(data);
+      } catch (error) {
+        console.error("Error fetching assets:", error);
+        setAlert({ message: "Failed to load assets", type: "error" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadAssets();
+  }, []);
 
   const {
     register,
     handleSubmit,
-    control,
-    watch,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
     defaultValues: {
       asset: "",
-      quantity: "",
+      quantity: 1,
       checkoutDate: new Date().toISOString().split("T")[0],
       notes: "",
     },
   });
 
-  const onSubmit = (data) => {
-    console.log("Form submitted:", data);
-    navigate("/components");
+  const onSubmit = async (data) => {
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        component: item.id,
+        asset: parseInt(data.asset),
+        quantity: data.quantity,
+        checkout_date: data.checkoutDate,
+        notes: data.notes || "",
+      };
+      await createComponentCheckout(payload);
+      navigate("/components", {
+        state: { successMessage: `Component "${item.name}" checked out successfully!` },
+      });
+    } catch (error) {
+      console.error("Error checking out component:", error);
+      const errorMsg = error.response?.data?.quantity?.[0]
+        || error.response?.data?.detail
+        || "Failed to checkout component";
+      setAlert({ message: errorMsg, type: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isLoading) return <SystemLoading />;
 
   return (
     <>
       <nav>
         <NavBar />
       </nav>
+      {alert.message && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert({ message: "", type: "" })}
+        />
+      )}
       <main className="registration">
         <section className="top">
           <TopSecFormPage
@@ -63,7 +110,9 @@ const ComponentCheckout = () => {
               >
                 <option value="">Select Asset</option>
                 {assets.map((asset) => (
-                  <option key={asset} value={asset}>{asset}</option>
+                  <option key={asset.id} value={asset.id}>
+                    {asset.asset_id} - {asset.name}
+                  </option>
                 ))}
               </select>
               {errors.asset && (
@@ -75,18 +124,21 @@ const ComponentCheckout = () => {
 
             {/* Quantity */}
             <fieldset>
-              <label htmlFor="quantity">Quantity<span className="required-asterisk">*</span> (Remaining: {item.available_quantity})</label>
+              <label htmlFor="quantity">
+                Quantity<span className="required-asterisk">*</span> (Available: {item.available_quantity})
+              </label>
               <input
                 className={errors.quantity ? "input-error" : ""}
                 type="number"
                 id="quantity"
                 placeholder="Enter quantity"
-                min="0"
+                min="1"
                 step="1"
                 max={item.available_quantity}
                 {...register("quantity", {
                   valueAsNumber: true,
                   required: "Quantity is required",
+                  min: { value: 1, message: "Quantity must be at least 1" },
                   validate: (value) =>
                     value <= item.available_quantity ||
                     `Cannot exceed available quantity (${item.available_quantity})`,
@@ -124,8 +176,12 @@ const ComponentCheckout = () => {
             </fieldset>
 
             {/* Submit */}
-            <button type="submit" className="primary-button" disabled={!isValid}>
-              Save
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid || isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save"}
             </button>
           </form>
         </section>

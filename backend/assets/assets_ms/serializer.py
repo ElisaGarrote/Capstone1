@@ -608,6 +608,7 @@ class ComponentInstanceSerializer(serializers.ModelSerializer):
     manufacturer_details = serializers.SerializerMethodField()
     supplier_details = serializers.SerializerMethodField()
     location_details = serializers.SerializerMethodField()
+    active_checkouts = serializers.SerializerMethodField()
     checkout_history = serializers.SerializerMethodField()
 
     class Meta:
@@ -626,34 +627,50 @@ class ComponentInstanceSerializer(serializers.ModelSerializer):
     def get_location_details(self, obj):
         return self.context.get("location_map", {}).get(obj.location)
 
-    def get_checkout_history(self, obj):
-        """Returns checkout/checkin history for this component."""
-        history = []
+    def _get_checkout_data(self, checkout):
+        """Helper to format checkout data."""
+        checkins = [{
+            'id': ci.id,
+            'checkin_date': ci.checkin_date,
+            'quantity': ci.quantity,
+            'notes': ci.notes,
+            'created_at': ci.created_at,
+        } for ci in checkout.component_checkins.all().order_by('-checkin_date')]
+
+        return {
+            'id': checkout.id,
+            'asset_id': checkout.asset.id if checkout.asset else None,
+            'asset_name': checkout.asset.name if checkout.asset else None,
+            'asset_displayed_id': checkout.asset.asset_id if checkout.asset else None,
+            'quantity': checkout.quantity,
+            'checkout_date': checkout.checkout_date,
+            'notes': checkout.notes,
+            'remaining_quantity': checkout.remaining_quantity,
+            'total_checked_in': checkout.total_checked_in,
+            'is_fully_returned': checkout.is_fully_returned,
+            'checkins': checkins,
+            'created_at': checkout.created_at,
+        }
+
+    def get_active_checkouts(self, obj):
+        """Returns active (not fully returned) checkouts for this component."""
         checkouts = obj.component_checkouts.select_related('asset').prefetch_related(
             'component_checkins'
         ).order_by('-checkout_date')
 
-        for checkout in checkouts:
-            checkins = [{
-                'id': ci.id,
-                'checkin_date': ci.checkin_date,
-                'quantity': ci.quantity,
-                'notes': ci.notes
-            } for ci in checkout.component_checkins.all().order_by('-checkin_date')]
+        return [
+            self._get_checkout_data(checkout)
+            for checkout in checkouts
+            if not checkout.is_fully_returned
+        ]
 
-            history.append({
-                'id': checkout.id,
-                'asset_id': checkout.asset.id if checkout.asset else None,
-                'asset_name': checkout.asset.name if checkout.asset else None,
-                'quantity': checkout.quantity,
-                'checkout_date': checkout.checkout_date,
-                'notes': checkout.notes,
-                'remaining_quantity': checkout.remaining_quantity,
-                'is_fully_returned': checkout.is_fully_returned,
-                'checkins': checkins
-            })
+    def get_checkout_history(self, obj):
+        """Returns all checkout/checkin history for this component."""
+        checkouts = obj.component_checkouts.select_related('asset').prefetch_related(
+            'component_checkins'
+        ).order_by('-checkout_date')
 
-        return history
+        return [self._get_checkout_data(checkout) for checkout in checkouts]
 
 
 # Component - Name serializer for bulk edit display
@@ -781,6 +798,98 @@ class ComponentCheckinSerializer(serializers.ModelSerializer):
             })
 
         return data
+
+
+class ComponentCheckoutListSerializer(serializers.ModelSerializer):
+    """List serializer for component checkouts with related details."""
+    component_details = serializers.SerializerMethodField()
+    asset_details = serializers.SerializerMethodField()
+    remaining_quantity = serializers.SerializerMethodField()
+    is_fully_returned = serializers.SerializerMethodField()
+    total_checked_in = serializers.SerializerMethodField()
+    checkins = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ComponentCheckout
+        fields = [
+            'id', 'component', 'component_details', 'asset', 'asset_details',
+            'quantity', 'checkout_date', 'notes', 'created_at',
+            'remaining_quantity', 'is_fully_returned', 'total_checked_in', 'checkins'
+        ]
+
+    def get_component_details(self, obj):
+        return {
+            'id': obj.component.id,
+            'name': obj.component.name,
+        } if obj.component else None
+
+    def get_asset_details(self, obj):
+        return {
+            'id': obj.asset.id,
+            'asset_id': obj.asset.asset_id,
+            'name': obj.asset.name,
+        } if obj.asset else None
+
+    def get_remaining_quantity(self, obj):
+        return obj.remaining_quantity
+
+    def get_is_fully_returned(self, obj):
+        return obj.is_fully_returned
+
+    def get_total_checked_in(self, obj):
+        return obj.total_checked_in
+
+    def get_checkins(self, obj):
+        """Get all checkins for this checkout."""
+        checkins = obj.component_checkins.all().order_by('-checkin_date')
+        return [{
+            'id': ci.id,
+            'checkin_date': ci.checkin_date,
+            'quantity': ci.quantity,
+            'notes': ci.notes,
+            'created_at': ci.created_at,
+        } for ci in checkins]
+
+
+class ComponentCheckinListSerializer(serializers.ModelSerializer):
+    """List serializer for component checkins with related details."""
+    checkout_details = serializers.SerializerMethodField()
+    component_details = serializers.SerializerMethodField()
+    asset_details = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ComponentCheckin
+        fields = [
+            'id', 'component_checkout', 'checkout_details',
+            'component_details', 'asset_details',
+            'checkin_date', 'quantity', 'notes', 'created_at'
+        ]
+
+    def get_checkout_details(self, obj):
+        checkout = obj.component_checkout
+        return {
+            'id': checkout.id,
+            'quantity': checkout.quantity,
+            'checkout_date': checkout.checkout_date,
+            'remaining_quantity': checkout.remaining_quantity,
+            'is_fully_returned': checkout.is_fully_returned,
+        } if checkout else None
+
+    def get_component_details(self, obj):
+        component = obj.component_checkout.component if obj.component_checkout else None
+        return {
+            'id': component.id,
+            'name': component.name,
+        } if component else None
+
+    def get_asset_details(self, obj):
+        asset = obj.component_checkout.asset if obj.component_checkout else None
+        return {
+            'id': asset.id,
+            'asset_id': asset.asset_id,
+            'name': asset.name,
+        } if asset else None
+
 
 class AuditScheduleSerializer(serializers.ModelSerializer):
     class Meta:

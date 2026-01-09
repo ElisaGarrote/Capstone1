@@ -265,6 +265,62 @@ export const fetchComponentNames = ({ ids = [], search = "" } = {}) => {
 };
 
 /* ===============================
+       COMPONENT CHECKOUT
+================================= */
+
+// GET all component checkouts
+export async function fetchAllComponentCheckouts() {
+  const res = await assetsAxios.get("component-checkout/");
+  return res.data;
+}
+
+// GET active component checkouts (not fully returned)
+export async function fetchActiveComponentCheckouts() {
+  const res = await assetsAxios.get("component-checkout/active/");
+  return res.data;
+}
+
+// GET component checkouts by component ID
+export async function fetchComponentCheckoutsByComponent(componentId) {
+  const res = await assetsAxios.get(`component-checkout/by-component/${componentId}/`);
+  return res.data;
+}
+
+// GET component checkouts by asset ID
+export async function fetchComponentCheckoutsByAsset(assetId) {
+  const res = await assetsAxios.get(`component-checkout/by-asset/${assetId}/`);
+  return res.data;
+}
+
+// CREATE component checkout
+export async function createComponentCheckout(data) {
+  const res = await assetsAxios.post("component-checkout/", data);
+  return res.data;
+}
+
+/* ===============================
+       COMPONENT CHECKIN
+================================= */
+
+// GET all component checkins
+export async function fetchAllComponentCheckins() {
+  const res = await assetsAxios.get("component-checkin/");
+  return res.data;
+}
+
+// GET component checkins by checkout ID
+export async function fetchComponentCheckinsByCheckout(checkoutId) {
+  const res = await assetsAxios.get(`component-checkin/by-checkout/${checkoutId}/`);
+  return res.data;
+}
+
+// CREATE component checkin (partial or full)
+export async function createComponentCheckin(data) {
+  const res = await assetsAxios.post("component-checkin/", data);
+  return res.data;
+}
+
+/* ===============================
           AUDIT SCHEDULE
 ================================= */
 // Fetch all audit schedules

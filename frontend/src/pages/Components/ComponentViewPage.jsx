@@ -204,31 +204,37 @@ function ComponentView() {
           <thead>
             <tr>
               <th>CHECKOUT DATE</th>
-              <th>USER</th>
               <th>CHECKED OUT TO</th>
+              <th>QTY</th>
+              <th>CHECKED IN</th>
+              <th>REMAINING</th>
               <th>NOTES</th>
-              <th>CHECKIN</th>
+              <th>ACTION</th>
             </tr>
           </thead>
           <tbody>
             {activeCheckouts.length > 0 ? (
               activeCheckouts.map((checkout, index) => (
                 <tr key={index}>
-                  <td>{new Date(checkout.checkout_date).toLocaleDateString()}</td>
-                  <td>N/A</td>
-                  <td>{checkout.to_asset?.displayed_id || 'N/A'}</td>
-                  <td>{checkout.notes}</td>
+                  <td>{checkout.checkout_date}</td>
+                  <td>{checkout.asset_displayed_id || checkout.asset_name || 'N/A'}</td>
+                  <td>{checkout.quantity}</td>
+                  <td>{checkout.total_checked_in || 0}</td>
+                  <td>{checkout.remaining_quantity}</td>
+                  <td>{checkout.notes || '-'}</td>
                   <td>
                     <ActionButtons
                       showCheckin
                       onCheckinClick={() => {
-                        navigate(`/components/check-in/${component.id}`, {
+                        navigate(`/components/check-in/${checkout.id}`, {
                           state: {
                             item: {
-                              id: component.id,
-                              name: component.name,
-                              available_quantity: component.available_quantity,
+                              id: checkout.id,
+                              checkout_date: checkout.checkout_date,
+                              quantity: checkout.quantity,
                               remaining_quantity: checkout.remaining_quantity,
+                              total_checked_in: checkout.total_checked_in || 0,
+                              asset_displayed_id: checkout.asset_displayed_id,
                             },
                             componentName: component.name,
                           },
@@ -240,7 +246,7 @@ function ComponentView() {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="no-data-message">
+                <td colSpan={7} className="no-data-message">
                   No Active Checkouts Found.
                 </td>
               </tr>
@@ -252,32 +258,40 @@ function ComponentView() {
   ) : activeTab === 2 ? (
     <div className="components-tab-wrapper">
       <div className="components-tab-header">
-        <h3>History</h3>
+        <h3>Checkout History</h3>
       </div>
       <section className="components-detail-table-section">
         <table>
           <thead>
             <tr>
-              <th>CHECKIN DATE</th>
-              <th>USER</th>
+              <th>CHECKOUT DATE</th>
               <th>CHECKED OUT TO</th>
+              <th>QTY</th>
+              <th>CHECKED IN</th>
+              <th>STATUS</th>
               <th>NOTES</th>
             </tr>
           </thead>
           <tbody>
             {componentHistory.length > 0 ? (
-              componentHistory.map((history, index) => (
-                <tr key={index}>
-                  <td>{new Date(history.checkin_date).toLocaleDateString()}</td>
-                  <td>{history.handled_by || 'N/A'}</td>
-                  <td>{history.checkout?.to_asset?.displayed_id || 'N/A'}</td>
-                  <td>{history.notes}</td>
+              componentHistory.map((checkout, index) => (
+                <tr key={index} className={checkout.is_fully_returned ? "fully-returned" : ""}>
+                  <td>{checkout.checkout_date}</td>
+                  <td>{checkout.asset_displayed_id || checkout.asset_name || 'N/A'}</td>
+                  <td>{checkout.quantity}</td>
+                  <td>{checkout.total_checked_in || 0}</td>
+                  <td>
+                    <span className={`status-badge ${checkout.is_fully_returned ? "status-returned" : "status-active"}`}>
+                      {checkout.is_fully_returned ? "Returned" : "Active"}
+                    </span>
+                  </td>
+                  <td>{checkout.notes || '-'}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="no-data-message">
-                  No History Found.
+                <td colSpan={6} className="no-data-message">
+                  No Checkout History Found.
                 </td>
               </tr>
             )}

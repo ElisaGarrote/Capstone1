@@ -384,25 +384,19 @@ export default function Assets() {
   };
 
   const handleCheckInOut = (asset, action) => {
-    // Build minimal mock item data expected by ComponentCheckout/ComponentCheckin
-    const available_quantity = asset.available_quantity ?? 10;
-    const remaining_quantity = asset.remaining_quantity ?? available_quantity;
-
     const item = {
       id: asset.id,
       name: asset.name,
-      available_quantity,
-      remaining_quantity,
+      available_quantity: asset.available_quantity ?? 0,
     };
 
     if (action === "checkin") {
-      navigate(`/components/check-in/${asset.id}`, {
-        state: {
-          item,
-          componentName: asset.name,
-        },
+      // Navigate to checkout list to select which checkout to check in from
+      navigate(`/components/checked-out-list/${asset.id}`, {
+        state: { item },
       });
     } else {
+      // Navigate to checkout form
       navigate(`/components/check-out/${asset.id}`, {
         state: { item },
       });
