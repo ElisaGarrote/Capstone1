@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import Alert from "../../components/Alert";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import { fetchAllDepreciations, deleteDepreciation, bulkDeleteDepreciations } from "../../services/contexts-service";
+import MockupData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
+import contextsApi, { contextsBase } from '../../api/contextsApi'
 import DepreciationFilterModal from "../../components/Modals/DepreciationFilterModal";
 import Pagination from "../../components/Pagination";
 import { exportToExcel } from "../../utils/exportToExcel";
@@ -83,7 +84,7 @@ export default function Depreciations() {
 
   // filter state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState([]);
+  const [filteredData, setFilteredData] = useState(MockupData);
   const [allData, setAllData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({ valueSort: "" });
@@ -91,31 +92,10 @@ export default function Depreciations() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  // If navigated here with a success/error message in navigation state,
-  // surface it and then clear the history state so it doesn't reappear on refresh.
-  useEffect(() => {
-    if (!location) return;
-    const incomingSuccess = location.state?.successMessage;
-    const incomingError = location.state?.errorMessage;
-    if (incomingSuccess) {
-      setSuccessMessage(incomingSuccess);
-      // clear navigation state
-      navigate(location.pathname, { replace: true, state: {} });
-      setTimeout(() => setSuccessMessage(''), 5000);
-    }
-    if (incomingError) {
-      setErrorMessage(incomingError);
-      navigate(location.pathname, { replace: true, state: {} });
-      setTimeout(() => setErrorMessage(''), 5000);
-    }
-  }, [location, navigate]);
 
   // Apply filters to data
-  const applyFilters = (filters, data) => {
-    let filtered = [...data];
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
 
     // Sort by Minimum Value (PHP) - greatest to least value
     if (filters.valueSort === "desc") {
@@ -140,7 +120,7 @@ export default function Depreciations() {
   // Handle filter apply
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    const filtered = applyFilters(filters, allData);
+    const filtered = applyFilters(filters);
     setFilteredData(filtered);
     setCurrentPage(1); // Reset to first page when filters change
   };
@@ -172,29 +152,39 @@ export default function Depreciations() {
     setExportToggle(false); // Close export menu after export
   };
 
-  // Fetch depreciations from contexts service
+  // Fetch depreciations from contexts API
   useEffect(() => {
-    let mounted = true;
+    let mounted = true
     async function load() {
-      setIsLoading(true);
+      setIsLoading(true)
       try {
-        const data = await fetchAllDepreciations();
-        const list = data.results ?? data;
-        if (!mounted) return;
-        setAllData(list);
-        setFilteredData(list);
+        const res = await contextsApi.get('/depreciations/')
+        const list = res.data.results ?? res.data
+        if (!mounted) return
+        setAllData(list)
+        // Apply current filters/search to the returned list
+        const normalized = searchQuery.trim().toLowerCase()
+        const filtered = normalized === '' ? list : list.filter((item) => {
+          const name = item.name?.toLowerCase() || '';
+          const duration = String(item.duration ?? '').toLowerCase();
+          const minimumValue = String(item.minimum_value ?? '').toLowerCase();
+          return (
+            name.includes(normalized) ||
+            duration.includes(normalized) ||
+            minimumValue.includes(normalized)
+          );
+        })
+        setFilteredData(filtered)
       } catch (err) {
-        console.error("Failed to fetch depreciations", err);
-        setErrorMessage("Failed to load depreciations from server.");
+        console.error('Failed to fetch depreciations', err)
+        setErrorMessage('Failed to load depreciations from server.')
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    load()
+    return () => { mounted = false }
+  }, [searchQuery])
 
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -245,74 +235,65 @@ export default function Depreciations() {
   const confirmDelete = async () => {
     try {
       if (deleteTarget) {
-        const respData = await deleteDepreciation(deleteTarget);
+        const resp = await contextsApi.delete(`/depreciations/${deleteTarget}/`)
         // backend may return usage info; if so, surface a friendly message
+        const respData = resp?.data ?? null
         if (respData && (respData.in_use || respData.skipped)) {
-          setErrorMessage("The selected depreciation cannot be deleted; it is currently in use.");
-          setTimeout(() => setErrorMessage(""), 5000);
-          return { ok: false, data: { in_use: true } };
+          setErrorMessage('The selected depreciation cannot be deleted; it is currently in use.')
+          setTimeout(() => setErrorMessage(''), 5000)
+          return { ok: false, data: { in_use: true } }
         }
-        setSuccessMessage("Depreciation deleted successfully!");
+        setSuccessMessage('Depreciation deleted successfully!')
       } else {
         if (selectedIds.length === 0) {
-          setErrorMessage("No items selected for deletion.");
-          setTimeout(() => setErrorMessage(""), 3000);
-          return { ok: false, data: { error: "no_selection" } };
+          setErrorMessage('No items selected for deletion.')
+          setTimeout(() => setErrorMessage(''), 3000)
+          return { ok: false, data: { error: 'no_selection' } }
         }
 
-        const data = await bulkDeleteDepreciations(selectedIds);
-        const deletedCount =
-          data?.deleted_count ?? (Array.isArray(data?.deleted) ? data.deleted.length : 0);
-        const skippedCount =
-          data?.skipped_count ??
-          (data?.skipped
-            ? Object.keys(data.skipped).length
-            : data?.failed
-            ? data.failed.length
-            : 0);
+        const resp = await contextsApi.post('/depreciations/bulk_delete/', { ids: selectedIds })
+        const data = resp?.data || {}
+        const deletedCount = data?.deleted_count ?? (Array.isArray(data?.deleted) ? data.deleted.length : 0)
+        const skippedCount = data?.skipped_count ?? (data?.skipped ? Object.keys(data.skipped).length : (data?.failed ? data.failed.length : 0))
 
         if (skippedCount > 0) {
           if (deletedCount > 0) {
-            const parts = [
-              `${deletedCount} depreciations deleted successfully`,
-              `${skippedCount} skipped (in use)`,
-            ];
-            setSuccessMessage(parts.join("; ") + ".");
+            const parts = [`${deletedCount} depreciations deleted successfully`, `${skippedCount} skipped (in use)`]
+            setSuccessMessage(parts.join('; ') + '.')
             // remove deleted ids from local lists if provided
             try {
-              const deletedIds =
-                data?.deleted_ids ?? (Array.isArray(data?.deleted) ? data.deleted : []);
+              const deletedIds = data?.deleted_ids ?? (Array.isArray(data?.deleted) ? data.deleted : [])
               if (deletedIds && deletedIds.length) {
-                setAllData((prev) => (prev || []).filter((p) => !deletedIds.includes(p.id)));
-                setFilteredData((prev) => (prev || []).filter((p) => !deletedIds.includes(p.id)));
-                setSelectedIds((prev) => (prev || []).filter((id) => !deletedIds.includes(id)));
+                setAllData((prev) => (prev || []).filter((p) => !deletedIds.includes(p.id)))
+                setFilteredData((prev) => (prev || []).filter((p) => !deletedIds.includes(p.id)))
+                setSelectedIds((prev) => (prev || []).filter((id) => !deletedIds.includes(id)))
               }
             } catch (e) {
-              console.error("Failed to update local list after mixed delete", e);
+              console.error('Failed to update local list after mixed delete', e)
             }
-            setTimeout(() => setSuccessMessage(""), 5000);
-            return { ok: true, data };
+            setTimeout(() => setSuccessMessage(''), 5000)
+            return { ok: true, data }
           }
 
           // only skipped
-          setErrorMessage(`${skippedCount} depreciations skipped (currently in use).`);
-          setTimeout(() => setErrorMessage(""), 5000);
-          return { ok: false, data };
+          setErrorMessage(`${skippedCount} depreciations skipped (currently in use).`)
+          setTimeout(() => setErrorMessage(''), 5000)
+          return { ok: false, data }
         }
 
         // fully deleted
-        setSuccessMessage("Depreciations deleted successfully!");
-        setSelectedIds([]);
+        setSuccessMessage('Depreciations deleted successfully!')
+        setSelectedIds([])
       }
 
       // Refresh list after delete to keep UI in sync
       try {
-        const refreshData = await fetchAllDepreciations();
-        const list = refreshData.results ?? refreshData;
-        setAllData(list);
-        setFilteredData(list);
+        const r = await contextsApi.get('/depreciations/')
+        const list = r.data.results ?? r.data
+        setAllData(list)
+        setFilteredData(list)
       } catch (e) {
-        console.error("Failed to refresh depreciations after delete", e);
+        console.error('Failed to refresh depreciations after delete', e)
       }
 
       // If bulk delete, reload to ensure server-side pagination/consistency

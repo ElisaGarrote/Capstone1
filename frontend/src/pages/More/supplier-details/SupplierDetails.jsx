@@ -4,6 +4,7 @@ import NavBar from "../../../components/NavBar";
 import DetailedViewPage from "../../../components/DetailedViewPage/DetailedViewPage";
 import MediumButtons from "../../../components/buttons/MediumButtons";
 import { getSupplierDetails, getSupplierTabs } from "../../../data/mockData/more/supplierDetailsData";
+import { fetchSupplierById } from '../../../services/contexts-service';
 import AssetsMockupData from "../../../data/mockData/assets/assets-mockup-data.json";
 import ComponentsMockupData from "../../../data/mockData/components/component-mockup-data.json";
 import Status from "../../../components/Status";
@@ -18,6 +19,7 @@ import ComponentFilterModal from "../../../components/Modals/ComponentFilterModa
 import "../../../styles/Assets/Assets.css";
 import "../../../styles/components/Components.css";
 import "../../../styles/more/supplier/SupplierDetails.css";
+import dateRelated from '../../../utils/dateRelated';
 
 function SupplierDetails() {
   const location = useLocation();
@@ -53,6 +55,37 @@ function SupplierDetails() {
   const [appliedFilters, setAppliedFilters] = useState({});
   const [assetSuccessMessage, setAssetSuccessMessage] = useState("");
   const supplierDetails = location.state?.supplier;
+
+  const [fullSupplier, setFullSupplier] = useState(null);
+
+  // If the supplier object passed via navigation is missing notes/timestamps,
+  // fetch the full supplier from the API and merge results.
+  useEffect(() => {
+    let mounted = true;
+    if (supplierDetails && supplierDetails.id) {
+      const missingNotes = !supplierDetails.notes && !supplierDetails.note;
+      const missingCreated = !supplierDetails.createdAt && !supplierDetails.created_at;
+      const missingUpdated = !supplierDetails.updatedAt && !supplierDetails.updated_at;
+
+      if (missingNotes || missingCreated || missingUpdated) {
+        fetchSupplierById(supplierDetails.id)
+          .then((res) => {
+            if (mounted) setFullSupplier(res);
+          })
+          .catch((err) => {
+            console.error('Failed to fetch full supplier:', err);
+          });
+      }
+    }
+    return () => {
+      mounted = false;
+    };
+  }, [supplierDetails]);
+
+  const mergedSupplier = fullSupplier ? { ...supplierDetails, ...fullSupplier } : supplierDetails;
+
+  // Mapped display-friendly fields (notes, createdAt, updatedAt, labels)
+  const display = getSupplierDetails(mergedSupplier) || {};
 
   if (!supplierDetails) {
     return (
@@ -483,42 +516,42 @@ function SupplierDetails() {
   const aboutContent = (
     <div className="about-section">
       {/* Details Section */}
-      <div className="asset-details-section">
+          <div className="asset-details-section">
         <h3 className="section-header">Details</h3>
         <div className="asset-details-grid">
           <div className="detail-row">
             <label>Supplier Name</label>
-            <span>{supplierDetails.name || 'N/A'}</span>
+            <span>{display.supplierName || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>Address</label>
-            <span>{supplierDetails.address || 'N/A'}</span>
+            <span>{display.address || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>City</label>
-            <span>{supplierDetails.city || 'N/A'}</span>
+            <span>{display.city || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>State</label>
-            <span>{supplierDetails.state || 'N/A'}</span>
+            <span>{display.state || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>ZIP</label>
-            <span>{supplierDetails.zip || 'N/A'}</span>
+            <span>{display.zip || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>Country</label>
-            <span>{supplierDetails.country || 'N/A'}</span>
+            <span>{display.country || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>Contact Name</label>
-            <span>{supplierDetails.contactName || 'N/A'}</span>
+            <span>{display.contactName || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
@@ -526,10 +559,10 @@ function SupplierDetails() {
             <span
               style={{ color: 'var(--primary-color)', cursor: 'pointer' }}
               onClick={() =>
-                window.open(`tel:${supplierDetails.phoneNumber}`, "_blank")
+                window.open(`tel:${display.phoneNumber || ''}`, "_blank")
               }
             >
-              {supplierDetails.phoneNumber || 'N/A'}
+              {display.phoneNumber || 'N/A'}
             </span>
           </div>
 
@@ -538,10 +571,10 @@ function SupplierDetails() {
             <span
               style={{ color: 'var(--primary-color)', cursor: 'pointer' }}
               onClick={() =>
-                window.open(`mailto:${supplierDetails.email}`, "_blank")
+                window.open(`mailto:${display.email || ''}`, "_blank")
               }
             >
-              {supplierDetails.email || 'N/A'}
+              {display.email || 'N/A'}
             </span>
           </div>
 
@@ -549,31 +582,41 @@ function SupplierDetails() {
             <label>URL</label>
             <span
               style={{ color: 'var(--primary-color)', cursor: 'pointer' }}
-              onClick={() => window.open(supplierDetails.url, "_blank")}
+              onClick={() => window.open(display.url || '', "_blank")}
             >
-              {supplierDetails.url || 'N/A'}
+              {display.url || 'N/A'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Additional Fields Section */}
+      {/* Additional Fields: Notes, Created At, Updated At */}
       <div className="additional-fields-section">
         <h3 className="section-header">Additional Information</h3>
         <div className="asset-details-grid">
           <div className="detail-row">
             <label>Notes</label>
-            <span>{supplierDetails.notes || 'N/A'}</span>
+            <span style={{ whiteSpace: 'pre-wrap' }}>{display.notes || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>Created At</label>
-            <span>{supplierDetails.createdAt || 'N/A'}</span>
+            <span>
+              {(() => {
+                const ts = display.createdAt;
+                return ts && ts !== 'N/A' ? dateRelated.formatDateWithTime(ts) : 'N/A';
+              })()}
+            </span>
           </div>
 
           <div className="detail-row">
             <label>Updated At</label>
-            <span>{supplierDetails.updatedAt || 'N/A'}</span>
+            <span>
+              {(() => {
+                const ts = display.updatedAt;
+                return ts && ts !== 'N/A' ? dateRelated.formatDateWithTime(ts) : 'N/A';
+              })()}
+            </span>
           </div>
         </div>
       </div>
@@ -910,6 +953,7 @@ function SupplierDetails() {
       />
       <DetailedViewPage
         {...getSupplierDetails(supplierDetails)}
+        hideAdditionalFields={true}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}

@@ -15,7 +15,8 @@ export const getSupplierDetails = (supplier) => {
     breadcrumbCurrent: "Show Supplier",
     breadcrumbRootPath: "/More/ViewSupplier",
     title: supplier.name,
-    subtitle: `Supplier ID: ${supplier.id}`,
+    // Hide supplier ID subtitle to avoid exposing internal IDs in the UI
+    subtitle: "",
     
     // Image (using default for suppliers)
     assetImage: null,
@@ -35,9 +36,9 @@ export const getSupplierDetails = (supplier) => {
     url: supplier.url || "N/A",
     
     // Additional Information
-    notes: supplier.notes || "N/A",
-    createdAt: supplier.createdAt || "N/A",
-    updatedAt: supplier.updatedAt || "N/A",
+    notes: supplier.notes || supplier.note || "N/A",
+    createdAt: supplier.createdAt || supplier.created_at || "N/A",
+    updatedAt: supplier.updatedAt || supplier.updated_at || "N/A",
   };
 };
 

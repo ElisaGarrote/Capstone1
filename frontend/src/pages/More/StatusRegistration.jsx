@@ -18,6 +18,7 @@ const StatusRegistration = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
@@ -120,6 +121,7 @@ const StatusRegistration = () => {
   const onSubmit = async (data) => {
     // Send the form to the contexts service
     try {
+      setIsSubmitting(true);
       const contextsBase = import.meta.env.VITE_CONTEXTS_API_URL || import.meta.env.VITE_API_URL || "/api/contexts/";
       const payload = {
         name: data.statusName,
@@ -135,6 +137,8 @@ const StatusRegistration = () => {
       const msg = err?.response?.data?.detail || err?.response?.data || err.message || "Failed to create status";
       setErrorMessage(typeof msg === "string" ? msg : JSON.stringify(msg));
       setTimeout(() => setErrorMessage(""), 5000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -269,9 +273,9 @@ const StatusRegistration = () => {
                 <button
                   type="submit"
                   className="primary-button"
-                  disabled={!isValid}
+                  disabled={isSubmitting}
                 >
-                  Save
+                  {isSubmitting ? "Saving..." : "Save"}
                 </button>
               </form>
             </section>

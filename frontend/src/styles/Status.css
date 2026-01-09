@@ -265,3 +265,16 @@
   background-color: var(--repair-text);
   --pulse-color: 19, 33, 68;
 }
+
+td, th {
+  height: 50px;
+  min-height: 50px;
+  vertical-align: middle;
+}
+
+img {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: cover !important;
+  border-radius: 4px !important;
+}

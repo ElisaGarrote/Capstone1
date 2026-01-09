@@ -71,13 +71,14 @@ const DepraciationRegistration = () => {
       }
       if (isEdit && editState?.id) {
         await contextsApi.patch(`/depreciations/${editState.id}/`, payload)
-        setSuccessMessage('Depreciation updated successfully.')
+        // Navigate to list with success alert
+        navigate('/More/Depreciations', { state: { successMessage: 'Depreciation updated successfully.' } });
+        return
       } else {
         await contextsApi.post('/depreciations/', payload)
-        setSuccessMessage('Depreciation created successfully.')
+        navigate('/More/Depreciations', { state: { successMessage: 'Depreciation created successfully.' } });
+        return
       }
-      setTimeout(() => setSuccessMessage(''), 3000)
-      navigate('/More/Depreciations')
     } catch (err) {
       console.error('Save failed', err)
       setErrorMessage(err?.response?.data?.detail || 'Save failed. See console for details.')
@@ -93,8 +94,9 @@ const DepraciationRegistration = () => {
       try {
         if (editState?.id) {
           await contextsApi.delete(`/depreciations/${editState.id}/`)
-          setSuccessMessage('Depreciation deleted.')
-          setTimeout(() => setSuccessMessage(''), 3000)
+          // navigate back to list with success message
+          navigate('/More/Depreciations', { state: { successMessage: 'Depreciation deleted.' } });
+          return
         }
       } catch (err) {
         console.error('Delete failed', err)
@@ -219,8 +221,8 @@ const DepraciationRegistration = () => {
               </fieldset>
 
               {/* Submit */}
-              <button type="submit" className="primary-button" disabled={!isValid}>
-                Save
+              <button type="submit" className="primary-button" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save"}
               </button>
             </form>
           </section>

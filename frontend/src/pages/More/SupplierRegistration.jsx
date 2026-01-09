@@ -152,6 +152,29 @@ const SupplierRegistration = () => {
     }
   };
 
+  // Format phone number to international +63 on blur
+  const formatPhoneToInternational = (raw) => {
+    if (!raw) return raw;
+    const digits = String(raw).replace(/[^0-9+]/g, "");
+    if (/^\+63\d{9,10}$/.test(digits)) return digits;
+    if (/^0\d{9,11}$/.test(digits)) return "+63" + digits.slice(1);
+    if (/^9\d{8,9}$/.test(digits)) return "+63" + digits;
+    return digits;
+  };
+
+  // Format fax number to international +63 on blur (allows shorter landline lengths)
+  const formatFaxToInternational = (raw) => {
+    if (!raw) return raw;
+    const digits = String(raw).replace(/[^0-9+]/g, "");
+    // If already in +63 format and reasonable length (7-10 local digits)
+    if (/^\+63\d{7,10}$/.test(digits)) return digits;
+    // Local numbers starting with 0 -> replace with +63
+    if (/^0\d{6,11}$/.test(digits)) return "+63" + digits.slice(1);
+    // Local numbers without leading zero (e.g., area/local) -> prefix +63
+    if (/^\d{6,10}$/.test(digits)) return "+63" + digits;
+    return digits;
+  };
+
   const state = supplier ? { updatedSupplier: true } : { addedSupplier: true };
 
   const onSubmit = async (data) => {
@@ -317,13 +340,16 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="address">Address</label>
+              <label htmlFor="address">
+                Address
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Address"
                 maxLength={200}
                 className={errors.address ? "input-error" : ""}
-                {...register("address")}
+                {...register("address", { required: "Address is required" })}
               />
               {errors.address && (
                 <span className="error-message">{errors.address.message}</span>
@@ -331,20 +357,31 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="city">City</label>
-              <input placeholder="City" {...register("city")} maxLength={50} />
+              <label htmlFor="city">
+                City
+                <span className="required-asterisk">*</span>
+              </label>
+              <input
+                placeholder="City"
+                {...register("city", { required: "City is required" })}
+                maxLength={50}
+              />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="zip">Zip Code</label>
+              <label htmlFor="zip">
+                Zip Code
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="number"
                 placeholder="ZIP"
                 maxLength={4}
                 className={errors.zip ? "input-error" : ""}
                 {...register("zip", {
+                  required: "Zip code is required",
                   pattern: {
-                    value: /^[0-9]{4}$/,
+                    value: /^[0-9]{4}$/, 
                     message: "Zip code must be a number with 4 digits only",
                   },
                   maxLength: {
@@ -359,34 +396,43 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="state">State</label>
+              <label htmlFor="state">
+                State
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="State"
                 maxLength={50}
                 className={errors.state ? "input-error" : ""}
-                {...register("state")}
+                {...register("state", { required: "State is required" })}
               />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="country">Country</label>
+              <label htmlFor="country">
+                Country
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Country"
                 maxLength={50}
-                className={errors.state ? "input-error" : ""}
-                {...register("country")}
+                className={errors.country ? "input-error" : ""}
+                {...register("country", { required: "Country is required" })}
               />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="contact_name">Contact Person</label>
+              <label htmlFor="contact_name">
+                Contact Person
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Supplier's Contact Name"
                 maxLength={100}
-                {...register("contact_name")}
+                {...register("contact_name", { required: "Contact name is required" })}
               />
               {errors.contact_name && (
                 <span className="error-message">
@@ -396,23 +442,51 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="phone_number">Phone Number</label>
+              <label htmlFor="phone_number">
+                Phone Number
+                <span className="required-asterisk">*</span>
+              </label>
               <input
-                type="number"
-                placeholder="Contact's Phone Number"
+                type="tel"
+                placeholder="Phone Number (e.g. +639XXXXXXXX)"
                 maxLength={13}
-                {...register("phone_number")}
+                className={errors.phone_number ? "input-error" : ""}
+                {...register("phone_number", {
+                  required: "Phone number is required",
+                  pattern: {
+                    value: /^\+63\d{9,10}$/,
+                    message: "Phone must start with +63 followed by 9-10 digits",
+                  },
+                })}
+                onBlur={(e) => {
+                  const formatted = formatPhoneToInternational(e.target.value || "");
+                  setValue("phone_number", formatted, { shouldValidate: true, shouldDirty: true });
+                }}
               />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="fax">Fax</label>
+              <label htmlFor="fax">
+                Fax Contact Number
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
-                placeholder="Fax"
+                placeholder="Fax (e.g. +632XXXXXXXX)"
                 maxLength={50}
-                className={errors.state ? "input-error" : ""}
-                {...register("fax")}
+                className={errors.fax ? "input-error" : ""}
+                {...register("fax", {
+                  required: "Fax is required",
+                  pattern: {
+                    value: /^\+63\d{7,10}$/,
+                    message:
+                      "Fax must be international format starting with +63 followed by 7-10 digits",
+                  },
+                })}
+                onBlur={(e) => {
+                  const formatted = formatFaxToInternational(e.target.value || "");
+                  setValue("fax", formatted, { shouldValidate: true, shouldDirty: true });
+                }}
               />
               {errors.fax && (
                 <span className="error-message">{errors.fax.message}</span>
@@ -420,21 +494,35 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">
+                Email
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="email"
                 placeholder="Contact's Email"
-                {...register("email")}
+                className={errors.email ? "input-error" : ""}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\S+@\S+\.\S+$/,
+                    message: "Please enter a valid email address",
+                  },
+                })}
               />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="URL">URL</label>
+              <label htmlFor="URL">
+                Website URL
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="url"
                 placeholder="URL"
                 className={errors.URL ? "input-error" : ""}
                 {...register("URL", {
+                  required: "URL is required",
                   pattern: {
                     value: /^(https?:\/\/).+/i,
                     message: "URL must start with http:// or https://",
@@ -499,9 +587,9 @@ const SupplierRegistration = () => {
             <button
               type="submit"
               className="primary-button"
-              disabled={!isValid}
+              disabled={isLoading}
             >
-              Save
+              {isLoading ? "Saving..." : "Save"}
             </button>
           </form>
         </main>
