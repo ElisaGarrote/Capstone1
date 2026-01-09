@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { selectUser } from "../features/counter/userSlice";
-import NavBar from "../components/NavBar";
-import authService from "../services/auth-service";
-import DefaultProfile from "../assets/img/default-profile.svg";
-import "../styles/ManageProfile.css";
+import NavBar from "../../components/NavBar";
+import authService from "../../services/auth-service";
+import DefaultProfile from "../../assets/img/default-profile.svg";
+import "../../styles/ManageProfile/ManageProfile.css";
 
 export default function ManageProfile() {
   const [userInfo, setUserInfo] = useState({
@@ -19,21 +17,19 @@ export default function ManageProfile() {
     image: null,
   });
 
-  const user = useSelector(selectUser);
-
   useEffect(() => {
     // Load user information from auth service
-    // const currentUser = authService.getUserInfo();
+    const currentUser = authService.getUserInfo();
     setUserInfo({
-      first_name: user.firstName || "",
-      middle_name: user.middleName || "",
-      last_name: user.lastName || "",
-      suffix: user.suffix || "",
-      company_id: user.company_id || "",
-      department: user.department || "",
-      email: user.email || "",
+      first_name: currentUser.firstName || "",
+      middle_name: currentUser.middleName || "",
+      last_name: currentUser.lastName || "",
+      suffix: currentUser.suffix || "",
+      company_id: currentUser.company_id || "",
+      department: currentUser.department || "",
+      email: currentUser.email || "",
       password: "",
-      image: user.image || null,
+      image: currentUser.image || null,
     });
   }, []);
 

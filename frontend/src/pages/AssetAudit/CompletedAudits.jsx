@@ -6,7 +6,7 @@ import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TabNavBar from "../../components/TabNavBar";
-import "../../styles/AuditsCompleted.css";
+import "../../styles/AssetAudits/AuditsCompleted.css";
 import completedAudit from "../../data/mockData/audits/completed-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";

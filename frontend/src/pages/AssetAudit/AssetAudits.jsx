@@ -7,7 +7,7 @@ import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
-import "../../styles/Audits.css";
+import "../../styles/AssetAudits/Audits.css";
 import dueAudit from "../../data/mockData/audits/due-audit-mockup-data.json";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";

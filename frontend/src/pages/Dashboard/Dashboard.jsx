@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import NavBar from "../components/NavBar";
-import StatusCard from "../components/dashboard/StatusCard";
-import AssetMetrics from "../components/dashboard/AssetMetrics";
-import KPISummaryCards from "../components/Dashboard/KPISummaryCards";
-import AssetStatusForecastChart from "../components/Dashboard/AssetStatusForecastChart";
-import ProductDemandForecastChart from "../components/Dashboard/ProductDemandForecastChart";
-import "../styles/Dashboard.css";
-import { fetchDashboardStats } from "../services/assets-service";
-import forecastService from "../services/forecast-service";
-import authService from "../services/auth-service";
+import NavBar from "../../components/NavBar";
+import StatusCard from "../../components/dashboard/StatusCard";
+import AssetMetrics from "../../components/dashboard/AssetMetrics";
+import KPISummaryCards from "../../components/Dashboard/KPISummaryCards";
+import AssetStatusForecastChart from "../../components/Dashboard/AssetStatusForecastChart";
+import ProductDemandForecastChart from "../../components/Dashboard/ProductDemandForecastChart";
+import "../../styles/Dashboard.css";
+import { fetchDashboardStats } from "../../services/assets-service";
+import forecastService from "../../services/forecast-service";
+import authService from "../../services/auth-service";
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
