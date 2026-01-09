@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "displayed_id": "A100000",
+    "displayed_id": "12344-Asset Dell XPS 13",
     "name": "Dell XPS 13",
     "product": "XPS 13\"",
     "category": "Laptop",
@@ -35,7 +35,7 @@
   },
   {
     "id": 2,
-    "displayed_id": "A100001",
+    "displayed_id": "12345-Asset Lenovo ThinkPad E15",
     "name": "Lenovo ThinkPad E15",
     "product": "ThinkPad E15 G4",
     "category": "Laptop",
@@ -69,7 +69,7 @@
   },
   {
     "id": 3,
-    "displayed_id": "A100002",
+    "displayed_id": "12346-Asset Apple iPhone 16 Pro Max",
     "name": "Apple iPhone 16 Pro Max",
     "product": "iPhone 16 Pro Max",
     "category": "Mobile Phone",
@@ -103,7 +103,7 @@
   },
   {
     "id": 4,
-    "displayed_id": "A100003",
+    "displayed_id": "12347-Asset Dell XPS 13",
     "name": "Dell XPS 13",
     "product": "XPS 13\"",
     "category": "Laptop",
@@ -126,7 +126,7 @@
   },
   {
     "id": 5,
-    "displayed_id": "A100004",
+    "displayed_id": "12348-Asset Dell XPS 13",
     "name": "Dell XPS 13",
     "product": "XPS 13\"",
     "category": "Laptop",
@@ -149,7 +149,7 @@
   },
   {
     "id": 6,
-    "displayed_id": "A100005",
+    "displayed_id": "12349-Asset Apple iPhone 16 Pro Max",
     "name": "Apple iPhone 16 Pro Max",
     "product": "iPhone 16 Pro Max",
     "category": "Mobile Phone",
@@ -183,7 +183,7 @@
   },
   {
     "id": 7,
-    "displayed_id": "A100006",
+    "displayed_id": "12350-Asset Apple iPhone 16 Pro Max",
     "name": "Apple iPhone 16 Pro Max",
     "product": "iPhone 16 Pro Max",
     "category": "Mobile Phone",
@@ -206,7 +206,7 @@
   },
   {
     "id": 8,
-    "displayed_id": "A100007",
+    "displayed_id": "12351-Asset Lenovo Yoga 7",
     "name": "Lenovo Yoga 7",
     "product": "Yoga 7",
     "category": "Laptop",
@@ -240,7 +240,7 @@
   },
   {
     "id": 9,
-    "displayed_id": "A100008",
+    "displayed_id": "12352-Asset Lenovo Yoga 7",
     "name": "Lenovo Yoga 7",
     "product": "Yoga 7",
     "category": "Laptop",
@@ -263,7 +263,7 @@
   },
   {
     "id": 10,
-    "displayed_id": "A100009",
+    "displayed_id": "12353-Asset Apple Macbook Pro 16",
     "name": "Apple Macbook Pro 16",
     "product": "Macbook Pro 16\"",
     "category": "Laptop",
@@ -297,7 +297,7 @@
   },
   {
     "id": 11,
-    "displayed_id": "A100010",
+    "displayed_id": "12354-Asset Apple Macbook Pro 16",
     "name": "Apple Macbook Pro 16",
     "product": "Macbook Pro 16\"",
     "category": "Laptop",
@@ -331,7 +331,7 @@
   },
   {
     "id": 12,
-    "displayed_id": "A100011",
+    "displayed_id": "12355-Asset Apple iPad Pro",
     "name": "Apple iPad Pro",
     "product": "iPad Pro",
     "category": "Tablet",
@@ -365,7 +365,7 @@
   },
   {
     "id": 13,
-    "displayed_id": "A100014",
+    "displayed_id": "12356-Asset Apple iPad Pro",
     "name": "Apple iPad Pro",
     "product": "iPad Pro",
     "category": "Tablet",
@@ -399,7 +399,7 @@
   },
   {
     "id": 14,
-    "displayed_id": "A100015",
+    "displayed_id": "12357-Asset Microsoft Surface Laptop 5",
     "name": "Microsoft Surface Laptop 5",
     "product": "Surface Laptop 5",
     "category": "Laptop",

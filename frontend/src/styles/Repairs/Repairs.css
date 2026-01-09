@@ -5,9 +5,10 @@
   overscroll-behavior: contain;
 
   table {
-    width: auto;
+    width: 100%;
     border-collapse: collapse;
     white-space: nowrap;
+    table-layout: fixed;
 
     th {
       padding: 0.75rem !important;
@@ -27,56 +28,56 @@
 
     /* table header for 'Checkbox' */
     th:first-child {
-      width: 50px;
-      min-width: 50px;
+      width: 6%;
+      min-width: auto;
     }
 
     /* table header for 'Asset' */
     th:nth-child(2) {
-      width: 130px;
-      min-width: 130px;
+      width: 14%;
+      min-width: auto;
     }
 
     /* table header for 'Type' */
     th:nth-child(3) {
-      width: 110px;
-      min-width: 110px;
+      width: 13%;
+      min-width: auto;
     }
 
     /* table header for 'Name' */
     th:nth-child(4) {
-      width: 160px;
-      min-width: 160px;
+      width: 18%;
+      min-width: auto;
     }
 
     /* table header for 'Start Date' */
     th:nth-child(5) {
-      width: 130px;
-      min-width: 130px;
+      width: 13%;
+      min-width: auto;
     }
 
     /* table header for 'End Date' */
     th:nth-child(6) {
-      width: 130px;
-      min-width: 130px;
+      width: 13%;
+      min-width: auto;
     }
 
     /* table header for 'Cost' */
     th:nth-child(7) {
-      width: 110px;
-      min-width: 110px;
+      width: 10%;
+      min-width: auto;
     }
 
     /* table header for 'Status' */
     th:nth-child(8) {
-      width: 130px;
-      min-width: 130px;
+      width: 13%;
+      min-width: auto;
     }
 
     /* table header for 'Action' */
     th:nth-child(9) {
-      width: 110px;
-      min-width: 110px;
+      width: 13%;
+      min-width: auto;
     }
 
     td {

@@ -2,48 +2,52 @@
   {
     "id": 1,
     "asset": {
-      "id": 301,
-      "displayed_id": "ASSET-021",
-      "name": "Dell Latitude 7440"
+      "id": 9,
+      "displayed_id": "12352-Asset Samsung Galaxy Book 3",
+      "name": "Samsung Galaxy Book 3"
     },
     "date": "2025-10-25",
     "notes": "Scheduled quarterly audit for IT laptops.",
+    "status": "pending",
     "is_deleted": false,
     "created_at": "2025-09-15T09:00:00Z"
   },
   {
     "id": 2,
     "asset": {
-      "id": 302,
-      "displayed_id": "ASSET-022",
-      "name": "HP LaserJet Pro M404"
+      "id": 10,
+      "displayed_id": "12353-Asset Google Pixelbook Go",
+      "name": "Google Pixelbook Go"
     },
     "date": "2025-11-05",
     "notes": "Printer maintenance and audit scheduled for next month.",
+    "status": "pending",
     "is_deleted": false,
     "created_at": "2025-09-30T14:20:00Z"
   },
   {
     "id": 3,
     "asset": {
-      "id": 303,
-      "displayed_id": "ASSET-023",
-      "name": "Samsung Galaxy Tab S8"
+      "id": 11,
+      "displayed_id": "12354-Asset LG Gram 17",
+      "name": "LG Gram 17"
     },
     "date": "2025-11-15",
     "notes": "Audit for field-use tablets. Assigned to compliance team.",
+    "status": "pending",
     "is_deleted": false,
     "created_at": "2025-10-02T10:45:00Z"
   },
   {
     "id": 4,
     "asset": {
-      "id": 304,
-      "displayed_id": "ASSET-024",
-      "name": "Cisco Network Switch 2960X"
+      "id": 12,
+      "displayed_id": "12355-Asset VAIO FE15",
+      "name": "VAIO FE15"
     },
     "date": "2025-12-01",
     "notes": "Network infrastructure audit scheduled at HQ.",
+    "status": "pending",
     "is_deleted": false,
     "created_at": "2025-10-10T11:15:00Z"
   }

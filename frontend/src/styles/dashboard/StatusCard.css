@@ -167,7 +167,6 @@
   transform: translateX(8px);
 }
 
-/* Active State (When Popup is Open) */
 .status-card.active {
   background: #0066ff;
   transform: translateY(-4px);
@@ -220,39 +219,39 @@
   }
 }
 
-.user-info {
+.status-card .user-info {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.user-icon {
+.status-card .user-icon {
   width: 1rem;
   height: 1rem;
-  color: #0D6EFD !important;
+  color: #0C0C0C;
 }
 
-.user-info span {
-  color: #0D6EFD;
+.status-card .user-info span {
+  color: #0C0C0C;
   font-weight: 500;
   font-size: 0.875rem;
 }
 
-.location-info {
+.status-card .location-info {
   display: flex;
   align-items: center;
   gap: 0.375rem;
   margin-top: 0.25rem;
 }
 
-.location-info svg {
+.status-card .location-info svg {
   width: 1rem;
   height: 1rem;
-  color: #0D6EFD !important;
+  color: #0C0C0C;
 }
 
-.location-info span {
-  color: #0D6EFD;
+.status-card .location-info span {
+  color: #0C0C0C;
   font-weight: 500;
   font-size: 0.875rem;
 } 
