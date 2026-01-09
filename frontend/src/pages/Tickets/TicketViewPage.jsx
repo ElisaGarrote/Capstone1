@@ -15,11 +15,9 @@ function TicketViewPage() {
   const [ticket, setTicket] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    // Find ticket from mockup data
-    const foundTicket = TicketsMockupData.find((t) => t.id === id);
+    const foundTicket = TicketsMockupData.find((t) => t.ticket_id === id);
     if (foundTicket) {
       setTicket(foundTicket);
     }
@@ -48,37 +46,22 @@ function TicketViewPage() {
     navigate("/approved-tickets");
   };
 
-  const handleCheckOut = () => {
-    console.log("Check-Out ticket:", ticket.id);
-  };
-
-  const handleCheckIn = () => {
-    console.log("Check-In ticket:", ticket.id);
-  };
-
   const handleDeleteClick = () => {
     setDeleteModalOpen(true);
   };
 
-  // Create action buttons with vertical layout - Check-Out, Check-In, Delete
   const actionButtons = (
     <div className="ticket-vertical-action-buttons">
-      <button
-        type="button"
-        className="ticket-action-btn ticket-checkout-btn"
-        onClick={handleCheckOut}
-      >
-        <i className="fas fa-sign-out-alt"></i>
-        Check-Out
-      </button>
-      <button
-        type="button"
-        className="ticket-action-btn ticket-checkin-btn"
-        onClick={handleCheckIn}
-      >
-        <i className="fas fa-sign-in-alt"></i>
-        Check-In
-      </button>
+      {ticket.category === "Software Request" && (
+        <button
+          type="button"
+          className="ticket-action-btn ticket-register-asset-btn"
+          onClick={() => console.log("Register Asset:", ticket.id)}
+        >
+          <i className="fas fa-plus"></i>
+          Register Asset
+        </button>
+      )}
       <MediumButtons
         type="delete"
         onClick={handleDeleteClick}
@@ -86,55 +69,333 @@ function TicketViewPage() {
     </div>
   );
 
-  // Tabs configuration
-  const tabs = [
-    { label: "About" }
-  ];
-
-  // Custom About tab content for Ticket Details
   const ticketDetailsContent = (
     <div className="ticket-about-section">
       <div className="ticket-details-section">
-        <h3 className="ticket-section-header">Ticket Details</h3>
+        <h3 className="ticket-section-header">
+          Ticket Details {(ticket.ticketType === "Registration" || ticket.ticketType === "Checkout" || ticket.ticketType === "Checkin" || ticket.ticketType === "Repair" || ticket.ticketType === "Incident" || ticket.ticketType === "Disposal") && `(${ticket.ticketType === "Checkin" ? "Check-in" : ticket.ticketType})`}
+        </h3>
         <div className="ticket-details-grid">
           <div className="ticket-detail-row">
             <label>Ticket Number</label>
             <span>{ticket.ticket_id}</span>
           </div>
-          <div className="ticket-detail-row">
-            <label>Asset</label>
-            <span>{ticket.asset_name}</span>
-          </div>
-          <div className="ticket-detail-row">
-            <label>Requestor</label>
-            <span>{ticket.requestor}</span>
-          </div>
-          <div className="ticket-detail-row">
-            <label>Subject</label>
-            <span>{ticket.subject}</span>
-          </div>
-          <div className="ticket-detail-row">
-            <label>Location</label>
-            <span>{ticket.requestor_location}</span>
-          </div>
-          <div className="ticket-detail-row">
-            <label>Status</label>
-            <span>
-              <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
-            </span>
-          </div>
-          <div className="ticket-detail-row">
-            <label>Priority</label>
-            <span>{ticket.priority}</span>
-          </div>
-          <div className="ticket-detail-row">
-            <label>Category</label>
-            <span>{ticket.category}</span>
-          </div>
-          <div className="ticket-detail-row">
-            <label>Assigned To</label>
-            <span>{ticket.assigned_to}</span>
-          </div>
+          {ticket.ticketType === "Registration" ? (
+            <>
+              <div className="ticket-detail-row">
+                <label>Category</label>
+                <span>{ticket.category}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Sub-category</label>
+                <span>{ticket.subcategory}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Subject</label>
+                <span>{ticket.subject}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Employee</label>
+                <span>{ticket.employee}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Status</label>
+                <span>
+                  <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
+                </span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Asset Model Name</label>
+                <span>{ticket.assetModelName}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Serial Number</label>
+                <span>{ticket.serialNumber}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Order Number</label>
+                <span>{ticket.orderNumber}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Purchase Cost</label>
+                <span>${ticket.purchaseCost}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Purchase Date</label>
+                <span>{ticket.purchasedDate}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Warranty Expiration</label>
+                <span>{ticket.warrantyExpiration}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Location</label>
+                <span>{ticket.requestor_location}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Department</label>
+                <span>{ticket.department}</span>
+              </div>
+            </>
+          ) : ticket.ticketType === "Checkout" ? (
+            <>
+              <div className="ticket-detail-row">
+                <label>Category</label>
+                <span>{ticket.category}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Sub-category</label>
+                <span>{ticket.subcategory}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Subject</label>
+                <span>{ticket.subject}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Employee</label>
+                <span>{ticket.requestor}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Status</label>
+                <span>
+                  <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
+                </span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Asset ID</label>
+                <span>{ticket.assetId}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Serial Number</label>
+                <span>{ticket.serialNumber}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Checkout Date</label>
+                <span>{new Date(ticket.checkout_date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Return Date</label>
+                <span>{new Date(ticket.return_date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Condition</label>
+                <span>{ticket.condition}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Location</label>
+                <span>{ticket.requestor_location}</span>
+              </div>
+            </>
+          ) : ticket.ticketType === "Checkin" ? (
+            <>
+              <div className="ticket-detail-row">
+                <label>Category</label>
+                <span>{ticket.category}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Sub-category</label>
+                <span>{ticket.subcategory}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Subject</label>
+                <span>{ticket.subject}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Employee</label>
+                <span>{ticket.requestor}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Status</label>
+                <span>
+                  <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
+                </span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Asset ID</label>
+                <span>{ticket.assetId}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Serial Number</label>
+                <span>{ticket.serialNumber}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Check-in Date</label>
+                <span>{new Date(ticket.checkin_date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Reference Ticket</label>
+                <span>{ticket.referenceTicket}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Condition</label>
+                <span>{ticket.condition}</span>
+              </div>
+            </>
+          ) : ticket.ticketType === "Repair" ? (
+            <>
+              <div className="ticket-detail-row">
+                <label>Category</label>
+                <span>{ticket.category}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Sub-category</label>
+                <span>{ticket.subcategory}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Subject</label>
+                <span>{ticket.subject}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Employee</label>
+                <span>{ticket.requestor}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Status</label>
+                <span>
+                  <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
+                </span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Repair Name</label>
+                <span>{ticket.repairName}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Repair Type</label>
+                <span>{ticket.repairType}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Asset ID</label>
+                <span>{ticket.assetId}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Start Date</label>
+                <span>{new Date(ticket.startDate).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>End Date</label>
+                <span>{new Date(ticket.endDate).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Cost</label>
+                <span>${ticket.cost}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Supplier</label>
+                <span>{ticket.supplier}</span>
+              </div>
+            </>
+          ) : ticket.ticketType === "Incident" ? (
+            <>
+              <div className="ticket-detail-row">
+                <label>Category</label>
+                <span>{ticket.category}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Sub-category</label>
+                <span>{ticket.subcategory}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Subject</label>
+                <span>{ticket.subject}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Employee</label>
+                <span>{ticket.requestor}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Status</label>
+                <span>
+                  <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
+                </span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Asset ID</label>
+                <span>{ticket.assetId}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Incident Date</label>
+                <span>{new Date(ticket.incidentDate).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Last Location</label>
+                <span>{ticket.lastLocation}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Schedule Audit</label>
+                <span>{ticket.scheduleAudit}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Damage Description</label>
+                <span>{ticket.damageDescription}</span>
+              </div>
+            </>
+          ) : ticket.ticketType === "Disposal" ? (
+            <>
+              <div className="ticket-detail-row">
+                <label>Category</label>
+                <span>{ticket.category}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Sub-category</label>
+                <span>{ticket.subcategory}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Subject</label>
+                <span>{ticket.subject}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Employee</label>
+                <span>{ticket.requestor}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Status</label>
+                <span>
+                  <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
+                </span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Command Note</label>
+                <span>{ticket.commandNote}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="ticket-detail-row">
+                <label>Asset</label>
+                <span>{ticket.asset_name}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Requestor</label>
+                <span>{ticket.requestor}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Subject</label>
+                <span>{ticket.subject}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Location</label>
+                <span>{ticket.requestor_location}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Status</label>
+                <span>
+                  <Status type={ticket.status.toLowerCase().replace(' ', '')} name={ticket.status} />
+                </span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Priority</label>
+                <span>{ticket.priority}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Category</label>
+                <span>{ticket.category}</span>
+              </div>
+              <div className="ticket-detail-row">
+                <label>Assigned To</label>
+                <span>{ticket.assigned_to}</span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Description Section */}
@@ -165,9 +426,6 @@ function TicketViewPage() {
         title={ticket.ticket_id}
         subtitle={ticket.subject}
         assetImage={DefaultImage}
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
         actionButtons={actionButtons}
       >
         {ticketDetailsContent}

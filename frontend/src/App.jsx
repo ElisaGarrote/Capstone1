@@ -19,6 +19,12 @@ import AssetViewPage from "./pages/Assets/AssetViewPage";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
 import Tickets from "./pages/Tickets/Tickets";
+import TicketsRegistration from "./pages/Tickets/TicketsRegistration";
+import TicketsCheckout from "./pages/Tickets/TicketsCheckout";
+import TicketsCheckin from "./pages/Tickets/TicketsCheckin";
+import TicketsRepair from "./pages/Tickets/TicketsRepair";
+import TicketsIncident from "./pages/Tickets/TicketsIncident";
+import TicketsDisposal from "./pages/Tickets/TicketsDisposal";
 import TicketViewPage from "./pages/Tickets/TicketViewPage";
 import Components from "./pages/Components/Components";
 import ComponentRegistration from "./pages/Components/ComponentRegistration";
@@ -289,6 +295,13 @@ function App() {
           <Route path="/audits/scheduled/edit/:id" element={<ScheduleRegistration />} />
           <Route path="/audits/overdue/edit/:id" element={<ScheduleRegistration />} />
           <Route path="/approved-tickets" element={<Tickets />} />
+          <Route path="/tickets" element={<Tickets />} />
+          <Route path="/tickets/registration" element={<TicketsRegistration />} />
+          <Route path="/tickets/check-out" element={<TicketsCheckout />} />
+          <Route path="/tickets/check-in" element={<TicketsCheckin />} />
+          <Route path="/tickets/repair" element={<TicketsRepair />} />
+          <Route path="/tickets/incident" element={<TicketsIncident />} />
+          <Route path="/tickets/disposal" element={<TicketsDisposal />} />
           <Route path="/tickets/view/:id" element={<TicketViewPage />} />
           <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
           <Route path="/warranties" element={<ExpiringWarranties />} />

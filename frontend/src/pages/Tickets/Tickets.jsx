@@ -8,13 +8,89 @@ import TicketFilterModal from "../../components/Modals/TicketFilterModal";
 import ActionButtons from "../../components/ActionButtons";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
+import TicketTabNavBar from "../../components/TicketTabNavBar";
 import TicketsMockupData from "../../data/mockData/tickets/tickets-mockup-data.json";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import RightArrowIcon from "../../assets/icons/right-arrow.svg";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/Tickets/Tickets.css";
 
-// TableHeader component to render the table header
-function TableHeader({ allSelected, onHeaderChange }) {
+function TableHeader({ allSelected, onHeaderChange, ticketType }) {
+  const renderHeaders = () => {
+    switch (ticketType) {
+      case "registration":
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>ASSET MODEL NAME</th>
+            <th>ASSET SERIAL NUMBER</th>
+            <th>PURCHASED DATE</th>
+          </>
+        );
+      case "check-out":
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>ASSET ID NUMBER</th>
+            <th>LOCATION</th>
+            <th>STATUS</th>
+            <th>REQUEST DATE</th>
+          </>
+        );
+      case "check-in":
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>ASSET ID NUMBER</th>
+            <th>LOCATION</th>
+            <th>STATUS</th>
+            <th>CHECKIN DATE</th>
+          </>
+        );
+      case "repair":
+        return (
+          <>
+            <th>TICKET</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>REPAIR NAME</th>
+            <th>REPAIR TYPE</th>
+            <th>START DATE</th>
+            <th>END DATE</th>
+          </>
+        );
+      case "incident":
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>ASSET ID NUMBER</th>
+            <th>INCIDENT DATE</th>
+            <th>EMPLOYEE NAME</th>
+            <th>SCHEDULE AUDIT</th>
+          </>
+        );
+      default:
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>TYPE</th>
+            <th>CATEGORY</th>
+            <th>SUBJECT</th>
+            <th>REQUESTOR</th>
+          </>
+        );
+    }
+  };
+
   return (
     <tr>
       <th>
@@ -24,19 +100,87 @@ function TableHeader({ allSelected, onHeaderChange }) {
           onChange={onHeaderChange}
         />
       </th>
-      <th>TICKET NUMBER</th>
-      <th>ASSET</th>
-      <th>REQUESTOR</th>
-      <th>SUBJECT</th>
-      <th>LOCATION</th>
-      <th>CHECK-IN / CHECK-OUT</th>
+      {renderHeaders()}
       <th>ACTIONS</th>
     </tr>
   );
 }
 
-// TableItem component to render each ticket row
-function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut, ticketType }) {
+  const renderColumns = () => {
+    switch (ticketType) {
+      case "registration":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.assetModelName || "-"}</td>
+            <td>{ticket.serialNumber || "-"}</td>
+            <td>{ticket.purchasedDate || "-"}</td>
+          </>
+        );
+      case "check-out":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.assetId || "-"}</td>
+            <td>{ticket.requestorLocation || "-"}</td>
+            <td>{ticket.status || "-"}</td>
+            <td>{ticket.checkoutDate || "-"}</td>
+          </>
+        );
+      case "check-in":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.assetId || "-"}</td>
+            <td>{ticket.requestorLocation || "-"}</td>
+            <td>{ticket.status || "-"}</td>
+            <td>{ticket.checkinDate || "-"}</td>
+          </>
+        );
+      case "repair":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.repairName || "-"}</td>
+            <td>{ticket.repairType || "-"}</td>
+            <td>{ticket.startDate || "-"}</td>
+            <td>{ticket.endDate || "-"}</td>
+          </>
+        );
+      case "incident":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.assetId || "-"}</td>
+            <td>{ticket.incidentDate || "-"}</td>
+            <td>{ticket.requestor || "-"}</td>
+            <td>{ticket.scheduleAudit || "-"}</td>
+          </>
+        );
+      default: // "all"
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.ticketType ? ticket.ticketType.charAt(0).toUpperCase() + ticket.ticketType.slice(1).toLowerCase() : "-"}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subject || "-"}</td>
+            <td>{ticket.requestor || "-"}</td>
+          </>
+        );
+    }
+  };
+
   return (
     <tr>
       <td>
@@ -46,31 +190,14 @@ function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick
           onChange={(e) => onRowChange(ticket.id, e.target.checked)}
         />
       </td>
-      <td>{ticket.id}</td>
-      <td>{ticket.assetName}</td>
-      <td>{ticket.requestor}</td>
-      <td>{ticket.subject}</td>
-      <td>{ticket.requestorLocation}</td>
-
-      {/* CHECK-IN / CHECK-OUT Column */}
-      <td>
-        {ticket.isCheckInOrOut && (
-          <ActionButtons
-            showCheckout={ticket.isCheckInOrOut === "Check-Out"}
-            showCheckin={ticket.isCheckInOrOut === "Check-In"}
-            onCheckoutClick={() => onCheckInOut(ticket)}
-            onCheckinClick={() => onCheckInOut(ticket)}
-          />
-        )}
-      </td>
-
-      {/* ACTIONS Column */}
+      {renderColumns()}
       <td>
         <ActionButtons
           showEdit={false}
-          showDelete={false}
+          showDelete={true}
           showView
           onViewClick={() => onViewClick(ticket)}
+          onDeleteClick={() => onDeleteClick(ticket)}
         />
       </td>
     </tr>
@@ -81,13 +208,11 @@ const Tickets = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const toggleRef = useRef(null);
-  const exportRef = useRef(null);
 
   const [ticketItems, setTicketItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [exportToggle, setExportToggle] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
@@ -100,8 +225,32 @@ const Tickets = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [currentTab, setCurrentTab] = useState(
+    location.pathname.split("/")[2] || "all"
+  );
+  const [ticketCounts, setTicketCounts] = useState({});
+  // Initialize ticketView from localStorage or default to "approved"
+  const [ticketView, setTicketView] = useState(() => {
+    return localStorage.getItem("ticketView") || "approved";
+  });
+  const [showViewDropdown, setShowViewDropdown] = useState(false);
+  
+  // Store reference to original tickets for stable counts calculation
+  const ticketItemsRef = useRef([]);
 
-
+  // Map ticket categories to tab keys
+  const categoryToTabKey = {
+    "Registration": "registration",
+    "Check-Out": "check-out",
+    "Check-In": "check-in",
+    "Repair": "repair",
+    "Incident": "incident",
+    "Disposal": "disposal",
+    // Map existing categories to appropriate tabs
+    "Hardware Issue": "repair",
+    "Software Request": "registration",
+    "Performance Issue": "incident",
+  };
 
   useEffect(() => {
     const loadTickets = () => {
@@ -116,6 +265,12 @@ const Tickets = () => {
                 : "Check-Out"
               : null);
 
+          // Determine ticket type based on category
+          let ticketType = "all";
+          if (ticket.category && categoryToTabKey[ticket.category]) {
+            ticketType = categoryToTabKey[ticket.category];
+          }
+
           return {
             id: ticket.ticket_id,
             assetId: ticket.asset_id,
@@ -126,13 +281,40 @@ const Tickets = () => {
             requestorLocation: ticket.requestor_location || "-",
             checkoutDate: ticket.checkout_date,
             returnDate: ticket.return_date,
+            checkinDate: ticket.checkin_date,
             image: DefaultImage,
             isResolved: ticket.is_resolved,
             isCheckInOrOut,
+            category: ticket.category,
+            status: ticket.status || "-",
+            subcategory: ticket.subcategory || "-",
+            assetModelName: ticket.assetModelName || "-",
+            serialNumber: ticket.serialNumber || "-",
+            purchasedDate: ticket.purchasedDate || "-",
+            repairName: ticket.repairName || "-",
+            repairType: ticket.repairType || "-",
+            startDate: ticket.startDate || "-",
+            endDate: ticket.endDate || "-",
+            incidentDate: ticket.incidentDate || "-",
+            scheduleAudit: ticket.scheduleAudit || "-",
+            ticketType,
           };
         });
 
+        // Calculate counts for each ticket type
+        const counts = {
+          all: mappedTickets.length,
+          registration: mappedTickets.filter(t => t.ticketType === "registration").length,
+          "check-out": mappedTickets.filter(t => t.ticketType === "check-out").length,
+          "check-in": mappedTickets.filter(t => t.ticketType === "check-in").length,
+          repair: mappedTickets.filter(t => t.ticketType === "repair").length,
+          incident: mappedTickets.filter(t => t.ticketType === "incident").length,
+          disposal: mappedTickets.filter(t => t.ticketType === "disposal").length,
+        };
+        setTicketCounts(counts);
+
         setTicketItems(mappedTickets);
+        ticketItemsRef.current = mappedTickets;
         setFilteredData(mappedTickets);
       } catch (error) {
         console.error("Error loading tickets:", error);
@@ -205,24 +387,10 @@ const Tickets = () => {
     navigate(`/tickets/view/${ticket.id}`);
   };
 
-  // outside click for export toggle
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+    const tabFromPath = location.pathname.split("/")[2] || "all";
+    setCurrentTab(tabFromPath);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -233,6 +401,73 @@ const Tickets = () => {
       }, 5000);
     }
   }, [location]);
+
+  const handleExport = () => {
+    const dataToExport = filteredTickets.length > 0 ? filteredTickets : ticketItems;
+    exportToExcel(dataToExport, "Tickets_Records.xlsx");
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const titleSection = document.querySelector(".audit-title-page-section");
+      if (titleSection && !titleSection.contains(event.target) && showViewDropdown) {
+        setShowViewDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showViewDropdown]);
+
+  useEffect(() => {
+    let viewFilteredTickets = ticketItemsRef.current;
+    
+    // Filter by view (approved/resolved)
+    viewFilteredTickets = viewFilteredTickets.filter(ticket => {
+      if (ticketView === "approved" && ticket.isResolved) {
+        return false;
+      }
+      if (ticketView === "resolved" && !ticket.isResolved) {
+        return false;
+      }
+      return true;
+    });
+
+    const counts = {
+      all: viewFilteredTickets.length,
+      registration: viewFilteredTickets.filter(t => t.ticketType === "registration").length,
+      "check-out": viewFilteredTickets.filter(t => t.ticketType === "check-out").length,
+      "check-in": viewFilteredTickets.filter(t => t.ticketType === "check-in").length,
+      repair: viewFilteredTickets.filter(t => t.ticketType === "repair").length,
+      incident: viewFilteredTickets.filter(t => t.ticketType === "incident").length,
+      disposal: viewFilteredTickets.filter(t => t.ticketType === "disposal").length,
+    };
+    setTicketCounts(counts);
+  }, [ticketView]);
+
+  useEffect(() => {
+    localStorage.setItem("ticketView", ticketView);
+  }, [ticketView]);
+
+  const getColumnCount = () => {
+    switch (currentTab) {
+      case "registration":
+        return 8;
+      case "check-out":
+        return 9;
+      case "check-in":
+        return 9;
+      case "repair":
+        return 9;
+      case "incident":
+        return 9;
+      case "all":
+        return 7;
+      default:
+        return 7;
+    }
+  };
 
   const handleCheckInOut = (ticket) => {
     if (ticket.isCheckInOrOut === "Check-In") {
@@ -271,13 +506,26 @@ const Tickets = () => {
     }
   };
 
-  // Filter tickets based on search query and applied filters
-  let filteredTickets = filteredData.filter(ticket =>
-    ticket.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ticket.requestor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    ticket.assetName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  let filteredTickets = filteredData.filter(ticket => {
+    // Filter by view
+    if (ticketView === "approved" && ticket.isResolved) {
+      return false;
+    }
+    if (ticketView === "resolved" && !ticket.isResolved) {
+      return false;
+    }
+    // Filter by tab
+    if (currentTab !== "all" && ticket.ticketType !== currentTab) {
+      return false;
+    }
+    // Filter by search query
+    return (
+      ticket.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.requestor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.assetName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   // Pagination logic
   const startIndex = (currentPage - 1) * pageSize;
@@ -360,10 +608,66 @@ const Tickets = () => {
         <NavBar />
 
         <main className="main-with-table">
+          <section className="audit-title-page-section">
+            <div className="ticket-title-container">
+              <h1>
+                {ticketView === "approved" ? "Approved Tickets" : "Resolved Tickets"}
+              </h1>
+              <button
+                onClick={() => setShowViewDropdown(!showViewDropdown)}
+                className="view-toggle-button"
+              >
+                <img
+                  src={RightArrowIcon}
+                  alt="dropdown"
+                  className="view-toggle-icon"
+                  style={{
+                    transform: showViewDropdown ? "rotate(-90deg)" : "rotate(90deg)",
+                  }}
+                />
+              </button>
+              {showViewDropdown && (
+                <div className="view-dropdown-menu">
+                  <button
+                    onClick={() => {
+                      setTicketView("approved");
+                      setShowViewDropdown(false);
+                    }}
+                    className={`dropdown-item ${ticketView === "approved" ? "active" : ""}`}
+                  >
+                    Approved Tickets
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTicketView("resolved");
+                      setShowViewDropdown(false);
+                    }}
+                    className={`dropdown-item ${ticketView === "resolved" ? "active" : ""}`}
+                  >
+                    Resolved Tickets
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <TicketTabNavBar ticketCounts={ticketCounts} />
+          </section>
+
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Approve Tickets ({filteredTickets.length})</h2>
+              <h2 className="h2">
+                {currentTab === "all" && `All`}
+                {currentTab === "registration" && `Registration Tickets`}
+                {currentTab === "check-out" && `Check-out Tickets`}
+                {currentTab === "check-in" && `Check-in Tickets`}
+                {currentTab === "repair" && `Repair Tickets`}
+                {currentTab === "incident" && `Incident Tickets`}
+                {currentTab === "disposal" && `Disposal Tickets`}
+                {` (${filteredTickets.length})`}
+              </h2>
               <section className="table-actions">
                   {/* Bulk delete removed for approval workflow */}
                 <input
@@ -380,29 +684,21 @@ const Tickets = () => {
                 >
                   Filter
                 </button>
-                <div ref={toggleRef}>
-                  <MediumButtons
-                    type="export"
-                    onClick={() => setExportToggle(!exportToggle)}
-                  />
-                </div>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
               </section>
             </section>
 
             {/* Table Structure */}
             <section className="tickets-table-section">
-              {exportToggle && (
-                <section className="export-button-section" ref={exportRef}>
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
               <table>
                 <thead>
                   <TableHeader
                     allSelected={allSelected}
                     onHeaderChange={handleHeaderChange}
+                    ticketType={currentTab}
                   />
                 </thead>
                 <tbody>
@@ -416,11 +712,12 @@ const Tickets = () => {
                         onDeleteClick={openDeleteModal}
                         onViewClick={handleViewClick}
                         onCheckInOut={handleCheckInOut}
+                        ticketType={currentTab}
                       />
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="no-data-message">
+                      <td colSpan={getColumnCount()} className="no-data-message">
                         No tickets found.
                       </td>
                     </tr>
