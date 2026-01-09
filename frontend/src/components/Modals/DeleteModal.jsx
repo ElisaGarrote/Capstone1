@@ -10,6 +10,8 @@ import {
   bulkDeleteRepairs,
   deleteAuditSchedule,
   bulkDeleteAuditSchedules,
+  deleteComponent,
+  bulkDeleteComponents,
 } from "../../services/assets-service";
 
 export default function ConfirmationModal({
@@ -41,6 +43,8 @@ export default function ConfirmationModal({
           await deleteRepair(targetId);
         } else if (entityType === "audit-schedule") {
           await deleteAuditSchedule(targetId);
+        } else if (entityType === "component") {
+          await deleteComponent(targetId);
         }
         if (onSuccess) onSuccess(targetId);
       } else if (actionType === "bulk-delete" && targetIds?.length > 0) {
@@ -53,6 +57,8 @@ export default function ConfirmationModal({
           await bulkDeleteRepairs({ ids: targetIds });
         } else if (entityType === "audit-schedule") {
           await bulkDeleteAuditSchedules(targetIds);
+        } else if (entityType === "component") {
+          await bulkDeleteComponents({ ids: targetIds });
         }
         if (onSuccess) onSuccess(targetIds);
       }

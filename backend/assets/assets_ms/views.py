@@ -1021,22 +1021,92 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
         return Response({"success": "Check-in, attachments, and status update completed successfully."}, status=status.HTTP_201_CREATED)
 
 class ComponentViewSet(viewsets.ModelViewSet):
-    serializer_class = ComponentSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
-    def get_queryset(self):
-        return Component.objects.filter(is_deleted=False).order_by('name')
     def get_queryset(self):
         queryset = Component.objects.filter(is_deleted=False).order_by('name')
         if self.request.query_params.get('show_deleted') == 'true':
             queryset = Component.objects.filter(is_deleted=True).order_by('name')
         return queryset
 
+    def get_serializer_class(self):
+        if self.action == "list":
+            return ComponentListSerializer
+        if self.action == "retrieve":
+            return ComponentInstanceSerializer
+        if self.action == "names":
+            return ComponentNameSerializer
+        return ComponentSerializer
+
+    def _build_context_maps(self, components=None):
+        """Build context maps for categories, manufacturers, suppliers, locations."""
+        # categories
+        category_map = cache.get("categories:map")
+        if not category_map:
+            categories = get_category_names()
+            if isinstance(categories, list):
+                category_map = {c['id']: c for c in categories}
+            else:
+                category_map = {}
+            cache.set("categories:map", category_map, 300)
+
+        # manufacturers
+        manufacturer_map = cache.get("manufacturers:map")
+        if not manufacturer_map:
+            manufacturers = get_manufacturer_names()
+            if isinstance(manufacturers, list):
+                manufacturer_map = {m['id']: m for m in manufacturers}
+            else:
+                manufacturer_map = {}
+            cache.set("manufacturers:map", manufacturer_map, 300)
+
+        # suppliers
+        supplier_map = cache.get("suppliers:map")
+        if not supplier_map:
+            suppliers = get_supplier_names()
+            if isinstance(suppliers, list):
+                supplier_map = {s['id']: s for s in suppliers}
+            else:
+                supplier_map = {}
+            cache.set("suppliers:map", supplier_map, 300)
+
+        # locations
+        location_map = cache.get("locations:map")
+        if not location_map:
+            locations = get_locations_list()
+            if isinstance(locations, list):
+                location_map = {loc['id']: loc for loc in locations}
+            elif isinstance(locations, dict) and 'results' in locations:
+                location_map = {loc['id']: loc for loc in locations['results']}
+            else:
+                location_map = {}
+            cache.set("locations:map", location_map, 300)
+
+        return {
+            'category_map': category_map,
+            'manufacturer_map': manufacturer_map,
+            'supplier_map': supplier_map,
+            'location_map': location_map,
+        }
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        context_maps = self._build_context_maps()
+        serializer = self.get_serializer(queryset, many=True, context=context_maps)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        context_maps = self._build_context_maps()
+        serializer = self.get_serializer(instance, context=context_maps)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def deleted(self, request):
         """List all soft-deleted components"""
         components = Component.objects.filter(is_deleted=True).order_by('name')
-        serializer = self.get_serializer(components, many=True)
+        context_maps = self._build_context_maps()
+        serializer = ComponentListSerializer(components, many=True, context=context_maps)
         return Response(serializer.data)
 
     @action(detail=True, methods=['patch'])
@@ -1089,6 +1159,96 @@ class ComponentViewSet(viewsets.ModelViewSet):
             component=component,
             notes=f"Component '{component.name}' updated"
         )
+
+    @action(detail=False, methods=['post'])
+    def bulk_delete(self, request):
+        """Bulk soft-delete components"""
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response(
+                {"detail": "No IDs provided."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check if any component is currently checked out
+        components = Component.objects.filter(id__in=ids, is_deleted=False)
+        for component in components:
+            if component.component_checkouts.filter(component_checkins__isnull=True).exists():
+                return Response(
+                    {"detail": f"Cannot delete component '{component.name}', it's currently checked out."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Perform soft delete
+        deleted_count = 0
+        for component in components:
+            component.is_deleted = True
+            component.save()
+            log_component_activity(
+                action='Delete',
+                component=component,
+                notes=f"Component '{component.name}' deleted (bulk)"
+            )
+            deleted_count += 1
+
+        return Response(
+            {"detail": f"Successfully deleted {deleted_count} component(s)."},
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['patch'], url_path='bulk-edit')
+    def bulk_edit(self, request):
+        """Bulk update components"""
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response(
+                {"detail": "No IDs provided."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        update_data = {k: v for k, v in request.data.items() if k != 'ids' and v is not None and v != ''}
+        if not update_data:
+            return Response(
+                {"detail": "No fields to update."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        components = Component.objects.filter(id__in=ids, is_deleted=False)
+        updated_count = 0
+        for component in components:
+            for field, value in update_data.items():
+                if hasattr(component, field):
+                    setattr(component, field, value)
+            component.save()
+            log_component_activity(
+                action='Update',
+                component=component,
+                notes=f"Component '{component.name}' updated (bulk)"
+            )
+            updated_count += 1
+
+        return Response(
+            {"detail": f"Successfully updated {updated_count} component(s)."},
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['get'])
+    def names(self, request):
+        """Get component names and images for bulk edit"""
+        ids_param = request.query_params.get('ids', '')
+        search = request.query_params.get('search', '')
+
+        queryset = Component.objects.filter(is_deleted=False)
+
+        if ids_param:
+            ids = [int(id) for id in ids_param.split(',') if id.isdigit()]
+            queryset = queryset.filter(id__in=ids)
+
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+
+        serializer = ComponentNameSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 class ComponentCheckoutViewSet(viewsets.ModelViewSet):
     serializer_class = ComponentCheckoutSerializer

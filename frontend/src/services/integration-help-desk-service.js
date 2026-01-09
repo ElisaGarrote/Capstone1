@@ -6,7 +6,12 @@ import helpDeskAxios from "../api/integrationHelpDesk";
 // GET all locations
 export async function fetchAllLocations() {
   const res = await helpDeskAxios.get("locations/");
-  return res.data;
+  // Map city to name for frontend compatibility
+  const data = res.data.results ?? res.data;
+  return data.map(loc => ({
+    id: loc.id,
+    name: loc.city || loc.name
+  }));
 }
 
 // GET location by ID

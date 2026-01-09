@@ -1,78 +1,125 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import MockupData from "../../data/mockData/components/component-mockup-data.json";
+import { fetchComponentById, createComponent, updateComponent } from "../../services/assets-service";
+import { fetchAllDropdowns, createCategory, createManufacturer, createSupplier } from "../../services/contexts-service";
+import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
+import SystemLoading from "../../components/Loading/SystemLoading";
+
+const ASSETS_API_URL = import.meta.env.VITE_ASSETS_API_URL || "";
 
 const ComponentRegistration = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const editState = location.state?.item || null;
-  const isEdit = !!editState;
+  const { id } = useParams();
+  const isEdit = !!id;
 
   const [attachmentFile, setAttachmentFile] = useState(null);
+  const [existingImage, setExistingImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
     handleSubmit,
-    control,
     setValue,
     watch,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
     defaultValues: {
-      componentName: editState?.name || "",
-      category: editState?.category || "",
-      manufacturer: editState?.manufacturer || "",
-      supplier: editState?.supplier || "",
-      location: editState?.location || "",
-      modelNumber: editState?.model_number || "",
-      orderNumber: editState?.order_number || "",
-      purchaseCost: editState?.purchase_cost || "",
-      quantity: editState?.quantity || "",
-      minimumQuantity: editState?.minimum_quantity || "",
-      purchaseDate: editState?.purchase_date || "",
-      notes: editState?.notes || "",
+      componentName: "",
+      category: "",
+      manufacturer: "",
+      supplier: "",
+      location: "",
+      modelNumber: "",
+      orderNumber: "",
+      purchaseCost: "",
+      quantity: "",
+      minimumQuantity: "",
+      purchaseDate: "",
+      notes: "",
     },
   });
 
-  useEffect(() => {
-    if (isEdit && editState) {
-      setValue("componentName", editState.name || "");
-      setValue("category", editState.category || "");
-      setValue("manufacturer", editState.manufacturer || "");
-      setValue("supplier", editState.supplier || "");
-      setValue("location", editState.location || "");
-      setValue("modelNumber", editState.model_number || "");
-      setValue("orderNumber", editState.order_number || "");
-      setValue("purchaseCost", editState.purchase_cost || "");
-      setValue("quantity", editState.quantity || "");
-      setValue("minimumQuantity", editState.minimum_quantity || "");
-      setValue("purchaseDate", editState.purchase_date || "");
-      setValue("notes", editState.notes || "");
-    }
-  }, [editState, isEdit, setValue]);
+  // Dropdown options from API
+  const [categories, setCategories] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [locations, setLocations] = useState([]);
 
-  // Base option lists derived from mock data
-  const [categories, setCategories] = useState(
-    () => Array.from(new Set(MockupData.map((item) => item.category).filter(Boolean)))
-  );
-  const [manufacturers, setManufacturers] = useState(
-    () => Array.from(new Set(MockupData.map((item) => item.manufacturer).filter(Boolean)))
-  );
-  const [suppliers, setSuppliers] = useState(
-    () => Array.from(new Set(MockupData.map((item) => item.supplier).filter(Boolean)))
-  );
-  const [locations, setLocations] = useState(
-    () => Array.from(new Set(MockupData.map((item) => item.location).filter(Boolean)))
-  );
+  // Initialize form with dropdown options and component data (if editing)
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        setIsLoading(true);
+
+        // Fetch dropdown options for components
+        const dropdowns = await fetchAllDropdowns("component", { type: "component" });
+        let categoriesList = dropdowns.categories || [];
+        setManufacturers(dropdowns.manufacturers || []);
+        setSuppliers(dropdowns.suppliers || []);
+
+        // Fetch locations from Help Desk service
+        const locationsData = await fetchAllLocations();
+        setLocations(locationsData || []);
+
+        // Fetch component data if editing
+        if (id) {
+          const componentData = await fetchComponentById(id);
+          if (componentData) {
+            // If component has a category that's not in the dropdown list, add it
+            // (handles case where component was created with an asset category)
+            if (componentData.category && componentData.category_details) {
+              const existingCategoryId = componentData.category;
+              const categoryExists = categoriesList.some(cat => cat.id === existingCategoryId);
+              if (!categoryExists) {
+                categoriesList = [
+                  { id: existingCategoryId, name: componentData.category_details.name },
+                  ...categoriesList
+                ];
+              }
+            }
+
+            setValue("componentName", componentData.name || "");
+            // Convert IDs to strings to match select option values
+            setValue("category", componentData.category ? String(componentData.category) : "");
+            setValue("manufacturer", componentData.manufacturer ? String(componentData.manufacturer) : "");
+            setValue("supplier", componentData.supplier ? String(componentData.supplier) : "");
+            setValue("location", componentData.location ? String(componentData.location) : "");
+            setValue("modelNumber", componentData.model_number || "");
+            setValue("orderNumber", componentData.order_number || "");
+            setValue("purchaseCost", componentData.purchase_cost || "");
+            setValue("quantity", componentData.quantity || "");
+            setValue("minimumQuantity", componentData.minimum_quantity || "");
+            setValue("purchaseDate", componentData.purchase_date || "");
+            setValue("notes", componentData.notes || "");
+            if (componentData.image) {
+              setExistingImage(componentData.image);
+            }
+          }
+        }
+
+        setCategories(categoriesList);
+      } catch (error) {
+        console.error("Error initializing form:", error);
+        setErrorMessage("Failed to load form data.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+  }, [id, setValue]);
 
   // Quick-add modal state
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -130,35 +177,51 @@ const ComponentRegistration = () => {
   ];
 
   const handleSaveCategory = async (data) => {
-    const name = data.name?.trim();
-    if (!name) return;
-    setCategories((prev) =>
-      prev.includes(name) ? prev : [...prev, name].sort()
-    );
+    try {
+      const result = await createCategory({ name: data.name?.trim(), type: "component" });
+      if (result) {
+        setCategories((prev) => [...prev, { id: result.id, name: result.name }]);
+        setValue("category", result.id);
+      }
+    } catch (error) {
+      console.error("Error creating category:", error);
+    }
   };
 
   const handleSaveManufacturer = async (data) => {
-    const name = data.name?.trim();
-    if (!name) return;
-    setManufacturers((prev) =>
-      prev.includes(name) ? prev : [...prev, name].sort()
-    );
+    try {
+      const result = await createManufacturer({ name: data.name?.trim() });
+      if (result) {
+        setManufacturers((prev) => [...prev, { id: result.id, name: result.name }]);
+        setValue("manufacturer", result.id);
+      }
+    } catch (error) {
+      console.error("Error creating manufacturer:", error);
+    }
   };
 
   const handleSaveSupplier = async (data) => {
-    const name = data.name?.trim();
-    if (!name) return;
-    setSuppliers((prev) =>
-      prev.includes(name) ? prev : [...prev, name].sort()
-    );
+    try {
+      const result = await createSupplier({ name: data.name?.trim() });
+      if (result) {
+        setSuppliers((prev) => [...prev, { id: result.id, name: result.name }]);
+        setValue("supplier", result.id);
+      }
+    } catch (error) {
+      console.error("Error creating supplier:", error);
+    }
   };
 
   const handleSaveLocation = async (data) => {
-    const name = data.name?.trim();
-    if (!name) return;
-    setLocations((prev) =>
-      prev.includes(name) ? prev : [...prev, name].sort()
-    );
+    try {
+      const result = await createLocation({ name: data.name?.trim() });
+      if (result) {
+        setLocations((prev) => [...prev, { id: result.id, name: result.name }]);
+        setValue("location", result.id);
+      }
+    } catch (error) {
+      console.error("Error creating location:", error);
+    }
   };
 
   const handleFileSelection = (e) => {
@@ -179,13 +242,50 @@ const ComponentRegistration = () => {
       }
 
       setAttachmentFile(file);
+      setExistingImage(null); // Clear existing image when new file is selected
     }
   };
 
-  const onSubmit = (data) => {
-    console.log("Form submitted:", data, attachmentFile);
-    navigate("/components");
+  const onSubmit = async (data) => {
+    try {
+      setIsSubmitting(true);
+      setErrorMessage("");
+
+      const formData = new FormData();
+      formData.append("name", data.componentName);
+      formData.append("category", data.category);
+      if (data.manufacturer) formData.append("manufacturer", data.manufacturer);
+      if (data.supplier) formData.append("supplier", data.supplier);
+      if (data.location) formData.append("location", data.location);
+      if (data.modelNumber) formData.append("model_number", data.modelNumber);
+      if (data.orderNumber) formData.append("order_number", data.orderNumber);
+      if (data.purchaseCost) formData.append("purchase_cost", data.purchaseCost);
+      formData.append("quantity", data.quantity || 1);
+      if (data.minimumQuantity) formData.append("minimum_quantity", data.minimumQuantity);
+      if (data.purchaseDate) formData.append("purchase_date", data.purchaseDate);
+      if (data.notes) formData.append("notes", data.notes);
+      if (attachmentFile) formData.append("image", attachmentFile);
+
+      if (isEdit) {
+        await updateComponent(id, formData);
+        navigate("/components", { state: { successMessage: "Component updated successfully!" } });
+      } else {
+        await createComponent(formData);
+        navigate("/components", { state: { successMessage: "Component created successfully!" } });
+      }
+    } catch (error) {
+      console.error("Error saving component:", error);
+      const errMsg = error.response?.data?.name?.[0] || error.response?.data?.detail || "Failed to save component.";
+      setErrorMessage(errMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isLoading) {
+    console.log("isLoading triggered — showing loading screen");
+    return <SystemLoading />;
+  }
 
   return (
     <>
@@ -235,8 +335,8 @@ const ComponentRegistration = () => {
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
                     </option>
                   ))}
                 </select>
@@ -261,8 +361,8 @@ const ComponentRegistration = () => {
                 <select {...register("manufacturer")}>
                   <option value="">Select Manufacturer</option>
                   {manufacturers.map((manufacturer) => (
-                    <option key={manufacturer} value={manufacturer}>
-                      {manufacturer}
+                    <option key={manufacturer.id} value={manufacturer.id}>
+                      {manufacturer.name}
                     </option>
                   ))}
                 </select>
@@ -284,8 +384,8 @@ const ComponentRegistration = () => {
                 <select {...register("supplier")}>
                   <option value="">Select Supplier</option>
                   {suppliers.map((supplier) => (
-                    <option key={supplier} value={supplier}>
-                      {supplier}
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
                     </option>
                   ))}
                 </select>
@@ -306,9 +406,9 @@ const ComponentRegistration = () => {
               <div className="select-with-button">
                 <select {...register("location")}>
                   <option value="">Select Location</option>
-                  {locations.map((locationOption) => (
-                    <option key={locationOption} value={locationOption}>
-                      {locationOption}
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
                     </option>
                   ))}
                 </select>
@@ -435,6 +535,16 @@ const ComponentRegistration = () => {
                     <img src={CloseIcon} alt="Remove" />
                   </button>
                 </div>
+              ) : existingImage ? (
+                <div className="image-selected">
+                  <img
+                    src={`${ASSETS_API_URL.replace(/\/$/, "")}${existingImage}`}
+                    alt="Existing component image"
+                  />
+                  <button type="button" onClick={() => setExistingImage(null)}>
+                    <img src={CloseIcon} alt="Remove" />
+                  </button>
+                </div>
               ) : (
                 <label className="upload-image-btn">
                   Choose File
@@ -451,8 +561,14 @@ const ComponentRegistration = () => {
               </small>
             </fieldset>
 
+            {errorMessage && (
+              <div className="error-message" style={{ marginBottom: "1rem" }}>
+                {errorMessage}
+              </div>
+            )}
+
             {/* Submit */}
-            <button type="submit" className="primary-button" disabled={!isValid}>
+            <button type="submit" className="primary-button" disabled={!isValid || isSubmitting}>
               {isEdit ? "Update Component" : "Save"}
             </button>
           </form>

@@ -189,6 +189,11 @@
     border-color: var(--primary-color);
 }
 
+.registration select option {
+    color: #333;
+    background-color: #fff;
+}
+
 .registration textarea {
     height: 13vh;
 }

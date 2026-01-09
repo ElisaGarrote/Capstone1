@@ -571,18 +571,107 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
 
         return checkin
 
-# Component
-class ComponentSerializer(serializers.ModelSerializer):
-    # Include context details for frontend convenience
+# Component - List serializer for table display
+class ComponentListSerializer(serializers.ModelSerializer):
+    category_details = serializers.SerializerMethodField()
+    manufacturer_details = serializers.SerializerMethodField()
+    active_checkout = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Component
+        fields = [
+            'id', 'image', 'name', 'category_details', 'manufacturer_details',
+            'quantity', 'available_quantity', 'minimum_quantity', 'active_checkout'
+        ]
+
+    def get_category_details(self, obj):
+        return self.context.get("category_map", {}).get(obj.category)
+
+    def get_manufacturer_details(self, obj):
+        return self.context.get("manufacturer_map", {}).get(obj.manufacturer)
+
+    def get_active_checkout(self, obj):
+        # Check if there's an active checkout (not fully returned)
+        checkout = obj.component_checkouts.filter(
+            component_checkins__isnull=True
+        ).first() or obj.component_checkouts.exclude(
+            id__in=ComponentCheckout.objects.annotate(
+                total_returned=models.Sum('component_checkins__quantity')
+            ).filter(total_returned__gte=models.F('quantity')).values('id')
+        ).first()
+        return checkout.id if checkout else None
+
+
+# Component - Instance serializer for view page
+class ComponentInstanceSerializer(serializers.ModelSerializer):
     category_details = serializers.SerializerMethodField()
     manufacturer_details = serializers.SerializerMethodField()
     supplier_details = serializers.SerializerMethodField()
     location_details = serializers.SerializerMethodField()
+    checkout_history = serializers.SerializerMethodField()
 
     class Meta:
         model = Component
         fields = '__all__'
-    
+
+    def get_category_details(self, obj):
+        return self.context.get("category_map", {}).get(obj.category)
+
+    def get_manufacturer_details(self, obj):
+        return self.context.get("manufacturer_map", {}).get(obj.manufacturer)
+
+    def get_supplier_details(self, obj):
+        return self.context.get("supplier_map", {}).get(obj.supplier)
+
+    def get_location_details(self, obj):
+        return self.context.get("location_map", {}).get(obj.location)
+
+    def get_checkout_history(self, obj):
+        """Returns checkout/checkin history for this component."""
+        history = []
+        checkouts = obj.component_checkouts.select_related('asset').prefetch_related(
+            'component_checkins'
+        ).order_by('-checkout_date')
+
+        for checkout in checkouts:
+            checkins = [{
+                'id': ci.id,
+                'checkin_date': ci.checkin_date,
+                'quantity': ci.quantity,
+                'notes': ci.notes
+            } for ci in checkout.component_checkins.all().order_by('-checkin_date')]
+
+            history.append({
+                'id': checkout.id,
+                'asset_id': checkout.asset.id if checkout.asset else None,
+                'asset_name': checkout.asset.name if checkout.asset else None,
+                'quantity': checkout.quantity,
+                'checkout_date': checkout.checkout_date,
+                'notes': checkout.notes,
+                'remaining_quantity': checkout.remaining_quantity,
+                'is_fully_returned': checkout.is_fully_returned,
+                'checkins': checkins
+            })
+
+        return history
+
+
+# Component - Name serializer for bulk edit display
+class ComponentNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Component
+        fields = ['id', 'name', 'image']
+
+
+# Component - CRUD serializer
+class ComponentSerializer(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = Component
+        fields = '__all__'
+
     def validate(self, data):
         name = data.get('name')
         instance = self.instance
@@ -601,44 +690,8 @@ class ComponentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "name": "A component with this name already exists."
             })
-        
+
         return data
-
-    def get_category_details(self, obj):
-        try:
-            if not getattr(obj, 'category', None):
-                return None
-            from assets_ms.services.contexts import get_category_by_id
-            return get_category_by_id(obj.category)
-        except Exception:
-            return {"warning": "Contexts service unreachable for categories."}
-
-    def get_manufacturer_details(self, obj):
-        try:
-            if not getattr(obj, 'manufacturer', None):
-                return None
-            from assets_ms.services.contexts import get_manufacturer_by_id
-            return get_manufacturer_by_id(obj.manufacturer)
-        except Exception:
-            return {"warning": "Contexts service unreachable for manufacturers."}
-
-    def get_supplier_details(self, obj):
-        try:
-            if not getattr(obj, 'supplier', None):
-                return None
-            from assets_ms.services.contexts import get_supplier_by_id
-            return get_supplier_by_id(obj.supplier)
-        except Exception:
-            return {"warning": "Contexts service unreachable for suppliers."}
-
-    def get_location_details(self, obj):
-        try:
-            if not getattr(obj, 'location', None):
-                return None
-            from assets_ms.services.contexts import get_location_by_id
-            return get_location_by_id(obj.location)
-        except Exception:
-            return {"warning": "Contexts service unreachable for locations."}
 
 class ComponentCheckoutSerializer(serializers.ModelSerializer):
     class Meta:

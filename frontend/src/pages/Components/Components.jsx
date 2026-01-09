@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
-import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ComponentFilterModal from "../../components/Modals/ComponentFilterModal";
 import Pagination from "../../components/Pagination";
@@ -11,11 +10,12 @@ import ConfirmationModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import MockupData from "../../data/mockData/components/component-mockup-data.json";
 import { exportToExcel } from "../../utils/exportToExcel";
 import { fetchAllComponents } from "../../services/assets-service";
 
 import "../../styles/components/Components.css";
+
+const ASSETS_API_URL = import.meta.env.VITE_ASSETS_API_URL || "";
 
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
@@ -31,7 +31,7 @@ function TableHeader({ allSelected, onHeaderChange }) {
       <th>NAME</th>
       <th>CATEGORY</th>
       <th>MANUFACTURER</th>
-      <th>DEPRECIATION</th>
+      <th>QUANTITY</th>
       <th>CHECK-OUT</th>
       <th>CHECK-IN</th>
       <th>ACTION</th>
@@ -72,9 +72,9 @@ function TableItem({
         />
       </td>
       <td>{asset.name}</td>
-      <td>{asset.category || "N/A"}</td>
-      <td>{asset.manufacturer || "N/A"}</td>
-      <td>{asset.depreciation || "N/A"}</td>
+      <td>{asset.category_details?.name || "N/A"}</td>
+      <td>{asset.manufacturer_details?.name || "N/A"}</td>
+      <td>{asset.available_quantity ?? 0}/{asset.quantity ?? 0}</td>
 
       {/* Check-out Column */}
       <td>
@@ -341,16 +341,22 @@ export default function Assets() {
     setDeleteTarget(null);
   };
 
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single id:", deleteTarget);
-      // remove from mock data / API call
-    } else {
-      console.log("Deleting multiple ids:", selectedIds);
-      // remove multiple
-      setSelectedIds([]); // clear selection
-    }
+  const handleDeleteSuccess = (deletedIds) => {
+    // Remove deleted items from data
+    const idsToRemove = Array.isArray(deletedIds) ? deletedIds : [deletedIds];
+    setBaseData((prev) => prev.filter((item) => !idsToRemove.includes(item.id)));
+    setFilteredData((prev) => prev.filter((item) => !idsToRemove.includes(item.id)));
+    setSelectedIds((prev) => prev.filter((id) => !idsToRemove.includes(id)));
+    setSuccessMessage("Component(s) deleted successfully!");
+    setTimeout(() => setSuccessMessage(""), 5000);
     closeDeleteModal();
+  };
+
+  const handleDeleteError = (error) => {
+    console.error("Delete error:", error);
+    const errMsg = error.response?.data?.detail || "Failed to delete component(s).";
+    setErrorMessage(errMsg);
+    setTimeout(() => setErrorMessage(""), 5000);
   };
 
   const handleViewClick = (component) => {
@@ -411,8 +417,12 @@ export default function Assets() {
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
+          actionType={deleteTarget ? "delete" : "bulk-delete"}
+          entityType="component"
+          targetId={deleteTarget}
+          targetIds={deleteTarget ? null : selectedIds}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 
@@ -504,7 +514,7 @@ export default function Assets() {
                   ) : (
                     <tr>
                       <td colSpan={8} className="no-data-message">
-                        No Assets Found.
+                        No Components Found.
                       </td>
                     </tr>
                   )}

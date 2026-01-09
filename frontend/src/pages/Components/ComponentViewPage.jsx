@@ -1,39 +1,43 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ActionButtons from "../../components/ActionButtons";
-import MockupData from "../../data/mockData/components/component-mockup-data.json";
-import ActiveCheckoutData from "../../data/mockData/components/active-checkout-mockup-data.json";
-import CheckinData from "../../data/mockData/components/checkin-mockup-data.json";
+import { fetchComponentById } from "../../services/assets-service";
 import { getComponentDetails, getComponentTabs } from "../../data/mockData/components/componentDetailsData";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import SystemLoading from "../../components/Loading/SystemLoading";
 
 function ComponentView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const [component, setComponent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    // Get component from location state or find from mockup data
-    if (location.state?.component) {
-      setComponent(location.state.component);
-    } else {
-      const foundComponent = MockupData.find((c) => c.id === parseInt(id));
-      if (foundComponent) {
-        setComponent(foundComponent);
+    const loadComponent = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchComponentById(id);
+        setComponent(data);
+      } catch (error) {
+        console.error("Error loading component:", error);
+        setComponent(null);
+      } finally {
+        setIsLoading(false);
       }
+    };
+
+    if (id) {
+      loadComponent();
     }
-    setIsLoading(false);
-  }, [id, location.state]);
+  }, [id]);
 
   if (isLoading) {
-    return null; // Don't render anything while loading
+    return <SystemLoading />;
   }
 
   if (!component) {
@@ -54,10 +58,12 @@ function ComponentView() {
     setDeleteModalOpen(false);
   };
 
-  const confirmDelete = () => {
-    console.log("Deleting component:", component.id);
-    closeDeleteModal();
-    navigate("/components");
+  const handleDeleteSuccess = () => {
+    navigate("/components", { state: { successMessage: "Component deleted successfully!" } });
+  };
+
+  const handleDeleteError = (error) => {
+    console.error("Error deleting component:", error);
   };
 
   const handleEditClick = () => {
@@ -95,6 +101,18 @@ function ComponentView() {
     </div>
   );
 
+  // Helper to format purchase cost
+  const formatCost = (cost) => {
+    if (cost === null || cost === undefined) return "N/A";
+    return `₱${parseFloat(cost).toFixed(2)}`;
+  };
+
+  // Helper to format date
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "N/A";
+    return new Date(dateStr).toLocaleDateString();
+  };
+
   const aboutContent = (
     <div className="about-section">
       <div className="component-details-section">
@@ -102,103 +120,78 @@ function ComponentView() {
         <div className="component-details-grid">
           <div className="detail-row">
             <label>Component Name</label>
-            <span>{component.name}</span>
+            <span>{component.name || "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Category</label>
-            <span>{component.category}</span>
+            <span>{component.category_details?.name || "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Manufacturer</label>
-            <span>{component.manufacturer}</span>
+            <span>{component.manufacturer_details?.name || "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Supplier</label>
-            <span>{component.supplier}</span>
+            <span>{component.supplier_details?.name || "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Model Number</label>
-            <span>{component.model_number}</span>
+            <span>{component.model_number || "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Order Number</label>
-            <span>{component.order_number}</span>
+            <span>{component.order_number || "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Location</label>
-            <span>{component.location}</span>
+            <span>{component.location_details?.name || component.location_details?.city || "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Purchase Cost</label>
-            <span>${component.purchase_cost?.toFixed(2)}</span>
+            <span>{formatCost(component.purchase_cost)}</span>
           </div>
 
           <div className="detail-row">
             <label>Total Quantity</label>
-            <span>{component.quantity}</span>
+            <span>{component.quantity ?? "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Available Quantity</label>
-            <span>{component.available_quantity}</span>
+            <span>{component.available_quantity ?? "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Checked Out Quantity</label>
-            <span>{component.checked_out_quantity}</span>
+            <span>{(component.quantity - component.available_quantity) || 0}</span>
           </div>
 
           <div className="detail-row">
             <label>Minimum Quantity</label>
-            <span>{component.minimum_quantity}</span>
+            <span>{component.minimum_quantity ?? "N/A"}</span>
           </div>
 
           <div className="detail-row">
             <label>Purchase Date</label>
-            <span>{component.purchase_date}</span>
-          </div>
-
-          <div className="detail-row">
-            <label>Depreciation</label>
-            <span>{component.depreciation}</span>
-          </div>
-
-          <div className="detail-row">
-            <label>Notes</label>
-            <span>{component.notes}</span>
+            <span>{formatDate(component.purchase_date)}</span>
           </div>
         </div>
       </div>
     </div>
   );
 
-  // Get active checkouts for this component
-  const activeCheckouts = ActiveCheckoutData.filter(
-    (checkout) => checkout.component === component.id
-  );
+  // Active checkouts - component.active_checkouts populated by API if available
+  const activeCheckouts = component.active_checkouts || [];
 
-  // Get check-in history for this component
-  const componentHistory = CheckinData.filter((checkin) => {
-    const checkout = ActiveCheckoutData.find(
-      (c) => c.id === checkin.component_checkout && c.component === component.id
-    );
-    return !!checkout;
-  }).map((checkin) => {
-    const checkout = ActiveCheckoutData.find(
-      (c) => c.id === checkin.component_checkout
-    );
-    return {
-      ...checkin,
-      checkout,
-    };
-  });
+  // History - component.checkout_history populated by API if available
+  const componentHistory = component.checkout_history || [];
 
   // Custom tab content for Active Checkouts and History
   const customTabContent = activeTab === 1 ? (
@@ -299,9 +292,13 @@ function ComponentView() {
       <NavBar />
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
           actionType="delete"
-          onConfirm={confirmDelete}
+          entityType="component"
+          targetId={component.id}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
       <DetailedViewPage
@@ -311,6 +308,9 @@ function ComponentView() {
         onTabChange={setActiveTab}
         actionButtons={actionButtons}
         customTabContent={customTabContent}
+        notes={component.notes || "N/A"}
+        createdAt={formatDate(component.created_at)}
+        updatedAt={formatDate(component.updated_at)}
       >
         {activeTab === 0 && aboutContent}
       </DetailedViewPage>

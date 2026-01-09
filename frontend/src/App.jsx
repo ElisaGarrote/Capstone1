@@ -31,7 +31,7 @@ import ComponentCheckout from "./pages/Components/ComponentCheckout";
 import ComponentCheckedoutList from "./pages/Components/ComponentCheckedoutList";
 import ComponentCheckin from "./pages/Components/ComponentCheckin";
 import BulkEditComponents from "./pages/Components/BulkEditComponents";
-import ComponentView from "./pages/Components/ComponentView";
+import ComponentView from "./pages/Components/ComponentViewPage";
 import ComponentDetails from "./pages/Components/ComponentDetails";
 import AssetAudits from "./pages/asset-audit/AssetAudits";
 import OverdueAudits from "./pages/asset-audit/OverdueAudits";

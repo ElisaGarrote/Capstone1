@@ -232,6 +232,38 @@ export async function deleteComponent(id) {
   return res.data;
 }
 
+// BULK DELETE components
+export async function bulkDeleteComponents(data) {
+  const res = await assetsAxios.post("components/bulk_delete/", data, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  return res.data;
+}
+
+// BULK EDIT components
+export async function bulkEditComponents(data, useFormData = false) {
+  const headers = useFormData
+    ? { "Content-Type": "multipart/form-data" }
+    : { "Content-Type": "application/json" };
+
+  const res = await assetsAxios.patch("components/bulk-edit/", data, { headers });
+  return res.data;
+}
+
+// GET component names and images for bulk edit
+export const fetchComponentNames = ({ ids = [], search = "" } = {}) => {
+  const params = {};
+
+  if (ids.length) params.ids = ids.join(",");
+  if (search) params.search = search;
+
+  return assetsAxios
+    .get("components/names/", { params })
+    .then(res => res.data);
+};
+
 /* ===============================
           AUDIT SCHEDULE
 ================================= */
