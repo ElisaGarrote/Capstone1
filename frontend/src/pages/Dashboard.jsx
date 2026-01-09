@@ -16,6 +16,7 @@ function Dashboard() {
   const [kpiData, setKpiData] = useState([]);
   const [assetForecast, setAssetForecast] = useState(null);
   const [productForecast, setProductForecast] = useState(null);
+  const [forecastLoading, setForecastLoading] = useState(true);
 
   useEffect(() => {
     async function loadDashboardStats() {
@@ -59,18 +60,24 @@ function Dashboard() {
       }
     }
 
-    // Load forecast data
-    function loadForecastData() {
+    // Load forecast data (async)
+    async function loadForecastData() {
+      setForecastLoading(true);
       try {
-        const kpi = forecastService.getKPISummary();
-        const assetData = forecastService.getAssetStatusForecast();
-        const productData = forecastService.getProductDemandForecast();
+        // Fetch all forecast data in parallel
+        const [kpi, assetData, productData] = await Promise.all([
+          forecastService.getKPISummary(),
+          forecastService.getAssetStatusForecast(),
+          forecastService.getProductDemandForecast(),
+        ]);
 
         setKpiData(kpi);
         setAssetForecast(assetData);
         setProductForecast(productData);
       } catch (error) {
         console.error("Failed to load forecast data:", error);
+      } finally {
+        setForecastLoading(false);
       }
     }
 
@@ -89,13 +96,16 @@ function Dashboard() {
           ))}
         </div>
 
-        {/* KPI Summary Cards */}
+        {/* Forecast Section - Admin Only */}
         {authService.getUserInfo().role === "Admin" && (
           <>
-            <KPISummaryCards kpiData={kpiData} />
+            {/* KPI Summary Cards */}
+            {!forecastLoading && kpiData && kpiData.length > 0 && (
+              <KPISummaryCards kpiData={kpiData} />
+            )}
 
             {/* Asset Status Forecast Section */}
-            {assetForecast && (
+            {!forecastLoading && assetForecast && assetForecast.chartData && (
               <AssetStatusForecastChart
                 chartData={assetForecast.chartData}
                 tableData={assetForecast.tableData}
@@ -103,7 +113,7 @@ function Dashboard() {
             )}
 
             {/* Product Demand Forecast Section */}
-            {productForecast && (
+            {!forecastLoading && productForecast && productForecast.chartData && (
               <ProductDemandForecastChart
                 chartData={productForecast.chartData}
                 tableData={productForecast.tableData}
@@ -111,7 +121,6 @@ function Dashboard() {
             )}
           </>
         )}
-        {/* {kpiData.length > 0 && <KPISummaryCards kpiData={kpiData} />} */}
 
         <AssetMetrics stats={dashboardStats} />
       </main>

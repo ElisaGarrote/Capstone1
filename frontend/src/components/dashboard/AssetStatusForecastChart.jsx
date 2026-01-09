@@ -30,7 +30,41 @@ function AssetStatusForecastChart({ chartData, tableData }) {
             <YAxis />
             <Tooltip />
             <Legend wrapperStyle={{ paddingTop: '20px' }} />
-            {/* Historical data - solid lines */}
+            {/* Forecast data - dashed lines (lighter shades) - rendered FIRST (behind) */}
+            <Line
+              type="monotone"
+              dataKey="forecastAvailable"
+              stroke="#7BB8FF"
+              strokeWidth={3}
+              strokeDasharray="5 5"
+              name="Available (Forecast)"
+              connectNulls={true}
+              dot={{ r: 5, fill: "#7BB8FF", strokeWidth: 0 }}
+              isAnimationActive={true}
+            />
+            <Line
+              type="monotone"
+              dataKey="forecastCheckedOut"
+              stroke="#FFD966"
+              strokeWidth={3}
+              strokeDasharray="5 5"
+              name="Checked-Out (Forecast)"
+              connectNulls={true}
+              dot={{ r: 5, fill: "#FFD966", strokeWidth: 0 }}
+              isAnimationActive={true}
+            />
+            <Line
+              type="monotone"
+              dataKey="forecastUnderRepair"
+              stroke="#FF9999"
+              strokeWidth={3}
+              strokeDasharray="5 5"
+              name="Under Repair (Forecast)"
+              connectNulls={true}
+              dot={{ r: 5, fill: "#FF9999", strokeWidth: 0 }}
+              isAnimationActive={true}
+            />
+            {/* Historical data - solid lines (darker shades) - rendered LAST (on top) */}
             <Line
               type="monotone"
               dataKey="available"
@@ -38,64 +72,27 @@ function AssetStatusForecastChart({ chartData, tableData }) {
               strokeWidth={2}
               name="Available (Historical)"
               connectNulls={true}
-              dot={{ r: 4 }}
+              dot={{ r: 4, fill: "#0D6EFD", strokeWidth: 0 }}
               isAnimationActive={true}
             />
             <Line
               type="monotone"
               dataKey="checkedOut"
-              stroke="#FFB800"
+              stroke="#E6A700"
               strokeWidth={2}
               name="Checked-Out (Historical)"
               connectNulls={true}
-              dot={{ r: 4 }}
+              dot={{ r: 4, fill: "#E6A700", strokeWidth: 0 }}
               isAnimationActive={true}
             />
             <Line
               type="monotone"
               dataKey="underRepair"
-              stroke="#FF6B6B"
+              stroke="#DC3545"
               strokeWidth={2}
               name="Under Repair (Historical)"
               connectNulls={true}
-              dot={{ r: 4 }}
-              isAnimationActive={true}
-            />
-            {/* Forecast data - dashed lines */}
-            <Line
-              type="monotone"
-              dataKey="forecastAvailable"
-              stroke="#0D6EFD"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              name="Available (Forecast)"
-              connectNulls={true}
-              dot={{ r: 4 }}
-              opacity={0.6}
-              isAnimationActive={true}
-            />
-            <Line
-              type="monotone"
-              dataKey="forecastCheckedOut"
-              stroke="#FFB800"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              name="Checked-Out (Forecast)"
-              connectNulls={true}
-              dot={{ r: 4 }}
-              opacity={0.6}
-              isAnimationActive={true}
-            />
-            <Line
-              type="monotone"
-              dataKey="forecastUnderRepair"
-              stroke="#FF6B6B"
-              strokeWidth={2}
-              strokeDasharray="5 5"
-              name="Under Repair (Forecast)"
-              connectNulls={true}
-              dot={{ r: 4 }}
-              opacity={0.6}
+              dot={{ r: 4, fill: "#DC3545", strokeWidth: 0 }}
               isAnimationActive={true}
             />
           </LineChart>

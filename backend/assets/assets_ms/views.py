@@ -1772,9 +1772,13 @@ class DashboardViewSet(viewsets.ViewSet):
 
     def list(self, request):
         """List available dashboard endpoints"""
+        base_uri = request.build_absolute_uri()
         return Response({
             "available_endpoints": {
-                "metrics": request.build_absolute_uri() + "metrics/"
+                "metrics": base_uri + "metrics/",
+                "forecast_asset_status": base_uri + "forecast/asset-status/",
+                "forecast_product_demand": base_uri + "forecast/product-demand/",
+                "forecast_kpi_summary": base_uri + "forecast/kpi-summary/",
             }
         })
     # /dashboard/metrics
@@ -1826,6 +1830,81 @@ class DashboardViewSet(viewsets.ViewSet):
 
         serializer = DashboardStatsSerializer(data)
         return Response(serializer.data)
+
+    # /dashboard/forecast/asset-status/
+    @action(detail=False, methods=['get'], url_path='forecast/asset-status')
+    def forecast_asset_status(self, request):
+        """
+        Get asset status forecast data.
+        Returns historical and forecasted counts by status type (available, checked-out, under repair).
+
+        Query params:
+        - months_back: Number of historical months (default: 6)
+        - months_forward: Number of forecast months (default: 3)
+        """
+        from assets_ms.services.forecast import get_asset_status_forecast
+
+        months_back = int(request.query_params.get('months_back', 6))
+        months_forward = int(request.query_params.get('months_forward', 3))
+
+        try:
+            data = get_asset_status_forecast(months_back=months_back, months_forward=months_forward)
+            return Response(data)
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to generate asset status forecast: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    # /dashboard/forecast/product-demand/
+    @action(detail=False, methods=['get'], url_path='forecast/product-demand')
+    def forecast_product_demand(self, request):
+        """
+        Get product demand forecast data.
+        Returns historical and forecasted checkout demand per product model.
+
+        Query params:
+        - months_back: Number of historical months (default: 6)
+        - months_forward: Number of forecast months (default: 3)
+        - top_n: Number of top products to include (default: 4)
+        """
+        from assets_ms.services.forecast import get_product_demand_forecast
+
+        months_back = int(request.query_params.get('months_back', 6))
+        months_forward = int(request.query_params.get('months_forward', 3))
+        top_n = int(request.query_params.get('top_n', 4))
+
+        try:
+            data = get_product_demand_forecast(
+                months_back=months_back,
+                months_forward=months_forward,
+                top_n=top_n
+            )
+            return Response(data)
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to generate product demand forecast: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    # /dashboard/forecast/kpi-summary/
+    @action(detail=False, methods=['get'], url_path='forecast/kpi-summary')
+    def forecast_kpi_summary(self, request):
+        """
+        Get KPI summary data for forecast insights.
+        Returns key performance indicators including forecasted demand, most requested model,
+        shortage risk, and predicted asset count changes.
+        """
+        from assets_ms.services.forecast import get_kpi_summary
+
+        try:
+            data = get_kpi_summary()
+            return Response(data)
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to generate KPI summary: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # ASSET REPORT TEMPLATES

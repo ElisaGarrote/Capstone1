@@ -58,11 +58,59 @@
   height: 1rem;
 }
 
+.forecast-table-header {
+  padding: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.forecast-table-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
 .table-footer {
   display: flex;
-  justify-content: flex-end;
-  padding-top: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
   border-top: 1px solid #f0f0f0;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pagination-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: #666;
 }
 
 /* Responsive */
@@ -75,6 +123,11 @@
 
   .forecast-table td {
     height: 45px;
+  }
+
+  .table-footer {
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .export-btn {

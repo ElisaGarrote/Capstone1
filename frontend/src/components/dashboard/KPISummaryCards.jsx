@@ -25,9 +25,16 @@ function KPISummaryCards({ kpiData }) {
             <div key={index} className="kpi-card">
               <div className="kpi-card-content">
                 <h3 className="kpi-title">{kpi.title}</h3>
-                <div className="kpi-value-section">
-                  <div className="kpi-value">{kpi.value}</div>
-                  <div className="kpi-unit">{kpi.unit}</div>
+                {kpi.subtitle && <p className="kpi-subtitle">{kpi.subtitle}</p>}
+                <div className="kpi-counts-section">
+                  <div className="kpi-count-item">
+                    <span className="kpi-count-label">Current:</span>
+                    <span className="kpi-count-value">{kpi.currentCount ?? kpi.value}</span>
+                  </div>
+                  <div className="kpi-count-item">
+                    <span className="kpi-count-label">Forecast:</span>
+                    <span className="kpi-count-value forecast">{kpi.forecastCount ?? kpi.value}</span>
+                  </div>
                 </div>
                 <div className={`kpi-change ${changeInfo.isPositive ? 'positive' : 'negative'}`}>
                   {changeInfo.isPositive ? (
@@ -50,6 +57,9 @@ KPISummaryCards.propTypes = {
   kpiData: PropTypes.arrayOf(
     PropTypes.shape({
       title: PropTypes.string.isRequired,
+      subtitle: PropTypes.string,
+      currentCount: PropTypes.number,
+      forecastCount: PropTypes.number,
       value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       unit: PropTypes.string.isRequired,
       change: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,

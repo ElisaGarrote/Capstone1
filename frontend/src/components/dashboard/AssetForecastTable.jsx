@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import MediumButtons from '../buttons/MediumButtons';
 import '../../styles/dashboard/AssetForecastTable.css';
 
-function AssetForecastTable({ data }) {
+const ITEMS_PER_PAGE = 5;
+
+function AssetForecastTable({ data, title = 'Asset Status Forecast' }) {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedData = data.slice(startIndex, endIndex);
+
   const handleExportExcel = () => {
     const headers = ['Status', 'Current Count', 'Forecast Count', 'Trend'];
     const rows = data.map(item => [
@@ -20,18 +29,34 @@ function AssetForecastTable({ data }) {
       ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
     ].join('\n');
 
-    // Create and download Excel file
-    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
+    // Generate filename with date
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0];
+    const filename = `asset-status-forecast_${dateStr}.csv`;
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'asset-forecast.xlsx';
+    a.download = filename;
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
+  const handlePrevPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
+
   return (
     <div className="forecast-table-wrapper">
+      <div className="forecast-table-header">
+        <h3 className="forecast-table-title">{title}</h3>
+      </div>
       <table className="forecast-table">
         <thead>
           <tr>
@@ -42,7 +67,7 @@ function AssetForecastTable({ data }) {
           </tr>
         </thead>
         <tbody>
-          {data.map((item, index) => (
+          {paginatedData.map((item, index) => (
             <tr key={index}>
               <td>{item.status}</td>
               <td>{item.currentCount}</td>
@@ -62,6 +87,27 @@ function AssetForecastTable({ data }) {
         </tbody>
       </table>
       <div className="table-footer">
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button
+              className="pagination-btn"
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+            >
+              <FiChevronLeft />
+            </button>
+            <span className="pagination-info">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              className="pagination-btn"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+            >
+              <FiChevronRight />
+            </button>
+          </div>
+        )}
         <MediumButtons type="export" onClick={handleExportExcel} />
       </div>
     </div>
@@ -77,6 +123,7 @@ AssetForecastTable.propTypes = {
       trend: PropTypes.string.isRequired,
     })
   ).isRequired,
+  title: PropTypes.string,
 };
 
 export default AssetForecastTable;

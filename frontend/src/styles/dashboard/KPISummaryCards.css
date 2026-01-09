@@ -41,13 +41,46 @@
 }
 
 .kpi-title {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #666;
+  color: #333;
   margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   line-height: 1.4;
+}
+
+.kpi-subtitle {
+  font-size: 0.75rem;
+  color: #666;
+  margin: -0.5rem 0 0 0;
+  font-style: italic;
+}
+
+.kpi-counts-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.kpi-count-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-count-label {
+  font-size: 0.875rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.kpi-count-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.kpi-count-value.forecast {
+  color: #0D6EFD;
 }
 
 .kpi-value-section {
