@@ -365,8 +365,16 @@ class RecycleBinViewSet(viewsets.ViewSet):
 
     def list(self, request):
         """List all deleted assets and components"""
-        assets = get_deleted_assets()
-        components = get_deleted_components()
+        try:
+            assets = get_deleted_assets()
+        except Exception:
+            assets = {"warning": "Assets service unreachable"}
+
+        try:
+            components = get_deleted_components()
+        except Exception:
+            components = {"warning": "Assets service unreachable"}
+
         return Response({
             "deleted_assets": assets,
             "deleted_components": components
