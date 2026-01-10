@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/dashboard/AssetMetrics.css';
 
@@ -49,6 +49,24 @@ const AssetMetrics = ({ stats }) => {
     );
   };
 
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: '8px 12px',
+          borderRadius: '4px',
+          color: '#fff',
+          border: '1px solid #ccc'
+        }}>
+          <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>{payload[0].name}</p>
+          <p style={{ margin: 0 }}>Count: {payload[0].value}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="metrics-section">
       <div className="metrics-header">
@@ -95,6 +113,7 @@ const AssetMetrics = ({ stats }) => {
                     <Cell key={`cell-cat-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
+                <Tooltip content={<CustomTooltip />} />
                 <Legend
                   layout="vertical"
                   align="left"
@@ -135,6 +154,7 @@ const AssetMetrics = ({ stats }) => {
                     <Cell key={`cell-stat-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
+                <Tooltip content={<CustomTooltip />} />
                 <Legend
                   layout="vertical"
                   align="left"
