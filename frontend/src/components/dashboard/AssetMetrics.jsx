@@ -109,7 +109,7 @@ const AssetMetrics = ({ stats }) => {
               <p>No category data available</p>
             </div>
           )}
-          <button className="browse-all" onClick={() => navigate('/assets')}>
+          <button className="browse-all" onClick={() => navigate('/More/ViewCategories')}>
             Browse All
           </button>
         </div>
@@ -149,7 +149,7 @@ const AssetMetrics = ({ stats }) => {
               <p>No status data available</p>
             </div>
           )}
-          <button className="browse-all" onClick={() => navigate('/reports/activity')}>
+          <button className="browse-all" onClick={() => navigate('/More/ViewStatus')}>
             Browse All
           </button>
         </div>
