@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/dashboard/AssetMetrics.css';
 
 const AssetMetrics = ({ stats }) => {
   const navigate = useNavigate();
-  const [selectedPeriod1, setSelectedPeriod1] = useState('This month');
-  const [selectedPeriod2, setSelectedPeriod2] = useState('This month');
 
   const assetCost = `₱${stats?.total_asset_costs || '0.00'}`;
   const assetUtilization = `${stats?.asset_utilization || 0}%`;
@@ -58,24 +56,9 @@ const AssetMetrics = ({ stats }) => {
           <div className="summary-content">
             <h3>Total Asset Costs</h3>
             <div className="summary-value">{assetCost}</div>
-            <div className="time-period-buttons">
-              <button
-                className={`time-button ${selectedPeriod1 === 'This month' ? 'active pulse' : ''}`}
-                onClick={() => {
-                  setSelectedPeriod1('This month');
-                }}
-              >
-                This month
-              </button>
-              <button
-                className={`time-button ${selectedPeriod1 === 'Last month' ? 'active pulse' : ''}`}
-                onClick={() => {
-                  setSelectedPeriod1('Last month');
-                }}
-              >
-                Last month
-              </button>
-            </div>
+            <button className="browse-all" onClick={() => navigate('/assets')}>
+              Browse All
+            </button>
           </div>
         </div>
 
@@ -83,24 +66,9 @@ const AssetMetrics = ({ stats }) => {
           <div className="summary-content">
             <h3>Asset Utilization</h3>
             <div className="summary-value">{assetUtilization}</div>
-            <div className="time-period-buttons">
-              <button
-                className={`time-button ${selectedPeriod2 === 'This month' ? 'active pulse' : ''}`}
-                onClick={() => {
-                  setSelectedPeriod2('This month');
-                }}
-              >
-                This month
-              </button>
-              <button
-                className={`time-button ${selectedPeriod2 === 'Last month' ? 'active pulse' : ''}`}
-                onClick={() => {
-                  setSelectedPeriod2('Last month');
-                }}
-              >
-                Last month
-              </button>
-            </div>
+            <button className="browse-all" onClick={() => navigate('/reports/activity')}>
+              Browse All
+            </button>
           </div>
         </div>
       </div>
