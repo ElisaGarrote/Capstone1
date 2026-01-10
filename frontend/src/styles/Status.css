@@ -272,9 +272,9 @@ td, th {
   vertical-align: middle;
 }
 
-img {
-  width: 40px !important;
-  height: 40px !important;
-  object-fit: cover !important;
-  border-radius: 4px !important;
+.page table td img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
 }

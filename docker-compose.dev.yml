@@ -20,7 +20,7 @@ services:
 
       # Listen on port 80 for proxy, 8001 for admin API
       KONG_PROXY_LISTEN: 0.0.0.0:80
-      KONG_ADMIN_LISTEN: 0.0.0.0:8444
+      KONG_ADMIN_LISTEN: 0.0.0.0:9444
 
       # Performance & Workers
       KONG_NGINX_WORKER_PROCESSES: auto
@@ -45,7 +45,7 @@ services:
       - ./kong:/kong:ro
     ports:
       - "80:80"      # Proxy port (main gateway)
-      - "8444:8444"  # Admin API (for debugging/management)
+      - "9444:9444"  # Admin API (for debugging/management)
     depends_on:
       - frontend
       - authentication
