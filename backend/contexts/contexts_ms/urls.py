@@ -18,6 +18,11 @@ from contexts_ms.api.import_export_api import (
 )
 
 
+@api_view(['GET'])
+def health_check(request):
+    return Response({'status': 'ok'})
+
+
 router = DefaultRouter()
 router.register('categories', CategoryViewSet, basename='categories')
 router.register('suppliers', SupplierViewSet, basename='supplier')
