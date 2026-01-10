@@ -9,7 +9,6 @@ import DepreciationFilterModal from "../../components/Modals/DepreciationFilterM
 import Footer from "../../components/Footer";
 import MockupData from "../../data/mockData/reports/depreciation-mockup-data.json";
 import { exportToExcel } from "../../utils/exportToExcel";
-
 import "../../styles/reports/DepreciationReport.css";
 
 const filterConfig = [
