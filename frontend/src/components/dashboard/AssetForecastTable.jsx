@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { FiTrendingUp, FiTrendingDown, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown, FiMinus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import MediumButtons from '../buttons/MediumButtons';
 import '../../styles/dashboard/AssetForecastTable.css';
 
 const ITEMS_PER_PAGE = 5;
+
+const getTrendLabel = (trend) => {
+  if (trend === 'up') return 'Increasing';
+  if (trend === 'down') return 'Decreasing';
+  return 'Stable';
+};
 
 function AssetForecastTable({ data, title = 'Asset Status Forecast' }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -20,7 +26,7 @@ function AssetForecastTable({ data, title = 'Asset Status Forecast' }) {
       item.status,
       item.currentCount,
       item.forecastCount,
-      item.trend === 'up' ? 'Increasing' : 'Decreasing',
+      getTrendLabel(item.trend),
     ]);
 
     // Create CSV content
@@ -74,12 +80,10 @@ function AssetForecastTable({ data, title = 'Asset Status Forecast' }) {
               <td>{item.forecastCount}</td>
               <td>
                 <div className={`trend-cell ${item.trend}`}>
-                  {item.trend === 'up' ? (
-                    <FiTrendingUp className="trend-icon" />
-                  ) : (
-                    <FiTrendingDown className="trend-icon" />
-                  )}
-                  <span>{item.trend === 'up' ? 'Increasing' : 'Decreasing'}</span>
+                  {item.trend === 'up' && <FiTrendingUp className="trend-icon" />}
+                  {item.trend === 'down' && <FiTrendingDown className="trend-icon" />}
+                  {item.trend === 'stable' && <FiMinus className="trend-icon" />}
+                  <span>{getTrendLabel(item.trend)}</span>
                 </div>
               </td>
             </tr>
