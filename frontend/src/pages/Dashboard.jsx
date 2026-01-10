@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
-import StatusCard from "../components/Dashboard/StatusCard";
-import AssetMetrics from "../components/Dashboard/AssetMetrics";
-import KPISummaryCards from "../components/Dashboard/KPISummaryCards";
-import AssetStatusForecastChart from "../components/Dashboard/AssetStatusForecastChart";
-import ProductDemandForecastChart from "../components/Dashboard/ProductDemandForecastChart";
+import StatusCard from "../components/dashboard/StatusCard";
+import AssetMetrics from "../components/dashboard/AssetMetrics";
+import KPISummaryCards from "../components/dashboard/KPISummaryCards";
+import AssetStatusForecastChart from "../components/dashboard/AssetStatusForecastChart";
+import ProductDemandForecastChart from "../components/dashboard/ProductDemandForecastChart";
 import "../styles/Dashboard.css";
 import { fetchDashboardStats } from "../services/assets-service";
 import forecastService from "../services/forecast-service";
