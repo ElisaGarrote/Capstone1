@@ -117,6 +117,7 @@ function Dashboard() {
               <ProductDemandForecastChart
                 chartData={productForecast.chartData}
                 tableData={productForecast.tableData}
+                productNames={productForecast.productNames}
               />
             )}
           </>

@@ -483,6 +483,20 @@ class AssetViewSet(viewsets.ModelViewSet):
         cache.delete("assets:list")
         cache.delete(f"assets:detail:{asset_id}")
         cache.delete("assets:names")
+        cache.delete("tickets:map")  # Also invalidate ticket cache
+        # Also invalidate the raw tickets list cache (used by get_tickets_list)
+        cache.delete("contexts:list:tickets:None:50")
+        cache.delete(f"contexts:tickets:asset:{asset_id}:unresolved")
+        cache.delete(f"contexts:tickets:asset:{asset_id}:all")
+
+    @action(detail=True, methods=['post'], url_path='invalidate-cache')
+    def invalidate_cache(self, request, pk=None):
+        """
+        Endpoint to invalidate cache for a specific asset.
+        Called by other services (e.g., Tickets) when related data changes.
+        """
+        self.invalidate_asset_cache(pk)
+        return Response({"status": "cache invalidated", "asset_id": pk})
 
     def perform_destroy(self, instance):
         errors = []

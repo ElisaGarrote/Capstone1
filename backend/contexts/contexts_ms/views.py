@@ -334,8 +334,31 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.is_resolved = True
         ticket.save()
 
+        # Invalidate asset cache when ticket is resolved
+        if ticket.asset:
+            invalidate_asset_cache(ticket.asset)
+
         serializer = self.get_serializer(ticket)
         return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        ticket = serializer.save()
+        # Invalidate asset cache when a new ticket is created
+        if ticket.asset:
+            invalidate_asset_cache(ticket.asset)
+
+    def perform_update(self, serializer):
+        ticket = serializer.save()
+        # Invalidate asset cache when ticket is updated
+        if ticket.asset:
+            invalidate_asset_cache(ticket.asset)
+
+    def perform_destroy(self, instance):
+        asset_id = instance.asset
+        instance.delete()
+        # Invalidate asset cache when ticket is deleted
+        if asset_id:
+            invalidate_asset_cache(asset_id)
 
 class RecycleBinViewSet(viewsets.ViewSet):
     """Handles viewing and recovering deleted items from the Assets service"""

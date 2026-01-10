@@ -26,23 +26,25 @@ const MOCK_ASSET_STATUS_FORECAST = {
   ]
 };
 
+// Mock product names and their forecast keys (must match getForecastKey logic)
 const MOCK_PRODUCT_DEMAND_FORECAST = {
   chartData: [
-    { month: 'Jan', 'MacBook Pro': 25, 'Dell XPS': 18, 'HP Pavilion': 12, 'Lenovo ThinkPad': 15, 'forecastMacBook': 25, 'forecastDell': 18, 'forecastHP': 12, 'forecastLenovo': 15 },
-    { month: 'Feb', 'MacBook Pro': 28, 'Dell XPS': 20, 'HP Pavilion': 14, 'Lenovo ThinkPad': 16, 'forecastMacBook': 28, 'forecastDell': 20, 'forecastHP': 14, 'forecastLenovo': 16 },
-    { month: 'Mar', 'MacBook Pro': 30, 'Dell XPS': 22, 'HP Pavilion': 16, 'Lenovo ThinkPad': 18, 'forecastMacBook': 30, 'forecastDell': 22, 'forecastHP': 16, 'forecastLenovo': 18 },
-    { month: 'Apr', 'MacBook Pro': 32, 'Dell XPS': 24, 'HP Pavilion': 18, 'Lenovo ThinkPad': 20, 'forecastMacBook': 32, 'forecastDell': 24, 'forecastHP': 18, 'forecastLenovo': 20 },
-    { month: 'May', 'MacBook Pro': 35, 'Dell XPS': 26, 'HP Pavilion': 20, 'Lenovo ThinkPad': 22, 'forecastMacBook': 35, 'forecastDell': 26, 'forecastHP': 20, 'forecastLenovo': 22 },
-    { month: 'Jun', 'MacBook Pro': 38, 'Dell XPS': 28, 'HP Pavilion': 22, 'Lenovo ThinkPad': 24, 'forecastMacBook': 38, 'forecastDell': 28, 'forecastHP': 22, 'forecastLenovo': 24 },
-    { month: 'Jul', 'MacBook Pro': null, 'Dell XPS': null, 'HP Pavilion': null, 'Lenovo ThinkPad': null, 'forecastMacBook': 40, 'forecastDell': 30, 'forecastHP': 24, 'forecastLenovo': 26 },
-    { month: 'Aug', 'MacBook Pro': null, 'Dell XPS': null, 'HP Pavilion': null, 'Lenovo ThinkPad': null, 'forecastMacBook': 42, 'forecastDell': 32, 'forecastHP': 26, 'forecastLenovo': 28 },
+    { month: 'Jan', 'MacBook Pro': 25, 'Dell XPS': 18, 'HP Pavilion': 12, 'Lenovo ThinkPad': 15, 'forecast_MacBook_Pro': 25, 'forecast_Dell_XPS': 18, 'forecast_HP_Pavilion': 12, 'forecast_Lenovo_ThinkPad': 15 },
+    { month: 'Feb', 'MacBook Pro': 28, 'Dell XPS': 20, 'HP Pavilion': 14, 'Lenovo ThinkPad': 16, 'forecast_MacBook_Pro': 28, 'forecast_Dell_XPS': 20, 'forecast_HP_Pavilion': 14, 'forecast_Lenovo_ThinkPad': 16 },
+    { month: 'Mar', 'MacBook Pro': 30, 'Dell XPS': 22, 'HP Pavilion': 16, 'Lenovo ThinkPad': 18, 'forecast_MacBook_Pro': 30, 'forecast_Dell_XPS': 22, 'forecast_HP_Pavilion': 16, 'forecast_Lenovo_ThinkPad': 18 },
+    { month: 'Apr', 'MacBook Pro': 32, 'Dell XPS': 24, 'HP Pavilion': 18, 'Lenovo ThinkPad': 20, 'forecast_MacBook_Pro': 32, 'forecast_Dell_XPS': 24, 'forecast_HP_Pavilion': 18, 'forecast_Lenovo_ThinkPad': 20 },
+    { month: 'May', 'MacBook Pro': 35, 'Dell XPS': 26, 'HP Pavilion': 20, 'Lenovo ThinkPad': 22, 'forecast_MacBook_Pro': 35, 'forecast_Dell_XPS': 26, 'forecast_HP_Pavilion': 20, 'forecast_Lenovo_ThinkPad': 22 },
+    { month: 'Jun', 'MacBook Pro': 38, 'Dell XPS': 28, 'HP Pavilion': 22, 'Lenovo ThinkPad': 24, 'forecast_MacBook_Pro': 38, 'forecast_Dell_XPS': 28, 'forecast_HP_Pavilion': 22, 'forecast_Lenovo_ThinkPad': 24 },
+    { month: 'Jul', 'MacBook Pro': null, 'Dell XPS': null, 'HP Pavilion': null, 'Lenovo ThinkPad': null, 'forecast_MacBook_Pro': 40, 'forecast_Dell_XPS': 30, 'forecast_HP_Pavilion': 24, 'forecast_Lenovo_ThinkPad': 26 },
+    { month: 'Aug', 'MacBook Pro': null, 'Dell XPS': null, 'HP Pavilion': null, 'Lenovo ThinkPad': null, 'forecast_MacBook_Pro': 42, 'forecast_Dell_XPS': 32, 'forecast_HP_Pavilion': 26, 'forecast_Lenovo_ThinkPad': 28 },
   ],
   tableData: [
     { productName: 'MacBook Pro', currentDemand: 38, forecastDemand: 42, trend: 'up' },
     { productName: 'Dell XPS', currentDemand: 28, forecastDemand: 32, trend: 'up' },
     { productName: 'HP Pavilion', currentDemand: 22, forecastDemand: 26, trend: 'up' },
     { productName: 'Lenovo ThinkPad', currentDemand: 24, forecastDemand: 28, trend: 'up' },
-  ]
+  ],
+  productNames: ['MacBook Pro', 'Dell XPS', 'HP Pavilion', 'Lenovo ThinkPad'],
 };
 
 const MOCK_KPI_SUMMARY = [

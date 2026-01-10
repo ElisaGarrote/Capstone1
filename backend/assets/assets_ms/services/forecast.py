@@ -286,7 +286,7 @@ def get_asset_status_forecast(months_back=6, months_forward=2):
     }
 
 
-def get_product_demand_forecast(months_back=6, months_forward=2, top_n=4):
+def get_product_demand_forecast(months_back=6, months_forward=2, top_n=5):
     """
     Calculate product demand forecast data using linear regression.
 
@@ -344,6 +344,11 @@ def get_product_demand_forecast(months_back=6, months_forward=2, top_n=4):
     product_history = {pid: [] for pid in product_ids}
     chart_data = []
 
+    # Helper to generate consistent forecast key from product name
+    def get_forecast_key(name):
+        import re
+        return f"forecast_{re.sub(r'[^a-zA-Z0-9]', '_', name)}"
+
     # Historical months - collect actual data
     for i in range(months_back, 0, -1):
         month_date = today - relativedelta(months=i)
@@ -362,8 +367,7 @@ def get_product_demand_forecast(months_back=6, months_forward=2, top_n=4):
             product_history[product_id].append((time_index, count))
 
             row[product_name] = count
-            forecast_key = f'forecast{product_name.replace(" ", "")[:10]}'
-            row[forecast_key] = count
+            row[get_forecast_key(product_name)] = count
 
         chart_data.append(row)
 
@@ -389,8 +393,7 @@ def get_product_demand_forecast(months_back=6, months_forward=2, top_n=4):
             slope, intercept = product_trends[product_id]
             forecast = _forecast_value(slope, intercept, time_index)
 
-            forecast_key = f'forecast{product_name.replace(" ", "")[:10]}'
-            row[forecast_key] = forecast
+            row[get_forecast_key(product_name)] = forecast
 
         chart_data.append(row)
 
@@ -404,8 +407,7 @@ def get_product_demand_forecast(months_back=6, months_forward=2, top_n=4):
 
         # Forecast demand = last forecast month
         last_row = chart_data[-1] if chart_data else {}
-        forecast_key = f'forecast{product_name.replace(" ", "")[:10]}'
-        forecast = last_row.get(forecast_key, current)
+        forecast = last_row.get(get_forecast_key(product_name), current)
 
         # Calculate trend based on regression slope
         slope, _ = product_trends.get(product_id, (0, 0))

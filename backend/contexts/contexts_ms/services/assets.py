@@ -101,3 +101,16 @@ def get_asset_checkout_by_id(checkout_id):
     response = client_get(f"asset-checkout/{checkout_id}/")
     response.raise_for_status()
     return response.json()
+
+def invalidate_asset_cache(asset_id):
+    """
+    Call the Assets service to invalidate cache for a specific asset.
+    Used when tickets are created/updated/deleted to ensure fresh data.
+    """
+    try:
+        response = client_post(f"assets/{asset_id}/invalidate-cache/")
+        response.raise_for_status()
+        return response.json()
+    except Exception:
+        # Silently fail - cache invalidation is best-effort
+        return None
