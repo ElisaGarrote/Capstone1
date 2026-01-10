@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import NavBar from "../components/NavBar";
-import StatusCard from "../components/dashboard/StatusCard";
-import AssetMetrics from "../components/dashboard/AssetMetrics";
+import StatusCard from "../components/Dashboard/StatusCard";
+import AssetMetrics from "../components/Dashboard/AssetMetrics";
 import KPISummaryCards from "../components/Dashboard/KPISummaryCards";
 import AssetStatusForecastChart from "../components/Dashboard/AssetStatusForecastChart";
 import ProductDemandForecastChart from "../components/Dashboard/ProductDemandForecastChart";
