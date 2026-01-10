@@ -31,7 +31,8 @@ CMD ["./entrypoint.sh"]
 FROM base as production
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-RUN mkdir -p staticfiles
-RUN python manage.py collectstatic --noinput
+RUN mkdir -p staticfiles static
+RUN python manage.py collectstatic --noinput || true
+ENV PORT=8001
 EXPOSE 8001
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn authentication.wsgi:application --bind 0.0.0.0:8001"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn authentication.wsgi:application --bind 0.0.0.0:${PORT:-8001}"]

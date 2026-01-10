@@ -186,9 +186,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Define where Django should look for static files
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]  # Add this line
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [STATIC_DIR] if os.path.exists(STATIC_DIR) else []
 
 # Optional: WhiteNoise settings for better performance
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
