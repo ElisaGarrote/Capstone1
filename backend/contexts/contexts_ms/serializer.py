@@ -448,34 +448,40 @@ class TicketSerializer(serializers.ModelSerializer):
             return
         
     def get_location_details(self, obj):
-        """Return location details fetched from Help Desk service."""
+        """Return location details from the database."""
         try:
             if not getattr(obj, 'location', None):
                 return None
-            from contexts_ms.services.integration_help_desk import get_location_by_id
-            return get_location_by_id(obj.location)
+            from contexts_ms.models import Location
+            try:
+                location = Location.objects.get(id=obj.location)
+                return {
+                    'id': location.id,
+                    'name': location.name,
+                }
+            except Location.DoesNotExist:
+                return None
         except Exception:
-            return {"warning": "Help Desk service unreachable for locations."}
+            return None
 
     def get_requestor_details(self, obj):
-        """Return requestor/employee details fetched from Help Desk service."""
+        """Return requestor/employee details from the database."""
         try:
             if not getattr(obj, 'employee', None):
                 return None
-            from contexts_ms.services.integration_help_desk import get_employee_by_id
-            employee = get_employee_by_id(obj.employee)
-            if employee:
-                firstname = employee.get('firstname', '')
-                lastname = employee.get('lastname', '')
+            from contexts_ms.models import Employee
+            try:
+                employee = Employee.objects.get(id=obj.employee)
                 return {
-                    'id': employee.get('id'),
-                    'name': f"{firstname} {lastname}".strip(),
-                    'firstname': firstname,
-                    'lastname': lastname,
+                    'id': employee.id,
+                    'name': f"{employee.firstname} {employee.lastname}".strip(),
+                    'firstname': employee.firstname,
+                    'lastname': employee.lastname,
                 }
-            return None
+            except Employee.DoesNotExist:
+                return None
         except Exception:
-            return {"warning": "Help Desk service unreachable for employees."}
+            return None
 
 
 class CategoryNameSerializer(serializers.ModelSerializer):
@@ -515,11 +521,18 @@ class TicketTypeSerializer(serializers.ModelSerializer):
         fields = ['id', 'asset', 'asset_checkout', 'ticket_number', 'checkout_date', 'return_date', ]
 
     def get_location_details(self, obj):
-        """Return location details fetched from Help Desk service."""
+        """Return location details from the database."""
         try:
             if not getattr(obj, 'location', None):
                 return None
-            from contexts_ms.services.integration_help_desk import get_location_by_id
-            return get_location_by_id(obj.location)
+            from contexts_ms.models import Location
+            try:
+                location = Location.objects.get(id=obj.location)
+                return {
+                    'id': location.id,
+                    'name': location.name,
+                }
+            except Location.DoesNotExist:
+                return None
         except Exception:
-            return {"warning": "Help Desk service unreachable for locations."}
+            return None
