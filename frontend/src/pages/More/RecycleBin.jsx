@@ -11,10 +11,7 @@ import "../../styles/TabNavBar.css";
 import "../../styles/RecycleBin.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-
-// Import mock data
-import deletedAssets from "../../data/mockData/assets/deleted-asset-mockup-data.json";
-import deletedComponents from "../../data/mockData/components/deleted-component-mockup-data.json";
+import { fetchDeletedItems, recoverAsset, recoverComponent } from "../../services/contexts-service";
 
 // TableHeader
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -49,16 +46,14 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
         />
       </td>
       <td>{item.name}</td>
-      <td>{item.category}</td>
-      <td>{item.manufacturer}</td>
-      <td>{item.supplier}</td>
-      <td>{item.location}</td>
+      <td>{item.category_name || 'N/A'}</td>
+      <td>{item.manufacturer_name || 'N/A'}</td>
+      <td>{item.supplier_name || 'N/A'}</td>
+      <td>{item.location_name || 'N/A'}</td>
       <td>
         <ActionButtons
           showRecover
-          showDelete
           onRecoverClick={() => onRecoverClick(item.id)}
-          onDeleteClick={() => onDeleteClick(item.id)}
         />
       </td>
     </tr>
@@ -73,6 +68,12 @@ export default function RecycleBin() {
 
   // active tab (assets | components)
   const [activeTab, setActiveTab] = useState("assets");
+  
+  // data state
+  const [deletedAssets, setDeletedAssets] = useState([]);
+  const [deletedComponents, setDeletedComponents] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
   // choose dataset depending on tab
   const data = activeTab === "assets" ? deletedAssets : deletedComponents;
 
@@ -89,6 +90,38 @@ export default function RecycleBin() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Fetch deleted items from API
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadDeletedItems = async () => {
+      setIsLoading(true);
+      try {
+        const data = await fetchDeletedItems();
+        if (mounted) {
+          setDeletedAssets(data.deleted_assets || []);
+          setDeletedComponents(data.deleted_components || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch deleted items:', error);
+        if (mounted) {
+          setErrorMessage('Failed to load deleted items.');
+          setTimeout(() => setErrorMessage(''), 5000);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadDeletedItems();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...data];
@@ -103,28 +136,28 @@ export default function RecycleBin() {
     // Filter by Category
     if (filters.category && filters.category.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.category?.toLowerCase().includes(filters.category.toLowerCase())
+        item.category_name?.toLowerCase().includes(filters.category.toLowerCase())
       );
     }
 
     // Filter by Manufacturer
     if (filters.manufacturer && filters.manufacturer.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.manufacturer?.toLowerCase().includes(filters.manufacturer.toLowerCase())
+        item.manufacturer_name?.toLowerCase().includes(filters.manufacturer.toLowerCase())
       );
     }
 
     // Filter by Supplier
     if (filters.supplier && filters.supplier.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.supplier?.toLowerCase().includes(filters.supplier.toLowerCase())
+        item.supplier_name?.toLowerCase().includes(filters.supplier.toLowerCase())
       );
     }
 
     // Filter by Location
     if (filters.location && filters.location.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.location?.toLowerCase().includes(filters.location.toLowerCase())
+        item.location_name?.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
@@ -150,10 +183,10 @@ export default function RecycleBin() {
       ? filteredData
       : filteredData.filter((item) => {
           const name = item.name?.toLowerCase() || "";
-          const category = item.category?.toLowerCase() || "";
-          const manufacturer = item.manufacturer?.toLowerCase() || "";
-          const supplier = item.supplier?.toLowerCase() || "";
-          const location = item.location?.toLowerCase() || "";
+          const category = item.category_name?.toLowerCase() || "";
+          const manufacturer = item.manufacturer_name?.toLowerCase() || "";
+          const supplier = item.supplier_name?.toLowerCase() || "";
+          const location = item.location_name?.toLowerCase() || "";
           return (
             name.includes(normalizedQuery) ||
             category.includes(normalizedQuery) ||
@@ -246,21 +279,60 @@ export default function RecycleBin() {
     setRecoverTarget(null);
   };
 
-  const confirmRecover = () => {
-    if (recoverTarget) {
-      console.log("Recovering single id:", recoverTarget);
-      // API call or restore from mock
-    } else {
-      console.log("Recovering multiple ids:", selectedIds);
-      setSelectedIds([]); // clear selection if bulk
+  const confirmRecover = async () => {
+    try {
+      if (recoverTarget) {
+        // Single recover
+        if (activeTab === "assets") {
+          await recoverAsset(recoverTarget);
+          setDeletedAssets(prev => prev.filter(item => item.id !== recoverTarget));
+          setSuccessMessage('Asset recovered successfully!');
+        } else {
+          await recoverComponent(recoverTarget);
+          setDeletedComponents(prev => prev.filter(item => item.id !== recoverTarget));
+          setSuccessMessage('Component recovered successfully!');
+        }
+      } else {
+        // Bulk recover
+        if (selectedIds.length === 0) {
+          setErrorMessage('No items selected.');
+          setTimeout(() => setErrorMessage(''), 3000);
+          closeRecoverModal();
+          return;
+        }
+        
+        const recoverPromises = selectedIds.map(id => 
+          activeTab === "assets" ? recoverAsset(id) : recoverComponent(id)
+        );
+        
+        await Promise.all(recoverPromises);
+        
+        if (activeTab === "assets") {
+          setDeletedAssets(prev => prev.filter(item => !selectedIds.includes(item.id)));
+        } else {
+          setDeletedComponents(prev => prev.filter(item => !selectedIds.includes(item.id)));
+        }
+        
+        setSuccessMessage(`${selectedIds.length} item(s) recovered successfully!`);
+        setSelectedIds([]);
+      }
+      
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      console.error('Failed to recover item(s):', error);
+      setErrorMessage('Failed to recover item(s). Please try again.');
+      setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      closeRecoverModal();
     }
-    closeRecoverModal();
   };
 
-  // Update filteredData when tab changes
+  // Update filteredData when tab changes or data changes
   useEffect(() => {
     setFilteredData(data);
     setAppliedFilters({});
+    setSearchQuery('');
+    setSelectedIds([]);
   }, [activeTab, data]);
 
   // outside click for export toggle
@@ -362,14 +434,6 @@ export default function RecycleBin() {
                   <MediumButtons
                     type="recover"
                     onClick={() => openRecoverModal(null)}
-                  />
-                )}
-
-                {/* Bulk delete button only when checkboxes selected */}
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
                   />
                 )}
 

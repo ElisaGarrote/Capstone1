@@ -98,7 +98,7 @@ function SupplierDetails() {
       </>
     );
   }
-  const tabs = getSupplierTabs();
+  const tabs = [{ label: 'About' }];
   const applyAssetFilters = (data, filters) => {
     let filtered = [...data];
 
@@ -958,15 +958,8 @@ function SupplierDetails() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         actionButtons={actionButtons}
-        customTabContent={
-          activeTab === 1
-            ? assetsTabContent
-            : activeTab === 2
-              ? componentsTabContent
-              : null
-        }
       >
-        {activeTab === 0 && aboutContent}
+        {aboutContent}
       </DetailedViewPage>
     </>
   );

@@ -216,3 +216,24 @@ export async function fetchAllDropdowns(entity, options = {}) {
   const res = await contextsAxios.get(url);
   return res.data;
 }
+
+/* ===============================
+        RECYCLE BIN
+================================= */
+// GET all deleted assets and components
+export async function fetchDeletedItems() {
+  const res = await contextsAxios.get("recycle-bin/");
+  return res.data;
+}
+
+// RECOVER asset
+export async function recoverAsset(id) {
+  const res = await contextsAxios.patch(`recycle-bin/${id}/recover_asset/`);
+  return res.data;
+}
+
+// RECOVER component
+export async function recoverComponent(id) {
+  const res = await contextsAxios.patch(`recycle-bin/${id}/recover_component/`);
+  return res.data;
+}
