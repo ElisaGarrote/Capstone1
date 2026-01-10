@@ -4,21 +4,25 @@ import assetsAxios from "../api/assetsAxios";
 // Fallback mock data for when API fails (6 historical + 2 forecast = 8 months)
 // Historical months have BOTH historical and forecast values (lines overlap)
 // Forecast months only have forecast values (dashed lines extend into future)
+// Status groupings:
+//   - Available = deployable + pending (assets that can potentially be assigned)
+//   - Deployed = deployed (assets currently in use)
+//   - Unavailable = undeployable + archived (assets that cannot be used)
 const MOCK_ASSET_STATUS_FORECAST = {
   chartData: [
-    { month: 'Jan', available: 120, checkedOut: 45, underRepair: 15, forecastAvailable: 120, forecastCheckedOut: 45, forecastUnderRepair: 15 },
-    { month: 'Feb', available: 125, checkedOut: 42, underRepair: 18, forecastAvailable: 125, forecastCheckedOut: 42, forecastUnderRepair: 18 },
-    { month: 'Mar', available: 130, checkedOut: 40, underRepair: 20, forecastAvailable: 130, forecastCheckedOut: 40, forecastUnderRepair: 20 },
-    { month: 'Apr', available: 128, checkedOut: 43, underRepair: 19, forecastAvailable: 128, forecastCheckedOut: 43, forecastUnderRepair: 19 },
-    { month: 'May', available: 135, checkedOut: 38, underRepair: 17, forecastAvailable: 135, forecastCheckedOut: 38, forecastUnderRepair: 17 },
-    { month: 'Jun', available: 140, checkedOut: 35, underRepair: 15, forecastAvailable: 140, forecastCheckedOut: 35, forecastUnderRepair: 15 },
-    { month: 'Jul', available: null, checkedOut: null, underRepair: null, forecastAvailable: 145, forecastCheckedOut: 32, forecastUnderRepair: 13 },
-    { month: 'Aug', available: null, checkedOut: null, underRepair: null, forecastAvailable: 150, forecastCheckedOut: 30, forecastUnderRepair: 12 },
+    { month: 'Jan', available: 120, deployed: 45, unavailable: 15, forecastAvailable: 120, forecastDeployed: 45, forecastUnavailable: 15 },
+    { month: 'Feb', available: 125, deployed: 42, unavailable: 18, forecastAvailable: 125, forecastDeployed: 42, forecastUnavailable: 18 },
+    { month: 'Mar', available: 130, deployed: 40, unavailable: 20, forecastAvailable: 130, forecastDeployed: 40, forecastUnavailable: 20 },
+    { month: 'Apr', available: 128, deployed: 43, unavailable: 19, forecastAvailable: 128, forecastDeployed: 43, forecastUnavailable: 19 },
+    { month: 'May', available: 135, deployed: 38, unavailable: 17, forecastAvailable: 135, forecastDeployed: 38, forecastUnavailable: 17 },
+    { month: 'Jun', available: 140, deployed: 35, unavailable: 15, forecastAvailable: 140, forecastDeployed: 35, forecastUnavailable: 15 },
+    { month: 'Jul', available: null, deployed: null, unavailable: null, forecastAvailable: 145, forecastDeployed: 32, forecastUnavailable: 13 },
+    { month: 'Aug', available: null, deployed: null, unavailable: null, forecastAvailable: 150, forecastDeployed: 30, forecastUnavailable: 12 },
   ],
   tableData: [
     { status: 'Available', currentCount: 140, forecastCount: 150, trend: 'up' },
-    { status: 'Checked-Out', currentCount: 35, forecastCount: 30, trend: 'down' },
-    { status: 'Under Repair', currentCount: 15, forecastCount: 12, trend: 'down' },
+    { status: 'Deployed', currentCount: 35, forecastCount: 30, trend: 'down' },
+    { status: 'Unavailable', currentCount: 15, forecastCount: 12, trend: 'down' },
   ]
 };
 
@@ -42,9 +46,51 @@ const MOCK_PRODUCT_DEMAND_FORECAST = {
 };
 
 const MOCK_KPI_SUMMARY = [
-  { title: 'Forecast: Asset Checkout', subtitle: 'Deployed Status', currentCount: 35, forecastCount: 40, value: '40', unit: 'assets', change: 14.3 },
-  { title: 'Forecast: Under Maintenance', subtitle: 'Pending Status', currentCount: 12, forecastCount: 10, value: '10', unit: 'assets', change: -16.7 },
-  { title: 'Forecast: Asset Write-off', subtitle: 'Undeployable Status', currentCount: 8, forecastCount: 6, value: '6', unit: 'assets', change: -25.0 },
+  {
+    title: 'Forecasted Total Demand',
+    subtitle: 'Predicted checkouts next period',
+    description: 'Total number of asset checkout requests expected in the next forecast period.',
+    currentCount: 45,
+    forecastCount: 52,
+    value: '52',
+    unit: 'checkouts',
+    change: 15.6,
+    insight: 'Based on 6 months of data, demand is increasing.'
+  },
+  {
+    title: 'Most Requested Model',
+    subtitle: 'Dell Latitude 5520 (LAT5520)',
+    description: 'The product (model) with the highest combined checkout count across all its assets.',
+    currentCount: 12,
+    forecastCount: 15,
+    value: 'Dell Latitude 5520 (LAT5520)',
+    unit: 'checkouts',
+    change: 25.0,
+    insight: 'This product has 12 checkouts this month across all its assets. Expect increased demand.'
+  },
+  {
+    title: 'Expected Shortage Risk',
+    subtitle: 'Medium Risk',
+    description: 'Risk assessment comparing forecasted demand against available inventory.',
+    currentCount: 85,
+    forecastCount: 45,
+    value: '45%',
+    unit: 'risk score',
+    change: 8.5,
+    riskLevel: 'Medium',
+    insight: '85 assets available vs 52 forecasted demand. Consider procurement.'
+  },
+  {
+    title: 'Predicted Status Change',
+    subtitle: 'Net deployed asset change',
+    description: 'Predicted net change in deployed assets (checkouts minus returns).',
+    currentCount: 3,
+    forecastCount: 5,
+    value: '+5',
+    unit: 'net change',
+    change: 12.3,
+    insight: 'More assets being checked out than returned.'
+  },
 ];
 
 /**

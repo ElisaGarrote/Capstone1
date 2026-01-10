@@ -44,22 +44,22 @@ function AssetStatusForecastChart({ chartData, tableData }) {
             />
             <Line
               type="monotone"
-              dataKey="forecastCheckedOut"
+              dataKey="forecastDeployed"
               stroke="#FFD966"
               strokeWidth={3}
               strokeDasharray="5 5"
-              name="Checked-Out (Forecast)"
+              name="Deployed (Forecast)"
               connectNulls={true}
               dot={{ r: 5, fill: "#FFD966", strokeWidth: 0 }}
               isAnimationActive={true}
             />
             <Line
               type="monotone"
-              dataKey="forecastUnderRepair"
+              dataKey="forecastUnavailable"
               stroke="#FF9999"
               strokeWidth={3}
               strokeDasharray="5 5"
-              name="Under Repair (Forecast)"
+              name="Unavailable (Forecast)"
               connectNulls={true}
               dot={{ r: 5, fill: "#FF9999", strokeWidth: 0 }}
               isAnimationActive={true}
@@ -77,20 +77,20 @@ function AssetStatusForecastChart({ chartData, tableData }) {
             />
             <Line
               type="monotone"
-              dataKey="checkedOut"
+              dataKey="deployed"
               stroke="#E6A700"
               strokeWidth={2}
-              name="Checked-Out (Historical)"
+              name="Deployed (Historical)"
               connectNulls={true}
               dot={{ r: 4, fill: "#E6A700", strokeWidth: 0 }}
               isAnimationActive={true}
             />
             <Line
               type="monotone"
-              dataKey="underRepair"
+              dataKey="unavailable"
               stroke="#DC3545"
               strokeWidth={2}
-              name="Under Repair (Historical)"
+              name="Unavailable (Historical)"
               connectNulls={true}
               dot={{ r: 4, fill: "#DC3545", strokeWidth: 0 }}
               isAnimationActive={true}
