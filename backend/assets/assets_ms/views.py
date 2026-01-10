@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils.timezone import now, localdate
 from datetime import timedelta
-from django.db.models import Sum, Value, F
+from django.db.models import Sum, Value, F, Count, DecimalField
 from django.db.models.functions import Coalesce
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import api_view
@@ -1801,34 +1801,109 @@ class DashboardViewSet(viewsets.ViewSet):
         today = now().date()
         next_30_days = today + timedelta(days=30)
 
-        # Assets due for return
-        due_for_return = AssetCheckout.objects.filter(return_date__gte=today).count()
-        overdue_for_return = AssetCheckout.objects.filter(return_date__lt=today).count()
+        # Assets due for return - only count checkouts that haven't been checked in yet
+        due_for_return = AssetCheckout.objects.filter(
+            return_date__gte=today,
+            asset_checkin__isnull=True
+        ).count()
+        overdue_for_return = AssetCheckout.objects.filter(
+            return_date__lt=today,
+            asset_checkin__isnull=True
+        ).count()
 
         # Audits - need to check if these models exist
         try:
-            upcoming_audits = AuditSchedule.objects.filter(date__gt=today, date__lte=next_30_days).count()
-            overdue_audits = AuditSchedule.objects.filter(date__lt=today).count()
+            upcoming_audits = AuditSchedule.objects.filter(
+                date__gt=today,
+                date__lte=next_30_days,
+                is_deleted=False,
+                is_completed=False
+            ).count()
+            overdue_audits = AuditSchedule.objects.filter(
+                date__lt=today,
+                is_deleted=False,
+                is_completed=False
+            ).count()
         except:
             upcoming_audits = 0
             overdue_audits = 0
 
-        # Remove end_of_life references since field doesn't exist
-        reached_end_of_life = 0
-        upcoming_end_of_life = 0
+        # End of life - products with end_of_life date
+        try:
+            reached_end_of_life = Product.objects.filter(
+                end_of_life__lte=today,
+                is_deleted=False
+            ).count()
+            upcoming_end_of_life = Product.objects.filter(
+                end_of_life__gt=today,
+                end_of_life__lte=next_30_days,
+                is_deleted=False
+            ).count()
+        except:
+            reached_end_of_life = 0
+            upcoming_end_of_life = 0
 
         # Warranties
-        expired_warranties = Asset.objects.filter(warranty_expiration__lte=today).count()
-        expiring_warranties = Asset.objects.filter(warranty_expiration__gt=today, warranty_expiration__lte=next_30_days).count()
+        expired_warranties = Asset.objects.filter(
+            warranty_expiration__lte=today,
+            is_deleted=False
+        ).count()
+        expiring_warranties = Asset.objects.filter(
+            warranty_expiration__gt=today,
+            warranty_expiration__lte=next_30_days,
+            is_deleted=False
+        ).count()
 
         # Low stock
-        low_stock = Component.objects.annotate(
+        low_stock = Component.objects.filter(is_deleted=False).annotate(
             total_checked_out=Coalesce(Sum('component_checkouts__quantity'), Value(0)),
             total_checked_in=Coalesce(Sum('component_checkouts__component_checkins__quantity'), Value(0)),
             available_quantity=F('quantity') - (F('total_checked_out') - F('total_checked_in'))
         ).filter(
             available_quantity__lt=F('minimum_quantity')
         ).count()
+
+        # Total asset costs
+        total_asset_costs = Asset.objects.filter(is_deleted=False).aggregate(
+            total=Coalesce(Sum('purchase_cost'), Value(0), output_field=DecimalField())
+        )['total']
+
+        # Asset utilization (% of assets that are deployed)
+        total_assets = Asset.objects.filter(is_deleted=False).count()
+        statuses = get_status_names_assets()
+        deployed_status_ids = [s['id'] for s in statuses if s.get('type') == 'deployed'] if isinstance(statuses, list) else []
+        deployed_count = Asset.objects.filter(
+            is_deleted=False,
+            status__in=deployed_status_ids
+        ).count() if deployed_status_ids else 0
+        asset_utilization = round((deployed_count / total_assets * 100) if total_assets > 0 else 0)
+
+        # Asset categories - count by category
+        categories = get_categories_list(type='asset', limit=100)
+        category_map = {c['id']: c['name'] for c in categories} if isinstance(categories, list) else {}
+        category_counts = Asset.objects.filter(is_deleted=False).values(
+            'product__category'
+        ).annotate(count=Count('id')).order_by('-count')
+        asset_categories = [
+            {
+                'product__category__name': category_map.get(item['product__category'], f"Category {item['product__category']}"),
+                'count': item['count']
+            }
+            for item in category_counts if item['product__category']
+        ]
+
+        # Asset statuses - count by status
+        status_map = {s['id']: s['name'] for s in statuses} if isinstance(statuses, list) else {}
+        status_counts = Asset.objects.filter(is_deleted=False).values(
+            'status'
+        ).annotate(count=Count('id')).order_by('-count')
+        asset_statuses = [
+            {
+                'status__name': status_map.get(item['status'], f"Status {item['status']}"),
+                'count': item['count']
+            }
+            for item in status_counts if item['status']
+        ]
 
         data = {
             "due_for_return": due_for_return,
@@ -1839,7 +1914,11 @@ class DashboardViewSet(viewsets.ViewSet):
             "upcoming_end_of_life": upcoming_end_of_life,
             "expired_warranties": expired_warranties,
             "expiring_warranties": expiring_warranties,
-            "low_stock": low_stock
+            "low_stock": low_stock,
+            "total_asset_costs": total_asset_costs,
+            "asset_utilization": asset_utilization,
+            "asset_categories": asset_categories,
+            "asset_statuses": asset_statuses,
         }
 
         serializer = DashboardStatsSerializer(data)

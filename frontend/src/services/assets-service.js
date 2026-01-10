@@ -461,7 +461,7 @@ export async function bulkDeleteRepairs(data) {
 ================================= */
 
 export async function fetchDashboardStats() {
-  const res = await assetsAxios.get("dashboard/");
+  const res = await assetsAxios.get("dashboard/metrics/");
   return res.data;
 }
 

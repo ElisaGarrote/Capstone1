@@ -1102,6 +1102,11 @@ class DashboardStatsSerializer(serializers.Serializer):
     expired_warranties = serializers.IntegerField()
     expiring_warranties = serializers.IntegerField()
     low_stock = serializers.IntegerField()
+    # Additional metrics for charts
+    total_asset_costs = serializers.DecimalField(max_digits=15, decimal_places=2, allow_null=True)
+    asset_utilization = serializers.IntegerField()
+    asset_categories = serializers.ListField(child=serializers.DictField(), allow_empty=True)
+    asset_statuses = serializers.ListField(child=serializers.DictField(), allow_empty=True)
 
 
 class AssetReportTemplateSerializer(serializers.ModelSerializer):
