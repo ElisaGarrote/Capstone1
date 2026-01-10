@@ -61,28 +61,40 @@ class ProductViewSet(viewsets.ModelViewSet):
         category_map = cache.get("categories:map")
         if not category_map:
             categories = get_category_names()
-            category_map = {c['id']: c for c in categories}
+            if isinstance(categories, list):
+                category_map = {c['id']: c for c in categories}
+            else:
+                category_map = {}
             cache.set("categories:map", category_map, 300)
 
         # manufacturers
         manufacturer_map = cache.get("manufacturers:map")
         if not manufacturer_map:
             manufacturers = get_manufacturer_names()
-            manufacturer_map = {m['id']: m for m in manufacturers}
+            if isinstance(manufacturers, list):
+                manufacturer_map = {m['id']: m for m in manufacturers}
+            else:
+                manufacturer_map = {}
             cache.set("manufacturers:map", manufacturer_map, 300)
 
         # suppliers
         supplier_map = cache.get("suppliers:map")
         if not supplier_map:
             suppliers = get_supplier_names()
-            supplier_map = {s['id']: s for s in suppliers}
+            if isinstance(suppliers, list):
+                supplier_map = {s['id']: s for s in suppliers}
+            else:
+                supplier_map = {}
             cache.set("suppliers:map", supplier_map, 300)
 
         # depreciations
         depreciation_map = cache.get("depreciations:map")
         if not depreciation_map:
             depreciations = get_depreciation_names()
-            depreciation_map = {d['id']: d for d in depreciations}
+            if isinstance(depreciations, list):
+                depreciation_map = {d['id']: d for d in depreciations}
+            else:
+                depreciation_map = {}
             cache.set("depreciations:map", depreciation_map, 300)
 
         return {
@@ -98,7 +110,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         status_map = cache.get("statuses:map")
         if not status_map:
             statuses = get_status_names_assets()
-            status_map = {s['id']: s for s in statuses}
+            # Handle warning dict or non-list response
+            if isinstance(statuses, list):
+                status_map = {s['id']: s for s in statuses}
+            else:
+                status_map = {}
             cache.set("statuses:map", status_map, 300)
 
         # products (for product_details - though in product view we already know the product)
@@ -112,7 +128,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         ticket_map = cache.get("tickets:map")
         if not ticket_map:
             tickets = get_tickets_list()
-            ticket_map = {t["asset"]: t for t in tickets}
+            # Handle warning dict or non-list response
+            if isinstance(tickets, list):
+                ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
+            else:
+                ticket_map = {}
             cache.set("tickets:map", ticket_map, 300)
 
         return {
@@ -404,26 +424,30 @@ class AssetViewSet(viewsets.ModelViewSet):
         status_map = cache.get("statuses:map")
         if not status_map:
             statuses = get_status_names_assets()
-            status_map = {s['id']: s for s in statuses}
+            # Handle warning dict or non-list response
+            if isinstance(statuses, list):
+                status_map = {s['id']: s for s in statuses}
+            else:
+                status_map = {}
             cache.set("statuses:map", status_map, 300)
 
         # products
         product_map = cache.get("products:map")
         if not product_map:
             products = Product.objects.filter(is_deleted=False)
-            # products
-            product_map = cache.get("products:map")
-            if not product_map:
-                products = Product.objects.filter(is_deleted=False)
-                serialized = ProductNameSerializer(products, many=True).data
-                product_map = {p['id']: p for p in serialized}
-                cache.set("products:map", product_map, 300)
+            serialized = ProductNameSerializer(products, many=True).data
+            product_map = {p['id']: p for p in serialized}
+            cache.set("products:map", product_map, 300)
 
         # locations
         location_map = cache.get("locations:map")
         if not location_map:
             locations = get_locations_list()
-            location_map = {l['id']: l for l in locations}
+            # Handle warning dict or non-list response
+            if isinstance(locations, list):
+                location_map = {l['id']: l for l in locations}
+            else:
+                location_map = {}
             cache.set("locations:map", location_map, 300)
 
         # tickets (unresolved)
@@ -1616,14 +1640,20 @@ class RepairViewSet(viewsets.ModelViewSet):
         supplier_map = cache.get("suppliers:map")
         if not supplier_map:
             suppliers = get_supplier_names()
-            supplier_map = {s['id']: s for s in suppliers}
+            if isinstance(suppliers, list):
+                supplier_map = {s['id']: s for s in suppliers}
+            else:
+                supplier_map = {}
             cache.set("suppliers:map", supplier_map, 300)
 
         # statuses (repair category only)
         status_map = cache.get("statuses:repair:map")
         if not status_map:
             statuses = get_status_names_repairs()
-            status_map = {s['id']: s for s in statuses}
+            if isinstance(statuses, list):
+                status_map = {s['id']: s for s in statuses}
+            else:
+                status_map = {}
             cache.set("statuses:repair:map", status_map, 300)
 
         return {
