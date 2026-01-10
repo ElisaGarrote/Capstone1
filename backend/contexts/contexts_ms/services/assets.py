@@ -1,14 +1,28 @@
 from .http_client import get as client_get, post as client_post, patch as client_patch, ASSETS_API_URL
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def get_deleted_assets():
-    response = client_get("assets/deleted/")
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = client_get("assets/deleted/", timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Failed to fetch deleted assets: {e}")
+        raise
+
 
 def get_deleted_components():
-    response = client_get("components/deleted/")
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = client_get("components/deleted/", timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Failed to fetch deleted components: {e}")
+        raise
+
 
 def recover_asset(asset_id):
     response = client_patch(f"assets/{asset_id}/recover/")

@@ -591,9 +591,17 @@ class AssetViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def deleted(self, request):
         """List all soft-deleted assets"""
-        assets = Asset.objects.filter(is_deleted=True).order_by('name')
-        serializer = self.get_serializer(assets, many=True)
-        return Response(serializer.data)
+        try:
+            assets = Asset.objects.filter(is_deleted=True).order_by('name')
+            # Use simplified serializer for recycle bin to avoid context map dependencies
+            serializer = AssetNameSerializer(assets, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error fetching deleted assets: {e}")
+            return Response(
+                {"error": f"Failed to fetch deleted assets: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['patch'])
     def recover(self, request, pk=None):
@@ -1142,10 +1150,18 @@ class ComponentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def deleted(self, request):
         """List all soft-deleted components"""
-        components = Component.objects.filter(is_deleted=True).order_by('name')
-        context_maps = self._build_context_maps()
-        serializer = ComponentListSerializer(components, many=True, context=context_maps)
-        return Response(serializer.data)
+        try:
+            components = Component.objects.filter(is_deleted=True).order_by('name')
+            # Use simplified serializer without context maps for recycle bin
+            # to avoid circular dependency (contexts -> assets -> contexts)
+            serializer = ComponentNameSerializer(components, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error fetching deleted components: {e}")
+            return Response(
+                {"error": f"Failed to fetch deleted components: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['patch'])
     def recover(self, request, pk=None):
