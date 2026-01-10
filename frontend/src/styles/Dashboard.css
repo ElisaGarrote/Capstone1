@@ -9,9 +9,6 @@
   padding: 2rem;
   margin-top: 60px;
   flex-grow: 1;
-  max-width: 1400px;
-  margin-left: auto;
-  margin-right: auto;
   width: 100%;
   box-sizing: border-box;
 }
@@ -21,6 +18,37 @@
   font-weight: bold;
   color: #333;
   margin-bottom: 1.5rem;
+}
+
+/* Tab Navigation Styling */
+.dashboard-tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  background-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  bottom: -2px;
+}
+
+.tab-button:hover {
+  color: #333;
+}
+
+.tab-button.active {
+  color: var(--primary-color, #0d6efd);
+  border-bottom-color: var(--primary-color, #0d6efd);
 }
 
 .status-cards-grid {

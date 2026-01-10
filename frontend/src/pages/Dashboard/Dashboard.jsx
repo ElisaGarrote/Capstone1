@@ -15,6 +15,7 @@ function Dashboard() {
   const [kpiData, setKpiData] = useState([]);
   const [assetForecast, setAssetForecast] = useState(null);
   const [productForecast, setProductForecast] = useState(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
   const normalizeCount = (value) => {
     if (value === null || value === undefined || value === '') return 0;
     return value;
@@ -80,36 +81,63 @@ function Dashboard() {
       <NavBar />
       <main className="dashboard-content">
         <h1>Dashboard</h1>
-        <div className="status-cards-grid">
-          {statusCards.map((card, index) => (
-            <StatusCard
-              key={index}
-              {...card}
-              index={index}
-            />
-          ))}
+        
+        {/* Tab Navigation */}
+        <div className="dashboard-tabs">
+          <button 
+            className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+          >
+            Dashboard
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'forecasting' ? 'active' : ''}`}
+            onClick={() => setActiveTab('forecasting')}
+          >
+            Forecasting
+          </button>
         </div>
 
-        {/* KPI Summary Cards */}
-        {kpiData.length > 0 && <KPISummaryCards kpiData={kpiData} />}
+        {/* Dashboard Tab Content */}
+        {activeTab === 'dashboard' && (
+          <>
+            <div className="status-cards-grid">
+              {statusCards.map((card, index) => (
+                <StatusCard
+                  key={index}
+                  {...card}
+                  index={index}
+                />
+              ))}
+            </div>
 
-        {/* Asset Status Forecast Section */}
-        {assetForecast && (
-          <AssetStatusForecastChart
-            chartData={assetForecast.chartData}
-            tableData={assetForecast.tableData}
-          />
+            <AssetMetrics stats={dashboardStats} />
+          </>
         )}
 
-        {/* Product Demand Forecast Section */}
-        {productForecast && (
-          <ProductDemandForecastChart
-            chartData={productForecast.chartData}
-            tableData={productForecast.tableData}
-          />
-        )}
+        {/* Forecasting Tab Content */}
+        {activeTab === 'forecasting' && (
+          <>
+            {/* KPI Summary Cards */}
+            {kpiData.length > 0 && <KPISummaryCards kpiData={kpiData} />}
 
-        <AssetMetrics stats={dashboardStats} />
+            {/* Asset Status Forecast Section */}
+            {assetForecast && (
+              <AssetStatusForecastChart
+                chartData={assetForecast.chartData}
+                tableData={assetForecast.tableData}
+              />
+            )}
+
+            {/* Product Demand Forecast Section */}
+            {productForecast && (
+              <ProductDemandForecastChart
+                chartData={productForecast.chartData}
+                tableData={productForecast.tableData}
+              />
+            )}
+          </>
+        )}
       </main>
     </div>
   );
