@@ -669,7 +669,16 @@ const Tickets = () => {
                 {` (${filteredTickets.length})`}
               </h2>
               <section className="table-actions">
-                  {/* Bulk delete removed for approval workflow */}
+                {/* Bulk delete button only when checkboxes selected */}
+                {selectedIds.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => {
+                      setDeleteTargetId(null);
+                      setDeleteModalOpen(true);
+                    }}
+                  />
+                )}
                 <input
                   type="search"
                   placeholder="Search..."

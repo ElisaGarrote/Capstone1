@@ -52,14 +52,34 @@ function TicketViewPage() {
 
   const actionButtons = (
     <div className="ticket-vertical-action-buttons">
-      {ticket.category === "Software Request" && (
+      {ticket.ticketType === "Registration" && (
         <button
           type="button"
           className="ticket-action-btn ticket-register-asset-btn"
-          onClick={() => console.log("Register Asset:", ticket.id)}
+          onClick={() => navigate('/assets/registration')}
         >
           <i className="fas fa-plus"></i>
           Register Asset
+        </button>
+      )}
+      {ticket.ticketType === "Checkout" && (
+        <button
+          type="button"
+          className="ticket-action-btn ticket-checkout-asset-btn"
+          onClick={() => navigate(`/assets/check-out/${ticket.assetId}`)}
+        >
+          <i className="fas fa-sign-out-alt"></i>
+          Checkout Asset
+        </button>
+      )}
+      {ticket.ticketType === "Checkin" && (
+        <button
+          type="button"
+          className="ticket-action-btn ticket-checkin-asset-btn"
+          onClick={() => navigate(`/assets/check-in/${ticket.assetId}`)}
+        >
+          <i className="fas fa-sign-in-alt"></i>
+          Checkin Asset
         </button>
       )}
       <MediumButtons
