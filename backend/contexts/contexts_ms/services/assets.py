@@ -1,4 +1,4 @@
-from .http_client import get as client_get, post as client_post, patch as client_patch, ASSETS_API_URL
+from .http_client import get as client_get, post as client_post, patch as client_patch, delete as client_delete, ASSETS_API_URL
 from ..models import Category, Manufacturer, Supplier, Location
 
 def get_deleted_assets():
@@ -200,3 +200,44 @@ def get_asset_checkout_by_id(checkout_id):
     response = client_get(f"asset-checkout/{checkout_id}/")
     response.raise_for_status()
     return response.json()
+
+
+def delete_asset(asset_id):
+    """Attempt to permanently delete an asset via the assets service."""
+    response = client_delete(f"assets/{asset_id}/")
+    response.raise_for_status()
+    # Some delete endpoints may return empty body
+    try:
+        return response.json()
+    except Exception:
+        return {"detail": "deleted"}
+
+
+def delete_component(component_id):
+    """Attempt to permanently delete a component via the assets service."""
+    response = client_delete(f"components/{component_id}/")
+    response.raise_for_status()
+    try:
+        return response.json()
+    except Exception:
+        return {"detail": "deleted"}
+
+
+def bulk_delete_assets(ids):
+    payload = {"ids": ids}
+    response = client_post('assets/bulk-delete/', json=payload)
+    response.raise_for_status()
+    try:
+        return response.json()
+    except Exception:
+        return {"detail": "bulk deleted"}
+
+
+def bulk_delete_components(ids):
+    payload = {"ids": ids}
+    response = client_post('components/bulk-delete/', json=payload)
+    response.raise_for_status()
+    try:
+        return response.json()
+    except Exception:
+        return {"detail": "bulk deleted"}

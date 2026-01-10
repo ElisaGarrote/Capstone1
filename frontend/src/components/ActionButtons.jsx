@@ -17,6 +17,8 @@ export default function ActionButtons({
   editPath = "",
   editState = {},
   onDeleteClick = null,
+  deleteDisabled = false,
+  deleteTitle = "",
   onRecoverClick = null,
   onCheckoutClick = null,
   onCheckinClick = null,
@@ -43,9 +45,10 @@ export default function ActionButtons({
 
       {showDelete && authService.getUserInfo().role === "Admin" && (
         <button
-          title="Delete"
+          title={deleteTitle || "Delete"}
           className="action-button"
-          onClick={onDeleteClick}
+          onClick={() => !deleteDisabled && onDeleteClick?.()}
+          disabled={deleteDisabled}
         >
           <i className="fas fa-trash-alt"></i>
         </button>

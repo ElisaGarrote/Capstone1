@@ -379,6 +379,74 @@ class RecycleBinViewSet(viewsets.ViewSet):
         except Exception as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
+    @action(detail=True, methods=['delete'])
+    def delete_asset(self, request, pk=None):
+        """Permanently delete an asset via the assets service."""
+        try:
+            data = delete_asset(pk)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    @action(detail=True, methods=['delete'])
+    def delete_component(self, request, pk=None):
+        """Permanently delete a component via the assets service."""
+        try:
+            data = delete_component(pk)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    @action(detail=False, methods=['post'], url_path='bulk-delete-assets')
+    def bulk_delete_assets_action(self, request):
+        ids = request.data.get('ids', [])
+        try:
+            data = bulk_delete_assets(ids)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    @action(detail=False, methods=['post'], url_path='bulk-delete-components')
+    def bulk_delete_components_action(self, request):
+        ids = request.data.get('ids', [])
+        try:
+            data = bulk_delete_components(ids)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
 # Dropdowns for asset service
 class ContextsDropdownsViewSet(viewsets.ViewSet):
     # /contexts-dropdowns/all/?entity=product

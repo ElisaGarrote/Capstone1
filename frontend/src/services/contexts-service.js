@@ -237,3 +237,27 @@ export async function recoverComponent(id) {
   const res = await contextsAxios.patch(`recycle-bin/${id}/recover_component/`);
   return res.data;
 }
+
+// DELETE asset permanently
+export async function deleteAsset(id) {
+  const res = await contextsAxios.delete(`recycle-bin/${id}/delete_asset/`);
+  return res.data;
+}
+
+// DELETE component permanently
+export async function deleteComponent(id) {
+  const res = await contextsAxios.delete(`recycle-bin/${id}/delete_component/`);
+  return res.data;
+}
+
+// BULK DELETE assets
+export async function bulkDeleteAssets(ids) {
+  const res = await contextsAxios.post(`recycle-bin/bulk-delete-assets/`, { ids });
+  return res.data;
+}
+
+// BULK DELETE components
+export async function bulkDeleteComponents(ids) {
+  const res = await contextsAxios.post(`recycle-bin/bulk-delete-components/`, { ids });
+  return res.data;
+}

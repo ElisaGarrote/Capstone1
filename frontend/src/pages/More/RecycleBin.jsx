@@ -11,7 +11,10 @@ import "../../styles/TabNavBar.css";
 import "../../styles/RecycleBin.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import { fetchDeletedItems, recoverAsset, recoverComponent } from "../../services/contexts-service";
+import { fetchDeletedItems, recoverAsset, recoverComponent, deleteAsset, deleteComponent, bulkDeleteAssets, bulkDeleteComponents } from "../../services/contexts-service";
+import { isEligible, daysUntilEligible } from "../../utils/retention";
+
+const MS_90_DAYS = 90 * 24 * 60 * 60 * 1000;
 
 // TableHeader
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -36,6 +39,18 @@ function TableHeader({ allSelected, onHeaderChange }) {
 
 // TableItem
 function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClick }) {
+  // Determine permanent-delete eligibility using retention helpers
+  let deleteDisabled = false;
+  let deleteTitle = "";
+  if (!item.deleted_at) {
+    deleteDisabled = true;
+    deleteTitle = "Deletion timestamp missing — cannot permanently delete.";
+  } else if (!isEligible(item.deleted_at, 90)) {
+    deleteDisabled = true;
+    const daysLeft = daysUntilEligible(item.deleted_at, 90);
+    deleteTitle = `Item is in retention. Eligible in ${daysLeft} day(s).`;
+  }
+
   return (
     <tr>
       <td>
@@ -53,7 +68,11 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
       <td>
         <ActionButtons
           showRecover
+          showDelete
           onRecoverClick={() => onRecoverClick(item.id)}
+          onDeleteClick={() => onDeleteClick(item.id)}
+          deleteDisabled={deleteDisabled}
+          deleteTitle={deleteTitle}
         />
       </td>
     </tr>
@@ -249,20 +268,60 @@ export default function RecycleBin() {
   };
 
   const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single id:", deleteTarget);
-      setSuccessMessage("Item deleted successfully from Recycle Bin!");
-      // remove from mock data / API call
-    } else {
-      console.log("Deleting multiple ids:", selectedIds);
-      if (selectedIds.length > 0) {
-        setSuccessMessage("Items deleted successfully from Recycle Bin!");
+    (async () => {
+      try {
+        if (deleteTarget) {
+          if (activeTab === "assets") {
+            await deleteAsset(deleteTarget);
+            setDeletedAssets(prev => prev.filter(item => item.id !== deleteTarget));
+          } else {
+            await deleteComponent(deleteTarget);
+            setDeletedComponents(prev => prev.filter(item => item.id !== deleteTarget));
+          }
+          setSuccessMessage('Item deleted successfully from Recycle Bin.');
+        } else {
+          if (selectedIds.length === 0) {
+            setErrorMessage('No items selected.');
+            setTimeout(() => setErrorMessage(''), 3000);
+            closeDeleteModal();
+            return;
+          }
+          // Filter selected ids to only those eligible for permanent deletion (90-day retention)
+          const eligibleIds = selectedIds.filter(id => {
+            const item = data.find(d => d.id === id);
+            if (!item || !item.deleted_at) return false;
+            return (Date.now() - new Date(item.deleted_at).getTime()) >= MS_90_DAYS;
+          });
+
+          if (eligibleIds.length === 0) {
+            setErrorMessage('None of the selected items are yet eligible for permanent deletion.');
+            setTimeout(() => setErrorMessage(''), 5000);
+            closeDeleteModal();
+            return;
+          }
+
+          if (activeTab === "assets") {
+            await bulkDeleteAssets(eligibleIds);
+            setDeletedAssets(prev => prev.filter(item => !eligibleIds.includes(item.id)));
+          } else {
+            await bulkDeleteComponents(eligibleIds);
+            setDeletedComponents(prev => prev.filter(item => !eligibleIds.includes(item.id)));
+          }
+
+          const skipped = selectedIds.length - eligibleIds.length;
+          setSuccessMessage(`${eligibleIds.length} item(s) deleted successfully.${skipped > 0 ? ` (${skipped} skipped - still in retention)` : ''}`);
+          setSelectedIds([]);
+        }
+      } catch (err) {
+        console.error('Failed to delete item(s):', err);
+        const msg = err?.response?.data?.detail || err?.message || 'Please try again.';
+        setErrorMessage('Failed to delete item(s): ' + msg);
+        setTimeout(() => setErrorMessage(''), 5000);
+      } finally {
+        setTimeout(() => setSuccessMessage(''), 5000);
+        closeDeleteModal();
       }
-      // remove multiple
-      setSelectedIds([]); // clear selection
-    }
-    setTimeout(() => setSuccessMessage(""), 5000);
-    closeDeleteModal();
+    })();
   };
 
   // recover modal state
@@ -436,6 +495,45 @@ export default function RecycleBin() {
                     onClick={() => openRecoverModal(null)}
                   />
                 )}
+
+                {/* Bulk delete button only when checkboxes selected; disable if none eligible */}
+                {selectedIds.length > 0 && (() => {
+                  const eligibleSelected = selectedIds.filter(id => {
+                    const item = data.find(d => d.id === id);
+                    return !!item && isEligible(item.deleted_at, 90);
+                  });
+
+                  const disabled = eligibleSelected.length === 0;
+                  let title = '';
+                  if (disabled) {
+                    // compute soonest days left among selected that have deleted_at
+                    const daysList = selectedIds
+                      .map(id => data.find(d => d.id === id))
+                      .filter(it => it && it.deleted_at)
+                      .map(it => daysUntilEligible(it.deleted_at, 90))
+                      .filter(v => v !== null && v !== undefined);
+
+                    if (daysList.length === 0) {
+                      title = 'No deletion timestamps found for selected items.';
+                    } else {
+                      const soonest = Math.min(...daysList);
+                      title = `No selected items are eligible yet. Soonest eligible in ${soonest} day(s).`;
+                    }
+                  } else {
+                    title = eligibleSelected.length < selectedIds.length
+                      ? `${eligibleSelected.length} of ${selectedIds.length} selected will be permanently deleted; others are in retention.`
+                      : `Permanently delete ${eligibleSelected.length} selected item(s)`;
+                  }
+
+                  return (
+                    <MediumButtons
+                      type="delete"
+                      onClick={() => openDeleteModal(null)}
+                      disabled={disabled}
+                      title={title}
+                    />
+                  );
+                })()}
 
                 <input
                   type="search"
