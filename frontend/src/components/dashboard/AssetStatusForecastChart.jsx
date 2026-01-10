@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import '../../styles/dashboard/AssetStatusForecastChart.css';
+import AssetForecastTable from './AssetForecastTable';
 import {
   LineChart,
   Line,
@@ -10,8 +12,19 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import '../../styles/dashboard/AssetStatusForecastChart.css';
-import AssetForecastTable from './AssetForecastTable';
+
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip">
+        <p className="tooltip-content">
+          {payload[0].name}: <span className="tooltip-count">{payload[0].value}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 function AssetStatusForecastChart({ chartData, tableData }) {
   const [showDetails, setShowDetails] = useState(false);
@@ -24,12 +37,12 @@ function AssetStatusForecastChart({ chartData, tableData }) {
 
       <div className="forecast-chart-container">
         <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <LineChart data={chartData} className="forecast-line-chart">
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip />
-            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend className="forecast-legend" />
             {/* Historical data - solid lines */}
             <Line
               type="monotone"

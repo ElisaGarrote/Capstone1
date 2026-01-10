@@ -13,6 +13,19 @@ import {
 import '../../styles/dashboard/ProductDemandForecastChart.css';
 import ProductForecastTable from './ProductForecastTable';
 
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip">
+        <p className="tooltip-content">
+          {payload[0].name}: <span className="tooltip-count">{payload[0].value}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 function ProductDemandForecastChart({ chartData, tableData }) {
   const [showDetails, setShowDetails] = useState(false);
 
@@ -27,12 +40,12 @@ function ProductDemandForecastChart({ chartData, tableData }) {
 
       <div className="forecast-chart-container">
         <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <BarChart data={chartData} className="forecast-bar-chart">
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip />
-            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend className="forecast-legend" />
             {/* Historical data - solid bars */}
             {products.map((product, index) => (
               <Bar
