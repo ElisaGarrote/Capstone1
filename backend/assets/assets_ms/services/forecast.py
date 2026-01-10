@@ -259,24 +259,32 @@ def get_asset_status_forecast(months_back=6, months_forward=2):
     forecast_deployed = last_forecast.get('forecastDeployed', current_deployed)
     forecast_unavailable = last_forecast.get('forecastUnavailable', current_unavailable)
 
+    def get_trend(current, forecast):
+        """Calculate trend based on comparing current to forecast values."""
+        if forecast > current:
+            return 'up'
+        elif forecast < current:
+            return 'down'
+        return 'stable'
+
     table_data = [
         {
             'status': 'Available',
             'currentCount': current_available,
             'forecastCount': forecast_available,
-            'trend': 'up' if forecast_available >= current_available else 'down'
+            'trend': get_trend(current_available, forecast_available)
         },
         {
             'status': 'Deployed',
             'currentCount': current_deployed,
             'forecastCount': forecast_deployed,
-            'trend': 'up' if forecast_deployed >= current_deployed else 'down'
+            'trend': get_trend(current_deployed, forecast_deployed)
         },
         {
             'status': 'Unavailable',
             'currentCount': current_unavailable,
             'forecastCount': forecast_unavailable,
-            'trend': 'up' if forecast_unavailable >= current_unavailable else 'down'
+            'trend': get_trend(current_unavailable, forecast_unavailable)
         },
     ]
 
@@ -409,14 +417,25 @@ def get_product_demand_forecast(months_back=6, months_forward=2, top_n=5):
         last_row = chart_data[-1] if chart_data else {}
         forecast = last_row.get(get_forecast_key(product_name), current)
 
-        # Calculate trend based on regression slope
-        slope, _ = product_trends.get(product_id, (0, 0))
-        trend = 'up' if slope > 0 else ('down' if slope < 0 else 'stable')
+        # Ensure values are integers
+        current = current or 0
+        forecast = forecast or 0
+
+        # Calculate trend by comparing current to forecast values
+        # This is more intuitive than using regression slope
+        if current == 0 and forecast == 0:
+            trend = 'stable'
+        elif forecast > current:
+            trend = 'up'
+        elif forecast < current:
+            trend = 'down'
+        else:
+            trend = 'stable'
 
         table_data.append({
             'productName': product_name,
-            'currentDemand': current or 0,
-            'forecastDemand': forecast or 0,
+            'currentDemand': current,
+            'forecastDemand': forecast,
             'trend': trend
         })
 
