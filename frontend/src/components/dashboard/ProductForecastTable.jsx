@@ -31,40 +31,50 @@ function ProductForecastTable({ data }) {
   };
 
   return (
-    <div className="forecast-table-wrapper">
-      <table className="forecast-table">
-        <thead>
-          <tr>
-            <th>Product Name</th>
-            <th>Current Demand</th>
-            <th>Forecast Demand</th>
-            <th>Trend</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((item, index) => (
-            <tr key={index}>
-              <td>{item.productName}</td>
-              <td>{item.currentDemand}</td>
-              <td>{item.forecastDemand}</td>
-              <td>
-                <div className={`trend-cell ${item.trend}`}>
-                  {item.trend === 'up' ? (
-                    <FiTrendingUp className="trend-icon" />
-                  ) : (
-                    <FiTrendingDown className="trend-icon" />
-                  )}
-                  <span>{item.trend === 'up' ? 'Increasing' : 'Decreasing'}</span>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="table-footer">
-        <MediumButtons type="export" onClick={handleExportExcel} />
-      </div>
-    </div>
+    <main className="main-with-table">
+      <section className="table-layout">
+        {/* Table Header */}
+        <section className="table-header">
+          <h2 className="h2">Demand Forecast Details</h2>
+          <section className="table-actions">
+            <MediumButtons type="export" onClick={handleExportExcel} />
+          </section>
+        </section>
+
+        {/* Table Structure */}
+        <section className="product-forecast-table-section">
+          <table>
+            <thead>
+              <tr>
+                <th>Product Name</th>
+                <th>Current Demand</th>
+                <th>Forecast Demand</th>
+                <th>Trend</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.productName}</td>
+                  <td>{item.currentDemand}</td>
+                  <td>{item.forecastDemand}</td>
+                  <td>
+                    <div className={`trend-cell ${item.trend}`}>
+                      {item.trend === 'up' ? (
+                        <FiTrendingUp className="trend-icon" />
+                      ) : (
+                        <FiTrendingDown className="trend-icon" />
+                      )}
+                      <span>{item.trend === 'up' ? 'Increasing' : 'Decreasing'}</span>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </section>
+    </main>
   );
 }
 
