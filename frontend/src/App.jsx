@@ -2,15 +2,14 @@ import React from "react";
 import Home from "./pages/Home";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./styles/GlobalTableStyles.css";
-import ChatBot from "./components/ChatBot";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import NotFound from "./pages/NotFound";
+import NotFound from "./pages/NotFound/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Dashboard from "./pages/Dashboard";
-import Products from "./pages/Assets/Products";
-import ProductsRegistration from "./pages/Assets/ProductsRegistration";
-import ProductViewPage from "./pages/Assets/ProductViewPage";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import Products from "./pages/AssetModel/Products";
+import ProductsRegistration from "./pages/AssetModel/ProductsRegistration";
+import ProductViewPage from "./pages/AssetModel/ProductViewPage";
 import Assets from "./pages/Assets/Assets";
 import AssetsRegistration from "./pages/Assets/AssetsRegistration";
 import BulkEditAssets from "./pages/Assets/BulkEditAssets";
@@ -19,46 +18,44 @@ import AssetViewPage from "./pages/Assets/AssetViewPage";
 import CheckInAsset from "./pages/Assets/CheckInAsset";
 import CheckOutAsset from "./pages/Assets/CheckOutAsset";
 import Tickets from "./pages/Tickets/Tickets";
+import TicketsRegistration from "./pages/Tickets/TicketsRegistration";
+import TicketsCheckout from "./pages/Tickets/TicketsCheckout";
+import TicketsCheckin from "./pages/Tickets/TicketsCheckin";
+import TicketsRepair from "./pages/Tickets/TicketsRepair";
+import TicketsIncident from "./pages/Tickets/TicketsIncident";
+import TicketsDisposal from "./pages/Tickets/TicketsDisposal";
 import TicketViewPage from "./pages/Tickets/TicketViewPage";
-import Accessories from "./pages/Accessories/Accessories";
-import AccessoriesRegistration from "./pages/Accessories/AccessoriesRegistration";
-import CheckinAccessory from "./pages/Accessories/CheckinAccessory";
-import CheckoutAccessory from "./pages/Accessories/CheckoutAccessory";
-import AccessoriesCheckoutList from "./pages/Accessories/AccessoriesCheckoutList";
 import Components from "./pages/Components/Components";
 import ComponentRegistration from "./pages/Components/ComponentRegistration";
 import ComponentCheckout from "./pages/Components/ComponentCheckout";
 import ComponentCheckedoutList from "./pages/Components/ComponentCheckedoutList";
 import ComponentCheckin from "./pages/Components/ComponentCheckin";
 import BulkEditComponents from "./pages/Components/BulkEditComponents";
-import ComponentView from "./pages/Components/ComponentViewPage";
+import ComponentView from "./pages/Components/ComponentView";
 import ComponentDetails from "./pages/Components/ComponentDetails";
-import AssetAudits from "./pages/asset-audit/AssetAudits";
-import OverdueAudits from "./pages/asset-audit/OverdueAudits";
-import ScheduledAudits from "./pages/asset-audit/ScheduledAudits";
-import CompletedAudits from "./pages/asset-audit/CompletedAudits";
-import PerformAudits from "./pages/asset-audit/PerformAudits";
-import ScheduleRegistration from "./pages/asset-audit/ScheduleRegistration";
-import ViewAudits from "./pages/asset-audit/ViewAudits";
-import Repairs from "./pages/Repair/Repairs";
-import RepairRegistration from "./pages/Repair/RepairRegistration";
-import Consumables from "./pages/Consumables/Consumables";
-import ConsumablesRegistration from "./pages/Consumables/ConsumablesRegistration";
+import AssetAudits from "./pages/AssetAudit/AssetAudits";
+import OverdueAudits from "./pages/AssetAudit/OverdueAudits";
+import ScheduledAudits from "./pages/AssetAudit/ScheduledAudits";
+import CompletedAudits from "./pages/AssetAudit/CompletedAudits";
+import PerformAudits from "./pages/AssetAudit/PerformAudits";
+import ScheduleRegistration from "./pages/AssetAudit/ScheduleRegistration";
+import Repairs from "./pages/Repairs/Repairs";
+import RepairRegistration from "./pages/Repairs/RepairRegistration";
 import PasswordResetRequest from "./pages/PasswordResetRequest";
 import PasswordReset from "./pages/PasswordReset";
-import UpcomingEndOfLife from "./pages/UpcomingEndOfLife";
-import ExpiringWarranties from "./pages/ExpiringWarranties";
-import ReachedEndOfLife from "./pages/ReachedEndOfLife";
-import ExpiredWarranties from "./pages/ExpiredWarranties";
-import AssetReport from "./pages/reports/AssetReport";
-import DepreciationReport from "./pages/reports/DepreciationReport";
-import DueBackReport from "./pages/reports/DueBackReport";
-import EndOfLifeWarrantyReport from "./pages/reports/EndOfLifeWarrantyReport";
-import ActivityReport from "./pages/reports/ActivityReport";
-import ManageProfile from "./pages/ManageProfile";
-import UserManagement from "./pages/UserManagement";
-import UserManagementViewPage from "./pages/UserManagementViewPage";
-import UserManagementEditPage from "./pages/UserManagementEditPage";
+import UpcomingEndOfLife from "./pages/Dashboard/UpcomingEndOfLife";
+import ExpiringWarranties from "./pages/Dashboard/ExpiringWarranties";
+import ReachedEndOfLife from "./pages/Dashboard/ReachedEndOfLife";
+import ExpiredWarranties from "./pages/Dashboard/ExpiredWarranties";
+import AssetReport from "./pages/Reports/AssetReport";
+import DepreciationReport from "./pages/Reports/DepreciationReport";
+import DueBackReport from "./pages/Reports/DueBackReport";
+import EndOfLifeWarrantyReport from "./pages/Reports/EndOfLifeWarrantyReport";
+import ActivityReport from "./pages/Reports/ActivityReport";
+import ManageProfile from "./pages/ManageProfile/ManageProfile";
+import UserManagement from "./pages/UserManagement/UserManagement";
+import UserManagementViewPage from "./pages/UserManagement/UserManagementViewPage";
+import UserManagementEditPage from "./pages/UserManagement/UserManagementEditPage";
 import ViewCategories from "./pages/More/ViewCategories";
 import CategoryRegistration from "./pages/More/CategoryRegistration";
 import CategoryEdit from "./pages/More/CategoryEdit";
@@ -81,6 +78,7 @@ import Depreciations from "./pages/More/Depreciations";
 import DepreciationRegistration from "./pages/More/DepreciationRegistration";
 import DepreciationDetails from "./pages/More/depreciation-details/DepreciationDetails";
 import RecycleBin from "./pages/More/RecycleBin";
+import BulkEditRepairs from "./pages/Repairs/BulkEditRepairs";
 
 function Logout() {
   localStorage.clear();
@@ -90,7 +88,6 @@ function Logout() {
 function App() {
   return (
     <BrowserRouter>
-      {/* <ChatBot /> */}
       <Routes>
         {/* This will Serve as Default Path*/}
         <Route path="/" element={<Navigate to="/login" />} />
@@ -223,10 +220,7 @@ function App() {
           />
           <Route path="/More/StatusEdit/:id" element={<StatusEdit />} />
           <Route path="/More/StatusDetails/:id" element={<StatusDetails />} />
-          <Route
-            path="/More/Depreciations"
-            element={<Depreciations />}
-          />
+          <Route path="/More/Depreciations" element={<Depreciations />} />
           <Route
             path="/More/Depreciations/Registration"
             element={<DepreciationRegistration />}
@@ -291,6 +285,7 @@ function App() {
             path="/repairs/edit/:id"
             element={<RepairRegistration />}
           />
+          <Route path="/repairs/bulk-edit" element={<BulkEditRepairs />} />
           <Route path="/audits/" element={<AssetAudits />} />
           <Route path="/audits/overdue" element={<OverdueAudits />} />
           <Route path="/audits/scheduled" element={<ScheduledAudits />} />
@@ -300,8 +295,14 @@ function App() {
           <Route path="/audits/edit/:id" element={<ScheduleRegistration />} />
           <Route path="/audits/scheduled/edit/:id" element={<ScheduleRegistration />} />
           <Route path="/audits/overdue/edit/:id" element={<ScheduleRegistration />} />
-          <Route path="/audits/view" element={<ViewAudits />} />
           <Route path="/approved-tickets" element={<Tickets />} />
+          <Route path="/tickets" element={<Tickets />} />
+          <Route path="/tickets/registration" element={<TicketsRegistration />} />
+          <Route path="/tickets/check-out" element={<TicketsCheckout />} />
+          <Route path="/tickets/check-in" element={<TicketsCheckin />} />
+          <Route path="/tickets/repair" element={<TicketsRepair />} />
+          <Route path="/tickets/incident" element={<TicketsIncident />} />
+          <Route path="/tickets/disposal" element={<TicketsDisposal />} />
           <Route path="/tickets/view/:id" element={<TicketViewPage />} />
           <Route path="/upcoming-end-of-life" element={<UpcomingEndOfLife />} />
           <Route path="/warranties" element={<ExpiringWarranties />} />
@@ -321,37 +322,6 @@ function App() {
           <Route path="/manage-profile" element={<ManageProfile />} />
 
           <Route path="*" element={<NotFound />}></Route>
-
-          {/*
-          <Route path="/accessories" element={<Accessories />} />
-          <Route
-            path="/accessories/registration"
-            element={<AccessoriesRegistration />}
-          />
-          <Route path="/accessories/checkin" element={<CheckinAccessory />} />
-          <Route path="/accessories/checkout" element={<CheckoutAccessory />} />
-          <Route
-            path="/accessories/:id"
-            element={<AccessoriesRegistration />}
-          />
-          <Route
-            path="/accessories/checkout-list"
-            element={<AccessoriesCheckoutList />}
-          />
-          <Route path="/consumables" element={<Consumables />} />
-          <Route
-            path="/consumables/registration"
-            element={<ConsumablesRegistration />}
-          />
-          <Route
-            path="/consumables/registration/:id"
-            element={<ConsumablesRegistration />}
-          />
-          <Route
-            path="/consumables/edit/:id"
-            element={<ConsumablesRegistration />}
-          />
-          */}
         </Route>
 
         {/* Place here all the routes that do not required authetication to access */}

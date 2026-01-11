@@ -1,19 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import { FiTrendingUp, FiTrendingDown, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import MediumButtons from '../buttons/MediumButtons';
 import '../../styles/dashboard/ProductForecastTable.css';
 
-const ITEMS_PER_PAGE = 5;
-
-function ProductForecastTable({ data, title = 'Product Demand Forecast' }) {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedData = data.slice(startIndex, endIndex);
-
+function ProductForecastTable({ data }) {
   const handleExportExcel = () => {
     const headers = ['Product Name', 'Current Demand', 'Forecast Demand', 'Trend'];
     const rows = data.map(item => [
@@ -29,34 +20,18 @@ function ProductForecastTable({ data, title = 'Product Demand Forecast' }) {
       ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
     ].join('\n');
 
-    // Generate filename with date
-    const date = new Date();
-    const dateStr = date.toISOString().split('T')[0];
-    const filename = `product-demand-forecast_${dateStr}.csv`;
-
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Create and download Excel file
+    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = 'product-forecast.xlsx';
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
-  const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  };
-
   return (
     <div className="forecast-table-wrapper">
-      <div className="forecast-table-header">
-        <h3 className="forecast-table-title">{title}</h3>
-      </div>
       <table className="forecast-table">
         <thead>
           <tr>
@@ -67,7 +42,7 @@ function ProductForecastTable({ data, title = 'Product Demand Forecast' }) {
           </tr>
         </thead>
         <tbody>
-          {paginatedData.map((item, index) => (
+          {data.map((item, index) => (
             <tr key={index}>
               <td>{item.productName}</td>
               <td>{item.currentDemand}</td>
@@ -87,27 +62,6 @@ function ProductForecastTable({ data, title = 'Product Demand Forecast' }) {
         </tbody>
       </table>
       <div className="table-footer">
-        {totalPages > 1 && (
-          <div className="pagination">
-            <button
-              className="pagination-btn"
-              onClick={handlePrevPage}
-              disabled={currentPage === 1}
-            >
-              <FiChevronLeft />
-            </button>
-            <span className="pagination-info">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              className="pagination-btn"
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-            >
-              <FiChevronRight />
-            </button>
-          </div>
-        )}
         <MediumButtons type="export" onClick={handleExportExcel} />
       </div>
     </div>
@@ -123,7 +77,6 @@ ProductForecastTable.propTypes = {
       trend: PropTypes.string.isRequired,
     })
   ).isRequired,
-  title: PropTypes.string,
 };
 
 export default ProductForecastTable;

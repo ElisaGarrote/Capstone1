@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import "../styles/ActionButtons.css";
+import authService from "../services/auth-service";
 
 export default function ActionButtons({
   showView = false,
@@ -16,6 +17,8 @@ export default function ActionButtons({
   editPath = "",
   editState = {},
   onDeleteClick = null,
+  deleteDisabled = false,
+  deleteTitle = "",
   onRecoverClick = null,
   onCheckoutClick = null,
   onCheckinClick = null,
@@ -25,16 +28,12 @@ export default function ActionButtons({
   return (
     <section className="action-button-section">
       {showView && (
-        <button
-          title="View"
-          className="action-button"
-          onClick={onViewClick}
-        >
+        <button title="View" className="action-button" onClick={onViewClick}>
           <i className="fas fa-eye"></i>
         </button>
       )}
 
-      {showEdit && (
+      {showEdit && authService.getUserInfo().role === "Admin" && (
         <button
           title="Edit"
           className="action-button"
@@ -44,11 +43,12 @@ export default function ActionButtons({
         </button>
       )}
 
-      {showDelete && (
+      {showDelete && authService.getUserInfo().role === "Admin" && (
         <button
-          title="Delete"
+          title={deleteTitle || "Delete"}
           className="action-button"
-          onClick={onDeleteClick}
+          onClick={() => !deleteDisabled && onDeleteClick?.()}
+          disabled={deleteDisabled}
         >
           <i className="fas fa-trash-alt"></i>
         </button>
@@ -66,7 +66,7 @@ export default function ActionButtons({
 
       {showCheckout && (
         <button
-          title="Check Out"
+          title={disableCheckout ? "Already Checked Out" : "Check Out"}
           className="action-button action-button-checkout"
           onClick={() => !disableCheckout && onCheckoutClick?.()}
           disabled={disableCheckout}
@@ -78,7 +78,7 @@ export default function ActionButtons({
 
       {showCheckin && (
         <button
-          title="Check In"
+          title={disableCheckin ? "Already Checked In" : "Check In"}
           className="action-button action-button-checkin"
           onClick={() => !disableCheckin && onCheckinClick?.()}
           disabled={disableCheckin}
@@ -87,7 +87,6 @@ export default function ActionButtons({
           <span>Check-In</span>
         </button>
       )}
-
     </section>
   );
 }

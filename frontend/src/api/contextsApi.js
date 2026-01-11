@@ -55,16 +55,4 @@ export async function importCategories(file, options = {}) {
   return res.data
 }
 
-// Locations
-export async function fetchAllLocations(params = {}) {
-  const res = await contextsApi.get('/locations/', { params })
-  // DRF may return paginated { results: [...], count } or a plain list
-  const data = res.data.results ?? res.data
-  // Map to consistent format with id and name
-  return data.map(loc => ({
-    id: loc.id,
-    name: loc.city || loc.name
-  }))
-}
-
 export default contextsApi

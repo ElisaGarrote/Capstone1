@@ -73,8 +73,16 @@ function TableItem({
   onCheckInOut,
 }) {
   const baseImage = asset.image || DefaultImage;
-
   const actions = getActionState(asset);
+
+  // Safely derive status type/name to avoid null dereference when data is incomplete
+  const statusType = asset.status_details && asset.status_details.type
+    ? String(asset.status_details.type).toLowerCase()
+    : "unknown";
+
+  const statusName = asset.status_details && asset.status_details.name
+    ? asset.status_details.name
+    : "";
 
   return (
     <tr>
@@ -435,6 +443,31 @@ export default function Assets() {
           targetIds={selectedIds}
           onSuccess={handleDeleteSuccess}
           onError={handleDeleteError}
+          onDeleteFail={(payload) => {
+            const deletedCount = payload?.deleted_count ?? 0;
+            const skippedCount = payload?.skipped_count ?? payload?.skipped ?? 0;
+            const deletedIds = payload?.deleted_ids ?? [];
+            const failed = payload?.failed ?? [];
+
+            if (deletedCount > 0) {
+              setSuccessMessage(`${deletedCount} assets deleted successfully.`);
+              if (deletedIds.length) {
+                setAssets((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+                setFilteredData((prev) => prev.filter((p) => !deletedIds.includes(p.id)));
+                setSelectedIds([]);
+              }
+            }
+
+            if (skippedCount > 0 || (Array.isArray(failed) && failed.length > 0)) {
+              const firstError = Array.isArray(failed) && failed.length > 0 ? (failed[0].message || failed[0].error || JSON.stringify(failed[0])) : null;
+              setErrorMessage(`${skippedCount} items skipped (in use). ${firstError || ''}`.trim());
+            }
+
+            setTimeout(() => {
+              setSuccessMessage("");
+              setErrorMessage("");
+            }, 6000);
+          }}
         />
       )}
 

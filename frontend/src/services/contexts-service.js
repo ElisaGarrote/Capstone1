@@ -53,6 +53,23 @@ export async function createSupplier(data) {
   const res = await contextsAxios.post("suppliers/", data);
   return res.data;
 }
+// UPDATE supplier
+export async function updateSupplier(id, data) {
+  const res = await contextsAxios.put(`suppliers/${id}/`, data);
+  return res.data;
+}
+
+// DELETE supplier
+export async function deleteSupplier(id) {
+  const res = await contextsAxios.delete(`suppliers/${id}/`);
+  return res.data;
+}
+
+// BULK DELETE suppliers
+export async function bulkDeleteSuppliers(ids) {
+  const res = await contextsAxios.post(`suppliers/bulk_delete/`, { ids });
+  return res.data;
+}
 
 /* ===============================
           MANUFACTURER CRUD
@@ -107,6 +124,20 @@ export async function importManufacturers(formData, options = {}) {
   return res.data;
 }
 
+// IMPORT suppliers via XLSX upload
+export async function importSuppliers(formData, options = {}) {
+  // options: { allowUpdate: boolean, upsertBy: 'natural'|'id', apiKey: string }
+  const params = {};
+  if (options.allowUpdate) params.allow_update = 'true';
+  if (options.upsertBy) params.upsert_by = options.upsertBy;
+
+  const headers = {};
+  if (options.apiKey) headers['X-IMPORT-API-KEY'] = options.apiKey;
+
+  const res = await contextsAxios.post(`import/suppliers/`, formData, { params, headers });
+  return res.data;
+}
+
 /* ===============================
             STATUS CRUD
 ================================= */
@@ -149,6 +180,18 @@ export async function createDepreciation(data) {
   return res.data;
 }
 
+// DELETE depreciation
+export async function deleteDepreciation(id) {
+  const res = await contextsAxios.delete(`depreciations/${id}/`);
+  return res.data;
+}
+
+// BULK DELETE depreciations
+export async function bulkDeleteDepreciations(ids) {
+  const res = await contextsAxios.post("depreciations/bulk_delete/", { ids });
+  return res.data;
+}
+
 /* ===============================
           CONTEXTS DROPDOWNS
 ================================= */
@@ -156,8 +199,6 @@ export async function fetchAllDropdowns(entity, options = {}) {
   let url = `contexts-dropdowns/all/?entity=${entity}`;
 
   // For status filtering: ?category=asset or repair
-  // await fetchAllDropdowns("asset", { category: "asset" });
-  // await fetchAllDropdowns("status", { category: "repair" });
   if (options.category) {
     url += `&category=${options.category}`;
   }
@@ -173,5 +214,50 @@ export async function fetchAllDropdowns(entity, options = {}) {
   }
 
   const res = await contextsAxios.get(url);
+  return res.data;
+}
+
+/* ===============================
+        RECYCLE BIN
+================================= */
+// GET all deleted assets and components
+export async function fetchDeletedItems() {
+  const res = await contextsAxios.get("recycle-bin/");
+  return res.data;
+}
+
+// RECOVER asset
+export async function recoverAsset(id) {
+  const res = await contextsAxios.patch(`recycle-bin/${id}/recover_asset/`);
+  return res.data;
+}
+
+// RECOVER component
+export async function recoverComponent(id) {
+  const res = await contextsAxios.patch(`recycle-bin/${id}/recover_component/`);
+  return res.data;
+}
+
+// DELETE asset permanently
+export async function deleteAsset(id) {
+  const res = await contextsAxios.delete(`recycle-bin/${id}/delete_asset/`);
+  return res.data;
+}
+
+// DELETE component permanently
+export async function deleteComponent(id) {
+  const res = await contextsAxios.delete(`recycle-bin/${id}/delete_component/`);
+  return res.data;
+}
+
+// BULK DELETE assets
+export async function bulkDeleteAssets(ids) {
+  const res = await contextsAxios.post(`recycle-bin/bulk-delete-assets/`, { ids });
+  return res.data;
+}
+
+// BULK DELETE components
+export async function bulkDeleteComponents(ids) {
+  const res = await contextsAxios.post(`recycle-bin/bulk-delete-components/`, { ids });
   return res.data;
 }

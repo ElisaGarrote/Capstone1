@@ -4,7 +4,6 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useLocation } from "react-router-dom";
 import Status from "../../components/Status";
 import dateRelated from "../../utils/dateRelated";
-import * as assetsService from "../../services/assets-service";
 
 export default function ViewAudits() {
   const location = useLocation();

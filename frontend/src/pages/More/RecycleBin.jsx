@@ -11,10 +11,10 @@ import "../../styles/TabNavBar.css";
 import "../../styles/RecycleBin.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import { fetchDeletedItems, recoverAsset, recoverComponent, deleteAsset, deleteComponent, bulkDeleteAssets, bulkDeleteComponents } from "../../services/contexts-service";
+import { isEligible, daysUntilEligible } from "../../utils/retention";
 
-// Import mock data
-import deletedAssets from "../../data/mockData/assets/deleted-asset-mockup-data.json";
-import deletedComponents from "../../data/mockData/components/deleted-component-mockup-data.json";
+const MS_90_DAYS = 90 * 24 * 60 * 60 * 1000;
 
 // TableHeader
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -39,6 +39,18 @@ function TableHeader({ allSelected, onHeaderChange }) {
 
 // TableItem
 function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClick }) {
+  // Determine permanent-delete eligibility using retention helpers
+  let deleteDisabled = false;
+  let deleteTitle = "";
+  if (!item.deleted_at) {
+    deleteDisabled = true;
+    deleteTitle = "Deletion timestamp missing — cannot permanently delete.";
+  } else if (!isEligible(item.deleted_at, 90)) {
+    deleteDisabled = true;
+    const daysLeft = daysUntilEligible(item.deleted_at, 90);
+    deleteTitle = `Item is in retention. Eligible in ${daysLeft} day(s).`;
+  }
+
   return (
     <tr>
       <td>
@@ -49,16 +61,18 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
         />
       </td>
       <td>{item.name}</td>
-      <td>{item.category}</td>
-      <td>{item.manufacturer}</td>
-      <td>{item.supplier}</td>
-      <td>{item.location}</td>
+      <td>{item.category_name || 'N/A'}</td>
+      <td>{item.manufacturer_name || 'N/A'}</td>
+      <td>{item.supplier_name || 'N/A'}</td>
+      <td>{item.location_name || 'N/A'}</td>
       <td>
         <ActionButtons
           showRecover
           showDelete
           onRecoverClick={() => onRecoverClick(item.id)}
           onDeleteClick={() => onDeleteClick(item.id)}
+          deleteDisabled={deleteDisabled}
+          deleteTitle={deleteTitle}
         />
       </td>
     </tr>
@@ -73,6 +87,12 @@ export default function RecycleBin() {
 
   // active tab (assets | components)
   const [activeTab, setActiveTab] = useState("assets");
+  
+  // data state
+  const [deletedAssets, setDeletedAssets] = useState([]);
+  const [deletedComponents, setDeletedComponents] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
   // choose dataset depending on tab
   const data = activeTab === "assets" ? deletedAssets : deletedComponents;
 
@@ -89,6 +109,38 @@ export default function RecycleBin() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Fetch deleted items from API
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadDeletedItems = async () => {
+      setIsLoading(true);
+      try {
+        const data = await fetchDeletedItems();
+        if (mounted) {
+          setDeletedAssets(data.deleted_assets || []);
+          setDeletedComponents(data.deleted_components || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch deleted items:', error);
+        if (mounted) {
+          setErrorMessage('Failed to load deleted items.');
+          setTimeout(() => setErrorMessage(''), 5000);
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadDeletedItems();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...data];
@@ -103,28 +155,28 @@ export default function RecycleBin() {
     // Filter by Category
     if (filters.category && filters.category.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.category?.toLowerCase().includes(filters.category.toLowerCase())
+        item.category_name?.toLowerCase().includes(filters.category.toLowerCase())
       );
     }
 
     // Filter by Manufacturer
     if (filters.manufacturer && filters.manufacturer.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.manufacturer?.toLowerCase().includes(filters.manufacturer.toLowerCase())
+        item.manufacturer_name?.toLowerCase().includes(filters.manufacturer.toLowerCase())
       );
     }
 
     // Filter by Supplier
     if (filters.supplier && filters.supplier.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.supplier?.toLowerCase().includes(filters.supplier.toLowerCase())
+        item.supplier_name?.toLowerCase().includes(filters.supplier.toLowerCase())
       );
     }
 
     // Filter by Location
     if (filters.location && filters.location.trim() !== "") {
       filtered = filtered.filter((item) =>
-        item.location?.toLowerCase().includes(filters.location.toLowerCase())
+        item.location_name?.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
@@ -150,10 +202,10 @@ export default function RecycleBin() {
       ? filteredData
       : filteredData.filter((item) => {
           const name = item.name?.toLowerCase() || "";
-          const category = item.category?.toLowerCase() || "";
-          const manufacturer = item.manufacturer?.toLowerCase() || "";
-          const supplier = item.supplier?.toLowerCase() || "";
-          const location = item.location?.toLowerCase() || "";
+          const category = item.category_name?.toLowerCase() || "";
+          const manufacturer = item.manufacturer_name?.toLowerCase() || "";
+          const supplier = item.supplier_name?.toLowerCase() || "";
+          const location = item.location_name?.toLowerCase() || "";
           return (
             name.includes(normalizedQuery) ||
             category.includes(normalizedQuery) ||
@@ -216,20 +268,60 @@ export default function RecycleBin() {
   };
 
   const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single id:", deleteTarget);
-      setSuccessMessage("Item deleted successfully from Recycle Bin!");
-      // remove from mock data / API call
-    } else {
-      console.log("Deleting multiple ids:", selectedIds);
-      if (selectedIds.length > 0) {
-        setSuccessMessage("Items deleted successfully from Recycle Bin!");
+    (async () => {
+      try {
+        if (deleteTarget) {
+          if (activeTab === "assets") {
+            await deleteAsset(deleteTarget);
+            setDeletedAssets(prev => prev.filter(item => item.id !== deleteTarget));
+          } else {
+            await deleteComponent(deleteTarget);
+            setDeletedComponents(prev => prev.filter(item => item.id !== deleteTarget));
+          }
+          setSuccessMessage('Item deleted successfully from Recycle Bin.');
+        } else {
+          if (selectedIds.length === 0) {
+            setErrorMessage('No items selected.');
+            setTimeout(() => setErrorMessage(''), 3000);
+            closeDeleteModal();
+            return;
+          }
+          // Filter selected ids to only those eligible for permanent deletion (90-day retention)
+          const eligibleIds = selectedIds.filter(id => {
+            const item = data.find(d => d.id === id);
+            if (!item || !item.deleted_at) return false;
+            return (Date.now() - new Date(item.deleted_at).getTime()) >= MS_90_DAYS;
+          });
+
+          if (eligibleIds.length === 0) {
+            setErrorMessage('None of the selected items are yet eligible for permanent deletion.');
+            setTimeout(() => setErrorMessage(''), 5000);
+            closeDeleteModal();
+            return;
+          }
+
+          if (activeTab === "assets") {
+            await bulkDeleteAssets(eligibleIds);
+            setDeletedAssets(prev => prev.filter(item => !eligibleIds.includes(item.id)));
+          } else {
+            await bulkDeleteComponents(eligibleIds);
+            setDeletedComponents(prev => prev.filter(item => !eligibleIds.includes(item.id)));
+          }
+
+          const skipped = selectedIds.length - eligibleIds.length;
+          setSuccessMessage(`${eligibleIds.length} item(s) deleted successfully.${skipped > 0 ? ` (${skipped} skipped - still in retention)` : ''}`);
+          setSelectedIds([]);
+        }
+      } catch (err) {
+        console.error('Failed to delete item(s):', err);
+        const msg = err?.response?.data?.detail || err?.message || 'Please try again.';
+        setErrorMessage('Failed to delete item(s): ' + msg);
+        setTimeout(() => setErrorMessage(''), 5000);
+      } finally {
+        setTimeout(() => setSuccessMessage(''), 5000);
+        closeDeleteModal();
       }
-      // remove multiple
-      setSelectedIds([]); // clear selection
-    }
-    setTimeout(() => setSuccessMessage(""), 5000);
-    closeDeleteModal();
+    })();
   };
 
   // recover modal state
@@ -246,21 +338,60 @@ export default function RecycleBin() {
     setRecoverTarget(null);
   };
 
-  const confirmRecover = () => {
-    if (recoverTarget) {
-      console.log("Recovering single id:", recoverTarget);
-      // API call or restore from mock
-    } else {
-      console.log("Recovering multiple ids:", selectedIds);
-      setSelectedIds([]); // clear selection if bulk
+  const confirmRecover = async () => {
+    try {
+      if (recoverTarget) {
+        // Single recover
+        if (activeTab === "assets") {
+          await recoverAsset(recoverTarget);
+          setDeletedAssets(prev => prev.filter(item => item.id !== recoverTarget));
+          setSuccessMessage('Asset recovered successfully!');
+        } else {
+          await recoverComponent(recoverTarget);
+          setDeletedComponents(prev => prev.filter(item => item.id !== recoverTarget));
+          setSuccessMessage('Component recovered successfully!');
+        }
+      } else {
+        // Bulk recover
+        if (selectedIds.length === 0) {
+          setErrorMessage('No items selected.');
+          setTimeout(() => setErrorMessage(''), 3000);
+          closeRecoverModal();
+          return;
+        }
+        
+        const recoverPromises = selectedIds.map(id => 
+          activeTab === "assets" ? recoverAsset(id) : recoverComponent(id)
+        );
+        
+        await Promise.all(recoverPromises);
+        
+        if (activeTab === "assets") {
+          setDeletedAssets(prev => prev.filter(item => !selectedIds.includes(item.id)));
+        } else {
+          setDeletedComponents(prev => prev.filter(item => !selectedIds.includes(item.id)));
+        }
+        
+        setSuccessMessage(`${selectedIds.length} item(s) recovered successfully!`);
+        setSelectedIds([]);
+      }
+      
+      setTimeout(() => setSuccessMessage(''), 5000);
+    } catch (error) {
+      console.error('Failed to recover item(s):', error);
+      setErrorMessage('Failed to recover item(s). Please try again.');
+      setTimeout(() => setErrorMessage(''), 5000);
+    } finally {
+      closeRecoverModal();
     }
-    closeRecoverModal();
   };
 
-  // Update filteredData when tab changes
+  // Update filteredData when tab changes or data changes
   useEffect(() => {
     setFilteredData(data);
     setAppliedFilters({});
+    setSearchQuery('');
+    setSelectedIds([]);
   }, [activeTab, data]);
 
   // outside click for export toggle
@@ -315,6 +446,10 @@ export default function RecycleBin() {
         <NavBar />
 
         <main className="main-with-table">
+          <section className="page-header">
+            <h1 className="page-title">Recycle Bin</h1>
+          </section>
+
           { /* Tab Navigation */}
           <div className="tab-nav">
             <ul>
@@ -361,13 +496,44 @@ export default function RecycleBin() {
                   />
                 )}
 
-                {/* Bulk delete button only when checkboxes selected */}
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
-                )}
+                {/* Bulk delete button only when checkboxes selected; disable if none eligible */}
+                {selectedIds.length > 0 && (() => {
+                  const eligibleSelected = selectedIds.filter(id => {
+                    const item = data.find(d => d.id === id);
+                    return !!item && isEligible(item.deleted_at, 90);
+                  });
+
+                  const disabled = eligibleSelected.length === 0;
+                  let title = '';
+                  if (disabled) {
+                    // compute soonest days left among selected that have deleted_at
+                    const daysList = selectedIds
+                      .map(id => data.find(d => d.id === id))
+                      .filter(it => it && it.deleted_at)
+                      .map(it => daysUntilEligible(it.deleted_at, 90))
+                      .filter(v => v !== null && v !== undefined);
+
+                    if (daysList.length === 0) {
+                      title = 'No deletion timestamps found for selected items.';
+                    } else {
+                      const soonest = Math.min(...daysList);
+                      title = `No selected items are eligible yet. Soonest eligible in ${soonest} day(s).`;
+                    }
+                  } else {
+                    title = eligibleSelected.length < selectedIds.length
+                      ? `${eligibleSelected.length} of ${selectedIds.length} selected will be permanently deleted; others are in retention.`
+                      : `Permanently delete ${eligibleSelected.length} selected item(s)`;
+                  }
+
+                  return (
+                    <MediumButtons
+                      type="delete"
+                      onClick={() => openDeleteModal(null)}
+                      disabled={disabled}
+                      title={title}
+                    />
+                  );
+                })()}
 
                 <input
                   type="search"

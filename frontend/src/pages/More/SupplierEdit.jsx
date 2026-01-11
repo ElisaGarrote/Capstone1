@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import DeleteModal from "../../components/Modals/DeleteModal";
+import { fetchSupplierById, updateSupplier, deleteSupplier } from "../../services/contexts-service";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -15,16 +16,18 @@ const SupplierEdit = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: "Sample Supplier",
-    address: "123 Main St",
-    city: "Seattle",
-    zip: "98109",
-    contact: "James Peterson",
-    phone: "123-456-7890",
-    email: "contact@example.com",
-    url: "https://example.com",
+    name: "",
+    address: "",
+    city: "",
+    zip: "",
+    contact: "",
+    phone: "",
+    email: "",
+    url: "",
     notes: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const validateField = (name, value) => {
     const regexMap = {
@@ -71,23 +74,87 @@ const SupplierEdit = () => {
     }
   };
 
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+      setIsLoading(true);
+      try {
+        const supplier = await fetchSupplierById(id);
+        if (!supplier) throw new Error('Supplier not found');
+        setFormData({
+          name: supplier.name || '',
+          address: supplier.address || '',
+          city: supplier.city || '',
+          zip: supplier.zip || '',
+          contact: supplier.contact_name || '',
+          phone: supplier.phone_number || '',
+          email: supplier.email || '',
+          url: supplier.url || supplier.URL || '',
+          notes: supplier.notes || '',
+        });
+        if (supplier.logo) {
+          // If backend provides a full URL use it; otherwise keep file selection null
+          setLogoFile(null);
+        }
+      } catch (err) {
+        setErrorMessage(err?.message || 'Failed to load supplier');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, [id]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    for (const [key, value] of Object.entries(formData)) {
-      if (key !== "notes" && key !== "url" && !validateField(key, value)) {
-        alert(`Please correct the field: ${key}`);
-        return;
+    (async () => {
+      for (const [key, value] of Object.entries(formData)) {
+        if (key !== "notes" && key !== "url" && !validateField(key, value)) {
+          alert(`Please correct the field: ${key}`);
+          return;
+        }
       }
-    }
 
-    console.log("Form submitted:", formData, logoFile);
-    navigate("/More/ViewSupplier");
+      setIsLoading(true);
+      try {
+        const fd = new FormData();
+        fd.append('name', formData.name);
+        fd.append('address', formData.address || '');
+        fd.append('city', formData.city || '');
+        fd.append('zip', formData.zip || '');
+        fd.append('contact_name', formData.contact || '');
+        fd.append('phone_number', formData.phone || '');
+        fd.append('email', formData.email || '');
+        fd.append('url', formData.url || '');
+        fd.append('notes', formData.notes || '');
+        if (logoFile && typeof logoFile !== 'string') fd.append('logo', logoFile);
+
+        const res = await updateSupplier(id, fd);
+        if (!res) throw new Error('Failed to update supplier');
+        navigate('/More/ViewSupplier', { state: { successMessage: 'Supplier updated' } });
+      } catch (err) {
+        console.error('Supplier update error', err?.response || err);
+        const payload = err?.response?.data || err?.message || 'Failed to update';
+        alert(typeof payload === 'object' ? JSON.stringify(payload) : payload);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   };
 
   const handleDeleteConfirm = () => {
-    // Handle supplier deletion logic here
-    console.log("Deleting supplier:", id);
-    navigate("/More/ViewSupplier");
+    (async () => {
+      if (!id) return;
+      try {
+        setIsLoading(true);
+        await deleteSupplier(id);
+        navigate('/More/ViewSupplier', { state: { successMessage: 'Supplier deleted' } });
+      } catch (err) {
+        alert(err?.response?.data?.detail || err?.message || 'Failed to delete supplier');
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   };
 
   return (

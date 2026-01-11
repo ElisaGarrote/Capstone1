@@ -8,7 +8,10 @@ import TicketFilterModal from "../../components/Modals/TicketFilterModal";
 import ActionButtons from "../../components/ActionButtons";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
+import TicketTabNavBar from "../../components/TicketTabNavBar";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import RightArrowIcon from "../../assets/icons/right-arrow.svg";
+import { exportToExcel } from "../../utils/exportToExcel";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
 import { fetchAssetById } from "../../services/assets-service";
 import {
@@ -19,8 +22,81 @@ import authService from "../../services/auth-service";
 
 import "../../styles/Tickets/Tickets.css";
 
-// TableHeader component to render the table header
-function TableHeader({ allSelected, onHeaderChange }) {
+function TableHeader({ allSelected, onHeaderChange, ticketType }) {
+  const renderHeaders = () => {
+    switch (ticketType) {
+      case "registration":
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>ASSET MODEL NAME</th>
+            <th>ASSET SERIAL NUMBER</th>
+            <th>PURCHASED DATE</th>
+          </>
+        );
+      case "check-out":
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>ASSET ID NUMBER</th>
+            <th>LOCATION</th>
+            <th>STATUS</th>
+            <th>REQUEST DATE</th>
+          </>
+        );
+      case "check-in":
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>ASSET ID NUMBER</th>
+            <th>LOCATION</th>
+            <th>STATUS</th>
+            <th>CHECKIN DATE</th>
+          </>
+        );
+      case "repair":
+        return (
+          <>
+            <th>TICKET</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>REPAIR NAME</th>
+            <th>REPAIR TYPE</th>
+            <th>START DATE</th>
+            <th>END DATE</th>
+          </>
+        );
+      case "incident":
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>CATEGORY</th>
+            <th>SUB-CATEGORY</th>
+            <th>ASSET ID NUMBER</th>
+            <th>INCIDENT DATE</th>
+            <th>EMPLOYEE NAME</th>
+            <th>SCHEDULE AUDIT</th>
+          </>
+        );
+      default:
+        return (
+          <>
+            <th>TICKET ID</th>
+            <th>TYPE</th>
+            <th>CATEGORY</th>
+            <th>SUBJECT</th>
+            <th>REQUESTOR</th>
+          </>
+        );
+    }
+  };
+
   return (
     <tr>
       <th>
@@ -30,26 +106,87 @@ function TableHeader({ allSelected, onHeaderChange }) {
           onChange={onHeaderChange}
         />
       </th>
-      <th>TICKET NUMBER</th>
-      <th>DATE</th>
-      <th>REQUESTOR</th>
-      <th>SUBJECT</th>
-      <th>LOCATION</th>
-      <th>CHECK-IN / CHECK-OUT</th>
+      {renderHeaders()}
       <th>ACTIONS</th>
     </tr>
   );
 }
 
-// TableItem component to render each ticket row
-function TableItem({
-  ticket,
-  isSelected,
-  onRowChange,
-  onDeleteClick,
-  onViewClick,
-  onCheckInOut,
-}) {
+function TableItem({ ticket, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut, ticketType }) {
+  const renderColumns = () => {
+    switch (ticketType) {
+      case "registration":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.assetModelName || "-"}</td>
+            <td>{ticket.serialNumber || "-"}</td>
+            <td>{ticket.purchasedDate || "-"}</td>
+          </>
+        );
+      case "check-out":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.assetId || "-"}</td>
+            <td>{ticket.requestorLocation || "-"}</td>
+            <td>{ticket.status || "-"}</td>
+            <td>{ticket.checkoutDate || "-"}</td>
+          </>
+        );
+      case "check-in":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.assetId || "-"}</td>
+            <td>{ticket.requestorLocation || "-"}</td>
+            <td>{ticket.status || "-"}</td>
+            <td>{ticket.checkinDate || "-"}</td>
+          </>
+        );
+      case "repair":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.repairName || "-"}</td>
+            <td>{ticket.repairType || "-"}</td>
+            <td>{ticket.startDate || "-"}</td>
+            <td>{ticket.endDate || "-"}</td>
+          </>
+        );
+      case "incident":
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subcategory || "-"}</td>
+            <td>{ticket.assetId || "-"}</td>
+            <td>{ticket.incidentDate || "-"}</td>
+            <td>{ticket.requestor || "-"}</td>
+            <td>{ticket.scheduleAudit || "-"}</td>
+          </>
+        );
+      default: // "all"
+        return (
+          <>
+            <td>{ticket.id}</td>
+            <td>{ticket.ticketType ? ticket.ticketType.charAt(0).toUpperCase() + ticket.ticketType.slice(1).toLowerCase() : "-"}</td>
+            <td>{ticket.category || "-"}</td>
+            <td>{ticket.subject || "-"}</td>
+            <td>{ticket.requestor || "-"}</td>
+          </>
+        );
+    }
+  };
+
   return (
     <tr>
       <td>
@@ -59,32 +196,14 @@ function TableItem({
           onChange={(e) => onRowChange(ticket.id, e.target.checked)}
         />
       </td>
-      <td>{ticket.ticket_number}</td>
-      <td>{ticket.formattedDate}</td>
-      <td>{ticket.employeeName}</td>
-      <td>{ticket.subject}</td>
-      <td>{ticket.location_details.city}</td>
-
-      {/* CHECK-IN / CHECK-OUT Column */}
-      <td>
-        {ticket.isCheckInOrOut && (
-          <ActionButtons
-            showCheckout={ticket.isCheckInOrOut === "Check-Out"}
-            showCheckin={ticket.isCheckInOrOut === "Check-In"}
-            onCheckoutClick={() => onCheckInOut(ticket)}
-            onCheckinClick={() => onCheckInOut(ticket)}
-          />
-        )}
-      </td>
-
-      {/* ACTIONS Column */}
+      {renderColumns()}
       <td>
         <ActionButtons
           showEdit={false}
-          showDelete
+          showDelete={true}
           showView
-          onDeleteClick={() => onDeleteClick(ticket.id)}
           onViewClick={() => onViewClick(ticket)}
+          onDeleteClick={() => onDeleteClick(ticket)}
         />
       </td>
     </tr>
@@ -95,18 +214,13 @@ const Tickets = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const toggleRef = useRef(null);
-  const exportRef = useRef(null);
 
   const [ticketItems, setTicketItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [exportToggle, setExportToggle] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [employees, setEmployees] = useState([]);
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -117,66 +231,104 @@ const Tickets = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
+  const [currentTab, setCurrentTab] = useState(
+    location.pathname.split("/")[2] || "all"
+  );
+  const [ticketCounts, setTicketCounts] = useState({});
+  // Initialize ticketView from localStorage or default to "approved"
+  const [ticketView, setTicketView] = useState(() => {
+    return localStorage.getItem("ticketView") || "approved";
+  });
+  const [showViewDropdown, setShowViewDropdown] = useState(false);
+  
+  // Store reference to original tickets for stable counts calculation
+  const ticketItemsRef = useRef([]);
+
+  // Map ticket categories to tab keys
+  const categoryToTabKey = {
+    "Registration": "registration",
+    "Check-Out": "check-out",
+    "Check-In": "check-in",
+    "Repair": "repair",
+    "Incident": "incident",
+    "Disposal": "disposal",
+    // Map existing categories to appropriate tabs
+    "Hardware Issue": "repair",
+    "Software Request": "registration",
+    "Performance Issue": "incident",
+  };
 
   useEffect(() => {
     const loadTickets = async () => {
       try {
         setIsLoading(true);
-        setErrorMessage("");
+        // Fetch tickets from backend
+        const tickets = await fetchAllTickets();
+        
+        const mappedTickets = tickets.map((ticket) => {
+          const isCheckInOrOut =
+            ticket.isCheckInOrOut ??
+            (!ticket.is_resolved
+              ? ticket.checkin_date
+                ? "Check-In"
+                : "Check-Out"
+              : null);
 
-        // Fetch tickets from API
-        const response = await fetchAllTickets();
-        const ticketsData = response.results || response;
-
-        // Fetch employees from API
-        const employeesResponse = await fetchAllEmployees();
-
-        const employeesList = Array.isArray(employeesResponse)
-          ? employeesResponse
-          : employeesResponse?.results || [];
-        setEmployees(employeesList);
-
-        // Map API response to component format
-        const mappedTickets = ticketsData.map((ticket) => {
-          // Determine if ticket needs check-in or check-out action
-          // Logic: If checkin_date is null, it's a Check-Out ticket, otherwise Check-In
-          const isCheckInOrOut = !ticket.is_resolved
-            ? ticket.checkin_date === null || ticket.checkin_date === undefined
-              ? "Check-Out"
-              : "Check-In"
-            : null;
-
-          const formattedDate =
-            isCheckInOrOut === "Check-In"
-              ? ticket.checkin_date?.slice(0, 10)
-              : ticket.checkout_date?.slice(0, 10);
-
-          // Find employee name
-          const employee = employeesList.find(
-            (e) => Number(e.id) === Number(ticket.employee)
-          );
-
-          const employeeName = employee
-            ? `${employee.firstname} ${employee.lastname}`
-            : "Unknown";
+          // Determine ticket type based on category
+          let ticketType = "all";
+          if (ticket.category && categoryToTabKey[ticket.category]) {
+            ticketType = categoryToTabKey[ticket.category];
+          }
 
           return {
-            ...ticket,
+            id: ticket.ticket_id,
+            assetId: ticket.asset_id,
+            assetName: ticket.asset_name,
+            subject: ticket.subject,
+            requestor: ticket.requestor,
+            requestorId: ticket.requestor_id,
+            requestorLocation: ticket.requestor_location || "-",
+            checkoutDate: ticket.checkout_date,
+            returnDate: ticket.return_date,
+            checkinDate: ticket.checkin_date,
+            image: DefaultImage,
+            isResolved: ticket.is_resolved,
             isCheckInOrOut,
-            formattedDate,
-            employeeName,
+            category: ticket.category,
+            status: ticket.status || "-",
+            subcategory: ticket.subcategory || "-",
+            assetModelName: ticket.assetModelName || "-",
+            serialNumber: ticket.serialNumber || "-",
+            purchasedDate: ticket.purchasedDate || "-",
+            repairName: ticket.repairName || "-",
+            repairType: ticket.repairType || "-",
+            startDate: ticket.startDate || "-",
+            endDate: ticket.endDate || "-",
+            incidentDate: ticket.incidentDate || "-",
+            scheduleAudit: ticket.scheduleAudit || "-",
+            ticketType,
           };
         });
 
+        // Calculate counts for each ticket type
+        const counts = {
+          all: mappedTickets.length,
+          registration: mappedTickets.filter(t => t.ticketType === "registration").length,
+          "check-out": mappedTickets.filter(t => t.ticketType === "check-out").length,
+          "check-in": mappedTickets.filter(t => t.ticketType === "check-in").length,
+          repair: mappedTickets.filter(t => t.ticketType === "repair").length,
+          incident: mappedTickets.filter(t => t.ticketType === "incident").length,
+          disposal: mappedTickets.filter(t => t.ticketType === "disposal").length,
+        };
+        setTicketCounts(counts);
+
         setTicketItems(mappedTickets);
+        ticketItemsRef.current = mappedTickets;
         setFilteredData(mappedTickets);
       } catch (error) {
         console.error("Error loading tickets:", error);
-        setErrorMessage(
-          "Failed to load tickets from server. Please try again later."
-        );
+        setErrorMessage("Failed to load tickets.");
         setTicketItems([]);
-        setFilteredData([]);
       } finally {
         setIsLoading(false);
       }
@@ -192,9 +344,7 @@ const Tickets = () => {
     // Filter by Ticket Number
     if (filters.ticketNumber && filters.ticketNumber.trim() !== "") {
       filtered = filtered.filter((ticket) =>
-        ticket.ticketNumber
-          ?.toLowerCase()
-          .includes(filters.ticketNumber.toLowerCase())
+        ticket.id?.toLowerCase().includes(filters.ticketNumber.toLowerCase())
       );
     }
 
@@ -208,9 +358,7 @@ const Tickets = () => {
     // Filter by Requestor
     if (filters.requestor && filters.requestor.trim() !== "") {
       filtered = filtered.filter((ticket) =>
-        ticket.requestor
-          ?.toLowerCase()
-          .includes(filters.requestor.toLowerCase())
+        ticket.requestor?.toLowerCase().includes(filters.requestor.toLowerCase())
       );
     }
 
@@ -224,16 +372,14 @@ const Tickets = () => {
     // Filter by Location
     if (filters.location && filters.location.trim() !== "") {
       filtered = filtered.filter((ticket) =>
-        ticket.requestorLocation
-          ?.toLowerCase()
-          .includes(filters.location.toLowerCase())
+        ticket.requestorLocation?.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
     // Filter by Check-In / Check-Out
     if (filters.checkInOut && filters.checkInOut.value !== "All") {
-      filtered = filtered.filter(
-        (ticket) => ticket.isCheckInOrOut === filters.checkInOut.value
+      filtered = filtered.filter((ticket) =>
+        ticket.isCheckInOrOut === filters.checkInOut.value
       );
     }
 
@@ -248,31 +394,14 @@ const Tickets = () => {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
-  const handleViewClick = async (ticket) => {
-    const asset = await fetchAssetById(ticket.asset);
-    navigate(`/tickets/view/${ticket.id}`, {
-      state: { ticket, asset },
-    });
+  const handleViewClick = (ticket) => {
+    navigate(`/tickets/view/${ticket.id}`);
   };
 
-  // outside click for export toggle
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+    const tabFromPath = location.pathname.split("/")[2] || "all";
+    setCurrentTab(tabFromPath);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -284,31 +413,129 @@ const Tickets = () => {
     }
   }, [location]);
 
+  const handleExport = () => {
+    const dataToExport = filteredTickets.length > 0 ? filteredTickets : ticketItems;
+    exportToExcel(dataToExport, "Tickets_Records.xlsx");
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const titleSection = document.querySelector(".audit-title-page-section");
+      if (titleSection && !titleSection.contains(event.target) && showViewDropdown) {
+        setShowViewDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showViewDropdown]);
+
+  useEffect(() => {
+    let viewFilteredTickets = ticketItemsRef.current;
+    
+    // Filter by view (approved/resolved)
+    viewFilteredTickets = viewFilteredTickets.filter(ticket => {
+      if (ticketView === "approved" && ticket.isResolved) {
+        return false;
+      }
+      if (ticketView === "resolved" && !ticket.isResolved) {
+        return false;
+      }
+      return true;
+    });
+
+    const counts = {
+      all: viewFilteredTickets.length,
+      registration: viewFilteredTickets.filter(t => t.ticketType === "registration").length,
+      "check-out": viewFilteredTickets.filter(t => t.ticketType === "check-out").length,
+      "check-in": viewFilteredTickets.filter(t => t.ticketType === "check-in").length,
+      repair: viewFilteredTickets.filter(t => t.ticketType === "repair").length,
+      incident: viewFilteredTickets.filter(t => t.ticketType === "incident").length,
+      disposal: viewFilteredTickets.filter(t => t.ticketType === "disposal").length,
+    };
+    setTicketCounts(counts);
+  }, [ticketView]);
+
+  useEffect(() => {
+    localStorage.setItem("ticketView", ticketView);
+  }, [ticketView]);
+
+  const getColumnCount = () => {
+    switch (currentTab) {
+      case "registration":
+        return 8;
+      case "check-out":
+        return 9;
+      case "check-in":
+        return 9;
+      case "repair":
+        return 9;
+      case "incident":
+        return 9;
+      case "all":
+        return 7;
+      default:
+        return 7;
+    }
+  };
+
   const handleCheckInOut = (ticket) => {
     if (ticket.isCheckInOrOut === "Check-In") {
-      navigate(`/assets/check-in/${ticket.asset}`, {
-        state: { ticketId: ticket.id, fromAsset: false },
+      navigate(`/assets/check-in/${ticket.assetId}`, {
+        state: {
+          id: ticket.assetId,
+          assetId: ticket.assetId,
+          product: ticket.assetName || "Generic Asset",
+          image: DefaultImage,
+          employee: ticket.requestor || "Not assigned",
+          empLocation: ticket.requestorLocation || "Unknown",
+          checkOutDate: ticket.checkoutDate || "Unknown",
+          returnDate: ticket.returnDate || "Unknown",
+          checkoutId: ticket.id,
+          condition: "Unknown",
+          ticketId: ticket.id,
+          fromTicket: true,
+        },
       });
     } else {
-      navigate(`/assets/check-out/${ticket.asset}`, {
-        state: { ticketId: ticket.id, fromAsset: false },
+      navigate(`/assets/check-out/${ticket.assetId}`, {
+        state: {
+          id: ticket.assetId,
+          assetId: ticket.assetId,
+          product: ticket.assetName || "Generic Asset",
+          image: DefaultImage,
+          ticketId: ticket.id,
+          empId: ticket.requestorId,
+          employee: ticket.requestor || "Not assigned",
+          empLocation: ticket.requestorLocation || "Unknown",
+          checkoutDate: ticket.checkoutDate || "Unknown",
+          returnDate: ticket.returnDate || "Unknown",
+          fromTicket: true,
+        },
       });
     }
   };
 
-  // Filter tickets based on search query and applied filters
-  let filteredTickets = filteredData.filter((ticket) => {
-    const qWords = searchQuery.toLowerCase().trim().split(/\s+/); // split by space
-    const fields = [
-      ticket.ticketNumber?.toLowerCase() || "",
-      ticket.formattedDate?.toLowerCase() || "",
-      ticket.employeeName?.toLowerCase() || "",
-      ticket.subject?.toLowerCase() || "",
-      ticket.location_details?.city?.toLowerCase() || "",
-    ];
-
-    // Every word in search query must match at least one field
-    return qWords.every((word) => fields.some((f) => f.includes(word)));
+  let filteredTickets = filteredData.filter(ticket => {
+    // Filter by view
+    if (ticketView === "approved" && ticket.isResolved) {
+      return false;
+    }
+    if (ticketView === "resolved" && !ticket.isResolved) {
+      return false;
+    }
+    // Filter by tab
+    if (currentTab !== "all" && ticket.ticketType !== currentTab) {
+      return false;
+    }
+    // Filter by search query
+    return (
+      ticket.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.requestor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ticket.assetName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   });
 
   // Pagination logic
@@ -323,10 +550,7 @@ const Tickets = () => {
 
   const handleHeaderChange = (e) => {
     if (e.target.checked) {
-      const newSelectedIds = [
-        ...selectedIds,
-        ...paginatedTickets.map((ticket) => ticket.id),
-      ];
+      const newSelectedIds = [...selectedIds, ...paginatedTickets.map((ticket) => ticket.id)];
       setSelectedIds([...new Set(newSelectedIds)]);
     } else {
       const paginatedIds = paginatedTickets.map((ticket) => ticket.id);
@@ -355,22 +579,20 @@ const Tickets = () => {
   const confirmDelete = () => {
     if (deleteTargetId) {
       // Delete single ticket
-      const updatedTickets = ticketItems.filter(
-        (ticket) => ticket.id !== deleteTargetId
-      );
+      const updatedTickets = ticketItems.filter(ticket => ticket.id !== deleteTargetId);
       setTicketItems(updatedTickets);
       setSuccessMessage("Ticket deleted successfully");
     } else {
       // Bulk delete
-      const updatedTickets = ticketItems.filter(
-        (ticket) => !selectedIds.includes(ticket.id)
-      );
+      const updatedTickets = ticketItems.filter(ticket => !selectedIds.includes(ticket.id));
       setTicketItems(updatedTickets);
       setSelectedIds([]);
       setSuccessMessage(`${selectedIds.length} ticket(s) deleted successfully`);
     }
     closeDeleteModal();
   };
+
+
 
   return (
     <>
@@ -397,18 +619,68 @@ const Tickets = () => {
         <NavBar />
 
         <main className="main-with-table">
+          <section className="audit-title-page-section">
+            <div className="ticket-title-container">
+              <h1>
+                {ticketView === "approved" ? "Approved Tickets" : "Resolved Tickets"}
+              </h1>
+              <button
+                onClick={() => setShowViewDropdown(!showViewDropdown)}
+                className="view-toggle-button"
+              >
+                <img
+                  src={RightArrowIcon}
+                  alt="dropdown"
+                  className="view-toggle-icon"
+                  style={{
+                    transform: showViewDropdown ? "rotate(-90deg)" : "rotate(90deg)",
+                  }}
+                />
+              </button>
+              {showViewDropdown && (
+                <div className="view-dropdown-menu">
+                  <button
+                    onClick={() => {
+                      setTicketView("approved");
+                      setShowViewDropdown(false);
+                    }}
+                    className={`dropdown-item ${ticketView === "approved" ? "active" : ""}`}
+                  >
+                    Approved Tickets
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTicketView("resolved");
+                      setShowViewDropdown(false);
+                    }}
+                    className={`dropdown-item ${ticketView === "resolved" ? "active" : ""}`}
+                  >
+                    Resolved Tickets
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <TicketTabNavBar ticketCounts={ticketCounts} />
+          </section>
+
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Tickets ({filteredTickets.length})</h2>
+              <h2 className="h2">
+                {currentTab === "all" && `All`}
+                {currentTab === "registration" && `Registration Tickets`}
+                {currentTab === "check-out" && `Check-out Tickets`}
+                {currentTab === "check-in" && `Check-in Tickets`}
+                {currentTab === "repair" && `Repair Tickets`}
+                {currentTab === "incident" && `Incident Tickets`}
+                {currentTab === "disposal" && `Disposal Tickets`}
+                {` (${filteredTickets.length})`}
+              </h2>
               <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
-                )}
+                  {/* Bulk delete removed for approval workflow */}
                 <input
                   type="search"
                   placeholder="Search..."
@@ -423,41 +695,25 @@ const Tickets = () => {
                 >
                   Filter
                 </button>
-                {authService.getUserInfo().role === "Admin" && (
-                  <div ref={toggleRef}>
-                    <MediumButtons
-                      type="export"
-                      onClick={() => setExportToggle(!exportToggle)}
-                    />
-                  </div>
-                )}
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
               </section>
             </section>
 
             {/* Table Structure */}
             <section className="tickets-table-section">
-              {exportToggle && (
-                <section className="export-button-section" ref={exportRef}>
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
               <table>
                 <thead>
                   <TableHeader
                     allSelected={allSelected}
                     onHeaderChange={handleHeaderChange}
+                    ticketType={currentTab}
                   />
                 </thead>
                 <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={8} className="no-data-message">
-                        Loading tickets...
-                      </td>
-                    </tr>
-                  ) : paginatedTickets.length > 0 ? (
+                  {paginatedTickets.length > 0 ? (
                     paginatedTickets.map((ticket) => (
                       <TableItem
                         key={ticket.id}
@@ -467,11 +723,12 @@ const Tickets = () => {
                         onDeleteClick={openDeleteModal}
                         onViewClick={handleViewClick}
                         onCheckInOut={handleCheckInOut}
+                        ticketType={currentTab}
                       />
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="no-data-message">
+                      <td colSpan={getColumnCount()} className="no-data-message">
                         No tickets found.
                       </td>
                     </tr>
