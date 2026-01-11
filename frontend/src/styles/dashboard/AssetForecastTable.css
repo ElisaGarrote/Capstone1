@@ -1,3 +1,37 @@
+.forecast-table-section {
+  width: 100%;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.forecast-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #cccccc;
+  background-color: #f9f9f9;
+}
+
+.forecast-title-container {
+  flex: 1;
+}
+
+.forecast-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.forecast-button-group {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
 .forecast-table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -101,17 +135,5 @@
 .forecast-table-wrapper .trend-icon {
   width: 1rem;
   height: 1rem;
-}
-
-.forecast-table-wrapper .table-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0.75rem;
-  background: transparent;
-  border-top: none;
-}
-
-.forecast-table-wrapper .table-footer button {
-  margin: 0 !important;
 }
 
