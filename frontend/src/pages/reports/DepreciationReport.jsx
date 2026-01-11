@@ -7,8 +7,10 @@ import Pagination from "../../components/Pagination";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import DepreciationFilterModal from "../../components/Modals/DepreciationFilterModal";
 import Footer from "../../components/Footer";
-import MockupData from "../../data/mockData/reports/depreciation-mockup-data.json";
 import { exportToExcel } from "../../utils/exportToExcel";
+import api from "../../api";
+// base for assets service (prefer specific env, fallback to general API)
+const assetsBase = import.meta.env.VITE_ASSETS_API_URL || import.meta.env.VITE_API_URL || "/api/assets/";
 import "../../styles/reports/DepreciationReport.css";
 
 const filterConfig = [
@@ -110,10 +112,11 @@ export default function DepreciationReport() {
   // filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
-  const [filteredData, setFilteredData] = useState(MockupData);
+  const [filteredData, setFilteredData] = useState([]);
+  const [allData, setAllData] = useState([]);
 
   const applyFilters = (filters) => {
-    let filtered = [...MockupData];
+    let filtered = [...allData];
 
     if (filters?.status) {
       filtered = filtered.filter(
@@ -123,25 +126,19 @@ export default function DepreciationReport() {
     }
 
     if (filters?.depreciation) {
-      filtered = filtered.filter(
-        (row) =>
-          row.depreciationName?.toLowerCase() ===
-          String(filters.depreciation.value || "").toLowerCase()
-      );
+      const depFilterVal = (filters.depreciation.label || filters.depreciation.value || "").toLowerCase();
+      filtered = filtered.filter((row) => row.depreciationName?.toLowerCase() === depFilterVal);
     }
 
-    if (
-      filters?.durationMonths &&
-      String(filters.durationMonths).trim() !== ""
-    ) {
-      const duration = parseInt(filters.durationMonths, 10);
+    if (filters?.duration && String(filters.duration).trim() !== "") {
+      const duration = parseInt(filters.duration, 10);
       if (!Number.isNaN(duration)) {
         filtered = filtered.filter((row) => row.duration === duration);
       }
     }
 
-    if (filters?.monthsLeft && String(filters.monthsLeft).trim() !== "") {
-      const monthsLeft = parseInt(filters.monthsLeft, 10);
+    if (filters?.monthsleft && String(filters.monthsleft).trim() !== "") {
+      const monthsLeft = parseInt(filters.monthsleft, 10);
       if (!Number.isNaN(monthsLeft)) {
         filtered = filtered.filter((row) => row.monthsLeft === monthsLeft);
       }
@@ -152,9 +149,43 @@ export default function DepreciationReport() {
 
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    setFilteredData(applyFilters(filters));
+    const next = applyFilters(filters);
+    setFilteredData(next);
     setCurrentPage(1);
   };
+
+  useEffect(() => {
+    // fetch depreciation report JSON from assets API
+    const fetchData = async () => {
+      try {
+        // the API view supports format=json
+        const url = `${assetsBase}reports/depreciation/?format=json`;
+        // prefer using api axios instance if base points to gateway; otherwise fallback to direct fetch
+        let resp;
+        try {
+          resp = await api.get(url.replace(import.meta.env.VITE_API_URL || "", ""));
+        } catch (e) {
+          // fallback direct call
+          resp = await fetch(url);
+          const data = await resp.json();
+          setAllData(data.results || []);
+          setFilteredData(data.results || []);
+          return;
+        }
+
+        if (resp && resp.data) {
+          const data = resp.data.results || resp.data || [];
+          setAllData(data);
+          setFilteredData(data);
+        }
+      } catch (err) {
+        // leave data empty on error; UI will show no results
+        console.error('Failed to load depreciation report', err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
