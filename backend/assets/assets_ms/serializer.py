@@ -378,9 +378,30 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
 
 # Serializer for asset bulk edit selected items
 class AssetNameSerializer(serializers.ModelSerializer):
+    status_details = serializers.SerializerMethodField()
+
     class Meta:
         model = Asset
-        fields = ['id', 'asset_id', 'name', 'image']
+        fields = ['id', 'asset_id', 'name', 'image', 'status_details']
+
+    def get_status_details(self, obj):
+        """Return status details (id, name, type) from contexts service."""
+        if not obj.status:
+            return None
+        # Check if status_map is provided in context (for bulk optimization)
+        status_map = self.context.get('status_map')
+        if status_map:
+            return status_map.get(obj.status)
+        # Fallback to individual fetch
+        from assets_ms.services.contexts import get_status_by_id
+        status = get_status_by_id(obj.status)
+        if status and not status.get('warning'):
+            return {
+                'id': status.get('id'),
+                'name': status.get('name'),
+                'type': status.get('type'),
+            }
+        return None
 
 class AssetCheckoutFileSerializer(serializers.ModelSerializer):
     file_from = serializers.CharField(default="asset_checkout", read_only=True)
@@ -397,6 +418,35 @@ class AssetCheckoutListSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckout
         fields = '__all__'
+
+
+class AssetCheckoutByEmployeeSerializer(serializers.ModelSerializer):
+    """Serializer for active checkouts by employee with asset details."""
+    files = AssetCheckoutFileSerializer(many=True, read_only=True)
+    asset_details = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AssetCheckout
+        fields = [
+            'id', 'asset', 'asset_details', 'ticket_id', 'checkout_to',
+            'location', 'checkout_date', 'return_date', 'revenue',
+            'condition', 'notes', 'created_at', 'files'
+        ]
+
+    def get_asset_details(self, obj):
+        """Return asset details (id, asset_id, name, image)."""
+        if obj.asset:
+            request = self.context.get('request')
+            image_url = None
+            if obj.asset.image:
+                image_url = request.build_absolute_uri(obj.asset.image.url) if request else obj.asset.image.url
+            return {
+                'id': obj.asset.id,
+                'asset_id': obj.asset.asset_id,
+                'name': obj.asset.name,
+                'image': image_url,
+            }
+        return None
 
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     # These fields are populated from ticket data, not from form input

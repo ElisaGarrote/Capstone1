@@ -17,6 +17,7 @@ import logging
 from assets_ms.services.contexts import *
 from assets_ms.services.integration_help_desk import *
 from assets_ms.services.integration_ticket_tracking import *
+from assets_ms.services.forecast import *
 
 from assets_ms.services.activity_logger import (
     log_asset_activity,
@@ -667,7 +668,6 @@ class AssetViewSet(viewsets.ModelViewSet):
             )
 
         # Fetch and validate status from Contexts service
-        from assets_ms.services.contexts import get_status_by_id
         status_details = get_status_by_id(status_id)
 
         if not status_details or status_details.get("warning"):
@@ -717,16 +717,26 @@ class AssetViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"], url_path='names')
     def names(self, request):
         """
-        Return assets with only id, asset_id, name, and image.
+        Return assets with only id, asset_id, name, image, and status_details.
         Optional query params:
             ?ids=1,2,3
             ?search=keyword
             ?status_type=deployable,deployed  (comma-separated status types)
         """
+
         ids_param = request.query_params.get("ids")
         search = request.query_params.get("search")
         status_type_param = request.query_params.get("status_type")
         queryset = self.get_queryset()
+
+        # Fetch all asset statuses for status_map (avoids N+1 queries)
+        statuses = get_status_names_assets()
+        status_map = {}
+        if isinstance(statuses, list):
+            status_map = {
+                s['id']: {'id': s['id'], 'name': s['name'], 'type': s.get('type')}
+                for s in statuses
+            }
 
         # Filter by IDs if provided
         if ids_param:
@@ -738,9 +748,7 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         # Filter by status type(s) if provided
         if status_type_param:
-            from assets_ms.services.contexts import get_status_names_assets
             status_types = [t.strip() for t in status_type_param.split(",") if t.strip()]
-            statuses = get_status_names_assets()
             if isinstance(statuses, list):
                 # Filter statuses that match the requested types
                 matching_status_ids = [s['id'] for s in statuses if s.get('type') in status_types]
@@ -755,7 +763,10 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         # Don't cache filtered results - they need to be real-time
         if search or status_type_param:
-            serializer = AssetNameSerializer(queryset, many=True, context={'request': request})
+            serializer = AssetNameSerializer(
+                queryset, many=True,
+                context={'request': request, 'status_map': status_map}
+            )
             return Response(serializer.data)
 
         # Build a cache key specific for this set of IDs
@@ -768,9 +779,9 @@ class AssetViewSet(viewsets.ModelViewSet):
             queryset,
             AssetNameSerializer,
             many=True,
-            context={'request': request}
+            context={'request': request, 'status_map': status_map}
         )
-    
+
     # Bulk edit
     @action(detail=False, methods=["patch"], url_path='bulk-edit')
     def bulk_edit(self, request):
@@ -946,6 +957,31 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='by-employee/(?P<employee_id>[^/.]+)')
+    def by_employee(self, request, employee_id=None):
+        """
+        List all active checkouts for a specific employee with asset details.
+        GET /asset-checkouts/by-employee/{employee_id}/
+        """
+        if not employee_id:
+            return Response({"detail": "Employee ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            employee_id = int(employee_id)
+        except ValueError:
+            return Response({"detail": "Invalid employee ID."}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = AssetCheckout.objects.select_related('asset').prefetch_related('files').filter(
+            checkout_to=employee_id,
+            asset_checkin__isnull=True,
+            asset__is_deleted=False
+        ).order_by('-checkout_date')
+
+        serializer = AssetCheckoutByEmployeeSerializer(
+            queryset, many=True, context={'request': request}
+        )
+        return Response(serializer.data)
+
     @action(detail=False, methods=['post'], url_path='checkout-with-status')
     def checkout_with_status(self, request):
         """
@@ -1056,7 +1092,6 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
                 asset = checkin.asset_checkout.asset
 
                 # Validate status type
-                from assets_ms.services.contexts import get_status_by_id
                 status_details = get_status_by_id(status_id)
 
                 if not status_details:
@@ -2010,7 +2045,6 @@ class DashboardViewSet(viewsets.ViewSet):
         - months_back: Number of historical months (default: 6)
         - months_forward: Number of forecast months (default: 3)
         """
-        from assets_ms.services.forecast import get_asset_status_forecast
 
         months_back = int(request.query_params.get('months_back', 6))
         months_forward = int(request.query_params.get('months_forward', 3))
@@ -2036,7 +2070,6 @@ class DashboardViewSet(viewsets.ViewSet):
         - months_forward: Number of forecast months (default: 3)
         - top_n: Number of top products to include (default: 4)
         """
-        from assets_ms.services.forecast import get_product_demand_forecast
 
         months_back = int(request.query_params.get('months_back', 6))
         months_forward = int(request.query_params.get('months_forward', 3))
@@ -2063,7 +2096,6 @@ class DashboardViewSet(viewsets.ViewSet):
         Returns key performance indicators including forecasted demand, most requested model,
         shortage risk, and predicted asset count changes.
         """
-        from assets_ms.services.forecast import get_kpi_summary
 
         try:
             data = get_kpi_summary()
