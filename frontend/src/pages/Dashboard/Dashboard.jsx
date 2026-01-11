@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
 import StatusCard from '../../components/dashboard/StatusCard';
 import AssetMetrics from '../../components/dashboard/AssetMetrics';
 import KPISummaryCards from '../../components/Dashboard/KPISummaryCards';
@@ -139,6 +140,7 @@ function Dashboard() {
           </>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
