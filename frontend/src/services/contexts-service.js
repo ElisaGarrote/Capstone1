@@ -181,6 +181,24 @@ export async function createDepreciation(data) {
   return res.data;
 }
 
+// UPDATE depreciation
+export async function updateDepreciation(id, data) {
+  const res = await contextsAxios.put(`depreciations/${id}/`, data);
+  return res.data;
+}
+
+// DELETE depreciation (soft-delete via API)
+export async function deleteDepreciation(id) {
+  const res = await contextsAxios.delete(`depreciations/${id}/`);
+  return res.data;
+}
+
+// BULK DELETE depreciations
+export async function bulkDeleteDepreciations(ids) {
+  const res = await contextsAxios.post(`depreciations/bulk_delete/`, { ids });
+  return res.data;
+}
+
 /* ===============================
           CONTEXTS DROPDOWNS
 ================================= */
