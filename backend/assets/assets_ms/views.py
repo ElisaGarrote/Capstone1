@@ -961,7 +961,7 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
     def by_employee(self, request, employee_id=None):
         """
         List all active checkouts for a specific employee with asset details.
-        GET /asset-checkouts/by-employee/{employee_id}/
+        GET /asset-checkout/by-employee/{employee_id}/
         """
         if not employee_id:
             return Response({"detail": "Employee ID is required."}, status=status.HTTP_400_BAD_REQUEST)
