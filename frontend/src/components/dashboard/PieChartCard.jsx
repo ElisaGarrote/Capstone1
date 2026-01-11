@@ -43,4 +43,4 @@ PieChartCard.propTypes = {
   ).isRequired,
 };
 
-export default PieChartCard; 
+export default PieChartCard;
