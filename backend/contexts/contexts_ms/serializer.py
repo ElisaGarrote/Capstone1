@@ -485,6 +485,14 @@ class TicketSerializer(serializers.ModelSerializer):
 
 
 class CategoryNameSerializer(serializers.ModelSerializer):
+    """Serializer for category names (id and name only)."""
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
+
+class CategoryHdRegistrationSerializer(serializers.ModelSerializer):
+    """Serializer with assets for HD registration."""
     assets = serializers.SerializerMethodField()
 
     class Meta:

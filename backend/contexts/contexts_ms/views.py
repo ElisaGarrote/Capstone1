@@ -67,11 +67,24 @@ class CategoryViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='names')
     def names(self, request):
-        """Return all categories with name, id, and list of assets.
+        """Return all categories with only name and id.
 
         Optional query param: ?type=asset or ?type=component
         """
+        categories = self.get_queryset()
+        category_type = request.query_params.get('type')
+        if category_type in ['asset', 'component']:
+            categories = categories.filter(type=category_type)
 
+        serializer = CategoryNameSerializer(categories, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='hd/registration')
+    def hd_registration(self, request):
+        """Return all categories with name, id, and list of assets for HD registration.
+
+        Optional query param: ?type=asset or ?type=component
+        """
         categories = self.get_queryset()
         category_type = request.query_params.get('type')
         if category_type in ['asset', 'component']:
@@ -82,7 +95,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         for cat in categories:
             assets_map[cat.id] = get_assets_by_category(cat.id)
 
-        serializer = self.get_serializer(
+        serializer = CategoryHdRegistrationSerializer(
             categories, many=True, context={'assets_map': assets_map}
         )
         return Response(serializer.data)

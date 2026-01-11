@@ -710,14 +710,51 @@ class AssetViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # Asset names 
-    # assets/names/?ids=1,2,3
-    # assets/names/?search=keyword
-    # assets/names/?status_type=deployable,deployed
-    # assets/names/?ids=1,2,3&search=keyword&status_type=deployable,deployed
     @action(detail=False, methods=["get"], url_path='names')
     def names(self, request):
         """
-        Return assets with only id, asset_id, name, image, and status_details.
+        Return assets with only id, asset_id, name, and image.
+        Optional query param: ?ids=1,2,3 or ?search=keyword
+        """
+        ids_param = request.query_params.get("ids")
+        search = request.query_params.get("search")
+        queryset = self.get_queryset()
+
+        # Filter by IDs if provided
+        if ids_param:
+            try:
+                ids = [int(i) for i in ids_param.split(",") if i.strip().isdigit()]
+                queryset = queryset.filter(id__in=ids)
+            except ValueError:
+                return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+
+        # Don't cache search results - they need to be real-time for clone name generation
+        if search:
+            serializer = AssetNameSerializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data)
+
+        # Build a cache key specific for this set of IDs
+        cache_key = "assets:names"
+        if ids_param:
+            cache_key += f":{','.join(map(str, ids))}"
+
+        return self.cached_response(
+            cache_key,
+            queryset,
+            AssetNameSerializer,
+            many=True,
+            context={'request': request}
+        )
+
+    # assets/hd/registration/?ids=1,2,3&search=keyword&status_type=deployable,deployed
+    # assets/hd/registration/?category=5
+    @action(detail=False, methods=["get"], url_path='hd/registration')
+    def hd_registration(self, request):
+        """
+        Return assets for HD registration with category filter.
         Optional query params:
             ?ids=1,2,3
             ?search=keyword
@@ -760,12 +797,10 @@ class AssetViewSet(viewsets.ModelViewSet):
         if status_type_param:
             status_types = [t.strip() for t in status_type_param.split(",") if t.strip()]
             if isinstance(statuses, list):
-                # Filter statuses that match the requested types
                 matching_status_ids = [s['id'] for s in statuses if s.get('type') in status_types]
                 if matching_status_ids:
                     queryset = queryset.filter(status__in=matching_status_ids)
                 else:
-                    # No matching statuses found, return empty
                     queryset = queryset.none()
 
         if search:
@@ -773,21 +808,20 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         # Don't cache filtered results - they need to be real-time
         if search or status_type_param or category_param:
-            serializer = AssetNameSerializer(
+            serializer = AssetHdRegistrationSerializer(
                 queryset, many=True,
                 context={'request': request, 'status_map': status_map}
             )
             return Response(serializer.data)
 
-        # Build a cache key specific for this set of IDs
-        cache_key = "assets:names"
+        cache_key = "assets:hd:registration"
         if ids_param:
             cache_key += f":{','.join(map(str, ids))}"
 
         return self.cached_response(
             cache_key,
             queryset,
-            AssetNameSerializer,
+            AssetHdRegistrationSerializer,
             many=True,
             context={'request': request, 'status_map': status_map}
         )

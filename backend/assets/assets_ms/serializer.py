@@ -378,6 +378,12 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
 
 # Serializer for asset bulk edit selected items
 class AssetNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Asset
+        fields = ['id', 'asset_id', 'name', 'image']
+
+# Serializer for HD registration with category filter
+class AssetHdRegistrationSerializer(serializers.ModelSerializer):
     status_details = serializers.SerializerMethodField()
 
     class Meta:
@@ -385,23 +391,7 @@ class AssetNameSerializer(serializers.ModelSerializer):
         fields = ['id', 'asset_id', 'name', 'image', 'status_details', 'serial_number']
 
     def get_status_details(self, obj):
-        """Return status details (id, name, type) from contexts service."""
-        if not obj.status:
-            return None
-        # Check if status_map is provided in context (for bulk optimization)
-        status_map = self.context.get('status_map')
-        if status_map:
-            return status_map.get(obj.status)
-        # Fallback to individual fetch
-        from assets_ms.services.contexts import get_status_by_id
-        status = get_status_by_id(obj.status)
-        if status and not status.get('warning'):
-            return {
-                'id': status.get('id'),
-                'name': status.get('name'),
-                'type': status.get('type'),
-            }
-        return None
+        return self.context.get("status_map", {}).get(obj.status)
 
 class AssetCheckoutFileSerializer(serializers.ModelSerializer):
     file_from = serializers.CharField(default="asset_checkout", read_only=True)
