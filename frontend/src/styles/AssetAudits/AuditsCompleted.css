@@ -1,12 +1,31 @@
-.due-back-report-table-section {
+.completed-audit-title-page-section {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.completed-audit-title-page-section h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.completed-audit-title-page-section > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.completed-audit-table-section {
   overflow-x: auto;
-  max-height: 55vh;
+  max-height: 500px;
   overflow-y: auto;
-  overscroll-behavior: contain;
 
   table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 
     th {
       padding: 0.75rem !important;
@@ -23,10 +42,6 @@
       z-index: 1;
     }
 
-    th:first-child {
-      width: 200px;
-    }
-
     td {
       text-align: left !important;
       padding: 0.75rem;
@@ -34,6 +49,9 @@
       color: var(--text-color);
       border-bottom: 1px solid #cccccc;
       height: 50px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     td.no-data-message {
@@ -50,17 +68,16 @@
     tr:hover {
       background-color: #fcfcfc;
     }
-  }
-}
-.due-back-report-table-section table th:nth-last-child(1),
-.due-back-report-table-section table th:nth-last-child(2),
-.due-back-report-table-section table th:nth-last-child(3),
-.due-back-report-table-section table td:nth-last-child(1),
-.due-back-report-table-section table td:nth-last-child(2),
-.due-back-report-table-section table td:nth-last-child(3) {
-  text-align: left !important;
-}
 
-.due-back-report-table-section .icon-td {
-  justify-content: flex-start;
+    th:nth-child(-n+5),
+    td:nth-child(-n+5) {
+      width: calc((100% - 150px) / 5);
+    }
+
+    th:nth-child(6),
+    td:nth-child(6) {
+      width: 150px;
+      text-align: center;
+    }
+  }
 }

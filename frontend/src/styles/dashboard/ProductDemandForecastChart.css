@@ -74,63 +74,6 @@
   }
 }
 
-/* Custom Legend Styles */
-.custom-legend {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.5rem;
-  padding: 1rem 0;
-  margin-top: 0.5rem;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.legend-color-group {
-  display: flex;
-  gap: 2px;
-}
-
-.legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-}
-
-.legend-color.forecast {
-  background-color: transparent !important;
-}
-
-.legend-label {
-  font-size: 0.75rem;
-  color: #333;
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.legend-hint {
-  display: flex;
-  gap: 1rem;
-  margin-left: 1rem;
-  padding-left: 1rem;
-  border-left: 1px solid #e0e0e0;
-  font-size: 0.7rem;
-  color: #666;
-}
-
-.hint-solid,
-.hint-forecast {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
 /* Responsive */
 @media (max-width: 1200px) {
   .forecast-section {

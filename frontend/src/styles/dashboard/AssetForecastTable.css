@@ -2,44 +2,81 @@
   width: 100%;
   overflow: hidden;
   border-radius: 25px;
-  border: 1px solid #cccccc;
+  border: 1px solid #d3d3d3;
+  box-shadow: 0 0 10px rgba(211, 211, 211, 0.5);
+  background: #ffffff;
 }
 
 .forecast-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1rem;
+  table-layout: fixed;
 }
 
 .forecast-table thead {
-  background-color: #f0f1f2;
+  background-color: #f8f9fa;
 }
 
 .forecast-table th {
-  padding: 0.75rem;
+  padding: 1rem 1.25rem;
   text-align: left;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #cccccc;
+  color: var(--secondary-text-color, #545f71);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #d3d3d3;
 }
 
 .forecast-table td {
-  padding: 0.75rem;
+  padding: 1rem 1.25rem;
   text-align: left;
-  font-size: 0.8125rem;
-  color: #666;
-  border-bottom: 1px solid #f0f0f0;
-  height: 50px;
+  font-size: 0.875rem;
+  color: var(--text-color, #333);
+  border-bottom: 1px solid #e5e7eb;
+  height: 56px;
+  vertical-align: middle;
+}
+
+.forecast-table tbody tr {
+  transition: background-color 0.15s ease;
 }
 
 .forecast-table tbody tr:hover {
-  background-color: #fcfcfc;
+  background-color: #f8fafc;
+}
+
+.forecast-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Column widths */
+.forecast-table th:nth-child(1),
+.forecast-table td:nth-child(1) {
+  width: 25%;
+}
+
+.forecast-table th:nth-child(2),
+.forecast-table td:nth-child(2) {
+  width: 30%;
+}
+
+.forecast-table th:nth-child(3),
+.forecast-table td:nth-child(3) {
+  width: 25%;
+}
+
+.forecast-table th:nth-child(4),
+.forecast-table td:nth-child(4) {
+  width: 20%;
+  text-align: right;
+  padding-right: 1.5rem;
 }
 
 .trend-cell {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
   font-weight: 600;
   font-size: 0.875rem;
@@ -54,85 +91,94 @@
 }
 
 .trend-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-.forecast-table-header {
-  padding: 1rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.forecast-table-title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
+  width: 1.125rem;
+  height: 1.125rem;
 }
 
 .table-footer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-top: 1px solid #f0f0f0;
+  justify-content: flex-end;
+  padding: 1rem 1.25rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e7eb;
 }
 
-.pagination {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.pagination-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  background: white;
+.export-btn {
+  background: transparent;
+  color: var(--secondary-text-color, #545f71);
+  border: 1px solid #d3d3d3;
+  padding: 0.5rem 1.25rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #666;
 }
 
-.pagination-btn:hover:not(:disabled) {
-  background: #f5f5f5;
-  border-color: #ccc;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-info {
-  font-size: 0.875rem;
-  color: #666;
+.export-btn:hover {
+  background: #f0f0f0;
+  border-color: #b3b3b3;
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .forecast-table th,
   .forecast-table td {
-    padding: 0.5rem;
-    font-size: 0.75rem;
+    padding: 0.875rem 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .forecast-table {
+    table-layout: auto;
+  }
+
+  .forecast-table th,
+  .forecast-table td {
+    padding: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .forecast-table td {
-    height: 45px;
+    height: 50px;
   }
 
-  .table-footer {
-    flex-direction: column;
-    gap: 1rem;
+  .forecast-table th:nth-child(1),
+  .forecast-table td:nth-child(1),
+  .forecast-table th:nth-child(2),
+  .forecast-table td:nth-child(2),
+  .forecast-table th:nth-child(3),
+  .forecast-table td:nth-child(3),
+  .forecast-table th:nth-child(4),
+  .forecast-table td:nth-child(4) {
+    width: auto;
   }
 
   .export-btn {
     padding: 0.5rem 1rem;
     font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .forecast-table-wrapper {
+    border-radius: 16px;
+  }
+
+  .forecast-table th,
+  .forecast-table td {
+    padding: 0.625rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .trend-cell {
+    font-size: 0.75rem;
+    gap: 0.25rem;
+  }
+
+  .trend-icon {
+    width: 0.875rem;
+    height: 0.875rem;
   }
 }
 

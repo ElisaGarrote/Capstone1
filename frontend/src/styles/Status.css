@@ -265,3 +265,16 @@
   background-color: var(--repair-text);
   --pulse-color: 19, 33, 68;
 }
+
+td, th {
+  height: 50px;
+  min-height: 50px;
+  vertical-align: middle;
+}
+
+.page table td img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+}

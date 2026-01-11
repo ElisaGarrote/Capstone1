@@ -91,3 +91,74 @@
   margin: 0 2px 0 0 !important;
   display: inline-flex !important;
 }
+
+/* Title Section Styles */
+.audit-title-page-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.ticket-title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.ticket-title-container h1 {
+  margin: 0;
+}
+
+.view-toggle-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.view-toggle-icon {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.2s ease;
+  filter: brightness(0);
+}
+
+.view-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  min-width: 150px;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: white;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.dropdown-item:first-child {
+  border-top: none;
+}
+
+.dropdown-item + .dropdown-item {
+  border-top: 1px solid #ccc;
+}
+
+.dropdown-item.active {
+  background-color: #f0f0f0;
+}
