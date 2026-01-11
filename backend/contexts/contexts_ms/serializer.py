@@ -504,8 +504,6 @@ class CategoryHdRegistrationSerializer(serializers.ModelSerializer):
         assets_map = self.context.get('assets_map')
         if assets_map is not None:
             return assets_map.get(obj.id, [])
-        # Fallback to individual fetch (not recommended for lists)
-        from contexts_ms.services.assets import get_assets_by_category
         return get_assets_by_category(obj.id)
 
 class SupplierNameSerializer(serializers.ModelSerializer):

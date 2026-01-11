@@ -711,7 +711,7 @@ class AssetViewSet(viewsets.ModelViewSet):
 
     # Asset names 
     @action(detail=False, methods=["get"], url_path='names')
-    def names(self, request):
+    def names(self, requesti):
         """
         Return assets with only id, asset_id, name, and image.
         Optional query param: ?ids=1,2,3 or ?search=keyword
