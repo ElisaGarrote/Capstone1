@@ -225,3 +225,48 @@ export async function fetchAllDropdowns(entity, options = {}) {
   const res = await contextsAxios.get(url);
   return res.data;
 }
+
+/* ===============================
+          RECYCLE BIN / DELETED ITEMS
+================================= */
+// List deleted assets and components (from contexts service proxy)
+export async function fetchDeletedItems() {
+  const res = await contextsAxios.get("recycle-bin/");
+  return res.data;
+}
+
+// Recover a deleted asset via contexts proxy
+export async function recoverAsset(id) {
+  const res = await contextsAxios.patch(`recycle-bin/${id}/recover_asset/`);
+  return res.data;
+}
+
+// Recover a deleted component via contexts proxy
+export async function recoverComponent(id) {
+  const res = await contextsAxios.patch(`recycle-bin/${id}/recover_component/`);
+  return res.data;
+}
+
+// Permanently delete an asset via contexts proxy
+export async function deleteAsset(id) {
+  const res = await contextsAxios.delete(`recycle-bin/${id}/delete_asset/`);
+  return res.data;
+}
+
+// Permanently delete a component via contexts proxy
+export async function deleteComponent(id) {
+  const res = await contextsAxios.delete(`recycle-bin/${id}/delete_component/`);
+  return res.data;
+}
+
+// Bulk delete assets via contexts proxy
+export async function bulkDeleteAssets(ids) {
+  const res = await contextsAxios.post(`recycle-bin/bulk-delete-assets/`, { ids });
+  return res.data;
+}
+
+// Bulk delete components via contexts proxy
+export async function bulkDeleteComponents(ids) {
+  const res = await contextsAxios.post(`recycle-bin/bulk-delete-components/`, { ids });
+  return res.data;
+}
