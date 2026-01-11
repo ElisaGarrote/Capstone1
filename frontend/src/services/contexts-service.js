@@ -72,6 +72,20 @@ export async function bulkDeleteSuppliers(ids) {
   return res.data;
 }
 
+// IMPORT suppliers via XLSX upload
+export async function importSuppliers(formData, options = {}) {
+  // options: { allowUpdate: boolean, upsertBy: 'natural'|'id', apiKey: string }
+  const params = {};
+  if (options.allowUpdate) params.allow_update = 'true';
+  if (options.upsertBy) params.upsert_by = options.upsertBy;
+
+  const headers = {};
+  if (options.apiKey) headers['X-IMPORT-API-KEY'] = options.apiKey;
+
+  const res = await contextsAxios.post(`import/suppliers/`, formData, { params, headers });
+  return res.data;
+}
+
 /* ===============================
           MANUFACTURER CRUD
 ================================= */
