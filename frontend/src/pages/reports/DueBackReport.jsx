@@ -7,10 +7,8 @@ import Pagination from "../../components/Pagination";
 import DueBackFilterModal from "../../components/Modals/DueBackFilterModal";
 import Footer from "../../components/Footer";
 import dateRelated from "../../utils/dateRelated";
-
 import { RxPerson } from "react-icons/rx";
 import { IoWarningOutline } from "react-icons/io5";
-
 import "../../styles/reports/DueBackReport.css";
 
 const filterConfig = [
@@ -112,6 +110,7 @@ export default function DueBackReport() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [filteredData, setFilteredData] = useState(MockupData);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const applyFilters = (filters) => {
     let filtered = [...MockupData];
@@ -133,9 +132,33 @@ export default function DueBackReport() {
     return filtered;
   };
 
+  const applyFiltersAndSearch = (filters, searchTerm) => {
+    let filtered = applyFilters(filters);
+
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((item) =>
+        (item.asset_id && item.asset_id.toLowerCase().includes(term)) ||
+        (item.product && item.product.toLowerCase().includes(term)) ||
+        (item.checked_out_by && item.checked_out_by.toLowerCase().includes(term)) ||
+        (item.checked_out_to && item.checked_out_to.toLowerCase().includes(term))
+      );
+    }
+
+    return filtered;
+  };
+
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    setFilteredData(applyFilters(filters));
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
     setCurrentPage(1);
   };
 
@@ -151,6 +174,14 @@ export default function DueBackReport() {
   const handleExport = () => {
     const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
     exportToExcel(dataToExport, "DueForCheckin_Report.xlsx");
+  };
+
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
   };
 
   return (
@@ -173,6 +204,8 @@ export default function DueBackReport() {
                   type="search"
                   placeholder="Search..."
                   className="search"
+                  value={searchTerm}
+                  onChange={handleSearch}
                 />
                 <button
                   type="button"
@@ -185,6 +218,7 @@ export default function DueBackReport() {
                   isOpen={isFilterModalOpen}
                   onClose={() => setIsFilterModalOpen(false)}
                   onApplyFilter={handleApplyFilter}
+                  onResetFilter={handleResetFilter}
                   initialFilters={appliedFilters}
                 />
                 <div>
@@ -211,7 +245,7 @@ export default function DueBackReport() {
                   ) : (
                     <tr>
                       <td colSpan={5} className="no-data-message">
-                        No end of life & warranty found.
+                        No Due For Checkin Report Found.
                       </td>
                     </tr>
                   )}

@@ -126,6 +126,7 @@ export default function ActivityReport() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [filteredData, setFilteredData] = useState(MockupData);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const applyFilters = (filters) => {
     let filtered = [...MockupData];
@@ -157,9 +158,35 @@ export default function ActivityReport() {
     return filtered;
   };
 
+  const applyFiltersAndSearch = (filters, searchTerm) => {
+    let filtered = applyFilters(filters);
+
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((item) =>
+        (item.user && item.user.toLowerCase().includes(term)) ||
+        (item.type && item.type.toLowerCase().includes(term)) ||
+        (item.action && item.action.toLowerCase().includes(term)) ||
+        (item.item && item.item.toLowerCase().includes(term)) ||
+        (item.to_from && item.to_from.toLowerCase().includes(term)) ||
+        (item.notes && item.notes.toLowerCase().includes(term))
+      );
+    }
+
+    return filtered;
+  };
+
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    setFilteredData(applyFilters(filters));
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
     setCurrentPage(1);
   };
 
@@ -177,6 +204,14 @@ export default function ActivityReport() {
     exportToExcel(dataToExport, "Activity_Report.xlsx");
   };
 
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
+  };
+
   return (
     <section className="page-layout-with-table">
       <NavBar />
@@ -192,7 +227,13 @@ export default function ActivityReport() {
           <section className="table-header">
             <h2 className="h2">Activity Log ({filteredData.length})</h2>
             <section className="table-actions">
-              <input type="search" placeholder="Search..." className="search" />
+              <input
+                type="search"
+                placeholder="Search..."
+                className="search"
+                value={searchTerm}
+                onChange={handleSearch}
+              />
               <button
                 type="button"
                 className="medium-button-filter"
@@ -204,6 +245,7 @@ export default function ActivityReport() {
                 isOpen={isFilterModalOpen}
                 onClose={() => setIsFilterModalOpen(false)}
                 onApplyFilter={handleApplyFilter}
+                onResetFilter={handleResetFilter}
                 initialFilters={appliedFilters}
               />
               <div>

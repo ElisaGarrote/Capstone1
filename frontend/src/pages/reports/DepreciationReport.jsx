@@ -114,6 +114,10 @@ export default function DepreciationReport() {
   const [filteredData, setFilteredData] = useState(MockupData);
   const [searchTerm, setSearchTerm] = useState("");
 
+  useEffect(() => {
+    setFilteredData(MockupData);
+  }, []);
+
   const applyFilters = (filters) => {
     let filtered = [...MockupData];
 
@@ -187,9 +191,6 @@ export default function DepreciationReport() {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
-
-  useEffect(() => {
-  }, []);
 
   const handleExport = () => {
     const dataToExport = filteredData.length > 0 ? filteredData : MockupData;

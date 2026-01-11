@@ -69,12 +69,16 @@ export default function AssetAudits() {
   const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  useEffect(() => {
+    setFilteredData(data);
+  }, []);
+
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = filteredData.length > 0 ? filteredData.slice(startIndex, endIndex) : data.slice(startIndex, endIndex);
+  const paginatedActivity = (filteredData && filteredData.length > 0 ? filteredData : data).slice(startIndex, endIndex);
 
   // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -92,7 +96,6 @@ export default function AssetAudits() {
 
   const confirmDelete = () => {
     console.log("Deleting ID:", deleteId);
-    // perform delete action here (API or filter)
     closeDeleteModal();
   };
 
@@ -138,17 +141,33 @@ export default function AssetAudits() {
     return filtered;
   };
 
+  const applyFiltersAndSearch = (filters, searchTerm) => {
+    let filtered = applyFilters(filters);
+
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((audit) =>
+        (audit.asset?.name && audit.asset.name.toLowerCase().includes(term)) ||
+        (audit.asset?.displayed_id && audit.asset.displayed_id.toLowerCase().includes(term)) ||
+        (audit.notes && audit.notes.toLowerCase().includes(term)) ||
+        (audit.status && audit.status.toLowerCase().includes(term))
+      );
+    }
+
+    return filtered;
+  };
+
   // Handle filter apply
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    const filtered = applyFilters(filters);
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   const handleResetFilter = () => {
     setAppliedFilters({});
-    const filtered = applyFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
     setFilteredData(filtered);
     setCurrentPage(1);
   };
@@ -161,27 +180,11 @@ export default function AssetAudits() {
 
   // Handle search
   const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
+    const term = e.target.value;
     setSearchTerm(term);
-    
-    if (term.trim() === "") {
-      // If search is empty, apply filters without search
-      const filtered = applyFilters(appliedFilters);
-      setFilteredData(filtered);
-    } else {
-      // Apply filters first, then search on filtered results
-      let filtered = applyFilters(appliedFilters);
-      
-      filtered = filtered.filter((audit) => 
-        (audit.asset?.name && audit.asset.name.toLowerCase().includes(term)) ||
-        (audit.asset?.displayed_id && audit.asset.displayed_id.toLowerCase().includes(term)) ||
-        (audit.notes && audit.notes.toLowerCase().includes(term)) ||
-        (audit.status && audit.status.toLowerCase().includes(term))
-      );
-      
-      setFilteredData(filtered);
-    }
-    setCurrentPage(1); // Reset to first page when searching
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
   };
 
   return (
@@ -230,7 +233,7 @@ export default function AssetAudits() {
 
           <section className="table-layout">
             <section className="table-header">
-              <h2 className="h2">Due to be Audited ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
+              <h2 className="h2">Due to be Audited ({(filteredData && filteredData.length > 0 ? filteredData : data).length})</h2>
               <section className="table-actions">
                 <input 
                   type="search" 
