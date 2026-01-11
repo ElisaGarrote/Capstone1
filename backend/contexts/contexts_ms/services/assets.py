@@ -128,3 +128,21 @@ def invalidate_asset_cache(asset_id):
     except Exception:
         # Silently fail - cache invalidation is best-effort
         return None
+
+
+def get_assets_by_category(category_id, timeout=8):
+    """
+    Fetch assets by category ID using the /assets/names/?category={id} endpoint.
+    Returns a list of asset name objects or empty list on error.
+    """
+    try:
+        response = client_get(f"assets/names/", params={"category": category_id}, timeout=timeout)
+        response.raise_for_status()
+        data = response.json()
+        # Handle both list and paginated responses
+        if isinstance(data, dict) and 'results' in data:
+            return data['results']
+        return data if isinstance(data, list) else []
+    except Exception as e:
+        logger.error(f"Failed to fetch assets for category {category_id}: {e}")
+        return []

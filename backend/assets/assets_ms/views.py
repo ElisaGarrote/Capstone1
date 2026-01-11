@@ -722,11 +722,13 @@ class AssetViewSet(viewsets.ModelViewSet):
             ?ids=1,2,3
             ?search=keyword
             ?status_type=deployable,deployed  (comma-separated status types)
+            ?category=5  (filter by category ID)
         """
 
         ids_param = request.query_params.get("ids")
         search = request.query_params.get("search")
         status_type_param = request.query_params.get("status_type")
+        category_param = request.query_params.get("category")
         queryset = self.get_queryset()
 
         # Fetch all asset statuses for status_map (avoids N+1 queries)
@@ -746,6 +748,14 @@ class AssetViewSet(viewsets.ModelViewSet):
             except ValueError:
                 return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Filter by category if provided
+        if category_param:
+            try:
+                category_id = int(category_param)
+                queryset = queryset.filter(product__category=category_id)
+            except ValueError:
+                return Response({"detail": "Invalid category ID."}, status=status.HTTP_400_BAD_REQUEST)
+
         # Filter by status type(s) if provided
         if status_type_param:
             status_types = [t.strip() for t in status_type_param.split(",") if t.strip()]
@@ -762,7 +772,7 @@ class AssetViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(name__icontains=search)
 
         # Don't cache filtered results - they need to be real-time
-        if search or status_type_param:
+        if search or status_type_param or category_param:
             serializer = AssetNameSerializer(
                 queryset, many=True,
                 context={'request': request, 'status_map': status_map}
