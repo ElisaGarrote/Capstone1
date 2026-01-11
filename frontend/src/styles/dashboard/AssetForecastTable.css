@@ -1,8 +1,5 @@
 .forecast-table-section {
   width: 100%;
-  border: none;
-  border-radius: 0;
-  overflow: hidden;
   background: white;
 }
 
@@ -38,6 +35,7 @@
   max-height: 55vh;
   overflow-y: auto;
   overscroll-behavior: contain;
+  border: none;
 }
 
 .forecast-table-wrapper table {
