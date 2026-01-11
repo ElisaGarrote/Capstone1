@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import ComponentData from "../../data/mockData/components/component-mockup-data.json";
 import CloseIcon from "../../assets/icons/close.svg";
+import PlusIcon from "../../assets/icons/plus.svg";
+import AddEntryModal from "../../components/Modals/AddEntryModal";
+import { getCustomSelectStyles } from "../../utils/selectStyles";
 import "../../styles/Registration.css";
 import "../../styles/components/BulkEditComponents.css";
 
@@ -22,6 +26,14 @@ export default function BulkEditComponents() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showManufacturerModal, setShowManufacturerModal] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   useEffect(() => {
     if (!selectedIds || selectedIds.length === 0) {
@@ -37,19 +49,83 @@ export default function BulkEditComponents() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm({
     mode: "all",
     defaultValues: {
-      category: "",
-      manufacturer: "",
-      supplier: "",
-      location: "",
+      category: null,
+      manufacturer: null,
+      supplier: null,
+      location: null,
       purchaseCost: "",
       minimumQuantity: "",
       notes: "",
     },
   });
+
+  // Get custom select styles from utility
+  const customSelectStyles = getCustomSelectStyles();
+
+  useEffect(() => {
+    const mockCategories = Array.from(new Set(ComponentData.map(c => c.category).filter(Boolean)));
+    const mockManufacturers = Array.from(new Set(ComponentData.map(m => m.manufacturer).filter(Boolean)));
+    const mockSuppliers = Array.from(new Set(ComponentData.map(s => s.supplier).filter(Boolean)));
+    const mockLocations = Array.from(new Set(ComponentData.map(l => l.location).filter(Boolean)));
+
+    setCategories(mockCategories);
+    setManufacturers(mockManufacturers);
+    setSuppliers(mockSuppliers);
+    setLocations(mockLocations);
+  }, []);
+
+  const handleSaveCategory = (data) => {
+    try {
+      const newCategory = data.name?.trim() || '';
+      if (newCategory && !categories.includes(newCategory)) {
+        setCategories((prev) => [...prev, newCategory]);
+      }
+      setShowCategoryModal(false);
+    } catch (error) {
+      console.error('Error creating category:', error);
+    }
+  };
+
+  const handleSaveManufacturer = (data) => {
+    try {
+      const newManufacturer = data.name?.trim() || '';
+      if (newManufacturer && !manufacturers.includes(newManufacturer)) {
+        setManufacturers((prev) => [...prev, newManufacturer]);
+      }
+      setShowManufacturerModal(false);
+    } catch (error) {
+      console.error('Error creating manufacturer:', error);
+    }
+  };
+
+  const handleSaveSupplier = (data) => {
+    try {
+      const newSupplier = data.name?.trim() || '';
+      if (newSupplier && !suppliers.includes(newSupplier)) {
+        setSuppliers((prev) => [...prev, newSupplier]);
+      }
+      setShowSupplierModal(false);
+    } catch (error) {
+      console.error('Error creating supplier:', error);
+    }
+  };
+
+  const handleSaveLocation = (data) => {
+    try {
+      const newLocation = data.name?.trim() || '';
+      if (newLocation && !locations.includes(newLocation)) {
+        setLocations((prev) => [...prev, newLocation]);
+      }
+      setShowLocationModal(false);
+    } catch (error) {
+      console.error('Error creating location:', error);
+    }
+  };
 
   const onSubmit = (data) => {
     if (currentSelectedIds.length === 0) {
@@ -143,52 +219,126 @@ export default function BulkEditComponents() {
             >
               <fieldset className="form-field">
                 <label htmlFor="category">Category</label>
-                <input
-                  id="category"
-                  type="text"
-                  className={`form-input ${errors.category ? "input-error" : ""}`}
-                  {...register("category")}
-                  maxLength={100}
-                  placeholder="Category"
-                />
+                <div className="select-with-button">
+                  <Controller
+                    name="category"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="category"
+                        options={categories.map(c => ({ value: c, label: c }))}
+                        value={categories.map(c => ({ value: c, label: c })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Category"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="add-entry-btn"
+                    onClick={() => setShowCategoryModal(true)}
+                    title="Add new category"
+                  >
+                    <img src={PlusIcon} alt="Add" />
+                  </button>
+                </div>
               </fieldset>
 
               <fieldset className="form-field">
                 <label htmlFor="manufacturer">Manufacturer</label>
-                <input
-                  id="manufacturer"
-                  type="text"
-                  className={`form-input ${
-                    errors.manufacturer ? "input-error" : ""
-                  }`}
-                  {...register("manufacturer")}
-                  maxLength={100}
-                  placeholder="Manufacturer"
-                />
+                <div className="select-with-button">
+                  <Controller
+                    name="manufacturer"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="manufacturer"
+                        options={manufacturers.map(m => ({ value: m, label: m }))}
+                        value={manufacturers.map(m => ({ value: m, label: m })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Manufacturer"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="add-entry-btn"
+                    onClick={() => setShowManufacturerModal(true)}
+                    title="Add new manufacturer"
+                  >
+                    <img src={PlusIcon} alt="Add" />
+                  </button>
+                </div>
               </fieldset>
 
               <fieldset className="form-field">
                 <label htmlFor="supplier">Supplier</label>
-                <input
-                  id="supplier"
-                  type="text"
-                  className={`form-input ${errors.supplier ? "input-error" : ""}`}
-                  {...register("supplier")}
-                  maxLength={100}
-                  placeholder="Supplier"
-                />
+                <div className="select-with-button">
+                  <Controller
+                    name="supplier"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="supplier"
+                        options={suppliers.map(s => ({ value: s, label: s }))}
+                        value={suppliers.map(s => ({ value: s, label: s })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Supplier"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="add-entry-btn"
+                    onClick={() => setShowSupplierModal(true)}
+                    title="Add new supplier"
+                  >
+                    <img src={PlusIcon} alt="Add" />
+                  </button>
+                </div>
               </fieldset>
 
               <fieldset className="form-field">
                 <label htmlFor="location">Location</label>
-                <input
-                  id="location"
-                  type="text"
-                  className={`form-input ${errors.location ? "input-error" : ""}`}
-                  {...register("location")}
-                  maxLength={100}
-                  placeholder="Location"
-                />
+                <div className="select-with-button">
+                  <Controller
+                    name="location"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="location"
+                        options={locations.map(l => ({ value: l, label: l }))}
+                        value={locations.map(l => ({ value: l, label: l })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Location"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="add-entry-btn"
+                    onClick={() => setShowLocationModal(true)}
+                    title="Add new location"
+                  >
+                    <img src={PlusIcon} alt="Add" />
+                  </button>
+                </div>
               </fieldset>
 
               <fieldset className="form-field cost-field">
@@ -254,6 +404,78 @@ export default function BulkEditComponents() {
       </section>
 
       <Footer />
+
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <AddEntryModal
+          title="Add New Category"
+          fields={[
+            {
+              name: "name",
+              label: "Category Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter category name"
+            }
+          ]}
+          onSubmit={handleSaveCategory}
+          onClose={() => setShowCategoryModal(false)}
+        />
+      )}
+
+      {/* Manufacturer Modal */}
+      {showManufacturerModal && (
+        <AddEntryModal
+          title="Add New Manufacturer"
+          fields={[
+            {
+              name: "name",
+              label: "Manufacturer Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter manufacturer name"
+            }
+          ]}
+          onSubmit={handleSaveManufacturer}
+          onClose={() => setShowManufacturerModal(false)}
+        />
+      )}
+
+      {/* Supplier Modal */}
+      {showSupplierModal && (
+        <AddEntryModal
+          title="Add New Supplier"
+          fields={[
+            {
+              name: "name",
+              label: "Supplier Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter supplier name"
+            }
+          ]}
+          onSubmit={handleSaveSupplier}
+          onClose={() => setShowSupplierModal(false)}
+        />
+      )}
+
+      {/* Location Modal */}
+      {showLocationModal && (
+        <AddEntryModal
+          title="Add New Location"
+          fields={[
+            {
+              name: "name",
+              label: "Location Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter location name"
+            }
+          ]}
+          onSubmit={handleSaveLocation}
+          onClose={() => setShowLocationModal(false)}
+        />
+      )}
     </>
   );
 }

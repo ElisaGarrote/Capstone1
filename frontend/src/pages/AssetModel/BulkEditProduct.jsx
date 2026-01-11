@@ -7,23 +7,26 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
+import DepreciationMockData from "../../data/mockData/more/asset-depreciation-mockup-data.json";
+import ManufacturerMockData from "../../data/mockData/more/manufacturer-mockup-data.json";
+import SupplierMockData from "../../data/mockData/more/supplier-mockup-data.json";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { getCustomSelectStyles } from "../../utils/selectStyles";
 import "../../styles/Registration.css";
-import "../../styles/Assets/BulkEditAssetModels.css";
+import "../../styles/Products/BulkEditProduct.css";
 
-export default function BulkEditAssetModels() {
+export default function BulkEditProduct() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { selectedIds } = location.state || { selectedIds: [] };
-
-  const [currentSelectedIds, setCurrentSelectedIds] = useState(selectedIds || []);
-  const selectedModels = ProductsMockupData.filter((product) =>
-    currentSelectedIds.includes(product.id)
-  );
-
+  const qs = new URLSearchParams(location.search);
+  const idsQuery = qs.get("ids");
+  const parsedIdsFromQuery = idsQuery && idsQuery.length > 0 ? idsQuery.split(",").map((v) => Number(v)).filter((n) => !Number.isNaN(n)) : [];
+  const selectedIdsFromState = (location.state && Array.isArray(location.state.selectedIds)) ? location.state.selectedIds : [];
+  const initialSelectedIds = (selectedIdsFromState && selectedIdsFromState.length > 0) ? selectedIdsFromState : parsedIdsFromQuery;
+  const [currentSelectedIds, setCurrentSelectedIds] = useState(initialSelectedIds || []);
+  const selectedProducts = ProductsMockupData.filter((p) => currentSelectedIds.includes(p.id));
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [categories, setCategories] = useState([]);
@@ -33,18 +36,7 @@ export default function BulkEditAssetModels() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showManufacturerModal, setShowManufacturerModal] = useState(false);
   const [showDepreciationModal, setShowDepreciationModal] = useState(false);
-
-  useEffect(() => {
-    if (!selectedIds || selectedIds.length === 0) {
-      setErrorMessage("No asset models selected for bulk edit");
-      setTimeout(() => navigate("/products"), 2000);
-    }
-  }, [selectedIds, navigate]);
-
-  const handleRemoveModel = (modelId) => {
-    setCurrentSelectedIds((prev) => prev.filter((id) => id !== modelId));
-  };
-
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
   const {
     register,
     handleSubmit,
@@ -53,20 +45,15 @@ export default function BulkEditAssetModels() {
   } = useForm({
     mode: "all",
     defaultValues: {
-      productName: "",
       category: null,
       manufacturer: null,
       depreciation: null,
+      supplier: null,
+      modelNumber: "",
       endOfLifeDate: "",
       defaultPurchaseCost: "",
-      defaultSupplier: null,
       minimumQuantity: "",
-      cpu: "",
-      gpu: "",
-      ram: "",
-      screenSize: "",
-      storageSize: "",
-      operatingSystem: "",
+      archiveModel: false,
       notes: "",
     },
   });
@@ -76,15 +63,18 @@ export default function BulkEditAssetModels() {
 
   useEffect(() => {
     // Initialize mock data for dropdowns
-    const mockCategories = Array.from(new Set(ProductsMockupData.map(p => p.category).filter(Boolean)));
-    const mockManufacturers = Array.from(new Set(ProductsMockupData.map(p => p.manufacturer).filter(Boolean)));
-    const mockDepreciations = [{ id: 1, name: 'Linear' }, { id: 2, name: 'Declining Balance' }];
-    const mockSuppliers = Array.from(new Set(ProductsMockupData.map(p => p.supplier).filter(Boolean)));
+    const mockCategories = Array.from(new Set(ProductsMockupData.map(p => p.category).filter(Boolean))).map((name, idx) => ({
+      id: idx + 1,
+      name: name,
+    }));
+    const mockDepreciations = DepreciationMockData.map(d => ({ id: d.id, name: d.name }));
+    const mockManufacturers = ManufacturerMockData.map(m => ({ id: m.id, name: m.name }));
+    const mockSuppliers = SupplierMockData.map(s => ({ id: s.id, name: s.name }));
 
-    setCategories(mockCategories.map((name, index) => ({ id: index + 1, name })));
-    setManufacturers(mockManufacturers.map((name, index) => ({ id: index + 1, name })));
+    setCategories(mockCategories);
     setDepreciations(mockDepreciations);
-    setSuppliers(mockSuppliers.map((name, index) => ({ id: index + 1, name })));
+    setManufacturers(mockManufacturers);
+    setSuppliers(mockSuppliers);
   }, []);
 
   const handleSaveCategory = (data) => {
@@ -93,7 +83,9 @@ export default function BulkEditAssetModels() {
         id: (categories[categories.length - 1]?.id || 0) + 1,
         name: data.name?.trim() || '',
       };
-      setCategories((prev) => [...prev, newCategory]);
+      if (newCategory.name && !categories.find(c => c.name === newCategory.name)) {
+        setCategories((prev) => [...prev, newCategory]);
+      }
       setShowCategoryModal(false);
     } catch (error) {
       console.error('Error creating category:', error);
@@ -106,7 +98,9 @@ export default function BulkEditAssetModels() {
         id: (manufacturers[manufacturers.length - 1]?.id || 0) + 1,
         name: data.name?.trim() || '',
       };
-      setManufacturers((prev) => [...prev, newManufacturer]);
+      if (newManufacturer.name && !manufacturers.find(m => m.name === newManufacturer.name)) {
+        setManufacturers((prev) => [...prev, newManufacturer]);
+      }
       setShowManufacturerModal(false);
     } catch (error) {
       console.error('Error creating manufacturer:', error);
@@ -119,24 +113,50 @@ export default function BulkEditAssetModels() {
         id: (depreciations[depreciations.length - 1]?.id || 0) + 1,
         name: data.name?.trim() || '',
       };
-      setDepreciations((prev) => [...prev, newDepreciation]);
+      if (newDepreciation.name && !depreciations.find(d => d.name === newDepreciation.name)) {
+        setDepreciations((prev) => [...prev, newDepreciation]);
+      }
       setShowDepreciationModal(false);
     } catch (error) {
       console.error('Error creating depreciation:', error);
     }
   };
 
+  const handleSaveSupplier = (data) => {
+    try {
+      const newSupplier = {
+        id: (suppliers[suppliers.length - 1]?.id || 0) + 1,
+        name: data.name?.trim() || '',
+      };
+      if (newSupplier.name && !suppliers.find(s => s.name === newSupplier.name)) {
+        setSuppliers((prev) => [...prev, newSupplier]);
+      }
+      setShowSupplierModal(false);
+    } catch (error) {
+      console.error('Error creating supplier:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!initialSelectedIds || initialSelectedIds.length === 0) {
+      setErrorMessage("No products selected for bulk edit");
+      setTimeout(() => navigate("/products"), 2000);
+    }
+  }, []);
+
+  const handleRemoveProduct = (id) => {
+    setCurrentSelectedIds((prev) => prev.filter((x) => x !== id));
+  };
+
   const onSubmit = (data) => {
     try {
       if (currentSelectedIds.length === 0) {
-        setErrorMessage("Please select at least one asset model to update");
+        setErrorMessage("Please select at least one product to update");
         return;
       }
 
       const updateData = Object.fromEntries(
-        Object.entries(data).filter(([, value]) =>
-          value !== "" && value !== null && value !== undefined
-        )
+        Object.entries(data).filter(([, value]) => value !== "" && value !== null && value !== undefined)
       );
 
       if (Object.keys(updateData).length === 0) {
@@ -144,21 +164,14 @@ export default function BulkEditAssetModels() {
         return;
       }
 
-      // TODO: Hook up to real API when backend is ready
-      console.log("Updating asset models:", currentSelectedIds, "with data:", updateData);
+      console.log("Updating products:", currentSelectedIds, "with", updateData);
 
-      setSuccessMessage(
-        `Successfully updated ${currentSelectedIds.length} asset model(s)`
-      );
+      setSuccessMessage(`Successfully updated ${currentSelectedIds.length} product(s)`);
       setTimeout(() => {
-        navigate("/products", {
-          state: {
-            successMessage: `Updated ${currentSelectedIds.length} asset model(s)`,
-          },
-        });
-      }, 2000);
-    } catch (error) {
-      setErrorMessage(error.message || "Failed to update asset models");
+        navigate("/products", { state: { successMessage: `Updated ${currentSelectedIds.length} product(s)` } });
+      }, 1500);
+    } catch (err) {
+      setErrorMessage(err.message || "Failed to update products");
     }
   };
 
@@ -170,36 +183,33 @@ export default function BulkEditAssetModels() {
       <section className="page-layout-registration">
         <NavBar />
 
-        <main className="registration bulk-edit-models-page">
+        <main className="registration bulk-edit-product-page">
           <section className="top">
             <TopSecFormPage
               root="Asset Models"
-              currentPage="Bulk Edit Asset Models"
+              currentPage="Bulk Edit Products"
               rootNavigatePage="/products"
-              title="Bulk Edit Asset Models"
+              title="Bulk Edit Products"
               rightComponent={
-                <div className="import-section">
-                  <span style={{ fontSize: '0.875rem', color: '#666' }}>
-                    {currentSelectedIds.length} Model{currentSelectedIds.length !== 1 ? 's' : ''} Selected
-                  </span>
+                <div className="products-selected-count">
+                  {currentSelectedIds.length} Product{currentSelectedIds.length !== 1 ? 's' : ''} Selected
                 </div>
               }
             />
           </section>
 
-          {/* Selected Asset Models */}
-          <section className="asset-models-selected-section">
-            <h3>Selected Asset Models ({currentSelectedIds.length})</h3>
-            <div className="asset-models-selected-tags">
-              {selectedModels.length > 0 ? (
-                selectedModels.map((model) => (
-                  <div key={model.id} className="asset-model-tag">
-                    <span className="asset-model-tag-name">{model.name}</span>
-                    <span className="asset-model-tag-id">#{model.id}</span>
+          <section className="products-selected-section">
+            <h3>Selected Products ({currentSelectedIds.length})</h3>
+            <div className="products-selected-tags">
+              {selectedProducts.length > 0 ? (
+                selectedProducts.map((p) => (
+                  <div key={p.id} className="product-tag">
+                    <span className="product-tag-name">{p.name}</span>
+                    <span className="product-tag-id">#{p.id}</span>
                     <button
                       type="button"
-                      className="asset-model-tag-remove"
-                      onClick={() => handleRemoveModel(model.id)}
+                      className="product-tag-remove"
+                      onClick={() => handleRemoveProduct(p.id)}
                       title="Remove from selection"
                     >
                       <img src={CloseIcon} alt="Remove" />
@@ -207,37 +217,17 @@ export default function BulkEditAssetModels() {
                   </div>
                 ))
               ) : (
-                <p className="asset-models-no-selection-message">
-                  No asset models selected
-                </p>
+                <p className="products-no-selection">No products selected</p>
               )}
             </div>
           </section>
 
-          <p className="asset-models-note">
-            Note: Fill in only the fields you want to change. Fields left empty will stay unchanged. Use the Remove toggle to clear existing values.
+          <p className="products-selected-note">
+            Note: Fill in only the fields you want to change. Fields left empty will stay unchanged.
           </p>
 
-          {/* Bulk Edit Form */}
-          <section className="asset-models-bulk-form-section">
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="asset-models-bulk-form"
-            >
-              {/* Asset Model Name */}
-              <fieldset className="form-field">
-                <label htmlFor="productName">Asset Model Name</label>
-                <input
-                  type="text"
-                  id="productName"
-                  className={`form-input ${errors.productName ? "input-error" : ""}`}
-                  {...register("productName")}
-                  maxLength="100"
-                  placeholder="Asset Model Name"
-                />
-              </fieldset>
-
-              {/* Category */}
+          <section className="products-bulk-form-section">
+            <form onSubmit={handleSubmit(onSubmit)} className="products-bulk-form">
               <fieldset className="form-field">
                 <label htmlFor="category">Category</label>
                 <div className="select-with-button">
@@ -269,7 +259,6 @@ export default function BulkEditAssetModels() {
                 </div>
               </fieldset>
 
-              {/* Manufacturer */}
               <fieldset className="form-field">
                 <label htmlFor="manufacturer">Manufacturer</label>
                 <div className="select-with-button">
@@ -301,7 +290,6 @@ export default function BulkEditAssetModels() {
                 </div>
               </fieldset>
 
-              {/* Depreciation */}
               <fieldset className="form-field">
                 <label htmlFor="depreciation">Depreciation</label>
                 <div className="select-with-button">
@@ -315,7 +303,7 @@ export default function BulkEditAssetModels() {
                         options={depreciations.map(d => ({ value: d.id, label: d.name }))}
                         value={depreciations.map(d => ({ value: d.id, label: d.name })).find(opt => opt.value === field.value) || null}
                         onChange={(selected) => field.onChange(selected?.value ?? null)}
-                        placeholder="Select Depreciation Method"
+                        placeholder="Select Depreciation"
                         isSearchable={true}
                         isClearable={true}
                         styles={customSelectStyles}
@@ -326,106 +314,75 @@ export default function BulkEditAssetModels() {
                     type="button"
                     className="add-entry-btn"
                     onClick={() => setShowDepreciationModal(true)}
-                    title="Add new depreciation method"
+                    title="Add new depreciation"
                   >
                     <img src={PlusIcon} alt="Add" />
                   </button>
                 </div>
               </fieldset>
 
-              {/* End of Life Date */}
               <fieldset className="form-field">
-                <label htmlFor="endOfLifeDate">End of Life Date</label>
-                <input
-                  type="date"
-                  id="endOfLifeDate"
-                  className={`form-input ${errors.endOfLifeDate ? "input-error" : ""}`}
-                  {...register("endOfLifeDate")}
-                />
+                <label htmlFor="supplier">Default Supplier</label>
+                <div className="select-with-button">
+                  <Controller
+                    name="supplier"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="supplier"
+                        options={suppliers.map(s => ({ value: s.id, label: s.name }))}
+                        value={suppliers.map(s => ({ value: s.id, label: s.name })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Supplier"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="add-entry-btn"
+                    onClick={() => setShowSupplierModal(true)}
+                    title="Add new supplier"
+                  >
+                    <img src={PlusIcon} alt="Add" />
+                  </button>
+                </div>
               </fieldset>
 
-              {/* Default Purchase Cost */}
+              <fieldset className="form-field">
+                <label htmlFor="modelNumber">Model Number</label>
+                <input id="modelNumber" className={`form-input ${errors.modelNumber ? 'input-error' : ''}`} {...register('modelNumber')} placeholder="Model Number" />
+              </fieldset>
+
+              <fieldset className="form-field">
+                <label htmlFor="endOfLifeDate">End Of Life Date</label>
+                <input id="endOfLifeDate" type="date" className={`form-input ${errors.endOfLifeDate ? 'input-error' : ''}`} {...register('endOfLifeDate')} />
+              </fieldset>
+
               <fieldset className="form-field cost-field">
                 <label htmlFor="defaultPurchaseCost">Default Purchase Cost</label>
                 <div className="cost-input-group">
                   <span className="cost-addon">PHP</span>
-                  <input
-                    type="number"
-                    id="defaultPurchaseCost"
-                    name="defaultPurchaseCost"
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    className={`form-input ${
-                      errors.defaultPurchaseCost ? "input-error" : ""
-                    }`}
-                    {...register("defaultPurchaseCost", { valueAsNumber: true })}
-                  />
+                  <input id="defaultPurchaseCost" type="number" step="0.01" min="0" className={`form-input ${errors.defaultPurchaseCost ? 'input-error' : ''}`} {...register('defaultPurchaseCost', { valueAsNumber: true })} placeholder="0.00" />
                 </div>
               </fieldset>
 
-              {/* Default Supplier */}
-              <fieldset className="form-field">
-                <label htmlFor="defaultSupplier">Default Supplier</label>
-                <Controller
-                  name="defaultSupplier"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      inputId="defaultSupplier"
-                      options={suppliers.map(s => ({ value: s.id, label: s.name }))}
-                      value={suppliers.map(s => ({ value: s.id, label: s.name })).find(opt => opt.value === field.value) || null}
-                      onChange={(selected) => field.onChange(selected?.value ?? null)}
-                      placeholder="Select Supplier"
-                      isSearchable={true}
-                      isClearable={true}
-                      styles={customSelectStyles}
-                    />
-                  )}
-                />
-              </fieldset>
-
-              {/* Minimum Quantity */}
               <fieldset className="form-field">
                 <label htmlFor="minimumQuantity">Minimum Quantity</label>
-                <input
-                  type="number"
-                  id="minimumQuantity"
-                  className={`form-input ${
-                    errors.minimumQuantity ? "input-error" : ""
-                  }`}
-                  {...register("minimumQuantity", { valueAsNumber: true })}
-                  placeholder="Minimum Quantity"
-                  min="0"
-                />
+                <input id="minimumQuantity" type="number" min="0" className={`form-input ${errors.minimumQuantity ? 'input-error' : ''}`} {...register('minimumQuantity', { valueAsNumber: true })} placeholder="0" />
               </fieldset>
 
-              {/* Notes */}
               <fieldset className="form-field notes-field">
                 <label htmlFor="notes">Notes</label>
-                <textarea
-                  id="notes"
-                  className={`form-input ${errors.notes ? "input-error" : ""}`}
-                  {...register("notes")}
-                  maxLength="500"
-                  placeholder="Notes"
-                  rows="4"
-                />
+                <textarea id="notes" rows="4" className={`form-input ${errors.notes ? 'input-error' : ''}`} {...register('notes')} placeholder="Notes" />
               </fieldset>
 
-              {/* Form Actions */}
               <div className="form-actions">
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => navigate("/products")}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn">
-                  Update Asset Models
-                </button>
+                <button type="button" className="cancel-btn" onClick={() => navigate('/products')}>Cancel</button>
+                <button type="submit" className="submit-btn">Update Products</button>
               </div>
             </form>
           </section>
@@ -487,7 +444,24 @@ export default function BulkEditAssetModels() {
           onClose={() => setShowDepreciationModal(false)}
         />
       )}
+
+      {/* Supplier Modal */}
+      {showSupplierModal && (
+        <AddEntryModal
+          title="Add New Supplier"
+          fields={[
+            {
+              name: "name",
+              label: "Supplier Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter supplier name"
+            }
+          ]}
+          onSubmit={handleSaveSupplier}
+          onClose={() => setShowSupplierModal(false)}
+        />
+      )}
     </>
   );
 }
-

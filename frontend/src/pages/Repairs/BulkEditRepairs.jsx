@@ -1,38 +1,43 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import MockupData from "../../data/mockData/repairs/asset-repair-mockup-data.json";
 import CloseIcon from "../../assets/icons/close.svg";
+import PlusIcon from "../../assets/icons/plus.svg";
+import AddEntryModal from "../../components/Modals/AddEntryModal";
+import { getCustomSelectStyles } from "../../utils/selectStyles";
 import "../../styles/Registration.css";
 import "../../styles/Repairs/BulkEditRepairs.css";
 
 export default function BulkEditRepairs() {
   const location = useLocation();
   const navigate = useNavigate();
-  // Try to read selected IDs from location state first, then fall back to query string `?ids=1,2,3`
   const qs = new URLSearchParams(location.search);
   const idsQuery = qs.get("ids");
   const parsedIdsFromQuery = idsQuery && idsQuery.length > 0 ? idsQuery.split(",").map((v) => Number(v)).filter((n) => !Number.isNaN(n)) : [];
-
   const selectedIdsFromState = (location.state && Array.isArray(location.state.selectedIds)) ? location.state.selectedIds : [];
   const initialSelectedIds = (selectedIdsFromState && selectedIdsFromState.length > 0) ? selectedIdsFromState : parsedIdsFromQuery;
-
   const [currentSelectedIds, setCurrentSelectedIds] = useState(initialSelectedIds || []);
   const selectedRepairs = MockupData.filter((r) => currentSelectedIds.includes(r.id));
-
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [assets, setAssets] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [repairTypes, setRepairTypes] = useState([]);
+  const [showAssetModal, setShowAssetModal] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [showRepairTypeModal, setShowRepairTypeModal] = useState(false);
 
   useEffect(() => {
     if (!initialSelectedIds || initialSelectedIds.length === 0) {
       setErrorMessage("No repairs selected for bulk edit");
       setTimeout(() => navigate("/repairs"), 2000);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRemoveRepair = (id) => {
@@ -42,19 +47,70 @@ export default function BulkEditRepairs() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm({
     mode: "all",
     defaultValues: {
-      type: "",
+      type: null,
       name: "",
       start_date: "",
       end_date: "",
       cost: "",
-      supplier: "",
+      supplier: null,
+      asset: null,
       notes: "",
     },
   });
+
+  // Get custom select styles from utility
+  const customSelectStyles = getCustomSelectStyles();
+
+  useEffect(() => {
+    const mockAssets = Array.from(new Set(MockupData.map(a => a.asset).filter(Boolean)));
+    const mockSuppliers = Array.from(new Set(MockupData.map(s => s.supplier).filter(Boolean)));
+    const mockRepairTypes = Array.from(new Set(MockupData.map(t => t.type).filter(Boolean)));
+
+    setAssets(mockAssets);
+    setSuppliers(mockSuppliers);
+    setRepairTypes(mockRepairTypes);
+  }, []);
+
+  const handleSaveAsset = (data) => {
+    try {
+      const newAsset = data.name?.trim() || '';
+      if (newAsset && !assets.includes(newAsset)) {
+        setAssets((prev) => [...prev, newAsset]);
+      }
+      setShowAssetModal(false);
+    } catch (error) {
+      console.error('Error creating asset:', error);
+    }
+  };
+
+  const handleSaveSupplier = (data) => {
+    try {
+      const newSupplier = data.name?.trim() || '';
+      if (newSupplier && !suppliers.includes(newSupplier)) {
+        setSuppliers((prev) => [...prev, newSupplier]);
+      }
+      setShowSupplierModal(false);
+    } catch (error) {
+      console.error('Error creating supplier:', error);
+    }
+  };
+
+  const handleSaveRepairType = (data) => {
+    try {
+      const newRepairType = data.name?.trim() || '';
+      if (newRepairType && !repairTypes.includes(newRepairType)) {
+        setRepairTypes((prev) => [...prev, newRepairType]);
+      }
+      setShowRepairTypeModal(false);
+    } catch (error) {
+      console.error('Error creating repair type:', error);
+    }
+  };
 
   const onSubmit = (data) => {
     try {
@@ -140,7 +196,64 @@ export default function BulkEditRepairs() {
             <form onSubmit={handleSubmit(onSubmit)} className="repairs-bulk-form">
               <fieldset className="form-field">
                 <label htmlFor="type">Repair Type</label>
-                <input id="type" className={`form-input ${errors.type ? 'input-error' : ''}`} {...register('type')} placeholder="Type" />
+                <div className="select-with-button">
+                  <Controller
+                    name="type"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="type"
+                        options={repairTypes.map(t => ({ value: t, label: t }))}
+                        value={repairTypes.map(t => ({ value: t, label: t })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Repair Type"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="add-entry-btn"
+                    onClick={() => setShowRepairTypeModal(true)}
+                    title="Add new repair type"
+                  >
+                    <img src={PlusIcon} alt="Add" />
+                  </button>
+                </div>
+              </fieldset>
+
+              <fieldset className="form-field">
+                <label htmlFor="asset">Asset</label>
+                <div className="select-with-button">
+                  <Controller
+                    name="asset"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="asset"
+                        options={assets.map(a => ({ value: a, label: a }))}
+                        value={assets.map(a => ({ value: a, label: a })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Asset"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="add-entry-btn"
+                    onClick={() => setShowAssetModal(true)}
+                    title="Add new asset"
+                  >
+                    <img src={PlusIcon} alt="Add" />
+                  </button>
+                </div>
               </fieldset>
 
               <fieldset className="form-field">
@@ -168,7 +281,33 @@ export default function BulkEditRepairs() {
 
               <fieldset className="form-field">
                 <label htmlFor="supplier">Supplier</label>
-                <input id="supplier" className={`form-input ${errors.supplier ? 'input-error' : ''}`} {...register('supplier')} placeholder="Supplier" />
+                <div className="select-with-button">
+                  <Controller
+                    name="supplier"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="supplier"
+                        options={suppliers.map(s => ({ value: s, label: s }))}
+                        value={suppliers.map(s => ({ value: s, label: s })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Supplier"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
+                  <button
+                    type="button"
+                    className="add-entry-btn"
+                    onClick={() => setShowSupplierModal(true)}
+                    title="Add new supplier"
+                  >
+                    <img src={PlusIcon} alt="Add" />
+                  </button>
+                </div>
               </fieldset>
 
               <fieldset className="form-field notes-field">
@@ -186,6 +325,60 @@ export default function BulkEditRepairs() {
       </section>
 
       <Footer />
+
+      {/* Asset Modal */}
+      {showAssetModal && (
+        <AddEntryModal
+          title="Add New Asset"
+          fields={[
+            {
+              name: "name",
+              label: "Asset Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter asset name"
+            }
+          ]}
+          onSubmit={handleSaveAsset}
+          onClose={() => setShowAssetModal(false)}
+        />
+      )}
+
+      {/* Supplier Modal */}
+      {showSupplierModal && (
+        <AddEntryModal
+          title="Add New Supplier"
+          fields={[
+            {
+              name: "name",
+              label: "Supplier Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter supplier name"
+            }
+          ]}
+          onSubmit={handleSaveSupplier}
+          onClose={() => setShowSupplierModal(false)}
+        />
+      )}
+
+      {/* Repair Type Modal */}
+      {showRepairTypeModal && (
+        <AddEntryModal
+          title="Add New Repair Type"
+          fields={[
+            {
+              name: "name",
+              label: "Repair Type Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter repair type name"
+            }
+          ]}
+          onSubmit={handleSaveRepairType}
+          onClose={() => setShowRepairTypeModal(false)}
+        />
+      )}
     </>
   );
 }
