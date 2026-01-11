@@ -126,7 +126,8 @@ const Tickets = () => {
 
         // Fetch tickets from API
         const response = await fetchAllTickets();
-        const ticketsData = response.results || response;
+        // Handle different response formats: {results: [...]}, {value: [...]}, or direct array
+        const ticketsData = response.results || response.value || (Array.isArray(response) ? response : []);
 
         // Fetch employees from API
         const employeesResponse = await fetchAllEmployees();
