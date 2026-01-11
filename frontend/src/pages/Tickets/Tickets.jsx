@@ -63,7 +63,7 @@ function TableItem({
       <td>{ticket.formattedDate}</td>
       <td>{ticket.employeeName}</td>
       <td>{ticket.subject}</td>
-      <td>{ticket.location_details.city}</td>
+      <td>{ticket.location}</td>
 
       {/* CHECK-IN / CHECK-OUT Column */}
       <td>
@@ -305,7 +305,7 @@ const Tickets = () => {
       ticket.formattedDate?.toLowerCase() || "",
       ticket.employeeName?.toLowerCase() || "",
       ticket.subject?.toLowerCase() || "",
-      ticket.location_details?.city?.toLowerCase() || "",
+      ticket.location?.toLowerCase() || "",
     ];
 
     // Every word in search query must match at least one field
