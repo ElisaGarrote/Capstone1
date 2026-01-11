@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import { exportToExcel } from "../../utils/exportToExcel";
 import MockupData from "../../data/mockData/reports/end-of-life-mockup-data.json";
-import DepreciationFilter from "../../components/FilterPanel";
+import EndOfLifeFilterModal from "../../components/Modals/EndOfLifeFilterModal";
 import Pagination from "../../components/Pagination";
 import dateRelated from "../../utils/dateRelated";
 import Footer from "../../components/Footer";
-
-import "../../styles/UpcomingEndOfLife.css";
+import "../../styles/Dashboard/UpcomingEndOfLife.css";
 
 const filterConfig = [
   {
@@ -37,7 +37,6 @@ const filterConfig = [
   },
 ];
 
-// TableHeader component to render the table header
 function TableHeader() {
   return (
     <tr>
@@ -50,7 +49,6 @@ function TableHeader() {
   );
 }
 
-// TableItem component to render each ticket row
 function TableItem({ asset, onDeleteClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -76,37 +74,89 @@ function TableItem({ asset, onDeleteClick }) {
 
 export default function EndOfLifeWarrantyReport() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
+  const handleToggleFilter = () => setIsFilterModalOpen(true);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState(MockupData);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
 
-  // paginate the data
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedDepreciation = MockupData.slice(startIndex, endIndex);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
+    if (filters?.status) {
+      filtered = filtered.filter(
+        (row) => String(row.status_type || "").toLowerCase() === String(filters.status || "").toLowerCase()
+      );
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+    if (filters?.endoflifedate) {
+      const target = new Date(filters.endoflifedate).toISOString().slice(0, 10);
+      filtered = filtered.filter(
+        (row) => new Date(row.end_of_life_date).toISOString().slice(0, 10) === target
+      );
+    }
+
+    if (filters?.warrantyexpirationdate) {
+      const target = new Date(filters.warrantyexpirationdate).toISOString().slice(0, 10);
+      filtered = filtered.filter(
+        (row) => new Date(row.warranty_expiration_date).toISOString().slice(0, 10) === target
+      );
+    }
+
+    return filtered;
+  };
+
+  const applyFiltersAndSearch = (filters, searchTerm) => {
+    let filtered = applyFilters(filters);
+
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((item) =>
+        (item.asset_id && item.asset_id.toLowerCase().includes(term)) ||
+        (item.product && item.product.toLowerCase().includes(term)) ||
+        (item.status_name && item.status_name.toLowerCase().includes(term)) ||
+        (item.location && item.location.toLowerCase().includes(term))
+      );
+    }
+
+    return filtered;
+  };
+
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
+
+  useEffect(() => {
+  }, []);
+
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "EndOfLife_Warranty_Report.xlsx");
+  };
+
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
+  };
 
   return (
     <section className="page-layout-with-table">
@@ -118,33 +168,40 @@ export default function EndOfLifeWarrantyReport() {
           <h1>End of Life & Warranty Report</h1>
         </section>
 
-        {/* Table Filter */}
-        <DepreciationFilter filters={filterConfig} />
-
         <section className="table-layout">
           {/* Table Header */}
           <section className="table-header">
-            <h2 className="h2">Asset ({MockupData.length})</h2>
+            <h2 className="h2">Asset ({filteredData.length})</h2>
             <section className="table-actions">
-              <input type="search" placeholder="Search..." className="search" />
-              <div ref={toggleRef}>
-                <MediumButtons
-                  type="export"
-                  onClick={() => setExportToggle(!exportToggle)}
-                />
+              <input
+                type="search"
+                placeholder="Search..."
+                className="search"
+                value={searchTerm}
+                onChange={handleSearch}
+              />
+              <button
+                type="button"
+                className="medium-button-filter"
+                onClick={handleToggleFilter}
+              >
+                Filter
+              </button>
+              <EndOfLifeFilterModal
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+                onApplyFilter={handleApplyFilter}
+                onResetFilter={handleResetFilter}
+                initialFilters={appliedFilters}
+              />
+              <div>
+                <MediumButtons type="export" onClick={handleExport} />
               </div>
             </section>
           </section>
 
           {/* Table Structure */}
           <section className="eof-warranty-report-table-section">
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
             <table>
               <thead>
                 <TableHeader />
@@ -174,7 +231,7 @@ export default function EndOfLifeWarrantyReport() {
             <Pagination
               currentPage={currentPage}
               pageSize={pageSize}
-              totalItems={MockupData.length}
+              totalItems={filteredData.length}
               onPageChange={setCurrentPage}
               onPageSizeChange={setPageSize}
             />

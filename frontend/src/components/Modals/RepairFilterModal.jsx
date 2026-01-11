@@ -5,7 +5,7 @@ import "../../styles/AssetFilterModal.css";
 import { fetchAllDropdowns } from "../../services/contexts-service";
 
 
-export default function RepairFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
+export default function RepairFilterModal({ isOpen, onClose, onApplyFilter, onResetFilter, initialFilters = {} }) {
 
   const [filters, setFilters] = useState({
     asset: "",
@@ -76,15 +76,20 @@ export default function RepairFilterModal({ isOpen, onClose, onApplyFilter, init
 
   // Reset all filters
   const handleReset = () => {
-    setFilters({
-      asset: "",
-      type: null,
-      name: "",
-      startDate: "",
-      endDate: "",
-      cost: "",
-      status: null,
-    });
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    } else {
+      setFilters({
+        asset: "",
+        type: null,
+        name: "",
+        startDate: "",
+        endDate: "",
+        cost: "",
+        status: null,
+      });
+    }
   };
 
   // Apply filters
