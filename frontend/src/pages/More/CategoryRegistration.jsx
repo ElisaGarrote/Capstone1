@@ -20,6 +20,7 @@ const CategoryRegistration = () => {
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [isImporting, setIsImporting] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const {
     register,
@@ -66,6 +67,7 @@ const CategoryRegistration = () => {
     form.append('type', data.categoryType)
     if (attachmentFile) form.append('logo', attachmentFile)
 
+    setIsSubmitting(true)
     createCategory(form)
       .then(() => {
         navigate("/More/ViewCategories", { state: { addedCategory: true } })
@@ -74,6 +76,7 @@ const CategoryRegistration = () => {
         console.error('Failed to create category', err)
         alert('Failed to create category: ' + (err?.response?.data?.detail || err.message))
       })
+      .finally(() => setIsSubmitting(false))
   };
 
   const handleImportFile = (e) => {
@@ -264,9 +267,9 @@ const CategoryRegistration = () => {
               <button
                 type="submit"
                 className="primary-button"
-                disabled={!isValid}
+                disabled={isSubmitting}
               >
-                Save
+                {isSubmitting ? "Saving..." : "Save"}
               </button>
             </form>
           </section>

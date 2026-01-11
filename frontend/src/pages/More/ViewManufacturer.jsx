@@ -370,7 +370,7 @@ export default function ViewManuDraft() {
         await fetchManufacturers();
         setSuccessMessage("Manufacturer deleted successfully!");
         setTimeout(() => setSuccessMessage(""), 5000);
-        return true;
+        return { ok: true, data: { deleted_ids: [deleteTarget] } };
       } catch (err) {
         console.error("Delete failed", err);
         const payload = err?.response?.data || { ok: false, detail: err?.message || "Delete failed" };
@@ -384,11 +384,14 @@ export default function ViewManuDraft() {
     }
     try {
       const res = await bulkDeleteManufacturers(checkedItems);
-      // refresh list and clear selection
+      // refresh list (do not clear selection yet — we need to preserve skipped items)
       await fetchManufacturers();
-      setCheckedItems([]);
-      const deletedCount = (res && res.deleted && res.deleted.length) || 0;
-      const skippedCount = res && res.skipped ? Object.keys(res.skipped).length : 0;
+      // Determine deleted and skipped ids
+      const deletedIds = res?.deleted_ids ?? (Array.isArray(res?.deleted) ? res.deleted : []);
+      const failedEntries = Array.isArray(res?.failed) ? res.failed : [];
+      const skippedIds = res?.skipped ? Object.keys(res.skipped).map((k) => (isNaN(Number(k)) ? k : Number(k))) : (failedEntries.length ? failedEntries.map((f) => f.id).filter(Boolean) : []);
+      const deletedCount = deletedIds ? deletedIds.length : 0;
+      const skippedCount = skippedIds ? skippedIds.length : 0;
 
       // Compose a single alert message showing both deleted and skipped counts.
       if (deletedCount > 0) {
@@ -398,13 +401,29 @@ export default function ViewManuDraft() {
         setSuccessMessage(msg);
         setErrorMessage('');
         setTimeout(() => setSuccessMessage(''), 5000);
-        // If some were skipped, return failure so modal handler can treat accordingly
-        if (skippedCount > 0) return { ok: false, data: res };
-        return res;
+        // If some were skipped, update UI to remove deleted and keep skipped selected
+        if (skippedCount > 0) {
+          try {
+            if (deletedIds && deletedIds.length) {
+              setManufacturers((prev) => (prev || []).filter((m) => !deletedIds.includes(m.id)));
+              setFilteredData((prev) => (prev || []).filter((m) => !deletedIds.includes(m.id)));
+            }
+            // Keep skipped items selected
+            if (skippedIds && skippedIds.length) setCheckedItems(skippedIds);
+          } catch (e) { console.error('Failed to update UI after mixed delete', e); }
+          return { ok: false, data: res };
+        }
+
+        // Full success for bulk delete — clear selection and reload to ensure sync
+        setCheckedItems([]);
+        window.location.reload();
+        return { ok: true };
       }
 
       // No deletions, only skipped
       if (skippedCount > 0) {
+        // No deletions, only skipped — keep them selected and show error
+        try { if (skippedIds && skippedIds.length) setCheckedItems(skippedIds); } catch (e) {}
         const msg = `${skippedCount} manufacturer(s) skipped (currently in use).`;
         setErrorMessage(msg);
         setSuccessMessage('');
@@ -412,7 +431,7 @@ export default function ViewManuDraft() {
         return { ok: false, data: res };
       }
 
-      return res;
+      return { ok: true, data: res };
     } catch (err) {
       console.error("Bulk delete failed", err);
       const payload = err?.response?.data || { ok: false, detail: err?.message || "Bulk delete failed" };
@@ -454,53 +473,98 @@ export default function ViewManuDraft() {
         <DeleteModal
           endPoint={endPoint}
           closeModal={closeDeleteModal}
-          actionType={"delete"}
+          actionType={deleteTarget ? "delete" : "bulk-delete"}
           onConfirm={handleDeleteOnConfirm}
+          targetIds={deleteTarget ? [deleteTarget] : checkedItems}
+          entityType="manufacturer"
             onDeleteFail={(payload) => {
-              // Normalize payload (handlers sometimes return { ok:false, data: ... })
-              let body = payload;
-              if (payload && payload.data) body = payload.data;
+                // Normalize payload (handlers sometimes return { ok:false, data: ... })
+                let body = payload;
+                if (payload && payload.data) body = payload.data;
 
-              // If this is a bulk delete summary with deleted/skipped, show a single combined alert
-              if (body && (body.deleted || body.skipped)) {
-                const deletedCount = (body.deleted && body.deleted.length) || 0;
-                const skippedCount = body.skipped ? Object.keys(body.skipped).length : 0;
-                const parts = [];
-                if (deletedCount > 0) parts.push(`${deletedCount} manufacturer(s) deleted successfully`);
-                if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
-                const msg = parts.length ? parts.join('; ') + '.' : 'Delete failed.';
-                // Show as successMessage when there were deletions, otherwise errorMessage
-                if (deletedCount > 0) {
-                  setSuccessMessage(msg);
-                  setTimeout(() => setSuccessMessage(''), 5000);
-                } else {
-                  setErrorMessage(msg);
-                  setTimeout(() => setErrorMessage(''), 5000);
+                // Support unified response: {deleted_count, skipped_count, deleted_ids, failed}
+                const deletedIds = body?.deleted_ids ?? (Array.isArray(body?.deleted) ? body.deleted : []);
+                const deletedCount = body?.deleted_count ?? (deletedIds ? deletedIds.length : 0) ?? 0;
+                const skippedCount = body?.skipped_count ?? (body?.skipped ? Object.keys(body.skipped).length : 0) ?? 0;
+
+                // If failed array exists, extract messages. But still prefer to show combined
+                // deleted/skipped summary when present, and remove deleted ids from UI.
+                const failedMsgs = Array.isArray(body?.failed) ? body.failed.map((f) => f && f.message ? f.message : JSON.stringify(f)).filter(Boolean) : [];
+                if (failedMsgs.length > 0) {
+                  // If there's also deleted/skipped counts, show combined summary first
+                  if (deletedCount > 0 || skippedCount > 0) {
+                    const parts = [];
+                    if (deletedCount > 0) parts.push(`${deletedCount} manufacturer(s) deleted successfully`);
+                    if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
+                    const summary = parts.join('; ') + '.';
+                    if (deletedCount > 0) {
+                      setSuccessMessage(summary);
+                      setTimeout(() => setSuccessMessage(''), 5000);
+                    } else {
+                      setErrorMessage(summary);
+                      setTimeout(() => setErrorMessage(''), 7000);
+                    }
+                  } else {
+                    const msg = failedMsgs.join('; ');
+                    setErrorMessage(msg);
+                    setTimeout(() => setErrorMessage(''), 7000);
+                  }
+                  // Remove any successfully deleted ids from UI
+                  try {
+                    if (deletedIds && deletedIds.length) {
+                      setManufacturers((prev) => (prev || []).filter((m) => !deletedIds.includes(m.id)));
+                      setFilteredData((prev) => (prev || []).filter((m) => !deletedIds.includes(m.id)));
+                      setCheckedItems((prev) => (prev || []).filter((id) => !deletedIds.includes(id)));
+                    }
+                  } catch (e) { console.error('Failed to apply partial-delete UI update', e); }
+                  return;
                 }
-                return;
-              }
 
-              // Fallback: prefer common fields, then skipped map, then fallback to JSON string
-              let msg = null;
-              try {
-                if (!payload) msg = 'Delete failed';
-                else if (typeof payload === 'string') msg = payload;
-                else if (body.detail) msg = body.detail;
-                else if (body.message) msg = body.message;
-                else if (body.error) msg = body.error;
-                else if (body.skipped && typeof body.skipped === 'object') {
-                  const vals = Object.values(body.skipped).filter(Boolean);
-                  msg = vals.length ? vals.join('; ') : 'Some items could not be deleted.';
-                } else {
-                  msg = JSON.stringify(body);
+                // Mixed summary (legacy or new shape) — show combined message and update UI
+                if (deletedCount > 0 || skippedCount > 0) {
+                  const parts = [];
+                  if (deletedCount > 0) parts.push(`${deletedCount} manufacturer(s) deleted successfully`);
+                  if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
+                  const msg = parts.join('; ') + '.';
+                  if (deletedCount > 0) {
+                    setSuccessMessage(msg);
+                    setTimeout(() => setSuccessMessage(''), 5000);
+                  } else {
+                    setErrorMessage(msg);
+                    setTimeout(() => setErrorMessage(''), 7000);
+                  }
+                  // Remove deleted ids from UI
+                  try {
+                    if (deletedIds && deletedIds.length) {
+                      setManufacturers((prev) => (prev || []).filter((m) => !deletedIds.includes(m.id)));
+                      setFilteredData((prev) => (prev || []).filter((m) => !deletedIds.includes(m.id)));
+                      setCheckedItems((prev) => (prev || []).filter((id) => !deletedIds.includes(id)));
+                    }
+                  } catch (e) { console.error('Failed to apply mixed-delete UI update', e); }
+                  return;
                 }
-              } catch (e) {
-                msg = 'Delete failed';
-              }
 
-              setErrorMessage(msg);
-              setTimeout(() => setErrorMessage(''), 5000);
-            }}
+                // Fallback: prefer common fields, then skipped map, then fallback to JSON string
+                let msg = null;
+                try {
+                  if (!payload) msg = 'Delete failed';
+                  else if (typeof payload === 'string') msg = payload;
+                  else if (body.detail) msg = body.detail;
+                  else if (body.message) msg = body.message;
+                  else if (body.error) msg = body.error;
+                  else if (body.skipped && typeof body.skipped === 'object') {
+                    const vals = Object.values(body.skipped).filter(Boolean);
+                    msg = vals.length ? vals.join('; ') : 'Some items could not be deleted.';
+                  } else {
+                    msg = JSON.stringify(body);
+                  }
+                } catch (e) {
+                  msg = 'Delete failed';
+                }
+
+                setErrorMessage(msg);
+                setTimeout(() => setErrorMessage(''), 5000);
+              }}
           selectedCount={checkedItems.length}
           /* BACKEND INTEGRATION HERE
           confirmDelete={async () => {

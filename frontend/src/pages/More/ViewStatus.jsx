@@ -6,7 +6,7 @@ import MediumButtons from "../../components/buttons/MediumButtons";
 import StatusFilterModal from "../../components/Modals/StatusFilterModal";
 import DeleteModal from "../../components/Modals/DeleteModal";
 import Status from "../../components/Status";
-import MockupData from "../../data/mockData/more/status-mockup-data.json";
+import api from "../../api";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 
@@ -68,13 +68,15 @@ function TableItem({ status, onDeleteClick, isSelected, onRowChange }) {
       if (actionType === "delete") {
         return "This status is currently in use and cannot be deleted.";
       }
-      return "This status is currently in use and cannot be edited.";
+      return "This status is currently in use; only Notes can be edited.";
     }
 
     return actionType === "delete" ? "Delete" : "Edit";
   };
 
-  const disabled = isDefaultStatus(status);
+  const isInUse = isDefaultStatus(status);
+  const disabledCheckboxOrDelete = isInUse; // keep delete button disabled when in use/default; allow checkbox selection for all
+  const typeName = status.type ? status.type[0].toUpperCase() + status.type.slice(1) : "";
 
   return (
     <tr>
@@ -86,15 +88,15 @@ function TableItem({ status, onDeleteClick, isSelected, onRowChange }) {
             id=""
             checked={isSelected}
             onChange={(e) => onRowChange(status.id, e.target.checked)}
-            disabled={disabled}
+            disabled={false}
           />
         </div>
       </td>
       <td>{status.name}</td>
       <td>
         <Status
-          type={status.type}
-          name={status.type[0].toUpperCase() + status.type.slice(1)}
+          type={status.type || ""}
+          name={typeName}
         />
       </td>
       <td>{status.notes || "-"}</td>
@@ -105,9 +107,9 @@ function TableItem({ status, onDeleteClick, isSelected, onRowChange }) {
             title={getTitle("edit", status)}
             className="action-button"
             onClick={() =>
-              navigate(`/More/StatusEdit/${status.id}`, { state: { status } })
+              navigate(`/More/StatusEdit/${status.id}`, { state: { status, notesOnly: isInUse } })
             }
-            disabled={disabled}
+            disabled={false}
           >
             <i className="fas fa-edit"></i>
           </button>
@@ -115,7 +117,7 @@ function TableItem({ status, onDeleteClick, isSelected, onRowChange }) {
             <button
               className="action-button"
               onClick={onDeleteClick}
-              disabled={disabled}
+              disabled={disabledCheckboxOrDelete}
             >
               <i className="fas fa-trash-alt"></i>
             </button>
@@ -129,11 +131,13 @@ function TableItem({ status, onDeleteClick, isSelected, onRowChange }) {
 export default function Category() {
   const location = useLocation();
   const navigate = useNavigate();
+  const contextsBase = import.meta.env.VITE_CONTEXTS_API_URL || import.meta.env.VITE_API_URL || "/api/contexts/";
 
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isProcessingDelete, setIsProcessingDelete] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -146,13 +150,40 @@ export default function Category() {
 
   // filter state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [filteredData, setFilteredData] = useState(MockupData);
+  const [filteredData, setFilteredData] = useState([]);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
 
   // Retrieve the "status" navigation flags for success alerts
   const addedStatus = location.state?.addedStatus;
   const updatedStatus = location.state?.updatedStatus;
+
+  // Fetch statuses from backend API and normalize fields used by this page
+  useEffect(() => {
+    let cancelled = false;
+    const fetchStatuses = async () => {
+      try {
+        const resp = await api.get(`${contextsBase}statuses/`);
+        // Expecting an array of status objects
+        const data = Array.isArray(resp.data) ? resp.data : resp.data.results || [];
+        const normalized = data.map((s) => ({
+          ...s,
+          // frontend expects `tag` as assets count; backend may return `asset_count`
+          tag: s.tag ?? s.asset_count ?? 0,
+        }));
+        if (!cancelled) setFilteredData(normalized);
+      } catch (err) {
+        console.error("Failed to load statuses:", err);
+        if (!cancelled) setErrorMessage("Failed to load statuses from server.");
+        setTimeout(() => setErrorMessage(""), 5000);
+      }
+    };
+
+    fetchStatuses();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const actionStatus = (action, status) => {
     let timeoutId;
@@ -252,10 +283,8 @@ export default function Category() {
   const endIndex = startIndex + pageSize;
   const paginatedCategories = searchedData.slice(startIndex, endIndex);
 
-  // Only non-default statuses are selectable for bulk actions
-  const selectableStatuses = paginatedCategories.filter(
-    (status) => !isDefaultStatus(status)
-  );
+  // Allow selection (checkbox) for all visible statuses
+  const selectableStatuses = paginatedCategories;
 
   const allSelected =
     selectableStatuses.length > 0 &&
@@ -296,19 +325,38 @@ export default function Category() {
     setDeleteTarget(null);
   };
 
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      console.log("Deleting single status id:", deleteTarget);
-      setSuccessMessage("Status deleted successfully!");
-    } else {
-      console.log("Deleting multiple status ids:", selectedIds);
-      if (selectedIds.length > 0) {
-        setSuccessMessage("Statuses deleted successfully!");
+  // Called by DeleteModal via its `onConfirm` prop. Must return { ok: true, data } on success
+  const performDelete = async () => {
+    setIsProcessingDelete(true);
+    try {
+      // single delete
+      if (deleteTarget) {
+        const res = await api.delete(`${contextsBase}statuses/${deleteTarget}/`);
+        return { ok: true, data: deleteTarget };
       }
-      setSelectedIds([]);
+
+      // bulk delete using selectedIds
+      if (selectedIds.length > 0) {
+        const res = await api.post(`${contextsBase}statuses/bulk_delete/`, { ids: selectedIds });
+        // backend returns a summary object; treat non-empty `failed` or `skipped_count` as partial failure
+        const payload = res.data ?? res;
+        const skipped = payload?.skipped_count ?? payload?.skipped ?? 0;
+        const failed = payload?.failed ?? payload?.failed_ids ?? [];
+        const deletedIds = payload?.deleted_ids ?? (skipped ? [] : selectedIds);
+
+        if ((Array.isArray(failed) && failed.length > 0) || skipped > 0) {
+          return { ok: false, data: payload };
+        }
+
+        return { ok: true, data: deletedIds };
+      }
+
+      return { ok: false, data: 'No target selected' };
+    } catch (error) {
+      return { ok: false, data: error.response?.data ?? error.message ?? String(error) };
+    } finally {
+      setIsProcessingDelete(false);
     }
-    setTimeout(() => setSuccessMessage(""), 5000);
-    closeDeleteModal();
   };
 
   return (
@@ -327,8 +375,121 @@ export default function Category() {
       {isDeleteModalOpen && (
         <DeleteModal
           closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
+          isOpen={isDeleteModalOpen}
+          actionType={deleteTarget || selectedIds.length > 0 ? (deleteTarget ? "delete" : "bulk-delete") : "delete"}
+          entityType="status"
+          targetId={deleteTarget}
+          targetIds={deleteTarget ? undefined : selectedIds}
+          onConfirm={performDelete}
+          onSuccess={(deleted) => {
+            if (Array.isArray(deleted)) {
+              setFilteredData((prev) => prev.filter((s) => !deleted.includes(s.id)));
+              setSelectedIds([]);
+              setSuccessMessage(`${deleted.length} statuses deleted successfully!`);
+            } else {
+              setFilteredData((prev) => prev.filter((s) => s.id !== deleted));
+              setSuccessMessage("Status deleted successfully!");
+            }
+            setTimeout(() => setSuccessMessage(""), 5000);
+          }}
+          onDeleteFail={(payload) => {
+            console.error('Bulk delete partial failure:', payload);
+            // Normalize payload shape: some callers return { ok:false, data: ... }
+            let body = payload && payload.data ? payload.data : payload;
+
+            const deletedIds = body?.deleted_ids ?? (Array.isArray(body?.deleted) ? body.deleted : []);
+            const deletedCount = body?.deleted_count ?? (deletedIds ? deletedIds.length : 0) ?? 0;
+            const skippedCount = body?.skipped_count ?? (body?.skipped ? Object.keys(body.skipped).length : 0) ?? 0;
+            const failedEntries = Array.isArray(body?.failed) ? body.failed : [];
+
+            // If there are failed messages, prefer to show them, but still present combined summary when available
+            const failedMsgs = failedEntries.map((f) => (f && f.message ? f.message : JSON.stringify(f))).filter(Boolean);
+            if (failedMsgs.length > 0) {
+              if (deletedCount > 0 || skippedCount > 0) {
+                const parts = [];
+                if (deletedCount > 0) parts.push(`${deletedCount} status(es) deleted successfully`);
+                if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
+                const summary = parts.join('; ') + '.';
+                if (deletedCount > 0) {
+                  setSuccessMessage(summary);
+                  setTimeout(() => setSuccessMessage(''), 5000);
+                } else {
+                  setErrorMessage(summary);
+                  setTimeout(() => setErrorMessage(''), 7000);
+                }
+              } else {
+                setErrorMessage(failedMsgs.join('; '));
+                setTimeout(() => setErrorMessage(''), 7000);
+              }
+
+              // Remove any successfully deleted ids from UI
+              try {
+                if (deletedIds && deletedIds.length) {
+                  setFilteredData((prev) => (prev || []).filter((s) => !deletedIds.includes(s.id)));
+                  setSelectedIds((prev) => (prev || []).filter((id) => !deletedIds.includes(id)));
+                }
+              } catch (e) {
+                console.error('Failed to apply partial-delete UI update', e);
+              }
+
+              return;
+            }
+
+            // Mixed summary — show combined deleted/skipped message and update UI
+            if (deletedCount > 0 || skippedCount > 0) {
+              const parts = [];
+              if (deletedCount > 0) parts.push(`${deletedCount} status(es) deleted successfully`);
+              if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
+              const msg = parts.join('; ') + '.';
+              if (deletedCount > 0) {
+                setSuccessMessage(msg);
+                setTimeout(() => setSuccessMessage(''), 5000);
+              } else {
+                setErrorMessage(msg);
+                setTimeout(() => setErrorMessage(''), 7000);
+              }
+
+              try {
+                if (deletedIds && deletedIds.length) {
+                  setFilteredData((prev) => (prev || []).filter((s) => !deletedIds.includes(s.id)));
+                  setSelectedIds((prev) => (prev || []).filter((id) => !deletedIds.includes(id)));
+                }
+                // Keep skipped items selected
+                if (body?.skipped) {
+                  const skippedIds = Array.isArray(body.skipped) ? body.skipped : Object.keys(body.skipped).map((k) => (isNaN(Number(k)) ? k : Number(k)));
+                  if (skippedIds && skippedIds.length) setSelectedIds(skippedIds);
+                }
+              } catch (e) { console.error('Failed to apply mixed-delete UI update', e); }
+              return;
+            }
+
+            // Fallback message extraction
+            let msg = null;
+            try {
+              if (!body) msg = 'Delete failed';
+              else if (typeof body === 'string') msg = body;
+              else if (body.detail) msg = body.detail;
+              else if (body.message) msg = body.message;
+              else if (body.error) msg = body.error;
+              else if (body.skipped && typeof body.skipped === 'object') {
+                const vals = Object.values(body.skipped).filter(Boolean);
+                msg = vals.length ? vals.join('; ') : 'Some items could not be deleted.';
+              } else {
+                msg = JSON.stringify(body);
+              }
+            } catch (e) {
+              msg = 'Delete failed';
+            }
+
+            setErrorMessage(msg);
+            setTimeout(() => setErrorMessage(''), 5000);
+          }}
+          onError={(err) => {
+            console.error('Delete error:', err);
+            const message = err?.response?.data?.detail ?? err?.response?.data ?? err?.message ?? 'Delete failed';
+            setErrorMessage(typeof message === 'string' ? message : JSON.stringify(message));
+            setTimeout(() => setErrorMessage(""), 7000);
+          }}
         />
       )}
 
@@ -399,8 +560,8 @@ export default function Category() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="no-data-message">
-                        No categories found.
+                      <td colSpan={6} className="no-data-message">
+                        No statuses found.
                       </td>
                     </tr>
                   )}
