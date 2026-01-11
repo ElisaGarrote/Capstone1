@@ -214,7 +214,12 @@ export const AuthProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${getAccessToken()}` },
       });
 
-      return res.data || [];
+      // API may return an object with shape { users_count, users: [...] }
+      // Normalize to always return an array of user objects.
+      if (!res || !res.data) return [];
+      if (Array.isArray(res.data)) return res.data;
+      if (Array.isArray(res.data.users)) return res.data.users;
+      return [];
     } catch (error) {
       console.error("Failed to fetch users list:", error);
       return [];
