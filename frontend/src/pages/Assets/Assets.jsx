@@ -248,6 +248,14 @@ export default function Assets() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  // Handle filter reset
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters reset
+  };
+
   // Handle search input
   const handleSearch = (e) => {
     const term = e.target.value;
@@ -416,6 +424,7 @@ export default function Assets() {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
+        onResetFilter={handleResetFilter}
         initialFilters={appliedFilters}
       />
 

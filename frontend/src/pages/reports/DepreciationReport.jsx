@@ -112,6 +112,7 @@ export default function DepreciationReport() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [filteredData, setFilteredData] = useState(MockupData);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const applyFilters = (filters) => {
     let filtered = [...MockupData];
@@ -151,9 +152,33 @@ export default function DepreciationReport() {
     return filtered;
   };
 
+  const applyFiltersAndSearch = (filters, searchTerm) => {
+    let filtered = applyFilters(filters);
+
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((item) =>
+        (item.assetId && item.assetId.toLowerCase().includes(term)) ||
+        (item.product && item.product.toLowerCase().includes(term)) ||
+        (item.statusName && item.statusName.toLowerCase().includes(term)) ||
+        (item.depreciationName && item.depreciationName.toLowerCase().includes(term))
+      );
+    }
+
+    return filtered;
+  };
+
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
-    setFilteredData(applyFilters(filters));
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
     setCurrentPage(1);
   };
 
@@ -171,6 +196,14 @@ export default function DepreciationReport() {
     exportToExcel(dataToExport, "Depreciation_Report.xlsx");
   };
 
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
+  };
+
   return (
     <>
       {isDeleteModalOpen && (
@@ -184,6 +217,7 @@ export default function DepreciationReport() {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
+        onResetFilter={handleResetFilter}
         initialFilters={appliedFilters}
       />
 
@@ -205,6 +239,8 @@ export default function DepreciationReport() {
                   type="search"
                   placeholder="Search..."
                   className="search"
+                  value={searchTerm}
+                  onChange={handleSearch}
                 />
                 <button
                   type="button"

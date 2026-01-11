@@ -3,7 +3,7 @@ import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/Modal.css";
 import "../../styles/AssetFilterModal.css";
 
-export default function DueAuditFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
+export default function DueAuditFilterModal({ isOpen, onClose, onApplyFilter, onResetFilter, initialFilters = {} }) {
 
   const [filters, setFilters] = useState({
     dueDate: "",
@@ -29,12 +29,17 @@ export default function DueAuditFilterModal({ isOpen, onClose, onApplyFilter, in
 
   // Reset all filters
   const handleReset = () => {
-    setFilters({
-      dueDate: "",
-      asset: "",
-      created: "",
-      audit: "",
-    });
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    } else {
+      setFilters({
+        dueDate: "",
+        asset: "",
+        created: "",
+        audit: "",
+      });
+    }
   };
 
   // Apply filters
@@ -93,7 +98,7 @@ export default function DueAuditFilterModal({ isOpen, onClose, onApplyFilter, in
 
             {/* Created */}
             <fieldset>
-              <label htmlFor="created">Created</label>
+              <label htmlFor="created">Created At</label>
               <input
                 type="date"
                 id="created"

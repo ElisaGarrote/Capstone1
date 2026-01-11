@@ -246,6 +246,13 @@ export default function Assets() {
     setFilteredData(filtered);
   };
 
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -374,6 +381,7 @@ export default function Assets() {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
+        onResetFilter={handleResetFilter}
         initialFilters={appliedFilters}
       />
 

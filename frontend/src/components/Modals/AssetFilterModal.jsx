@@ -3,7 +3,7 @@ import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/Modal.css";
 import "../../styles/AssetFilterModal.css";
 
-export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
+export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, onResetFilter, initialFilters = {} }) {
 
   const [filters, setFilters] = useState({
     assetId: "",
@@ -91,6 +91,11 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
       purchaseDate: "",
       purchaseCost: "",
     });
+    // Call the parent's reset handler if provided
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    }
   };
 
   // Apply filters

@@ -7,6 +7,7 @@ export default function DepreciationFilterModal({
   isOpen,
   onClose,
   onApplyFilter,
+  onResetFilter,
   initialFilters = {},
 }) {
   const [filters, setFilters] = useState({
@@ -54,12 +55,17 @@ export default function DepreciationFilterModal({
 
   // Reset all filters
   const handleReset = () => {
-    setFilters({
-      status: null,
-      depreciation: null,
-      durationMonths: "",
-      monthsLeft: "",
-    });
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    } else {
+      setFilters({
+        status: null,
+        depreciation: null,
+        durationMonths: "",
+        monthsLeft: "",
+      });
+    }
   };
 
   // Apply filters

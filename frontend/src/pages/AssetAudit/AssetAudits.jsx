@@ -146,6 +146,13 @@ export default function AssetAudits() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFilters({});
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
   const handleExport = () => {
     const baseData = data;
     const dataToExport = filteredData.length > 0 ? filteredData : baseData;
@@ -192,6 +199,7 @@ export default function AssetAudits() {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
+        onResetFilter={handleResetFilter}
         initialFilters={appliedFilters}
       />
 

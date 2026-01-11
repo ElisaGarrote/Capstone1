@@ -408,6 +408,13 @@ export default function Products() {
     setFilteredData(filtered);
   };
 
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
   const handleExport = () => {
     const dataToExport = filteredData.length > 0 ? filteredData : products;
     exportToExcel(dataToExport, "AssetModels_Records.xlsx");
@@ -431,6 +438,7 @@ export default function Products() {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
+        onResetFilter={handleResetFilter}
         initialFilters={appliedFilters}
       />
 

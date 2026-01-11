@@ -283,6 +283,13 @@ export default function AssetRepairs() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFilters({});
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
@@ -301,6 +308,7 @@ export default function AssetRepairs() {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
+        onResetFilter={handleResetFilter}
         initialFilters={appliedFilters}
       />
 
