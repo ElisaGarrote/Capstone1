@@ -33,9 +33,10 @@ def _fetch_ticket_by_id_from_endpoint(endpoint, ticket_id):
             return None
         resp.raise_for_status()
         data = resp.json()
-        # Response is a list, find the ticket with matching ID
-        if isinstance(data, list):
-            for ticket in data:
+        # Handle 'value' key (new format) or list directly
+        tickets = data.get('value') if isinstance(data, dict) else data
+        if isinstance(tickets, list):
+            for ticket in tickets:
                 if ticket.get("id") == ticket_id:
                     return ticket
             return None
@@ -55,7 +56,8 @@ def get_ticket_by_id(ticket_id):
     if cached is not None:
         return cached
 
-    result = _fetch_ticket_by_id_from_endpoint("tickets/asset/resolved/", ticket_id)
+    # Use the new /external/ams/tickets/ endpoint
+    result = _fetch_ticket_by_id_from_endpoint("external/ams/tickets/", ticket_id)
 
     if result:
         cache.set(key, result, TICKET_CACHE_TTL)
@@ -81,18 +83,8 @@ def get_ticket_by_asset_id(asset_id, status=None):
     if cached is not None:
         return cached
 
-    # Determine which endpoint to use
-    if status == 'resolved':
-        endpoint = "tickets/asset/resolved/"
-    elif status == 'unresolved':
-        endpoint = "tickets/asset/unresolved/"
-    else:
-        # Try unresolved first, then resolved
-        ticket = get_ticket_by_asset_id(asset_id, status='unresolved')
-        if not ticket:
-            ticket = get_ticket_by_asset_id(asset_id, status='resolved')
-        return ticket
-
+    # Use the new /external/ams/tickets/ endpoint
+    endpoint = "external/ams/tickets/"
     url = _build_url(endpoint)
     try:
         resp = client_get(url, params={"asset": asset_id}, timeout=6)
@@ -102,11 +94,19 @@ def get_ticket_by_asset_id(asset_id, status=None):
         resp.raise_for_status()
         data = resp.json()
 
-        # Response is a list, find ticket for this asset
+        # Handle 'value' key (new format) or list directly
+        tickets = data.get('value') if isinstance(data, dict) else data
+
+        # Find ticket for this asset, optionally filtering by status
         ticket = None
-        if isinstance(data, list):
-            for t in data:
+        if isinstance(tickets, list):
+            for t in tickets:
                 if t.get("asset") == asset_id:
+                    # Filter by is_resolved if status specified
+                    if status == 'resolved' and not t.get('is_resolved', False):
+                        continue
+                    if status == 'unresolved' and t.get('is_resolved', False):
+                        continue
                     ticket = t
                     break
 
@@ -191,20 +191,27 @@ def get_tickets_list(ticket_type='unresolved', q=None, limit=50):
     if cached is not None:
         return cached
 
-    # The external API uses /tickets/asset/checkout/ with ?status= parameter
-    # status=Open for unresolved, status=Resolved for resolved
-    endpoint = "tickets/asset/checkout"
+    # The external API uses /external/ams/tickets/ endpoint
+    # It returns all tickets with is_resolved field, filter client-side
+    endpoint = "external/ams/tickets"
     params = {}
-    if ticket_type == 'unresolved':
-        params['status'] = 'Open'
-    else:
-        params['status'] = 'Resolved'
     if q:
         params['q'] = q
     if limit:
         params['limit'] = limit
 
     result = fetch_resource_list(endpoint, params=params)
+
+    # Filter by is_resolved based on ticket_type
+    if isinstance(result, dict) and not result.get('warning'):
+        # Handle both 'value' key (new format) and 'results' key (old format)
+        tickets = result.get('value') or result.get('results') or []
+        if ticket_type == 'unresolved':
+            filtered = [t for t in tickets if not t.get('is_resolved', False)]
+        else:
+            filtered = [t for t in tickets if t.get('is_resolved', False)]
+        result = {'results': filtered, 'count': len(filtered)}
+
     if isinstance(result, dict) and result.get('warning'):
         cache.set(key, result, LIST_WARNING_TTL)
     else:
