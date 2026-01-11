@@ -19,11 +19,12 @@ import {
   isTokenExpired,
   getSystemRole,
 } from "../api/TokenUtils";
+import { read } from "xlsx";
 
 const AuthContext = createContext();
 
 // Auth service URL - points to centralized auth service
-const AUTH_URL = import.meta.env.VITE_AUTH_URL || "http://localhost:8000";
+const AUTH_URL = import.meta.env.VITE_AUTH_URL || "http://localhost:3001";
 
 // API endpoints
 const PROFILE_URL = `${AUTH_URL}/api/v1/users/profile/`;
@@ -65,6 +66,8 @@ export const AuthProvider = ({ children }) => {
 
   // Get user's AMS role
   const getAmsRole = useCallback(() => {
+    console.log("User in getAmsRole:", user);
+    console.log("return getamsrole:", user ? getSystemRole(user, "ams") : null);
     return user ? getSystemRole(user, "ams") : null;
   }, [user]);
 

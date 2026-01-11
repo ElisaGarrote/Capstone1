@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setUser } from "../features/counter/userSlice";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../Context";
 import LoadingButton from "../components/LoadingButton";
 import eyeOpen from "../assets/icons/eye-open.svg";
 import eyeClose from "../assets/icons/eye-close.svg";
@@ -54,6 +54,7 @@ function Login() {
       if (result.success) {
         // Also update Redux store for backwards compatibility
         const user = result.user;
+        console.log("Updating Redux store with user:", user);
         if (user) {
           dispatch(
             setUser({
@@ -62,7 +63,7 @@ function Login() {
                 user.last_name ||
                 user.full_name?.split(" ").slice(1).join(" ") ||
                 "",
-              role: getAmsRole() || "operator",
+              role: user.roles?.[0]?.role?.toLowerCase() ?? "",
               loggedIn: true,
             })
           );

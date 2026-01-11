@@ -14,9 +14,7 @@ export const hasAccessToken = () => {
   }
 
   // Fall back to checking cookies
-  return document.cookie
-    .split("; ")
-    .some((row) => row.startsWith("access_token="));
+  return !!(getCookie("access_token") || getCookie("accessToken"));
 };
 
 /**
@@ -31,11 +29,29 @@ export const getAccessToken = () => {
   }
 
   // Fall back to cookies if not in localStorage
-  const tokenCookie = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith("access_token="));
+  return getAccessTokenFromCookie();
+};
 
-  return tokenCookie ? tokenCookie.split("=")[1] : null;
+/**
+ * Get a cookie value by name (safe regex, decoded)
+ * @param {string} name
+ * @returns {string|null}
+ */
+export const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+  const escapedName = name.replace(/([.*+?^${}()|[\]\\])/g, "\\$1");
+  const regex = new RegExp("(?:^|; )" + escapedName + "=([^;]*)");
+  const match = document.cookie.match(regex);
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
+/**
+ * Convenience accessor specifically for the `access_token` cookie
+ * Tries both `access_token` and legacy `accessToken` cookie names
+ * @returns {string|null}
+ */
+export const getAccessTokenFromCookie = () => {
+  return getCookie("access_token") || getCookie("accessToken") || null;
 };
 
 /**
@@ -136,12 +152,24 @@ export const getUserFromToken = () => {
 };
 
 /**
+ * Get user role from the JWT token
+ * @returns {object|null} User role or null if no valid token
+ */
+export const getUserRoleFromToken = () => {
+  const userRole = getAccessToken();
+  if (!userRole) return null;
+
+  return userRole.roles?.[0]?.role?.toLowerCase() ?? "";
+};
+
+/**
  * Get the user's role for a specific system
  * @param {object} user - User object with roles array
  * @param {string} system - System name to check
  * @returns {string|null} The role name or null if no role found
  */
 export const getSystemRole = (user, system) => {
+  console.log("Token Utils User:", user);
   if (!user || !user.roles || !Array.isArray(user.roles)) {
     return null;
   }
@@ -149,7 +177,8 @@ export const getSystemRole = (user, system) => {
   const roleEntry = user.roles.find(
     (role) => role.system?.toLowerCase() === system?.toLowerCase()
   );
-
+  console.log("Role entry:", roleEntry);
+  console.log("return role entry:", roleEntry ? roleEntry.role : null);
   return roleEntry ? roleEntry.role : null;
 };
 

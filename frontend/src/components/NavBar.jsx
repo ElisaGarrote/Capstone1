@@ -8,8 +8,9 @@ import { IoIosArrowDown } from "react-icons/io";
 import { FaBars, FaChevronLeft } from "react-icons/fa";
 import NotificationOverlay from "./NotificationOverlay";
 import SystemLogo from "../assets/icons/Map-LogoNew.svg";
-import authService from "../services/auth-service";
 import DefaultProfile from "../assets/img/default-profile.svg";
+import { getUserFromToken } from "../api/TokenUtils";
+import { useAuth } from "../Context";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ export default function NavBar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(4);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const user = getUserFromToken();
+  const { logout } = useAuth();
 
   // State for selected items in each dropdown
   const [selectedAsset, setSelectedAsset] = useState("Assets");
@@ -173,10 +176,14 @@ export default function NavBar() {
     }
   }, [location.pathname]);
 
-  const logout = () => {
-    authService.logout();
-    navigate("/login");
+  const logoutAccount = () => {
+    setShowProfileMenu(false);
+    setShowNotifications(false);
+    setMobileOpen(false);
+    logout();
   };
+
+  console.log("user:", user);
 
   return (
     <nav className="main-nav-bar">
@@ -353,7 +360,7 @@ export default function NavBar() {
             </a>
           </li>
 
-          {authService.getUserInfo().role === "Admin" && (
+          {user.roles?.[0].role === "Admin" && (
             <>
               <li
                 className={`dropdown-container reports-dropdown-container ${
@@ -546,7 +553,7 @@ export default function NavBar() {
         </div>
         <div className="profile-container">
           <img
-            src={authService.getUserInfo().image || DefaultProfile}
+            src={DefaultProfile}
             alt="sample-profile"
             className="sample-profile"
             onClick={() => {
@@ -557,30 +564,22 @@ export default function NavBar() {
           {showProfileMenu && (
             <div className="profile-dropdown">
               <div className="profile-header">
-                <img
-                  src={authService.getUserInfo().image || DefaultProfile}
-                  alt="profile"
-                />
+                <img src={DefaultProfile} alt="profile" />
                 <div className="profile-info">
-                  <h3>
-                    {authService.getUserInfo().first_name}{" "}
-                    {authService.getUserInfo().last_name}
-                  </h3>
-                  <span className="admin-badge">
-                    {authService.getUserInfo().role}
-                  </span>
+                  <h3>{user.full_name}</h3>
+                  <span className="admin-badge">{user.roles?.[0].role}</span>
                 </div>
               </div>
               <div className="profile-menu">
                 <button onClick={() => navigate("/manage-profile")}>
                   Manage Profile
                 </button>
-                {authService.getUserInfo().role === "Admin" && (
+                {user.roles?.[0].role === "Admin" && (
                   <button onClick={() => navigate("/user-management")}>
                     User Management
                   </button>
                 )}
-                <button onClick={logout} className="logout-btn">
+                <button onClick={logoutAccount} className="logout-btn">
                   Log Out
                 </button>
               </div>

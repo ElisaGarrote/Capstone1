@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
 import { useNavigate } from "react-router-dom";
 import "../../styles/dashboard/AssetMetrics.css";
 import authService from "../../services/auth-service";
+import { getUserFromToken } from "../../api/TokenUtils";
 
 const AssetMetrics = ({ stats }) => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const AssetMetrics = ({ stats }) => {
 
   const assetCost = `₱${stats?.total_asset_costs || "0.00"}`;
   const assetUtilization = `${stats?.asset_utilization || 0}%`;
+  const user = getUserFromToken();
 
   // Sample data for when API is not available
   const sampleCategoriesData = [
@@ -169,7 +171,7 @@ const AssetMetrics = ({ stats }) => {
               <p>No category data available</p>
             </div>
           )}
-          {authService.getUserInfo().role === "Admin" && (
+          {user.roles?.[0].role === "Admin" && (
             <button className="browse-all" onClick={() => navigate("/assets")}>
               Browse All
             </button>
@@ -211,7 +213,7 @@ const AssetMetrics = ({ stats }) => {
               <p>No status data available</p>
             </div>
           )}
-          {authService.getUserInfo().role === "Admin" && (
+          {user.roles?.[0].role === "Admin" && (
             <button
               className="browse-all"
               onClick={() => navigate("/reports/activity")}

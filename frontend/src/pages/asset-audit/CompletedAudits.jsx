@@ -12,6 +12,7 @@ import CompletedAuditFilterModal from "../../components/Modals/CompletedAuditFil
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import { fetchAllAudits } from "../../services/assets-service";
+import { getUserFromToken } from "../../api/TokenUtils";
 
 // TableHeader
 function TableHeader() {
@@ -36,10 +37,15 @@ function TableItem({ item, onViewClick }) {
     <tr>
       <td>{item.audit_date}</td>
       <td>
-        {assetDetails.asset_id || "N/A"} - {assetDetails.name || "Unknown Asset"}
+        {assetDetails.asset_id || "N/A"} -{" "}
+        {assetDetails.name || "Unknown Asset"}
       </td>
       <td>{locationDetails.name || "N/A"}</td>
-      <td>{userDetails.first_name ? `${userDetails.first_name} ${userDetails.last_name || ""}` : "N/A"}</td>
+      <td>
+        {userDetails.first_name
+          ? `${userDetails.first_name} ${userDetails.last_name || ""}`
+          : "N/A"}
+      </td>
       <td>
         <ActionButtons showView onViewClick={() => onViewClick(item)} />
       </td>
@@ -51,6 +57,7 @@ export default function CompletedAudits() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const user = getUserFromToken();
 
   // Fetch completed audits on mount
   useEffect(() => {
@@ -124,7 +131,9 @@ export default function CompletedAudits() {
     // Filter by Location
     if (filters.location && filters.location.trim() !== "") {
       filtered = filtered.filter((audit) =>
-        audit.location_details?.name?.toLowerCase().includes(filters.location.toLowerCase())
+        audit.location_details?.name
+          ?.toLowerCase()
+          .includes(filters.location.toLowerCase())
       );
     }
 
@@ -132,7 +141,9 @@ export default function CompletedAudits() {
     if (filters.performedBy && filters.performedBy.trim() !== "") {
       const searchTerm = filters.performedBy.toLowerCase();
       filtered = filtered.filter((audit) => {
-        const fullName = `${audit.user_details?.first_name || ""} ${audit.user_details?.last_name || ""}`.toLowerCase();
+        const fullName = `${audit.user_details?.first_name || ""} ${
+          audit.user_details?.last_name || ""
+        }`.toLowerCase();
         return fullName.includes(searchTerm);
       });
     }
@@ -158,21 +169,44 @@ export default function CompletedAudits() {
     <>
       {isViewModalOpen && selectedItem && (
         <View
-          title={`${selectedItem.asset_details?.name || "Unknown"} : ${selectedItem.audit_date}`}
+          title={`${selectedItem.asset_details?.name || "Unknown"} : ${
+            selectedItem.audit_date
+          }`}
           data={[
             {
               label: "Asset",
-              value: `${selectedItem.asset_details?.asset_id || "N/A"} - ${selectedItem.asset_details?.name || "Unknown"}`,
+              value: `${selectedItem.asset_details?.asset_id || "N/A"} - ${
+                selectedItem.asset_details?.name || "Unknown"
+              }`,
             },
-            { label: "Location", value: selectedItem.location_details?.name || "N/A" },
-            { label: "Performed By", value: selectedItem.user_details?.first_name ? `${selectedItem.user_details.first_name} ${selectedItem.user_details.last_name || ""}` : "N/A" },
+            {
+              label: "Location",
+              value: selectedItem.location_details?.name || "N/A",
+            },
+            {
+              label: "Performed By",
+              value: selectedItem.user_details?.first_name
+                ? `${selectedItem.user_details.first_name} ${
+                    selectedItem.user_details.last_name || ""
+                  }`
+                : "N/A",
+            },
             { label: "Audit Date", value: selectedItem.audit_date },
-            { label: "Scheduled Date", value: selectedItem.schedule_date || "N/A" },
-            { label: "Created At", value: new Date(selectedItem.created_at).toLocaleDateString() },
+            {
+              label: "Scheduled Date",
+              value: selectedItem.schedule_date || "N/A",
+            },
+            {
+              label: "Created At",
+              value: new Date(selectedItem.created_at).toLocaleDateString(),
+            },
             { label: "Notes", value: selectedItem.notes || "N/A" },
             {
               label: "Files",
-              value: selectedItem.files?.length > 0 ? selectedItem.files.map((f) => f.file).join(", ") : "No files",
+              value:
+                selectedItem.files?.length > 0
+                  ? selectedItem.files.map((f) => f.file).join(", ")
+                  : "No files",
             },
           ]}
           closeModal={closeViewModal}
@@ -231,7 +265,7 @@ export default function CompletedAudits() {
                 >
                   Filter
                 </button>
-                {authService.getUserInfo().role === "Admin" && (
+                {user.roles?.[0].role === "Admin" && (
                   <MediumButtons type="export" onClick={handleExport} />
                 )}
               </section>

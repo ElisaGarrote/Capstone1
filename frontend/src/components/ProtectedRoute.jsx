@@ -7,14 +7,19 @@ import SystemLoading from "./Loading/SystemLoading";
 import { selectUser } from "../features/counter/userSlice";
 import { useSelector } from "react-redux";
 import authService from "../services/auth-service";
+import { getUserRoleFromToken, getUserFromToken } from "../api/TokenUtils";
+import { getAccessTokenFromCookie } from "../api/TokenUtils";
 
 function ProtectedRoute({ roles }) {
   const user = useSelector(selectUser);
   const navigate = useNavigate();
-  const token = sessionStorage.getItem(ACCESS_TOKEN);
+  const userRole = getUserRoleFromToken();
+  const currentUser = getUserFromToken();
+  const token = getAccessTokenFromCookie();
+  // console.log("current user:", currentUser);
 
   // const role = currentUser?.role?.toLowerCase() || "";
-  const role = user?.role?.toLowerCase() || "";
+  const role = currentUser?.roles?.[0]?.role?.toLowerCase() ?? "";
   const isAuthenticated = token ? true : false;
 
   // Redirect the user back to the previous page.
