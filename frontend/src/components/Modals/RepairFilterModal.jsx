@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/Modal.css";
 import "../../styles/AssetFilterModal.css";
-import { fetchAllDropdowns } from "../../services/contexts-service";
-
 
 export default function RepairFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
 
@@ -27,29 +25,13 @@ export default function RepairFilterModal({ isOpen, onClose, onApplyFilter, init
   ];
 
   // Status options
-  const [statusOptions, setStatusOptions] = useState([]);
-  const [loadingStatus, setLoadingStatus] = useState(false);
-
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const fetchStatuses = async () => {
-      try {
-        setLoadingStatus(true);
-
-        const response = await fetchAllDropdowns("status", { category: "repair" });
-        setStatusOptions(response.statuses || []);
-      } catch (error) {
-        console.error("Failed to fetch repair statuses", error);
-      } finally {
-        setLoadingStatus(false);
-      }
-    };
-
-    fetchStatuses();
-  }, [isOpen]);
-
+  const statusOptions = [
+    { value: "deployed", label: "Deployed" },
+    { value: "pending", label: "Pending Approval" },
+    { value: "undeployable", label: "In Progress" },
+    { value: "archived", label: "Archived" },
+    { value: "completed", label: "Completed" },
+  ];
 
   // Initialize filters from props
   useEffect(() => {
@@ -207,24 +189,15 @@ export default function RepairFilterModal({ isOpen, onClose, onApplyFilter, init
               <select
                 id="status"
                 value={filters.status?.value || ""}
-                disabled={loadingStatus}
                 onChange={(e) => {
-                  const selectedOption = statusOptions.find(opt => String(opt.id) === e.target.value);
-                  handleSelectChange(
-                    "status",
-                    selectedOption
-                      ? { value: selectedOption.id, label: selectedOption.name }
-                      : null
-                  );
+                  const selectedOption = statusOptions.find(opt => opt.value === e.target.value);
+                  handleSelectChange("status", selectedOption || null);
                 }}
               >
-                <option value="">
-                  {loadingStatus ? "Loading statuses..." : "Select Status"}
-                </option>
-
+                <option value="">Select Status</option>
                 {statusOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.name}
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>

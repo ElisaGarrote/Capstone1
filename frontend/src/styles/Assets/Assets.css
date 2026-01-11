@@ -5,9 +5,8 @@
   overscroll-behavior: contain;
 
   table {
-    width: auto;
+    width: 100%;
     border-collapse: collapse;
-    white-space: nowrap;
 
     th {
       padding: 0.75rem !important;
@@ -22,55 +21,17 @@
       position: sticky;
       top: 0;
       z-index: 1;
-      white-space: nowrap;
     }
 
     /* table header for 'Checkbox' */
     th:first-child {
       width: 50px;
-      min-width: 50px;
     }
 
     /* table header for 'Image' */
     th:nth-child(2) {
-      width: 60px;
       min-width: 60px;
-    }
-
-    /* table header for 'ID' */
-    th:nth-child(3) {
-      width: 100px;
-      min-width: 100px;
-    }
-
-    /* table header for 'Name' */
-    th:nth-child(4) {
-      width: 150px;
-      min-width: 150px;
-    }
-
-    /* table header for 'Category' */
-    th:nth-child(5) {
-      width: 120px;
-      min-width: 120px;
-    }
-
-    /* table header for 'Status' */
-    th:nth-child(6) {
-      width: 120px;
-      min-width: 120px;
-    }
-
-    /* table header for 'Check-in/Check-out' */
-    th:nth-child(7) {
-      width: 140px;
-      min-width: 140px;
-    }
-
-    /* table header for 'Action' */
-    th:nth-child(8) {
-      width: 100px;
-      min-width: 100px;
+      max-width: fit-content;
     }
 
     td {
@@ -80,9 +41,6 @@
       color: var(--text-color);
       border-bottom: 1px solid #cccccc;
       height: 50px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     td.no-data-message {
@@ -118,4 +76,34 @@
   height: 40px !important;
   object-fit: cover !important;
   border-radius: 4px !important;
+}
+
+.assets-table-section th .category-link {
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.75rem;
+  display: inline-block;
+}
+.assets-table-section th .category-link:hover {
+  text-decoration: underline;
+  color: var(--primary-color);
+}
+.assets-table-section th .category-link:active,
+.assets-table-section th .category-link:focus {
+  color: var(--primary-color);
+  outline: none;
+}
+.assets-table-section th .category-link {
+  transition: color 120ms ease-in-out, text-decoration 120ms ease-in-out;
+}
+
+.assets-table-section td:nth-child(5) .category-link {
+  color: var(--primary-color, #0d6efd);
+  font-weight: 500;
+}
+.assets-table-section td:nth-child(5) .category-link:hover {
+  color: var(--primary-color-hover, #0b5ed7);
+  text-decoration: underline;
 }
