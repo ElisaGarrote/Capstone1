@@ -1,7 +1,7 @@
 .kpi-summary-section {
   margin-bottom: 3rem;
   overflow: visible;
-  padding-top: 4rem; /* Space for tooltip above cards */
+  padding-top: 1rem;
 }
 
 .kpi-section-title {

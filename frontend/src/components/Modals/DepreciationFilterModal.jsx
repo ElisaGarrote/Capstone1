@@ -106,40 +106,4 @@ export default function DepreciationFilterModal({
     </div>
   );
 }
-                value={filters.durationMonths}
-                onChange={(e) =>
-                  handleInputChange("durationMonths", e.target.value)
-                }
-                min="0"
-                step="1"
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="monthsLeft">Months Left</label>
-              <input
-                type="number"
-                id="monthsLeft"
-                placeholder="Enter months left"
-                value={filters.monthsLeft}
-                onChange={(e) => handleInputChange("monthsLeft", e.target.value)}
-                min="0"
-                step="1"
-              />
-            </fieldset>
-          </div>
-        </div>
-
-        <div className="modal-footer">
-          <button className="modal-cancel-btn" onClick={handleReset}>
-            Reset Filter
-          </button>
-          <button className="modal-save-btn" onClick={handleApply}>
-            Apply Filter
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 

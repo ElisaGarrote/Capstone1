@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
 import TabNavBar from "../../components/TabNavBar";
-import "../../styles/AuditsCompleted.css";
+import "../../styles/AssetAudits/AuditsCompleted.css";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import CompletedAuditFilterModal from "../../components/Modals/CompletedAuditFilterModal";
@@ -48,6 +49,7 @@ function TableItem({ item, onViewClick }) {
 }
 
 export default function CompletedAudits() {
+  const location = useLocation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

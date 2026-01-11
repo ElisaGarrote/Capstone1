@@ -311,9 +311,9 @@ export default function RecycleBin() {
         activeTab={activeTab}
       />
 
-      <section className="page-layout-with-table">
-        <NavBar />
+      <NavBar />
 
+      <section className="page-layout-with-table">
         <main className="main-with-table">
           <section className="page-header">
             <h1 className="page-title">Recycle Bin</h1>

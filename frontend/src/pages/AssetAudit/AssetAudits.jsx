@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Pagination from "../../components/Pagination";
@@ -7,7 +8,7 @@ import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
-import "../../styles/Audits.css";
+import "../../styles/AssetAudits/Audits.css";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import DueAuditFilterModal from "../../components/Modals/DueAuditFilterModal";
@@ -62,6 +63,7 @@ function TableItem({ item, onDeleteClick, onViewClick }) {
 }
 
 export default function AssetAudits() {
+  const location = useLocation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

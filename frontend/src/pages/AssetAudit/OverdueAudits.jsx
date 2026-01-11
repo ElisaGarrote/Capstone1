@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Pagination from "../../components/Pagination";
@@ -8,7 +8,7 @@ import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TableBtn from "../../components/buttons/TableButtons";
 import TabNavBar from "../../components/TabNavBar";
-import "../../styles/AuditsOverdue.css";
+import "../../styles/AssetAudits/AuditsOverdue.css";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import OverdueAuditFilterModal from "../../components/Modals/OverdueAuditFilterModal";
@@ -77,6 +77,7 @@ function TableItem({ item, onDeleteClick, onViewClick }) {
 
 export default function OverdueAudits() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
