@@ -146,7 +146,6 @@ export default function DepreciationReport() {
         filtered = filtered.filter((row) => row.monthsLeft === monthsLeft);
       }
     }
-
     return filtered;
   };
 
