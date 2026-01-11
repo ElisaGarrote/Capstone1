@@ -9,10 +9,6 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import "../../styles/dashboard/AssetMetrics.css";
-import React, { useState } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
-import { useNavigate } from "react-router-dom";
-import "../../styles/dashboard/AssetMetrics.css";
 import authService from "../../services/auth-service";
 import { getUserFromToken } from "../../api/TokenUtils";
 
