@@ -465,12 +465,13 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"ticket_id": "Ticket is already resolved."})
 
         # --- Asset Validations (from ticket) ---
-        asset_id = ticket.get('asset')
-        if not asset_id:
+        # ticket['asset'] contains the display asset_id (e.g., "AST-20260110-00030-43A7")
+        ticket_asset_id = ticket.get('asset')
+        if not ticket_asset_id:
             raise serializers.ValidationError({"asset": "Ticket has no asset assigned."})
 
         try:
-            asset = Asset.objects.get(id=asset_id)
+            asset = Asset.objects.get(asset_id=ticket_asset_id)
         except Asset.DoesNotExist:
             raise serializers.ValidationError({"asset": "Asset not found."})
 
@@ -513,19 +514,21 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
                     "return_date": "Return date cannot be before checkout date."
                 })
 
-        # Store ticket data for create method
+        # Store ticket data and asset for create method
         data['_ticket'] = ticket
+        data['_asset'] = asset
 
         return data
 
     def create(self, validated_data):
         # Pop internal data
         ticket = validated_data.pop('_ticket')
+        asset = validated_data.pop('_asset')
         files_data = validated_data.pop('files', [])
 
         # Enforce values from ticket (backend sets these, not form)
         validated_data['ticket_id'] = ticket.get('id')
-        validated_data['asset_id'] = ticket.get('asset')
+        validated_data['asset'] = asset  # Use Asset object, not display asset_id string
         validated_data['checkout_to'] = ticket.get('employee')
         validated_data['location'] = ticket.get('location')
         validated_data['checkout_date'] = ticket.get('checkout_date')
@@ -587,7 +590,9 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
             if not ticket or ticket.get("warning"):
                 raise serializers.ValidationError({"ticket_id": "Ticket not found."})
 
-            if ticket.get("asset") != checkout.asset_id:
+            # ticket["asset"] is display asset_id (e.g., "AST-20260110-00030-43A7")
+            # checkout.asset.asset_id is the display asset_id on the Asset model
+            if ticket.get("asset") != checkout.asset.asset_id:
                 raise serializers.ValidationError({
                     "ticket_id": "Ticket does not match this asset."
                 })

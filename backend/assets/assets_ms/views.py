@@ -1077,9 +1077,10 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
 
     def _resolve_overlapping_tickets(self, checkout, current_ticket_id):
         """Resolve other unresolved tickets that overlap with this checkout period."""
-        asset_id = checkout.asset.id
+        # Use display asset_id for tickets API (e.g., "AST-20260110-00030-43A7")
+        display_asset_id = checkout.asset.asset_id
         unresolved_tickets = fetch_resource_list(
-            f"tickets/by-asset/{asset_id}",
+            f"tickets/by-asset/{display_asset_id}",
             params={"is_resolved": False}
         )
 
