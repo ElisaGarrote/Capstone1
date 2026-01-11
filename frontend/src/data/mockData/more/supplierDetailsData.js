@@ -24,20 +24,20 @@ export const getSupplierDetails = (supplier) => {
     supplierName: supplier.name || "N/A",
     address: supplier.address || "N/A",
     city: supplier.city || "N/A",
-    state: supplier.state || "N/A",
+    state: supplier.state_province || supplier.state || "N/A",
     zip: supplier.zip || "N/A",
     country: supplier.country || "N/A",
     
     // Contact Information
-    contactName: supplier.contactName || "N/A",
-    phoneNumber: supplier.phoneNumber || "N/A",
+    contactName: supplier.contact_name || supplier.contactName || "N/A",
+    phoneNumber: supplier.phone_number || supplier.phoneNumber || "N/A",
     email: supplier.email || "N/A",
     url: supplier.url || "N/A",
     
     // Additional Information
-    notes: supplier.notes || "N/A",
-    createdAt: supplier.createdAt || "N/A",
-    updatedAt: supplier.updatedAt || "N/A",
+    notes: supplier.notes || supplier.note || "N/A",
+    createdAt: supplier.created_at || supplier.createdAt || "N/A",
+    updatedAt: supplier.updated_at || supplier.updatedAt || "N/A",
   };
 };
 

@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from .utils import normalize_name_smart
 
 # Create your models here.
@@ -48,6 +49,8 @@ class Supplier(models.Model):
     logo = models.ImageField(upload_to='supplier_logos/', blank=True, null=True)
 
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -64,6 +67,8 @@ class Manufacturer(models.Model):
     logo = models.ImageField(upload_to='manufacturer_logos/', blank=True, null=True)
     
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name

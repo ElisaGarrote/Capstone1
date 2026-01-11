@@ -60,17 +60,21 @@ function Dashboard() {
     }
 
     // Load forecast data
-    function loadForecastData() {
+    async function loadForecastData() {
       try {
-        const kpi = forecastService.getKPISummary();
-        const assetData = forecastService.getAssetStatusForecast();
-        const productData = forecastService.getProductDemandForecast();
+        const kpi = await forecastService.getKPISummary();
+        const assetData = await forecastService.getAssetStatusForecast();
+        const productData = await forecastService.getProductDemandForecast();
 
         setKpiData(kpi);
         setAssetForecast(assetData);
         setProductForecast(productData);
       } catch (error) {
         console.error("Failed to load forecast data:", error);
+        // Set default values on error
+        setKpiData([]);
+        setAssetForecast(null);
+        setProductForecast(null);
       }
     }
 

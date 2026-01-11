@@ -15,6 +15,11 @@ function KPISummaryCards({ kpiData }) {
     };
   };
 
+  // Safety check: ensure kpiData is an array
+  if (!Array.isArray(kpiData) || kpiData.length === 0) {
+    return null;
+  }
+
   return (
     <div className="kpi-summary-section">
       <h2 className="kpi-section-title">Forecast Insights</h2>
@@ -54,7 +59,11 @@ KPISummaryCards.propTypes = {
       unit: PropTypes.string.isRequired,
       change: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     })
-  ).isRequired,
+  ),
+};
+
+KPISummaryCards.defaultProps = {
+  kpiData: [],
 };
 
 export default KPISummaryCards;
