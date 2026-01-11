@@ -382,7 +382,7 @@ class AssetNameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Asset
-        fields = ['id', 'asset_id', 'name', 'image', 'status_details']
+        fields = ['id', 'asset_id', 'name', 'image', 'status_details', 'serial_number']
 
     def get_status_details(self, obj):
         """Return status details (id, name, type) from contexts service."""
