@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .api.supplier import SupplierDetailProxy, SupplierListProxy
 from .api.contexts import *
 from .views import *
-from .api.reports import DepreciationReportAPIView, AssetReportAPIView, ActivityReportAPIView, ActivityReportSummaryAPIView, EoLWarrantyReportAPIView
+from .api.reports import DepreciationReportAPIView, AssetReportAPIView, ActivityReportAPIView, ActivityReportSummaryAPIView, EoLWarrantyReportAPIView, UpcomingEoLReportAPIView
 
 router = DefaultRouter()
 router.register('products', ProductViewSet, basename='categories')
@@ -45,6 +45,7 @@ urlpatterns = [
     path("reports/activity/", ActivityReportAPIView.as_view(), name="activity-report"),
     path("reports/activity/summary/", ActivityReportSummaryAPIView.as_view(), name="activity-report-summary"),
     path("reports/eol-warranty/", EoLWarrantyReportAPIView.as_view(), name="eol-warranty-report"),
+    path("reports/upcoming-eol/", UpcomingEoLReportAPIView.as_view(), name="upcoming-eol-report"),
 
     path("", include(router.urls)),
 ]

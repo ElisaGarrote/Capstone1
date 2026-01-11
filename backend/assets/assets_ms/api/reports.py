@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from ..services.depreciation_report import generate_depreciation_report
 from ..services.eol_warranty_report import generate_eol_warranty_report
+from ..services.upcoming_eol_report import generate_upcoming_eol_report
 from ..services.asset_report import generate_asset_report
 from ..services.activity_report import generate_activity_report, get_activity_summary
 
@@ -465,3 +466,17 @@ class ActivityReportSummaryAPIView(APIView):
 
         summary = get_activity_summary(start_date=start_date, end_date=end_date)
         return Response(summary)
+
+
+class UpcomingEoLReportAPIView(APIView):
+        """Return compact Upcoming End-of-Life asset list as JSON.
+
+        Query params:
+            - format=json to return JSON results (default)
+        """
+
+        def get(self, request):
+                fmt = request.query_params.get('format', '').lower()
+                rows = generate_upcoming_eol_report()
+                # Currently only JSON supported
+                return Response({'results': rows})
