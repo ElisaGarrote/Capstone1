@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const baseURL = import.meta.env.VITE_INTEGRATION_TICKET_TRACKING_API_URL || "http://165.22.247.50:1001/";
+
+console.log("[Ticket Tracking] Base URL:", baseURL);
+
 const ticketTrackingAxios = axios.create({
-  baseURL: import.meta.env.VITE_INTEGRATION_TICKET_TRACKING_API_URL,
+  baseURL: baseURL,
   timeout: 10000,
 });
 
