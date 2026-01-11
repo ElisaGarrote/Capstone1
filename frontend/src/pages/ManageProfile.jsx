@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import Alert from "../components/Alert";
 import NavBar from "../components/NavBar";
 import DefaultProfile from "../assets/img/default-profile.svg";
 import "../styles/ManageProfile.css";
@@ -15,9 +16,13 @@ export default function ManageProfile() {
     email: "",
     password: "",
     image: null,
+    imageFile: null,
   });
   const { user, fetchUserProfile, updateUserProfile, updateUserContext } =
     useAuth();
+
+  const [statusAlert, setStatusAlert] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -65,14 +70,16 @@ export default function ManageProfile() {
         setUserInfo((prev) => ({
           ...prev,
           image: e.target.result,
+          imageFile: file,
         }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveChanges = (e) => {
+  const handleSaveChanges = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
     const payload = {
       first_name: userInfo.first_name,
       middle_name: userInfo.middle_name,
@@ -81,19 +88,27 @@ export default function ManageProfile() {
       company_id: userInfo.company_id,
       department: userInfo.department,
       email: userInfo.email,
-      // profile_picture: userInfo.image (backend may expect multipart; include only if appropriate)
+      // include file when present so backend can accept multipart uploads
+      profile_picture: userInfo.imageFile || undefined,
     };
 
-    updateUserProfile(payload).then((res) => {
+    try {
+      const res = await updateUserProfile(payload);
       if (res?.success) {
-        // update context and UI
         updateUserContext(res.data);
-        alert("Profile updated successfully!");
+        setStatusAlert({
+          type: "success",
+          message: "Profile updated successfully",
+        });
+        setTimeout(() => setStatusAlert(null), 4000);
       } else {
         console.error("Profile update failed:", res?.error);
-        alert("Failed to update profile. See console for details.");
+        setStatusAlert({ type: "danger", message: "Failed to update profile" });
+        setTimeout(() => setStatusAlert(null), 4000);
       }
-    });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -102,6 +117,12 @@ export default function ManageProfile() {
       <main className="manage-profile-page">
         <div className="manage-profile-container">
           <h1>Manage Profile</h1>
+
+          {statusAlert && (
+            <div style={{ marginTop: 8 }}>
+              <Alert message={statusAlert.message} type={statusAlert.type} />
+            </div>
+          )}
 
           <div className="profile-content">
             <div className="profile-left">
@@ -220,8 +241,12 @@ export default function ManageProfile() {
                     </div>
                   </div>
 
-                  <button type="submit" className="save-changes-btn">
-                    SAVE CHANGES
+                  <button
+                    type="submit"
+                    className="save-changes-btn"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "SAVING..." : "SAVE CHANGES"}
                   </button>
                 </div>
 
