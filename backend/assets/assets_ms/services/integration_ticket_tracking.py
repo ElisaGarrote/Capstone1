@@ -191,14 +191,20 @@ def get_tickets_list(ticket_type='unresolved', q=None, limit=50):
     if cached is not None:
         return cached
 
-    endpoint = f"tickets/asset/{ticket_type}/"
+    # The external API uses /tickets/asset/checkout/ with ?status= parameter
+    # status=Open for unresolved, status=Resolved for resolved
+    endpoint = "tickets/asset/checkout"
     params = {}
+    if ticket_type == 'unresolved':
+        params['status'] = 'Open'
+    else:
+        params['status'] = 'Resolved'
     if q:
         params['q'] = q
     if limit:
         params['limit'] = limit
 
-    result = fetch_resource_list(endpoint.rstrip('/'), params=params)
+    result = fetch_resource_list(endpoint, params=params)
     if isinstance(result, dict) and result.get('warning'):
         cache.set(key, result, LIST_WARNING_TTL)
     else:
