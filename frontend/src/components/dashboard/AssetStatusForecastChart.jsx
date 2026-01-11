@@ -40,16 +40,9 @@ function AssetStatusForecastChart({ chartData, tableData }) {
           <LineChart data={chartData} className="forecast-line-chart">
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
-            <YAxis />
-<<<<<<< HEAD
             <Tooltip content={<CustomTooltip />} />
             <Legend className="forecast-legend" />
             {/* Historical data - solid lines */}
-=======
-            <Tooltip content={<CustomTooltip />} />
-            <Legend className="forecast-legend" />
-            {/* Historical data - solid lines */}
->>>>>>> Mergee2
             <Line
               type="monotone"
               dataKey="available"
