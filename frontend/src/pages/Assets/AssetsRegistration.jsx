@@ -3,7 +3,8 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import "../../styles/Registration.css";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
@@ -39,7 +40,38 @@ export default function AssetsRegistration() {
     { id: 7, name: "Stolen" }
   ]);
 
-
+  // Custom styles for react-select to match Registration inputs
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      width: '100%',
+      minHeight: '48px',
+      height: '48px',
+      borderRadius: '25px',
+      fontSize: '0.875rem',
+      padding: '0 8px',
+      border: state.isFocused ? '1px solid #007bff' : '1px solid #ccc',
+      boxShadow: state.isFocused ? '0 0 0 1px #007bff' : 'none',
+      cursor: 'pointer',
+      '&:hover': { borderColor: '#007bff' },
+    }),
+    valueContainer: (provided) => ({ ...provided, height: '46px', padding: '0 8px' }),
+    input: (provided) => ({ ...provided, margin: 0, padding: 0 }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'block', backgroundColor: '#ccc', width: '1px', marginTop: '10px', marginBottom: '10px' }),
+    indicatorsContainer: (provided) => ({ ...provided, height: '46px' }),
+    container: (provided) => ({ ...provided, width: '100%' }),
+    menu: (provided) => ({ ...provided, zIndex: 9999, position: 'absolute', width: '100%', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? 'white' : '#333',
+      fontSize: '0.875rem',
+      padding: '10px 16px',
+      backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
+      cursor: 'pointer',
+    }),
+    singleValue: (provided) => ({ ...provided, color: '#333' }),
+    placeholder: (provided) => ({ ...provided, color: '#999' }),
+  };
 
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
@@ -49,21 +81,21 @@ export default function AssetsRegistration() {
   const currentDate = new Date().toISOString().split("T")[0];
   const [generatedAssetId, setGeneratedAssetId] = useState('(Loading...)');
 
-  const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, watch, control, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       assetId: '',
-      product: '',
-      status: '',
-      supplier: '',
-      location: '',
+      product: null,
+      status: null,
+      supplier: null,
+      location: null,
       assetName: '',
       serialNumber: '',
       warrantyExpiration: '',
       orderNumber: '',
       purchaseDate: '',
       purchaseCost: '',
-      disposalStatus: '',
+      disposalStatus: null,
       scheduleAuditDate: '',
       notes: '',
     }
@@ -463,41 +495,57 @@ export default function AssetsRegistration() {
             {/* Product Dropdown */}
             <fieldset>
               <label htmlFor='product'>Product <span style={{color: 'red'}}>*</span></label>
-              <select
-                id="product"
-                {...register("product", { required: "Product is required" })}
-                onChange={handleProductChange}
-                className={errors.product ? 'input-error' : ''}
-              >
-                <option value="">Select Product</option>
-                {products.map(product => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="product"
+                control={control}
+                rules={{ required: "Product is required" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    inputId="product"
+                    options={products.map(p => ({ value: p.id, label: p.name }))}
+                    value={products.map(p => ({ value: p.id, label: p.name })).find(opt => opt.value === field.value) || null}
+                    onChange={(selected) => {
+                      field.onChange(selected?.value ?? null);
+                      handleProductChange({ target: { value: selected?.value ?? '' } });
+                    }}
+                    placeholder="Select Product"
+                    isSearchable={true}
+                    isClearable={true}
+                    styles={customSelectStyles}
+                    className={errors.product ? 'react-select-error' : ''}
+                  />
+                )}
+              />
               {errors.product && <span className='error-message'>{errors.product.message}</span>}
             </fieldset>
 
             {/* Status Dropdown with + button */}
             <fieldset>
               <label htmlFor='status'>Status <span style={{color: 'red'}}>*</span></label>
-              <div className="dropdown-with-add">
-                <select
-                  id="status"
-                  {...register("status", { required: "Status is required" })}
-                  className={errors.status ? 'input-error' : ''}
-                >
-                  <option value="">Select Status</option>
-                  {statuses.map(status => (
-                    <option key={status.id} value={status.id}>
-                      {status.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="select-with-button">
+                <Controller
+                  name="status"
+                  control={control}
+                  rules={{ required: "Status is required" }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="status"
+                      options={statuses.map(s => ({ value: s.id, label: s.name }))}
+                      value={statuses.map(s => ({ value: s.id, label: s.name })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Status"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                      className={errors.status ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
-                  className="add-btn"
+                  className="add-entry-btn"
                   onClick={() => setShowStatusModal(true)}
                   title="Add new status"
                 >
@@ -510,22 +558,28 @@ export default function AssetsRegistration() {
             {/* Supplier Dropdown with + button */}
             <fieldset>
               <label htmlFor='supplier'>Supplier</label>
-              <div className="dropdown-with-add">
-                <select
-                  id="supplier"
-                  {...register("supplier")}
-                  className={errors.supplier ? 'input-error' : ''}
-                >
-                  <option value="">Select Supplier</option>
-                  {suppliers.map(supplier => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="select-with-button">
+                <Controller
+                  name="supplier"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="supplier"
+                      options={suppliers.map(s => ({ value: s.id, label: s.name }))}
+                      value={suppliers.map(s => ({ value: s.id, label: s.name })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Supplier"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                      className={errors.supplier ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
-                  className="add-btn"
+                  className="add-entry-btn"
                   onClick={() => setShowSupplierModal(true)}
                   title="Add new supplier"
                 >
@@ -538,22 +592,28 @@ export default function AssetsRegistration() {
             {/* Location Dropdown with + button */}
             <fieldset>
               <label htmlFor='location'>Location</label>
-              <div className="dropdown-with-add">
-                <select
-                  id="location"
-                  {...register("location")}
-                  className={errors.location ? 'input-error' : ''}
-                >
-                  <option value="">Select Location</option>
-                  {locations.map(location => (
-                    <option key={location.id} value={location.name}>
-                      {location.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="select-with-button">
+                <Controller
+                  name="location"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="location"
+                      options={locations.map(l => ({ value: l.name, label: l.name }))}
+                      value={locations.map(l => ({ value: l.name, label: l.name })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Location"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                      className={errors.location ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
-                  className="add-btn"
+                  className="add-entry-btn"
                   onClick={() => setShowLocationModal(true)}
                   title="Add new location"
                 >
@@ -638,18 +698,24 @@ export default function AssetsRegistration() {
             {/* Disposal Status */}
             <fieldset>
               <label htmlFor='disposal-status'>Disposal Status</label>
-              <select
-                id="disposal-status"
-                {...register("disposalStatus")}
-                className={errors.disposalStatus ? 'input-error' : ''}
-              >
-                <option value="">Select Disposal Status</option>
-                {disposalStatuses.map(status => (
-                  <option key={status.id} value={status.name}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="disposalStatus"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    inputId="disposal-status"
+                    options={disposalStatuses.map(d => ({ value: d.name, label: d.name }))}
+                    value={disposalStatuses.map(d => ({ value: d.name, label: d.name })).find(opt => opt.value === field.value) || null}
+                    onChange={(selected) => field.onChange(selected?.value ?? null)}
+                    placeholder="Select Disposal Status"
+                    isSearchable={true}
+                    isClearable={true}
+                    styles={customSelectStyles}
+                    className={errors.disposalStatus ? 'react-select-error' : ''}
+                  />
+                )}
+              />
               {errors.disposalStatus && <span className='error-message'>{errors.disposalStatus.message}</span>}
             </fieldset>
 

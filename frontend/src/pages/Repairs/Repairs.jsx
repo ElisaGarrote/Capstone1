@@ -80,6 +80,7 @@ export default function AssetRepairs() {
 
   // Filter and data state
   const [filteredData, setFilteredData] = useState(MockupData);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -191,6 +192,32 @@ export default function AssetRepairs() {
     exportToExcel(dataToExport, "Repairs_Records.xlsx");
   };
 
+  // Handle search
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+    
+    if (term.trim() === "") {
+      // If search is empty, apply filters without search
+      const filtered = applyFilters(appliedFilters);
+      setFilteredData(filtered);
+    } else {
+      // Apply filters first, then search on filtered results
+      let filtered = applyFilters(appliedFilters);
+      
+      filtered = filtered.filter((repair) => 
+        (repair.asset && repair.asset.toLowerCase().includes(term)) ||
+        (repair.type && repair.type.toLowerCase().includes(term)) ||
+        (repair.name && repair.name.toLowerCase().includes(term)) ||
+        (repair.supplier && repair.supplier.toLowerCase().includes(term)) ||
+        (repair.notes && repair.notes.toLowerCase().includes(term))
+      );
+      
+      setFilteredData(filtered);
+    }
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
   // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...MockupData];
@@ -299,7 +326,13 @@ export default function AssetRepairs() {
                     />
                   </>
                 )}
-                <input type="search" placeholder="Search..." className="search" />
+                <input 
+                  type="search" 
+                  placeholder="Search..." 
+                  className="search"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                />
                 <button
                   type="button"
                   className="medium-button-filter"

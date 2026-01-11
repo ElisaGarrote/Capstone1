@@ -67,6 +67,7 @@ export default function AssetAudits() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [filteredData, setFilteredData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -151,6 +152,31 @@ export default function AssetAudits() {
     exportToExcel(dataToExport, "Due_Audits.xlsx");
   };
 
+  // Handle search
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+    
+    if (term.trim() === "") {
+      // If search is empty, apply filters without search
+      const filtered = applyFilters(appliedFilters);
+      setFilteredData(filtered);
+    } else {
+      // Apply filters first, then search on filtered results
+      let filtered = applyFilters(appliedFilters);
+      
+      filtered = filtered.filter((audit) => 
+        (audit.asset?.name && audit.asset.name.toLowerCase().includes(term)) ||
+        (audit.asset?.displayed_id && audit.asset.displayed_id.toLowerCase().includes(term)) ||
+        (audit.notes && audit.notes.toLowerCase().includes(term)) ||
+        (audit.status && audit.status.toLowerCase().includes(term))
+      );
+      
+      setFilteredData(filtered);
+    }
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
   return (
     <>
       {isDeleteModalOpen && (
@@ -198,7 +224,13 @@ export default function AssetAudits() {
             <section className="table-header">
               <h2 className="h2">Due to be Audited ({filteredData.length > 0 ? filteredData.length : data.length})</h2>
               <section className="table-actions">
-                <input type="search" placeholder="Search..." className="search" />
+                <input 
+                  type="search" 
+                  placeholder="Search..." 
+                  className="search"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                />
                 <button
                   type="button"
                   className="medium-button-filter"

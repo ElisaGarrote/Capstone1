@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Status from "../../components/Status";
@@ -16,14 +17,48 @@ const StatusRegistration = () => {
   const [importFile, setImportFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Custom styles for react-select to match Registration inputs
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      width: '100%',
+      minHeight: '48px',
+      height: '48px',
+      borderRadius: '25px',
+      fontSize: '0.875rem',
+      padding: '0 8px',
+      border: state.isFocused ? '1px solid #007bff' : '1px solid #ccc',
+      boxShadow: state.isFocused ? '0 0 0 1px #007bff' : 'none',
+      cursor: 'pointer',
+      '&:hover': { borderColor: '#007bff' },
+    }),
+    valueContainer: (provided) => ({ ...provided, height: '46px', padding: '0 8px' }),
+    input: (provided) => ({ ...provided, margin: 0, padding: 0 }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'block', backgroundColor: '#ccc', width: '1px', marginTop: '10px', marginBottom: '10px' }),
+    indicatorsContainer: (provided) => ({ ...provided, height: '46px' }),
+    container: (provided) => ({ ...provided, width: '100%' }),
+    menu: (provided) => ({ ...provided, zIndex: 9999, position: 'absolute', width: '100%', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? 'white' : '#333',
+      fontSize: '0.875rem',
+      padding: '10px 16px',
+      backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
+      cursor: 'pointer',
+    }),
+    singleValue: (provided) => ({ ...provided, color: '#333' }),
+    placeholder: (provided) => ({ ...provided, color: '#999' }),
+  };
+
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
       statusName: "",
-      statusType: "",
+      statusType: null,
       notes: "",
       showInList: true,
       defaultStatus: false,
@@ -124,19 +159,25 @@ const StatusRegistration = () => {
                     Status Type
                     <span className="required-asterisk">*</span>
                   </label>
-                  <select
-                    className={errors.statusType ? "input-error" : ""}
-                    {...register("statusType", {
-                      required: "Status Type is required",
-                    })}
-                  >
-                    <option value="">Select Status Type</option>
-                    {statusTypes.map((type, idx) => (
-                      <option key={idx} value={type.toLowerCase()}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
+                  <Controller
+                    name="statusType"
+                    control={control}
+                    rules={{ required: "Status Type is required" }}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="statusType"
+                        options={statusTypes.map(t => ({ value: t.toLowerCase(), label: t }))}
+                        value={statusTypes.map(t => ({ value: t.toLowerCase(), label: t })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Status Type"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                        className={errors.statusType ? 'react-select-error' : ''}
+                      />
+                    )}
+                  />
                   {errors.statusType && (
                     <span className="error-message">
                       {errors.statusType.message}

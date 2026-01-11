@@ -4,7 +4,8 @@ import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import Alert from "../../components/Alert";
@@ -24,18 +25,52 @@ const RepairRegistration = () => {
   const assets = Array.from(new Set(MockupData.map((item) => item.asset)));
   const suppliers = Array.from(new Set(MockupData.map((item) => item.supplier)));
   const repairTypes = Array.from(new Set(MockupData.map((item) => item.type)));
+
+  // Custom styles for react-select to match Registration inputs
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      width: '100%',
+      minHeight: '48px',
+      height: '48px',
+      borderRadius: '25px',
+      fontSize: '0.875rem',
+      padding: '0 8px',
+      border: state.isFocused ? '1px solid #007bff' : '1px solid #ccc',
+      boxShadow: state.isFocused ? '0 0 0 1px #007bff' : 'none',
+      cursor: 'pointer',
+      '&:hover': { borderColor: '#007bff' },
+    }),
+    valueContainer: (provided) => ({ ...provided, height: '46px', padding: '0 8px' }),
+    input: (provided) => ({ ...provided, margin: 0, padding: 0 }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'block', backgroundColor: '#ccc', width: '1px', marginTop: '10px', marginBottom: '10px' }),
+    indicatorsContainer: (provided) => ({ ...provided, height: '46px' }),
+    container: (provided) => ({ ...provided, width: '100%' }),
+    menu: (provided) => ({ ...provided, zIndex: 9999, position: 'absolute', width: '100%', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? 'white' : '#333',
+      fontSize: '0.875rem',
+      padding: '10px 16px',
+      backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
+      cursor: 'pointer',
+    }),
+    singleValue: (provided) => ({ ...provided, color: '#333' }),
+    placeholder: (provided) => ({ ...provided, color: '#999' }),
+  };
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
     defaultValues: {
-      asset: editState?.asset || "",
-      supplier: editState?.supplier || "",
-      repairType: editState?.type || "",
+      asset: editState?.asset || null,
+      supplier: editState?.supplier || null,
+      repairType: editState?.type || null,
       repairName: editState?.name || "",
       startDate: editState?.start_date || "",
       endDate: editState?.end_date || "",
@@ -402,17 +437,25 @@ const RepairRegistration = () => {
               <label htmlFor="asset">
                 Asset<span className="required-asterisk">*</span>
               </label>
-              <select
-                className={errors.asset ? "input-error" : ""}
-                {...register("asset", {
-                  required: "Asset is required",
-                })}
-              >
-                <option value="">Select Asset</option>
-                {assets.map((asset) => (
-                  <option key={asset} value={asset}>{asset}</option>
-                ))}
-              </select>
+              <Controller
+                name="asset"
+                control={control}
+                rules={{ required: "Asset is required" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    inputId="asset"
+                    options={assets.map(a => ({ value: a, label: a }))}
+                    value={assets.map(a => ({ value: a, label: a })).find(opt => opt.value === field.value) || null}
+                    onChange={(selected) => field.onChange(selected?.value ?? null)}
+                    placeholder="Select Asset"
+                    isSearchable={true}
+                    isClearable={true}
+                    styles={customSelectStyles}
+                    className={errors.asset ? 'react-select-error' : ''}
+                  />
+                )}
+              />
               {errors.asset && (
                 <span className="error-message">
                   {errors.asset.message}
@@ -423,15 +466,29 @@ const RepairRegistration = () => {
             {/* Supplier */}
             <fieldset>
               <label htmlFor="supplier">Supplier</label>
-              <select
-                className={errors.supplier ? "input-error" : ""}
-                {...register("supplier")}
-              >
-                <option value="">Select Supplier</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier} value={supplier}>{supplier}</option>
-                ))}
-              </select>
+              <Controller
+                name="supplier"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    inputId="supplier"
+                    options={suppliers.map(s => ({ value: s, label: s }))}
+                    value={suppliers.map(s => ({ value: s, label: s })).find(opt => opt.value === field.value) || null}
+                    onChange={(selected) => field.onChange(selected?.value ?? null)}
+                    placeholder="Select Supplier"
+                    isSearchable={true}
+                    isClearable={true}
+                    styles={customSelectStyles}
+                    className={errors.supplier ? 'react-select-error' : ''}
+                  />
+                )}
+              />
+              {errors.supplier && (
+                <span className="error-message">
+                  {errors.supplier.message}
+                </span>
+              )}
             </fieldset>
 
             {/* Repair Type */}
@@ -439,17 +496,25 @@ const RepairRegistration = () => {
               <label htmlFor="repairType">
                 Repair Type<span className="required-asterisk">*</span>
               </label>
-              <select
-                className={errors.repairType ? "input-error" : ""}
-                {...register("repairType", {
-                  required: "Repair type is required",
-                })}
-              >
-                <option value="">Select Repair Type</option>
-                {repairTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
+              <Controller
+                name="repairType"
+                control={control}
+                rules={{ required: "Repair type is required" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    inputId="repairType"
+                    options={repairTypes.map(t => ({ value: t, label: t }))}
+                    value={repairTypes.map(t => ({ value: t, label: t })).find(opt => opt.value === field.value) || null}
+                    onChange={(selected) => field.onChange(selected?.value ?? null)}
+                    placeholder="Select Repair Type"
+                    isSearchable={true}
+                    isClearable={true}
+                    styles={customSelectStyles}
+                    className={errors.repairType ? 'react-select-error' : ''}
+                  />
+                )}
+              />
               {errors.repairType && (
                 <span className="error-message">
                   {errors.repairType.message}

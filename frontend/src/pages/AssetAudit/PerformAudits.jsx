@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import CloseIcon from "../../assets/icons/close.svg";
 import overdueAudits from "../../data/mockData/audits/overdue-audit-mockup-data.json";
 import dueAudits from "../../data/mockData/audits/due-audit-mockup-data.json";
@@ -27,6 +28,39 @@ const PerformAudits = () => {
   const locations = Array.from(new Set(completedAudits.map(item => item.location)));
   const users = Array.from(new Set(completedAudits.map(item => item.performed_by)));
 
+  // Custom styles for react-select to match Registration inputs
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      width: '100%',
+      minHeight: '48px',
+      height: '48px',
+      borderRadius: '25px',
+      fontSize: '0.875rem',
+      padding: '0 8px',
+      border: state.isFocused ? '1px solid #007bff' : '1px solid #ccc',
+      boxShadow: state.isFocused ? '0 0 0 1px #007bff' : 'none',
+      cursor: 'pointer',
+      '&:hover': { borderColor: '#007bff' },
+    }),
+    valueContainer: (provided) => ({ ...provided, height: '46px', padding: '0 8px' }),
+    input: (provided) => ({ ...provided, margin: 0, padding: 0 }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'block', backgroundColor: '#ccc', width: '1px', marginTop: '10px', marginBottom: '10px' }),
+    indicatorsContainer: (provided) => ({ ...provided, height: '46px' }),
+    container: (provided) => ({ ...provided, width: '100%' }),
+    menu: (provided) => ({ ...provided, zIndex: 9999, position: 'absolute', width: '100%', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? 'white' : '#333',
+      fontSize: '0.875rem',
+      padding: '10px 16px',
+      backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
+      cursor: 'pointer',
+    }),
+    singleValue: (provided) => ({ ...provided, color: '#333' }),
+    placeholder: (provided) => ({ ...provided, color: '#999' }),
+  };
+
   const {
     register,
     handleSubmit,
@@ -37,8 +71,8 @@ const PerformAudits = () => {
   } = useForm({
     mode: "all",
     defaultValues: {
-      asset: "",
-      location: "",
+      asset: null,
+      location: null,
       performBy: "John Doe" || "",
       auditDate: new Date().toISOString().split("T")[0],
       nextAuditDate: "",
@@ -107,17 +141,25 @@ const PerformAudits = () => {
             {/* Asset */}
             <fieldset>
               <label htmlFor="asset">Select Asset<span className="required-asterisk">*</span></label>
-              <select
-                className={errors.asset ? "input-error" : ""}
-                {...register("asset", {
-                  required: "Asset is required",
-                })}
-              >
-                <option value="">Select Asset</option>
-                {uniqueAssets.map((asset) => (
-                  <option key={asset} value={asset}>{asset}</option>
-                ))}
-              </select>
+              <Controller
+                name="asset"
+                control={control}
+                rules={{ required: "Asset is required" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    inputId="asset"
+                    options={uniqueAssets.map(a => ({ value: a, label: a }))}
+                    value={uniqueAssets.map(a => ({ value: a, label: a })).find(opt => opt.value === field.value) || null}
+                    onChange={(selected) => field.onChange(selected?.value ?? null)}
+                    placeholder="Select Asset"
+                    isSearchable={true}
+                    isClearable={true}
+                    styles={customSelectStyles}
+                    className={errors.asset ? 'react-select-error' : ''}
+                  />
+                )}
+              />
               {errors.asset && (
                 <span className="error-message">
                   {errors.asset.message}
@@ -128,17 +170,25 @@ const PerformAudits = () => {
             {/* Location */}
             <fieldset>
               <label htmlFor="location">Location<span className="required-asterisk">*</span></label>
-              <select
-                className={errors.location ? "input-error" : ""}
-                {...register("location", {
-                  required: "Location is required",
-                })}
-              >
-                <option value="">Select Location</option>
-                {locations.map((location) => (
-                  <option key={location} value={location}>{location}</option>
-                ))}
-              </select>
+              <Controller
+                name="location"
+                control={control}
+                rules={{ required: "Location is required" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    inputId="location"
+                    options={locations.map(l => ({ value: l, label: l }))}
+                    value={locations.map(l => ({ value: l, label: l })).find(opt => opt.value === field.value) || null}
+                    onChange={(selected) => field.onChange(selected?.value ?? null)}
+                    placeholder="Select Location"
+                    isSearchable={true}
+                    isClearable={true}
+                    styles={customSelectStyles}
+                    className={errors.location ? 'react-select-error' : ''}
+                  />
+                )}
+              />
               {errors.location && (
                 <span className="error-message">
                   {errors.location.message}
