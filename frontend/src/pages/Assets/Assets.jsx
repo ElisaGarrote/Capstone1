@@ -324,8 +324,6 @@ export default function Assets() {
       // remove multiple
       setSelectedIds([]); // clear selection
     }
-
-    // Auto-hide success message after 5 seconds
     setTimeout(() => setSuccessMessage(""), 5000);
     closeDeleteModal();
   };
@@ -363,8 +361,6 @@ export default function Assets() {
     const checkout = asset.checkoutRecord;
     console.log("checkout:", checkout);
     console.log("action:", action);
-
-    // Determine action: use passed parameter or asset property
     const isCheckIn = action === 'checkin' || asset.isCheckInOrOut === "Check-In";
 
     if (isCheckIn) {

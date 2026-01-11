@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import Select from "react-select";
+import { getCustomSelectStyles } from "../../utils/selectStyles";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -19,38 +20,7 @@ const CategoryRegistration = () => {
   // Import file state
   const [importFile, setImportFile] = useState(null);
 
-  // Custom styles for react-select to match Registration inputs
-  const customSelectStyles = {
-    control: (provided, state) => ({
-      ...provided,
-      width: '100%',
-      minHeight: '48px',
-      height: '48px',
-      borderRadius: '25px',
-      fontSize: '0.875rem',
-      padding: '0 8px',
-      border: state.isFocused ? '1px solid #007bff' : '1px solid #ccc',
-      boxShadow: state.isFocused ? '0 0 0 1px #007bff' : 'none',
-      cursor: 'pointer',
-      '&:hover': { borderColor: '#007bff' },
-    }),
-    valueContainer: (provided) => ({ ...provided, height: '46px', padding: '0 8px' }),
-    input: (provided) => ({ ...provided, margin: 0, padding: 0 }),
-    indicatorSeparator: (provided) => ({ ...provided, display: 'block', backgroundColor: '#ccc', width: '1px', marginTop: '10px', marginBottom: '10px' }),
-    indicatorsContainer: (provided) => ({ ...provided, height: '46px' }),
-    container: (provided) => ({ ...provided, width: '100%' }),
-    menu: (provided) => ({ ...provided, zIndex: 9999, position: 'absolute', width: '100%', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }),
-    option: (provided, state) => ({
-      ...provided,
-      color: state.isSelected ? 'white' : '#333',
-      fontSize: '0.875rem',
-      padding: '10px 16px',
-      backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
-      cursor: 'pointer',
-    }),
-    singleValue: (provided) => ({ ...provided, color: '#333' }),
-    placeholder: (provided) => ({ ...provided, color: '#999' }),
-  };
+  const customSelectStyles = getCustomSelectStyles();
 
   const {
     register,

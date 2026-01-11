@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
+import { getCustomSelectStyles } from "../../utils/selectStyles";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm, Controller } from "react-hook-form";
 import Select from "react-select";
@@ -40,38 +41,7 @@ export default function AssetsRegistration() {
     { id: 7, name: "Stolen" }
   ]);
 
-  // Custom styles for react-select to match Registration inputs
-  const customSelectStyles = {
-    control: (provided, state) => ({
-      ...provided,
-      width: '100%',
-      minHeight: '48px',
-      height: '48px',
-      borderRadius: '25px',
-      fontSize: '0.875rem',
-      padding: '0 8px',
-      border: state.isFocused ? '1px solid #007bff' : '1px solid #ccc',
-      boxShadow: state.isFocused ? '0 0 0 1px #007bff' : 'none',
-      cursor: 'pointer',
-      '&:hover': { borderColor: '#007bff' },
-    }),
-    valueContainer: (provided) => ({ ...provided, height: '46px', padding: '0 8px' }),
-    input: (provided) => ({ ...provided, margin: 0, padding: 0 }),
-    indicatorSeparator: (provided) => ({ ...provided, display: 'block', backgroundColor: '#ccc', width: '1px', marginTop: '10px', marginBottom: '10px' }),
-    indicatorsContainer: (provided) => ({ ...provided, height: '46px' }),
-    container: (provided) => ({ ...provided, width: '100%' }),
-    menu: (provided) => ({ ...provided, zIndex: 9999, position: 'absolute', width: '100%', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }),
-    option: (provided, state) => ({
-      ...provided,
-      color: state.isSelected ? 'white' : '#333',
-      fontSize: '0.875rem',
-      padding: '10px 16px',
-      backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
-      cursor: 'pointer',
-    }),
-    singleValue: (provided) => ({ ...provided, color: '#333' }),
-    placeholder: (provided) => ({ ...provided, color: '#999' }),
-  };
+  const customSelectStyles = getCustomSelectStyles();
 
   const [asset, setAsset] = useState(null);
   const { id } = useParams();
@@ -751,7 +721,7 @@ export default function AssetsRegistration() {
                     <input
                       type="file"
                       id="attachments"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                       onChange={handleFileSelection}
                       style={{ display: "none" }}
                       multiple
@@ -820,52 +790,16 @@ export default function AssetsRegistration() {
       {/* Image Preview Modal */}
       {selectedImageForModal && (
         <div 
-          className="modal-overlay"
+          className="image-preview-modal-overlay"
           onClick={() => setSelectedImageForModal(null)}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999
-          }}
         >
           <div 
-            className="modal-content"
+            className="image-preview-modal-content"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '40px 20px 20px 20px',
-              width: '600px',
-              maxWidth: '80%',
-              maxHeight: '70vh',
-              overflow: 'auto',
-              position: 'relative'
-            }}
           >
             <button
+              className="image-preview-close-btn"
               onClick={() => setSelectedImageForModal(null)}
-              style={{
-                position: 'absolute',
-                top: '10px',
-                right: '10px',
-                background: 'none',
-                border: 'none',
-                fontSize: '24px',
-                cursor: 'pointer',
-                color: '#333',
-                width: '30px',
-                height: '30px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
             >
               ✕
             </button>

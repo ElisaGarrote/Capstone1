@@ -913,7 +913,7 @@ export default function ProductsRegistration() {
                     <input
                       type="file"
                       id="image"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                       onChange={handleImageSelection}
                       style={{ display: "none" }}
                     />
@@ -978,52 +978,16 @@ export default function ProductsRegistration() {
         {/* Image Preview Modal */}
         {selectedImageForModal && (
           <div
-            className="modal-overlay"
+            className="image-preview-modal-overlay"
             onClick={() => setSelectedImageForModal(null)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 9999
-            }}
           >
             <div
-              className="modal-content"
+              className="image-preview-modal-content"
               onClick={(e) => e.stopPropagation()}
-              style={{
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                padding: '40px 20px 20px 20px',
-                width: '600px',
-                maxWidth: '80%',
-                maxHeight: '70vh',
-                overflow: 'auto',
-                position: 'relative'
-              }}
             >
               <button
+                className="image-preview-close-btn"
                 onClick={() => setSelectedImageForModal(null)}
-                style={{
-                  position: 'absolute',
-                  top: '10px',
-                  right: '10px',
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  color: '#333',
-                  width: '30px',
-                  height: '30px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
               >
                 ✕
               </button>
