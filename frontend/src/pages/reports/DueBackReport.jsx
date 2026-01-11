@@ -6,7 +6,6 @@ import Pagination from "../../components/Pagination";
 import DepreciationFilter from "../../components/FilterPanel";
 import Footer from "../../components/Footer";
 import dateRelated from "../../utils/dateRelated";
-
 import { RxPerson } from "react-icons/rx";
 import { IoWarningOutline } from "react-icons/io5";
 

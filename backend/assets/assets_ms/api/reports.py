@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..services.depreciation_report import generate_depreciation_report
+from ..services.eol_warranty_report import generate_eol_warranty_report
 from ..services.asset_report import generate_asset_report
 from ..services.activity_report import generate_activity_report, get_activity_summary
 
@@ -393,6 +394,47 @@ class ActivityReportAPIView(APIView):
         )
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+
+class EoLWarrantyReportAPIView(APIView):
+    """Return End-of-Life & Warranty report as JSON (default) or XLSX.
+
+    Query params:
+      - format=json to return JSON results
+      - format=xlsx to download XLSX
+    """
+
+    def get(self, request):
+        fmt = request.query_params.get('format', '').lower()
+
+        rows = generate_eol_warranty_report()
+
+        if fmt == 'xlsx':
+            try:
+                from openpyxl.workbook import Workbook
+            except Exception:
+                return Response({
+                    'detail': 'openpyxl not installed in assets image.'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            fieldnames = ['assetId', 'product', 'statusName', 'location', 'endOfLifeDate', 'warrantyExpiration']
+            wb = Workbook()
+            ws = wb.active
+            ws.title = 'EoL_Warranty'
+            ws.append(fieldnames)
+            for r in rows:
+                row = [r.get(f, '') for f in fieldnames]
+                ws.append(row)
+            bio = BytesIO()
+            wb.save(bio)
+            bio.seek(0)
+            filename = f"eol_warranty_report_{datetime.date.today().isoformat()}.xlsx"
+            response = HttpResponse(bio.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+
+        # Default: JSON
+        return Response({'results': rows})
 
 
 class ActivityReportSummaryAPIView(APIView):
