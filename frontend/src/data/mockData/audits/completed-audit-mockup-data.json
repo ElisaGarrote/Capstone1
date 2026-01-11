@@ -7,14 +7,15 @@
     "audit_date": "2025-09-25",
     "next_audit_date": "2025-12-25",
     "notes": "Audit completed successfully. No discrepancies found.",
+    "status": "passed",
     "is_deleted": false,
     "created_at": "2025-09-25T15:30:00Z",
     "audit_schedule": {
       "id": 1,
       "asset": {
-        "id": 201,
-        "displayed_id": "ASSET-010",
-        "name": "Lenovo ThinkPad X1 Carbon"
+        "id": 5,
+        "displayed_id": "12348-Asset Microsoft Surface Pro 9",
+        "name": "Microsoft Surface Pro 9"
       },
       "date": "2025-09-25",
       "notes": "Missed audit last month due to inventory backlog.",
@@ -42,14 +43,15 @@
     "audit_date": "2025-09-30",
     "next_audit_date": "2026-01-30",
     "notes": "Camera inventory verified and matched the records.",
+    "status": "passed",
     "is_deleted": false,
     "created_at": "2025-09-30T11:45:00Z",
     "audit_schedule": {
       "id": 2,
       "asset": {
-        "id": 202,
-        "displayed_id": "ASSET-011",
-        "name": "Canon EOS M50 Camera"
+        "id": 6,
+        "displayed_id": "12349-Asset HP Pavilion 15",
+        "name": "HP Pavilion 15"
       },
       "date": "2025-09-30",
       "notes": "Pending audit for media equipment. Needs rescheduling.",
@@ -72,14 +74,15 @@
     "audit_date": "2025-10-05",
     "next_audit_date": "2026-01-05",
     "notes": "iMac audited. Minor software updates required.",
+    "status": "passed",
     "is_deleted": false,
     "created_at": "2025-10-05T10:20:00Z",
     "audit_schedule": {
       "id": 3,
       "asset": {
-        "id": 203,
-        "displayed_id": "ASSET-012",
-        "name": "Apple iMac 27-inch"
+        "id": 7,
+        "displayed_id": "12350-Asset Acer Aspire 5",
+        "name": "Acer Aspire 5"
       },
       "date": "2025-10-05",
       "notes": "Audit postponed due to hardware diagnostics.",

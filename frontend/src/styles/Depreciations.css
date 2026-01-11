@@ -34,8 +34,6 @@
     overflow-x: auto;
     max-height: 55vh;
     overflow-y: auto;
-
-    /* Prevent affecting the parent when scrolling. */
     overscroll-behavior: contain;
 
     table {

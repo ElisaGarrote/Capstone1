@@ -122,6 +122,13 @@ export default function Depreciations() {
     setCurrentPage(1); // Reset to first page when filters change
   };
 
+  // Handle reset filter
+  const handleResetFilter = () => {
+    setAppliedFilters({ valueSort: "" });
+    setFilteredData(MockupData);
+    setCurrentPage(1);
+  };
+
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
@@ -248,6 +255,7 @@ export default function Depreciations() {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
+        onResetFilter={handleResetFilter}
         initialFilters={appliedFilters}
       />
 

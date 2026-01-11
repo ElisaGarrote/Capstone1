@@ -57,21 +57,18 @@ function TableItem({ status, onDeleteClick, isSelected, onRowChange }) {
   const navigate = useNavigate();
 
   const getTitle = (actionType, status) => {
-    const isDefault = systemDefaultStatus.some(
-      (defaultStatus) =>
-        defaultStatus.toLowerCase() === status.name.toLowerCase()
-    );
+    const disabled = isDefaultStatus(status);
 
-    const isInUseOrDefault = isDefault || status.tag > 0;
-
-    if (isInUseOrDefault) {
-      if (actionType === "delete") {
-        return "This status is currently in use and cannot be deleted.";
-      }
-      return "This status is currently in use and cannot be edited.";
+    if (actionType === "edit") {
+      return disabled
+        ? "This status is currently in use and cannot be edited."
+        : "Edit";
     }
 
-    return actionType === "delete" ? "Delete" : "Edit";
+    // delete
+    return disabled
+      ? "This is a system default status label, and cannot be deleted."
+      : "Delete";
   };
 
   const disabled = isDefaultStatus(status);
@@ -101,16 +98,17 @@ function TableItem({ status, onDeleteClick, isSelected, onRowChange }) {
       <td>{status.tag}</td>
       <td>
         <section className="action-button-section">
-          <button
-            title={getTitle("edit", status)}
-            className="action-button"
-            onClick={() =>
-              navigate(`/More/StatusEdit/${status.id}`, { state: { status } })
-            }
-            disabled={disabled}
-          >
-            <i className="fas fa-edit"></i>
-          </button>
+          <span title={getTitle("edit", status)}>
+            <button
+              className="action-button"
+              onClick={() =>
+                navigate(`/More/StatusEdit/${status.id}`, { state: { status } })
+              }
+              disabled={disabled}
+            >
+              <i className="fas fa-edit"></i>
+            </button>
+          </span>
           <span title={getTitle("delete", status)}>
             <button
               className="action-button"

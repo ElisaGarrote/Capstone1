@@ -56,6 +56,14 @@
   margin-bottom: 1.5rem;
 }
 
+.forecast-bar-chart {
+  margin: 5px 30px 5px 0;
+}
+
+.forecast-legend {
+  padding-top: 20px;
+}
+
 .forecast-table-container {
   animation: slideDown 0.3s ease;
   border-top: 1px solid #f0f0f0;
