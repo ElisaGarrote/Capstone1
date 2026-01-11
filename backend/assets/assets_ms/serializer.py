@@ -422,15 +422,12 @@ class AssetCheckoutListSerializer(serializers.ModelSerializer):
 
 class AssetCheckoutByEmployeeSerializer(serializers.ModelSerializer):
     """Serializer for active checkouts by employee with asset details."""
-    files = AssetCheckoutFileSerializer(many=True, read_only=True)
     asset_details = serializers.SerializerMethodField()
 
     class Meta:
         model = AssetCheckout
         fields = [
-            'id', 'asset', 'asset_details', 'ticket_id', 'checkout_to',
-            'location', 'checkout_date', 'return_date', 'revenue',
-            'condition', 'notes', 'created_at', 'files'
+            'id', 'asset_details', 'checkout_to', 'condition'
         ]
 
     def get_asset_details(self, obj):
