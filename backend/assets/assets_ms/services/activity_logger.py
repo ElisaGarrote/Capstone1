@@ -10,10 +10,13 @@ from ..models import ActivityLog
 def log_activity(
     module: str,
     action: str,
-    item_id: int,
+    item_id: int = None,
+    item_identifier: str = None,
     item_name: str = '',
     user_id: int = None,
-    target_user_id: int = None,
+    user_name: str = None,
+    target_id: int = None,
+    target_name: str = None,
     notes: str = '',
 ):
     """
@@ -34,11 +37,14 @@ def log_activity(
     # user_id is required by the model, default to 0 if not provided
     return ActivityLog.objects.create(
         user_id=user_id or 0,
-        module=module,
+        user_name=user_name,
+        activity_type=module,
         action=action.upper(),
         item_id=item_id,
+        item_identifier=item_identifier,
         item_name=item_name or '',
-        target_user_id=target_user_id,
+        target_id=target_id,
+        target_name=target_name,
         notes=notes or '',
     )
 
@@ -47,6 +53,7 @@ def log_asset_activity(
     action: str,
     asset,
     user_id: int = None,
+    user_name: str = None,
     target_user_id: int = None,
     notes: str = '',
 ):
@@ -54,10 +61,12 @@ def log_asset_activity(
     return log_activity(
         module='Asset',
         action=action,
-        item_id=asset.id,
-        item_name=asset.name or asset.asset_id or '',
+        item_id=getattr(asset, 'id', None),
+        item_identifier=getattr(asset, 'asset_id', None) or None,
+        item_name=(getattr(asset, 'name', None) or getattr(asset, 'asset_id', None) or ''),
         user_id=user_id,
-        target_user_id=target_user_id,
+        user_name=user_name,
+        target_id=target_user_id,
         notes=notes,
     )
 
@@ -66,6 +75,7 @@ def log_component_activity(
     action: str,
     component,
     user_id: int = None,
+    user_name: str = None,
     target_user_id: int = None,
     notes: str = '',
 ):
@@ -73,10 +83,12 @@ def log_component_activity(
     return log_activity(
         module='Component',
         action=action,
-        item_id=component.id,
-        item_name=component.name or '',
+        item_id=getattr(component, 'id', None),
+        item_identifier=None,
+        item_name=(getattr(component, 'name', None) or ''),
         user_id=user_id,
-        target_user_id=target_user_id,
+        user_name=user_name,
+        target_id=target_user_id,
         notes=notes,
     )
 
@@ -86,6 +98,7 @@ def log_audit_activity(
     audit_or_schedule,
     asset=None,
     user_id: int = None,
+    user_name: str = None,
     notes: str = '',
 ):
     """Log an activity for an Audit or AuditSchedule."""
@@ -101,9 +114,11 @@ def log_audit_activity(
     return log_activity(
         module='Audit',
         action=action,
-        item_id=audit_or_schedule.id,
+        item_id=getattr(audit_or_schedule, 'id', None),
+        item_identifier=None,
         item_name=item_name,
         user_id=user_id,
+        user_name=user_name,
         notes=notes,
     )
 
@@ -112,15 +127,18 @@ def log_repair_activity(
     action: str,
     repair,
     user_id: int = None,
+    user_name: str = None,
     notes: str = '',
 ):
     """Log an activity for a Repair."""
     return log_activity(
         module='Repair',
         action=action,
-        item_id=repair.id,
-        item_name=repair.name or '',
+        item_id=getattr(repair, 'id', None),
+        item_identifier=None,
+        item_name=(getattr(repair, 'name', None) or ''),
         user_id=user_id,
+        user_name=user_name,
         notes=notes,
     )
 
