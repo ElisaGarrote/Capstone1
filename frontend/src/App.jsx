@@ -75,6 +75,7 @@ import ViewStatus from "./pages/More/ViewStatus";
 import StatusRegistration from "./pages/More/StatusRegistration";
 import StatusEdit from "./pages/More/StatusEdit";
 import StatusDetails from "./pages/More/StatusDetails";
+import Depreciations from "./pages/More/Depreciations";
 import DepreciationRegistration from "./pages/More/DepreciationRegistration";
 import DepreciationDetails from "./pages/More/depreciation-details/DepreciationDetails";
 import RecycleBin from "./pages/More/RecycleBin";
@@ -220,6 +221,7 @@ function App() {
           />
           <Route path="/More/StatusEdit/:id" element={<StatusEdit />} />
           <Route path="/More/StatusDetails/:id" element={<StatusDetails />} />
+          <Route path="/More/Depreciations" element={<Depreciations />} />
           <Route
             path="/More/Depreciations/Registration"
             element={<DepreciationRegistration />}
