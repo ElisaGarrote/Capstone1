@@ -147,8 +147,9 @@ class AssetListSerializer(serializers.ModelSerializer):
         return self.context.get("product_map", {}).get(obj.product_id)
     
     def get_ticket_details(self, obj):
-        return self.context.get("ticket_map", {}).get(obj.id)
-    
+        # ticket_map is keyed by display asset_id (e.g., "AST-20260110-00030-43A7")
+        return self.context.get("ticket_map", {}).get(obj.asset_id)
+
     def get_active_checkout(self, obj):
         checkout = obj.asset_checkouts.filter(asset_checkin__isnull=True).first()
         return checkout.id if checkout else None
@@ -224,7 +225,8 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
         return self.context.get("status_map", {}).get(obj.status)
 
     def get_ticket_details(self, obj):
-        return self.context.get("ticket_map", {}).get(obj.id)
+        # ticket_map is keyed by display asset_id (e.g., "AST-20260110-00030-43A7")
+        return self.context.get("ticket_map", {}).get(obj.asset_id)
 
     def get_history(self, obj):
         """

@@ -69,9 +69,10 @@ export default function CheckOutAsset() {
           setAssetDisplayId(assetDisplayIdFromState || "");
         }
         // Scenario 2: Coming from Tickets page - need to fetch asset details
+        // ticket.asset contains the display asset_id (e.g., "AST-20260110-00030-43A7")
         else if (ticket?.asset) {
           setFromAssets(false);
-          const assetData = await fetchAssetNames({ ids: [ticket.asset] });
+          const assetData = await fetchAssetNames({ asset_ids: [ticket.asset] });
           if (assetData && assetData.length > 0) {
             setAssetName(assetData[0].name || "");
             setAssetDisplayId(assetData[0].asset_id || "");

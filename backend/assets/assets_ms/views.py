@@ -709,24 +709,33 @@ class AssetViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(asset)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # Asset names 
+    # Asset names
     @action(detail=False, methods=["get"], url_path='names')
-    def names(self, requesti):
+    def names(self, request):
         """
         Return assets with only id, asset_id, name, and image.
-        Optional query param: ?ids=1,2,3 or ?search=keyword
+        Optional query params:
+          - ?ids=1,2,3 (database IDs)
+          - ?asset_ids=AST-001,AST-002 (display asset_ids)
+          - ?search=keyword
         """
         ids_param = request.query_params.get("ids")
+        asset_ids_param = request.query_params.get("asset_ids")
         search = request.query_params.get("search")
         queryset = self.get_queryset()
 
-        # Filter by IDs if provided
+        # Filter by database IDs if provided (integers)
         if ids_param:
             try:
                 ids = [int(i) for i in ids_param.split(",") if i.strip().isdigit()]
                 queryset = queryset.filter(id__in=ids)
             except ValueError:
                 return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Filter by display asset_ids if provided (strings like "AST-20260110-00030-43A7")
+        if asset_ids_param:
+            asset_ids = [aid.strip() for aid in asset_ids_param.split(",") if aid.strip()]
+            queryset = queryset.filter(asset_id__in=asset_ids)
 
         if search:
             queryset = queryset.filter(name__icontains=search)
@@ -739,7 +748,9 @@ class AssetViewSet(viewsets.ModelViewSet):
         # Build a cache key specific for this set of IDs
         cache_key = "assets:names"
         if ids_param:
-            cache_key += f":{','.join(map(str, ids))}"
+            cache_key += f":ids:{','.join(map(str, ids_param.split(',')))}"
+        if asset_ids_param:
+            cache_key += f":asset_ids:{asset_ids_param}"
 
         return self.cached_response(
             cache_key,
