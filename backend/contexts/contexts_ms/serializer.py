@@ -457,7 +457,7 @@ class TicketSerializer(serializers.ModelSerializer):
                 location = Location.objects.get(id=obj.location)
                 return {
                     'id': location.id,
-                    'name': location.name,
+                    'name': location.city,
                 }
             except Location.DoesNotExist:
                 return None
@@ -530,7 +530,7 @@ class TicketTypeSerializer(serializers.ModelSerializer):
                 location = Location.objects.get(id=obj.location)
                 return {
                     'id': location.id,
-                    'name': location.name,
+                    'name': location.city,
                 }
             except Location.DoesNotExist:
                 return None
