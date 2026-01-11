@@ -13,7 +13,6 @@ import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { createAssetCheckinWithStatus, fetchAssetNames } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
-import { fetchTicketById } from "../../services/integration-ticket-tracking-service";
 
 export default function CheckInAsset() {
   const { state } = useLocation();
@@ -35,12 +34,11 @@ export default function CheckInAsset() {
   const [fromAssets, setFromAssets] = useState(false);
 
   // Extract from navigation state
-  // From Assets page: { assetId (db id), assetDisplayId, assetName, ticketId, checkoutId }
+  // From Assets page: { assetId, assetDisplayId, assetName, checkoutId, ticket (full object) }
   // From Tickets page: { ticket (full ticket object) }
   const assetIdFromState = state?.assetId;
   const assetDisplayIdFromState = state?.assetDisplayId;
   const assetNameFromState = state?.assetName;
-  const ticketIdFromState = state?.ticketId;
   const checkoutIdFromState = state?.checkoutId;
   const ticketFromState = state?.ticket;
 
@@ -83,51 +81,26 @@ export default function CheckInAsset() {
     return ticketData.return_date;
   };
 
-  // Initialize: fetch ticket and dropdowns
+  // Initialize: load ticket data and dropdowns
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
       try {
-        let ticketData = null;
+        let ticketData = ticketFromState;
 
-        // Scenario 1: Coming from Assets page with assetId, assetDisplayId, assetName
-        // Ticket is optional - may or may not have ticketId
+        // Scenario 1: Coming from Assets page with asset details and ticket
         if (assetIdFromState) {
           setFromAssets(true);
           setAssetName(assetNameFromState || "");
           setAssetDisplayId(assetDisplayIdFromState || "");
-
-          // Fetch ticket details only if ticketId is provided
-          if (ticketIdFromState) {
-            ticketData = await fetchTicketById(ticketIdFromState);
-          }
         }
-        // Scenario 2: Coming from Tickets page with full ticket object
-        else if (ticketFromState) {
+        // Scenario 2: Coming from Tickets page - need to fetch asset details
+        else if (ticketData?.asset) {
           setFromAssets(false);
-          ticketData = ticketFromState;
-
-          // Fetch asset details using asset id from ticket
-          if (ticketData.asset) {
-            const assetData = await fetchAssetNames({ ids: [ticketData.asset] });
-            if (assetData && assetData.length > 0) {
-              setAssetName(assetData[0].name || "");
-              setAssetDisplayId(assetData[0].asset_id || "");
-            }
-          }
-        }
-        // Scenario 3: Coming from Tickets page with only ticketId
-        else if (ticketIdFromState) {
-          setFromAssets(false);
-          ticketData = await fetchTicketById(ticketIdFromState);
-
-          // Fetch asset details using asset id from ticket
-          if (ticketData?.asset) {
-            const assetData = await fetchAssetNames({ ids: [ticketData.asset] });
-            if (assetData && assetData.length > 0) {
-              setAssetName(assetData[0].name || "");
-              setAssetDisplayId(assetData[0].asset_id || "");
-            }
+          const assetData = await fetchAssetNames({ ids: [ticketData.asset] });
+          if (assetData && assetData.length > 0) {
+            setAssetName(assetData[0].name || "");
+            setAssetDisplayId(assetData[0].asset_id || "");
           }
         }
 
@@ -160,7 +133,7 @@ export default function CheckInAsset() {
     };
 
     initialize();
-  }, [assetIdFromState, assetDisplayIdFromState, assetNameFromState, ticketIdFromState, ticketFromState, setValue]);
+  }, [assetIdFromState, assetDisplayIdFromState, assetNameFromState, ticketFromState, setValue]);
 
   const conditionOptions = [
       { value: "1", label: "1 - Unserviceable" },

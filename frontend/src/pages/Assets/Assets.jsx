@@ -407,15 +407,16 @@ export default function Assets() {
     const assetDisplayId = asset.asset_id;
     const assetName = asset.name;
     const checkoutId = asset.active_checkout;
-    const ticketId = asset.ticket_details?.id;
+    // Pass the full ticket_details object - no need to fetch by ID later
+    const ticket = asset.ticket_details;
 
     if (checkoutId) {
       navigate(`/assets/check-in/${assetId}`, {
-        state: { assetDisplayId, assetName, checkoutId, ticketId },
+        state: { assetId, assetDisplayId, assetName, checkoutId, ticket },
       });
     } else {
-      navigate(`/assets/check-out/${asset.id}`, {
-        state: { assetDisplayId, assetName, assetId, ticketId },
+      navigate(`/assets/check-out/${assetId}`, {
+        state: { assetId, assetDisplayId, assetName, ticket },
       });
     }
   };
