@@ -32,6 +32,7 @@ const TOKEN_OBTAIN_URL = `${AUTH_URL}/api/v1/token/obtain/`;
 const TOKEN_VERIFY_URL = `${AUTH_URL}/api/v1/token/verify/`;
 const TOKEN_REFRESH_URL = `${AUTH_URL}/api/v1/token/refresh/`;
 const LOGOUT_URL = `${AUTH_URL}/logout/`;
+const USERS_LIST_URL = `${AUTH_URL}/api/v1/users/list/`;
 
 // Create auth API instance for auth service requests
 const createAuthRequest = () => {
@@ -202,6 +203,24 @@ export const AuthProvider = ({ children }) => {
     return getAccessToken();
   }, []);
 
+  /**
+   * Fetch all users from the auth service.
+   * Returns an array of user objects or an empty array on error.
+   */
+  const fetchAllUsers = useCallback(async () => {
+    try {
+      const authApi = createAuthRequest();
+      const res = await authApi.get(USERS_LIST_URL, {
+        headers: { Authorization: `Bearer ${getAccessToken()}` },
+      });
+
+      return res.data || [];
+    } catch (error) {
+      console.error("Failed to fetch users list:", error);
+      return [];
+    }
+  }, []);
+
   const refreshAuth = useCallback(async () => {
     setLoading(true);
     try {
@@ -297,6 +316,7 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus,
     getToken,
     updateUserContext,
+    fetchAllUsers,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
