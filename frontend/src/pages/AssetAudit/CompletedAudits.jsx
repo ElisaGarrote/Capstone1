@@ -5,7 +5,7 @@ import Pagination from "../../components/Pagination";
 import "../../styles/Table.css";
 import ActionButtons from "../../components/ActionButtons";
 import TabNavBar from "../../components/TabNavBar";
-import "../../styles/AuditsCompleted.css";
+import "../../styles/AssetAudits/AuditsCompleted.css";
 import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import CompletedAuditFilterModal from "../../components/Modals/CompletedAuditFilterModal";

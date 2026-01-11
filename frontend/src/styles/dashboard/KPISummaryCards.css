@@ -38,12 +38,6 @@
   flex-direction: column;
   gap: 0.5rem;
 }
-<<<<<<< HEAD
-=======
-  color: #0D6EFD;
-  flex-shrink: 0;
-}
->>>>>>> b2e34470041c69e49a9cb94f3b70b8f8cf75902f
 
 .kpi-title {
   font-size: 0.65rem;
@@ -66,10 +60,6 @@
 
 .kpi-value {
   font-size: 1rem;
-<<<<<<< HEAD
-=======
->>>>>>> Mergee2
->>>>>>> b2e34470041c69e49a9cb94f3b70b8f8cf75902f
   font-weight: 700;
   color: #0D6EFD;
   line-height: 1.2;

@@ -4,7 +4,7 @@ import { selectUser } from "../features/counter/userSlice";
 import NavBar from "../components/NavBar";
 import authService from "../services/auth-service";
 import DefaultProfile from "../assets/img/default-profile.svg";
-import "../styles/ManageProfile.css";
+import "../styles/ManageProfile/ManageProfile.css";
 
 export default function ManageProfile() {
   const [userInfo, setUserInfo] = useState({
