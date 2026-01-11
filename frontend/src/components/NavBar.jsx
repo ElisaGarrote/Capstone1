@@ -360,79 +360,80 @@ export default function NavBar() {
             </a>
           </li>
 
+          <li
+            className={`dropdown-container reports-dropdown-container ${
+              showReportsMenu ? "open" : ""
+            }`}
+          >
+            <div
+              className={`dropdown-trigger ${
+                activeMenu === "reports" ? "active" : ""
+              }`}
+              onClick={() => toggleDropdown("reports")}
+            >
+              <span className="dropdown-text">{selectedReport}</span>{" "}
+              <IoIosArrowDown />
+            </div>
+            {showReportsMenu && (
+              <div className="custom-dropdown reports-dropdown">
+                <div className="dropdown-menu">
+                  <button
+                    onClick={() => {
+                      navigate("/reports/asset");
+                      setSelectedReport("Asset Reports");
+                      setShowReportsMenu(false);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    Asset Reports
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/reports/depreciation");
+                      setSelectedReport("Depreciation Reports");
+                      setShowReportsMenu(false);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    Depreciation Reports
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/reports/due-back");
+                      setSelectedReport("Due Back Reports");
+                      setShowReportsMenu(false);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    Due Back Reports
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/reports/eol-warranty");
+                      setSelectedReport("EoL & Warranty Reports");
+                      setShowReportsMenu(false);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    EoL & Warranty Reports
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/reports/activity");
+                      setSelectedReport("Activity Reports");
+                      setShowReportsMenu(false);
+                      setMobileOpen(false);
+                    }}
+                  >
+                    Activity Reports
+                  </button>
+                </div>
+              </div>
+            )}
+          </li>
+
           {user.roles?.[0].role === "Admin" && (
             <>
-              <li
-                className={`dropdown-container reports-dropdown-container ${
-                  showReportsMenu ? "open" : ""
-                }`}
-              >
-                <div
-                  className={`dropdown-trigger ${
-                    activeMenu === "reports" ? "active" : ""
-                  }`}
-                  onClick={() => toggleDropdown("reports")}
-                >
-                  <span className="dropdown-text">{selectedReport}</span>{" "}
-                  <IoIosArrowDown />
-                </div>
-                {showReportsMenu && (
-                  <div className="custom-dropdown reports-dropdown">
-                    <div className="dropdown-menu">
-                      <button
-                        onClick={() => {
-                          navigate("/reports/asset");
-                          setSelectedReport("Asset Reports");
-                          setShowReportsMenu(false);
-                          setMobileOpen(false);
-                        }}
-                      >
-                        Asset Reports
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/reports/depreciation");
-                          setSelectedReport("Depreciation Reports");
-                          setShowReportsMenu(false);
-                          setMobileOpen(false);
-                        }}
-                      >
-                        Depreciation Reports
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/reports/due-back");
-                          setSelectedReport("Due Back Reports");
-                          setShowReportsMenu(false);
-                          setMobileOpen(false);
-                        }}
-                      >
-                        Due Back Reports
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/reports/eol-warranty");
-                          setSelectedReport("EoL & Warranty Reports");
-                          setShowReportsMenu(false);
-                          setMobileOpen(false);
-                        }}
-                      >
-                        EoL & Warranty Reports
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigate("/reports/activity");
-                          setSelectedReport("Activity Reports");
-                          setShowReportsMenu(false);
-                          setMobileOpen(false);
-                        }}
-                      >
-                        Activity Reports
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </li>
               <li
                 className={`dropdown-container more-dropdown-container ${
                   showMoreMenu ? "open" : ""
