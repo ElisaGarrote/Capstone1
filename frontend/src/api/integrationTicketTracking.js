@@ -1,8 +1,9 @@
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_INTEGRATION_TICKET_TRACKING_API_URL || "http://165.22.247.50:1001/";
+// Use ASSETS API as a proxy to external ticket tracking API (avoids mixed content HTTPS->HTTP issue)
+const baseURL = import.meta.env.VITE_ASSETS_API_URL || "https://ams-assets.up.railway.app/";
 
-console.log("[Ticket Tracking] Base URL:", baseURL);
+console.log("[Ticket Tracking] Using Assets API proxy, Base URL:", baseURL);
 
 const ticketTrackingAxios = axios.create({
   baseURL: baseURL,

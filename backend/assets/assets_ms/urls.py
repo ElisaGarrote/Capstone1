@@ -40,6 +40,11 @@ urlpatterns = [
     path("contexts/depreciations/<int:pk>/", DepreciationDetailProxy.as_view(), name="proxy-depreciation-detail"),
     path("contexts/locations/", LocationListProxy.as_view(), name="proxy-location-list"),
     path("contexts/statuses/", StatusListProxy.as_view(), name="proxy-status-list"),
+
+    # Proxy endpoints for external Ticket Tracking API
+    path("tickets/asset/unresolved/", TicketUnresolvedListProxy.as_view(), name="proxy-tickets-unresolved"),
+    path("tickets/asset/resolved/", TicketResolvedListProxy.as_view(), name="proxy-tickets-resolved"),
+
     path("reports/depreciation/", DepreciationReportAPIView.as_view(), name="depreciation-report"),
     path("reports/assets/", AssetReportAPIView.as_view(), name="asset-report"),
     path("reports/activity/", ActivityReportAPIView.as_view(), name="activity-report"),
