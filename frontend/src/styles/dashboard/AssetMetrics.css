@@ -221,3 +221,23 @@
   margin: 0;
   font-size: 1rem;
 }
+
+/* Custom Tooltip Styles */
+.custom-tooltip {
+  background-color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: #333;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tooltip-content {
+  margin: 0;
+  font-size: 14px;
+}
+
+.tooltip-count {
+  color: #0D6EFD;
+  font-weight: bold;
+}
