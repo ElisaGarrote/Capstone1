@@ -5,9 +5,8 @@
   overscroll-behavior: contain;
 
   table {
-    width: auto;
+    width: 100%;
     border-collapse: collapse;
-    white-space: nowrap;
 
     th {
       padding: 0.75rem !important;
@@ -22,7 +21,6 @@
       position: sticky;
       top: 0;
       z-index: 1;
-      white-space: nowrap;
     }
 
     /* table header for 'Checkbox' */
@@ -33,67 +31,57 @@
 
     /* table header for 'Image'*/
     th:nth-child(2) {
-      width: 60px;
       min-width: 60px;
+      max-width: fit-content;
     }
 
     /* table header for 'Name' */
     th:nth-child(3) {
-      width: 150px;
       min-width: 150px;
     }
 
     /* table header for 'Category' */
     th:nth-child(4) {
-      width: 120px;
       min-width: 120px;
     }
 
     /* table header for 'Model Number' */
     th:nth-child(5) {
-      width: 130px;
       min-width: 130px;
     }
 
     /* table header for 'End of Life' */
     th:nth-child(6) {
-      width: 120px;
       min-width: 120px;
     }
 
     /* table header for 'Manufacturer' */
     th:nth-child(7) {
-      width: 130px;
       min-width: 130px;
     }
 
     /* table header for 'Depreciation' */
     th:nth-child(8) {
-      width: 130px;
       min-width: 130px;
     }
 
     /* table header for 'Default Cost' */
     th:nth-child(9) {
-      width: 120px;
       min-width: 120px;
     }
 
     /* table header for 'Default Supplier' */
     th:nth-child(10) {
-      width: 140px;
       min-width: 140px;
     }
 
     /* table header for 'Minimum Quantity' */
     th:nth-child(11) {
-      width: 130px;
       min-width: 130px;
     }
 
     /* table header for 'Action' */
     th:nth-child(12) {
-      width: 100px;
       min-width: 100px;
     }
 
@@ -104,9 +92,6 @@
       color: var(--text-color);
       border-bottom: 1px solid #cccccc;
       height: 50px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     td.no-data-message {
@@ -142,4 +127,35 @@
   height: 40px !important;
   object-fit: cover !important;
   border-radius: 4px !important;
+}
+
+.products-table-section th .category-link {
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.75rem;
+  display: inline-block;
+}
+.products-table-section th .category-link:hover {
+  text-decoration: underline;
+  color: var(--primary-color);
+}
+.products-table-section th .category-link:active,
+.products-table-section th .category-link:focus {
+  color: var(--primary-color);
+  outline: none;
+}
+
+.products-table-section th .category-link {
+  transition: color 120ms ease-in-out, text-decoration 120ms ease-in-out;
+}
+
+.products-table-section td:nth-child(4) .category-link {
+  color: var(--primary-color, #0d6efd);
+  font-weight: 500;
+}
+.products-table-section td:nth-child(4) .category-link:hover {
+  color: var(--primary-color-hover, #0b5ed7);
+  text-decoration: underline;
 }

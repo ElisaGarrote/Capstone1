@@ -60,3 +60,16 @@
   width: 16px !important;
   margin-right: 8px !important;
 }
+
+.supplier-components-tab-wrapper.history-tab-wrapper {
+  width: 100% !important;
+}
+
+.supplier-components-tab-wrapper .assets-table-section {
+  width: 100%;
+}
+
+.supplier-components-tab-wrapper .assets-table-section table {
+  width: 100% !important;
+  table-layout: auto;
+}

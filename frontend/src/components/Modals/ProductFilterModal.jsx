@@ -3,7 +3,7 @@ import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/Modal.css";
 import "../../styles/ProductFilterModal.css";
 
-export default function ProductFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
+export default function ProductFilterModal({ isOpen, onClose, onApplyFilter, onResetFilter, initialFilters = {} }) {
 
   const initialFilterState = {
     category: "",
@@ -132,7 +132,12 @@ export default function ProductFilterModal({ isOpen, onClose, onApplyFilter, ini
 
   // Reset all filters
   const handleReset = () => {
-    setFilters(initialFilterState);
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    } else {
+      setFilters(initialFilterState);
+    }
   };
 
   // Apply filters

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import '../../styles/dashboard/AssetStatusForecastChart.css';
+import AssetForecastTable from './AssetForecastTable';
 import {
   LineChart,
   Line,
@@ -10,8 +12,19 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import '../../styles/dashboard/AssetStatusForecastChart.css';
-import AssetForecastTable from './AssetForecastTable';
+
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="custom-tooltip">
+        <p className="tooltip-content">
+          {payload[0].name}: <span className="tooltip-count">{payload[0].value}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 function AssetStatusForecastChart({ chartData, tableData }) {
   const [showDetails, setShowDetails] = useState(false);
@@ -24,47 +37,19 @@ function AssetStatusForecastChart({ chartData, tableData }) {
 
       <div className="forecast-chart-container">
         <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <LineChart data={chartData} className="forecast-line-chart">
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip />
-            <Legend wrapperStyle={{ paddingTop: '20px' }} />
-            {/* Forecast data - dashed lines (lighter shades) - rendered FIRST (behind) */}
-            <Line
-              type="monotone"
-              dataKey="forecastAvailable"
-              stroke="#7BB8FF"
-              strokeWidth={3}
-              strokeDasharray="5 5"
-              name="Available (Forecast)"
-              connectNulls={true}
-              dot={{ r: 5, fill: "#7BB8FF", strokeWidth: 0 }}
-              isAnimationActive={true}
-            />
-            <Line
-              type="monotone"
-              dataKey="forecastDeployed"
-              stroke="#FFD966"
-              strokeWidth={3}
-              strokeDasharray="5 5"
-              name="Deployed (Forecast)"
-              connectNulls={true}
-              dot={{ r: 5, fill: "#FFD966", strokeWidth: 0 }}
-              isAnimationActive={true}
-            />
-            <Line
-              type="monotone"
-              dataKey="forecastUnavailable"
-              stroke="#FF9999"
-              strokeWidth={3}
-              strokeDasharray="5 5"
-              name="Unavailable (Forecast)"
-              connectNulls={true}
-              dot={{ r: 5, fill: "#FF9999", strokeWidth: 0 }}
-              isAnimationActive={true}
-            />
-            {/* Historical data - solid lines (darker shades) - rendered LAST (on top) */}
+<<<<<<< HEAD
+            <Tooltip content={<CustomTooltip />} />
+            <Legend className="forecast-legend" />
+            {/* Historical data - solid lines */}
+=======
+            <Tooltip content={<CustomTooltip />} />
+            <Legend className="forecast-legend" />
+            {/* Historical data - solid lines */}
+>>>>>>> Mergee2
             <Line
               type="monotone"
               dataKey="available"

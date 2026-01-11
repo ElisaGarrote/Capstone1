@@ -84,7 +84,7 @@ export default function ActionButtons({
 
       {showCheckout && (
         <button
-          title="Check Out"
+          title={disableCheckout ? "Already Checked Out" : "Check Out"}
           className="action-button action-button-checkout"
           onClick={() => !disableCheckout && onCheckoutClick?.()}
           disabled={disableCheckout}
@@ -96,7 +96,7 @@ export default function ActionButtons({
 
       {showCheckin && (
         <button
-          title="Check In"
+          title={disableCheckin ? "Already Checked In" : "Check In"}
           className="action-button action-button-checkin"
           onClick={() => !disableCheckin && onCheckinClick?.()}
           disabled={disableCheckin}

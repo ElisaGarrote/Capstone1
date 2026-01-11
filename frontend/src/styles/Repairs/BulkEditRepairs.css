@@ -1,0 +1,73 @@
+.bulk-edit-repairs-page .repairs-selected-section,
+.bulk-edit-repairs-page .repairs-bulk-form-section {
+	width: 60vw;
+	max-width: 1200px;
+	margin: 0 auto;
+	box-sizing: border-box;
+}
+
+.bulk-edit-repairs-page .repairs-selected-section {
+	background: #ffffff;
+	border-radius: 25px;
+	padding: 2rem;
+	margin-top: 2rem;
+	margin-bottom: 1rem;
+	border: 1px solid #f0f0f0;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	align-items: stretch;
+}
+
+.bulk-edit-repairs-page .repairs-selected-section h3 {
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: #333;
+	margin: 0 0 0.5rem 0;
+}
+
+.bulk-edit-repairs-page .repairs-selected-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: flex-start;
+	align-content: flex-start;
+}
+
+.bulk-edit-repairs-page .repair-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.75rem;
+	background: #e8e8e8;
+	color: #333;
+	padding: 0.5rem 0.75rem 0.5rem 1rem;
+	border-radius: 20px;
+	font-size: 0.875rem;
+	font-weight: 500;
+}
+
+.bulk-edit-repairs-page .repair-tag-name { font-weight:600; }
+.bulk-edit-repairs-page .repair-tag-id { font-size:0.8125rem; color:#666; }
+
+.bulk-edit-repairs-page .repair-tag-remove { display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.1); border:none; border-radius:50%; width:1.25rem; height:1.25rem; padding:0; cursor:pointer; transition:all .2s ease; flex-shrink:0; }
+.bulk-edit-repairs-page .repair-tag-remove img { width:0.75rem; height:0.75rem; }
+.bulk-edit-repairs-page .repair-tag-remove:hover { background: rgba(0,0,0,0.2); transform:scale(1.1); }
+
+.bulk-edit-repairs-page .repairs-no-selection { color:#7a7a7a; font-size:0.8125rem; margin:0 auto; padding:0; text-align:center; background:none; border-radius:0; font-style:italic; display:inline-block; }
+
+.bulk-edit-repairs-page .repairs-selected-note { width:60vw; max-width:1200px; margin:0.5rem auto 1rem auto; color:#6b6b6b; font-size:0.875rem; font-style:italic; text-align:center; }
+
+.bulk-edit-repairs-page .repairs-bulk-form-section { background:#ffffff; border-radius:25px; padding:2rem; margin-top:1rem; margin-bottom:2rem; border:1px solid #d3d3d3; box-shadow:0 0 20px rgba(211,211,211,0.3); }
+
+.bulk-edit-repairs-page .repairs-bulk-form { display:flex; flex-direction:column; gap:1.5rem; }
+
+.bulk-edit-repairs-page .form-actions { display:flex; gap:1rem; justify-content:flex-end; margin-top:1rem; padding-top:0.75rem; border-top:none; }
+
+@media (max-width:768px) {
+	.bulk-edit-repairs-page .repairs-selected-section { padding:1.5rem; }
+	.bulk-edit-repairs-page .repairs-selected-tags { gap:0.5rem; }
+	.bulk-edit-repairs-page .repair-tag { padding:0.4rem 0.8rem; font-size:0.8125rem; }
+	.bulk-edit-repairs-page .repairs-bulk-form-section { padding:1.5rem; }
+}
+
