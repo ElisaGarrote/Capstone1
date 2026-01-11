@@ -124,6 +124,101 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  /**
+   * Update current user's profile on the auth service.
+   * Accepts a payload object. If payload contains an `image` dataURL
+   * it will be sent as `profile_picture` in the JSON body.
+   */
+  const updateUserProfile = useCallback(
+    async (payload) => {
+      try {
+        const authApi = createAuthRequest();
+
+        let body = payload || {};
+
+        // If frontend provided a File under profile_picture, send as multipart FormData
+        const hasFile =
+          body.profile_picture &&
+          typeof File !== "undefined" &&
+          body.profile_picture instanceof File;
+
+        if (hasFile) {
+          const formData = new FormData();
+          Object.keys(body).forEach((key) => {
+            const value = body[key];
+            if (value === undefined || value === null) return;
+            // If it's an object/array (not file), stringify
+            if (typeof value === "object" && !(value instanceof File)) {
+              formData.append(key, JSON.stringify(value));
+            } else {
+              formData.append(key, value);
+            }
+          });
+
+          console.debug("updateUserProfile: sending FormData", formData);
+
+          // Don't set default application/json header when sending FormData
+          const res = await authApi
+            .patch(PROFILE_URL, formData, {
+              headers: { Authorization: `Bearer ${getAccessToken()}` },
+            })
+            .catch(async (err) => {
+              // fallback to PUT when PATCH is not allowed
+              if (err?.response?.status === 405) {
+                return await authApi.put(PROFILE_URL, formData, {
+                  headers: { Authorization: `Bearer ${getAccessToken()}` },
+                });
+              }
+              throw err;
+            });
+
+          const updated = res.data || (await fetchUserProfile());
+          setUser((prev) => ({ ...prev, ...updated, roles: prev?.roles }));
+          console.debug("updateUserProfile: success", updated);
+          return { success: true, data: updated };
+        }
+
+        // No file: send JSON body
+        // If the frontend passed an image as a dataURL, include as profile_picture
+        if (
+          body.image &&
+          typeof body.image === "string" &&
+          body.image.startsWith("data:")
+        ) {
+          body = { ...body, profile_picture: body.image };
+          delete body.image;
+        }
+
+        console.debug("updateUserProfile: sending JSON body", body);
+
+        const res = await authApi
+          .patch(PROFILE_URL, body, {
+            headers: { Authorization: `Bearer ${getAccessToken()}` },
+          })
+          .catch(async (err) => {
+            if (err?.response?.status === 405) {
+              return await authApi.put(PROFILE_URL, body, {
+                headers: { Authorization: `Bearer ${getAccessToken()}` },
+              });
+            }
+            throw err;
+          });
+
+        // Normalize response and update context user state
+        const updated = res.data || (await fetchUserProfile());
+        setUser((prev) => ({ ...prev, ...updated, roles: prev?.roles }));
+
+        console.debug("updateUserProfile: success", updated);
+        return { success: true, data: updated };
+      } catch (error) {
+        console.error("Failed to update user profile:", error);
+        const err = error.response?.data || error.message || "Update failed";
+        return { success: false, error: err };
+      }
+    },
+    [fetchUserProfile]
+  );
+
   // Central auth checker (single source of truth)
   const checkAuthStatus = useCallback(async () => {
     if (!hasAccessToken()) {
@@ -321,6 +416,8 @@ export const AuthProvider = ({ children }) => {
     checkAuthStatus,
     getToken,
     updateUserContext,
+    fetchUserProfile,
+    updateUserProfile,
     fetchAllUsers,
   };
 
