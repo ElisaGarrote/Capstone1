@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import NavBar from "../../components/NavBar";
 import StatusCard from '../../components/dashboard/StatusCard';
 import AssetMetrics from '../../components/dashboard/AssetMetrics';
-import KPISummaryCards from '../../components/Dashboard/KPISummaryCards';
-import AssetStatusForecastChart from '../../components/Dashboard/AssetStatusForecastChart';
-import ProductDemandForecastChart from '../../components/Dashboard/ProductDemandForecastChart';
-import assetsService from '../../services/assets-service';
+import KPISummaryCards from '../../components/dashboard/KPISummaryCards';
+import AssetStatusForecastChart from '../../components/dashboard/AssetStatusForecastChart';
+import ProductDemandForecastChart from '../../components/dashboard/ProductDemandForecastChart';
+import { fetchDashboardStats, fetchAllAudits } from '../../services/assets-service';
 import forecastService from '../../services/forecast-service';
 import "../../styles/Dashboard.css";
 
@@ -24,7 +24,7 @@ function Dashboard() {
   useEffect(() => {
     async function loadDashboardStats() {
       try {
-        const stats = await assetsService.fetchDashboardStats();
+        const stats = await fetchDashboardStats();
 
         const cards = [
           { number: normalizeCount(stats?.due_for_return), title: 'Due for Return' },
