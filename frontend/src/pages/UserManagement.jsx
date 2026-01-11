@@ -13,6 +13,7 @@ import Footer from "../components/Footer";
 import { exportToExcel } from "../utils/exportToExcel";
 import ActionButtons from "../components/ActionButtons";
 import mockUsers from "../data/mockData/user-management/user-management-data.json";
+import { useAuth } from "../Context/AuthContext";
 
 import "../styles/UserManagement/UserManagement.css";
 
@@ -69,9 +70,9 @@ function TableItem({ user, isSelected, onRowChange, onViewUser }) {
       <td>{user.name}</td>
       <td>{user.email}</td>
       <td>{user.role}</td>
-      <td>{user.phoneNumber}</td>
-      <td>{user.company}</td>
-      <td>{user.phone}</td>
+      <td>{user.phoneNumber || "-"}</td>
+      <td>{user.company || "-"}</td>
+      <td>{user.phone || "-"}</td>
       <td>
         <Status type={user.status.type} name={user.status.name} />
       </td>
@@ -92,6 +93,7 @@ function TableItem({ user, isSelected, onRowChange, onViewUser }) {
 export default function UserManagement() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { fetchAllUsers } = useAuth();
 
   // User data state
   const [users, setUsers] = useState([]);
@@ -124,8 +126,6 @@ export default function UserManagement() {
 
   const [successMessage, setSuccessMessage] = useState("");
 
-
-
   // Mock data for users - loaded from JSON file (replace with API later)
 
   // Paginate the data
@@ -142,7 +142,9 @@ export default function UserManagement() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedUsers.map((item) => item.id).filter((id) => !prev.includes(id)),
+        ...paginatedUsers
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
@@ -196,9 +198,70 @@ export default function UserManagement() {
       }, 5000);
     }
 
-    // Initialize with mock data
-    setUsers(mockUsers);
-    setFilteredData(mockUsers);
+    // Initialize with API users (fallback to mock data)
+    const loadUsers = async () => {
+      try {
+        const apiUsers = await fetchAllUsers();
+
+        const transform = (u) => {
+          // Build display name
+          const name =
+            [u.first_name, u.last_name].filter(Boolean).join(" ") ||
+            u.username ||
+            u.email;
+
+          // Determine role: prefer AMS role if present
+          const amsRole = (u.system_roles || []).find(
+            (r) => r.system_slug === "ams"
+          );
+          const roleObj = amsRole || (u.system_roles && u.system_roles[0]);
+          const role = roleObj ? roleObj.role_name : "";
+
+          // Map status based on is_active boolean
+          const mapStatus = (isActive) => {
+            if (isActive === undefined || isActive === null)
+              return { type: "unknown", name: "Unknown" };
+            return isActive
+              ? { type: "deployable", name: "Active" }
+              : { type: "archived", name: "Inactive" };
+          };
+
+          return {
+            id: u.id,
+            name,
+            email: u.email,
+            role,
+            phoneNumber: u.phone_number || "",
+            company: u.company_id || "",
+            phone: u.phone_number || "",
+            status: mapStatus(u.is_active),
+            lastLogin: u.last_login || null,
+            original: u,
+          };
+        };
+
+        // Only include users that have an AMS system role
+        const amsOnly = (apiUsers || []).filter((u) =>
+          (u.system_roles || []).some((r) => r.system_slug === "ams")
+        );
+
+        const transformed = amsOnly.map(transform);
+
+        if (transformed.length === 0) {
+          setUsers(mockUsers);
+          setFilteredData(mockUsers);
+        } else {
+          setUsers(transformed);
+          setFilteredData(transformed);
+        }
+      } catch (err) {
+        console.error("Failed to load users from API, using mock data:", err);
+        setUsers(mockUsers);
+        setFilteredData(mockUsers);
+      }
+    };
+
+    loadUsers();
   }, [location]);
 
   // Filter users based on search query and applied filters
@@ -264,10 +327,14 @@ export default function UserManagement() {
       console.log("Activating user:", user.id);
 
       // Update the user's status in the local state
-      setUsers(prevUsers =>
-        prevUsers.map(u =>
+      setUsers((prevUsers) =>
+        prevUsers.map((u) =>
           u.id === user.id
-            ? { ...u, status: { type: "deployable", name: "Active" } }
+            ? {
+                ...u,
+                status: { type: "deployable", name: "Active" },
+                original: { ...(u.original || {}), is_active: true },
+              }
             : u
         )
       );
@@ -285,10 +352,14 @@ export default function UserManagement() {
     try {
       console.log("Deactivating user:", user.id);
 
-      setUsers(prevUsers =>
-        prevUsers.map(u =>
+      setUsers((prevUsers) =>
+        prevUsers.map((u) =>
           u.id === user.id
-            ? { ...u, status: { type: "archived", name: "Inactive" } }
+            ? {
+                ...u,
+                status: { type: "archived", name: "Inactive" },
+                original: { ...(u.original || {}), is_active: false },
+              }
             : u
         )
       );
@@ -402,10 +473,7 @@ export default function UserManagement() {
                 >
                   Filter
                 </button>
-                <MediumButtons
-                  type="export"
-                  onClick={handleExport}
-                />
+                <MediumButtons type="export" onClick={handleExport} />
               </section>
             </section>
 
