@@ -1,7 +1,7 @@
 .forecast-table-section {
   width: 100%;
   border: 1px solid #cccccc;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   background: white;
 }
