@@ -64,8 +64,19 @@ function SupplierDetails() {
     let mounted = true;
     if (supplierDetails && supplierDetails.id) {
       const missingNotes = !supplierDetails.notes && !supplierDetails.note;
-      const missingCreated = !supplierDetails.createdAt && !supplierDetails.created_at;
-      const missingUpdated = !supplierDetails.updatedAt && !supplierDetails.updated_at;
+      const missingCreated =
+        !supplierDetails.createdAt &&
+        !supplierDetails.created_at &&
+        !supplierDetails.created &&
+        !supplierDetails.created_on &&
+        !supplierDetails.creation_date;
+      const missingUpdated =
+        !supplierDetails.updatedAt &&
+        !supplierDetails.updated_at &&
+        !supplierDetails.updated &&
+        !supplierDetails.modified &&
+        !supplierDetails.modified_on &&
+        !supplierDetails.update_date;
 
       if (missingNotes || missingCreated || missingUpdated) {
         fetchSupplierById(supplierDetails.id)
@@ -86,6 +97,9 @@ function SupplierDetails() {
 
   // Mapped display-friendly fields (notes, createdAt, updatedAt, labels)
   const display = getSupplierDetails(mergedSupplier) || {};
+
+  // Temporary debug to confirm merged supplier fields at runtime
+  // End temporary debug
 
   if (!supplierDetails) {
     return (
@@ -952,7 +966,7 @@ function SupplierDetails() {
         initialFilters={componentFilters}
       />
       <DetailedViewPage
-        {...getSupplierDetails(supplierDetails)}
+        {...getSupplierDetails(mergedSupplier)}
         hideAdditionalFields={true}
         tabs={tabs}
         activeTab={activeTab}

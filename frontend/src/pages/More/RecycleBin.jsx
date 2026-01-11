@@ -11,7 +11,8 @@ import "../../styles/TabNavBar.css";
 import "../../styles/RecycleBin.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import { fetchDeletedItems, recoverAsset, recoverComponent, deleteAsset, deleteComponent, bulkDeleteAssets, bulkDeleteComponents } from "../../services/contexts-service";
+import { fetchDeletedItems, recoverAsset, recoverComponent, deleteAsset, deleteComponent, bulkDeleteAssets, bulkDeleteComponents, fetchAllDropdowns } from "../../services/contexts-service";
+import { fetchProductById } from "../../services/assets-service";
 import { isEligible, daysUntilEligible } from "../../utils/retention";
 
 const MS_90_DAYS = 90 * 24 * 60 * 60 * 1000;
@@ -38,7 +39,64 @@ function TableHeader({ allSelected, onHeaderChange }) {
 }
 
 // TableItem
-function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClick }) {
+// Helpers to resolve embedded names
+function resolveCategoryName(item, categoriesMap = {}, productMap = {}) {
+  return (
+    item.category_name ||
+    item.category_details?.name ||
+    // product may be an object or an id mapped in productMap
+    (item.product && typeof item.product === 'object' && item.product.category_details?.name) ||
+    (item.product && typeof item.product === 'number' && productMap[String(item.product)]?.category_details?.name) ||
+    item.product?.category_name ||
+    item.product?.category ||
+    // fallback to dropdown map id lookup
+    (item.product && categoriesMap[String(item.product.category)]) ||
+    (item.category && categoriesMap[String(item.category)]) ||
+    null
+  );
+}
+
+function resolveManufacturerName(item, manufacturersMap = {}, productMap = {}) {
+  return (
+    item.manufacturer_name ||
+    item.manufacturer_details?.name ||
+    // product may be an object or id mapped in productMap
+    (item.product && typeof item.product === 'object' && item.product.manufacturer_details?.name) ||
+    (item.product && typeof item.product === 'number' && productMap[String(item.product)]?.manufacturer_details?.name) ||
+    item.product?.manufacturer_name ||
+    item.product?.manufacturer ||
+    // fallback to dropdown map id lookup
+    (item.product && manufacturersMap[String(item.product.manufacturer)]) ||
+    null
+  );
+}
+
+function resolveSupplierName(item, suppliersMap = {}) {
+  return (
+    item.supplier_name ||
+    item.supplier_details?.name ||
+    item.product?.default_supplier_details?.name ||
+    item.product?.default_supplier_name ||
+    // if supplier is an id, map via suppliersMap
+    (item.supplier && suppliersMap[String(item.supplier)]) ||
+    item.supplier ||
+    null
+  );
+}
+
+function resolveLocationName(item, locationsMap = {}) {
+  return (
+    item.location_name ||
+    item.location_details?.name ||
+    item.location?.name ||
+    // fallback to dropdown map id lookup
+    (item.location && locationsMap[String(item.location)]) ||
+    (item.location_id && locationsMap[String(item.location_id)]) ||
+    null
+  );
+}
+
+function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClick, suppliersMap = {}, categoriesMap = {}, manufacturersMap = {}, locationsMap = {}, productMap = {} }) {
   // Determine permanent-delete eligibility using retention helpers
   let deleteDisabled = false;
   let deleteTitle = "";
@@ -61,10 +119,33 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
         />
       </td>
       <td>{item.name}</td>
-      <td>{item.category_name || 'N/A'}</td>
-      <td>{item.manufacturer_name || 'N/A'}</td>
-      <td>{item.supplier_name || 'N/A'}</td>
-      <td>{item.location_name || 'N/A'}</td>
+      {(() => {
+        const catName = resolveCategoryName(item, categoriesMap, productMap) ||
+          (item.product && (item.product.category || item.product.category_id)) ||
+          item.category_name || null;
+        const manName = resolveManufacturerName(item, manufacturersMap, productMap) ||
+          (item.product && (item.product.manufacturer || item.product.manufacturer_id)) ||
+          item.manufacturer_name || null;
+        const supName = resolveSupplierName(item, suppliersMap) ||
+          (item.product && (item.product.default_supplier || item.product.default_supplier_id)) ||
+          (item.supplier || null);
+        const locName = resolveLocationName(item, locationsMap) || (item.location || item.location_id) || null;
+
+        // If any still unresolved, log for debugging (helps identify API shape)
+        if (!catName || !manName || !supName || !locName) {
+          // eslint-disable-next-line no-console
+          console.debug('RecycleBin unresolved names', { id: item.id, item, catName, manName, supName, locName });
+        }
+
+        return (
+          <>
+            <td>{catName || `#${item.product?.category || item.category || 'N/A'}`}</td>
+            <td>{manName || `#${item.product?.manufacturer || item.manufacturer || 'N/A'}`}</td>
+            <td>{supName || `#${item.product?.default_supplier || item.supplier || 'N/A'}`}</td>
+            <td>{locName || `#${item.location || 'N/A'}`}</td>
+          </>
+        );
+      })()}
       <td>
         <ActionButtons
           showRecover
@@ -92,9 +173,39 @@ export default function RecycleBin() {
   const [deletedAssets, setDeletedAssets] = useState([]);
   const [deletedComponents, setDeletedComponents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  // dropdown maps (id -> name) for resolving ids returned by assets service
+  const [suppliersMap, setSuppliersMap] = useState({});
+  const [categoriesMap, setCategoriesMap] = useState({});
+  const [manufacturersMap, setManufacturersMap] = useState({});
+  const [locationsMap, setLocationsMap] = useState({});
+  const [productMap, setProductMap] = useState({});
   
   // choose dataset depending on tab
   const data = activeTab === "assets" ? deletedAssets : deletedComponents;
+
+  // If deleted items include location ids not present in locationsMap, try reloading locations
+  useEffect(() => {
+    const missingLocationIds = new Set();
+    const items = [...deletedAssets, ...deletedComponents];
+    for (const it of items) {
+      const loc = it?.location || it?.location_id;
+      if (loc && !locationsMap[String(loc)]) missingLocationIds.add(loc);
+    }
+
+          if (missingLocationIds.size > 0) {
+      (async () => {
+        try {
+          const locDd = await fetchAllDropdowns("location");
+          const locs = locDd.locations || [];
+          if (locs.length > 0) {
+            setLocationsMap(locs.reduce((acc, l) => ({ ...acc, [String(l.id)]: (l.name || l.city) }), {}));
+          }
+        } catch (e) {
+          console.debug('Retry load locations failed:', e);
+        }
+      })();
+    }
+  }, [deletedAssets, deletedComponents]);
 
   // pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -116,10 +227,32 @@ export default function RecycleBin() {
     const loadDeletedItems = async () => {
       setIsLoading(true);
       try {
-        const data = await fetchDeletedItems();
+        const resp = await fetchDeletedItems();
         if (mounted) {
-          setDeletedAssets(data.deleted_assets || []);
-          setDeletedComponents(data.deleted_components || []);
+          const assets = resp.deleted_assets || [];
+          const components = resp.deleted_components || [];
+          setDeletedAssets(assets);
+          setDeletedComponents(components);
+
+          // Fetch product details for any product ids referenced by the returned items
+          const allItems = [...assets, ...components];
+          const productIds = new Set();
+          allItems.forEach(it => {
+            const p = it?.product;
+            if (p && typeof p === 'number') productIds.add(p);
+          });
+          if (productIds.size > 0) {
+            const map = {};
+            await Promise.all(Array.from(productIds).map(async (id) => {
+              try {
+                const prod = await fetchProductById(id);
+                map[String(id)] = prod;
+              } catch (e) {
+                // ignore per-id failures
+              }
+            }));
+            if (mounted) setProductMap(prev => ({ ...prev, ...map }));
+          }
         }
       } catch (error) {
         console.error('Failed to fetch deleted items:', error);
@@ -135,6 +268,34 @@ export default function RecycleBin() {
     };
     
     loadDeletedItems();
+    // also load dropdowns to resolve ids -> names
+    const loadDropdowns = async () => {
+      try {
+        const dd = await fetchAllDropdowns("product");
+        if (!mounted) return;
+        const suppliers = dd.suppliers || [];
+        const categories = dd.categories || [];
+        const manufacturers = dd.manufacturers || [];
+        setSuppliersMap(suppliers.reduce((acc, s) => ({ ...acc, [String(s.id)]: s.name }), {}));
+        setCategoriesMap(categories.reduce((acc, c) => ({ ...acc, [String(c.id)]: c.name }), {}));
+        setManufacturersMap(manufacturers.reduce((acc, m) => ({ ...acc, [String(m.id)]: m.name }), {}));
+        // load locations separately
+        try {
+          const locDd = await fetchAllDropdowns("location");
+          if (mounted && locDd.locations) {
+            setLocationsMap(locDd.locations.reduce((acc, l) => ({ ...acc, [String(l.id)]: (l.name || l.city) }), {}));
+          }
+        } catch (e) {
+          // ignore location dropdown errors
+          console.debug('Failed to load locations for recycle bin:', e);
+        }
+      } catch (err) {
+        // ignore dropdown errors, keep maps empty
+        console.error('Failed to load dropdowns for recycle bin:', err);
+      }
+    };
+    loadDropdowns();
+    // product details are fetched right after loading deleted items
     
     return () => {
       mounted = false;
@@ -576,6 +737,11 @@ export default function RecycleBin() {
                         onRowChange={handleRowChange}
                         onDeleteClick={openDeleteModal}
                         onRecoverClick={openRecoverModal}
+                        suppliersMap={suppliersMap}
+                        categoriesMap={categoriesMap}
+                        manufacturersMap={manufacturersMap}
+                        locationsMap={locationsMap}
+                        productMap={productMap}
                       />
                     ))
                   ) : (
