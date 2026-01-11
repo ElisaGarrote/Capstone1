@@ -81,9 +81,10 @@ export default function CheckOutAsset() {
           // Fetch asset details using asset id from ticket
           if (ticket.asset) {
             const assetData = await fetchAssetNames({ ids: [ticket.asset] });
-            if (assetData) {
-              setAssetName(assetData.name || "");
-              setAssetDisplayId(assetData.asset_id || "");
+            // fetchAssetNames returns an array
+            if (assetData && assetData.length > 0) {
+              setAssetName(assetData[0].name || "");
+              setAssetDisplayId(assetData[0].asset_id || "");
             }
           }
         }
@@ -91,7 +92,8 @@ export default function CheckOutAsset() {
         if (ticket) {
           // Fill form with ticket data (read-only fields)
           setValue("employeeName", ticket.requestor_details?.name || "Unknown");
-          setValue("empLocation", ticket.location_details?.city || "Unknown");
+          // Use direct location field (string), fallback to location_details.name if available
+          setValue("empLocation", ticket.location || ticket.location_details?.name || "Unknown");
           setValue("checkoutDate", ticket.checkout_date || "");
           setValue("expectedReturnDate", ticket.return_date || "");
         }

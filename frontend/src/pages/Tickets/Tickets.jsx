@@ -286,13 +286,14 @@ const Tickets = () => {
   }, [location]);
 
   const handleCheckInOut = (ticket) => {
+    // Pass the full ticket object in state - no need to fetch by ID
     if (ticket.isCheckInOrOut === "Check-In") {
       navigate(`/assets/check-in/${ticket.asset}`, {
-        state: { ticketId: ticket.id, fromAsset: false },
+        state: { ticket, fromAsset: false },
       });
     } else {
       navigate(`/assets/check-out/${ticket.asset}`, {
-        state: { ticketId: ticket.id, fromAsset: false },
+        state: { ticket, fromAsset: false },
       });
     }
   };
