@@ -4,7 +4,6 @@ import NavBar from "../../../components/NavBar";
 import DetailedViewPage from "../../../components/DetailedViewPage/DetailedViewPage";
 import MediumButtons from "../../../components/buttons/MediumButtons";
 import { getSupplierDetails, getSupplierTabs } from "../../../data/mockData/more/supplierDetailsData";
-import { fetchSupplierById } from '../../../services/contexts-service';
 import AssetsMockupData from "../../../data/mockData/assets/assets-mockup-data.json";
 import ComponentsMockupData from "../../../data/mockData/components/component-mockup-data.json";
 import Status from "../../../components/Status";
@@ -19,7 +18,6 @@ import ComponentFilterModal from "../../../components/Modals/ComponentFilterModa
 import "../../../styles/Assets/Assets.css";
 import "../../../styles/components/Components.css";
 import "../../../styles/more/supplier/SupplierDetails.css";
-import dateRelated from '../../../utils/dateRelated';
 
 function SupplierDetails() {
   const location = useLocation();
@@ -56,51 +54,6 @@ function SupplierDetails() {
   const [assetSuccessMessage, setAssetSuccessMessage] = useState("");
   const supplierDetails = location.state?.supplier;
 
-  const [fullSupplier, setFullSupplier] = useState(null);
-
-  // If the supplier object passed via navigation is missing notes/timestamps,
-  // fetch the full supplier from the API and merge results.
-  useEffect(() => {
-    let mounted = true;
-    if (supplierDetails && supplierDetails.id) {
-      const missingNotes = !supplierDetails.notes && !supplierDetails.note;
-      const missingCreated =
-        !supplierDetails.createdAt &&
-        !supplierDetails.created_at &&
-        !supplierDetails.created &&
-        !supplierDetails.created_on &&
-        !supplierDetails.creation_date;
-      const missingUpdated =
-        !supplierDetails.updatedAt &&
-        !supplierDetails.updated_at &&
-        !supplierDetails.updated &&
-        !supplierDetails.modified &&
-        !supplierDetails.modified_on &&
-        !supplierDetails.update_date;
-
-      if (missingNotes || missingCreated || missingUpdated) {
-        fetchSupplierById(supplierDetails.id)
-          .then((res) => {
-            if (mounted) setFullSupplier(res);
-          })
-          .catch((err) => {
-            console.error('Failed to fetch full supplier:', err);
-          });
-      }
-    }
-    return () => {
-      mounted = false;
-    };
-  }, [supplierDetails]);
-
-  const mergedSupplier = fullSupplier ? { ...supplierDetails, ...fullSupplier } : supplierDetails;
-
-  // Mapped display-friendly fields (notes, createdAt, updatedAt, labels)
-  const display = getSupplierDetails(mergedSupplier) || {};
-
-  // Temporary debug to confirm merged supplier fields at runtime
-  // End temporary debug
-
   if (!supplierDetails) {
     return (
       <>
@@ -112,7 +65,7 @@ function SupplierDetails() {
       </>
     );
   }
-  const tabs = [{ label: 'About' }];
+  const tabs = getSupplierTabs();
   const applyAssetFilters = (data, filters) => {
     let filtered = [...data];
 
@@ -530,42 +483,42 @@ function SupplierDetails() {
   const aboutContent = (
     <div className="about-section">
       {/* Details Section */}
-          <div className="asset-details-section">
+      <div className="asset-details-section">
         <h3 className="section-header">Details</h3>
         <div className="asset-details-grid">
           <div className="detail-row">
             <label>Supplier Name</label>
-            <span>{display.supplierName || 'N/A'}</span>
+            <span>{supplierDetails.name || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>Address</label>
-            <span>{display.address || 'N/A'}</span>
+            <span>{supplierDetails.address || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>City</label>
-            <span>{display.city || 'N/A'}</span>
+            <span>{supplierDetails.city || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>State</label>
-            <span>{display.state || 'N/A'}</span>
+            <span>{supplierDetails.state || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>ZIP</label>
-            <span>{display.zip || 'N/A'}</span>
+            <span>{supplierDetails.zip || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>Country</label>
-            <span>{display.country || 'N/A'}</span>
+            <span>{supplierDetails.country || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>Contact Name</label>
-            <span>{display.contactName || 'N/A'}</span>
+            <span>{supplierDetails.contactName || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
@@ -573,10 +526,10 @@ function SupplierDetails() {
             <span
               style={{ color: 'var(--primary-color)', cursor: 'pointer' }}
               onClick={() =>
-                window.open(`tel:${display.phoneNumber || ''}`, "_blank")
+                window.open(`tel:${supplierDetails.phoneNumber}`, "_blank")
               }
             >
-              {display.phoneNumber || 'N/A'}
+              {supplierDetails.phoneNumber || 'N/A'}
             </span>
           </div>
 
@@ -585,10 +538,10 @@ function SupplierDetails() {
             <span
               style={{ color: 'var(--primary-color)', cursor: 'pointer' }}
               onClick={() =>
-                window.open(`mailto:${display.email || ''}`, "_blank")
+                window.open(`mailto:${supplierDetails.email}`, "_blank")
               }
             >
-              {display.email || 'N/A'}
+              {supplierDetails.email || 'N/A'}
             </span>
           </div>
 
@@ -596,41 +549,31 @@ function SupplierDetails() {
             <label>URL</label>
             <span
               style={{ color: 'var(--primary-color)', cursor: 'pointer' }}
-              onClick={() => window.open(display.url || '', "_blank")}
+              onClick={() => window.open(supplierDetails.url, "_blank")}
             >
-              {display.url || 'N/A'}
+              {supplierDetails.url || 'N/A'}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Additional Fields: Notes, Created At, Updated At */}
+      {/* Additional Fields Section */}
       <div className="additional-fields-section">
         <h3 className="section-header">Additional Information</h3>
         <div className="asset-details-grid">
           <div className="detail-row">
             <label>Notes</label>
-            <span style={{ whiteSpace: 'pre-wrap' }}>{display.notes || 'N/A'}</span>
+            <span>{supplierDetails.notes || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>Created At</label>
-            <span>
-              {(() => {
-                const ts = display.createdAt;
-                return ts && ts !== 'N/A' ? dateRelated.formatDateWithTime(ts) : 'N/A';
-              })()}
-            </span>
+            <span>{supplierDetails.createdAt || 'N/A'}</span>
           </div>
 
           <div className="detail-row">
             <label>Updated At</label>
-            <span>
-              {(() => {
-                const ts = display.updatedAt;
-                return ts && ts !== 'N/A' ? dateRelated.formatDateWithTime(ts) : 'N/A';
-              })()}
-            </span>
+            <span>{supplierDetails.updatedAt || 'N/A'}</span>
           </div>
         </div>
       </div>
@@ -966,14 +909,20 @@ function SupplierDetails() {
         initialFilters={componentFilters}
       />
       <DetailedViewPage
-        {...getSupplierDetails(mergedSupplier)}
-        hideAdditionalFields={true}
+        {...getSupplierDetails(supplierDetails)}
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
         actionButtons={actionButtons}
+        customTabContent={
+          activeTab === 1
+            ? assetsTabContent
+            : activeTab === 2
+              ? componentsTabContent
+              : null
+        }
       >
-        {aboutContent}
+        {activeTab === 0 && aboutContent}
       </DetailedViewPage>
     </>
   );

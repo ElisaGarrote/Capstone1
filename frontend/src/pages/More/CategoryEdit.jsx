@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
 import DeleteModal from "../../components/Modals/DeleteModal";
-import { updateCategory, getCategory, contextsBase } from '../../api/contextsApi'
+
 import "../../styles/Registration.css";
 import "../../styles/CategoryRegistration.css";
 
@@ -14,27 +15,58 @@ const CategoryEdit = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Retrieve the "category" data value passed from the navigation state.
-  // If the "category" data is not exist, the default value for this is undefined.
-  const category = location.state?.category;
-
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [initialAttachment, setInitialAttachment] = useState(true);
-  const [categoryData, setCategoryData] = useState(category ?? null);
-  const [isInUse, setIsInUse] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
+  // Retrieve the "category" data value passed from the navigation state.
+  // If the "category" data is not exist, the default value for this is "undifiend".
+  const category = location.state?.category;
+
   console.log("attachment:", attachmentFile);
+
+  // Custom styles for react-select to match Registration inputs
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      width: '100%',
+      minHeight: '48px',
+      height: '48px',
+      borderRadius: '25px',
+      fontSize: '0.875rem',
+      padding: '0 8px',
+      border: state.isFocused ? '1px solid #007bff' : '1px solid #ccc',
+      boxShadow: state.isFocused ? '0 0 0 1px #007bff' : 'none',
+      cursor: 'pointer',
+      '&:hover': { borderColor: '#007bff' },
+    }),
+    valueContainer: (provided) => ({ ...provided, height: '46px', padding: '0 8px' }),
+    input: (provided) => ({ ...provided, margin: 0, padding: 0 }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'block', backgroundColor: '#ccc', width: '1px', marginTop: '10px', marginBottom: '10px' }),
+    indicatorsContainer: (provided) => ({ ...provided, height: '46px' }),
+    container: (provided) => ({ ...provided, width: '100%' }),
+    menu: (provided) => ({ ...provided, zIndex: 9999, position: 'absolute', width: '100%', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? 'white' : '#333',
+      fontSize: '0.875rem',
+      padding: '10px 16px',
+      backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
+      cursor: 'pointer',
+    }),
+    singleValue: (provided) => ({ ...provided, color: '#333' }),
+    placeholder: (provided) => ({ ...provided, color: '#999' }),
+  };
 
   const {
     register,
     handleSubmit,
-    reset,
+    control,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
-      categoryName: category?.name ?? '',
-      categoryType: category?.type ? category.type.toLowerCase() : '',
+      categoryName: category.name,
+      categoryType: category.type.toLowerCase(),
     },
     mode: "all",
   });
@@ -57,23 +89,11 @@ const CategoryEdit = () => {
   };
 
   const onSubmit = (data) => {
-    const form = new FormData()
-    form.append('name', data.categoryName)
-    // type is not editable here, but include for completeness
-    form.append('type', data.categoryType)
-    if (attachmentFile) form.append('logo', attachmentFile)
+    // Here you would typically send the data to your API
+    console.log("Form submitted:", data, attachmentFile);
 
-    if (category && category.id) {
-      updateCategory(category.id, form)
-        .then(() => navigate('/More/ViewCategories', { state: { updatedCategory: true } }))
-        .catch((err) => {
-          console.error('Failed to update category', err)
-          alert('Failed to update category: ' + (err?.response?.data?.detail || err.message))
-        })
-    } else {
-      // Fallback: navigate back
-      navigate('/More/ViewCategories', { state: { updatedCategory: true } })
-    }
+    // Optional: navigate back to categories view after successful submission
+    navigate("/More/ViewCategories", { state: { updatedCategory: true } });
   };
 
   console.log("initial:", initialAttachment);
@@ -83,40 +103,6 @@ const CategoryEdit = () => {
     console.log("Deleting category:", category.id);
     navigate("/More/ViewCategories");
   };
-
-  // Build an absolute image URL for logos returned as relative paths
-  const buildImageUrl = (logoPath) => {
-    if (!logoPath) return null
-    if (typeof logoPath !== 'string') return null
-    if (logoPath.startsWith('http://') || logoPath.startsWith('https://')) return logoPath
-    // Ensure no double-slash when joining
-    const base = contextsBase ? contextsBase.replace(/\/$/, '') : ''
-    return base + (logoPath.startsWith('/') ? logoPath : '/' + logoPath)
-  }
-
-  // Fetch fresh category details (including asset/component counts) to decide if type is editable
-  useEffect(() => {
-    let mounted = true
-    const id = category?.id
-    if (!id) return
-    getCategory(id)
-      .then((data) => {
-        if (!mounted) return
-        setCategoryData(data)
-        // reset form values in case we fetched newer values
-        reset({
-          categoryName: data.name || '',
-          categoryType: data.type ? data.type.toLowerCase() : '',
-        })
-        const assetCount = Number(data.asset_count || 0)
-        const compCount = Number(data.component_count || 0)
-        setIsInUse(assetCount > 0 || compCount > 0)
-      })
-      .catch((err) => {
-        console.error('Failed to load category details', err)
-      })
-    return () => { mounted = false }
-  }, [category, reset])
 
   return (
     <>
@@ -168,21 +154,26 @@ const CategoryEdit = () => {
                   Category Type
                   <span className="required-asterisk">*</span>
                 </label>
-                <select
-                  disabled={isInUse}
-                  title={isInUse ? "Cannot change category type while category is in use" : ""}
-                  className={errors.categoryType ? "input-error" : ""}
-                  {...register("categoryType", {
-                    required: "Category Type is required",
-                  })}
-                >
-                  <option value="">Select Category Type</option>
-                  {categoryTypes.map((type, idx) => (
-                    <option key={idx} value={type.toLowerCase()}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="categoryType"
+                  control={control}
+                  rules={{ required: "Category Type is required" }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="categoryType"
+                      options={categoryTypes.map(t => ({ value: t.toLowerCase(), label: t }))}
+                      value={categoryTypes.map(t => ({ value: t.toLowerCase(), label: t })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Category Type"
+                      isSearchable={true}
+                      isClearable={true}
+                      isDisabled={true}
+                      styles={customSelectStyles}
+                      className={errors.categoryType ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 {errors.categoryType && (
                   <span className="error-message">
                     {errors.categoryType.message}
@@ -192,30 +183,28 @@ const CategoryEdit = () => {
 
               <fieldset>
                 <label>Icon</label>
-                {(() => {
-                  const existingImage = (categoryData?.logo ?? categoryData?.icon ?? category?.logo ?? category?.icon)
-                  const imageSrc = attachmentFile
-                    ? URL.createObjectURL(attachmentFile)
-                    : (initialAttachment ? buildImageUrl(existingImage) : null)
-
-                  if (imageSrc) {
-                    return (
-                      <div className="image-selected">
-                        <img src={imageSrc} alt="Selected icon" />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAttachmentFile(null);
-                            setInitialAttachment(false);
-                          }}
-                        >
-                          <img src={CloseIcon} alt="Remove" />
-                        </button>
-                      </div>
-                    )
-                  }
-
-                  return (
+                {attachmentFile || initialAttachment ? (
+                  <div className="image-selected">
+                    <img
+                      // src={category.icon}
+                      src={
+                        initialAttachment
+                          ? category.icon
+                          : URL.createObjectURL(attachmentFile)
+                      }
+                      alt="Selected icon"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachmentFile(null);
+                        setInitialAttachment(false);
+                      }}
+                    >
+                      <img src={CloseIcon} alt="Remove" />
+                    </button>
+                  </div>
+                ) : (
                   <label className="upload-image-btn">
                     Choose File
                     <input
@@ -225,8 +214,7 @@ const CategoryEdit = () => {
                       style={{ display: "none" }}
                     />
                   </label>
-                  )
-                })()}
+                )}
                 <small className="file-size-info">
                   Maximum file size must be 5MB
                 </small>

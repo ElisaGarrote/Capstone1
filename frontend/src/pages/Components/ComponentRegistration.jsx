@@ -1,125 +1,83 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from 'react-select';
+import { getCustomSelectStyles } from "../../utils/selectStyles";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { fetchComponentById, createComponent, updateComponent } from "../../services/assets-service";
-import { fetchAllDropdowns, createCategory, createManufacturer, createSupplier } from "../../services/contexts-service";
-import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
-import SystemLoading from "../../components/Loading/SystemLoading";
-
-const ASSETS_API_URL = import.meta.env.VITE_ASSETS_API_URL || "";
+import MockupData from "../../data/mockData/components/component-mockup-data.json";
 
 const ComponentRegistration = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { id } = useParams();
-  const isEdit = !!id;
+  const editState = location.state?.item || null;
+  const isEdit = !!editState;
 
   const [attachmentFile, setAttachmentFile] = useState(null);
-  const [existingImage, setExistingImage] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedImageForModal, setSelectedImageForModal] = useState(null);
 
   const {
     register,
     handleSubmit,
+    control,
     setValue,
     watch,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
     defaultValues: {
-      componentName: "",
-      category: "",
-      manufacturer: "",
-      supplier: "",
-      location: "",
-      modelNumber: "",
-      orderNumber: "",
-      purchaseCost: "",
-      quantity: "",
-      minimumQuantity: "",
-      purchaseDate: "",
-      notes: "",
+      componentName: editState?.name || "",
+      category: editState?.category ?? null,
+      manufacturer: editState?.manufacturer ?? null,
+      supplier: editState?.supplier ?? null,
+      location: editState?.location ?? null,
+      modelNumber: editState?.model_number || "",
+      orderNumber: editState?.order_number || "",
+      purchaseCost: editState?.purchase_cost || "",
+      quantity: editState?.quantity || "",
+      minimumQuantity: editState?.minimum_quantity || "",
+      purchaseDate: editState?.purchase_date || "",
+      notes: editState?.notes || "",
     },
   });
 
-  // Dropdown options from API
-  const [categories, setCategories] = useState([]);
-  const [manufacturers, setManufacturers] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const customSelectStyles = getCustomSelectStyles();
 
-  // Initialize form with dropdown options and component data (if editing)
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        setIsLoading(true);
+    if (isEdit && editState) {
+      setValue("componentName", editState.name || "");
+      setValue("category", editState.category ?? null);
+      setValue("manufacturer", editState.manufacturer ?? null);
+      setValue("supplier", editState.supplier ?? null);
+      setValue("location", editState.location ?? null);
+      setValue("modelNumber", editState.model_number || "");
+      setValue("orderNumber", editState.order_number || "");
+      setValue("purchaseCost", editState.purchase_cost || "");
+      setValue("quantity", editState.quantity || "");
+      setValue("minimumQuantity", editState.minimum_quantity || "");
+      setValue("purchaseDate", editState.purchase_date || "");
+      setValue("notes", editState.notes || "");
+    }
+  }, [editState, isEdit, setValue]);
 
-        // Fetch dropdown options for components
-        const dropdowns = await fetchAllDropdowns("component", { type: "component" });
-        let categoriesList = dropdowns.categories || [];
-        setManufacturers(dropdowns.manufacturers || []);
-        setSuppliers(dropdowns.suppliers || []);
-
-        // Fetch locations from Help Desk service
-        const locationsData = await fetchAllLocations();
-        setLocations(locationsData || []);
-
-        // Fetch component data if editing
-        if (id) {
-          const componentData = await fetchComponentById(id);
-          if (componentData) {
-            // If component has a category that's not in the dropdown list, add it
-            // (handles case where component was created with an asset category)
-            if (componentData.category && componentData.category_details) {
-              const existingCategoryId = componentData.category;
-              const categoryExists = categoriesList.some(cat => cat.id === existingCategoryId);
-              if (!categoryExists) {
-                categoriesList = [
-                  { id: existingCategoryId, name: componentData.category_details.name },
-                  ...categoriesList
-                ];
-              }
-            }
-
-            setValue("componentName", componentData.name || "");
-            // Convert IDs to strings to match select option values
-            setValue("category", componentData.category ? String(componentData.category) : "");
-            setValue("manufacturer", componentData.manufacturer ? String(componentData.manufacturer) : "");
-            setValue("supplier", componentData.supplier ? String(componentData.supplier) : "");
-            setValue("location", componentData.location ? String(componentData.location) : "");
-            setValue("modelNumber", componentData.model_number || "");
-            setValue("orderNumber", componentData.order_number || "");
-            setValue("purchaseCost", componentData.purchase_cost || "");
-            setValue("quantity", componentData.quantity || "");
-            setValue("minimumQuantity", componentData.minimum_quantity || "");
-            setValue("purchaseDate", componentData.purchase_date || "");
-            setValue("notes", componentData.notes || "");
-            if (componentData.image) {
-              setExistingImage(componentData.image);
-            }
-          }
-        }
-
-        setCategories(categoriesList);
-      } catch (error) {
-        console.error("Error initializing form:", error);
-        setErrorMessage("Failed to load form data.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initialize();
-  }, [id, setValue]);
+  // Base option lists derived from mock data
+  const [categories, setCategories] = useState(
+    () => Array.from(new Set(MockupData.map((item) => item.category).filter(Boolean)))
+  );
+  const [manufacturers, setManufacturers] = useState(
+    () => Array.from(new Set(MockupData.map((item) => item.manufacturer).filter(Boolean)))
+  );
+  const [suppliers, setSuppliers] = useState(
+    () => Array.from(new Set(MockupData.map((item) => item.supplier).filter(Boolean)))
+  );
+  const [locations, setLocations] = useState(
+    () => Array.from(new Set(MockupData.map((item) => item.location).filter(Boolean)))
+  );
 
   // Quick-add modal state
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -177,51 +135,35 @@ const ComponentRegistration = () => {
   ];
 
   const handleSaveCategory = async (data) => {
-    try {
-      const result = await createCategory({ name: data.name?.trim(), type: "component" });
-      if (result) {
-        setCategories((prev) => [...prev, { id: result.id, name: result.name }]);
-        setValue("category", result.id);
-      }
-    } catch (error) {
-      console.error("Error creating category:", error);
-    }
+    const name = data.name?.trim();
+    if (!name) return;
+    setCategories((prev) =>
+      prev.includes(name) ? prev : [...prev, name].sort()
+    );
   };
 
   const handleSaveManufacturer = async (data) => {
-    try {
-      const result = await createManufacturer({ name: data.name?.trim() });
-      if (result) {
-        setManufacturers((prev) => [...prev, { id: result.id, name: result.name }]);
-        setValue("manufacturer", result.id);
-      }
-    } catch (error) {
-      console.error("Error creating manufacturer:", error);
-    }
+    const name = data.name?.trim();
+    if (!name) return;
+    setManufacturers((prev) =>
+      prev.includes(name) ? prev : [...prev, name].sort()
+    );
   };
 
   const handleSaveSupplier = async (data) => {
-    try {
-      const result = await createSupplier({ name: data.name?.trim() });
-      if (result) {
-        setSuppliers((prev) => [...prev, { id: result.id, name: result.name }]);
-        setValue("supplier", result.id);
-      }
-    } catch (error) {
-      console.error("Error creating supplier:", error);
-    }
+    const name = data.name?.trim();
+    if (!name) return;
+    setSuppliers((prev) =>
+      prev.includes(name) ? prev : [...prev, name].sort()
+    );
   };
 
   const handleSaveLocation = async (data) => {
-    try {
-      const result = await createLocation({ name: data.name?.trim() });
-      if (result) {
-        setLocations((prev) => [...prev, { id: result.id, name: result.name }]);
-        setValue("location", result.id);
-      }
-    } catch (error) {
-      console.error("Error creating location:", error);
-    }
+    const name = data.name?.trim();
+    if (!name) return;
+    setLocations((prev) =>
+      prev.includes(name) ? prev : [...prev, name].sort()
+    );
   };
 
   const handleFileSelection = (e) => {
@@ -242,50 +184,28 @@ const ComponentRegistration = () => {
       }
 
       setAttachmentFile(file);
-      setExistingImage(null); // Clear existing image when new file is selected
     }
   };
 
-  const onSubmit = async (data) => {
-    try {
-      setIsSubmitting(true);
-      setErrorMessage("");
-
-      const formData = new FormData();
-      formData.append("name", data.componentName);
-      formData.append("category", data.category);
-      if (data.manufacturer) formData.append("manufacturer", data.manufacturer);
-      if (data.supplier) formData.append("supplier", data.supplier);
-      if (data.location) formData.append("location", data.location);
-      if (data.modelNumber) formData.append("model_number", data.modelNumber);
-      if (data.orderNumber) formData.append("order_number", data.orderNumber);
-      if (data.purchaseCost) formData.append("purchase_cost", data.purchaseCost);
-      formData.append("quantity", data.quantity || 1);
-      if (data.minimumQuantity) formData.append("minimum_quantity", data.minimumQuantity);
-      if (data.purchaseDate) formData.append("purchase_date", data.purchaseDate);
-      if (data.notes) formData.append("notes", data.notes);
-      if (attachmentFile) formData.append("image", attachmentFile);
-
-      if (isEdit) {
-        await updateComponent(id, formData);
-        navigate("/components", { state: { successMessage: "Component updated successfully!" } });
-      } else {
-        await createComponent(formData);
-        navigate("/components", { state: { successMessage: "Component created successfully!" } });
-      }
-    } catch (error) {
-      console.error("Error saving component:", error);
-      const errMsg = error.response?.data?.name?.[0] || error.response?.data?.detail || "Failed to save component.";
-      setErrorMessage(errMsg);
-    } finally {
-      setIsSubmitting(false);
+  const handleImageClick = () => {
+    if (attachmentFile) {
+      const url = URL.createObjectURL(attachmentFile);
+      setSelectedImageForModal(url);
     }
   };
 
-  if (isLoading) {
-    console.log("isLoading triggered — showing loading screen");
-    return <SystemLoading />;
-  }
+  const handleRemoveImage = () => {
+    if (selectedImageForModal) {
+      URL.revokeObjectURL(selectedImageForModal);
+      setSelectedImageForModal(null);
+    }
+    setAttachmentFile(null);
+  };
+
+  const onSubmit = (data) => {
+    console.log("Form submitted:", data, attachmentFile);
+    navigate("/components");
+  };
 
   return (
     <>
@@ -329,17 +249,25 @@ const ComponentRegistration = () => {
                 Category<span className="required-asterisk">*</span>
               </label>
               <div className="select-with-button">
-                <select
-                  className={errors.category ? "input-error" : ""}
-                  {...register("category", { required: "Category is required" })}
-                >
-                  <option value="">Select Category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="category"
+                  control={control}
+                  rules={{ required: 'Category is required' }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="category"
+                      options={categories.map(c => ({ value: c, label: c }))}
+                      value={categories.map(c => ({ value: c, label: c })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Category"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                      className={errors.category ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -358,14 +286,23 @@ const ComponentRegistration = () => {
             <fieldset>
               <label htmlFor="manufacturer">Manufacturer</label>
               <div className="select-with-button">
-                <select {...register("manufacturer")}>
-                  <option value="">Select Manufacturer</option>
-                  {manufacturers.map((manufacturer) => (
-                    <option key={manufacturer.id} value={manufacturer.id}>
-                      {manufacturer.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="manufacturer"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="manufacturer"
+                      options={manufacturers.map(m => ({ value: m, label: m }))}
+                      value={manufacturers.map(m => ({ value: m, label: m })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Manufacturer"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -381,14 +318,23 @@ const ComponentRegistration = () => {
             <fieldset>
               <label htmlFor="supplier">Supplier</label>
               <div className="select-with-button">
-                <select {...register("supplier")}>
-                  <option value="">Select Supplier</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="supplier"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="supplier"
+                      options={suppliers.map(s => ({ value: s, label: s }))}
+                      value={suppliers.map(s => ({ value: s, label: s })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Supplier"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -404,14 +350,23 @@ const ComponentRegistration = () => {
             <fieldset>
               <label htmlFor="location">Location</label>
               <div className="select-with-button">
-                <select {...register("location")}>
-                  <option value="">Select Location</option>
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="location"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="location"
+                      options={locations.map(l => ({ value: l, label: l }))}
+                      value={locations.map(l => ({ value: l, label: l })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Location"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -524,51 +479,43 @@ const ComponentRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label>Image</label>
-              {attachmentFile ? (
-                <div className="image-selected">
-                  <img
-                    src={URL.createObjectURL(attachmentFile)}
-                    alt="Selected icon"
-                  />
-                  <button type="button" onClick={() => setAttachmentFile(null)}>
-                    <img src={CloseIcon} alt="Remove" />
-                  </button>
+              <label>Image Upload</label>
+              <div className="attachments-wrapper">
+                <div className="upload-left">
+                  <label htmlFor="component-image" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="component-image"
+                      accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  <small className="file-size-info">Maximum file size must be 5MB</small>
                 </div>
-              ) : existingImage ? (
-                <div className="image-selected">
-                  <img
-                    src={`${ASSETS_API_URL.replace(/\/$/, "")}${existingImage}`}
-                    alt="Existing component image"
-                  />
-                  <button type="button" onClick={() => setExistingImage(null)}>
-                    <img src={CloseIcon} alt="Remove" />
-                  </button>
+
+                <div className="upload-right">
+                  {attachmentFile && (
+                    <div className="file-uploaded">
+                      <span
+                        title={attachmentFile.name}
+                        onClick={handleImageClick}
+                        style={{ cursor: 'pointer', textDecoration: 'underline', color: '#007bff' }}
+                      >
+                        {attachmentFile.name}
+                      </span>
+                      <button type="button" onClick={handleRemoveImage}>
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <label className="upload-image-btn">
-                  Choose File
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    onChange={handleFileSelection}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              )}
-              <small className="file-size-info">
-                Maximum file size must be 5MB
-              </small>
+              </div>
             </fieldset>
 
-            {errorMessage && (
-              <div className="error-message" style={{ marginBottom: "1rem" }}>
-                {errorMessage}
-              </div>
-            )}
-
             {/* Submit */}
-            <button type="submit" className="primary-button" disabled={!isValid || isSubmitting}>
+            <button type="submit" className="primary-button" disabled={!isValid}>
               {isEdit ? "Update Component" : "Save"}
             </button>
           </form>
@@ -612,6 +559,42 @@ const ComponentRegistration = () => {
         fields={locationFields}
         type="location"
       />
+
+      {/* Image Preview Modal */}
+      {selectedImageForModal && (
+        <div
+          className="image-preview-modal-overlay"
+          onClick={() => {
+            URL.revokeObjectURL(selectedImageForModal);
+            setSelectedImageForModal(null);
+          }}
+        >
+          <div
+            className="image-preview-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="image-preview-close-btn"
+              onClick={() => {
+                URL.revokeObjectURL(selectedImageForModal);
+                setSelectedImageForModal(null);
+              }}
+            >
+              ✕
+            </button>
+            <img
+              src={selectedImageForModal}
+              alt="Preview"
+              style={{
+                maxWidth: '100%',
+                maxHeight: '60vh',
+                display: 'block',
+                margin: '0 auto'
+              }}
+            />
+          </div>
+        </div>
+      )}
 
 
     </>

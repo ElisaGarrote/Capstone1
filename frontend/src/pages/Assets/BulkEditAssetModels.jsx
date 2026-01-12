@@ -1,74 +1,44 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import NavBar from "../../components/NavBar";
-import Footer from "../../components/Footer";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
+import Footer from "../../components/Footer";
+import ProductsMockupData from "../../data/mockData/products/products-mockup-data.json";
 import CloseIcon from "../../assets/icons/close.svg";
-import PlusIcon from '../../assets/icons/plus.svg';
+import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import SystemLoading from "../../components/Loading/SystemLoading";
+import { getCustomSelectStyles } from "../../utils/selectStyles";
 import "../../styles/Registration.css";
 import "../../styles/Assets/BulkEditAssetModels.css";
-import { fetchProductNames, bulkEditProducts } from "../../services/assets-service";
-import { fetchAllDropdowns, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
 
 export default function BulkEditAssetModels() {
   const location = useLocation();
   const navigate = useNavigate();
   const { selectedIds } = location.state || { selectedIds: [] };
-  const [currentSelectedIds, setCurrentSelectedIds] = useState(selectedIds || []);
-  
-  const [selectedModels, setSelectedModels] = useState([]);
-  const [isLoading, setLoading] = useState(true);
 
+  const [currentSelectedIds, setCurrentSelectedIds] = useState(selectedIds || []);
+  const selectedModels = ProductsMockupData.filter((product) =>
+    currentSelectedIds.includes(product.id)
+  );
+
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [categories, setCategories] = useState([]);
   const [manufacturers, setManufacturers] = useState([]);
   const [depreciations, setDepreciations] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
-
-  // Modal states for adding new entries
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showManufacturerModal, setShowManufacturerModal] = useState(false);
   const [showDepreciationModal, setShowDepreciationModal] = useState(false);
-  const [showSupplierModal, setShowSupplierModal] = useState(false);
-
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const [previewImage, setPreviewImage] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [removeImage, setRemoveImage] = useState(false);
 
   useEffect(() => {
-    async function loadSelectedModels() {
-      try {
-        if (!selectedIds || selectedIds.length === 0) {
-          setErrorMessage("No asset models selected for bulk edit");
-          setTimeout(() => navigate("/products"), 2000);
-          return;
-        }
-
-        setLoading(true);
-        const models = await fetchProductNames({ ids: selectedIds });
-        setSelectedModels(models);
-
-        // Fetch dropdown options
-        const dropdowns = await fetchAllDropdowns("product");
-          setCategories(dropdowns.categories);
-          setManufacturers(dropdowns.manufacturers);
-          setSuppliers(dropdowns.suppliers);
-          setDepreciations(dropdowns.depreciations);
-
-      } catch (error) {
-        setErrorMessage("Failed to load selected asset models");
-      } finally {
-        setLoading(false);
-      }
+    if (!selectedIds || selectedIds.length === 0) {
+      setErrorMessage("No asset models selected for bulk edit");
+      setTimeout(() => navigate("/products"), 2000);
     }
-
-    loadSelectedModels();
   }, [selectedIds, navigate]);
 
   const handleRemoveModel = (modelId) => {
@@ -78,18 +48,18 @@ export default function BulkEditAssetModels() {
   const {
     register,
     handleSubmit,
-    setValue,
+    control,
     formState: { errors },
   } = useForm({
     mode: "all",
     defaultValues: {
       productName: "",
-      category: "",
-      manufacturer: "",
-      depreciation: "",
+      category: null,
+      manufacturer: null,
+      depreciation: null,
       endOfLifeDate: "",
       defaultPurchaseCost: "",
-      defaultSupplier: "",
+      defaultSupplier: null,
       minimumQuantity: "",
       cpu: "",
       gpu: "",
@@ -101,283 +71,121 @@ export default function BulkEditAssetModels() {
     },
   });
 
-  const handleImageSelection = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage("Image size exceeds 5MB. Please choose a smaller file.");
-        setTimeout(() => setErrorMessage(""), 5000);
-        return;
-      }
+  // Get custom select styles from utility
+  const customSelectStyles = getCustomSelectStyles();
 
-      setSelectedImage(file);
-      setValue('image', file);
+  useEffect(() => {
+    // Initialize mock data for dropdowns
+    const mockCategories = Array.from(new Set(ProductsMockupData.map(p => p.category).filter(Boolean)));
+    const mockManufacturers = Array.from(new Set(ProductsMockupData.map(p => p.manufacturer).filter(Boolean)));
+    const mockDepreciations = [{ id: 1, name: 'Linear' }, { id: 2, name: 'Declining Balance' }];
+    const mockSuppliers = Array.from(new Set(ProductsMockupData.map(p => p.supplier).filter(Boolean)));
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+    setCategories(mockCategories.map((name, index) => ({ id: index + 1, name })));
+    setManufacturers(mockManufacturers.map((name, index) => ({ id: index + 1, name })));
+    setDepreciations(mockDepreciations);
+    setSuppliers(mockSuppliers.map((name, index) => ({ id: index + 1, name })));
+  }, []);
 
-  // Modal field configurations
-  const categoryFields = [
-    {
-      name: 'name',
-      label: 'Category Name',
-      type: 'text',
-      placeholder: 'Category Name',
-      required: true,
-      maxLength: 100,
-      validation: { required: 'Category Name is required' }
-    }
-  ];
-
-  const manufacturerFields = [
-    {
-      name: 'name',
-      label: 'Manufacturer Name',
-      type: 'text',
-      placeholder: 'Manufacturer Name',
-      required: true,
-      maxLength: 100,
-      validation: { required: 'Manufacturer Name is required' }
-    }
-  ];
-
-  const depreciationFields = [
-    {
-      name: 'name',
-      label: 'Name',
-      type: 'text',
-      placeholder: 'Depreciation Method Name',
-      required: true,
-      maxLength: 100,
-      validation: { required: 'Name is required' }
-    },
-    {
-      name: 'duration',
-      label: 'Duration',
-      type: 'number',
-      placeholder: '0',
-      required: true,
-      validation: {
-        required: 'Duration is required',
-        min: { value: 1, message: 'Duration must be at least 1' }
-      },
-      suffix: 'months'
-    },
-    {
-      name: 'minimum_value',
-      label: 'Minimum Value',
-      type: 'number',
-      placeholder: '0.00',
-      required: true,
-      validation: {
-        required: 'Minimum Value is required',
-        min: { value: 0, message: 'Minimum Value must be at least 0' }
-      },
-      prefix: 'PHP',
-      step: '0.01'
-    }
-  ];
-
-  const supplierFields = [
-    {
-      name: "name",
-      label: "Supplier Name",
-      type: "text",
-      placeholder: "Supplier Name",
-      required: true,
-      maxLength: 100,
-      validation: { required: "Supplier Name is required" },
-    },
-  ];
-
-  // Handle save for each modal
-  const handleSaveCategory = async (data) => {
+  const handleSaveCategory = (data) => {
     try {
-      const categoryData = {
-        name: data.name,
-        type: 'asset'
+      const newCategory = {
+        id: (categories[categories.length - 1]?.id || 0) + 1,
+        name: data.name?.trim() || '',
       };
-      const newCategory = await createCategory(categoryData);
-      setCategories([...categories, newCategory]);
+      setCategories((prev) => [...prev, newCategory]);
       setShowCategoryModal(false);
-      setErrorMessage("");
     } catch (error) {
-      console.error("Error creating category:", error);
-      setErrorMessage("Failed to create category");
-      setTimeout(() => setErrorMessage(""), 5000);
+      console.error('Error creating category:', error);
     }
   };
 
-  const handleSaveManufacturer = async (data) => {
+  const handleSaveManufacturer = (data) => {
     try {
-      const newManufacturer = await createManufacturer(data);
-      setManufacturers([...manufacturers, newManufacturer]);
+      const newManufacturer = {
+        id: (manufacturers[manufacturers.length - 1]?.id || 0) + 1,
+        name: data.name?.trim() || '',
+      };
+      setManufacturers((prev) => [...prev, newManufacturer]);
       setShowManufacturerModal(false);
-      setErrorMessage("");
     } catch (error) {
-      console.error("Error creating manufacturer:", error);
-      setErrorMessage("Failed to create manufacturer");
-      setTimeout(() => setErrorMessage(""), 5000);
+      console.error('Error creating manufacturer:', error);
     }
   };
 
-  const handleSaveDepreciation = async (data) => {
+  const handleSaveDepreciation = (data) => {
     try {
-      const newDepreciation = await createDepreciation(data);
-      setDepreciations([...depreciations, newDepreciation]);
+      const newDepreciation = {
+        id: (depreciations[depreciations.length - 1]?.id || 0) + 1,
+        name: data.name?.trim() || '',
+      };
+      setDepreciations((prev) => [...prev, newDepreciation]);
       setShowDepreciationModal(false);
-      setErrorMessage("");
     } catch (error) {
-      console.error("Error creating depreciation:", error);
-      setErrorMessage("Failed to create depreciation method");
-      setTimeout(() => setErrorMessage(""), 5000);
+      console.error('Error creating depreciation:', error);
     }
   };
 
-  const handleSaveSupplier = async (data) => {
-    try {
-      const newSupplier = await createSupplier(data);
-      setSuppliers([...suppliers, newSupplier]);
-      setShowSupplierModal(false);
-      setErrorMessage("");
-    } catch (error) {
-      console.error("Error creating supplier:", error);
-      setErrorMessage("Failed to create supplier");
-      setTimeout(() => setErrorMessage(""), 5000);
-    }
-  };
-
-  const onSubmit = async (data) => {
+  const onSubmit = (data) => {
     try {
       if (currentSelectedIds.length === 0) {
         setErrorMessage("Please select at least one asset model to update");
         return;
       }
 
-      // Map frontend field names to backend field names
-      const fieldMapping = {
-        productName: 'name',
-        category: 'category',
-        manufacturer: 'manufacturer',
-        depreciation: 'depreciation',
-        modelNumber: 'model_number',
-        endOfLifeDate: 'end_of_life',
-        defaultPurchaseCost: 'default_purchase_cost',
-        defaultSupplier: 'default_supplier',
-        minimumQuantity: 'minimum_quantity',
-        cpu: 'cpu',
-        gpu: 'gpu',
-        ram: 'ram',
-        screenSize: 'size',
-        storageSize: 'storage',
-        operatingSystem: 'os',
-        notes: 'notes',
-      };
+      const updateData = Object.fromEntries(
+        Object.entries(data).filter(([, value]) =>
+          value !== "" && value !== null && value !== undefined
+        )
+      );
 
-      // Filter out empty values and map to backend field names
-      const updateData = {};
-      Object.entries(data).forEach(([key, value]) => {
-        // Skip empty, null, undefined, and NaN values
-        const isEmptyOrInvalid = value === "" || value === null || value === undefined ||
-                                  (typeof value === 'number' && isNaN(value));
-        if (!isEmptyOrInvalid) {
-          const backendKey = fieldMapping[key] || key;
-          // For integer fields, parse as integer to avoid floating point issues
-          if (key === 'minimumQuantity') {
-            updateData[backendKey] = parseInt(value, 10);
-          } else if (key === 'defaultPurchaseCost') {
-            // For decimal fields, keep as string to preserve precision
-            updateData[backendKey] = String(value);
-          } else {
-            updateData[backendKey] = value;
-          }
-        }
-      });
-
-      // Check if there's anything to update (including image)
-      const hasFieldUpdates = Object.keys(updateData).length > 0;
-      const hasImageUpdate = selectedImage !== null || removeImage;
-
-      if (!hasFieldUpdates && !hasImageUpdate) {
-        setErrorMessage("Please fill in at least one field to update");
+      if (Object.keys(updateData).length === 0) {
+        setErrorMessage("Please select at least one field to update");
         return;
       }
 
-      setLoading(true);
+      // TODO: Hook up to real API when backend is ready
+      console.log("Updating asset models:", currentSelectedIds, "with data:", updateData);
 
-      let result;
-
-      // If image is selected, we need to use FormData
-      if (hasImageUpdate) {
-        const formData = new FormData();
-        formData.append('ids', JSON.stringify(currentSelectedIds));
-        formData.append('data', JSON.stringify(updateData));
-
-        if (selectedImage) {
-          formData.append('image', selectedImage);
-        }
-        if (removeImage) {
-          formData.append('remove_image', 'true');
-        }
-
-        result = await bulkEditProducts(formData, true); // true = use FormData
-      } else {
-        const payload = {
-          ids: currentSelectedIds,
-          data: updateData,
-        };
-        result = await bulkEditProducts(payload, false);
-      }
-
-      if (result.failed && result.failed.length > 0) {
-        setErrorMessage(
-          `Updated ${result.updated?.length || 0} asset model(s), but ${result.failed.length} failed.`
-        );
-      } else {
-        setSuccessMessage(
-          `Successfully updated ${result.updated?.length || currentSelectedIds.length} asset model(s)`
-        );
-        setTimeout(() => {
-          navigate("/products", {
-            state: {
-              successMessage: `Updated ${result.updated?.length || currentSelectedIds.length} asset model(s)`,
-            },
-          });
-        }, 2000);
-      }
+      setSuccessMessage(
+        `Successfully updated ${currentSelectedIds.length} asset model(s)`
+      );
+      setTimeout(() => {
+        navigate("/products", {
+          state: {
+            successMessage: `Updated ${currentSelectedIds.length} asset model(s)`,
+          },
+        });
+      }, 2000);
     } catch (error) {
-      console.error("Bulk edit error:", error);
-      setErrorMessage(error.response?.data?.detail || error.message || "Failed to update asset models");
-    } finally {
-      setLoading(false);
+      setErrorMessage(error.message || "Failed to update asset models");
     }
   };
-
-  if (isLoading) {
-    console.log("isLoading triggered — showing loading screen");
-    return <SystemLoading />;
-  }
 
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
 
-        <main className="main-with-table">
-          <TopSecFormPage
-            root="Asset Models"
-            currentPage="Bulk Edit Asset Models"
-            rootNavigatePage="/products"
-            title="Bulk Edit Asset Models"
-          />
+        <main className="registration bulk-edit-models-page">
+          <section className="top">
+            <TopSecFormPage
+              root="Asset Models"
+              currentPage="Bulk Edit Asset Models"
+              rootNavigatePage="/products"
+              title="Bulk Edit Asset Models"
+              rightComponent={
+                <div className="import-section">
+                  <span style={{ fontSize: '0.875rem', color: '#666' }}>
+                    {currentSelectedIds.length} Model{currentSelectedIds.length !== 1 ? 's' : ''} Selected
+                  </span>
+                </div>
+              }
+            />
+          </section>
 
           {/* Selected Asset Models */}
           <section className="asset-models-selected-section">
@@ -406,8 +214,12 @@ export default function BulkEditAssetModels() {
             </div>
           </section>
 
+          <p className="asset-models-note">
+            Note: Fill in only the fields you want to change. Fields left empty will stay unchanged. Use the Remove toggle to clear existing values.
+          </p>
+
           {/* Bulk Edit Form */}
-          <section className="asset-models-bulk-form-section registration">
+          <section className="asset-models-bulk-form-section">
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="asset-models-bulk-form"
@@ -427,23 +239,28 @@ export default function BulkEditAssetModels() {
 
               {/* Category */}
               <fieldset className="form-field">
-                <label htmlFor='category'>Category</label>
-                <div className="dropdown-with-add">
-                  <select
-                    id="category"
-                    {...register("category")}
-                    className={`form-input ${errors.category ? 'input-error' : ''}`}
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map(category => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+                <label htmlFor="category">Category</label>
+                <div className="select-with-button">
+                  <Controller
+                    name="category"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="category"
+                        options={categories.map(c => ({ value: c.id, label: c.name }))}
+                        value={categories.map(c => ({ value: c.id, label: c.name })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Category"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
                   <button
                     type="button"
-                    className="add-btn"
+                    className="add-entry-btn"
                     onClick={() => setShowCategoryModal(true)}
                     title="Add new category"
                   >
@@ -454,23 +271,28 @@ export default function BulkEditAssetModels() {
 
               {/* Manufacturer */}
               <fieldset className="form-field">
-                <label htmlFor='manufacturer'>Manufacturer</label>
-                <div className="dropdown-with-add">
-                  <select
-                    id="manufacturer"
-                    {...register("manufacturer")}
-                    className={`form-input ${errors.manufacturer ? 'input-error' : ''}`}
-                  >
-                    <option value="">Select Manufacturer</option>
-                    {manufacturers.map(manufacturer => (
-                      <option key={manufacturer.id} value={manufacturer.id}>
-                        {manufacturer.name}
-                      </option>
-                    ))}
-                  </select>
+                <label htmlFor="manufacturer">Manufacturer</label>
+                <div className="select-with-button">
+                  <Controller
+                    name="manufacturer"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="manufacturer"
+                        options={manufacturers.map(m => ({ value: m.id, label: m.name }))}
+                        value={manufacturers.map(m => ({ value: m.id, label: m.name })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Manufacturer"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
                   <button
                     type="button"
-                    className="add-btn"
+                    className="add-entry-btn"
                     onClick={() => setShowManufacturerModal(true)}
                     title="Add new manufacturer"
                   >
@@ -481,44 +303,34 @@ export default function BulkEditAssetModels() {
 
               {/* Depreciation */}
               <fieldset className="form-field">
-                <label htmlFor='depreciation'>Depreciation</label>
-                <div className="dropdown-with-add">
-                  <select
-                    id="depreciation"
-                    {...register("depreciation")}
-                    className={`form-input ${errors.depreciation ? 'input-error' : ''}`}
-                  >
-                    <option value="">Select Depreciation</option>
-                    {depreciations.map(depreciation => (
-                      <option key={depreciation.id} value={depreciation.id}>
-                        {depreciation.name}
-                      </option>
-                    ))}
-                  </select>
+                <label htmlFor="depreciation">Depreciation</label>
+                <div className="select-with-button">
+                  <Controller
+                    name="depreciation"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="depreciation"
+                        options={depreciations.map(d => ({ value: d.id, label: d.name }))}
+                        value={depreciations.map(d => ({ value: d.id, label: d.name })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Depreciation Method"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                      />
+                    )}
+                  />
                   <button
                     type="button"
-                    className="add-btn"
+                    className="add-entry-btn"
                     onClick={() => setShowDepreciationModal(true)}
-                    title="Add new depreciation"
+                    title="Add new depreciation method"
                   >
                     <img src={PlusIcon} alt="Add" />
                   </button>
                 </div>
-              </fieldset>
-
-              {/* Model Number */}
-              <fieldset className="form-field">
-                <label htmlFor="modelNumber">Model Number</label>
-                <input
-                  type="text"
-                  id="modelNumber"
-                  className={`form-input ${
-                    errors.modelNumber ? "input-error" : ""
-                  }`}
-                  {...register("modelNumber")}
-                  maxLength="100"
-                  placeholder="Model Number"
-                />
               </fieldset>
 
               {/* End of Life Date */}
@@ -538,197 +350,55 @@ export default function BulkEditAssetModels() {
                 <div className="cost-input-group">
                   <span className="cost-addon">PHP</span>
                   <input
-                    type="text"
-                    inputMode="decimal"
+                    type="number"
                     id="defaultPurchaseCost"
+                    name="defaultPurchaseCost"
                     placeholder="0.00"
+                    min="0"
+                    step="0.01"
                     className={`form-input ${
                       errors.defaultPurchaseCost ? "input-error" : ""
                     }`}
-                    {...register("defaultPurchaseCost", {
-                      pattern: {
-                        value: /^[0-9]*\.?[0-9]*$/,
-                        message: "Please enter a valid number, e.g. 100.00"
-                      }
-                    })}
+                    {...register("defaultPurchaseCost", { valueAsNumber: true })}
                   />
                 </div>
-                {errors.defaultPurchaseCost && (
-                  <span className="error-message">
-                    {errors.defaultPurchaseCost.message}
-                  </span>
-                )}
               </fieldset>
 
               {/* Default Supplier */}
               <fieldset className="form-field">
-                <label htmlFor='defaultSupplier'>Default Supplier</label>
-                <div className="dropdown-with-add">
-                  <select
-                    id="defaultSupplier"
-                    {...register("defaultSupplier")}
-                    className={`form-input ${errors.defaultSupplier ? 'input-error' : ''}`}
-                  >
-                    <option value="">Select Default Supplier</option>
-                    {suppliers.map(supplier => (
-                      <option key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className="add-btn"
-                    onClick={() => setShowSupplierModal(true)}
-                    title="Add new supplier"
-                  >
-                    <img src={PlusIcon} alt="Add" />
-                  </button>
-                </div>
+                <label htmlFor="defaultSupplier">Default Supplier</label>
+                <Controller
+                  name="defaultSupplier"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="defaultSupplier"
+                      options={suppliers.map(s => ({ value: s.id, label: s.name }))}
+                      value={suppliers.map(s => ({ value: s.id, label: s.name })).find(opt => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Supplier"
+                      isSearchable={true}
+                      isClearable={true}
+                      styles={customSelectStyles}
+                    />
+                  )}
+                />
               </fieldset>
 
               {/* Minimum Quantity */}
               <fieldset className="form-field">
                 <label htmlFor="minimumQuantity">Minimum Quantity</label>
                 <input
-                  type="text"
-                  inputMode="numeric"
+                  type="number"
                   id="minimumQuantity"
                   className={`form-input ${
                     errors.minimumQuantity ? "input-error" : ""
                   }`}
-                  {...register("minimumQuantity", {
-                    pattern: {
-                      value: /^[0-9]*$/,
-                      message: "Please enter a valid whole number"
-                    }
-                  })}
+                  {...register("minimumQuantity", { valueAsNumber: true })}
                   placeholder="Minimum Quantity"
+                  min="0"
                 />
-                {errors.minimumQuantity && (
-                  <span className="error-message">
-                    {errors.minimumQuantity.message}
-                  </span>
-                )}
-              </fieldset>
-
-              {/* CPU */}
-              <fieldset className="form-field">
-                <label htmlFor='cpu'>CPU</label>
-
-                <select
-                  id="cpu"
-                  {...register("cpu")}
-                  className={`form-input ${errors.cpu ? 'input-error' : ''}`}
-                >
-                  <option value="">Select CPU</option>
-                  <option value="intel-i3">Intel Core i3</option>
-                  <option value="intel-i5">Intel Core i5</option>
-                  <option value="intel-i7">Intel Core i7</option>
-                  <option value="intel-i9">Intel Core i9</option>
-                  <option value="amd-ryzen-5">AMD Ryzen 5</option>
-                  <option value="amd-ryzen-7">AMD Ryzen 7</option>
-                  <option value="amd-ryzen-9">AMD Ryzen 9</option>
-                  <option value="apple-m1">Apple M1</option>
-                  <option value="apple-m2">Apple M2</option>
-                  <option value="other">Other</option>
-                </select>
-              </fieldset>
-
-              {/* GPU */}
-              <fieldset className="form-field">
-                <label htmlFor='gpu'>GPU</label>
-                <select
-                  id="gpu"
-                  {...register("gpu")}
-                  className={`form-input ${errors.gpu ? 'input-error' : ''}`}
-                >
-                  <option value="">Select GPU</option>
-                  <option value="nvidia-gtx-1050">NVIDIA GTX 1050</option>
-                  <option value="nvidia-gtx-1650">NVIDIA GTX 1650</option>
-                  <option value="nvidia-rtx-2060">NVIDIA RTX 2060</option>
-                  <option value="nvidia-rtx-3060">NVIDIA RTX 3060</option>
-                  <option value="amd-radeon-rx-5500">AMD Radeon RX 5500</option>
-                  <option value="amd-radeon-rx-6600">AMD Radeon RX 6600</option>
-                  <option value="integrated">Integrated Graphics</option>
-                  <option value="other">Other</option>
-                </select>
-              </fieldset>
-
-              {/* RAM */}
-              <fieldset className="form-field">
-                <label htmlFor='ram'>RAM</label>
-                <select
-                  id="ram"
-                  {...register("ram")}
-                  className={`form-input ${errors.ram ? 'input-error' : ''}`}
-                >
-                  <option value="">Select RAM</option>
-                  <option value="4gb">4 GB</option>
-                  <option value="8gb">8 GB</option>
-                  <option value="16gb">16 GB</option>
-                  <option value="32gb">32 GB</option>
-                  <option value="64gb">64 GB</option>
-                  <option value="other">Other</option>
-                </select>
-              </fieldset>
-
-              {/* Screen Size */}
-              <fieldset className="form-field">
-                <label htmlFor='screenSize'>Screen Size</label>
-                <select
-                  id="screenSize"
-                  {...register("screenSize")}
-                  className={`form-input ${errors.screenSize ? 'input-error' : ''}`}
-                >
-                  <option value="">Select Screen Size</option>
-                  <option value="13-inch">13 inches</option>
-                  <option value="14-inch">14 inches</option>
-                  <option value="15-inch">15 inches</option>
-                  <option value="17-inch">17 inches</option>
-                  <option value="21-inch">21 inches</option>
-                  <option value="24-inch">24 inches</option>
-                  <option value="27-inch">27 inches</option>
-                  <option value="other">Other</option>
-                </select>
-              </fieldset>
-
-              {/* Storage Size */}
-              <fieldset className="form-field">
-                <label htmlFor='storageSize'>Storage Size</label>
-                <select
-                  id="storageSize"
-                  {...register("storageSize")}
-                  className={`form-input ${errors.storageSize ? 'input-error' : ''}`}
-                >
-                  <option value="">Select Storage Size</option>
-                  <option value="128gb">128 GB</option>
-                  <option value="256gb">256 GB</option>
-                  <option value="512gb">512 GB</option>
-                  <option value="1tb">1 TB</option>
-                  <option value="2tb">2 TB</option>
-                  <option value="other">Other</option>
-                </select>
-              </fieldset>
-
-              {/* Operating System */}
-              <fieldset className="form-field">
-                <label htmlFor='operatingSystem'>Operating System</label>
-                <select
-                  id="operatingSystem"
-                  {...register("operatingSystem")}
-                  className={`form-input ${errors.operatingSystem ? 'input-error' : ''}`}
-                >
-                  <option value="">Select Operating System</option>
-                  <option value="linux">Linux</option>
-                  <option value="windows">Windows</option>
-                  <option value="macos">macOS</option>
-                  <option value="ubuntu">Ubuntu</option>
-                  <option value="centos">CentOS</option>
-                  <option value="debian">Debian</option>
-                  <option value="fedora">Fedora</option>
-                  <option value="other">Other</option>
-                </select>
               </fieldset>
 
               {/* Notes */}
@@ -742,44 +412,6 @@ export default function BulkEditAssetModels() {
                   placeholder="Notes"
                   rows="4"
                 />
-              </fieldset>
-
-              {/* Image */}
-              <fieldset>
-                <label>Image</label>
-                {previewImage ? (
-                  <div className="image-selected">
-                    <img src={previewImage} alt="Selected image" />
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPreviewImage(null);
-                        setSelectedImage(null);
-                        setValue('image', null);
-                        document.getElementById('image').value = '';
-                        setRemoveImage(true);
-                        console.log("Remove image flag set to:", true);
-                      }}
-                    >
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="upload-image-btn">
-                    Choose File
-                    <input
-                      type="file"
-                      id="image"
-                      accept="image/*"
-                      onChange={handleImageSelection}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                )}
-                <small className="file-size-info">
-                  Maximum file size must be 5MB
-                </small>
               </fieldset>
 
               {/* Form Actions */}
@@ -797,48 +429,65 @@ export default function BulkEditAssetModels() {
               </div>
             </form>
           </section>
-          {/* Add Category Modal */}
-        <AddEntryModal
-          isOpen={showCategoryModal}
-          onClose={() => setShowCategoryModal(false)}
-          onSave={handleSaveCategory}
-          title="New Category"
-          fields={categoryFields}
-          type="category"
-        />
-
-        {/* Add Manufacturer Modal */}
-        <AddEntryModal
-          isOpen={showManufacturerModal}
-          onClose={() => setShowManufacturerModal(false)}
-          onSave={handleSaveManufacturer}
-          title="New Manufacturer"
-          fields={manufacturerFields}
-          type="manufacturer"
-        />
-
-        {/* Add Depreciation Modal */}
-        <AddEntryModal
-          isOpen={showDepreciationModal}
-          onClose={() => setShowDepreciationModal(false)}
-          onSave={handleSaveDepreciation}
-          title="New Depreciation"
-          fields={depreciationFields}
-          type="depreciation"
-        />
-
-        {/* Add Supplier Modal */}
-        <AddEntryModal
-          isOpen={showSupplierModal}
-          onClose={() => setShowSupplierModal(false)}
-          onSave={handleSaveSupplier}
-          title="New Supplier"
-          fields={supplierFields}
-          type="supplier"
-        />
         </main>
-        <Footer />
       </section>
+
+      <Footer />
+
+      {/* Category Modal */}
+      {showCategoryModal && (
+        <AddEntryModal
+          title="Add New Category"
+          fields={[
+            {
+              name: "name",
+              label: "Category Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter category name"
+            }
+          ]}
+          onSubmit={handleSaveCategory}
+          onClose={() => setShowCategoryModal(false)}
+        />
+      )}
+
+      {/* Manufacturer Modal */}
+      {showManufacturerModal && (
+        <AddEntryModal
+          title="Add New Manufacturer"
+          fields={[
+            {
+              name: "name",
+              label: "Manufacturer Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter manufacturer name"
+            }
+          ]}
+          onSubmit={handleSaveManufacturer}
+          onClose={() => setShowManufacturerModal(false)}
+        />
+      )}
+
+      {/* Depreciation Modal */}
+      {showDepreciationModal && (
+        <AddEntryModal
+          title="Add New Depreciation Method"
+          fields={[
+            {
+              name: "name",
+              label: "Depreciation Method Name",
+              type: "text",
+              required: true,
+              placeholder: "Enter depreciation method name"
+            }
+          ]}
+          onSubmit={handleSaveDepreciation}
+          onClose={() => setShowDepreciationModal(false)}
+        />
+      )}
     </>
   );
 }
+

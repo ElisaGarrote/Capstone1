@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import { exportToExcel } from "../../utils/exportToExcel";
 import MockupData from "../../data/mockData/reports/activity-report-mockup-data.json";
-import DepreciationFilter from "../../components/FilterPanel";
+import ActivityFilterModal from "../../components/Modals/ActivityFilterModal";
 import Pagination from "../../components/Pagination";
 import Footer from "../../components/Footer";
 import { BsKeyboard } from "react-icons/bs";
@@ -12,28 +13,8 @@ import { HiOutlineTag } from "react-icons/hi";
 import { RxPerson } from "react-icons/rx";
 import { AiOutlineAudit } from "react-icons/ai";
 import { RxComponent1 } from "react-icons/rx";
-import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/reports/ActivityReport.css";
-
-// Generate a random 7-character alphanumeric token
-const generateToken = () => {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let token = "";
-  for (let i = 0; i < 7; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return token;
-};
-
-// Get formatted date as YYYYMMDD
-const getFormattedDate = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}${month}${day}`;
-};
 
 const filterConfig = [
   {
@@ -93,7 +74,6 @@ const getTypeIcon = (type) => {
   }
 };
 
-// TableHeader component to render the table header
 function TableHeader() {
   return (
     <tr>
@@ -108,7 +88,6 @@ function TableHeader() {
   );
 }
 
-// TableItem component to render each ticket row
 function TableItem({ activity }) {
   return (
     <tr>
@@ -141,23 +120,96 @@ function TableItem({ activity }) {
 }
 
 export default function ActivityReport() {
-  // pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+  const handleToggleFilter = () => setIsFilterModalOpen(true);
 
-  // paginate the data
+  // filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState(MockupData);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    if (filters?.type) {
+      filtered = filtered.filter(
+        (row) => String(row.type || "").toLowerCase() === String(filters.type || "").toLowerCase()
+      );
+    }
+
+    if (filters?.event) {
+      filtered = filtered.filter(
+        (row) => String(row.action || "").toLowerCase() === String(filters.event || "").toLowerCase()
+      );
+    }
+
+    if (filters?.user && String(filters.user).trim() !== "") {
+      filtered = filtered.filter((row) =>
+        String(row.user || "").toLowerCase().includes(String(filters.user).toLowerCase())
+      );
+    }
+
+    if (filters?.tofrom && String(filters.tofrom).trim() !== "") {
+      filtered = filtered.filter((row) =>
+        String(row.to_from || "").toLowerCase().includes(String(filters.tofrom).toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  const applyFiltersAndSearch = (filters, searchTerm) => {
+    let filtered = applyFilters(filters);
+
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((item) =>
+        (item.user && item.user.toLowerCase().includes(term)) ||
+        (item.type && item.type.toLowerCase().includes(term)) ||
+        (item.action && item.action.toLowerCase().includes(term)) ||
+        (item.item && item.item.toLowerCase().includes(term)) ||
+        (item.to_from && item.to_from.toLowerCase().includes(term)) ||
+        (item.notes && item.notes.toLowerCase().includes(term))
+      );
+    }
+
+    return filtered;
+  };
+
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedActivity = MockupData.slice(startIndex, endIndex);
+  const paginatedActivity = filteredData.slice(startIndex, endIndex);
 
-  // Handle export to Excel with format: [Name]_[DateGenerated]_[7DigitToken].xlsx
-  const handleExportExcel = () => {
-    const name = "ActivityReport";
-    const dateGenerated = getFormattedDate();
-    const token = generateToken();
-    const fileName = `${name}_${dateGenerated}_${token}.xlsx`;
+  useEffect(() => {
+  }, []);
 
-    exportToExcel(MockupData, fileName);
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "Activity_Report.xlsx");
+  };
+
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
   };
 
   return (
@@ -170,16 +222,35 @@ export default function ActivityReport() {
           <h1>Activity Report</h1>
         </section>
 
-        {/* Table Filter */}
-        <DepreciationFilter filters={filterConfig} />
-
         <section className="table-layout">
           {/* Table Header */}
           <section className="table-header">
-            <h2 className="h2">Activity Log ({MockupData.length})</h2>
+            <h2 className="h2">Activity Log ({filteredData.length})</h2>
             <section className="table-actions">
-              <input type="search" placeholder="Search..." className="search" />
-              <MediumButtons type="export" onClick={handleExportExcel} />
+              <input
+                type="search"
+                placeholder="Search..."
+                className="search"
+                value={searchTerm}
+                onChange={handleSearch}
+              />
+              <button
+                type="button"
+                className="medium-button-filter"
+                onClick={handleToggleFilter}
+              >
+                Filter
+              </button>
+              <ActivityFilterModal
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+                onApplyFilter={handleApplyFilter}
+                onResetFilter={handleResetFilter}
+                initialFilters={appliedFilters}
+              />
+              <div>
+                <MediumButtons type="export" onClick={handleExport} />
+              </div>
             </section>
           </section>
 
@@ -214,7 +285,7 @@ export default function ActivityReport() {
             <Pagination
               currentPage={currentPage}
               pageSize={pageSize}
-              totalItems={MockupData.length}
+              totalItems={filteredData.length}
               onPageChange={setCurrentPage}
               onPageSizeChange={setPageSize}
             />

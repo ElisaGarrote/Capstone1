@@ -12,8 +12,6 @@ export default function MediumButtons({
   previousPage,
   onClick = null,
   deleteModalOpen = null,
-  disabled = false,
-  title = "",
 }) {
   console.log("MediumButtons RENDER - type:", type, "| onClick exists:", !!onClick);
 
@@ -60,7 +58,6 @@ export default function MediumButtons({
   };
 
   const handleClick = () => {
-    if (disabled) return;
     console.log("🎯 handleClick CALLED - type:", type, "| onClick exists:", !!onClick);
 
     if (type.toLowerCase() === "export" && onClick) {
@@ -99,11 +96,6 @@ export default function MediumButtons({
       console.log("FILTER onClick executed");
     }
 
-    if (type.toLowerCase() === "new" && onClick) {
-      console.log("Executing NEW onClick");
-      onClick();
-    }
-
     if (navigatePage) {
       console.log("Navigating to:", navigatePage);
       navigate(navigatePage, { state: { previousPage } });
@@ -115,17 +107,18 @@ export default function MediumButtons({
   return (
     <button
       type="button"
-      className={`medium-button-${type} ${disabled ? 'medium-button-disabled' : ''}`}
-      title={title}
+      className={`medium-button-${type}`}
       onClick={(e) => {
-        if (disabled) return;
+        console.log("BUTTON CLICKED - type:", type);
+        console.log("Event target:", e.target);
+        console.log("Current target:", e.currentTarget);
         e.preventDefault();
         e.stopPropagation();
         handleClick();
       }}
       style={{
-        pointerEvents: disabled ? 'none' : 'auto',
-        cursor: disabled ? 'not-allowed' : 'pointer',
+        pointerEvents: 'auto',
+        cursor: 'pointer',
         position: 'relative',
         zIndex: 10
       }}

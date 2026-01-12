@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import NavBar from "../../components/NavBar";
-import api from "../../api";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Status from "../../components/Status";
 import Alert from "../../components/Alert";
@@ -19,31 +19,55 @@ const StatusRegistration = () => {
   // Retrieve the "status" data value passed from the navigation state.
   // If the "status" data is not exist, the default value for this is "undifiend".
   const status = location.state?.status;
-  const notesOnly = location.state?.notesOnly || false;
+
+  // Custom styles for react-select to match Registration inputs
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      width: '100%',
+      minHeight: '48px',
+      height: '48px',
+      borderRadius: '25px',
+      fontSize: '0.875rem',
+      padding: '0 8px',
+      border: state.isFocused ? '1px solid #007bff' : '1px solid #ccc',
+      boxShadow: state.isFocused ? '0 0 0 1px #007bff' : 'none',
+      cursor: 'pointer',
+      '&:hover': { borderColor: '#007bff' },
+    }),
+    valueContainer: (provided) => ({ ...provided, height: '46px', padding: '0 8px' }),
+    input: (provided) => ({ ...provided, margin: 0, padding: 0 }),
+    indicatorSeparator: (provided) => ({ ...provided, display: 'block', backgroundColor: '#ccc', width: '1px', marginTop: '10px', marginBottom: '10px' }),
+    indicatorsContainer: (provided) => ({ ...provided, height: '46px' }),
+    container: (provided) => ({ ...provided, width: '100%' }),
+    menu: (provided) => ({ ...provided, zIndex: 9999, position: 'absolute', width: '100%', backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? 'white' : '#333',
+      fontSize: '0.875rem',
+      padding: '10px 16px',
+      backgroundColor: state.isSelected ? '#007bff' : state.isFocused ? '#f8f9fa' : 'white',
+      cursor: 'pointer',
+    }),
+    singleValue: (provided) => ({ ...provided, color: '#333' }),
+    placeholder: (provided) => ({ ...provided, color: '#999' }),
+  };
 
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
-      statusName: status?.name || "",
-      statusCategory: status?.category || "",
-      statusType: status?.type || "",
-      notes: status?.notes || "",
+      statusName: status.name,
+      statusType: status.type,
+      notes: status.notes,
     },
     mode: "all",
   });
 
-  const statusCategory = watch("statusCategory");
-
-  const statusCategories = [
-    { value: "asset", label: "Asset Status" },
-    { value: "repair", label: "Repair Status" },
-  ];
-
-  const assetStatusTypes = [
+  const statusTypes = [
     "Archived",
     "Deployable",
     "Deployed",
@@ -52,30 +76,11 @@ const StatusRegistration = () => {
   ];
 
   const onSubmit = (data) => {
-    // Send update to contexts service
-    const doSubmit = async () => {
-      try {
-        const contextsBase = import.meta.env.VITE_CONTEXTS_API_URL || import.meta.env.VITE_API_URL || "/api/contexts/";
-        const url = `${contextsBase}statuses/${status?.id}/`;
+    // Here you would typically send the data to your API
+    console.log("Form submitted:", data);
 
-        // If notesOnly, only send notes field to avoid changing name/type
-        const payload = notesOnly ? { notes: data.notes } : {
-          name: data.statusName,
-          category: data.statusCategory,
-          type: data.statusCategory === "asset" ? data.statusType : null,
-          notes: data.notes,
-        };
-
-        await api.patch(url, payload);
-        navigate("/More/ViewStatus", { state: { updatedStatus: true } });
-      } catch (err) {
-        const msg = err?.response?.data?.detail || err?.response?.data || err.message || "Failed to update status";
-        setErrorMessage(typeof msg === "string" ? msg : JSON.stringify(msg));
-        setTimeout(() => setErrorMessage(""), 5000);
-      }
-    };
-
-    doSubmit();
+    // Optional: navigate back to status view after successful submission
+    navigate("/More/ViewStatus", { state: { updatedStatus: true } });
   };
 
   return (
@@ -106,9 +111,8 @@ const StatusRegistration = () => {
                     placeholder="Status Name"
                     maxLength="100"
                     className={errors.statusName ? "input-error" : ""}
-                    disabled={notesOnly}
                     {...register("statusName", {
-                      required: notesOnly ? false : "Status Name is required",
+                      required: "Status Name is required",
                     })}
                   />
                   {errors.statusName && (
@@ -119,58 +123,35 @@ const StatusRegistration = () => {
                 </fieldset>
 
                 <fieldset>
-                  <label htmlFor="statusCategory">
-                    Status Category
+                  <label htmlFor="statusType">
+                    Status Type
                     <span className="required-asterisk">*</span>
                   </label>
-                  <select
-                    className={errors.statusCategory ? "input-error" : ""}
-                    disabled={notesOnly}
-                    {...register("statusCategory", {
-                      required: notesOnly ? false : "Status Category is required",
-                    })}
-                  >
-                    <option value="">Select Status Category</option>
-                    {statusCategories.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.statusCategory && (
+                  <Controller
+                    name="statusType"
+                    control={control}
+                    rules={{ required: "Status Type is required" }}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        inputId="statusType"
+                        options={statusTypes.map(t => ({ value: t.toLowerCase(), label: t }))}
+                        value={statusTypes.map(t => ({ value: t.toLowerCase(), label: t })).find(opt => opt.value === field.value) || null}
+                        onChange={(selected) => field.onChange(selected?.value ?? null)}
+                        placeholder="Select Status Type"
+                        isSearchable={true}
+                        isClearable={true}
+                        styles={customSelectStyles}
+                        className={errors.statusType ? 'react-select-error' : ''}
+                      />
+                    )}
+                  />
+                  {errors.statusType && (
                     <span className="error-message">
-                      {errors.statusCategory.message}
+                      {errors.statusType.message}
                     </span>
                   )}
                 </fieldset>
-
-                {statusCategory === "asset" && (
-                  <fieldset>
-                    <label htmlFor="statusType">
-                      Status Type
-                      <span className="required-asterisk">*</span>
-                    </label>
-                    <select
-                      className={errors.statusType ? "input-error" : ""}
-                      disabled={notesOnly}
-                      {...register("statusType", {
-                        required: !notesOnly && statusCategory === "asset" ? "Status Type is required for asset statuses" : false,
-                      })}
-                    >
-                      <option value="">Select Status Type</option>
-                      {assetStatusTypes.map((type, idx) => (
-                        <option key={idx} value={type.toLowerCase()}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.statusType && (
-                      <span className="error-message">
-                        {errors.statusType.message}
-                      </span>
-                    )}
-                  </fieldset>
-                )}
 
                 <fieldset>
                   <label htmlFor="notes">Notes</label>

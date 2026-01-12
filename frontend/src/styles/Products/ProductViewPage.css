@@ -594,7 +594,6 @@
   transition: all 0.3s ease;
   text-transform: capitalize;
   box-sizing: border-box;
-  color: white !important;
 }
 
 .action-btn.clone-btn {

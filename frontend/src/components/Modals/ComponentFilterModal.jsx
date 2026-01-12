@@ -3,7 +3,7 @@ import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/Modal.css";
 import "../../styles/AssetFilterModal.css";
 
-export default function ComponentFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
+export default function ComponentFilterModal({ isOpen, onClose, onApplyFilter, onResetFilter, initialFilters = {} }) {
 
   const [filters, setFilters] = useState({
     // Dropdowns
@@ -108,20 +108,25 @@ export default function ComponentFilterModal({ isOpen, onClose, onApplyFilter, i
 
   // Reset all filters
   const handleReset = () => {
-    setFilters({
-      category: null,
-      manufacturer: null,
-      supplier: null,
-      location: null,
-      purchaseDateFrom: "",
-      purchaseDateTo: "",
-      dueForCheckinFrom: "",
-      dueForCheckinTo: "",
-      createdAtFrom: "",
-      createdAtTo: "",
-      updatedAtFrom: "",
-      updatedAtTo: "",
-    });
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    } else {
+      setFilters({
+        category: null,
+        manufacturer: null,
+        supplier: null,
+        location: null,
+        purchaseDateFrom: "",
+        purchaseDateTo: "",
+        dueForCheckinFrom: "",
+        dueForCheckinTo: "",
+        createdAtFrom: "",
+        createdAtTo: "",
+        updatedAtFrom: "",
+        updatedAtTo: "",
+      });
+    }
   };
 
   // Apply filters

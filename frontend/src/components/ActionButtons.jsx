@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import "../styles/ActionButtons.css";
-import authService from "../services/auth-service";
 
 export default function ActionButtons({
   showView = false,
@@ -17,8 +16,6 @@ export default function ActionButtons({
   editPath = "",
   editState = {},
   onDeleteClick = null,
-  deleteDisabled = false,
-  deleteTitle = "",
   onRecoverClick = null,
   onCheckoutClick = null,
   onCheckinClick = null,
@@ -28,12 +25,16 @@ export default function ActionButtons({
   return (
     <section className="action-button-section">
       {showView && (
-        <button title="View" className="action-button" onClick={onViewClick}>
+        <button
+          title="View"
+          className="action-button"
+          onClick={onViewClick}
+        >
           <i className="fas fa-eye"></i>
         </button>
       )}
 
-      {showEdit && authService.getUserInfo().role === "Admin" && (
+      {showEdit && (
         <button
           title="Edit"
           className="action-button"
@@ -43,12 +44,11 @@ export default function ActionButtons({
         </button>
       )}
 
-      {showDelete && authService.getUserInfo().role === "Admin" && (
+      {showDelete && (
         <button
-          title={deleteTitle || "Delete"}
+          title="Delete"
           className="action-button"
-          onClick={() => !deleteDisabled && onDeleteClick?.()}
-          disabled={deleteDisabled}
+          onClick={onDeleteClick}
         >
           <i className="fas fa-trash-alt"></i>
         </button>
@@ -87,6 +87,7 @@ export default function ActionButtons({
           <span>Check-In</span>
         </button>
       )}
+
     </section>
   );
 }

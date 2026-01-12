@@ -7,28 +7,16 @@ export default function DepreciationFilterModal({
   isOpen,
   onClose,
   onApplyFilter,
+  onResetFilter,
   initialFilters = {},
 }) {
   const [filters, setFilters] = useState({
-    status: null,
-    depreciation: null,
-    durationMonths: "",
-    monthsLeft: "",
+    valueSort: "",
   });
 
-  const statusOptions = [
-    { value: "beingrepaired", label: "Being Repaired" },
-    { value: "broken", label: "Broken" },
-    { value: "deployed", label: "Deployed" },
-    { value: "lostorstolen", label: "Lost or Stolen" },
-    { value: "pending", label: "Pending" },
-    { value: "readytodeploy", label: "Ready to Deploy" },
-  ];
-
-  const depreciationOptions = [
-    { value: "iPhone Depreciation", label: "iPhone Depreciation" },
-    { value: "Laptop Depreciation", label: "Laptop Depreciation" },
-    { value: "Tablet Depreciation", label: "Tablet Depreciation" },
+  const valueSortOptions = [
+    { value: "asc", label: "Minimum Value - Lowest to Highest" },
+    { value: "desc", label: "Minimum Value - Highest to Lowest" },
   ];
 
   // Initialize filters from props
@@ -38,28 +26,22 @@ export default function DepreciationFilterModal({
     }
   }, [initialFilters]);
 
-  const handleInputChange = (field, value) => {
+  const handleSelectChange = (field, value) => {
     setFilters((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleSelectChange = (field, selectedOption) => {
-    setFilters((prev) => ({
-      ...prev,
-      [field]: selectedOption,
-    }));
-  };
-
   // Reset all filters
   const handleReset = () => {
     setFilters({
-      status: null,
-      depreciation: null,
-      durationMonths: "",
-      monthsLeft: "",
+      valueSort: "",
     });
+    if (onResetFilter) {
+      onResetFilter();
+    }
+    onClose();
   };
 
   // Apply filters
@@ -86,7 +68,7 @@ export default function DepreciationFilterModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
-          <h2>Filter Depreciation Report</h2>
+          <h2>Filter Depreciations</h2>
           <button className="modal-close-btn" onClick={onClose}>
             <img src={CloseIcon} alt="Close" />
           </button>
@@ -95,73 +77,19 @@ export default function DepreciationFilterModal({
         <div className="modal-body asset-filter-modal-body">
           <div className="filter-grid">
             <fieldset>
-              <label htmlFor="status">Status</label>
+              <label htmlFor="valueSort">Sort by Minimum Value</label>
               <select
-                id="status"
-                value={filters.status?.value || ""}
-                onChange={(e) => {
-                  const selectedOption = statusOptions.find(
-                    (opt) => opt.value === e.target.value
-                  );
-                  handleSelectChange("status", selectedOption || null);
-                }}
+                id="valueSort"
+                value={filters.valueSort || ""}
+                onChange={(e) => handleSelectChange("valueSort", e.target.value)}
               >
-                <option value="">Select Status</option>
-                {statusOptions.map((option) => (
+                <option value="">No Sort</option>
+                {valueSortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
               </select>
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="depreciation">Depreciation</label>
-              <select
-                id="depreciation"
-                value={filters.depreciation?.value || ""}
-                onChange={(e) => {
-                  const selectedOption = depreciationOptions.find(
-                    (opt) => opt.value === e.target.value
-                  );
-                  handleSelectChange("depreciation", selectedOption || null);
-                }}
-              >
-                <option value="">Select Depreciation</option>
-                {depreciationOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="durationMonths">Duration Months</label>
-              <input
-                type="number"
-                id="durationMonths"
-                placeholder="Enter duration"
-                value={filters.durationMonths}
-                onChange={(e) =>
-                  handleInputChange("durationMonths", e.target.value)
-                }
-                min="0"
-                step="1"
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="monthsLeft">Months Left</label>
-              <input
-                type="number"
-                id="monthsLeft"
-                placeholder="Enter months left"
-                value={filters.monthsLeft}
-                onChange={(e) => handleInputChange("monthsLeft", e.target.value)}
-                min="0"
-                step="1"
-              />
             </fieldset>
           </div>
         </div>

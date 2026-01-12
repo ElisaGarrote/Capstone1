@@ -1,43 +1,39 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ActionButtons from "../../components/ActionButtons";
-import { fetchComponentById } from "../../services/assets-service";
+import MockupData from "../../data/mockData/components/component-mockup-data.json";
+import ActiveCheckoutData from "../../data/mockData/components/active-checkout-mockup-data.json";
+import CheckinData from "../../data/mockData/components/checkin-mockup-data.json";
 import { getComponentDetails, getComponentTabs } from "../../data/mockData/components/componentDetailsData";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import SystemLoading from "../../components/Loading/SystemLoading";
 
 function ComponentView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [component, setComponent] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
-    const loadComponent = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchComponentById(id);
-        setComponent(data);
-      } catch (error) {
-        console.error("Error loading component:", error);
-        setComponent(null);
-      } finally {
-        setIsLoading(false);
+    // Get component from location state or find from mockup data
+    if (location.state?.component) {
+      setComponent(location.state.component);
+    } else {
+      const foundComponent = MockupData.find((c) => c.id === parseInt(id));
+      if (foundComponent) {
+        setComponent(foundComponent);
       }
-    };
-
-    if (id) {
-      loadComponent();
     }
-  }, [id]);
+    setIsLoading(false);
+  }, [id, location.state]);
 
   if (isLoading) {
-    return <SystemLoading />;
+    return null; // Don't render anything while loading
   }
 
   if (!component) {
@@ -58,12 +54,10 @@ function ComponentView() {
     setDeleteModalOpen(false);
   };
 
-  const handleDeleteSuccess = () => {
-    navigate("/components", { state: { successMessage: "Component deleted successfully!" } });
-  };
-
-  const handleDeleteError = (error) => {
-    console.error("Error deleting component:", error);
+  const confirmDelete = () => {
+    console.log("Deleting component:", component.id);
+    closeDeleteModal();
+    navigate("/components");
   };
 
   const handleEditClick = () => {
@@ -101,18 +95,6 @@ function ComponentView() {
     </div>
   );
 
-  // Helper to format purchase cost
-  const formatCost = (cost) => {
-    if (cost === null || cost === undefined) return "N/A";
-    return `₱${parseFloat(cost).toFixed(2)}`;
-  };
-
-  // Helper to format date
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString();
-  };
-
   const aboutContent = (
     <div className="about-section">
       <div className="component-details-section">
@@ -120,78 +102,103 @@ function ComponentView() {
         <div className="component-details-grid">
           <div className="detail-row">
             <label>Component Name</label>
-            <span>{component.name || "N/A"}</span>
+            <span>{component.name}</span>
           </div>
 
           <div className="detail-row">
             <label>Category</label>
-            <span>{component.category_details?.name || "N/A"}</span>
+            <span>{component.category}</span>
           </div>
 
           <div className="detail-row">
             <label>Manufacturer</label>
-            <span>{component.manufacturer_details?.name || "N/A"}</span>
+            <span>{component.manufacturer}</span>
           </div>
 
           <div className="detail-row">
             <label>Supplier</label>
-            <span>{component.supplier_details?.name || "N/A"}</span>
+            <span>{component.supplier}</span>
           </div>
 
           <div className="detail-row">
             <label>Model Number</label>
-            <span>{component.model_number || "N/A"}</span>
+            <span>{component.model_number}</span>
           </div>
 
           <div className="detail-row">
             <label>Order Number</label>
-            <span>{component.order_number || "N/A"}</span>
+            <span>{component.order_number}</span>
           </div>
 
           <div className="detail-row">
             <label>Location</label>
-            <span>{component.location_details?.name || component.location_details?.city || "N/A"}</span>
+            <span>{component.location}</span>
           </div>
 
           <div className="detail-row">
             <label>Purchase Cost</label>
-            <span>{formatCost(component.purchase_cost)}</span>
+            <span>${component.purchase_cost?.toFixed(2)}</span>
           </div>
 
           <div className="detail-row">
             <label>Total Quantity</label>
-            <span>{component.quantity ?? "N/A"}</span>
+            <span>{component.quantity}</span>
           </div>
 
           <div className="detail-row">
             <label>Available Quantity</label>
-            <span>{component.available_quantity ?? "N/A"}</span>
+            <span>{component.available_quantity}</span>
           </div>
 
           <div className="detail-row">
             <label>Checked Out Quantity</label>
-            <span>{(component.quantity - component.available_quantity) || 0}</span>
+            <span>{component.checked_out_quantity}</span>
           </div>
 
           <div className="detail-row">
             <label>Minimum Quantity</label>
-            <span>{component.minimum_quantity ?? "N/A"}</span>
+            <span>{component.minimum_quantity}</span>
           </div>
 
           <div className="detail-row">
             <label>Purchase Date</label>
-            <span>{formatDate(component.purchase_date)}</span>
+            <span>{component.purchase_date}</span>
+          </div>
+
+          <div className="detail-row">
+            <label>Depreciation</label>
+            <span>{component.depreciation}</span>
+          </div>
+
+          <div className="detail-row">
+            <label>Notes</label>
+            <span>{component.notes}</span>
           </div>
         </div>
       </div>
     </div>
   );
 
-  // Active checkouts - component.active_checkouts populated by API if available
-  const activeCheckouts = component.active_checkouts || [];
+  // Get active checkouts for this component
+  const activeCheckouts = ActiveCheckoutData.filter(
+    (checkout) => checkout.component === component.id
+  );
 
-  // History - component.checkout_history populated by API if available
-  const componentHistory = component.checkout_history || [];
+  // Get check-in history for this component
+  const componentHistory = CheckinData.filter((checkin) => {
+    const checkout = ActiveCheckoutData.find(
+      (c) => c.id === checkin.component_checkout && c.component === component.id
+    );
+    return !!checkout;
+  }).map((checkin) => {
+    const checkout = ActiveCheckoutData.find(
+      (c) => c.id === checkin.component_checkout
+    );
+    return {
+      ...checkin,
+      checkout,
+    };
+  });
 
   // Custom tab content for Active Checkouts and History
   const customTabContent = activeTab === 1 ? (
@@ -204,37 +211,31 @@ function ComponentView() {
           <thead>
             <tr>
               <th>CHECKOUT DATE</th>
+              <th>USER</th>
               <th>CHECKED OUT TO</th>
-              <th>QTY</th>
-              <th>CHECKED IN</th>
-              <th>REMAINING</th>
               <th>NOTES</th>
-              <th>ACTION</th>
+              <th>CHECKIN</th>
             </tr>
           </thead>
           <tbody>
             {activeCheckouts.length > 0 ? (
               activeCheckouts.map((checkout, index) => (
                 <tr key={index}>
-                  <td>{checkout.checkout_date}</td>
-                  <td>{checkout.asset_displayed_id || checkout.asset_name || 'N/A'}</td>
-                  <td>{checkout.quantity}</td>
-                  <td>{checkout.total_checked_in || 0}</td>
-                  <td>{checkout.remaining_quantity}</td>
-                  <td>{checkout.notes || '-'}</td>
+                  <td>{new Date(checkout.checkout_date).toLocaleDateString()}</td>
+                  <td>N/A</td>
+                  <td>{checkout.to_asset?.displayed_id || 'N/A'}</td>
+                  <td>{checkout.notes}</td>
                   <td>
                     <ActionButtons
                       showCheckin
                       onCheckinClick={() => {
-                        navigate(`/components/check-in/${checkout.id}`, {
+                        navigate(`/components/check-in/${component.id}`, {
                           state: {
                             item: {
-                              id: checkout.id,
-                              checkout_date: checkout.checkout_date,
-                              quantity: checkout.quantity,
+                              id: component.id,
+                              name: component.name,
+                              available_quantity: component.available_quantity,
                               remaining_quantity: checkout.remaining_quantity,
-                              total_checked_in: checkout.total_checked_in || 0,
-                              asset_displayed_id: checkout.asset_displayed_id,
                             },
                             componentName: component.name,
                           },
@@ -246,7 +247,7 @@ function ComponentView() {
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="no-data-message">
+                <td colSpan={5} className="no-data-message">
                   No Active Checkouts Found.
                 </td>
               </tr>
@@ -258,40 +259,32 @@ function ComponentView() {
   ) : activeTab === 2 ? (
     <div className="components-tab-wrapper">
       <div className="components-tab-header">
-        <h3>Checkout History</h3>
+        <h3>History</h3>
       </div>
       <section className="components-detail-table-section">
         <table>
           <thead>
             <tr>
-              <th>CHECKOUT DATE</th>
+              <th>CHECKIN DATE</th>
+              <th>USER</th>
               <th>CHECKED OUT TO</th>
-              <th>QTY</th>
-              <th>CHECKED IN</th>
-              <th>STATUS</th>
               <th>NOTES</th>
             </tr>
           </thead>
           <tbody>
             {componentHistory.length > 0 ? (
-              componentHistory.map((checkout, index) => (
-                <tr key={index} className={checkout.is_fully_returned ? "fully-returned" : ""}>
-                  <td>{checkout.checkout_date}</td>
-                  <td>{checkout.asset_displayed_id || checkout.asset_name || 'N/A'}</td>
-                  <td>{checkout.quantity}</td>
-                  <td>{checkout.total_checked_in || 0}</td>
-                  <td>
-                    <span className={`status-badge ${checkout.is_fully_returned ? "status-returned" : "status-active"}`}>
-                      {checkout.is_fully_returned ? "Returned" : "Active"}
-                    </span>
-                  </td>
-                  <td>{checkout.notes || '-'}</td>
+              componentHistory.map((history, index) => (
+                <tr key={index}>
+                  <td>{new Date(history.checkin_date).toLocaleDateString()}</td>
+                  <td>{history.handled_by || 'N/A'}</td>
+                  <td>{history.checkout?.to_asset?.displayed_id || 'N/A'}</td>
+                  <td>{history.notes}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="no-data-message">
-                  No Checkout History Found.
+                <td colSpan={4} className="no-data-message">
+                  No History Found.
                 </td>
               </tr>
             )}
@@ -306,13 +299,9 @@ function ComponentView() {
       <NavBar />
       {isDeleteModalOpen && (
         <ConfirmationModal
-          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
           actionType="delete"
-          entityType="component"
-          targetId={component.id}
-          onSuccess={handleDeleteSuccess}
-          onError={handleDeleteError}
+          onConfirm={confirmDelete}
         />
       )}
       <DetailedViewPage
@@ -322,9 +311,6 @@ function ComponentView() {
         onTabChange={setActiveTab}
         actionButtons={actionButtons}
         customTabContent={customTabContent}
-        notes={component.notes || "N/A"}
-        createdAt={formatDate(component.created_at)}
-        updatedAt={formatDate(component.updated_at)}
       >
         {activeTab === 0 && aboutContent}
       </DetailedViewPage>

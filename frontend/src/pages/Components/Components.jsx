@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
+import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ComponentFilterModal from "../../components/Modals/ComponentFilterModal";
 import Pagination from "../../components/Pagination";
@@ -10,14 +11,13 @@ import ConfirmationModal from "../../components/Modals/DeleteModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
+import MockupData from "../../data/mockData/components/component-mockup-data.json";
 import { exportToExcel } from "../../utils/exportToExcel";
-import { fetchAllComponents } from "../../services/assets-service";
 
 import "../../styles/components/Components.css";
 
-const ASSETS_API_URL = import.meta.env.VITE_ASSETS_API_URL || "";
-
 function TableHeader({ allSelected, onHeaderChange }) {
+  const navigate = useNavigate();
   return (
     <tr>
       <th>
@@ -29,27 +29,22 @@ function TableHeader({ allSelected, onHeaderChange }) {
       </th>
       <th>IMAGE</th>
       <th>NAME</th>
-      <th>CATEGORY</th>
+      <th>
+        <a className="category-link" onClick={() => navigate("/More/ViewCategories")} role="button">CATEGORY</a>
+      </th>
       <th>MANUFACTURER</th>
-      <th>QUANTITY</th>
-      <th>CHECK-OUT</th>
-      <th>CHECK-IN</th>
+      <th>DEPRECIATION</th>
+      <th>CHECK-OUT / CHECK-IN</th>
       <th>ACTION</th>
     </tr>
   );
 }
 
 // TableItem component to render each asset row
-function TableItem({
-  asset,
-  isSelected,
-  onRowChange,
-  onDeleteClick,
-  onViewClick,
-  onCheckInOut,
-}) {
+function TableItem({ asset, isSelected, onRowChange, onDeleteClick, onViewClick, onCheckInOut }) {
+  const navigate = useNavigate();
   const baseImage = asset.image
-    ? `${ASSETS_API_URL.replace(/\/$/, "")}${asset.image}`
+    ? `https://assets-service-production.up.railway.app${asset.image}`
     : DefaultImage;
 
   return (
@@ -72,23 +67,27 @@ function TableItem({
         />
       </td>
       <td>{asset.name}</td>
-      <td>{asset.category_details?.name || "N/A"}</td>
-      <td>{asset.manufacturer_details?.name || "N/A"}</td>
-      <td>{asset.available_quantity ?? 0}/{asset.quantity ?? 0}</td>
-
-      {/* Check-out Column */}
       <td>
-        <ActionButtons
-          showCheckout
-          onCheckoutClick={() => onCheckInOut(asset, "checkout")}
-        />
+        <a
+          className="category-link"
+          onClick={() => navigate("/More/ViewCategories", { state: { selectedCategory: asset.category } })}
+          role="button"
+        >
+          {asset.category || 'N/A'}
+        </a>
       </td>
+      <td>{asset.manufacturer || 'N/A'}</td>
+      <td>{asset.depreciation || 'N/A'}</td>
 
-      {/* Check-in Column */}
+      {/* Check-out / Check-in Column */}
       <td>
         <ActionButtons
-          showCheckin
-          onCheckinClick={() => onCheckInOut(asset, "checkin")}
+          showCheckout={true}
+          showCheckin={true}
+          disableCheckout={asset.disableCheckout}
+          disableCheckin={asset.disableCheckin}
+          onCheckoutClick={() => onCheckInOut(asset, 'checkout')}
+          onCheckinClick={() => onCheckInOut(asset, 'checkin')}
         />
       </td>
 
@@ -110,36 +109,15 @@ function TableItem({
 export default function Assets() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // base data state
-  const [baseData, setBaseData] = useState([]);
-
-  // Load components from API
-  useEffect(() => {
-    async function loadComponents() {
-      try {
-        const data = await fetchAllComponents();
-
-        const processed = data.map((asset) => {
-          const available = asset.available_quantity ?? 0;
-          const checkedOut = asset.checked_out_quantity ?? 0;
-
-          return {
-            ...asset,
-            showCheckout: available > 0,
-            showCheckin: checkedOut > 0,
-          };
-        });
-
-        setBaseData(processed);
-        setFilteredData(processed);
-      } catch (error) {
-        setErrorMessage("Failed to load components.");
-      }
-    }
-
-    loadComponents();
-  }, []);
+  const [baseData] = useState(() =>
+    MockupData.map((asset) => {
+      const available = asset.available_quantity ?? 0;
+      const checkedOut = asset.checked_out_quantity ?? 0;
+      const disableCheckout = available <= 0;
+      const disableCheckin = checkedOut <= 0;
+      return { ...asset, disableCheckout, disableCheckin };
+    })
+  );
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -154,20 +132,15 @@ export default function Assets() {
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
+  const [pageSize, setPageSize] = useState(5);
 
   // selection state
   const [selectedIds, setSelectedIds] = useState([]);
-
-  // Helper to normalise date strings (YYYY-MM-DD) for comparison
   const toDate = (value) => {
     if (!value) return null;
     const d = new Date(value);
-    // Guard against invalid dates from bad mock data
     return Number.isNaN(d.getTime()) ? null : d;
   };
-
-  // Apply filters to data
   const applyFilters = (filters) => {
     let filtered = [...baseData];
 
@@ -215,13 +188,6 @@ export default function Assets() {
         return true;
       });
     }
-
-    // Due for Check-in range
-    // NOTE: components list does not have a direct "due for check-in" field.
-    // For now, we treat this as a no-op so the UI remains consistent
-    // and can be wired to real data once available.
-
-    // Created At range (front-end only; not present in current mock data)
     const createdFrom = toDate(filters.createdAtFrom);
     const createdTo = toDate(filters.createdAtTo);
     if (createdFrom || createdTo) {
@@ -233,8 +199,6 @@ export default function Assets() {
         return true;
       });
     }
-
-    // Updated At range (front-end only; not present in current mock data)
     const updatedFrom = toDate(filters.updatedAtFrom);
     const updatedTo = toDate(filters.updatedAtTo);
     if (updatedFrom || updatedTo) {
@@ -250,45 +214,43 @@ export default function Assets() {
     return filtered;
   };
 
-  // Combine modal filters and search term
   const applyFiltersAndSearch = (filters, term) => {
     let filtered = applyFilters(filters || {});
 
     if (term && term.trim() !== "") {
       const lowerTerm = term.toLowerCase();
-      filtered = filtered.filter(
-        (component) =>
-          (component.name &&
-            component.name.toLowerCase().includes(lowerTerm)) ||
-          (component.category &&
-            component.category.toLowerCase().includes(lowerTerm)) ||
-          (component.manufacturer &&
-            component.manufacturer.toLowerCase().includes(lowerTerm)) ||
-          (component.supplier &&
-            component.supplier.toLowerCase().includes(lowerTerm)) ||
-          (component.location &&
-            component.location.toLowerCase().includes(lowerTerm))
+      filtered = filtered.filter((component) =>
+        (component.name && component.name.toLowerCase().includes(lowerTerm)) ||
+        (component.category && component.category.toLowerCase().includes(lowerTerm)) ||
+        (component.manufacturer && component.manufacturer.toLowerCase().includes(lowerTerm)) ||
+        (component.supplier && component.supplier.toLowerCase().includes(lowerTerm)) ||
+        (component.location && component.location.toLowerCase().includes(lowerTerm))
       );
     }
 
     return filtered;
   };
 
-  // Handle filter apply
   const handleApplyFilter = (filters) => {
     setAppliedFilters(filters);
     const filtered = applyFiltersAndSearch(filters, searchTerm);
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
-  // Handle search input
   const handleSearch = (e) => {
     const term = e.target.value;
     setSearchTerm(term);
     setCurrentPage(1);
     const filtered = applyFiltersAndSearch(appliedFilters, term);
     setFilteredData(filtered);
+  };
+
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
   };
 
   // paginate the data
@@ -305,15 +267,11 @@ export default function Assets() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedAssets
-          .map((item) => item.id)
-          .filter((id) => !prev.includes(id)),
+        ...paginatedAssets.map((item) => item.id).filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
-        prev.filter(
-          (id) => !paginatedAssets.map((item) => item.id).includes(id)
-        )
+        prev.filter((id) => !paginatedAssets.map((item) => item.id).includes(id))
       );
     }
   };
@@ -341,23 +299,16 @@ export default function Assets() {
     setDeleteTarget(null);
   };
 
-  const handleDeleteSuccess = (deletedIds) => {
-    // Remove deleted items from data
-    const idsToRemove = Array.isArray(deletedIds) ? deletedIds : [deletedIds];
-    setBaseData((prev) => prev.filter((item) => !idsToRemove.includes(item.id)));
-    setFilteredData((prev) => prev.filter((item) => !idsToRemove.includes(item.id)));
-    setSelectedIds((prev) => prev.filter((id) => !idsToRemove.includes(id)));
-    setSuccessMessage("Component(s) deleted successfully!");
-    setTimeout(() => setSuccessMessage(""), 5000);
+  const confirmDelete = () => {
+    if (deleteTarget) {
+      console.log("Deleting single id:", deleteTarget);
+    } else {
+      console.log("Deleting multiple ids:", selectedIds);
+      setSelectedIds([]);
+    }
     closeDeleteModal();
   };
 
-  const handleDeleteError = (error) => {
-    console.error("Delete error:", error);
-    const errMsg = error.response?.data?.detail || "Failed to delete component(s).";
-    setErrorMessage(errMsg);
-    setTimeout(() => setErrorMessage(""), 5000);
-  };
 
   const handleViewClick = (component) => {
     navigate(`/components/view/${component.id}`, {
@@ -367,6 +318,8 @@ export default function Assets() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+
 
   useEffect(() => {
     if (location.state?.successMessage) {
@@ -384,24 +337,31 @@ export default function Assets() {
   };
 
   const handleCheckInOut = (asset, action) => {
+    const available_quantity = asset.available_quantity ?? 10;
+    const remaining_quantity = asset.remaining_quantity ?? available_quantity;
+
     const item = {
       id: asset.id,
       name: asset.name,
-      available_quantity: asset.available_quantity ?? 0,
+      available_quantity,
+      remaining_quantity,
     };
 
-    if (action === "checkin") {
-      // Navigate to checkout list to select which checkout to check in from
-      navigate(`/components/checked-out-list/${asset.id}`, {
-        state: { item },
+    if (action === 'checkin') {
+      navigate(`/components/check-in/${asset.id}`, {
+        state: {
+          item,
+          componentName: asset.name,
+        },
       });
     } else {
-      // Navigate to checkout form
       navigate(`/components/check-out/${asset.id}`, {
         state: { item },
       });
     }
   };
+
+
 
   return (
     <>
@@ -411,12 +371,8 @@ export default function Assets() {
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}
-          actionType={deleteTarget ? "delete" : "bulk-delete"}
-          entityType="component"
-          targetId={deleteTarget}
-          targetIds={deleteTarget ? null : selectedIds}
-          onSuccess={handleDeleteSuccess}
-          onError={handleDeleteError}
+          actionType="delete"
+          onConfirm={confirmDelete}
         />
       )}
 
@@ -425,6 +381,7 @@ export default function Assets() {
         isOpen={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
+        onResetFilter={handleResetFilter}
         initialFilters={appliedFilters}
       />
 
@@ -443,9 +400,7 @@ export default function Assets() {
                     <MediumButtons
                       type="edit"
                       onClick={() =>
-                        navigate("/components/bulk-edit", {
-                          state: { selectedIds },
-                        })
+                        navigate("/components/bulk-edit", { state: { selectedIds } })
                       }
                     />
                     <MediumButtons
@@ -471,14 +426,15 @@ export default function Assets() {
                 >
                   Filter
                 </button>
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
                 {authService.getUserInfo().role === "Admin" && (
-                  <>
-                    <MediumButtons type="export" onClick={handleExport} />
-                    <MediumButtons
-                      type="new"
-                      navigatePage="/components/registration"
-                    />
-                  </>
+                  <MediumButtons
+                    type="new"
+                    navigatePage="/components/registration"
+                  />
                 )}
               </section>
             </section>
@@ -508,7 +464,7 @@ export default function Assets() {
                   ) : (
                     <tr>
                       <td colSpan={8} className="no-data-message">
-                        No Components Found.
+                        No Assets Found.
                       </td>
                     </tr>
                   )}

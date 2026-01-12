@@ -4,13 +4,11 @@ import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
-import SystemLoading from "../../components/Loading/SystemLoading";
+import Footer from "../../components/Footer";
+import MockupData from "../../data/mockData/assets/assets-mockup-data.json";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { fetchAssetNames, bulkEditAssets, fetchProductsForAssetRegistration } from "../../services/assets-service";
-import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
-import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
 import "../../styles/Registration.css";
 import "../../styles/Assets/BulkEditAssets.css";
 
@@ -19,21 +17,59 @@ export default function BulkEditAssets() {
   const navigate = useNavigate();
   const { selectedIds } = location.state || { selectedIds: [] };
 
-  const [currentSelectedIds, setCurrentSelectedIds] = useState(selectedIds || []);
-  const [selectedAssets, setSelectedAssets] = useState([]);
-  const [isLoading, setLoading] = useState(true);
+  // Get the selected assets from mockup data
+  const [currentSelectedIds, setCurrentSelectedIds] = useState(selectedIds);
+  const selectedAssets = MockupData.filter(asset => currentSelectedIds.includes(asset.id));
 
-  const [products, setProducts] = useState([]);
-  const [statuses, setStatuses] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const handleRemoveAsset = (assetId) => {
+    setCurrentSelectedIds(prev => prev.filter(id => id !== assetId));
+  };
+
+  const [products, setProducts] = useState([
+    { id: 1, name: "MacBook Pro" },
+    { id: 2, name: "Dell XPS" },
+    { id: 3, name: "HP Pavilion" },
+    { id: 4, name: "Lenovo ThinkPad" }
+  ]);
+
+  const [statuses, setStatuses] = useState([
+    { id: 1, name: "Archived" },
+    { id: 2, name: "Being Repaired" },
+    { id: 3, name: "Broken" },
+    { id: 4, name: "Deployed" },
+    { id: 5, name: "Lost or Stolen" },
+    { id: 6, name: "Pending" },
+    { id: 7, name: "Ready to Deploy" }
+  ]);
+
+  const [suppliers, setSuppliers] = useState([
+    { id: 1, name: "Tech Supplier A" },
+    { id: 2, name: "Tech Supplier B" },
+    { id: 3, name: "Tech Supplier C" }
+  ]);
+
+  const [locations, setLocations] = useState([
+    { id: 1, name: "Makati Office" },
+    { id: 2, name: "Pasig Office" },
+    { id: 3, name: "Marikina Office" },
+    { id: 4, name: "Quezon City Office" },
+    { id: 5, name: "Manila Office" },
+    { id: 6, name: "Taguig Office" },
+    { id: 7, name: "Remote" }
+  ]);
+
+  const [disposalStatuses] = useState([
+    { id: 1, name: "Not Disposed" },
+    { id: 2, name: "Sold" },
+    { id: 3, name: "Donated" },
+    { id: 4, name: "Recycled" },
+    { id: 5, name: "Destroyed" },
+    { id: 6, name: "Lost" },
+    { id: 7, name: "Stolen" }
+  ]);
 
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
-  const [previewImage, setPreviewImage] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [removeImage, setRemoveImage] = useState(false);
 
   // Modal states for adding new entries
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -42,148 +78,48 @@ export default function BulkEditAssets() {
 
   const currentDate = new Date().toISOString().split("T")[0];
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm({
     mode: "all",
     defaultValues: {
       product: '',
       status: '',
       supplier: '',
       location: '',
-      name: '',
-      serial_number: '',
-      warranty_expiration: '',
-      order_number: '',
-      purchase_date: '',
-      purchase_cost: '',
+      assetName: '',
+      serialNumber: '',
+      warrantyExpiration: '',
+      orderNumber: '',
+      purchaseDate: '',
+      purchaseCost: '',
+      disposalStatus: '',
+      scheduleAuditDate: '',
       notes: '',
     }
   });
 
   useEffect(() => {
-    async function loadSelectedAssets() {
-      try {
-        if (!selectedIds || selectedIds.length === 0) {
-          setErrorMessage("No assets selected for bulk edit");
-          setTimeout(() => navigate('/assets'), 2000);
-          return;
-        }
-
-        setLoading(true);
-        const assets = await fetchAssetNames({ ids: selectedIds });
-        setSelectedAssets(assets);
-
-        // Update currentSelectedIds to only include IDs that exist
-        const validIds = assets.map(a => a.id);
-        setCurrentSelectedIds(validIds);
-
-        // Fetch products for asset registration (includes default_purchase_cost and default_supplier)
-        const productsData = await fetchProductsForAssetRegistration();
-        setProducts(productsData || []);
-
-        // Fetch dropdown options
-        const dropdowns = await fetchAllDropdowns("asset");
-        setStatuses(dropdowns.statuses || []);
-        setSuppliers(dropdowns.suppliers || []);
-
-        const locationsData = await fetchAllLocations();
-        setLocations(locationsData || []);
-
-      } catch (error) {
-        setErrorMessage("Failed to load selected assets");
-      } finally {
-        setLoading(false);
-      }
+    if (!selectedIds || selectedIds.length === 0) {
+      setErrorMessage("No assets selected for bulk edit");
+      setTimeout(() => navigate('/assets'), 2000);
     }
-
-    loadSelectedAssets();
   }, [selectedIds, navigate]);
 
-  const handleRemoveAsset = (assetId) => {
-    setCurrentSelectedIds(prev => prev.filter(id => id !== assetId));
+  const handleAddStatus = (data) => {
+    const newStatus = { id: statuses.length + 1, name: data.name };
+    setStatuses([...statuses, newStatus]);
+    setShowStatusModal(false);
   };
 
-  // Handle product selection to auto-fill default values
-  const handleProductChange = (event) => {
-    const productId = event.target.value;
-    setValue('product', productId);
-
-    if (productId) {
-      const product = products.find(p => p.id === parseInt(productId));
-      if (product) {
-        // Set purchase cost if available
-        if (product.default_purchase_cost) {
-          setValue('purchase_cost', product.default_purchase_cost);
-        }
-        // Set supplier if available
-        if (product.default_supplier) {
-          setValue('supplier', String(product.default_supplier));
-        }
-      }
-    }
+  const handleAddSupplier = (data) => {
+    const newSupplier = { id: suppliers.length + 1, name: data.name };
+    setSuppliers([...suppliers, newSupplier]);
+    setShowSupplierModal(false);
   };
 
-  const handleAddStatus = async (data) => {
-    try {
-      const statusData = {
-        name: data.name,
-        category: 'asset',
-        type: data.type
-      };
-      const newStatus = await createStatus(statusData);
-      setStatuses([...statuses, newStatus]);
-      setShowStatusModal(false);
-      setErrorMessage("");
-    } catch (error) {
-      console.error("Error creating status:", error);
-      setErrorMessage("Failed to create status");
-      setTimeout(() => setErrorMessage(""), 5000);
-    }
-  };
-
-  const handleAddSupplier = async (data) => {
-    try {
-      const newSupplier = await createSupplier(data);
-      setSuppliers([...suppliers, newSupplier]);
-      setShowSupplierModal(false);
-      setErrorMessage("");
-    } catch (error) {
-      console.error("Error creating supplier:", error);
-      setErrorMessage("Failed to create supplier");
-      setTimeout(() => setErrorMessage(""), 5000);
-    }
-  };
-
-  const handleAddLocation = async (data) => {
-    try {
-      const newLocation = await createLocation(data);
-      setLocations([...locations, newLocation]);
-      setShowLocationModal(false);
-      setErrorMessage("");
-    } catch (error) {
-      console.error("Error creating location:", error);
-      setErrorMessage("Failed to create location");
-      setTimeout(() => setErrorMessage(""), 5000);
-    }
-  };
-
-  const handleImageSelection = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage("Image size exceeds 5MB. Please choose a smaller file.");
-        setTimeout(() => setErrorMessage(""), 5000);
-        return;
-      }
-
-      setSelectedImage(file);
-      setValue('image', file);
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleAddLocation = (data) => {
+    const newLocation = { id: locations.length + 1, name: data.name };
+    setLocations([...locations, newLocation]);
+    setShowLocationModal(false);
   };
 
   const onSubmit = async (data) => {
@@ -193,136 +129,90 @@ export default function BulkEditAssets() {
         return;
       }
 
-      // Filter out empty values
-      const updateData = {};
-      Object.entries(data).forEach(([key, value]) => {
-        const isEmptyOrInvalid = value === "" || value === null || value === undefined ||
-                                  (typeof value === 'number' && isNaN(value));
-        if (!isEmptyOrInvalid) {
-          // For decimal fields, keep as string to preserve precision
-          if (key === 'purchase_cost') {
-            updateData[key] = String(value);
-          } else {
-            updateData[key] = value;
-          }
-        }
-      });
+      // Filter out empty fields
+      const updateData = Object.fromEntries(
+        Object.entries(data).filter(([_, value]) => value !== '')
+      );
 
-      // Check if there's anything to update (including image)
-      const hasFieldUpdates = Object.keys(updateData).length > 0;
-      const hasImageUpdate = selectedImage !== null || removeImage;
-
-      if (!hasFieldUpdates && !hasImageUpdate) {
-        setErrorMessage("Please fill in at least one field to update");
+      if (Object.keys(updateData).length === 0) {
+        setErrorMessage("Please select at least one field to update");
         return;
       }
 
-      setLoading(true);
+      // TODO: Call API to update multiple assets
+      console.log("Updating assets:", currentSelectedIds, "with data:", updateData);
 
-      let result;
-
-      // If image is selected, we need to use FormData
-      if (hasImageUpdate) {
-        const formData = new FormData();
-        formData.append('ids', JSON.stringify(currentSelectedIds));
-        formData.append('data', JSON.stringify(updateData));
-
-        if (selectedImage) {
-          formData.append('image', selectedImage);
-        }
-        if (removeImage) {
-          formData.append('remove_image', 'true');
-        }
-
-        result = await bulkEditAssets(formData, true); // true = use FormData
-      } else {
-        const payload = {
-          ids: currentSelectedIds,
-          data: updateData,
-        };
-        result = await bulkEditAssets(payload, false);
-      }
-
-      if (result.failed && result.failed.length > 0) {
-        setErrorMessage(
-          `Updated ${result.updated?.length || 0} asset(s), but ${result.failed.length} failed.`
-        );
-      } else {
-        setSuccessMessage(
-          `Successfully updated ${result.updated?.length || currentSelectedIds.length} asset(s)`
-        );
-        setTimeout(() => {
-          navigate('/assets', {
-            state: {
-              successMessage: `Updated ${result.updated?.length || currentSelectedIds.length} asset(s)`,
-            },
-          });
-        }, 2000);
-      }
+      setSuccessMessage(`Successfully updated ${currentSelectedIds.length} asset(s)`);
+      setTimeout(() => {
+        navigate('/assets', { state: { successMessage: `Updated ${currentSelectedIds.length} asset(s)` } });
+      }, 2000);
     } catch (error) {
-      console.error("Bulk edit error:", error);
-      setErrorMessage(error.response?.data?.detail || error.message || "Failed to update assets");
-    } finally {
-      setLoading(false);
+      setErrorMessage(error.message || "Failed to update assets");
     }
   };
-
-  if (isLoading) {
-    return <SystemLoading />;
-  }
 
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
 
-        <main className="main-with-table">
-          <TopSecFormPage
-            root="Assets"
-            currentPage="Bulk Edit Assets"
-            rootNavigatePage="/assets"
-            title="Bulk Edit Assets"
-          />
+        <main className="registration bulk-edit-page">
+          <section className="top">
+            <TopSecFormPage
+              root="Assets"
+              currentPage="Bulk Edit Assets"
+              rootNavigatePage="/assets"
+              title="Bulk Edit Assets"
+              rightComponent={
+                <div className="import-section">
+                  <span style={{ fontSize: '0.875rem', color: '#666' }}>
+                    {currentSelectedIds.length} Asset{currentSelectedIds.length !== 1 ? 's' : ''} Selected
+                  </span>
+                </div>
+              }
+            />
+          </section>
 
           {/* Selected Assets Section */}
           <section className="selected-assets-section">
-            <h3>Selected Assets ({selectedAssets.filter(a => currentSelectedIds.includes(a.id)).length})</h3>
+            <h3>Selected Assets ({currentSelectedIds.length})</h3>
             <div className="selected-assets-tags">
-              {selectedAssets.filter(a => currentSelectedIds.includes(a.id)).length > 0 ? (
-                selectedAssets
-                  .filter(a => currentSelectedIds.includes(a.id))
-                  .map((asset) => (
-                    <div key={asset.id} className="asset-tag">
-                      <span className="asset-tag-name">{asset.name || 'Unnamed Asset'}</span>
-                      <span className="asset-tag-id">{asset.asset_id}</span>
-                      <button
-                        type="button"
-                        className="asset-tag-remove"
-                        onClick={() => handleRemoveAsset(asset.id)}
-                        title="Remove from selection"
-                      >
-                        <img src={CloseIcon} alt="Remove" />
-                      </button>
-                    </div>
-                  ))
+              {selectedAssets.length > 0 ? (
+                selectedAssets.map((asset) => (
+                  <div key={asset.id} className="asset-tag">
+                    <span className="asset-tag-name">{asset.name}</span>
+                    <span className="asset-tag-id">#{asset.displayed_id}</span>
+                    <button
+                      type="button"
+                      className="asset-tag-remove"
+                      onClick={() => handleRemoveAsset(asset.id)}
+                      title="Remove from selection"
+                    >
+                      <img src={CloseIcon} alt="Remove" />
+                    </button>
+                  </div>
+                ))
               ) : (
                 <p className="no-assets-message">No assets selected</p>
               )}
             </div>
           </section>
 
-          <section className="bulk-edit-form-section registration">
-            <form onSubmit={handleSubmit(onSubmit)} className="bulk-edit-form">
+          <p className="selected-assets-note">
+            Note: Fill in only the fields you want to change. Fields left empty will stay unchanged. Use the Remove toggle to clear existing values.
+          </p>
+
+          <section className="registration-form">
+            <form onSubmit={handleSubmit(onSubmit)}>
               {/* Product Dropdown */}
               <fieldset className="form-field">
                 <label htmlFor='product'>Product</label>
                 <select
                   id="product"
                   {...register("product")}
-                  onChange={handleProductChange}
                   className={`form-input ${errors.product ? 'input-error' : ''}`}
                 >
                   <option value="">Select Product</option>
@@ -332,6 +222,7 @@ export default function BulkEditAssets() {
                     </option>
                   ))}
                 </select>
+                {errors.product && <span className='error-message'>{errors.product.message}</span>}
               </fieldset>
 
               {/* Status Dropdown with Add Button */}
@@ -359,6 +250,7 @@ export default function BulkEditAssets() {
                     <img src={PlusIcon} alt="Add" />
                   </button>
                 </div>
+                {errors.status && <span className='error-message'>{errors.status.message}</span>}
               </fieldset>
 
               {/* Supplier Dropdown with Add Button */}
@@ -400,7 +292,7 @@ export default function BulkEditAssets() {
                   >
                     <option value="">Select Location</option>
                     {locations.map(location => (
-                      <option key={location.id} value={location.id}>
+                      <option key={location.id} value={location.name}>
                         {location.name}
                       </option>
                     ))}
@@ -419,87 +311,118 @@ export default function BulkEditAssets() {
 
               {/* Asset Name */}
               <fieldset className="form-field">
-                <label htmlFor='name'>Asset Name</label>
+                <label htmlFor='asset-name'>Asset Name</label>
                 <input
                   type='text'
-                  id='name'
-                  className={`form-input ${errors.name ? 'input-error' : ''}`}
-                  {...register('name')}
+                  id='asset-name'
+                  className={`form-input ${errors.assetName ? 'input-error' : ''}`}
+                  {...register('assetName')}
                   maxLength='100'
                   placeholder='Asset Name'
                 />
-                {errors.name && <span className='error-message'>{errors.name.message}</span>}
+                {errors.assetName && <span className='error-message'>{errors.assetName.message}</span>}
               </fieldset>
 
               {/* Serial Number */}
               <fieldset className="form-field">
-                <label htmlFor='serial_number'>Serial Number</label>
+                <label htmlFor='serial-number'>Serial Number</label>
                 <input
                   type='text'
-                  id='serial_number'
-                  className={`form-input ${errors.serial_number ? 'input-error' : ''}`}
-                  {...register('serial_number')}
+                  id='serial-number'
+                  className={`form-input ${errors.serialNumber ? 'input-error' : ''}`}
+                  {...register('serialNumber')}
                   maxLength='50'
                   placeholder='Serial Number'
                 />
-                {errors.serial_number && <span className='error-message'>{errors.serial_number.message}</span>}
+                {errors.serialNumber && <span className='error-message'>{errors.serialNumber.message}</span>}
               </fieldset>
 
               {/* Warranty Expiration Date */}
               <fieldset className="form-field">
-                <label htmlFor='warranty_expiration'>Warranty Expiration Date</label>
+                <label htmlFor='warranty-expiration'>Warranty Expiration Date</label>
                 <input
                   type='date'
-                  id='warranty_expiration'
-                  className={`form-input ${errors.warranty_expiration ? 'input-error' : ''}`}
-                  {...register('warranty_expiration')}
+                  id='warranty-expiration'
+                  className={`form-input ${errors.warrantyExpiration ? 'input-error' : ''}`}
+                  {...register('warrantyExpiration')}
                 />
-                {errors.warranty_expiration && <span className='error-message'>{errors.warranty_expiration.message}</span>}
+                {errors.warrantyExpiration && <span className='error-message'>{errors.warrantyExpiration.message}</span>}
               </fieldset>
 
               {/* Order Number */}
               <fieldset className="form-field">
-                <label htmlFor='order_number'>Order Number</label>
+                <label htmlFor='order-number'>Order Number</label>
                 <input
                   type='text'
-                  id='order_number'
-                  className={`form-input ${errors.order_number ? 'input-error' : ''}`}
-                  {...register('order_number')}
+                  id='order-number'
+                  className={`form-input ${errors.orderNumber ? 'input-error' : ''}`}
+                  {...register('orderNumber')}
                   maxLength='50'
                   placeholder='Order Number'
                 />
-                {errors.order_number && <span className='error-message'>{errors.order_number.message}</span>}
+                {errors.orderNumber && <span className='error-message'>{errors.orderNumber.message}</span>}
               </fieldset>
 
               {/* Purchase Date */}
               <fieldset className="form-field">
-                <label htmlFor='purchase_date'>Purchase Date</label>
+                <label htmlFor='purchase-date'>Purchase Date</label>
                 <input
                   type='date'
-                  id='purchase_date'
-                  className={`form-input ${errors.purchase_date ? 'input-error' : ''}`}
-                  {...register('purchase_date')}
+                  id='purchase-date'
+                  className={`form-input ${errors.purchaseDate ? 'input-error' : ''}`}
+                  {...register('purchaseDate')}
                 />
-                {errors.purchase_date && <span className='error-message'>{errors.purchase_date.message}</span>}
+                {errors.purchaseDate && <span className='error-message'>{errors.purchaseDate.message}</span>}
               </fieldset>
 
               {/* Purchase Cost */}
               <fieldset className="form-field cost-field">
-                <label htmlFor="purchase_cost">Purchase Cost</label>
+                <label htmlFor="purchaseCost">Purchase Cost</label>
                 <div className="cost-input-group">
                   <span className="cost-addon">PHP</span>
                   <input
                     type="number"
-                    id="purchase_cost"
-                    name="purchase_cost"
+                    id="purchaseCost"
+                    name="purchaseCost"
                     placeholder="0.00"
                     min="0"
                     step="0.01"
-                    className={`form-input ${errors.purchase_cost ? 'input-error' : ''}`}
-                    {...register("purchase_cost", { valueAsNumber: true })}
+                    className={`form-input ${errors.purchaseCost ? 'input-error' : ''}`}
+                    {...register("purchaseCost", { valueAsNumber: true })}
                   />
                 </div>
-                {errors.purchase_cost && <span className='error-message'>{errors.purchase_cost.message}</span>}
+                {errors.purchaseCost && <span className='error-message'>{errors.purchaseCost.message}</span>}
+              </fieldset>
+
+              {/* Disposal Status */}
+              <fieldset className="form-field">
+                <label htmlFor='disposal-status'>Disposal Status</label>
+                <select
+                  id="disposal-status"
+                  {...register("disposalStatus")}
+                  className={`form-input ${errors.disposalStatus ? 'input-error' : ''}`}
+                >
+                  <option value="">Select Disposal Status</option>
+                  {disposalStatuses.map(status => (
+                    <option key={status.id} value={status.name}>
+                      {status.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.disposalStatus && <span className='error-message'>{errors.disposalStatus.message}</span>}
+              </fieldset>
+
+              {/* Schedule Audit Date */}
+              <fieldset className="form-field">
+                <label htmlFor='schedule-audit-date'>Schedule Audit Date</label>
+                <input
+                  type='date'
+                  id='schedule-audit-date'
+                  className={`form-input ${errors.scheduleAuditDate ? 'input-error' : ''}`}
+                  {...register('scheduleAuditDate')}
+                  min={currentDate}
+                />
+                {errors.scheduleAuditDate && <span className='error-message'>{errors.scheduleAuditDate.message}</span>}
               </fieldset>
 
               {/* Notes */}
@@ -514,44 +437,6 @@ export default function BulkEditAssets() {
                   rows='4'
                 />
                 {errors.notes && <span className='error-message'>{errors.notes.message}</span>}
-              </fieldset>
-
-              {/* Image */}
-              <fieldset>
-                <label>Image</label>
-                {previewImage ? (
-                  <div className="image-selected">
-                    <img src={previewImage} alt="Selected image" />
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPreviewImage(null);
-                        setSelectedImage(null);
-                        setValue('image', null);
-                        document.getElementById('image').value = '';
-                        setRemoveImage(true);
-                        console.log("Remove image flag set to:", true);
-                      }}
-                    >
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="upload-image-btn">
-                    Choose File
-                    <input
-                      type="file"
-                      id="image"
-                      accept="image/*"
-                      onChange={handleImageSelection}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                )}
-                <small className="file-size-info">
-                  Maximum file size must be 5MB
-                </small>
               </fieldset>
 
               {/* Form Actions */}
@@ -572,6 +457,8 @@ export default function BulkEditAssets() {
         </main>
       </section>
 
+      <Footer />
+
       {/* Modals */}
       {showStatusModal && (
         <AddEntryModal
@@ -582,28 +469,7 @@ export default function BulkEditAssets() {
               label: "Status Name",
               type: "text",
               required: true,
-              placeholder: "Enter status name",
-              validation: { required: 'Status Name is required' }
-            },
-            {
-              name: "category",
-              type: "hidden",
-              defaultValue: "asset"
-            },
-            {
-              name: "type",
-              label: "Status Type",
-              type: "select",
-              required: true,
-              placeholder: "Select Status Type",
-              options: [
-                { value: 'deployable', label: 'Deployable' },
-                { value: 'deployed', label: 'Deployed' },
-                { value: 'undeployable', label: 'Undeployable' },
-                { value: 'pending', label: 'Pending' },
-                { value: 'archived', label: 'Archived' }
-              ],
-              validation: { required: 'Status Type is required' }
+              placeholder: "Enter status name"
             }
           ]}
           onSubmit={handleAddStatus}
@@ -647,3 +513,4 @@ export default function BulkEditAssets() {
     </>
   );
 }
+

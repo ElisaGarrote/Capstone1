@@ -7,6 +7,7 @@ export default function ActivityFilterModal({
   isOpen,
   onClose,
   onApplyFilter,
+  onResetFilter,
   initialFilters = {},
 }) {
   const [filters, setFilters] = useState({
@@ -28,8 +29,14 @@ export default function ActivityFilterModal({
   const handleInputChange = (field, value) =>
     setFilters((prev) => ({ ...prev, [field]: value }));
 
-  const handleReset = () =>
-    setFilters({ type: "", event: "", user: "", tofrom: "" });
+  const handleReset = () => {
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    } else {
+      setFilters({ type: "", event: "", user: "", tofrom: "" });
+    }
+  };
 
   const handleApply = () => {
     onApplyFilter(filters);

@@ -1,0 +1,144 @@
+.bulk-edit-product-page {
+  padding: 20px;
+}
+
+.products-selected-count {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.products-selected-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+}
+
+.products-selected-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.products-selected-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.product-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: white;
+  border: 1px solid #007bff;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  color: #333;
+}
+
+.product-tag-name {
+  font-weight: 500;
+}
+
+.product-tag-id {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.product-tag-remove {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+.product-tag-remove img {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.product-tag-remove:hover img {
+  opacity: 1;
+}
+
+.products-no-selection {
+  color: #999;
+  font-style: italic;
+  margin: 0;
+}
+
+.products-selected-note {
+  margin-bottom: 20px;
+  padding: 12px 15px;
+  background-color: #e7f3ff;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+  color: #0056b3;
+  font-size: 0.875rem;
+}
+
+.products-bulk-form-section {
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.products-bulk-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.products-bulk-form .form-field {
+  margin-bottom: 0;
+}
+
+.products-bulk-form .notes-field {
+  grid-column: 1 / -1;
+}
+
+.products-bulk-form .form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.form-actions .cancel-btn {
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.form-actions .cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.form-actions .submit-btn {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.form-actions .submit-btn:hover {
+  background-color: #0056b3;
+}

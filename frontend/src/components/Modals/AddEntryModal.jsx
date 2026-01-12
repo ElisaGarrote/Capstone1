@@ -17,8 +17,7 @@ const AddEntryModal = ({
     register, 
     handleSubmit, 
     formState: { errors, isValid }, 
-    reset,
-    setValue
+    reset 
   } = useForm({
     mode: "all"
   });
@@ -53,17 +52,6 @@ const AddEntryModal = ({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-  if (isOpen) {
-    // initialize fields with defaultValue if provided
-    fields.forEach(field => {
-      if (field.defaultValue) {
-        setValue(field.name, field.defaultValue);
-      }
-    });
-  }
-}, [isOpen, fields, setValue]);
-
   if (!isOpen) return null;
 
   return (
@@ -83,14 +71,6 @@ const AddEntryModal = ({
         <form onSubmit={handleSubmit(onSubmit)} className="modal-form">
           <div className="modal-body">
             {fields.map((field) => (
-              field.type === 'hidden' ? (
-                <input
-                  key={field.name}
-                  type="hidden"
-                  {...register(field.name)}
-                  defaultValue={field.defaultValue}
-                />
-              ) : (
               <fieldset key={field.name}>
                 <label htmlFor={field.name}>
                   {field.label} {field.required && <span style={{color: 'red'}}>*</span>}
@@ -149,7 +129,6 @@ const AddEntryModal = ({
                   </span>
                 )}
               </fieldset>
-              )
             ))}
 
 

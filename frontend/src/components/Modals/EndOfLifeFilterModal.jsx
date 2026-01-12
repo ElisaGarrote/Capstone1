@@ -7,6 +7,7 @@ export default function EndOfLifeFilterModal({
   isOpen,
   onClose,
   onApplyFilter,
+  onResetFilter,
   initialFilters = {},
 }) {
   const [filters, setFilters] = useState({
@@ -36,8 +37,14 @@ export default function EndOfLifeFilterModal({
   const handleInputChange = (field, value) =>
     setFilters((prev) => ({ ...prev, [field]: value }));
 
-  const handleReset = () =>
-    setFilters({ status: null, endoflifedate: "", warrantyexpirationdate: "" });
+  const handleReset = () => {
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    } else {
+      setFilters({ status: null, endoflifedate: "", warrantyexpirationdate: "" });
+    }
+  };
 
   const handleApply = () => {
     onApplyFilter(filters);

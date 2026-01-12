@@ -87,10 +87,8 @@
             }
 
             img {
-                width: 40px !important;
-                height: 40px !important;
-                object-fit: cover !important;
-                border-radius: 4px !important;
+                width: 22px;
+                height: 22px;
             }
 
             .action-button-section,

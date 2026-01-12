@@ -3,17 +3,13 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import DepreciationFilter from "../../components/FilterPanel";
-import api from "../../api";
+import { exportToExcel } from "../../utils/exportToExcel";
 import MockupData from "../../data/mockData/reports/end-of-life-mockup-data.json";
-// base for assets service (prefer specific env, fallback to general API)
-const assetsBase = import.meta.env.VITE_ASSETS_API_URL || import.meta.env.VITE_API_URL || "/api/assets/";
+import EndOfLifeFilterModal from "../../components/Modals/EndOfLifeFilterModal";
 import Pagination from "../../components/Pagination";
 import dateRelated from "../../utils/dateRelated";
-import { IoWarningOutline } from "react-icons/io5";
 import Footer from "../../components/Footer";
-
-import "../../styles/UpcomingEndOfLife.css";
+import "../../styles/Dashboard/UpcomingEndOfLife.css";
 
 const filterConfig = [
   {
@@ -31,17 +27,16 @@ const filterConfig = [
   },
   {
     type: "date",
-    name: "endOfLifeDate",
+    name: "endoflifedate",
     label: "End of Life Date",
   },
   {
     type: "date",
-    name: "warrantyExpiration",
+    name: "warrantyexpirationdate",
     label: "Warranty Expiration Date",
   },
 ];
 
-// TableHeader component to render the table header
 function TableHeader() {
   return (
     <tr>
@@ -54,147 +49,114 @@ function TableHeader() {
   );
 }
 
-// TableItem component to render each ticket row
 function TableItem({ asset, onDeleteClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [currentDate, setCurrentDate] = useState("");
-
-  useEffect(() => {
-    const today = new Date();
-    const options = {
-      timeZone: "Asia/Manila",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    };
-    const formatter = new Intl.DateTimeFormat("en-CA", options);
-    const formattedDate = formatter.format(today);
-    setCurrentDate(formattedDate);
-  }, []);
-
-  const warrantyDate = asset.warrantyExpiration || "";
-  const isExpired = warrantyDate ? new Date(warrantyDate) < new Date(currentDate) : false;
-  let dayDifference = 0;
-  if (isExpired) {
-    const diff = Math.floor((new Date(currentDate) - new Date(warrantyDate)) / (1000 * 60 * 60 * 24));
-    dayDifference = Number.isFinite(diff) ? diff : 0;
-  }
 
   return (
     <tr>
       <td>
-        {asset.assetId} - {asset.product}
+        {asset.asset_id} - {asset.product}
       </td>
       <td>
         <Status
-          type={asset.statusType}
-          name={asset.statusName}
-          {...(asset.deployedTo && { personName: asset.deployedTo })}
+          type={asset.status_type}
+          name={asset.status_name}
+          {...(asset.deployed_to && { personName: asset.deployed_to })}
         />
       </td>
       <td>{asset.location}</td>
-      <td>{dateRelated.formatDate(asset.endOfLifeDate)}</td>
-      <td
-        title={
-          isExpired && `Warranty expired ${dayDifference} ${dayDifference > 1 ? "days" : "day"} ago.`
-        }
-      >
-          <div className="icon-td">
-            {isExpired && <IoWarningOutline />}
-            <span
-              title={
-                isExpired
-                  ? `Beyond warranty by ${dayDifference} ${dayDifference > 1 ? "days" : "day"}`
-                  : ""
-              }
-              style={{ color: isExpired ? "red" : "#333333" }}
-            >
-              {dateRelated.formatDate(asset.warrantyExpiration)}
-            </span>
-          </div>
-      </td>
+      <td>{dateRelated.formatDate(asset.end_of_life_date)}</td>
+      <td>{dateRelated.formatDate(asset.warranty_expiration_date)}</td>
     </tr>
   );
 }
 
 export default function EndOfLifeWarrantyReport() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
+  const handleToggleFilter = () => setIsFilterModalOpen(true);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState(MockupData);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // pagination state
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    if (filters?.status) {
+      filtered = filtered.filter(
+        (row) => String(row.status_type || "").toLowerCase() === String(filters.status || "").toLowerCase()
+      );
+    }
+
+    if (filters?.endoflifedate) {
+      const target = new Date(filters.endoflifedate).toISOString().slice(0, 10);
+      filtered = filtered.filter(
+        (row) => new Date(row.end_of_life_date).toISOString().slice(0, 10) === target
+      );
+    }
+
+    if (filters?.warrantyexpirationdate) {
+      const target = new Date(filters.warrantyexpirationdate).toISOString().slice(0, 10);
+      filtered = filtered.filter(
+        (row) => new Date(row.warranty_expiration_date).toISOString().slice(0, 10) === target
+      );
+    }
+
+    return filtered;
+  };
+
+  const applyFiltersAndSearch = (filters, searchTerm) => {
+    let filtered = applyFilters(filters);
+
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter((item) =>
+        (item.asset_id && item.asset_id.toLowerCase().includes(term)) ||
+        (item.product && item.product.toLowerCase().includes(term)) ||
+        (item.status_name && item.status_name.toLowerCase().includes(term)) ||
+        (item.location && item.location.toLowerCase().includes(term))
+      );
+    }
+
+    return filtered;
+  };
+
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFiltersAndSearch(filters, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilter = () => {
+    setAppliedFilters({});
+    const filtered = applyFiltersAndSearch({}, searchTerm);
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  };
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
-
-  // paginate the data
+  const [pageSize, setPageSize] = useState(5);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const [allData, setAllData] = useState(MockupData);
-  const paginatedDepreciation = allData.slice(startIndex, endIndex);
+  const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
 
   useEffect(() => {
-    let cancelled = false;
-    async function fetchData() {
-      const url = `${assetsBase}reports/eol-warranty/?format=json`;
-      try {
-        let resp;
-        try {
-          resp = await api.get(url.replace(import.meta.env.VITE_API_URL || "", ""));
-        } catch (e) {
-          // fallback to direct fetch
-          resp = await fetch(url);
-          const data = await resp.json();
-          if (!cancelled) {
-            const rows = data.results || [];
-            rows.sort((a, b) => {
-              const pa = a.warrantyExpiration ? new Date(a.warrantyExpiration).getTime() : Number.MAX_SAFE_INTEGER;
-              const pb = b.warrantyExpiration ? new Date(b.warrantyExpiration).getTime() : Number.MAX_SAFE_INTEGER;
-              return pa - pb;
-            });
-            setAllData(rows);
-          }
-          return;
-        }
-
-        if (!cancelled && resp && resp.data) {
-          const data = resp.data.results || resp.data || [];
-          data.sort((a, b) => {
-            const pa = a.warrantyExpiration ? new Date(a.warrantyExpiration).getTime() : Number.MAX_SAFE_INTEGER;
-            const pb = b.warrantyExpiration ? new Date(b.warrantyExpiration).getTime() : Number.MAX_SAFE_INTEGER;
-            return pa - pb;
-          });
-          setAllData(data);
-        }
-      } catch (e) {
-        // keep mock data on error
-      }
-    }
-    fetchData();
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
+  const handleExport = () => {
+    const dataToExport = filteredData.length > 0 ? filteredData : MockupData;
+    exportToExcel(dataToExport, "EndOfLife_Warranty_Report.xlsx");
+  };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
+  const handleSearch = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const filtered = applyFiltersAndSearch(appliedFilters, term);
+    setFilteredData(filtered);
+  };
 
   return (
     <section className="page-layout-with-table">
@@ -206,33 +168,40 @@ export default function EndOfLifeWarrantyReport() {
           <h1>End of Life & Warranty Report</h1>
         </section>
 
-        {/* Table Filter */}
-        <DepreciationFilter filters={filterConfig} />
-
         <section className="table-layout">
           {/* Table Header */}
-            <section className="table-header">
-            <h2 className="h2">Asset ({allData.length})</h2>
+          <section className="table-header">
+            <h2 className="h2">Asset ({filteredData.length})</h2>
             <section className="table-actions">
-              <input type="search" placeholder="Search..." className="search" />
-              <div ref={toggleRef}>
-                <MediumButtons
-                  type="export"
-                  onClick={() => setExportToggle(!exportToggle)}
-                />
+              <input
+                type="search"
+                placeholder="Search..."
+                className="search"
+                value={searchTerm}
+                onChange={handleSearch}
+              />
+              <button
+                type="button"
+                className="medium-button-filter"
+                onClick={handleToggleFilter}
+              >
+                Filter
+              </button>
+              <EndOfLifeFilterModal
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+                onApplyFilter={handleApplyFilter}
+                onResetFilter={handleResetFilter}
+                initialFilters={appliedFilters}
+              />
+              <div>
+                <MediumButtons type="export" onClick={handleExport} />
               </div>
             </section>
           </section>
 
           {/* Table Structure */}
           <section className="eof-warranty-report-table-section">
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
-              </section>
-            )}
             <table>
               <thead>
                 <TableHeader />
@@ -262,7 +231,7 @@ export default function EndOfLifeWarrantyReport() {
             <Pagination
               currentPage={currentPage}
               pageSize={pageSize}
-              totalItems={allData.length}
+              totalItems={filteredData.length}
               onPageChange={setCurrentPage}
               onPageSizeChange={setPageSize}
             />

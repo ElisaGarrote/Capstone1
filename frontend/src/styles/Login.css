@@ -30,10 +30,9 @@
 }
 
 .login-page .left-panel img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  border-radius: 0 !important;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
 .login-page .right-panel {
@@ -91,14 +90,12 @@
 }
 
 .show-password {
-  height: 20px !important;
-  width: 20px !important;
+  height: 20px;
+  width: 20px;
 
   position: absolute;
   right: 16px;
   cursor: pointer;
-  border-radius: 0 !important;
-  object-fit: contain !important;
 }
 
 input[type="password"]::-ms-reveal {
@@ -170,12 +167,11 @@ input[type="password"]::-ms-reveal {
 }
 
 .form-header .logo img {
-  height: 5.8rem !important;
-  width: 5.8rem !important;
+  height: 5.8rem;
+  width: 5.8rem;
 
-  object-fit: contain !important;
+  object-fit: contain;
   mix-blend-mode: multiply;
-  border-radius: 0 !important;
 }
 
 .form-header .logo-text {

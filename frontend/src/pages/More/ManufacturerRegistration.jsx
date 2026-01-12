@@ -5,12 +5,6 @@ import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import Alert from "../../components/Alert";
-import {
-  fetchManufacturerById,
-  createManufacturer,
-  updateManufacturer,
-} from "../../services/contexts-service";
-import { importManufacturers } from "../../services/contexts-service";
 import Footer from "../../components/Footer";
 import PlusIcon from "../../assets/icons/plus.svg";
 
@@ -49,36 +43,37 @@ const ManufacturerRegistration = () => {
   const [removeImage, setRemoveImage] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [importFile, setImportFile] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [isImporting, setIsImporting] = useState(false);
 
   const navigate = useNavigate();
 
-  const [isLoading, setIsLoading] = useState(false);
+  /* BACKEND INTEGRATION HERE
+  const contextServiceUrl =
+    "https://contexts-service-production.up.railway.app";
 
   useEffect(() => {
     const initialize = async () => {
-      if (!id) return;
       try {
         setIsLoading(true);
-        const manufacturerData = await fetchManufacturerById(id);
-        if (!manufacturerData) {
-          setErrorMessage("Failed to fetch manufacturer details");
-          return;
-        }
-        setValue("manufacturerName", manufacturerData.name || "");
-        // support both new and legacy field names
-        setValue(
-          "url",
-          manufacturerData.website_url || manufacturerData.manu_url || manufacturerData.url || ""
-        );
-        setValue("supportUrl", manufacturerData.support_url || "");
-        setValue("supportPhone", manufacturerData.support_phone || "");
-        setValue("supportEmail", manufacturerData.support_email || manufacturerData.email || "");
-        setValue("notes", manufacturerData.notes || "");
-        if (manufacturerData.logo) {
-          setPreviewImage(manufacturerData.logo);
-          setSelectedImage(null);
+        if (id) {
+          const manufacturerData = await contextsService.fetchManufacturerById(
+            id
+          );
+          if (!manufacturerData) {
+            setErrorMessage("Failed to fetch manufacturer details");
+            setIsLoading(false);
+            return;
+          }
+          console.log("Manufacturer Details:", manufacturerData);
+          setValue("manufacturerName", manufacturerData.name || "");
+          setValue("url", manufacturerData.manu_url || "");
+          setValue("supportUrl", manufacturerData.support_url || "");
+          setValue("supportPhone", manufacturerData.support_phone || "");
+          setValue("supportEmail", manufacturerData.support_email || "");
+          setValue("notes", manufacturerData.notes || "");
+          if (manufacturerData.logo) {
+            setPreviewImage(`${contextServiceUrl}${manufacturerData.logo}`);
+            setSelectedImage(null);
+          }
         }
       } catch (error) {
         console.error("Error initializing:", error);
@@ -89,6 +84,8 @@ const ManufacturerRegistration = () => {
     };
     initialize();
   }, [id, setValue]);
+
+  */
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -120,25 +117,6 @@ const ManufacturerRegistration = () => {
     }
   };
 
-  // Format phone number to international +63... on blur and normalize input
-  const formatPhoneToInternational = (raw) => {
-    if (!raw) return raw;
-    // remove spaces, dashes, parentheses
-    const digits = raw.replace(/[^0-9+]/g, "");
-    // if already starts with +63 and digits only afterwards, normalize
-    if (/^\+63\d{9,10}$/.test(digits)) return digits;
-    // If starts with 0, replace leading 0 with +63
-    if (/^0\d{9,11}$/.test(digits)) {
-      return "+63" + digits.slice(1);
-    }
-    // If starts with 9 and length 9 or 10, prepend +63
-    if (/^9\d{8,9}$/.test(digits)) {
-      return "+63" + digits;
-    }
-    // otherwise return original cleaned digits (fallback)
-    return digits;
-  };
-
   const handleImportFile = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -151,35 +129,8 @@ const ManufacturerRegistration = () => {
         return;
       }
       setImportFile(file);
-      // Upload immediately and show result (inline messages like Category import)
-      (async () => {
-        try {
-          setIsImporting(true);
-          setSuccessMessage('');
-          setErrorMessage('');
-          const fd = new FormData();
-          fd.append('file', file, file.name);
-          const res = await importManufacturers(fd);
-          const created = res?.created || 0;
-          const updated = res?.updated || 0;
-          const errors = res?.errors || [];
-          let msg = `Import complete. Created ${created}. Updated ${updated}.`;
-          if (Array.isArray(errors) && errors.length) {
-            msg += ` ${errors.length} rows failed.`;
-            setErrorMessage(msg);
-          } else {
-            setSuccessMessage(msg);
-          }
-        } catch (err) {
-          console.error('Import failed', err);
-          const detail = err?.response?.data?.detail || err?.message || 'Import failed';
-          setErrorMessage(detail);
-        } finally {
-          setIsImporting(false);
-          setImportFile(null);
-          if (typeof e.target !== 'undefined') e.target.value = '';
-        }
-      })();
+      // Here you would typically process the Excel file
+      console.log("Import file selected:", file.name);
     }
   };
 
@@ -188,15 +139,34 @@ const ManufacturerRegistration = () => {
     : { addedManufacturer: true };
 
   const onSubmit = async (data) => {
+    /* BACKEND INTEGRATION HERE
     try {
-      setIsLoading(true);
-
-      // Duplicate name check using fetchAllManufacturers is optional; skip to keep UX fast
+      // Duplicate name check for creation
+      if (!id) {
+        const existingManufacturers =
+          await contextsService.fetchAllManufacturerNames();
+        if (!existingManufacturers) {
+          throw new Error(
+            "Failed to fetch manufacturer names for duplicate check"
+          );
+        }
+        const isDuplicate = existingManufacturers.manufacturers.some(
+          (manufacturer) =>
+            manufacturer.name.toLowerCase() ===
+            data.manufacturerName.toLowerCase()
+        );
+        if (isDuplicate) {
+          setErrorMessage(
+            "A manufacturer with this name already exists. Please use a different name."
+          );
+          setTimeout(() => setErrorMessage(""), 5000);
+          return;
+        }
+      }
 
       const formData = new FormData();
       formData.append("name", data.manufacturerName);
-      // server expects `website_url`
-      formData.append("website_url", data.url || "");
+      formData.append("manu_url", data.url || "");
       formData.append("support_url", data.supportUrl || "");
       formData.append("support_phone", data.supportPhone || "");
       formData.append("support_email", data.supportEmail || "");
@@ -208,27 +178,52 @@ const ManufacturerRegistration = () => {
 
       if (removeImage) {
         formData.append("remove_logo", "true");
+        console.log("Removing logo: remove_logo flag set to true");
+      }
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Form data before submission:");
+        for (let pair of formData.entries()) {
+          console.log(`${pair[0]}: ${pair[1]}`);
+        }
       }
 
       let result;
       if (id) {
-        result = await updateManufacturer(id, formData);
+        result = await contextsService.updateManufacturer(id, formData);
       } else {
-        result = await createManufacturer(formData);
+        result = await contextsService.createManufacturer(formData);
       }
 
-      if (!result) throw new Error("Server did not return a result.");
+      if (!result) {
+        throw new Error(`Failed to ${id ? "update" : "create"} manufacturer.`);
+      }
 
+      console.log(`${id ? "Updated" : "Created"} manufacturer:`, result);
       navigate("/More/ViewManufacturer", {
-        state: { successMessage: `Manufacturer has been ${id ? "updated" : "created"} successfully!` },
+        state: {
+          successMessage: `Manufacturer has been ${
+            id ? "updated" : "created"
+          } successfully!`,
+        },
       });
     } catch (error) {
-      console.error(`Error ${id ? "updating" : "creating"} manufacturer:`, error);
-      setErrorMessage(error?.message || "Failed to save manufacturer.");
+      console.error(
+        `Error ${id ? "updating" : "creating"} manufacturer:`,
+        error
+      );
+      setErrorMessage(
+        error.message.includes("Failed to create manufacturer")
+          ? "Failed to create manufacturer. Please check the server configuration or endpoint."
+          : error.message ||
+              `An error occurred while ${
+                id ? "updating" : "creating"
+              } the manufacturer`
+      );
       setTimeout(() => setErrorMessage(""), 5000);
-    } finally {
-      setIsLoading(false);
     }
+    */
+    navigate("/More/ViewManufacturer", { state });
   };
 
   return (
@@ -263,18 +258,6 @@ const ManufacturerRegistration = () => {
               }
             />
           </section>
-          {/* Left-side import status: matches Category import UI */}
-          <div style={{ padding: '0 24px', marginTop: 8 }}>
-            <div className="import-status-left" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {isImporting && <span style={{ fontSize: 13, fontWeight: 500 }}>Uploading...</span>}
-              {!isImporting && successMessage && (
-                <div className="success-message" style={{ fontSize: 13, color: 'green' }}>{successMessage}</div>
-              )}
-              {!isImporting && errorMessage && (
-                <div className="error-message" style={{ fontSize: 13, color: '#d32f2f' }}>{errorMessage}</div>
-              )}
-            </div>
-          </div>
           <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)}>
               <fieldset>
@@ -299,22 +282,17 @@ const ManufacturerRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="url">
-                  Website URL
-                  <span className="required-asterisk">*</span>
-                </label>
+                <label htmlFor="url">URL</label>
                 <input
                   type="url"
                   placeholder="URL"
                   className={errors.url ? "input-error" : ""}
                   {...register("url", {
-                    required: "Website URL is required",
                     pattern: {
                       value: /^(https?:\/\/).+/i,
                       message: "URL must start with http:// or https://",
                     },
                   })}
-                  aria-required="true"
                 />
                 {errors.url && (
                   <span className="error-message">{errors.url.message}</span>
@@ -322,23 +300,18 @@ const ManufacturerRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="supportUrl">
-                  Support URL
-                  <span className="required-asterisk">*</span>
-                </label>
+                <label htmlFor="supportUrl">Support URL</label>
                 <input
                   type="url"
                   placeholder="Support URL"
                   className={errors.supportUrl ? "input-error" : ""}
                   {...register("supportUrl", {
-                    required: "Support URL is required",
                     pattern: {
                       value: /^(https?:\/\/).+/i,
                       message:
                         "Support URL must start with http:// or https://",
                     },
                   })}
-                  aria-required="true"
                 />
                 {errors.supportUrl && (
                   <span className="error-message">
@@ -348,46 +321,20 @@ const ManufacturerRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="supportPhone">
-                  Phone Number
-                  <span className="required-asterisk">*</span>
-                </label>
+                <label htmlFor="supportPhone">Phone Number</label>
                 <input
                   type="tel"
-                  placeholder="Phone Number (e.g. +639XXXXXXXX)"
-                  className={errors.supportPhone ? "input-error" : ""}
-                  {...register("supportPhone", {
-                    required: "Phone Number is required",
-                    pattern: {
-                      value: /^\+63\d{9,10}$/,
-                      message:
-                        "Phone must be in international format starting with +63 (e.g. +639XXXXXXXX)",
-                    },
-                  })}
-                  aria-required="true"
-                  onBlur={(e) => {
-                    const formatted = formatPhoneToInternational(e.target.value || "");
-                    setValue("supportPhone", formatted, { shouldValidate: true, shouldDirty: true });
-                  }}
+                  placeholder="Phone Number"
+                  {...register("supportPhone")}
                 />
               </fieldset>
 
               <fieldset>
-                <label htmlFor="supportEmail">
-                  Manufacturer Email
-                  <span className="required-asterisk">*</span>
-                </label>
+                <label htmlFor="supportEmail">Email</label>
                 <input
                   type="email"
                   placeholder="Email"
-                  {...register("supportEmail", {
-                    required: "Manufacturer Email is required",
-                    pattern: {
-                      value: /^\S+@\S+\.\S+$/,
-                      message: "Please enter a valid email address",
-                    },
-                  })}
-                  aria-required="true"
+                  {...register("supportEmail")}
                 />
               </fieldset>
 
@@ -448,9 +395,9 @@ const ManufacturerRegistration = () => {
               <button
                 type="submit"
                 className="primary-button"
-                disabled={isLoading}
+                disabled={!isValid}
               >
-                {isLoading ? "Saving..." : "Save"}
+                Save
               </button>
             </form>
           </section>

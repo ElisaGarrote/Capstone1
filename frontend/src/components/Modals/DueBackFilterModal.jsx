@@ -7,6 +7,7 @@ export default function DueBackFilterModal({
   isOpen,
   onClose,
   onApplyFilter,
+  onResetFilter,
   initialFilters = {},
 }) {
   const [filters, setFilters] = useState({
@@ -25,7 +26,12 @@ export default function DueBackFilterModal({
   };
 
   const handleReset = () => {
-    setFilters({ checkoutdate: "", checkindate: "" });
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    } else {
+      setFilters({ checkoutdate: "", checkindate: "" });
+    }
   };
 
   const handleApply = () => {

@@ -10,6 +10,7 @@ import DefaultImage from "../../../assets/img/default-image.jpg";
 import Status from "../../../components/Status";
 import DeleteModal from "../../../components/Modals/DeleteModal";
 import Footer from "../../../components/Footer";
+
 import "../../../styles/more/supplier/SupplierAsset.css";
 
 // TableHeader component to render the table header

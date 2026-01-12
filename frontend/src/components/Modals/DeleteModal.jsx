@@ -1,112 +1,64 @@
 import { useEffect, useState } from "react";
 import LoadingButton from "../LoadingButton";
+
 import "../../styles/DeleteModal.css";
-import {
-  deleteProduct,
-  bulkDeleteProducts,
-  deleteAsset,
-  bulkDeleteAssets,
-} from "../../services/assets-service";
 
 export default function ConfirmationModal({
   closeModal,
-  isOpen,
-  actionType,      // "delete", "bulk-delete", "activate", etc.
-  entityType,      // "product", "asset"
-  targetId,        // single ID for delete
-  targetIds,       // array of IDs for bulk-delete
-  selectedCount,   // optional explicit count to show in modal
-  onSuccess,       // callback after successful delete (receives deleted id(s))
-  onError,         // callback on error (receives error)
-  // Optional parent-driven confirm flow: some pages pass `onConfirm` which
-  // performs the API call and returns { ok: true } or { ok: false, data: ... }
-  onConfirm,
-  // Optional parent-side bulk failure handler
+  confirmDelete,
+  endPoint,
   onDeleteFail,
+  isOpen,
+  onConfirm,
+  onCancel,
+  actionType,
 }) {
-  const [isProcessing, setIsProcessing] = useState(false);
+  /*
+  Action Type includes the following:
+    - delete
+    - activate
+    - deactivate
+    - recover
+  */
 
-  const handleClose = () => {
-    if (closeModal) closeModal();
-  };
+  const [isDeleting, setDeleting] = useState(false);
 
+  // Handle compatibility with different prop patterns
+  const handleClose = closeModal || onCancel;
   const handleConfirm = async () => {
-    setIsProcessing(true);
+    if (confirmDelete) {
+      setDeleting(true);
+      const success = await handleDelete(endPoint);
+      if (success) {
+        await confirmDelete();
+        if (closeModal) closeModal();
+      } else {
+        if (onDeleteFail) onDeleteFail();
+        if (closeModal) closeModal(); // Always close the modal even on failure
+      }
+    } else if (onConfirm) {
+      onConfirm();
+    }
+  };
+  const handleDelete = async (endPoint) => {
     try {
-      // If parent provided an `onConfirm` callback, defer the action to it.
-      if (typeof onConfirm === "function") {
-        const result = await onConfirm();
-        // Parent is expected to return { ok: true } on success
-        if (result && result.ok) {
-          if (onSuccess) onSuccess(result.data ?? (Array.isArray(targetIds) ? targetIds : targetId));
-        } else {
-          // allow parent to handle bulk-skipped/reporting via onDeleteFail
-          if (typeof onDeleteFail === "function") {
-            onDeleteFail(result?.data ?? result);
-          } else if (onError) {
-            onError(result?.data ?? result);
-          }
-        }
-        return;
-      }
-
-      // Fallback: modal performs the API action directly (legacy behavior)
-      if (actionType === "delete" && targetId) {
-        // Single delete
-        if (entityType === "product") {
-          await deleteProduct(targetId);
-        } else if (entityType === "asset") {
-          await deleteAsset(targetId);
-        }
-        if (onSuccess) onSuccess(targetId);
-        } else if (actionType === "bulk-delete" && targetIds?.length > 0) {
-        // Bulk delete
-        if (entityType === "product") {
-          const res = await bulkDeleteProducts({ ids: targetIds });
-          // New backend response: { deleted_count, skipped_count, deleted_ids, failed }
-          const skippedCount = res?.skipped_count ?? res?.skipped ?? 0;
-          const failedList = res?.failed ?? (res?.failed_ids ? res.failed_ids : []);
-          const deletedIds = res?.deleted_ids ?? (skippedCount ? [] : targetIds);
-
-          if (skippedCount > 0 || (Array.isArray(failedList) && failedList.length > 0)) {
-            if (typeof onDeleteFail === "function") {
-              onDeleteFail(res);
-            } else if (onError) {
-              onError({ response: { data: res } });
-            }
-          } else {
-            if (onSuccess) onSuccess(deletedIds.length ? deletedIds : targetIds);
-          }
-        } else if (entityType === "asset") {
-          const res = await bulkDeleteAssets({ ids: targetIds });
-          const skippedCount = res?.skipped_count ?? res?.skipped ?? 0;
-          const failedList = res?.failed ?? (res?.failed_ids ? res.failed_ids : []);
-          const deletedIds = res?.deleted_ids ?? (skippedCount ? [] : targetIds);
-
-          if (skippedCount > 0 || (Array.isArray(failedList) && failedList.length > 0)) {
-            if (typeof onDeleteFail === "function") {
-              onDeleteFail(res);
-            } else if (onError) {
-              onError({ response: { data: res } });
-            }
-          } else {
-            if (onSuccess) onSuccess(deletedIds.length ? deletedIds : targetIds);
-          }
-        }
-      }
+      const response = await fetch(endPoint, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("Delete failed");
+      return true;
     } catch (error) {
-      console.error("Action failed:", error);
-      if (onError) onError(error);
-    } finally {
-      setIsProcessing(false);
-      handleClose();
+      console.error("Delete error:", error);
+      return false;
     }
   };
 
   const getActionText = () => {
     switch (actionType) {
       case "delete":
-      case "bulk-delete":
         return "Delete";
       case "activate":
         return "Activate";
@@ -122,7 +74,6 @@ export default function ConfirmationModal({
   const getProcessingText = () => {
     switch (actionType) {
       case "delete":
-      case "bulk-delete":
         return "Deleting...";
       case "activate":
         return "Activating...";
@@ -144,25 +95,26 @@ export default function ConfirmationModal({
   return (
     <section className="delete-modal">
       <div className="overlay" onClick={handleClose}>
-        <div className="content" onClick={(e) => e.stopPropagation()}>
+        <div className="content">
           <h2 className="modal-title">{getActionText()} Confirmation</h2>
           <p className="modal-message">
-            {actionType === "bulk-delete" ? (
-              <>Are you sure you want to delete these {selectedCount ?? (targetIds?.length || 0)} {entityType || 'item'}(s)? This action cannot be undone.</>
-            ) : (
-              <>Are you sure you want to delete this {entityType || 'item'}? This action cannot be undone.</>
-            )}
+            Are you sure you want to {getActionText().toLowerCase()} this{" "}
+            {actionType != "activate" && actionType != "deactivate"
+              ? "item"
+              : "user"}
+            ? This action cannot be undone.
           </p>
           <div className="modal-actions">
-            <button className="cancel-btn" onClick={handleClose} disabled={isProcessing}>
+            <button className="cancel-btn" onClick={handleClose}>
               Cancel
             </button>
             <button
               className={`confirm-action-btn ${actionType}-btn`}
               onClick={handleConfirm}
-              disabled={isProcessing}
+              disabled={isDeleting}
             >
-              {isProcessing ? <LoadingButton /> : getActionText()}
+              {isDeleting && <LoadingButton />}
+              {!isDeleting ? getActionText() : getProcessingText()}
             </button>
           </div>
         </div>

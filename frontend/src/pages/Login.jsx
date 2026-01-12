@@ -6,8 +6,6 @@ import Alert from "../components/Alert";
 import { useForm } from "react-hook-form";
 import authService from "../services/auth-service";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { setUser } from "../features/counter/userSlice";
 import LoadingButton from "../components/LoadingButton";
 import eyeOpen from "../assets/icons/eye-open.svg";
 import eyeClose from "../assets/icons/eye-close.svg";
@@ -20,8 +18,6 @@ function Login() {
   const [isSubmitting, setSubmitting] = useState(false);
   const [isShowPassword, setShowPassword] = useState(false);
   const [hasActiveAdmin, setActiveAdmin] = useState(true);
-
-  const dispatch = useDispatch();
 
   const {
     register,
@@ -39,17 +35,9 @@ function Login() {
     setSubmitting(true);
 
     try {
-      const user = await authService.login(email, password);
+      const success = await authService.login(email, password);
 
-      if (user) {
-        dispatch(
-          setUser({
-            firstName: user.first_name,
-            lastName: user.last_name,
-            role: user.role,
-            loggedIn: true,
-          })
-        );
+      if (success) {
         setInvalidCredentials(false);
 
         navigate("/dashboard");
