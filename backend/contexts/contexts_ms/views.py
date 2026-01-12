@@ -509,5 +509,58 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
         
         if entity == "location":
             data["locations"] = LocationNameSerializer(Location.objects.all(), many=True).data
-            
+
         return Response(data, status=status.HTTP_200_OK,)
+
+
+# Help Desk Proxy ViewSet - proxies requests to external Help Desk service
+# This allows the frontend to call the contexts service over HTTPS instead of
+# calling the external Help Desk service directly over HTTP (which causes mixed content errors)
+class HelpDeskLocationsProxyViewSet(viewsets.ViewSet):
+    """Proxy ViewSet for Help Desk locations to avoid mixed content errors."""
+
+    def list(self, request):
+        """Proxy GET /helpdesk-locations/ to help desk service."""
+        from contexts_ms.services.integration_help_desk import get_locations_list
+        q = request.query_params.get('q')
+        limit = request.query_params.get('limit', 50)
+        try:
+            limit = int(limit)
+        except (TypeError, ValueError):
+            limit = 50
+        result = get_locations_list(q=q, limit=limit)
+        if isinstance(result, dict) and result.get('warning'):
+            return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result)
+
+    def retrieve(self, request, pk=None):
+        """Proxy GET /helpdesk-locations/<pk>/ to help desk service."""
+        from contexts_ms.services.integration_help_desk import get_location_by_id
+        result = get_location_by_id(pk)
+        if result is None:
+            return Response({'error': 'Location not found'}, status=status.HTTP_404_NOT_FOUND)
+        if isinstance(result, dict) and result.get('warning'):
+            return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result)
+
+
+class HelpDeskEmployeesProxyViewSet(viewsets.ViewSet):
+    """Proxy ViewSet for Help Desk employees to avoid mixed content errors."""
+
+    def list(self, request):
+        """Proxy GET /helpdesk-employees/ to help desk service."""
+        from contexts_ms.services.integration_help_desk import fetch_resource_list
+        result = fetch_resource_list('employees')
+        if isinstance(result, dict) and result.get('warning'):
+            return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result)
+
+    def retrieve(self, request, pk=None):
+        """Proxy GET /helpdesk-employees/<pk>/ to help desk service."""
+        from contexts_ms.services.integration_help_desk import get_employee_by_id
+        result = get_employee_by_id(pk)
+        if result is None:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+        if isinstance(result, dict) and result.get('warning'):
+            return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result)

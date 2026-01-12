@@ -34,6 +34,9 @@ router.register('employees', EmployeeViewSet, basename='employee')
 router.register('tickets', TicketViewSet, basename='tickets')
 router.register('recycle-bin', RecycleBinViewSet, basename='recycle-bin')
 router.register('contexts-dropdowns', ContextsDropdownsViewSet, basename='contexts-dropdowns')
+# Help Desk Proxy endpoints - proxies to external Help Desk service to avoid mixed content errors
+router.register('helpdesk-locations', HelpDeskLocationsProxyViewSet, basename='helpdesk-locations')
+router.register('helpdesk-employees', HelpDeskEmployeesProxyViewSet, basename='helpdesk-employees')
 
 urlpatterns = router.urls
 

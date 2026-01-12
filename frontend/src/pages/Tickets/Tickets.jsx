@@ -118,75 +118,77 @@ const Tickets = () => {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  useEffect(() => {
-    const loadTickets = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
+  // Extract loadTickets as a reusable function
+  const loadTickets = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
 
-        // Fetch tickets from API
-        const response = await fetchAllTickets();
-        // Handle different response formats: {results: [...]}, {value: [...]}, or direct array
-        const ticketsData = response.results || response.value || (Array.isArray(response) ? response : []);
+      // Fetch tickets from API
+      const response = await fetchAllTickets();
+      // Handle different response formats: {results: [...]}, {value: [...]}, or direct array
+      const ticketsData = response.results || response.value || (Array.isArray(response) ? response : []);
 
-        // Fetch employees from API
-        const employeesResponse = await fetchAllEmployees();
+      // Fetch employees from API
+      const employeesResponse = await fetchAllEmployees();
 
-        const employeesList = Array.isArray(employeesResponse)
-          ? employeesResponse
-          : employeesResponse?.results || [];
-        setEmployees(employeesList);
+      const employeesList = Array.isArray(employeesResponse)
+        ? employeesResponse
+        : employeesResponse?.results || [];
+      setEmployees(employeesList);
 
-        // Map API response to component format
-        const mappedTickets = ticketsData.map((ticket) => {
-          // Determine if ticket needs check-in or check-out action
-          // Logic: If checkin_date is null, it's a Check-Out ticket, otherwise Check-In
-          const isCheckInOrOut = !ticket.is_resolved
-            ? ticket.checkin_date === null || ticket.checkin_date === undefined
-              ? "Check-Out"
-              : "Check-In"
-            : null;
+      // Map API response to component format
+      const mappedTickets = ticketsData.map((ticket) => {
+        // Determine if ticket needs check-in or check-out action
+        // Logic: If checkin_date is null, it's a Check-Out ticket, otherwise Check-In
+        const isCheckInOrOut = !ticket.is_resolved
+          ? ticket.checkin_date === null || ticket.checkin_date === undefined
+            ? "Check-Out"
+            : "Check-In"
+          : null;
 
-          const formattedDate =
-            isCheckInOrOut === "Check-In"
-              ? ticket.checkin_date?.slice(0, 10)
-              : ticket.checkout_date?.slice(0, 10);
+        const formattedDate =
+          isCheckInOrOut === "Check-In"
+            ? ticket.checkin_date?.slice(0, 10)
+            : ticket.checkout_date?.slice(0, 10);
 
-          // Find employee name
-          const employee = employeesList.find(
-            (e) => Number(e.id) === Number(ticket.employee)
-          );
-
-          const employeeName = employee
-            ? `${employee.firstname} ${employee.lastname}`
-            : "Unknown";
-
-          return {
-            ...ticket,
-            isCheckInOrOut,
-            formattedDate,
-            employeeName,
-            // Use location_details.name for display (location is now an integer ID)
-            location: ticket.location_details?.name || "Unknown",
-          };
-        });
-
-        setTicketItems(mappedTickets);
-        setFilteredData(mappedTickets);
-      } catch (error) {
-        console.error("Error loading tickets:", error);
-        setErrorMessage(
-          "Failed to load tickets from server. Please try again later."
+        // Find employee name
+        const employee = employeesList.find(
+          (e) => Number(e.id) === Number(ticket.employee)
         );
-        setTicketItems([]);
-        setFilteredData([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
+        const employeeName = employee
+          ? `${employee.firstname} ${employee.lastname}`
+          : "Unknown";
+
+        return {
+          ...ticket,
+          isCheckInOrOut,
+          formattedDate,
+          employeeName,
+          // Use location_details.name for display (location is now an integer ID)
+          location: ticket.location_details?.name || "Unknown",
+        };
+      });
+
+      setTicketItems(mappedTickets);
+      setFilteredData(mappedTickets);
+    } catch (error) {
+      console.error("Error loading tickets:", error);
+      setErrorMessage(
+        "Failed to load tickets from server. Please try again later."
+      );
+      setTicketItems([]);
+      setFilteredData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load tickets on mount and when navigating back with success message
+  useEffect(() => {
     loadTickets();
-  }, []);
+  }, [location.key]);
 
   // Apply filters to data
   const applyFilters = (filters) => {
