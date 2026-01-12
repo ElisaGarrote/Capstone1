@@ -8,8 +8,8 @@ import contextsAxios from "../api/contextsAxios";
 // GET all locations (via contexts proxy)
 export async function fetchAllLocations() {
   const res = await contextsAxios.get("helpdesk-locations/");
-  // Map city to name for frontend compatibility
-  const data = res.data.results ?? res.data;
+  // API returns { success, count, locations: [...] }
+  const data = res.data.locations ?? res.data.results ?? res.data;
   // Ensure data is an array before mapping
   if (!Array.isArray(data)) {
     console.warn("fetchAllLocations: Expected array but got:", typeof data);
@@ -17,7 +17,7 @@ export async function fetchAllLocations() {
   }
   return data.map(loc => ({
     id: loc.id,
-    name: loc.city || loc.name
+    name: loc.display_name || loc.city || loc.name
   }));
 }
 
