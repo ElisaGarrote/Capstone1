@@ -8,7 +8,7 @@ from ..services.depreciation_report import generate_depreciation_report
 from ..services.eol_warranty_report import generate_eol_warranty_report
 from ..services.upcoming_eol_report import generate_upcoming_eol_report
 from ..services.reached_eol_report import generate_reached_eol_report
-from ..services.expired_warranty_report import generate_expired_warranty_report
+from ..services.expired_warranty_report import generate_expired_warranty_report, generate_expiring_warranty_report
 from ..services.asset_report import generate_asset_report
 from ..services.activity_report import generate_activity_report, get_activity_summary
 
@@ -450,6 +450,23 @@ class ExpiredWarrantyReportAPIView(APIView):
         def get(self, request):
                 fmt = request.query_params.get('format', '').lower()
                 rows = generate_expired_warranty_report()
+                # Currently only JSON supported
+                return Response({'results': rows})
+
+
+class ExpiringWarrantyReportAPIView(APIView):
+        """Return compact Expiring Warranty asset list as JSON.
+
+        Logic matches dashboard metric for expiring_warranties
+        (warranty_expiration > today and <= today + 30 days).
+
+        Query params:
+            - format=json to return JSON results (default)
+        """
+
+        def get(self, request):
+                fmt = request.query_params.get('format', '').lower()
+                rows = generate_expiring_warranty_report()
                 # Currently only JSON supported
                 return Response({'results': rows})
 
