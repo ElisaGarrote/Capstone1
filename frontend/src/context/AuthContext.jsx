@@ -18,13 +18,15 @@ import {
   hasAnySystemRole,
   isTokenExpired,
   getSystemRole,
+  getAccessTokenFromCookie,
 } from "../api/TokenUtils";
 import { read } from "xlsx";
 
 const AuthContext = createContext();
 
 // Auth service URL - points to centralized auth service
-const AUTH_URL = import.meta.env.VITE_AUTH_URL || "http://localhost:3001";
+const AUTH_URL = import.meta.env.VITE_AUTH_URL || "http://165.22.247.50:8003";
+console.log("pointed at -> ", `${AUTH_URL}/api/v1/token/obtain/`);
 
 // API endpoints
 const PROFILE_URL = `${AUTH_URL}/api/v1/users/profile/`;
@@ -341,12 +343,21 @@ export const AuthProvider = ({ children }) => {
       const authApi = createAuthRequest();
       const response = await authApi.post(TOKEN_OBTAIN_URL, loginData);
 
+      const readResponse = response.data;
+      console.log("read response:", readResponse);
+
       if (response.data?.access) {
         setAccessToken(response.data.access);
+      } else {
+        // Get access token on cookie
+        setAccessToken(getAccessTokenFromCookie());
       }
 
       // Let checkAuthStatus fetch & set FULL user
       const authSuccess = await checkAuthStatus();
+
+      const readAuthSucess = authSuccess.data;
+      console.log("auth sucess:", readAuthSucess);
 
       if (!authSuccess) {
         return {
