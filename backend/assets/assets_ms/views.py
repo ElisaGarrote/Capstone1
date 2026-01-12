@@ -1973,37 +1973,37 @@ class DashboardViewSet(viewsets.ViewSet):
                 asset_checkin__isnull=True
             ).count()
 
-        # Audits - due (today and future), upcoming (next 30 days), overdue, and completed
-        try:
-            # Only consider audit schedules that are not deleted and not yet audited
-            base_schedule_qs = AuditSchedule.objects.filter(
-                is_deleted=False,
-                audit__isnull=True
-            )
+            # Audits - due (today and future), upcoming (next 30 days), overdue, and completed
+            try:
+                # Only consider audit schedules that are not deleted and not yet audited
+                base_schedule_qs = AuditSchedule.objects.filter(
+                    is_deleted=False,
+                    audit__isnull=True
+                )
 
-            # Audits due to be audited: all pending audits from today onwards
-            due_audits = base_schedule_qs.filter(
-                date__gte=today,
-            ).count()
+                # Audits due to be audited: all pending audits from today onwards
+                due_audits = base_schedule_qs.filter(
+                    date__gte=today,
+                ).count()
 
-            # Upcoming audits within the next 30 days
-            upcoming_audits = base_schedule_qs.filter(
-                date__gt=today,
-                date__lte=next_30_days,
-            ).count()
+                # Upcoming audits within the next 30 days
+                upcoming_audits = base_schedule_qs.filter(
+                    date__gt=today,
+                    date__lte=next_30_days,
+                ).count()
 
-            # Overdue audits (past due date, not yet completed)
-            overdue_audits = base_schedule_qs.filter(
-                date__lt=today,
-            ).count()
+                # Overdue audits (past due date, not yet completed)
+                overdue_audits = base_schedule_qs.filter(
+                    date__lt=today,
+                ).count()
 
-            # Completed audits (audit records not soft-deleted)
-            completed_audits = Audit.objects.filter(is_deleted=False).count()
-        except Exception:
-            due_audits = 0
-            upcoming_audits = 0
-            overdue_audits = 0
-            completed_audits = 0
+                # Completed audits (audit records not soft-deleted)
+                completed_audits = Audit.objects.filter(is_deleted=False).count()
+            except Exception:
+                due_audits = 0
+                upcoming_audits = 0
+                overdue_audits = 0
+                completed_audits = 0
 
             # End of life - products with end_of_life date
             try:
@@ -2016,7 +2016,7 @@ class DashboardViewSet(viewsets.ViewSet):
                     end_of_life__lte=next_30_days,
                     is_deleted=False
                 ).count()
-            except:
+            except Exception:
                 reached_end_of_life = 0
                 upcoming_end_of_life = 0
 
@@ -2082,23 +2082,23 @@ class DashboardViewSet(viewsets.ViewSet):
                 for item in status_counts if item['status']
             ]
 
-        data = {
-            "due_for_return": due_for_return,
-            "overdue_for_return": overdue_for_return,
-            "due_audits": due_audits,
-            "upcoming_audits": upcoming_audits,
-            "overdue_audits": overdue_audits,
-            "completed_audits": completed_audits,
-            "reached_end_of_life": reached_end_of_life,
-            "upcoming_end_of_life": upcoming_end_of_life,
-            "expired_warranties": expired_warranties,
-            "expiring_warranties": expiring_warranties,
-            "low_stock": low_stock,
-            "total_asset_costs": total_asset_costs,
-            "asset_utilization": asset_utilization,
-            "asset_categories": asset_categories,
-            "asset_statuses": asset_statuses,
-        }
+            data = {
+                "due_for_return": due_for_return,
+                "overdue_for_return": overdue_for_return,
+                "due_audits": due_audits,
+                "upcoming_audits": upcoming_audits,
+                "overdue_audits": overdue_audits,
+                "completed_audits": completed_audits,
+                "reached_end_of_life": reached_end_of_life,
+                "upcoming_end_of_life": upcoming_end_of_life,
+                "expired_warranties": expired_warranties,
+                "expiring_warranties": expiring_warranties,
+                "low_stock": low_stock,
+                "total_asset_costs": total_asset_costs,
+                "asset_utilization": asset_utilization,
+                "asset_categories": asset_categories,
+                "asset_statuses": asset_statuses,
+            }
 
             serializer = DashboardStatsSerializer(data)
             return Response(serializer.data)
