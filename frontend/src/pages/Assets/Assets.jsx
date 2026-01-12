@@ -159,7 +159,7 @@ export default function Assets() {
     }
   }, [location]);
 
-  // Fetch assets on component mount
+  // Fetch assets on component mount and when navigating back (e.g., after bulk edit)
   useEffect(() => {
     const loadAssets = async () => {
       try {
@@ -177,7 +177,7 @@ export default function Assets() {
     };
 
     loadAssets();
-  }, []);
+  }, [location.key]);
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
