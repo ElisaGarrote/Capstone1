@@ -3,6 +3,11 @@
   min-width: 600px !important;
 }
 
+.depreciation-filter-modal {
+  max-width: 600px !important;
+  min-width: 400px !important;
+}
+
 .asset-filter-modal-body {
   max-height: 60vh;
   overflow-y: auto;
@@ -10,7 +15,7 @@
 
 .filter-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
 }
 

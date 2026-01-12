@@ -25,13 +25,13 @@ const AssetMetrics = ({ stats }) => {
     { name: 'Retired', value: 5, color: '#FF6B6B' }
   ];
 
-  const assetCategoriesData = stats?.asset_categories?.map((item, index) => ({
+  const assetCategoriesData = (stats?.asset_categories?.slice(0, 5) || [])?.map((item, index) => ({
     name: item['product__category__name'],
     value: item.count,
     color: ['#0D6EFD', '#FFB800', '#82ca9d', '#FF6B6B', '#FF8C00', '#9C27B0'][index % 6]
-  })) || sampleCategoriesData;
+  })) || sampleCategoriesData.slice(0, 5);
 
-  const assetStatusData = stats?.asset_statuses?.map((item, index) => ({
+  const assetStatusData = (stats?.asset_statuses?.slice(0, 5) || [])?.map((item, index) => ({
     name: item['status__name'],
     value: item.count,
     color: ['#0D6EFD', '#FF6B6B', '#82ca9d', '#FFB800', '#9C27B0', '#00C49F'][index % 6]

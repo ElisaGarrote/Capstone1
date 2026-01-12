@@ -16,6 +16,7 @@ import "../../styles/CategoryRegistration.css";
 const CategoryRegistration = () => {
   const navigate = useNavigate();
   const [attachmentFile, setAttachmentFile] = useState(null);
+  const [selectedImageForModal, setSelectedImageForModal] = useState(null);
 
   // Import file state
   const [importFile, setImportFile] = useState(null);
@@ -58,6 +59,23 @@ const CategoryRegistration = () => {
         return;
       }
       setAttachmentFile(e.target.files[0]);
+    }
+  };
+
+  // Check if file is an image
+  const isImageFile = (file) => {
+    const imageExtensions = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    return imageExtensions.includes(file.type);
+  };
+
+  // Handle image click to open preview modal
+  const handleImageClick = (file) => {
+    if (isImageFile(file)) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImageForModal(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -178,7 +196,7 @@ const CategoryRegistration = () => {
                       <input
                         type="file"
                         id="icon"
-                        accept="image/*"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                         onChange={handleFileSelection}
                         style={{ display: "none" }}
                       />
@@ -192,7 +210,13 @@ const CategoryRegistration = () => {
                   <div className="upload-right">
                     {attachmentFile && (
                       <div className="file-uploaded">
-                        <span title={attachmentFile.name}>{attachmentFile.name}</span>
+                        <span 
+                          title={attachmentFile.name}
+                          onClick={() => handleImageClick(attachmentFile)}
+                          style={isImageFile(attachmentFile) ? { cursor: 'pointer', textDecoration: 'underline', color: '#007bff' } : {}}
+                        >
+                          {attachmentFile.name}
+                        </span>
                         <button
                           type="button"
                           onClick={() => setAttachmentFile(null)}
@@ -217,6 +241,36 @@ const CategoryRegistration = () => {
         </main>
         <Footer />
       </section>
+
+      {/* Image Preview Modal */}
+      {selectedImageForModal && (
+        <div 
+          className="image-preview-modal-overlay"
+          onClick={() => setSelectedImageForModal(null)}
+        >
+          <div 
+            className="image-preview-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="image-preview-close-btn"
+              onClick={() => setSelectedImageForModal(null)}
+            >
+              ✕
+            </button>
+            <img 
+              src={selectedImageForModal} 
+              alt="Preview" 
+              style={{
+                maxWidth: '100%',
+                maxHeight: '60vh',
+                display: 'block',
+                margin: '0 auto'
+              }}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };

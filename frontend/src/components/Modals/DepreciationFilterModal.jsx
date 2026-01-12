@@ -64,7 +64,7 @@ export default function DepreciationFilterModal({
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
       <div
-        className="modal-container asset-filter-modal-container"
+        className="modal-container asset-filter-modal-container depreciation-filter-modal"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">

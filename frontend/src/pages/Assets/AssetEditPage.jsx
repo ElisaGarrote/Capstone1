@@ -74,7 +74,7 @@ export default function AssetEditPage() {
   });
 
   const [attachmentFiles, setAttachmentFiles] = useState([]);
-
+  const [selectedImageForModal, setSelectedImageForModal] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -222,6 +222,23 @@ export default function AssetEditPage() {
 
   const removeFile = (index) => {
     setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Check if file is an image
+  const isImageFile = (file) => {
+    const imageExtensions = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    return imageExtensions.includes(file.type);
+  };
+
+  // Handle image click to open preview modal
+  const handleImageClick = (file) => {
+    if (isImageFile(file)) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImageForModal(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Handle form submission - copied from AssetRegistration
@@ -433,10 +450,10 @@ export default function AssetEditPage() {
               {errors.product && <span className='error-message'>{errors.product.message}</span>}
             </fieldset>
 
-            {/* Status Dropdown with Add Button */}
+            {/* Status Dropdown with + button */}
             <fieldset>
               <label htmlFor='status'>Status <span style={{color: 'red'}}>*</span></label>
-              <div className="dropdown-with-add">
+              <div className="select-with-button">
                 <Controller
                   name="status"
                   control={control}
@@ -458,19 +475,20 @@ export default function AssetEditPage() {
                 />
                 <button
                   type="button"
-                  className="add-btn"
+                  className="add-entry-btn"
                   onClick={() => setShowStatusModal(true)}
+                  title="Add new status"
                 >
-                  <img src={PlusIcon} alt="Add Status" />
+                  <img src={PlusIcon} alt="Add" />
                 </button>
               </div>
               {errors.status && <span className='error-message'>{errors.status.message}</span>}
             </fieldset>
 
-            {/* Supplier Dropdown with Add Button */}
+            {/* Supplier Dropdown with + button */}
             <fieldset>
               <label htmlFor='supplier'>Supplier</label>
-              <div className="dropdown-with-add">
+              <div className="select-with-button">
                 <Controller
                   name="supplier"
                   control={control}
@@ -490,18 +508,19 @@ export default function AssetEditPage() {
                 />
                 <button
                   type="button"
-                  className="add-btn"
+                  className="add-entry-btn"
                   onClick={() => setShowSupplierModal(true)}
+                  title="Add new supplier"
                 >
-                  <img src={PlusIcon} alt="Add Supplier" />
+                  <img src={PlusIcon} alt="Add" />
                 </button>
               </div>
             </fieldset>
 
-            {/* Location Dropdown with Add Button */}
+            {/* Location Dropdown with + button */}
             <fieldset>
               <label htmlFor='location'>Location</label>
-              <div className="dropdown-with-add">
+              <div className="select-with-button">
                 <Controller
                   name="location"
                   control={control}
@@ -522,7 +541,7 @@ export default function AssetEditPage() {
                 />
                 <button
                   type="button"
-                  className="add-btn"
+                  className="add-entry-btn"
                   onClick={() => setShowLocationModal(true)}
                   title="Add new location"
                 >
@@ -671,7 +690,7 @@ export default function AssetEditPage() {
                     <input
                       type="file"
                       id="attachments"
-                      accept="image/*,.pdf,.doc,.docx"
+                      accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                       onChange={handleFileSelection}
                       style={{ display: "none" }}
                       multiple
@@ -686,7 +705,13 @@ export default function AssetEditPage() {
                 <div className="upload-right">
                   {attachmentFiles.map((file, index) => (
                     <div className="file-uploaded" key={index}>
-                      <span title={file.name}>{file.name}</span>
+                      <span 
+                        title={file.name}
+                        onClick={() => handleImageClick(file)}
+                        style={isImageFile(file) ? { cursor: 'pointer', textDecoration: 'underline', color: '#007bff' } : {}}
+                      >
+                        {file.name}
+                      </span>
                       <button type="button" onClick={() => removeFile(index)}>
                         <img src={CloseIcon} alt="Remove" />
                       </button>
@@ -770,6 +795,36 @@ export default function AssetEditPage() {
           onConfirm={confirmDeleteAsset}
           actionType="delete"
         />
+      )}
+
+      {/* Image Preview Modal */}
+      {selectedImageForModal && (
+        <div 
+          className="image-preview-modal-overlay"
+          onClick={() => setSelectedImageForModal(null)}
+        >
+          <div 
+            className="image-preview-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="image-preview-close-btn"
+              onClick={() => setSelectedImageForModal(null)}
+            >
+              ✕
+            </button>
+            <img 
+              src={selectedImageForModal} 
+              alt="Preview" 
+              style={{
+                maxWidth: '100%',
+                maxHeight: '60vh',
+                display: 'block',
+                margin: '0 auto'
+              }}
+            />
+          </div>
+        </div>
       )}
     </>
   );

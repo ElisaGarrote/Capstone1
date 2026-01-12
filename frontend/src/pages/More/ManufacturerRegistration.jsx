@@ -41,6 +41,7 @@ const ManufacturerRegistration = () => {
   );
   const [selectedImage, setSelectedImage] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
+  const [selectedImageForModal, setSelectedImageForModal] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [importFile, setImportFile] = useState(null);
 
@@ -112,6 +113,23 @@ const ManufacturerRegistration = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Check if file is an image
+  const isImageFile = (file) => {
+    const imageExtensions = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    return imageExtensions.includes(file.type);
+  };
+
+  // Handle image click to open preview modal
+  const handleImageClick = (file) => {
+    if (isImageFile(file)) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSelectedImageForModal(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -358,7 +376,7 @@ const ManufacturerRegistration = () => {
                       <input
                         type="file"
                         id="logo"
-                        accept="image/*"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                         onChange={handleImageSelection}
                         style={{ display: "none" }}
                       />
@@ -372,7 +390,13 @@ const ManufacturerRegistration = () => {
                   <div className="upload-right">
                     {selectedImage && (
                       <div className="file-uploaded">
-                        <span title={selectedImage.name}>{selectedImage.name}</span>
+                        <span 
+                          title={selectedImage.name}
+                          onClick={() => handleImageClick(selectedImage)}
+                          style={isImageFile(selectedImage) ? { cursor: 'pointer', textDecoration: 'underline', color: '#007bff' } : {}}
+                        >
+                          {selectedImage.name}
+                        </span>
                         <button
                           type="button"
                           onClick={() => {
@@ -404,6 +428,36 @@ const ManufacturerRegistration = () => {
         </main>
         <Footer />
       </section>
+
+      {/* Image Preview Modal */}
+      {selectedImageForModal && (
+        <div 
+          className="image-preview-modal-overlay"
+          onClick={() => setSelectedImageForModal(null)}
+        >
+          <div 
+            className="image-preview-modal-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="image-preview-close-btn"
+              onClick={() => setSelectedImageForModal(null)}
+            >
+              ✕
+            </button>
+            <img 
+              src={selectedImageForModal} 
+              alt="Preview" 
+              style={{
+                maxWidth: '100%',
+                maxHeight: '60vh',
+                display: 'block',
+                margin: '0 auto'
+              }}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 };

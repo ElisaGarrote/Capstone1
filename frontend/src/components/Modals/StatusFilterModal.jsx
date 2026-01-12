@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/ContextFilterModal.css";
 
-export default function StatusFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
+export default function StatusFilterModal({ isOpen, onClose, onApplyFilter, onResetFilter, initialFilters = {} }) {
 
   const [filters, setFilters] = useState({
     usageSort: "", // "desc" = greatest to least used, "asc" = least to greatest
@@ -33,6 +33,10 @@ export default function StatusFilterModal({ isOpen, onClose, onApplyFilter, init
     setFilters({
       usageSort: "",
     });
+    if (onResetFilter) {
+      onResetFilter();
+      onClose();
+    }
   };
 
   // Apply filters
