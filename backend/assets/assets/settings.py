@@ -157,6 +157,9 @@ WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Ensure media directory exists
+os.makedirs(MEDIA_ROOT, exist_ok=True)
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny'

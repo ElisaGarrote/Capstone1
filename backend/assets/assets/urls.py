@@ -24,6 +24,7 @@ urlpatterns = [
     path('', include('assets_ms.urls')),
 ]
 
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve media files
+# NOTE: In production, you should use cloud storage (S3, Cloudinary, etc.) instead
+# This is a temporary solution - media files will be lost on Railway redeployment
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
