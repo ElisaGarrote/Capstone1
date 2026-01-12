@@ -203,14 +203,19 @@ def get_tickets_list(ticket_type='unresolved', q=None, limit=50):
     result = fetch_resource_list(endpoint, params=params)
 
     # Filter by is_resolved based on ticket_type
-    if isinstance(result, dict) and not result.get('warning'):
-        # Handle both 'value' key (new format) and 'results' key (old format)
+    # Handle both list (direct API response) and dict (with 'results' or 'value' key)
+    tickets = []
+    if isinstance(result, list):
+        tickets = result
+    elif isinstance(result, dict) and not result.get('warning'):
         tickets = result.get('value') or result.get('results') or []
+
+    if tickets:
         if ticket_type == 'unresolved':
             filtered = [t for t in tickets if not t.get('is_resolved', False)]
         else:
             filtered = [t for t in tickets if t.get('is_resolved', False)]
-        result = {'results': filtered, 'count': len(filtered)}
+        result = filtered  # Return as list for consistency
 
     if isinstance(result, dict) and result.get('warning'):
         cache.set(key, result, LIST_WARNING_TTL)

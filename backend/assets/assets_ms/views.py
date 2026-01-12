@@ -462,9 +462,13 @@ class AssetViewSet(viewsets.ModelViewSet):
         # tickets (unresolved)
         ticket_map = cache.get("tickets:map")
         if not ticket_map:
-            tickets = get_tickets_list()
-            if isinstance(tickets, list):
+            tickets_response = get_tickets_list()
+            # get_tickets_list returns a dict with 'results' key, not a list
+            if isinstance(tickets_response, dict) and not tickets_response.get('warning'):
+                tickets = tickets_response.get('results') or tickets_response.get('value') or []
                 ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
+            elif isinstance(tickets_response, list):
+                ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
             else:
                 ticket_map = {}
             cache.set("tickets:map", ticket_map, 300)
