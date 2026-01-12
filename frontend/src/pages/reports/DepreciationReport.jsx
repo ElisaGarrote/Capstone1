@@ -67,8 +67,26 @@ function TableHeader() {
 }
 
 function TableItem({ asset, onDeleteClick }) {
-  const navigate = useNavigate();
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const rawStatus = (asset.statusType || asset.statusName || "").toString().toLowerCase();
+
+  let statusType = rawStatus;
+  if (rawStatus.includes("deployed")) {
+    statusType = "deployed";
+  } else if (rawStatus.includes("ready to deploy") || rawStatus.includes("deployable") || rawStatus.includes("available")) {
+    statusType = "deployable";
+  } else if (rawStatus.includes("pending")) {
+    statusType = "pending";
+  } else if (rawStatus.includes("write-off") || rawStatus.includes("write off") || rawStatus.includes("written off")) {
+    statusType = "undeployable";
+  } else if (rawStatus.includes("lost") || rawStatus.includes("stolen")) {
+    statusType = "lost";
+  } else if (rawStatus.includes("broken") || rawStatus.includes("repair")) {
+    statusType = "undeployable";
+  } else if (rawStatus.includes("archive")) {
+    statusType = "archived";
+  }
+
+  const showPerson = statusType === "deployed" && !!asset.deployedTo;
 
   return (
     <tr>
@@ -77,9 +95,9 @@ function TableItem({ asset, onDeleteClick }) {
       </td>
       <td>
         <Status
-          type={asset.statusType}
+          type={statusType}
           name={asset.statusName}
-          {...(asset.deployedTo && { personName: asset.deployedTo })}
+          {...(showPerson && { personName: asset.deployedTo })}
         />
       </td>
       <td>{asset.depreciationName}</td>
