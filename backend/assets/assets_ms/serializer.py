@@ -615,13 +615,6 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
             if not ticket or ticket.get("warning"):
                 raise serializers.ValidationError({"ticket_id": "Ticket not found."})
 
-            # ticket["asset"] is display asset_id (e.g., "AST-20260110-00030-43A7")
-            # checkout.asset.asset_id is the display asset_id on the Asset model
-            if ticket.get("asset") != checkout.asset.asset_id:
-                raise serializers.ValidationError({
-                    "ticket_id": "Ticket does not match this asset."
-                })
-
         return data
 
     def create(self, validated_data):
