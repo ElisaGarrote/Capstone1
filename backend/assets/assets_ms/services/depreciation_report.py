@@ -9,7 +9,6 @@ from .contexts import get_depreciation_by_id, get_status_by_id
 
 def _months_between(start_date: Optional[date], end_date: date) -> int:
     """Return whole months elapsed between two dates (end_date >= start_date).
-
     If start_date is None or in the future, returns 0.
     """
     if not start_date:
