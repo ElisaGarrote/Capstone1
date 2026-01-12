@@ -40,6 +40,7 @@ export default function CheckInAsset() {
   const assetNameFromState = state?.assetName;
   const checkoutIdFromState = state?.checkoutId;
   const ticketFromState = state?.ticket;
+  const ticketIdFromState = state?.ticketId;
 
   // Only allow asset statuses with these types for checkin (excludes 'deployed')
   const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";

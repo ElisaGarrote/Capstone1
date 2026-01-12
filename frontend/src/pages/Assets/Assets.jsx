@@ -44,12 +44,29 @@ function getActionState(asset) {
   const status = asset.status_details?.type;
   const hasTicket = !!asset.ticket_details;
 
+  // Debug logging
+  console.log("Asset action state:", {
+    assetId: asset.asset_id,
+    status,
+    hasTicket,
+    status_details: asset.status_details
+  });
+
   // No actions for undeployable or archived
   if (status === "undeployable" || status === "archived") {
     return {
       showCheckin: false,
       showCheckout: false,
       checkoutDisabled: false,
+    };
+  }
+
+  // If status is unknown/undefined, show checkout (disabled) as fallback
+  if (!status) {
+    return {
+      showCheckin: false,
+      showCheckout: true,
+      checkoutDisabled: true, // disabled because we don't know the status
     };
   }
 
