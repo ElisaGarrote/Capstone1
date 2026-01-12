@@ -23,8 +23,14 @@ def _build_url(path):
 def _fetch_ticket_by_id_from_endpoint(endpoint, ticket_id):
     """Helper to fetch a ticket by ID from a specific endpoint."""
     url = _build_url(endpoint)
+    # Ensure ticket_id is an integer for comparison
     try:
-        resp = client_get(url, params={"id": ticket_id}, timeout=6)
+        ticket_id_int = int(ticket_id)
+    except (ValueError, TypeError):
+        return None
+
+    try:
+        resp = client_get(url, params={"id": ticket_id_int}, timeout=6)
         if resp.status_code == 404:
             return None
         resp.raise_for_status()
@@ -33,7 +39,7 @@ def _fetch_ticket_by_id_from_endpoint(endpoint, ticket_id):
         tickets = data.get('value') if isinstance(data, dict) else data
         if isinstance(tickets, list):
             for ticket in tickets:
-                if ticket.get("id") == ticket_id:
+                if ticket.get("id") == ticket_id_int:
                     return ticket
             return None
         return data

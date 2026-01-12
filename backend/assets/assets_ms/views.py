@@ -1175,9 +1175,11 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
         ticket_id = request.data.get("ticket_id")
         if ticket_id:
             try:
-                resolve_ticket(ticket_id, asset_checkin_id=checkin.id)
-            except Exception:
-                pass
+                result = resolve_ticket(ticket_id, asset_checkin_id=checkin.id)
+                if result and result.get("warning"):
+                    print(f"[CheckIn] Warning resolving ticket {ticket_id}: {result}")
+            except Exception as e:
+                print(f"[CheckIn] Error resolving ticket {ticket_id}: {e}")
 
         return Response({"success": "Check-in, attachments, and status update completed successfully."}, status=status.HTTP_201_CREATED)
 
