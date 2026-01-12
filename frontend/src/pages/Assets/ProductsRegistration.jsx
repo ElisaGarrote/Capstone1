@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
+import Select from 'react-select';
 import NavBar from '../../components/NavBar';
 import Footer from "../../components/Footer";
 import TopSecFormPage from '../../components/TopSecFormPage';
@@ -9,6 +10,7 @@ import PlusIcon from '../../assets/icons/plus.svg';
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Alert from "../../components/Alert";
+import { getCustomSelectStyles } from "../../utils/selectStyles";
 import '../../styles/Registration.css';
 import { fetchProductById, fetchProductNames, createProduct, updateProduct } from "../../services/assets-service";
 import { fetchAllDropdowns, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
@@ -34,7 +36,7 @@ export default function ProductsRegistration() {
   const location = useLocation();
   const { id } = useParams();
 
-  const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, watch, control, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       productName: '',
@@ -62,6 +64,7 @@ export default function ProductsRegistration() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const customSelectStyles = getCustomSelectStyles();
 
   // Generate a non-conflicting clone name
   const generateCloneName = async (baseName) => {
@@ -473,18 +476,27 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor='category'>Category <span style={{color: 'red'}}>*</span></label>
               <div className="select-with-button">
-                <select
-                  id="category"
-                  {...register("category", { required: "Category is required" })}
-                  className={errors.category ? 'input-error' : ''}
-                >
-                  <option value="">Select Category</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="category"
+                  control={control}
+                  rules={{ required: "Category is required" }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="category"
+                      options={categories.map((c) => ({ value: c.id, label: c.name }))}
+                      value={categories
+                        .map((c) => ({ value: c.id, label: c.name }))
+                        .find((opt) => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Category"
+                      isSearchable
+                      isClearable
+                      styles={customSelectStyles}
+                      className={errors.category ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -500,18 +512,27 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor='manufacturer'>Manufacturer <span style={{color: 'red'}}>*</span></label>
               <div className="select-with-button">
-                <select
-                  id="manufacturer"
-                  {...register("manufacturer", { required: "Manufacturer is required" })}
-                  className={errors.manufacturer ? 'input-error' : ''}
-                >
-                  <option value="">Select Manufacturer</option>
-                  {manufacturers.map(manufacturer => (
-                    <option key={manufacturer.id} value={manufacturer.id}>
-                      {manufacturer.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="manufacturer"
+                  control={control}
+                  rules={{ required: "Manufacturer is required" }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="manufacturer"
+                      options={manufacturers.map((m) => ({ value: m.id, label: m.name }))}
+                      value={manufacturers
+                        .map((m) => ({ value: m.id, label: m.name }))
+                        .find((opt) => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Manufacturer"
+                      isSearchable
+                      isClearable
+                      styles={customSelectStyles}
+                      className={errors.manufacturer ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -527,18 +548,27 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor='depreciation'>Depreciation <span style={{color: 'red'}}>*</span></label>
               <div className="select-with-button">
-                <select
-                  id="depreciation"
-                  {...register("depreciation", { required: "Depreciation is required" })}
-                  className={errors.depreciation ? 'input-error' : ''}
-                >
-                  <option value="">Select Depreciation Method</option>
-                  {depreciations.map(depreciation => (
-                    <option key={depreciation.id} value={depreciation.id}>
-                      {depreciation.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="depreciation"
+                  control={control}
+                  rules={{ required: "Depreciation is required" }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="depreciation"
+                      options={depreciations.map((d) => ({ value: d.id, label: d.name }))}
+                      value={depreciations
+                        .map((d) => ({ value: d.id, label: d.name }))
+                        .find((opt) => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Depreciation Method"
+                      isSearchable
+                      isClearable
+                      styles={customSelectStyles}
+                      className={errors.depreciation ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"
@@ -593,14 +623,25 @@ export default function ProductsRegistration() {
             <fieldset>
               <label htmlFor="defaultSupplier">Default Supplier</label>
               <div className="select-with-button">
-                <select {...register("defaultSupplier")}>
-                  <option value="">Select Default Supplier</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="defaultSupplier"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="defaultSupplier"
+                      options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
+                      value={suppliers
+                        .map((s) => ({ value: s.id, label: s.name }))
+                        .find((opt) => opt.value === field.value) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? null)}
+                      placeholder="Select Default Supplier"
+                      isSearchable
+                      isClearable
+                      styles={customSelectStyles}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-entry-btn"

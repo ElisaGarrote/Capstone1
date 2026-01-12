@@ -1,7 +1,6 @@
 // styles
 import "../styles/FilterPanel.css";
 import Select from "react-select";
-import { getCustomSelectStyles } from "../utils/selectStyles";
 
 // react
 import { useState } from "react";
@@ -149,7 +148,6 @@ export default function FilterPanel({ filters = [], onReset, onFilter }) {
                   isClearable
                   isSearchable
                   menuPortalTarget={document.body}
-                  styles={getCustomSelectStyles()}
                   unstyled
                   maxMenuHeight={5 * 38}
                 />
