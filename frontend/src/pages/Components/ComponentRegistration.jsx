@@ -10,7 +10,7 @@ import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { fetchComponentById, createComponent, updateComponent } from "../../services/assets-service";
 import { fetchAllDropdowns, createCategory, createManufacturer, createSupplier } from "../../services/contexts-service";
-import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
+import { fetchAllLocations } from "../../services/integration-help-desk-service";
 import SystemLoading from "../../components/Loading/SystemLoading";
 
 const ASSETS_API_URL = import.meta.env.VITE_ASSETS_API_URL || "";
@@ -125,7 +125,6 @@ const ComponentRegistration = () => {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showManufacturerModal, setShowManufacturerModal] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
 
   // Modal field configurations for quick-add
   const categoryFields = [
@@ -164,18 +163,6 @@ const ComponentRegistration = () => {
     },
   ];
 
-  const locationFields = [
-    {
-      name: "name",
-      label: "Location Name",
-      type: "text",
-      placeholder: "Location Name",
-      required: true,
-      maxLength: 100,
-      validation: { required: "Location Name is required" },
-    },
-  ];
-
   const handleSaveCategory = async (data) => {
     try {
       const result = await createCategory({ name: data.name?.trim(), type: "component" });
@@ -209,18 +196,6 @@ const ComponentRegistration = () => {
       }
     } catch (error) {
       console.error("Error creating supplier:", error);
-    }
-  };
-
-  const handleSaveLocation = async (data) => {
-    try {
-      const result = await createLocation({ name: data.name?.trim() });
-      if (result) {
-        setLocations((prev) => [...prev, { id: result.id, name: result.name }]);
-        setValue("location", result.id);
-      }
-    } catch (error) {
-      console.error("Error creating location:", error);
     }
   };
 
@@ -403,24 +378,14 @@ const ComponentRegistration = () => {
             {/* Location (optional) */}
             <fieldset>
               <label htmlFor="location">Location</label>
-              <div className="select-with-button">
-                <select {...register("location")}>
-                  <option value="">Select Location</option>
-                  {locations.map((loc) => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="add-entry-btn"
-                  onClick={() => setShowLocationModal(true)}
-                  title="Add new location"
-                >
-                  <img src={PlusIcon} alt="Add" />
-                </button>
-              </div>
+              <select {...register("location")}>
+                <option value="">Select Location</option>
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
             </fieldset>
 
             {/* Model Number (optional) */}
@@ -603,17 +568,6 @@ const ComponentRegistration = () => {
         fields={supplierFields}
         type="supplier"
       />
-
-      <AddEntryModal
-        isOpen={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
-        onSave={handleSaveLocation}
-        title="New Location"
-        fields={locationFields}
-        type="location"
-      />
-
-
     </>
   );
 };

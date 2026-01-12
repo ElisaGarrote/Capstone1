@@ -12,7 +12,7 @@ import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { createAssetCheckinWithStatus, fetchAssetNames } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
-import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
+import { fetchAllLocations } from "../../services/integration-help-desk-service";
 
 export default function CheckInAsset() {
   const { state } = useLocation();
@@ -24,7 +24,6 @@ export default function CheckInAsset() {
   const [statuses, setStatuses] = useState([]);
   const [locations, setLocations] = useState([]);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
   const [attachmentFiles, setAttachmentFiles] = useState([]);
 
   // Ticket and asset data
@@ -186,18 +185,6 @@ export default function CheckInAsset() {
     }
   ];
 
-  const locationFields = [
-    {
-      name: 'city',
-      label: 'Location City',
-      type: 'text',
-      placeholder: 'Location City',
-      required: true,
-      maxLength: 100,
-      validation: { required: 'Location City is required' }
-    }
-  ];
-
   const handleSaveStatus = async (data) => {
     try {
       const newStatus = await createStatus(data);
@@ -208,37 +195,6 @@ export default function CheckInAsset() {
       console.error('Error creating status:', error);
 
       let message = "Failed to create status";
-
-      if (error.response && error.response.data) {
-        const data = error.response.data;
-
-        // Aggregate all error messages
-        const messages = [];
-        Object.values(data).forEach((value) => {
-          if (Array.isArray(value)) messages.push(...value);
-          else if (typeof value === "string") messages.push(value);
-        });
-
-        if (messages.length > 0) {
-          message = messages.join(" ");
-        }
-      }
-
-      setErrorMessage(message);
-      setTimeout(() => setErrorMessage(""), 5000);
-    }
-  };
-
-  const handleSaveLocation = async (data) => {
-    try {
-      const newLocation = await createLocation(data);
-      setLocations(prev => [...prev, newLocation]);
-      setShowLocationModal(false);
-      setErrorMessage("");
-    } catch (error) {
-      console.error('Error creating location:', error);
-
-      let message = "Failed to create location";
 
       if (error.response && error.response.data) {
         const data = error.response.data;
@@ -457,31 +413,21 @@ export default function CheckInAsset() {
               {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
             </fieldset>
 
-            {/* Location Dropdown with + button */}
+            {/* Location Dropdown */}
             <fieldset>
               <label htmlFor='location'>Location <span style={{color: 'red'}}>*</span></label>
-              <div className="dropdown-with-add">
-                <select
-                  id="location"
-                  {...register("location", { required: "Location is required" })}
-                  className={errors.location ? 'input-error' : ''}
-                >
-                  <option value="">Select Location</option>
-                  {locations.map(location => (
-                    <option key={location.id} value={location.id}>
-                      {location.city}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="add-btn"
-                  onClick={() => setShowLocationModal(true)}
-                  title="Add new location"
-                >
-                  <img src={PlusIcon} alt="Add" />
-                </button>
-              </div>
+              <select
+                id="location"
+                {...register("location", { required: "Location is required" })}
+                className={errors.location ? 'input-error' : ''}
+              >
+                <option value="">Select Location</option>
+                {locations.map(loc => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
               {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
 
@@ -550,15 +496,6 @@ export default function CheckInAsset() {
         title="New Status Label"
         fields={statusFields}
         type="status"
-      />
-
-      <AddEntryModal
-        isOpen={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
-        onSave={handleSaveLocation}
-        title="New Location"
-        fields={locationFields}
-        type="location"
       />
     </>
   );

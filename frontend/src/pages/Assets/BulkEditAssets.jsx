@@ -10,7 +10,7 @@ import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { fetchAssetNames, bulkEditAssets, fetchProductsForAssetRegistration } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
-import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
+import { fetchAllLocations } from "../../services/integration-help-desk-service";
 import "../../styles/Registration.css";
 import "../../styles/Assets/BulkEditAssets.css";
 
@@ -38,7 +38,6 @@ export default function BulkEditAssets() {
   // Modal states for adding new entries
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
 
   const currentDate = new Date().toISOString().split("T")[0];
 
@@ -149,19 +148,6 @@ export default function BulkEditAssets() {
     } catch (error) {
       console.error("Error creating supplier:", error);
       setErrorMessage("Failed to create supplier");
-      setTimeout(() => setErrorMessage(""), 5000);
-    }
-  };
-
-  const handleAddLocation = async (data) => {
-    try {
-      const newLocation = await createLocation(data);
-      setLocations([...locations, newLocation]);
-      setShowLocationModal(false);
-      setErrorMessage("");
-    } catch (error) {
-      console.error("Error creating location:", error);
-      setErrorMessage("Failed to create location");
       setTimeout(() => setErrorMessage(""), 5000);
     }
   };
@@ -392,28 +378,18 @@ export default function BulkEditAssets() {
               {/* Location Dropdown with Add Button */}
               <fieldset className="form-field">
                 <label htmlFor='location'>Location</label>
-                <div className="dropdown-with-add">
-                  <select
-                    id="location"
-                    {...register("location")}
-                    className={`form-input ${errors.location ? 'input-error' : ''}`}
-                  >
-                    <option value="">Select Location</option>
-                    {locations.map(location => (
-                      <option key={location.id} value={location.id}>
-                        {location.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className="add-btn"
-                    onClick={() => setShowLocationModal(true)}
-                    title="Add new location"
-                  >
-                    <img src={PlusIcon} alt="Add" />
-                  </button>
-                </div>
+                <select
+                  id="location"
+                  {...register("location")}
+                  className={`form-input ${errors.location ? 'input-error' : ''}`}
+                >
+                  <option value="">Select Location</option>
+                  {locations.map(loc => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
                 {errors.location && <span className='error-message'>{errors.location.message}</span>}
               </fieldset>
 
@@ -625,23 +601,6 @@ export default function BulkEditAssets() {
           ]}
           onSubmit={handleAddSupplier}
           onClose={() => setShowSupplierModal(false)}
-        />
-      )}
-
-      {showLocationModal && (
-        <AddEntryModal
-          title="Add New Location"
-          fields={[
-            {
-              name: "name",
-              label: "Location Name",
-              type: "text",
-              required: true,
-              placeholder: "Enter location name"
-            }
-          ]}
-          onSubmit={handleAddLocation}
-          onClose={() => setShowLocationModal(false)}
         />
       )}
     </>

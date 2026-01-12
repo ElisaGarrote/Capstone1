@@ -10,6 +10,11 @@ export async function fetchAllLocations() {
   const res = await contextsAxios.get("helpdesk-locations/");
   // Map city to name for frontend compatibility
   const data = res.data.results ?? res.data;
+  // Ensure data is an array before mapping
+  if (!Array.isArray(data)) {
+    console.warn("fetchAllLocations: Expected array but got:", typeof data);
+    return [];
+  }
   return data.map(loc => ({
     id: loc.id,
     name: loc.city || loc.name
@@ -29,12 +34,5 @@ export async function fetchLocationById(id) {
   };
 }
 
-// create location - Note: create is not proxied, may need to add if needed
-export async function createLocation(data) {
-  // Creating locations via external Help Desk is currently not proxied
-  // If needed, add a proxy endpoint in the contexts service
-  console.warn("createLocation: Direct Help Desk calls may have mixed content issues in production");
-  const helpDeskAxios = (await import("../api/integrationHelpDesk")).default;
-  const res = await helpDeskAxios.post("locations/", data);
-  return res.data;
-}
+// NOTE: Locations are fetched from external Help Desk service (http://165.22.247.50:5001/api/locations/)
+// Location creation is not available - locations must be managed directly in the Help Desk system
