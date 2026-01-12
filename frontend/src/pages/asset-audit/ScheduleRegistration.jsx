@@ -6,6 +6,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import Footer from "../../components/Footer";
 import { fetchAssetNames, fetchAuditScheduleById, createAuditSchedule, updateAuditSchedule } from "../../services/assets-service";
+import Alert from "../../components/Alert";
 
 const ScheduleRegistration = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const ScheduleRegistration = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [scheduleData, setScheduleData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const {
     register,
@@ -61,6 +63,7 @@ const ScheduleRegistration = () => {
 
   const onSubmit = async (data) => {
     setSubmitting(true);
+    setErrorMessage("");
     try {
       const payload = {
         asset: parseInt(data.asset),
@@ -68,18 +71,23 @@ const ScheduleRegistration = () => {
         notes: data.notes || "",
       };
 
+      let message = "";
       if (id) {
         await updateAuditSchedule(id, payload);
+        message = "Audit schedule updated successfully.";
       } else {
         await createAuditSchedule(payload);
+        message = "Audit schedule created successfully.";
       }
 
-      // Redirect to scheduled audits section if coming from asset view, otherwise go back to previous page
+      // Redirect to scheduled audits (or previous) and show success message there
       const redirectPage = previousPage === "/asset-view" ? "/audits/scheduled" : previousPage;
-      navigate(redirectPage || "/audits/scheduled");
+      navigate(redirectPage || "/audits/scheduled", {
+        state: { successMessage: message },
+      });
     } catch (err) {
       console.error("Error saving audit schedule:", err);
-      alert("Failed to save audit schedule. Please try again.");
+      setErrorMessage("Failed to save audit schedule. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -110,6 +118,7 @@ const ScheduleRegistration = () => {
         <NavBar />
       </nav>
       <main className="registration">
+        {errorMessage && <Alert message={errorMessage} type="danger" />}
         <section className="top">
           <TopSecFormPage
             root={getRootPage()}

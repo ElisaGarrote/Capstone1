@@ -1,18 +1,19 @@
 /* Global table styles */
-table th:nth-last-child(1),
-table th:nth-last-child(2),
-table th:nth-last-child(3) {
-  text-align: center !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+
+table:not(.status-card-table) th:nth-last-child(1),
+table:not(.status-card-table) th:nth-last-child(2),
+table:not(.status-card-table) th:nth-last-child(3) {
+  text-align: left !important;
+  padding-left: 1 !important;
+  padding-right: 1 !important;
   font-size: 0.7rem !important;
   letter-spacing: -0.5px !important;
 }
 
-table td:nth-last-child(1),
-table td:nth-last-child(2),
-table td:nth-last-child(3) {
-  text-align: center !important;
+table:not(.status-card-table) td:nth-last-child(1),
+table:not(.status-card-table) td:nth-last-child(2),
+table:not(.status-card-table) td:nth-last-child(3) {
+  text-align: left !important;
   vertical-align: middle !important;
   padding: 8px !important;
 }
@@ -33,8 +34,8 @@ table td:nth-last-child(3) {
   min-width: 80px !important;
 }
 
-table th:last-child,
-table td:last-child {
+table:not(.status-card-table) th:last-child,
+table:not(.status-card-table) td:last-child {
   padding-right: 25px !important;
 }
 

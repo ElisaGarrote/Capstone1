@@ -71,6 +71,7 @@ export default function DetailedViewPage({
   onTabChange,
   children,
   customTabContent = null,
+  hideAdditionalFields = false,
   showCheckoutLog = false
 }) {
   const navigate = useNavigate();
@@ -123,7 +124,7 @@ Notes: ${notes || 'N/A'}
 Created At: ${createdAt || 'N/A'}
 Updated At: ${updatedAt || 'N/A'}`;
 
-        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&ecc=L&data=${encodeURIComponent(qrData)}`;
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&ecc=L&data=${encodeURIComponent(qrData)}`;
 
         setQrCodeUrl(qrApiUrl);
       } catch (error) {
@@ -445,8 +446,8 @@ Updated At: ${updatedAt || 'N/A'}`;
           {/* Custom Children Content */}
           {children}
 
-          {/* Additional Fields Section (always shown on About tab) */}
-          {activeTab === 0 && (
+          {/* Additional Fields Section (shown on About tab unless hidden) */}
+          {activeTab === 0 && !hideAdditionalFields && (
             <div className="additional-fields-section">
               <h3 className="section-header">Additional Fields</h3>
               <div className="asset-details-grid">

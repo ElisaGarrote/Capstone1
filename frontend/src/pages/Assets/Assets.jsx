@@ -89,7 +89,22 @@ function TableItem({
   onViewClick,
   onCheckInOut,
 }) {
-  const baseImage = asset.image || DefaultImage;
+  // Ensure media URLs returned as absolute host URLs are routed through the API gateway
+  let baseImage = DefaultImage;
+  if (asset.image) {
+    try {
+      const gateway = import.meta.env.VITE_API_GATEWAY_URL || "";
+      if (/^https?:\/\//i.test(asset.image)) {
+        // Strip host from absolute URL and prefix with gateway + /api/assets so Kong routes to assets service
+        const pathOnly = asset.image.replace(/^https?:\/\/[^/]+/i, "");
+        baseImage = `${gateway.replace(/\/$/, "")}/api/assets${pathOnly}`;
+      } else {
+        baseImage = asset.image;
+      }
+    } catch (e) {
+      baseImage = asset.image;
+    }
+  }
 
   const actions = getActionState(asset);
 

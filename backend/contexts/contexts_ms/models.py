@@ -47,6 +47,10 @@ class Supplier(models.Model):
     notes = models.TextField(blank=True, null=True)
     logo = models.ImageField(upload_to='supplier_logos/', blank=True, null=True)
 
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):

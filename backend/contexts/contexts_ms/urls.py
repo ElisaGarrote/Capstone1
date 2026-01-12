@@ -2,20 +2,8 @@ from rest_framework.routers import DefaultRouter
 from .views import *
 from django.urls import path, include
 from contexts_ms.api.supplier_usage_api import *
-from contexts_ms.api.imports import (
-    CategoryImportAPIView,
-    SupplierImportAPIView,
-    DepreciationImportAPIView,
-    ManufacturerImportAPIView,
-    StatusImportAPIView,
-)
-from contexts_ms.api.import_export_api import (
-    SupplierExportAPIView,
-    CategoryExportAPIView,
-    DepreciationExportAPIView,
-    ManufacturerExportAPIView,
-    StatusExportAPIView,
-)
+from contexts_ms.api.imports import *
+from contexts_ms.api.import_export_api import *
 
 
 @api_view(['GET'])

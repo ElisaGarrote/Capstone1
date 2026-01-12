@@ -12,6 +12,8 @@ export default function MediumButtons({
   previousPage,
   onClick = null,
   deleteModalOpen = null,
+  disabled = false,
+  title = "",
 }) {
   console.log("MediumButtons RENDER - type:", type, "| onClick exists:", !!onClick);
 
@@ -58,6 +60,7 @@ export default function MediumButtons({
   };
 
   const handleClick = () => {
+    if (disabled) return;
     console.log("🎯 handleClick CALLED - type:", type, "| onClick exists:", !!onClick);
 
     if (type.toLowerCase() === "export" && onClick) {
@@ -112,18 +115,17 @@ export default function MediumButtons({
   return (
     <button
       type="button"
-      className={`medium-button-${type}`}
+      className={`medium-button-${type} ${disabled ? 'medium-button-disabled' : ''}`}
+      title={title}
       onClick={(e) => {
-        console.log("BUTTON CLICKED - type:", type);
-        console.log("Event target:", e.target);
-        console.log("Current target:", e.currentTarget);
+        if (disabled) return;
         e.preventDefault();
         e.stopPropagation();
         handleClick();
       }}
       style={{
-        pointerEvents: 'auto',
-        cursor: 'pointer',
+        pointerEvents: disabled ? 'none' : 'auto',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         position: 'relative',
         zIndex: 10
       }}

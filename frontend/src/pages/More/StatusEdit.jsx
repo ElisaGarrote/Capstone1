@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
+import api from "../../api";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Status from "../../components/Status";
 import Alert from "../../components/Alert";
@@ -18,6 +19,7 @@ const StatusRegistration = () => {
   // Retrieve the "status" data value passed from the navigation state.
   // If the "status" data is not exist, the default value for this is "undifiend".
   const status = location.state?.status;
+  const notesOnly = location.state?.notesOnly || false;
 
   const {
     register,
@@ -50,11 +52,30 @@ const StatusRegistration = () => {
   ];
 
   const onSubmit = (data) => {
-    // Here you would typically send the data to your API
-    console.log("Form submitted:", data);
+    // Send update to contexts service
+    const doSubmit = async () => {
+      try {
+        const contextsBase = import.meta.env.VITE_CONTEXTS_API_URL || import.meta.env.VITE_API_URL || "/api/contexts/";
+        const url = `${contextsBase}statuses/${status?.id}/`;
 
-    // Optional: navigate back to status view after successful submission
-    navigate("/More/ViewStatus", { state: { updatedStatus: true } });
+        // If notesOnly, only send notes field to avoid changing name/type
+        const payload = notesOnly ? { notes: data.notes } : {
+          name: data.statusName,
+          category: data.statusCategory,
+          type: data.statusCategory === "asset" ? data.statusType : null,
+          notes: data.notes,
+        };
+
+        await api.patch(url, payload);
+        navigate("/More/ViewStatus", { state: { updatedStatus: true } });
+      } catch (err) {
+        const msg = err?.response?.data?.detail || err?.response?.data || err.message || "Failed to update status";
+        setErrorMessage(typeof msg === "string" ? msg : JSON.stringify(msg));
+        setTimeout(() => setErrorMessage(""), 5000);
+      }
+    };
+
+    doSubmit();
   };
 
   return (
@@ -85,8 +106,9 @@ const StatusRegistration = () => {
                     placeholder="Status Name"
                     maxLength="100"
                     className={errors.statusName ? "input-error" : ""}
+                    disabled={notesOnly}
                     {...register("statusName", {
-                      required: "Status Name is required",
+                      required: notesOnly ? false : "Status Name is required",
                     })}
                   />
                   {errors.statusName && (
@@ -103,8 +125,9 @@ const StatusRegistration = () => {
                   </label>
                   <select
                     className={errors.statusCategory ? "input-error" : ""}
+                    disabled={notesOnly}
                     {...register("statusCategory", {
-                      required: "Status Category is required",
+                      required: notesOnly ? false : "Status Category is required",
                     })}
                   >
                     <option value="">Select Status Category</option>
@@ -129,8 +152,9 @@ const StatusRegistration = () => {
                     </label>
                     <select
                       className={errors.statusType ? "input-error" : ""}
+                      disabled={notesOnly}
                       {...register("statusType", {
-                        required: statusCategory === "asset" ? "Status Type is required for asset statuses" : false,
+                        required: !notesOnly && statusCategory === "asset" ? "Status Type is required for asset statuses" : false,
                       })}
                     >
                       <option value="">Select Status Type</option>

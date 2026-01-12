@@ -10,6 +10,7 @@ import PlusIcon from "../../assets/icons/plus.svg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import CloseIcon from "../../assets/icons/close.svg";
+import { fetchSupplierById, createSupplier, updateSupplier, importSuppliers } from "../../services/contexts-service";
 
 import "../../styles/Registration.css";
 import "../../styles/SupplierRegistration.css";
@@ -20,6 +21,8 @@ const SupplierRegistration = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   // Delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -40,6 +43,7 @@ const SupplierRegistration = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
@@ -92,6 +96,38 @@ const SupplierRegistration = () => {
     initialize();
   }, [id, setValue]);
   */
+  useEffect(() => {
+    const initialize = async () => {
+      if (!id) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        setIsLoading(true);
+        const supplierData = await fetchSupplierById(id);
+        if (!supplierData) throw new Error('Failed to fetch supplier details');
+
+        setValue('name', supplierData.name || '');
+        setValue('address', supplierData.address || '');
+        setValue('city', supplierData.city || '');
+        setValue('zip', supplierData.zip || '');
+        setValue('state', supplierData.state_province || '');
+        setValue('country', supplierData.country || '');
+        setValue('contact_name', supplierData.contact_name || '');
+        setValue('phone_number', supplierData.phone_number || '');
+        setValue('fax', supplierData.fax || '');
+        setValue('email', supplierData.email || '');
+        setValue('URL', supplierData.url || supplierData.URL || '');
+        setValue('notes', supplierData.notes || '');
+        if (supplierData.logo) setPreviewImage(supplierData.logo);
+      } catch (err) {
+        setErrorMessage(err?.message || 'Failed to initialize form');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    initialize();
+  }, [id, setValue]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -116,67 +152,71 @@ const SupplierRegistration = () => {
     }
   };
 
+  // Format phone number to international +63 on blur
+  const formatPhoneToInternational = (raw) => {
+    if (!raw) return raw;
+    const digits = String(raw).replace(/[^0-9+]/g, "");
+    if (/^\+63\d{9,10}$/.test(digits)) return digits;
+    if (/^0\d{9,11}$/.test(digits)) return "+63" + digits.slice(1);
+    if (/^9\d{8,9}$/.test(digits)) return "+63" + digits;
+    return digits;
+  };
+
+  // Format fax number to international +63 on blur (allows shorter landline lengths)
+  const formatFaxToInternational = (raw) => {
+    if (!raw) return raw;
+    const digits = String(raw).replace(/[^0-9+]/g, "");
+    // If already in +63 format and reasonable length (7-10 local digits)
+    if (/^\+63\d{7,10}$/.test(digits)) return digits;
+    // Local numbers starting with 0 -> replace with +63
+    if (/^0\d{6,11}$/.test(digits)) return "+63" + digits.slice(1);
+    // Local numbers without leading zero (e.g., area/local) -> prefix +63
+    if (/^\d{6,10}$/.test(digits)) return "+63" + digits;
+    return digits;
+  };
+
   const state = supplier ? { updatedSupplier: true } : { addedSupplier: true };
 
   const onSubmit = async (data) => {
-    /* BACKEND INTEGRATION HERE
     try {
-      if (!id) {
-        const existingSuppliers = await contextsService.fetchAllSupplierNames();
-        if (!existingSuppliers)
-          throw new Error("Failed to fetch supplier names for duplicate check");
-
-        const isDuplicate = existingSuppliers.suppliers.some(
-          (supplier) => supplier.name.toLowerCase() === data.name.toLowerCase()
-        );
-        if (isDuplicate) {
-          setErrorMessage(
-            "A supplier with this name already exists. Please use a different name."
-          );
-          setTimeout(() => setErrorMessage(""), 5000);
-          return;
-        }
-      }
-
+      setIsLoading(true);
       const formData = new FormData();
-      formData.append("name", data.name);
-      formData.append("address", data.address);
-      formData.append("city", data.city);
-      formData.append("zip", data.zip);
-      formData.append("contact_name", data.contact_name);
-      formData.append("phone_number", data.phone_number);
-      formData.append("email", data.email);
-      formData.append("URL", data.URL || "");
-      formData.append("notes", data.notes || "");
-
-      if (selectedImage) formData.append("logo", selectedImage);
-      if (removeImage) formData.append("remove_logo", "true");
+      formData.append('name', data.name);
+      formData.append('address', data.address || '');
+      formData.append('city', data.city || '');
+      formData.append('zip', data.zip || '');
+      formData.append('state_province', data.state || '');
+      formData.append('country', data.country || '');
+      formData.append('contact_name', data.contact_name || '');
+      formData.append('phone_number', data.phone_number || '');
+      formData.append('fax', data.fax || '');
+      formData.append('email', data.email || '');
+      formData.append('url', data.URL || '');
+      formData.append('notes', data.notes || '');
+      if (selectedImage) formData.append('logo', selectedImage);
+      if (removeImage) formData.append('remove_logo', 'true');
 
       let result;
       if (id) {
-        result = await contextsService.updateSupplier(id, formData);
+        result = await updateSupplier(id, formData);
       } else {
-        result = await contextsService.createSupplier(formData);
+        result = await createSupplier(formData);
       }
 
-      if (!result) throw new Error("Failed to save supplier");
+      if (!result) throw new Error('Failed to save supplier');
 
-      navigate("/More/ViewSupplier", {
-        state: {
-          successMessage: `Supplier successfully ${id ? "updated" : "created"}`,
-        },
+      navigate('/More/ViewSupplier', {
+        state: { successMessage: `Supplier successfully ${id ? 'updated' : 'created'}` },
       });
     } catch (error) {
-      const message =
-        typeof error === "string"
-          ? error
-          : error?.error || error?.message || "An unexpected error occurred";
-
+      console.error('Supplier save error', error?.response || error);
+      const payload = error?.response?.data || error?.message || 'An unexpected error occurred';
+      const message = typeof payload === 'object' ? JSON.stringify(payload) : payload;
       setErrorMessage(message);
-      setTimeout(() => setErrorMessage(""), 5000);
+      setTimeout(() => setErrorMessage(''), 8000);
+    } finally {
+      setIsLoading(false);
     }
-    */
-    navigate("/More/ViewSupplier", { state });
   };
 
   const handleImportFile = (e) => {
@@ -190,9 +230,36 @@ const SupplierRegistration = () => {
         setTimeout(() => setErrorMessage(""), 5000);
         return;
       }
-      setImportFile(file);
-      // Here you would typically process the Excel file
-      console.log("Import file selected:", file.name);
+      // Upload immediately to the backend import endpoint
+      const formData = new FormData();
+      formData.append('file', file);
+
+      (async () => {
+        try {
+          setIsImporting(true);
+          setSuccessMessage('');
+          setErrorMessage('');
+          const res = await importSuppliers(formData);
+          const created = res?.created || 0;
+          const updated = res?.updated || 0;
+          const errors = res?.errors || [];
+          let msg = `Import complete. Created ${created}. Updated ${updated}.`;
+          if (Array.isArray(errors) && errors.length) {
+            msg += ` ${errors.length} rows failed.`;
+            setErrorMessage(msg);
+          } else {
+            setSuccessMessage(msg);
+          }
+        } catch (err) {
+          const payload = err?.response?.data || err?.message || 'Import failed';
+          const message = typeof payload === 'object' ? JSON.stringify(payload) : payload;
+          setErrorMessage(message);
+        } finally {
+          setIsImporting(false);
+          setImportFile(null);
+          if (typeof e.target !== 'undefined') e.target.value = '';
+        }
+      })();
     }
   };
 
@@ -239,7 +306,20 @@ const SupplierRegistration = () => {
             />
           </section>
 
-          {errorMessage && <Alert type="danger" message={errorMessage} />}
+            {/* Left-side import status: match Manufacturer import UI */}
+            <div style={{ padding: '0 24px', marginTop: 8 }}>
+              <div className="import-status-left" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {isImporting && <span style={{ fontSize: 13, fontWeight: 500 }}>Uploading...</span>}
+                {!isImporting && successMessage && (
+                  <div className="success-message" style={{ fontSize: 13, color: 'green' }}>{successMessage}</div>
+                )}
+                {!isImporting && errorMessage && (
+                  <div className="error-message" style={{ fontSize: 13, color: '#d32f2f' }}>{errorMessage}</div>
+                )}
+              </div>
+            </div>
+
+            {false && errorMessage && <Alert type="danger" message={errorMessage} />}
 
           <form onSubmit={handleSubmit(onSubmit)} className="registration-form">
             <fieldset>
@@ -260,13 +340,16 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="address">Address</label>
+              <label htmlFor="address">
+                Address
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Address"
                 maxLength={200}
                 className={errors.address ? "input-error" : ""}
-                {...register("address")}
+                {...register("address", { required: "Address is required" })}
               />
               {errors.address && (
                 <span className="error-message">{errors.address.message}</span>
@@ -274,20 +357,31 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="city">City</label>
-              <input placeholder="City" {...register("city")} maxLength={50} />
+              <label htmlFor="city">
+                City
+                <span className="required-asterisk">*</span>
+              </label>
+              <input
+                placeholder="City"
+                {...register("city", { required: "City is required" })}
+                maxLength={50}
+              />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="zip">Zip Code</label>
+              <label htmlFor="zip">
+                Zip Code
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="number"
                 placeholder="ZIP"
                 maxLength={4}
                 className={errors.zip ? "input-error" : ""}
                 {...register("zip", {
+                  required: "Zip code is required",
                   pattern: {
-                    value: /^[0-9]{4}$/,
+                    value: /^[0-9]{4}$/, 
                     message: "Zip code must be a number with 4 digits only",
                   },
                   maxLength: {
@@ -302,34 +396,43 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="state">State</label>
+              <label htmlFor="state">
+                State
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="State"
                 maxLength={50}
                 className={errors.state ? "input-error" : ""}
-                {...register("state")}
+                {...register("state", { required: "State is required" })}
               />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="country">Country</label>
+              <label htmlFor="country">
+                Country
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Country"
                 maxLength={50}
-                className={errors.state ? "input-error" : ""}
-                {...register("country")}
+                className={errors.country ? "input-error" : ""}
+                {...register("country", { required: "Country is required" })}
               />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="contact_name">Contact Person</label>
+              <label htmlFor="contact_name">
+                Contact Person
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="Supplier's Contact Name"
                 maxLength={100}
-                {...register("contact_name")}
+                {...register("contact_name", { required: "Contact name is required" })}
               />
               {errors.contact_name && (
                 <span className="error-message">
@@ -339,23 +442,51 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="phone_number">Phone Number</label>
+              <label htmlFor="phone_number">
+                Phone Number
+                <span className="required-asterisk">*</span>
+              </label>
               <input
-                type="number"
-                placeholder="Contact's Phone Number"
+                type="tel"
+                placeholder="Phone Number (e.g. +639XXXXXXXX)"
                 maxLength={13}
-                {...register("phone_number")}
+                className={errors.phone_number ? "input-error" : ""}
+                {...register("phone_number", {
+                  required: "Phone number is required",
+                  pattern: {
+                    value: /^\+63\d{9,10}$/,
+                    message: "Phone must start with +63 followed by 9-10 digits",
+                  },
+                })}
+                onBlur={(e) => {
+                  const formatted = formatPhoneToInternational(e.target.value || "");
+                  setValue("phone_number", formatted, { shouldValidate: true, shouldDirty: true });
+                }}
               />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="fax">Fax</label>
+              <label htmlFor="fax">
+                Fax Contact Number
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="text"
-                placeholder="Fax"
+                placeholder="Fax (e.g. +632XXXXXXXX)"
                 maxLength={50}
-                className={errors.state ? "input-error" : ""}
-                {...register("fax")}
+                className={errors.fax ? "input-error" : ""}
+                {...register("fax", {
+                  required: "Fax is required",
+                  pattern: {
+                    value: /^\+63\d{7,10}$/,
+                    message:
+                      "Fax must be international format starting with +63 followed by 7-10 digits",
+                  },
+                })}
+                onBlur={(e) => {
+                  const formatted = formatFaxToInternational(e.target.value || "");
+                  setValue("fax", formatted, { shouldValidate: true, shouldDirty: true });
+                }}
               />
               {errors.fax && (
                 <span className="error-message">{errors.fax.message}</span>
@@ -363,21 +494,35 @@ const SupplierRegistration = () => {
             </fieldset>
 
             <fieldset>
-              <label htmlFor="email">Email</label>
+              <label htmlFor="email">
+                Email
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="email"
                 placeholder="Contact's Email"
-                {...register("email")}
+                className={errors.email ? "input-error" : ""}
+                {...register("email", {
+                  required: "Email is required",
+                  pattern: {
+                    value: /^\S+@\S+\.\S+$/,
+                    message: "Please enter a valid email address",
+                  },
+                })}
               />
             </fieldset>
 
             <fieldset>
-              <label htmlFor="URL">URL</label>
+              <label htmlFor="URL">
+                Website URL
+                <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="url"
                 placeholder="URL"
                 className={errors.URL ? "input-error" : ""}
                 {...register("URL", {
+                  required: "URL is required",
                   pattern: {
                     value: /^(https?:\/\/).+/i,
                     message: "URL must start with http:// or https://",
@@ -442,9 +587,9 @@ const SupplierRegistration = () => {
             <button
               type="submit"
               className="primary-button"
-              disabled={!isValid}
+              disabled={isLoading}
             >
-              Save
+              {isLoading ? "Saving..." : "Save"}
             </button>
           </form>
         </main>

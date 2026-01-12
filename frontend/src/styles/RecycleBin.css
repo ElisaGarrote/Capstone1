@@ -46,7 +46,6 @@
       white-space: nowrap;
     }
 
-    /* Action column - flexbox for button alignment */
     td:nth-child(7) {
       overflow: visible;
       text-overflow: clip;
@@ -71,15 +70,12 @@
       background-color: #fcfcfc;
     }
 
-    /* 👇 Width setup for 7 columns */
-    /* Checkbox column */
     th:nth-child(1),
     td:nth-child(1) {
       width: 40px;
       text-align: center;
     }
 
-    /* Name, Category, Manufacturer, Supplier, Location columns share equal width */
     th:nth-child(n+2):nth-child(-n+6),
     td:nth-child(n+2):nth-child(-n+6) {
       width: calc((100% - 40px - 140px) / 5);
@@ -106,4 +102,27 @@
 
 .recycle-bin-table-section .action-button {
   flex-shrink: 0;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+.page-header .page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+td, th {
+  height: 50px;
+  min-height: 50px;
+  vertical-align: middle;
+}
+
+.recycle-page table td img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
 }

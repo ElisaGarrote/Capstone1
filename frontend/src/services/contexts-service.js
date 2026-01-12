@@ -54,6 +54,38 @@ export async function createSupplier(data) {
   return res.data;
 }
 
+// UPDATE supplier
+export async function updateSupplier(id, data) {
+  const res = await contextsAxios.put(`suppliers/${id}/`, data);
+  return res.data;
+}
+
+// DELETE supplier (soft-delete via API)
+export async function deleteSupplier(id) {
+  const res = await contextsAxios.delete(`suppliers/${id}/`);
+  return res.data;
+}
+
+// BULK DELETE suppliers
+export async function bulkDeleteSuppliers(ids) {
+  const res = await contextsAxios.post(`suppliers/bulk_delete/`, { ids });
+  return res.data;
+}
+
+// IMPORT suppliers via XLSX upload
+export async function importSuppliers(formData, options = {}) {
+  // options: { allowUpdate: boolean, upsertBy: 'natural'|'id', apiKey: string }
+  const params = {};
+  if (options.allowUpdate) params.allow_update = 'true';
+  if (options.upsertBy) params.upsert_by = options.upsertBy;
+
+  const headers = {};
+  if (options.apiKey) headers['X-IMPORT-API-KEY'] = options.apiKey;
+
+  const res = await contextsAxios.post(`import/suppliers/`, formData, { params, headers });
+  return res.data;
+}
+
 /* ===============================
           MANUFACTURER CRUD
 ================================= */
@@ -149,6 +181,24 @@ export async function createDepreciation(data) {
   return res.data;
 }
 
+// UPDATE depreciation
+export async function updateDepreciation(id, data) {
+  const res = await contextsAxios.put(`depreciations/${id}/`, data);
+  return res.data;
+}
+
+// DELETE depreciation (soft-delete via API)
+export async function deleteDepreciation(id) {
+  const res = await contextsAxios.delete(`depreciations/${id}/`);
+  return res.data;
+}
+
+// BULK DELETE depreciations
+export async function bulkDeleteDepreciations(ids) {
+  const res = await contextsAxios.post(`depreciations/bulk_delete/`, { ids });
+  return res.data;
+}
+
 /* ===============================
           CONTEXTS DROPDOWNS
 ================================= */
@@ -173,5 +223,50 @@ export async function fetchAllDropdowns(entity, options = {}) {
   }
 
   const res = await contextsAxios.get(url);
+  return res.data;
+}
+
+/* ===============================
+          RECYCLE BIN / DELETED ITEMS
+================================= */
+// List deleted assets and components (from contexts service proxy)
+export async function fetchDeletedItems() {
+  const res = await contextsAxios.get("recycle-bin/");
+  return res.data;
+}
+
+// Recover a deleted asset via contexts proxy
+export async function recoverAsset(id) {
+  const res = await contextsAxios.patch(`recycle-bin/${id}/recover_asset/`);
+  return res.data;
+}
+
+// Recover a deleted component via contexts proxy
+export async function recoverComponent(id) {
+  const res = await contextsAxios.patch(`recycle-bin/${id}/recover_component/`);
+  return res.data;
+}
+
+// Permanently delete an asset via contexts proxy
+export async function deleteAsset(id) {
+  const res = await contextsAxios.delete(`recycle-bin/${id}/delete_asset/`);
+  return res.data;
+}
+
+// Permanently delete a component via contexts proxy
+export async function deleteComponent(id) {
+  const res = await contextsAxios.delete(`recycle-bin/${id}/delete_component/`);
+  return res.data;
+}
+
+// Bulk delete assets via contexts proxy
+export async function bulkDeleteAssets(ids) {
+  const res = await contextsAxios.post(`recycle-bin/bulk-delete-assets/`, { ids });
+  return res.data;
+}
+
+// Bulk delete components via contexts proxy
+export async function bulkDeleteComponents(ids) {
+  const res = await contextsAxios.post(`recycle-bin/bulk-delete-components/`, { ids });
   return res.data;
 }

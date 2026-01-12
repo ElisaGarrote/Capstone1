@@ -119,3 +119,54 @@
   object-fit: cover !important;
   border-radius: 4px !important;
 }
+
+.components-table-section th .category-link {
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.75rem;
+  display: inline-block;
+}
+.components-table-section th .category-link:hover {
+  text-decoration: underline;
+  color: var(--primary-color);
+}
+.components-table-section th .category-link:active,
+.components-table-section th .category-link:focus {
+  color: var(--primary-color);
+  outline: none;
+}
+.components-table-section th .category-link {
+  transition: color 120ms ease-in-out, text-decoration 120ms ease-in-out;
+}
+
+.components-table-section td:nth-child(4) .category-link,
+.components-table-section td:nth-child(4) a.category-link {
+  color: var(--primary-color, #0d6efd) !important;
+  font-weight: 500;
+  text-decoration: none !important;
+}
+.components-table-section td:nth-child(4) .category-link:hover,
+.components-table-section td:nth-child(4) a.category-link:hover {
+  color: var(--primary-color-hover, #0b5ed7) !important;
+  text-decoration: underline !important;
+}
+
+.components-table-section a.category-link {
+  color: var(--primary-color, #0d6efd) !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+.components-table-section a.category-link:hover {
+  color: var(--primary-color-hover, #0b5ed7) !important;
+  text-decoration: underline !important;
+}
+
+.components-table-section td:nth-child(4) {
+  color: var(--primary-color, #0d6efd) !important;
+}
+
+.components-table-section td:nth-child(4) a {
+  color: var(--primary-color, #0d6efd) !important;
+}
