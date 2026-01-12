@@ -504,9 +504,21 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         # --- Date Validations (from ticket) ---
         checkout_date = ticket.get('checkout_date')
         return_date = ticket.get('return_date')
+
+        # Parse checkout_date if string
+        if checkout_date and isinstance(checkout_date, str):
+            checkout_date = datetime.strptime(checkout_date, "%Y-%m-%d").date()
+
+        # Validate checkout is not before the ticket's checkout_date
+        if checkout_date:
+            today = datetime.now().date()
+            if today < checkout_date:
+                raise serializers.ValidationError({
+                    "checkout_date": f"Cannot check out before the scheduled checkout date ({checkout_date})."
+                })
+
+        # Validate return_date is not before checkout_date
         if checkout_date and return_date:
-            if isinstance(checkout_date, str):
-                checkout_date = datetime.strptime(checkout_date, "%Y-%m-%d").date()
             if isinstance(return_date, str):
                 return_date = datetime.strptime(return_date, "%Y-%m-%d").date()
             if return_date < checkout_date:
