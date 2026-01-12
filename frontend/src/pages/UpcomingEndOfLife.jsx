@@ -8,6 +8,7 @@ import Pagination from "../components/Pagination";
 import Footer from "../components/Footer";
 import DefaultImage from "../assets/img/default-image.jpg";
 import api from "../api";
+import assetsAxios from "../api/assetsAxios";
 import "../styles/UpcomingEndOfLife.css";
 
 // TableHeader component to render the table header
@@ -95,16 +96,22 @@ export default function UpcomingEndOfLife() {
     async function fetchData() {
       try {
         // Ask the gateway for the assets service route so Kong forwards correctly.
-        const apiPath = "/assets/reports/upcoming-eol/?format=json";
+        // Use the assets-specific axios instance which routes through the gateway
+        const apiPath = "reports/upcoming-eol/?format=json";
         let resp;
         try {
-          // axios baseURL is VITE_API_URL (e.g. http://localhost/api)
-          resp = await api.get(apiPath);
+          resp = await assetsAxios.get(apiPath);
+          // If server returned HTML (error page) instead of JSON, bail out with a clear log
+          const contentType = (resp.headers && (resp.headers['content-type'] || resp.headers['Content-Type'])) || '';
+          if (typeof contentType === 'string' && !contentType.includes('application/json')) {
+            console.error('Unexpected non-JSON response for upcoming-eol:', contentType, resp.data);
+            return;
+          }
         } catch (e) {
-          // Fallback: build full URL using service-specific env or gateway
-          const assetsBase = import.meta.env.VITE_ASSETS_API_URL || (import.meta.env.VITE_API_URL ? (import.meta.env.VITE_API_URL + "/assets/") : "");
+          // Fallback: attempt a direct fetch through gateway
+          const assetsBase = import.meta.env.VITE_ASSETS_API_URL || (import.meta.env.VITE_API_GATEWAY_URL ? (import.meta.env.VITE_API_GATEWAY_URL + "/api/assets/") : "");
           const fullUrl = assetsBase.replace(/\/$/, "") + "/reports/upcoming-eol/?format=json";
-          const fetchResp = await fetch(fullUrl);
+          const fetchResp = await fetch(fullUrl, { headers: { 'Accept': 'application/json' } });
           const data = await fetchResp.json();
           if (cancelled) return;
           const rows = data.results || [];
@@ -113,8 +120,7 @@ export default function UpcomingEndOfLife() {
             const pb = b.endOfLife ? new Date(b.endOfLife).getTime() : Number.MAX_SAFE_INTEGER;
             return pa - pb;
           });
-          setAllData(rows);
-          return;
+          if (!cancelled) setAllData(rows);
         }
 
         if (resp && resp.data) {
