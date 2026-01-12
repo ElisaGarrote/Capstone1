@@ -765,7 +765,11 @@ export default function ProductsRegistration() {
                       setPreviewImage(null);
                       setSelectedImage(null);
                       setValue('image', null);
-                      document.getElementById('image').value = '';
+                      // Clear file input if it exists (it may not exist when preview is shown)
+                      const imageInput = document.getElementById('image');
+                      if (imageInput) {
+                        imageInput.value = '';
+                      }
                       setRemoveImage(true);
                       console.log("Remove image flag set to:", true);
                     }}

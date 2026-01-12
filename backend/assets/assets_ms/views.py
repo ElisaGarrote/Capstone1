@@ -203,6 +203,14 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         instance = serializer.save()
+
+        # Handle image removal
+        remove_image = self.request.data.get("remove_image") == "true"
+        if remove_image and instance.image:
+            instance.image.delete(save=False)
+            instance.image = None
+            instance.save()
+
         self.invalidate_product_cache(instance.id)
     
     # Product names and image for bulk edit
