@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import Select from "react-select";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import TopSecFormPage from "../../components/TopSecFormPage";
@@ -10,6 +11,7 @@ import AddEntryModal from "../../components/Modals/AddEntryModal";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Alert from "../../components/Alert";
 import "../../styles/Registration.css";
+import { getCustomSelectStyles } from "../../utils/selectStyles";
 import { getNextAssetId, fetchAssetNames, fetchProductsForAssetRegistration, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
 import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
@@ -33,7 +35,7 @@ export default function AssetsRegistration() {
   const { id } = useParams();
   const currentDate = new Date().toISOString().split("T")[0];
 
-  const { setValue, register, handleSubmit, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, control, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       assetId: '',
@@ -57,6 +59,8 @@ export default function AssetsRegistration() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+
+  const customSelectStyles = getCustomSelectStyles();
 
   // Determine mode: clone mode passed from AssetViewPage
   const cloneMode = location.state?.isClone === true;
@@ -498,19 +502,29 @@ export default function AssetsRegistration() {
             {/* Product Dropdown */}
             <fieldset>
               <label htmlFor='product'>Product <span style={{color: 'red'}}>*</span></label>
-              <select
-                id="product"
-                {...register("product", { required: "Product is required" })}
-                onChange={handleProductChange}
-                className={errors.product ? 'input-error' : ''}
-              >
-                <option value="">Select Product</option>
-                {products.map(product => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="product"
+                control={control}
+                rules={{ required: "Product is required" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    inputId="product"
+                    options={products.map(product => ({ value: product.id, label: product.name }))}
+                    value={products.map(product => ({ value: product.id, label: product.name })).find(opt => String(opt.value) === String(field.value)) || null}
+                    onChange={(selected) => {
+                      const value = selected?.value ?? "";
+                      field.onChange(value);
+                      handleProductChange({ target: { value } });
+                    }}
+                    placeholder="Select Product"
+                    isSearchable
+                    isClearable
+                    styles={customSelectStyles}
+                    className={errors.product ? 'react-select-error' : ''}
+                  />
+                )}
+              />
               {errors.product && <span className='error-message'>{errors.product.message}</span>}
             </fieldset>
 
@@ -518,18 +532,25 @@ export default function AssetsRegistration() {
             <fieldset>
               <label htmlFor='status'>Status <span style={{color: 'red'}}>*</span></label>
               <div className="dropdown-with-add">
-                <select
-                  id="status"
-                  {...register("status", { required: "Status is required" })}
-                  className={errors.status ? 'input-error' : ''}
-                >
-                  <option value="">Select Status</option>
-                  {statuses.map(status => (
-                    <option key={status.id} value={status.id}>
-                      {status.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="status"
+                  control={control}
+                  rules={{ required: "Status is required" }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="status"
+                      options={statuses.map(status => ({ value: status.id, label: status.name }))}
+                      value={statuses.map(status => ({ value: status.id, label: status.name })).find(opt => String(opt.value) === String(field.value)) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? "")}
+                      placeholder="Select Status"
+                      isSearchable
+                      isClearable
+                      styles={customSelectStyles}
+                      className={errors.status ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-btn"
@@ -546,18 +567,24 @@ export default function AssetsRegistration() {
             <fieldset>
               <label htmlFor='supplier'>Supplier</label>
               <div className="dropdown-with-add">
-                <select
-                  id="supplier"
-                  {...register("supplier")}
-                  className={errors.supplier ? 'input-error' : ''}
-                >
-                  <option value="">Select Supplier</option>
-                  {suppliers.map(supplier => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="supplier"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="supplier"
+                      options={suppliers.map(supplier => ({ value: supplier.id, label: supplier.name }))}
+                      value={suppliers.map(supplier => ({ value: supplier.id, label: supplier.name })).find(opt => String(opt.value) === String(field.value)) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? "")}
+                      placeholder="Select Supplier"
+                      isSearchable
+                      isClearable
+                      styles={customSelectStyles}
+                      className={errors.supplier ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-btn"
@@ -574,18 +601,24 @@ export default function AssetsRegistration() {
             <fieldset>
               <label htmlFor='location'>Location</label>
               <div className="dropdown-with-add">
-                <select
-                  id="location"
-                  {...register("location")}
-                  className={errors.location ? 'input-error' : ''}
-                >
-                  <option value="">Select Location</option>
-                  {locations.map(loc => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.city}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="location"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      inputId="location"
+                      options={locations.map(loc => ({ value: loc.id, label: loc.city }))}
+                      value={locations.map(loc => ({ value: loc.id, label: loc.city })).find(opt => String(opt.value) === String(field.value)) || null}
+                      onChange={(selected) => field.onChange(selected?.value ?? "")}
+                      placeholder="Select Location"
+                      isSearchable
+                      isClearable
+                      styles={customSelectStyles}
+                      className={errors.location ? 'react-select-error' : ''}
+                    />
+                  )}
+                />
                 <button
                   type="button"
                   className="add-btn"
