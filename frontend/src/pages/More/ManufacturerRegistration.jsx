@@ -120,6 +120,25 @@ const ManufacturerRegistration = () => {
     }
   };
 
+  // Format phone number to international +63... on blur and normalize input
+  const formatPhoneToInternational = (raw) => {
+    if (!raw) return raw;
+    // remove spaces, dashes, parentheses
+    const digits = raw.replace(/[^0-9+]/g, "");
+    // if already starts with +63 and digits only afterwards, normalize
+    if (/^\+63\d{9,10}$/.test(digits)) return digits;
+    // If starts with 0, replace leading 0 with +63
+    if (/^0\d{9,11}$/.test(digits)) {
+      return "+63" + digits.slice(1);
+    }
+    // If starts with 9 and length 9 or 10, prepend +63
+    if (/^9\d{8,9}$/.test(digits)) {
+      return "+63" + digits;
+    }
+    // otherwise return original cleaned digits (fallback)
+    return digits;
+  };
+
   const handleImportFile = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -280,17 +299,22 @@ const ManufacturerRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="url">URL</label>
+                <label htmlFor="url">
+                  Website URL
+                  <span className="required-asterisk">*</span>
+                </label>
                 <input
                   type="url"
                   placeholder="URL"
                   className={errors.url ? "input-error" : ""}
                   {...register("url", {
+                    required: "Website URL is required",
                     pattern: {
                       value: /^(https?:\/\/).+/i,
                       message: "URL must start with http:// or https://",
                     },
                   })}
+                  aria-required="true"
                 />
                 {errors.url && (
                   <span className="error-message">{errors.url.message}</span>
@@ -298,18 +322,23 @@ const ManufacturerRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="supportUrl">Support URL</label>
+                <label htmlFor="supportUrl">
+                  Support URL
+                  <span className="required-asterisk">*</span>
+                </label>
                 <input
                   type="url"
                   placeholder="Support URL"
                   className={errors.supportUrl ? "input-error" : ""}
                   {...register("supportUrl", {
+                    required: "Support URL is required",
                     pattern: {
                       value: /^(https?:\/\/).+/i,
                       message:
                         "Support URL must start with http:// or https://",
                     },
                   })}
+                  aria-required="true"
                 />
                 {errors.supportUrl && (
                   <span className="error-message">
@@ -319,20 +348,46 @@ const ManufacturerRegistration = () => {
               </fieldset>
 
               <fieldset>
-                <label htmlFor="supportPhone">Phone Number</label>
+                <label htmlFor="supportPhone">
+                  Phone Number
+                  <span className="required-asterisk">*</span>
+                </label>
                 <input
                   type="tel"
-                  placeholder="Phone Number"
-                  {...register("supportPhone")}
+                  placeholder="Phone Number (e.g. +639XXXXXXXX)"
+                  className={errors.supportPhone ? "input-error" : ""}
+                  {...register("supportPhone", {
+                    required: "Phone Number is required",
+                    pattern: {
+                      value: /^\+63\d{9,10}$/,
+                      message:
+                        "Phone must be in international format starting with +63 (e.g. +639XXXXXXXX)",
+                    },
+                  })}
+                  aria-required="true"
+                  onBlur={(e) => {
+                    const formatted = formatPhoneToInternational(e.target.value || "");
+                    setValue("supportPhone", formatted, { shouldValidate: true, shouldDirty: true });
+                  }}
                 />
               </fieldset>
 
               <fieldset>
-                <label htmlFor="supportEmail">Email</label>
+                <label htmlFor="supportEmail">
+                  Manufacturer Email
+                  <span className="required-asterisk">*</span>
+                </label>
                 <input
                   type="email"
                   placeholder="Email"
-                  {...register("supportEmail")}
+                  {...register("supportEmail", {
+                    required: "Manufacturer Email is required",
+                    pattern: {
+                      value: /^\S+@\S+\.\S+$/,
+                      message: "Please enter a valid email address",
+                    },
+                  })}
+                  aria-required="true"
                 />
               </fieldset>
 
@@ -393,9 +448,9 @@ const ManufacturerRegistration = () => {
               <button
                 type="submit"
                 className="primary-button"
-                disabled={!isValid}
+                disabled={isLoading}
               >
-                Save
+                {isLoading ? "Saving..." : "Save"}
               </button>
             </form>
           </section>

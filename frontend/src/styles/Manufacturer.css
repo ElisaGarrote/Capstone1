@@ -124,8 +124,10 @@
         }
 
         img {
-            width: 22px;
-            height: 22px;
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
         }
 
         .action-button-section,
