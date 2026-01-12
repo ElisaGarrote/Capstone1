@@ -15,6 +15,7 @@ import OverdueAuditFilterModal from "../../components/Modals/OverdueAuditFilterM
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import { fetchOverdueAudits } from "../../services/assets-service";
+import Alert from "../../components/Alert";
 
 // TableHeader
 function TableHeader() {
@@ -82,6 +83,7 @@ export default function OverdueAudits() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Fetch overdue audits on mount
   useEffect(() => {
@@ -132,6 +134,7 @@ export default function OverdueAudits() {
   const handleDeleteSuccess = (deletedId) => {
     setData(data.filter((item) => item.id !== deletedId));
     setRefreshKey((prev) => prev + 1); // Trigger TabNavBar refresh
+    setSuccessMessage("Audit schedule deleted successfully.");
     closeDeleteModal();
   };
 
@@ -218,6 +221,7 @@ export default function OverdueAudits() {
 
   return (
     <>
+      {successMessage && <Alert message={successMessage} type="success" />}
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}

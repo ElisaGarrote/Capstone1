@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Pagination from "../../components/Pagination";
@@ -12,6 +13,7 @@ import CompletedAuditFilterModal from "../../components/Modals/CompletedAuditFil
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import { fetchAllAudits } from "../../services/assets-service";
+import Alert from "../../components/Alert";
 
 // TableHeader
 function TableHeader() {
@@ -48,9 +50,13 @@ function TableItem({ item, onViewClick }) {
 }
 
 export default function CompletedAudits() {
+  const location = useLocation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(
+    location.state?.successMessage || ""
+  );
 
   // Fetch completed audits on mount
   useEffect(() => {
@@ -68,6 +74,13 @@ export default function CompletedAudits() {
     };
     loadData();
   }, []);
+
+  // Clear success message from navigation state after reading it once
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      window.history.replaceState({}, "", location.pathname);
+    }
+  }, [location.pathname, location.state]);
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -156,6 +169,7 @@ export default function CompletedAudits() {
 
   return (
     <>
+      {successMessage && <Alert message={successMessage} type="success" />}
       {isViewModalOpen && selectedItem && (
         <View
           title={`${selectedItem.asset_details?.name || "Unknown"} : ${selectedItem.audit_date}`}

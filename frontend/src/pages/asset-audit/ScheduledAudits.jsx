@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Pagination from "../../components/Pagination";
@@ -15,6 +15,7 @@ import DueAuditFilterModal from "../../components/Modals/DueAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import { fetchScheduledAudits } from "../../services/assets-service";
+import Alert from "../../components/Alert";
 
 // TableHeader
 function TableHeader() {
@@ -64,11 +65,21 @@ function TableItem({ item, onDeleteClick, onViewClick }) {
 
 export default function ScheduledAudits() {
   const navigate = useNavigate();
-
+  const location = useLocation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [successMessage, setSuccessMessage] = useState(
+    location.state?.successMessage || ""
+  );
+
+  // Clear success message from navigation state after reading it once
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   // Fetch scheduled audits on mount
   useEffect(() => {
@@ -119,6 +130,7 @@ export default function ScheduledAudits() {
   const handleDeleteSuccess = (deletedId) => {
     setData(data.filter((item) => item.id !== deletedId));
     setRefreshKey((prev) => prev + 1); // Trigger TabNavBar refresh
+    setSuccessMessage("Audit schedule deleted successfully.");
     closeDeleteModal();
   };
 
@@ -197,6 +209,7 @@ export default function ScheduledAudits() {
 
   return (
     <>
+      {successMessage && <Alert message={successMessage} type="success" />}
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}

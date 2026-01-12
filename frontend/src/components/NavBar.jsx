@@ -233,57 +233,57 @@ export default function NavBar() {
               <FaChevronLeft />
             </button>
           </li>
-          <li>
-            <a
-              onClick={() => {
-                navigate("/dashboard");
-                setActiveMenu("dashboard");
-                setMobileOpen(false);
-              }}
-              className={activeMenu === "dashboard" ? "active" : ""}
-            >
-              Dashboard
-            </a>
-          </li>
-          <li
-            className={`dropdown-container assets-dropdown-container ${
-              showAssetsMenu ? "open" : ""
-            }`}
-          >
-            <div
-              className={`dropdown-trigger ${
-                activeMenu === "assets" ? "active" : ""
+            <li>
+              <a
+                onClick={() => {
+                  navigate("/dashboard");
+                  setActiveMenu("dashboard");
+                  setMobileOpen(false);
+                }}
+                className={activeMenu === "dashboard" ? "active" : ""}
+              >
+                Dashboard
+              </a>
+            </li>
+            <li
+              className={`dropdown-container assets-dropdown-container ${
+                showAssetsMenu ? "open" : ""
               }`}
-              onClick={() => toggleDropdown("assets")}
             >
-              <span className="dropdown-text">{selectedAsset}</span>{" "}
-              <IoIosArrowDown />
-            </div>
-            {showAssetsMenu && (
-              <div className="custom-dropdown assets-dropdown">
-                <div className="dropdown-menu">
-                  <button
-                    onClick={() => {
-                      navigate("/products");
-                      setSelectedAsset("Asset Models");
-                      setShowAssetsMenu(false);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    Asset Models
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigate("/assets");
-                      setSelectedAsset("Assets");
-                      setShowAssetsMenu(false);
-                      setMobileOpen(false);
-                    }}
-                  >
-                    Assets
-                  </button>
+              <div
+                className={`dropdown-trigger ${
+                  activeMenu === "assets" ? "active" : ""
+                }`}
+                onClick={() => toggleDropdown("assets")}
+              >
+                <span className="dropdown-text">{selectedAsset}</span>{" "}
+                <IoIosArrowDown />
+              </div>
+              {showAssetsMenu && (
+                <div className="custom-dropdown assets-dropdown">
+                  <div className="dropdown-menu">
+                    <button
+                      onClick={() => {
+                        navigate("/products");
+                        setSelectedAsset("Asset Models");
+                        setShowAssetsMenu(false);
+                        setMobileOpen(false);
+                      }}
+                    >
+                      Asset Models
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate("/assets");
+                        setSelectedAsset("Assets");
+                        setShowAssetsMenu(false);
+                        setMobileOpen(false);
+                      }}
+                    >
+                      Assets
+                    </button>
 
-                  {/* <button
+                    {/* <button
                     onClick={() => {
                       navigate("/accessories");
                       setSelectedAsset("Accessories");
@@ -508,9 +508,8 @@ export default function NavBar() {
                   </div>
                 )}
               </li>
-            </>
-          )}
-        </ul>
+            )}
+          </ul>
       </section>
 
       <section className="nav-actions">

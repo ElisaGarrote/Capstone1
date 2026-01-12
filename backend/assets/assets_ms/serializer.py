@@ -1095,8 +1095,10 @@ class RepairInstanceSerializer(serializers.ModelSerializer):
 class DashboardStatsSerializer(serializers.Serializer):
     due_for_return = serializers.IntegerField()
     overdue_for_return = serializers.IntegerField()
+    due_audits = serializers.IntegerField()
     upcoming_audits = serializers.IntegerField()
     overdue_audits = serializers.IntegerField()
+    completed_audits = serializers.IntegerField()
     reached_end_of_life = serializers.IntegerField()
     upcoming_end_of_life = serializers.IntegerField()
     expired_warranties = serializers.IntegerField()

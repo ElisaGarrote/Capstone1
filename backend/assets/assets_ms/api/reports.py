@@ -5,6 +5,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..services.depreciation_report import generate_depreciation_report
+from ..services.eol_warranty_report import generate_eol_warranty_report
+from ..services.upcoming_eol_report import generate_upcoming_eol_report
+from ..services.reached_eol_report import generate_reached_eol_report
+from ..services.expired_warranty_report import generate_expired_warranty_report, generate_expiring_warranty_report
 from ..services.asset_report import generate_asset_report
 from ..services.activity_report import generate_activity_report, get_activity_summary
 
@@ -395,6 +399,78 @@ class ActivityReportAPIView(APIView):
         return response
 
 
+class EoLWarrantyReportAPIView(APIView):
+    """Return End-of-Life & Warranty report as JSON (default) or XLSX.
+
+    Query params:
+      - format=json to return JSON results
+      - format=xlsx to download XLSX
+    """
+
+    def get(self, request):
+        fmt = request.query_params.get('format', '').lower()
+
+        rows = generate_eol_warranty_report()
+
+        if fmt == 'xlsx':
+            try:
+                from openpyxl.workbook import Workbook
+            except Exception:
+                return Response({
+                    'detail': 'openpyxl not installed in assets image.'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+            fieldnames = ['assetId', 'product', 'statusName', 'location', 'endOfLifeDate', 'warrantyExpiration']
+            wb = Workbook()
+            ws = wb.active
+            ws.title = 'EoL_Warranty'
+            ws.append(fieldnames)
+            for r in rows:
+                row = [r.get(f, '') for f in fieldnames]
+                ws.append(row)
+            bio = BytesIO()
+            wb.save(bio)
+            bio.seek(0)
+            filename = f"eol_warranty_report_{datetime.date.today().isoformat()}.xlsx"
+            response = HttpResponse(bio.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+
+        # Default: JSON
+        return Response({'results': rows})
+
+
+class ExpiredWarrantyReportAPIView(APIView):
+        """Return compact Expired Warranty asset list as JSON.
+
+        Query params:
+            - format=json to return JSON results (default)
+        """
+
+        def get(self, request):
+                fmt = request.query_params.get('format', '').lower()
+                rows = generate_expired_warranty_report()
+                # Currently only JSON supported
+                return Response({'results': rows})
+
+
+class ExpiringWarrantyReportAPIView(APIView):
+        """Return compact Expiring Warranty asset list as JSON.
+
+        Logic matches dashboard metric for expiring_warranties
+        (warranty_expiration > today and <= today + 30 days).
+
+        Query params:
+            - format=json to return JSON results (default)
+        """
+
+        def get(self, request):
+                fmt = request.query_params.get('format', '').lower()
+                rows = generate_expiring_warranty_report()
+                # Currently only JSON supported
+                return Response({'results': rows})
+
+
 class ActivityReportSummaryAPIView(APIView):
     """Return activity report summary statistics.
 
@@ -423,3 +499,31 @@ class ActivityReportSummaryAPIView(APIView):
 
         summary = get_activity_summary(start_date=start_date, end_date=end_date)
         return Response(summary)
+
+
+class UpcomingEoLReportAPIView(APIView):
+    """Return compact Upcoming End-of-Life asset list as JSON.
+
+    Query params:
+      - format=json to return JSON results (default)
+    """
+
+    def get(self, request):
+        fmt = request.query_params.get('format', '').lower()
+        rows = generate_upcoming_eol_report()
+        # Currently only JSON supported
+        return Response({'results': rows})
+
+
+class ReachedEoLReportAPIView(APIView):
+    """Return compact Reached End-of-Life asset list as JSON.
+
+    Query params:
+      - format=json to return JSON results (default)
+    """
+
+    def get(self, request):
+        fmt = request.query_params.get('format', '').lower()
+        rows = generate_reached_eol_report()
+        # Currently only JSON supported
+        return Response({'results': rows})

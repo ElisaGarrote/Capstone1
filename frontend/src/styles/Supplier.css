@@ -1,0 +1,10 @@
+td, th {
+  height: 50px;
+}
+
+img {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: cover !important;
+  border-radius: 4px !important;
+}
