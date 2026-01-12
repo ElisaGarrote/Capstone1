@@ -580,3 +580,48 @@
 .toggle-switch input[type="checkbox"]:checked + .toggle-label::after {
     left: 26px;
 }
+
+/* Image Preview Modal Styles */
+.image-preview-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.image-preview-modal-content {
+    background-color: white;
+    border-radius: 8px;
+    padding: 40px 20px 20px 20px;
+    width: 600px;
+    max-width: 80%;
+    max-height: 70vh;
+    overflow: auto;
+    position: relative;
+}
+
+.image-preview-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-preview-close-btn:hover {
+    color: #007bff;
+}
