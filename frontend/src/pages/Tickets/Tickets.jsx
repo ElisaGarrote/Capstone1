@@ -10,7 +10,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
-import { fetchAssetById } from "../../services/assets-service";
+import { fetchAssetById, fetchAssetCheckoutById } from "../../services/assets-service";
 import {
   fetchAllEmployees,
   fetchEmployeeById,
@@ -294,10 +294,19 @@ const Tickets = () => {
     }
   }, [location]);
 
-  const handleCheckInOut = (ticket) => {
-    // Pass the full ticket object in state
+  const handleCheckInOut = async (ticket) => {
     // Use ticket.asset (numeric ID) or ticket.asset_id as fallback
-    const assetId = ticket.asset || ticket.asset_id;
+    let assetId = ticket.asset || ticket.asset_id;
+
+    // If asset ID is missing but we have asset_checkout, fetch asset from checkout
+    if (!assetId && ticket.asset_checkout) {
+      try {
+        const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
+        assetId = checkout?.asset;
+      } catch (error) {
+        console.error("Failed to fetch checkout for asset ID:", error);
+      }
+    }
 
     if (!assetId) {
       console.error("No asset ID found in ticket:", ticket);

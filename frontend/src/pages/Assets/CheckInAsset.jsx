@@ -10,7 +10,7 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { createAssetCheckinWithStatus, fetchAssetNames } from "../../services/assets-service";
+import { createAssetCheckinWithStatus, fetchAssetNames, fetchAssetCheckoutById } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
 import { fetchAllLocations } from "../../services/integration-help-desk-service";
 
@@ -97,7 +97,18 @@ export default function CheckInAsset() {
         // Scenario 2: Coming from Tickets page - need to fetch asset details
         // Use ticketData.asset (numeric ID) or ticketData.asset_id as fallback
         else {
-          const ticketAssetId = ticketData?.asset || ticketData?.asset_id;
+          let ticketAssetId = ticketData?.asset || ticketData?.asset_id;
+
+          // If asset ID is missing but we have asset_checkout, fetch asset from checkout
+          if (!ticketAssetId && ticketData?.asset_checkout) {
+            try {
+              const checkout = await fetchAssetCheckoutById(ticketData.asset_checkout);
+              ticketAssetId = checkout?.asset;
+            } catch (error) {
+              console.error("Failed to fetch checkout for asset ID:", error);
+            }
+          }
+
           if (ticketAssetId) {
             setFromAssets(false);
             const assetData = await fetchAssetNames({ ids: [ticketAssetId] });

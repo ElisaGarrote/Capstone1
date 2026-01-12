@@ -41,7 +41,17 @@ function TicketViewPage() {
 
   const handleCheckOut = async () => {
     // Use ticket.asset (numeric ID) or ticket.asset_id as fallback
-    const assetId = ticket.asset || ticket.asset_id;
+    let assetId = ticket.asset || ticket.asset_id;
+
+    // If asset ID is missing but we have asset_checkout, fetch asset from checkout
+    if (!assetId && ticket.asset_checkout) {
+      try {
+        const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
+        assetId = checkout?.asset;
+      } catch (error) {
+        console.error("Failed to fetch checkout for asset ID:", error);
+      }
+    }
 
     if (!assetId) {
       setErrorMessage("Cannot process ticket: missing asset information.");
@@ -61,7 +71,20 @@ function TicketViewPage() {
 
   const handleCheckIn = async () => {
     // Use ticket.asset (numeric ID) or ticket.asset_id as fallback
-    const assetId = ticket.asset || ticket.asset_id;
+    let assetId = ticket.asset || ticket.asset_id;
+
+    // If asset ID is missing but we have asset_checkout, fetch asset from checkout
+    let checkout = null;
+    if (ticket.asset_checkout) {
+      try {
+        checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
+        if (!assetId) {
+          assetId = checkout?.asset;
+        }
+      } catch (error) {
+        console.error("Failed to fetch checkout:", error);
+      }
+    }
 
     if (!assetId) {
       setErrorMessage("Cannot process ticket: missing asset information.");
@@ -70,7 +93,10 @@ function TicketViewPage() {
 
     try {
       const asset = await fetchAssetById(assetId);
-      const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
+      // Fetch checkout again if we don't have it yet
+      if (!checkout && ticket.asset_checkout) {
+        checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
+      }
       navigate(`/assets/check-in/${assetId}`, {
         state: { ticket, asset, checkout, fromAsset: false },
       });
