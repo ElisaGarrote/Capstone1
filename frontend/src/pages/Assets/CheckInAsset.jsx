@@ -95,13 +95,16 @@ export default function CheckInAsset() {
           setAssetDisplayId(assetDisplayIdFromState || "");
         }
         // Scenario 2: Coming from Tickets page - need to fetch asset details
-        // ticketData.asset contains the display asset_id (e.g., "AST-20260110-00030-43A7")
-        else if (ticketData?.asset) {
-          setFromAssets(false);
-          const assetData = await fetchAssetNames({ asset_ids: [ticketData.asset] });
-          if (assetData && assetData.length > 0) {
-            setAssetName(assetData[0].name || "");
-            setAssetDisplayId(assetData[0].asset_id || "");
+        // Use ticketData.asset (numeric ID) or ticketData.asset_id as fallback
+        else {
+          const ticketAssetId = ticketData?.asset || ticketData?.asset_id;
+          if (ticketAssetId) {
+            setFromAssets(false);
+            const assetData = await fetchAssetNames({ ids: [ticketAssetId] });
+            if (assetData && assetData.length > 0) {
+              setAssetName(assetData[0].name || "");
+              setAssetDisplayId(assetData[0].asset_id || "");
+            }
           }
         }
 

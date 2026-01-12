@@ -295,13 +295,22 @@ const Tickets = () => {
   }, [location]);
 
   const handleCheckInOut = (ticket) => {
-    // Pass the full ticket object in state - no need to fetch by ID
+    // Pass the full ticket object in state
+    // Use ticket.asset (numeric ID) or ticket.asset_id as fallback
+    const assetId = ticket.asset || ticket.asset_id;
+
+    if (!assetId) {
+      console.error("No asset ID found in ticket:", ticket);
+      setErrorMessage("Cannot process ticket: missing asset information.");
+      return;
+    }
+
     if (ticket.isCheckInOrOut === "Check-In") {
-      navigate(`/assets/check-in/${ticket.asset}`, {
+      navigate(`/assets/check-in/${assetId}`, {
         state: { ticket, fromAsset: false },
       });
     } else {
-      navigate(`/assets/check-out/${ticket.asset}`, {
+      navigate(`/assets/check-out/${assetId}`, {
         state: { ticket, fromAsset: false },
       });
     }

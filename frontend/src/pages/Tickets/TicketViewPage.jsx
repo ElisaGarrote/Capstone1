@@ -40,9 +40,17 @@ function TicketViewPage() {
   };
 
   const handleCheckOut = async () => {
+    // Use ticket.asset (numeric ID) or ticket.asset_id as fallback
+    const assetId = ticket.asset || ticket.asset_id;
+
+    if (!assetId) {
+      setErrorMessage("Cannot process ticket: missing asset information.");
+      return;
+    }
+
     try {
-      const asset = await fetchAssetById(ticket.asset);
-      navigate(`/assets/check-out/${ticket.asset}`, {
+      const asset = await fetchAssetById(assetId);
+      navigate(`/assets/check-out/${assetId}`, {
         state: { ticket, asset, employeeName: ticket.employeeName, fromAsset: false },
       });
     } catch (error) {
@@ -52,10 +60,18 @@ function TicketViewPage() {
   };
 
   const handleCheckIn = async () => {
+    // Use ticket.asset (numeric ID) or ticket.asset_id as fallback
+    const assetId = ticket.asset || ticket.asset_id;
+
+    if (!assetId) {
+      setErrorMessage("Cannot process ticket: missing asset information.");
+      return;
+    }
+
     try {
-      const asset = await fetchAssetById(ticket.asset);
+      const asset = await fetchAssetById(assetId);
       const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
-      navigate(`/assets/check-in/${ticket.asset}`, {
+      navigate(`/assets/check-in/${assetId}`, {
         state: { ticket, asset, checkout, fromAsset: false },
       });
     } catch (error) {
