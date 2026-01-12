@@ -3,6 +3,7 @@ from .models import *
 from .utils import normalize_name_smart, validate_image_file
 import logging
 from .services.assets import *
+from .services.integration_help_desk import get_location_by_id as get_helpdesk_location_by_id
 import re
 
 
@@ -448,19 +449,18 @@ class TicketSerializer(serializers.ModelSerializer):
             return
         
     def get_location_details(self, obj):
-        """Return location details from the database."""
+        """Return location details from help desk location service."""
         try:
-            if not getattr(obj, 'location', None):
+            location_id = getattr(obj, 'location', None)
+            if not location_id:
                 return None
-            from contexts_ms.models import Location
-            try:
-                location = Location.objects.get(id=obj.location)
-                return {
-                    'id': location.id,
-                    'name': location.city,
-                }
-            except Location.DoesNotExist:
+            location = get_helpdesk_location_by_id(location_id)
+            if not location or location.get('warning'):
                 return None
+            return {
+                'id': location.get('id'),
+                'name': location.get('display_name') or location.get('city'),
+            }
         except Exception:
             return None
 
@@ -538,18 +538,17 @@ class TicketTypeSerializer(serializers.ModelSerializer):
         fields = ['id', 'asset', 'asset_checkout', 'ticket_number', 'checkout_date', 'return_date', ]
 
     def get_location_details(self, obj):
-        """Return location details from the database."""
+        """Return location details from help desk location service."""
         try:
-            if not getattr(obj, 'location', None):
+            location_id = getattr(obj, 'location', None)
+            if not location_id:
                 return None
-            from contexts_ms.models import Location
-            try:
-                location = Location.objects.get(id=obj.location)
-                return {
-                    'id': location.id,
-                    'name': location.city,
-                }
-            except Location.DoesNotExist:
+            location = get_helpdesk_location_by_id(location_id)
+            if not location or location.get('warning'):
                 return None
+            return {
+                'id': location.get('id'),
+                'name': location.get('display_name') or location.get('city'),
+            }
         except Exception:
             return None

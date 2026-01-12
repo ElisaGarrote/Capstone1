@@ -526,11 +526,24 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         asset = validated_data.pop('_asset')
         files_data = validated_data.pop('files', [])
 
+        # Get location ID from location_details (from external location system)
+        location_details = ticket.get('location_details')
+        location_id = None
+        if location_details:
+            loc_id = location_details.get('id')
+            if isinstance(loc_id, int):
+                location_id = loc_id
+            elif isinstance(loc_id, str) and loc_id.isdigit():
+                location_id = int(loc_id)
+
+        if location_id is None:
+            raise serializers.ValidationError({"location": "Valid location ID is required from ticket."})
+
         # Enforce values from ticket (backend sets these, not form)
         validated_data['ticket_id'] = ticket.get('id')
         validated_data['asset'] = asset  # Use Asset object, not display asset_id string
         validated_data['checkout_to'] = ticket.get('employee')
-        validated_data['location'] = ticket.get('location')
+        validated_data['location'] = location_id
         validated_data['checkout_date'] = ticket.get('checkout_date')
         validated_data['return_date'] = ticket.get('return_date')
 
