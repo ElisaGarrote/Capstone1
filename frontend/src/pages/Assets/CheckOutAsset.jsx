@@ -82,8 +82,8 @@ export default function CheckOutAsset() {
         if (ticket) {
           // Fill form with ticket data (read-only fields)
           setValue("employeeName", ticket.requestor_details?.name || "Unknown");
-          // Use direct location field (string), fallback to location_details.name if available
-          setValue("empLocation", ticket.location || ticket.location_details?.name || "Unknown");
+          // Use location_details.name (location is now an integer ID)
+          setValue("empLocation", ticket.location_details?.name || "Unknown");
           setValue("checkoutDate", ticket.checkout_date || "");
           setValue("expectedReturnDate", ticket.return_date || "");
         }

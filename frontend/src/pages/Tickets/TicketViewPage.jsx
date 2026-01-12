@@ -127,7 +127,7 @@ function TicketViewPage() {
           </div>
           <div className="ticket-detail-row">
             <label>Location</label>
-            <span>{ticket.location_details?.city || 'N/A'}</span>
+            <span>{ticket.location_details?.name || 'N/A'}</span>
           </div>
           <div className="ticket-detail-row">
             <label>Status</label>

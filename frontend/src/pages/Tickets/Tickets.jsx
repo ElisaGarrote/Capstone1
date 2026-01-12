@@ -166,6 +166,8 @@ const Tickets = () => {
             isCheckInOrOut,
             formattedDate,
             employeeName,
+            // Use location_details.name for display (location is now an integer ID)
+            location: ticket.location_details?.name || "Unknown",
           };
         });
 
