@@ -1,7 +1,6 @@
 import os
 from requests.exceptions import RequestException
 from .http_client import get as client_get, post as client_post
-from django.core.cache import cache
 from django.conf import settings
 
 
@@ -13,11 +12,8 @@ BASE_URL = getattr(
     os.getenv("EXTERNAL_TICKET_API_URL", "http://165.22.247.50:1001/")
 )
 
-# Cache settings
-TICKET_CACHE_TTL = 300
-TICKET_WARNING_TTL = 60
-LIST_CACHE_TTL = 300
-LIST_WARNING_TTL = 60
+# Note: Tickets are NOT cached to avoid stale data issues.
+# Other services update tickets and we don't want to require cache invalidation calls.
 
 
 def _build_url(path):
@@ -46,30 +42,22 @@ def _fetch_ticket_by_id_from_endpoint(endpoint, ticket_id):
 
 
 def get_ticket_by_id(ticket_id):
-    """Fetch a ticket by ID from the external ticket service with caching.
+    """Fetch a ticket by ID from the external ticket service (no caching).
     """
     if not ticket_id:
         return None
 
-    key = f"external:ticket:{ticket_id}"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-
     # Use the new /external/ams/tickets/ endpoint
     result = _fetch_ticket_by_id_from_endpoint("external/ams/tickets/", ticket_id)
 
-    if result:
-        cache.set(key, result, TICKET_CACHE_TTL)
-    else:
+    if not result:
         result = {"warning": f"Ticket {ticket_id} not found."}
-        cache.set(key, result, TICKET_WARNING_TTL)
 
     return result
 
 
 def get_ticket_by_asset_id(asset_id, status=None):
-    """Fetch the first ticket for a specific asset with caching.
+    """Fetch the first ticket for a specific asset (no caching).
 
     Args:
         asset_id: The ID of the asset
@@ -78,18 +66,12 @@ def get_ticket_by_asset_id(asset_id, status=None):
     if not asset_id:
         return None
 
-    key = f"external:tickets:asset:{asset_id}:{status or 'all'}"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-
     # Use the new /external/ams/tickets/ endpoint
     endpoint = "external/ams/tickets/"
     url = _build_url(endpoint)
     try:
         resp = client_get(url, params={"asset": asset_id}, timeout=6)
         if resp.status_code == 404:
-            cache.set(key, None, TICKET_WARNING_TTL)
             return None
         resp.raise_for_status()
         data = resp.json()
@@ -98,7 +80,6 @@ def get_ticket_by_asset_id(asset_id, status=None):
         tickets = data.get('value') if isinstance(data, dict) else data
 
         # Find ticket for this asset, optionally filtering by status
-        ticket = None
         if isinstance(tickets, list):
             for t in tickets:
                 if t.get("asset") == asset_id:
@@ -107,17 +88,10 @@ def get_ticket_by_asset_id(asset_id, status=None):
                         continue
                     if status == 'unresolved' and t.get('is_resolved', False):
                         continue
-                    ticket = t
-                    break
+                    return t
 
-        if ticket:
-            cache.set(key, ticket, TICKET_CACHE_TTL)
-        else:
-            cache.set(key, None, TICKET_WARNING_TTL)
-
-        return ticket
+        return None
     except RequestException:
-        cache.set(key, None, TICKET_WARNING_TTL)
         return None
 
 
@@ -171,26 +145,19 @@ def resolve_ticket(ticket_id, asset_checkout_id=None, asset_checkin_id=None):
     try:
         resp = client_post(url, json=payload, timeout=6)
         resp.raise_for_status()
-        # Invalidate ticket cache
-        cache.delete(f"external:ticket:{ticket_id}")
         return resp.json() if resp.content else {"success": True}
     except RequestException as e:
         return {"warning": f"Failed to resolve ticket: {str(e)}"}
 
 
 def get_tickets_list(ticket_type='unresolved', q=None, limit=50):
-    """Fetch a list of tickets from the external ticket service.
+    """Fetch a list of tickets from the external ticket service (no caching).
 
     Args:
         ticket_type: 'unresolved' or 'resolved'
         q: Optional search query
         limit: Max results
     """
-    key = f"external:list:tickets:{ticket_type}:{q}:{limit}"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-
     # The external API uses /external/ams/tickets/ endpoint
     # It returns all tickets with is_resolved field, filter client-side
     endpoint = "external/ams/tickets"
@@ -215,12 +182,8 @@ def get_tickets_list(ticket_type='unresolved', q=None, limit=50):
             filtered = [t for t in tickets if not t.get('is_resolved', False)]
         else:
             filtered = [t for t in tickets if t.get('is_resolved', False)]
-        result = filtered  # Return as list for consistency
+        return filtered  # Return as list for consistency
 
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LIST_WARNING_TTL)
-    else:
-        cache.set(key, result, LIST_CACHE_TTL)
     return result
 
 

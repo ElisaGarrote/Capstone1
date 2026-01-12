@@ -125,16 +125,13 @@ class ProductViewSet(viewsets.ModelViewSet):
             product_map = {p.id: p.name for p in products}
             cache.set("products:map", product_map, 300)
 
-        # tickets
-        ticket_map = cache.get("tickets:map")
-        if not ticket_map:
-            tickets = get_tickets_list()
-            # Handle warning dict or non-list response
-            if isinstance(tickets, list):
-                ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
-            else:
-                ticket_map = {}
-            cache.set("tickets:map", ticket_map, 300)
+        # tickets (no caching - always fetch fresh from external service)
+        tickets = get_tickets_list()
+        # Handle warning dict or non-list response
+        if isinstance(tickets, list):
+            ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
+        else:
+            ticket_map = {}
 
         return {
             "status_map": status_map,
@@ -459,19 +456,16 @@ class AssetViewSet(viewsets.ModelViewSet):
                 location_map = {}
             cache.set("locations:map", location_map, 300)
 
-        # tickets (unresolved)
-        ticket_map = cache.get("tickets:map")
-        if not ticket_map:
-            tickets_response = get_tickets_list()
-            # get_tickets_list returns a dict with 'results' key, not a list
-            if isinstance(tickets_response, dict) and not tickets_response.get('warning'):
-                tickets = tickets_response.get('results') or tickets_response.get('value') or []
-                ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
-            elif isinstance(tickets_response, list):
-                ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
-            else:
-                ticket_map = {}
-            cache.set("tickets:map", ticket_map, 300)
+        # tickets (unresolved) - no caching, always fetch fresh from external service
+        tickets_response = get_tickets_list()
+        # get_tickets_list returns a list (after filtering) or dict with warning
+        if isinstance(tickets_response, list):
+            ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
+        elif isinstance(tickets_response, dict) and not tickets_response.get('warning'):
+            tickets = tickets_response.get('results') or tickets_response.get('value') or []
+            ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
+        else:
+            ticket_map = {}
 
         return {
             "status_map": status_map,
@@ -520,11 +514,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         cache.delete("assets:list")
         cache.delete(f"assets:detail:{asset_id}")
         cache.delete("assets:names")
-        cache.delete("tickets:map")  # Also invalidate ticket cache
-        # Also invalidate the raw tickets list cache (used by get_tickets_list)
-        cache.delete("contexts:list:tickets:None:50")
-        cache.delete(f"contexts:tickets:asset:{asset_id}:unresolved")
-        cache.delete(f"contexts:tickets:asset:{asset_id}:all")
+        # Note: tickets are not cached anymore - always fetched fresh from external service
 
     @action(detail=True, methods=['post'], url_path='invalidate-cache')
     def invalidate_cache(self, request, pk=None):
