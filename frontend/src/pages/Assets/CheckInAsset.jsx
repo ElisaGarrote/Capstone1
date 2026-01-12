@@ -64,21 +64,23 @@ export default function CheckInAsset() {
     }
   });
 
-  // Helper to determine check-in date based on ticket return_date
-  const getCheckinDate = (ticketData) => {
-    if (!ticketData || !ticketData.return_date) {
+  // Helper to determine check-in date
+  // From Tickets page: use ticket.checkin_date
+  // From Assets page (no ticket): use today's date
+  const getCheckinDate = (ticketData, isFromAssets) => {
+    // If from Assets page or no ticket, use current date
+    if (isFromAssets || !ticketData) {
       return currentDate;
     }
 
-    const returnDate = new Date(ticketData.return_date);
-    const today = new Date(currentDate);
-
-    // If return_date is in the past, use current date
-    if (returnDate < today) {
-      return currentDate;
+    // From Tickets page: use checkin_date if available
+    if (ticketData.checkin_date) {
+      // Extract just the date part (YYYY-MM-DD) from the ISO string
+      const checkinDate = ticketData.checkin_date.split("T")[0];
+      return checkinDate;
     }
 
-    return ticketData.return_date;
+    return currentDate;
   };
 
   // Initialize: load ticket data and dropdowns
@@ -121,8 +123,11 @@ export default function CheckInAsset() {
 
         setTicket(ticketData);
 
-        // Set check-in date based on ticket or default to current date
-        const checkinDate = getCheckinDate(ticketData);
+        // Set check-in date based on source:
+        // From Tickets page: use ticket.checkin_date
+        // From Assets page: use today's date
+        const isFromAssetsPage = !!assetIdFromState;
+        const checkinDate = getCheckinDate(ticketData, isFromAssetsPage);
         setValue("checkinDate", checkinDate);
 
         // Set location from ticket if available
