@@ -119,9 +119,11 @@ const PerformAudits = () => {
         }
       }
 
-      // Redirect to completed audits section
+      // Redirect to completed audits section and surface success there
       const redirectPage = previousPage === "/asset-view" ? "/audits/completed" : "/audits/completed";
-      navigate(redirectPage);
+      navigate(redirectPage, {
+        state: { successMessage: "Audit performed successfully." },
+      });
     } catch (err) {
       console.error("Error performing audit:", err);
       // Extract error message from API response

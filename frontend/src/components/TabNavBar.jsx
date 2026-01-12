@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchDashboardStats } from "../services/assets-service";
 
-export default function TabNavBar() {
+export default function TabNavBar({ refreshKey }) {
   const navigate = useNavigate();
+  const [countDueAudits, setCountDueAudits] = useState(0);
   const [countScheduleAudits, setCountScheduleAudits] = useState(0);
   const [countAudits, setCountAudits] = useState(0);
   const [countOverdueAudits, setCountOverdueAudits] = useState(0);
@@ -16,6 +17,7 @@ export default function TabNavBar() {
         const stats = await fetchDashboardStats();
 
         // Map backend dashboard keys to the UI counters. Use safe defaults.
+        setCountDueAudits(stats.due_audits ?? 0);
         setCountScheduleAudits(stats.upcoming_audits ?? 0);
         setCountOverdueAudits(stats.overdue_audits ?? 0);
         setCountAudits(stats.completed_audits ?? 0);
@@ -26,7 +28,7 @@ export default function TabNavBar() {
     };
 
     makeRequest();
-  }, []);
+  }, [refreshKey]);
 
   return (
     <nav className="tab-nav">
@@ -36,7 +38,7 @@ export default function TabNavBar() {
             className={location.pathname === "/audits" ? "active" : ""}
             onClick={() => navigate("/audits")}
           >
-            Due to be Audited ({countScheduleAudits})
+            Due to be Audited ({countDueAudits})
           </a>
         </li>
         <li className={location.pathname === "/audits/overdue" ? "active" : ""}>
