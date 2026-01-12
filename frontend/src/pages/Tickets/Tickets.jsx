@@ -140,12 +140,17 @@ const Tickets = () => {
       // Map API response to component format
       const mappedTickets = ticketsData.map((ticket) => {
         // Determine if ticket needs check-in or check-out action
-        // Logic: If checkin_date is null, it's a Check-Out ticket, otherwise Check-In
-        const isCheckInOrOut = !ticket.is_resolved
-          ? ticket.checkin_date === null || ticket.checkin_date === undefined
-            ? "Check-Out"
-            : "Check-In"
-          : null;
+        // Logic:
+        // - If checkout_date exists and no asset_checkout → show Checkout button
+        // - If asset_checkout exists → show Checkin button
+        let isCheckInOrOut = null;
+        if (!ticket.is_resolved) {
+          if (ticket.asset_checkout) {
+            isCheckInOrOut = "Check-In";
+          } else if (ticket.checkout_date) {
+            isCheckInOrOut = "Check-Out";
+          }
+        }
 
         const formattedDate =
           isCheckInOrOut === "Check-In"
