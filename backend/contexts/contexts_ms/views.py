@@ -465,7 +465,7 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
             data["depreciations"] = DepreciationNameSerializer(Depreciation.objects.filter(is_deleted=False), many=True).data
 
         if entity == "asset":
-            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.ASSET), many=True).data
+            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.ASSET, type__in=[Status.AssetStatusType.DEPLOYABLE, Status.AssetStatusType.UNDEPLOYABLE, Status.AssetStatusType.PENDING, Status.AssetStatusType.ARCHIVED]), many=True).data
 
         if entity == "repair":
             data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.REPAIR), many=True).data
