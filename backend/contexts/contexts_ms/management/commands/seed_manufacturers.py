@@ -105,4 +105,3 @@ class Command(BaseCommand):
             })
 
         return manufacturers[:count]
-

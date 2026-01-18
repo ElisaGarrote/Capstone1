@@ -86,4 +86,3 @@ class Command(BaseCommand):
         ]
 
         return statuses
-

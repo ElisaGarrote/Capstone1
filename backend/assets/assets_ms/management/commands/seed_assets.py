@@ -83,8 +83,8 @@ class Command(BaseCommand):
         # Status IDs from seed_statuses.py:
         # 1: Ready to Deploy (deployable)
         # 2: Available (deployable)
-        # 3: In Use (deployed)
-        # 4: Checked Out (deployed)
+        # 3: In Use (deployed) - NOT USED (no checkouts seeded)
+        # 4: Checked Out (deployed) - NOT USED (no checkouts seeded)
         # 5: Under Repair (undeployable)
         # 6: Broken (undeployable)
         # 7: Pending Approval (pending)
@@ -92,22 +92,18 @@ class Command(BaseCommand):
         # 9: Retired (archived)
         # 10: Lost/Stolen (archived)
 
-        # Distribution strategy for 100 assets:
-        # - Assets 1-40: Deployable (status IDs 1-2) - Available for checkout → CHECKOUT tickets
-        # - Assets 41-80: Deployed (status IDs 3-4) - Currently checked out → CHECKIN tickets
-        # - Assets 81-90: Undeployable (status IDs 5-6) - Under repair or broken → NO tickets
-        # - Assets 91-95: Pending (status IDs 7-8) - Pending approval or in transit → NO tickets
-        # - Assets 96-100: Archived (status IDs 9-10) - Retired or lost/stolen → NO tickets
+        # Distribution strategy for 100 assets (no deployed status since no checkouts):
+        # - Assets 1-70: Deployable (status IDs 1-2) - Available for checkout
+        # - Assets 71-85: Undeployable (status IDs 5-6) - Under repair or broken
+        # - Assets 86-93: Pending (status IDs 7-8) - Pending approval or in transit
+        # - Assets 94-100: Archived (status IDs 9-10) - Retired or lost/stolen
 
-        # IMPORTANT: Do NOT shuffle! Ticket seeder depends on this exact order
         status_distribution = (
-            [1, 2] * 20 +  # Assets 1-40: deployable (will have CHECKOUT tickets)
-            [3, 4] * 20 +  # Assets 41-80: deployed (will have CHECKIN tickets)
-            [5, 6] * 5 +   # Assets 81-90: undeployable (no tickets)
-            [7, 8] * 3 + [7] * 2 +  # Assets 91-95: pending (no tickets)
-            [9, 10] * 3 + [9] * 2   # Assets 96-100: archived (no tickets)
+            [1, 2] * 35 +  # Assets 1-70: deployable (ready to deploy, available) - 70 assets
+            [5, 6] * 7 + [5] +  # Assets 71-85: undeployable (under repair, broken) - 15 assets
+            [7, 8] * 4 +  # Assets 86-93: pending (pending approval, in transit) - 8 assets
+            [9, 10] * 3 + [9]  # Assets 94-100: archived (retired, lost/stolen) - 7 assets
         )
-        # DO NOT SHUFFLE - ticket seeder relies on this order!
 
         # Create 100 assets
         for i in range(100):

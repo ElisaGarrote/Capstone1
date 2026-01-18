@@ -127,4 +127,3 @@ class Command(BaseCommand):
             self.stderr.write(self.style.ERROR(f"IntegrityError while inserting: {exc}"))
 
         self.stdout.write(self.style.SUCCESS(f"Done. Created {created} categories. Skipped {len(skipped)} existing."))
-
