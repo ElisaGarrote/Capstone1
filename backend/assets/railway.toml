@@ -4,4 +4,4 @@ builder = "NIXPACKS"
 [deploy]
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
-startCommand = "gunicorn assets.wsgi:application --bind 0.0.0.0:8003"
+startCommand = "gunicorn assets.wsgi:application --bind 0.0.0.0:8001"

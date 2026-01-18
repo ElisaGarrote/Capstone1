@@ -4,6 +4,7 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useLocation } from "react-router-dom";
 import Status from "../../components/Status";
 import dateRelated from "../../utils/dateRelated";
+import * as assetsService from "../../services/assets-service";
 
 export default function ViewAudits() {
   const location = useLocation();
@@ -13,8 +14,9 @@ export default function ViewAudits() {
   const data = location.state?.data;
   const previousPage = location.state?.previousPage;
 
-  console.log("root: ", previousPage);
-  console.log("data:", data);
+  // For debugging only.
+  // console.log("root: ", previousPage);
+  // console.log("data:", data);
 
   // Function to assign the appropriate value for the root props in TopSecFormPage component
   const assignRoot = () => {
@@ -52,7 +54,10 @@ export default function ViewAudits() {
           <fieldset>
             <label htmlFor="status">Status</label>
             <p>
-              <Status type="deployable" name="Ready to Deploy" />
+              <Status
+                type={data.asset_info.status_info.type}
+                name={data.asset_info.status_info.name}
+              />
             </p>
           </fieldset>
 
@@ -93,7 +98,7 @@ export default function ViewAudits() {
 
           <fieldset>
             <label htmlFor="notes">Notes</label>
-            <p>{data.notes == "" ? "-" : data.notes}</p>
+            <p>{data.notes == "" || data.notes == null ? "-" : data.notes}</p>
           </fieldset>
 
           {data.audit_info != null &&
@@ -104,7 +109,9 @@ export default function ViewAudits() {
                   {data.audit_info.audit_files.map((file, index) => {
                     return (
                       <a
-                        href={`http://127.0.0.1:8003${file.file}`}
+                        href={assetsService.auditFileUrl(
+                          String(file.file).slice(1)
+                        )}
                         key={index}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -130,7 +137,9 @@ export default function ViewAudits() {
                   {data.audit_files.map((file, index) => {
                     return (
                       <a
-                        href={`http://127.0.0.1:8003${file.file}`}
+                        href={assetsService.auditFileUrl(
+                          String(file.file).slice(1)
+                        )}
                         key={index}
                         target="_blank"
                         rel="noopener noreferrer"

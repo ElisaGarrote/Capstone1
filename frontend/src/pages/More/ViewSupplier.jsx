@@ -1,267 +1,569 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import NavBar from '../../components/NavBar';
-import '../../styles/custom-colors.css';
-import '../../styles/PageTable.css';
-import '../../styles/GlobalTableStyles.css';
-import '../../styles/ViewSupplier.css';
-import '../../styles/TableButtons.css';
-import '../../styles/SupplierURLFix.css';
-import '../../styles/SupplierColumnSpacingFix.css';
-import DeleteModal from '../../components/Modals/DeleteModal';
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import NavBar from "../../components/NavBar";
+import DeleteModal from "../../components/Modals/DeleteModal";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import TableBtn from "../../components/buttons/TableButtons";
-import SupplierTableDetails from './SupplierTableDetails';
+import SupplierFilterModal from "../../components/Modals/SupplierFilterModal";
+import Alert from "../../components/Alert";
+import Pagination from "../../components/Pagination";
+import Footer from "../../components/Footer";
+import DefaultImage from "../../assets/img/default-image.jpg";
+import MockupData from "../../data/mockData/more/supplier-mockup-data.json";
+import { fetchAllCategories } from "../../services/contexts-service";
+import { exportToExcel } from "../../utils/exportToExcel";
 
-export default function ViewSupplier() {
+import "../../styles/ViewSupplier.css";
+
+// TableHeader component to render the table header
+function TableHeader({ allChecked, onHeaderChange }) {
+  return (
+    <tr>
+      <th>
+        <input
+          type="checkbox"
+          name="checkbox-supplier"
+          id="checkbox-supplier"
+          checked={allChecked}
+          onChange={(e) => onHeaderChange(e.target.checked)}
+        />
+      </th>
+      <th>NAME</th>
+      <th>ADDRESS</th>
+      <th>CITY</th>
+      <th>STATE</th>
+      <th>ZIP</th>
+      <th>COUNTRY</th>
+      <th>CONTACT PERSON</th>
+      <th>PHONE</th>
+      <th>ACTIONS</th>
+    </tr>
+  );
+}
+
+// TableItem component to render each ticket row
+function TableItem({ supplier, onDeleteClick, onViewClick, isChecked, onRowChange }) {
   const navigate = useNavigate();
 
-  // ----------------- State -----------------
-  const [suppliers, setSuppliers] = useState([
-    {
-      id: 1,
-      logo: '',
-      name: "Amazon",
-      address: "410 Terry Ave N",
-      city: "Seattle",
-      state: "Washington",
-      zip: "98109",
-      country: "United States",
-      contact: "James Peterson",
-      phone: "1-800-383-2839",
-      email: "contact@amazon.com",
-      url: "https://amazon.com",
-      notes: "Always use the corporate account"
-    },
-    {
-      id: 2,
-      logo: '',
-      name: "Newegg",
-      address: "17560 Rowland St",
-      city: "City of Industry",
-      state: "California",
-      zip: "91745",
-      country: "United States",
-      contact: "Bob Anderson",
-      phone: "1-800-930-1119",
-      email: "contact@newegg.com",
-      url: "https://newegg.com",
-      notes: "-"
-    },
-    {
-      id: 3,
-      logo: '',
-      name: "Staples",
-      address: "500 8th Ave",
-      city: "New York",
-      state: "New York",
-      zip: "10018",
-      country: "United States",
-      contact: "Julie Henderson",
-      phone: "1-800-413-8571",
-      email: "contact@staples.com",
-      url: "https://staples.com",
-      notes: "Shop from the store in Manhattan"
-    },
-    {
-      id: 4,
-      logo: '',
-      name: "WHSmith",
-      address: "115 Buckingham Palace Rd",
-      city: "London",
-      state: "-",
-      zip: "SW1V 1JT",
-      country: "United Kingdom",
-      contact: "Vicky Butlerson",
-      phone: "+442079320805",
-      email: "contact@whsmith.com",
-      url: "https://www.whsmith.co.uk/",
-      notes: "-"
-    }
-  ]);
+  return (
+    <tr>
+      <td>
+        <div className="checkbox-supplier">
+          <input
+            type="checkbox"
+            name=""
+            id=""
+            checked={isChecked}
+            onChange={(e) => onRowChange(supplier.id, e.target.checked)}
+          />
+        </div>
+      </td>
+      <td>
+        <div className="supplier-name">
+          <img
+            src={supplier.logo ? supplier.logo : DefaultImage}
+            alt={supplier.logo}
+          />
+          <Link
+            to={`/More/SupplierDetails/${supplier.id}`}
+            state={{ supplier }}
+            className="supplier-name-link"
+          >
+            {supplier.name}
+          </Link>
+          {/* <span
+            onClick={() =>
+              navigate(`/More/SupplierDetails/${supplier.id}`, {
+                state: { supplier },
+              })
+            }
+          >
+            {supplier.name}
+          </span> */}
+        </div>
+      </td>
+      <td>{supplier.address || "-"}</td>
+      <td>{supplier.city || "-"}</td>
+      <td>{supplier.state || "-"}</td>
+      <td>{supplier.zip || "-"}</td>
+      <td>{supplier.country || "-"}</td>
+      <td>{supplier.contactName || "-"}</td>
+      <td>{supplier.phoneNumber || "-"}</td>
+      <td>
+        <section className="action-button-section">
+          <button
+            title="View"
+            className="action-button"
+            onClick={() => onViewClick(supplier)}
+          >
+            <i className="fas fa-eye"></i>
+          </button>
+          <button
+            title="Edit"
+            className="action-button"
+            onClick={() =>
+              navigate(`/More/SupplierRegistration/${supplier.id}`, {
+                state: { supplier },
+              })
+            }
+          >
+            <i className="fas fa-edit"></i>
+          </button>
+          <button
+            title="Delete"
+            className="action-button"
+            onClick={onDeleteClick}
+          >
+            <i className="fas fa-trash-alt"></i>
+          </button>
+        </section>
+      </td>
+    </tr>
+  );
+}
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [itemsPerPage, setItemsPerPage] = useState(20);
+export default function ViewSupplier() {
+  const location = useLocation();
+  const [isLoading, setLoading] = useState(true);
+  const [suppliers, setSuppliers] = useState([]);
+  const [checkedItems, setCheckedItems] = useState([]);
+  const [endPoint, setEndPoint] = useState(null);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isAddRecordSuccess, setAddRecordSuccess] = useState(false);
+  const [isUpdateRecordSuccess, setUpdateRecordSuccess] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const navigate = useNavigate();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [supplierToDelete, setSupplierToDelete] = useState(null);
+  // filter state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filteredData, setFilteredData] = useState(MockupData);
+  const [appliedFilters, setAppliedFilters] = useState({});
 
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState(null);
 
-  // ----------------- Effects -----------------
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...MockupData];
+
+    // Filter by City
+    if (filters.city && filters.city.trim() !== "") {
+      const cityQuery = filters.city.toLowerCase();
+      filtered = filtered.filter((supplier) =>
+        supplier.city?.toLowerCase().includes(cityQuery)
+      );
+    }
+
+    // Filter by State
+    if (filters.state && filters.state.trim() !== "") {
+      const stateQuery = filters.state.toLowerCase();
+      filtered = filtered.filter((supplier) =>
+        supplier.state?.toLowerCase().includes(stateQuery)
+      );
+    }
+
+    // Filter by Country
+    if (filters.country && filters.country.trim() !== "") {
+      const countryQuery = filters.country.toLowerCase();
+      filtered = filtered.filter((supplier) =>
+        supplier.country?.toLowerCase().includes(countryQuery)
+      );
+    }
+
+    // Filter by Contact Person
+    if (filters.contact && filters.contact.trim() !== "") {
+      const contactQuery = filters.contact.toLowerCase();
+      filtered = filtered.filter((supplier) => {
+        const contactValue =
+          supplier.contactName || supplier.contact_name || "";
+        return contactValue.toLowerCase().includes(contactQuery);
+      });
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchedData =
+    normalizedQuery === ""
+      ? filteredData
+      : filteredData.filter((supplier) => {
+          const name = supplier.name?.toLowerCase() || "";
+          const city = supplier.city?.toLowerCase() || "";
+          const country = supplier.country?.toLowerCase() || "";
+          const contact =
+            supplier.contactName?.toLowerCase() ||
+            supplier.contact_name?.toLowerCase() ||
+            "";
+          return (
+            name.includes(normalizedQuery) ||
+            city.includes(normalizedQuery) ||
+            country.includes(normalizedQuery) ||
+            contact.includes(normalizedQuery)
+          );
+        });
+
+  // paginate the data
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedSuppliers = searchedData.slice(startIndex, endIndex);
+
+  const allChecked =
+    paginatedSuppliers.length > 0 &&
+    paginatedSuppliers.every((supplier) => checkedItems.includes(supplier.id));
+
+  const handleHeaderChange = (checked) => {
+    if (checked) {
+      setCheckedItems((prev) => [
+        ...prev,
+        ...paginatedSuppliers
+          .map((item) => item.id)
+          .filter((id) => !prev.includes(id)),
+      ]);
+    } else {
+      setCheckedItems((prev) =>
+        prev.filter(
+          (id) => !paginatedSuppliers.map((item) => item.id).includes(id)
+        )
+      );
+    }
+  };
+
+  const handleRowChange = (id, isChecked) => {
+    if (isChecked) {
+      setCheckedItems((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    } else {
+      setCheckedItems((prev) => prev.filter((itemId) => itemId !== id));
+    }
+  };
+
+  // Retrieve the "addManufacturer" value passed from the navigation state.
+  // If the "addManufacturer" is not exist, the default value for this is "undifiend".
+  const addedSupplier = location.state?.addedSupplier;
+  const updatedSupplier = location.state?.updatedSupplier;
+
+  /* BACKEND INTEGRATION HERE
+  const contextServiceUrl =
+    "https://contexts-service-production.up.railway.app";
+
   useEffect(() => {
-    console.log("ViewSupplier mounted.");
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const suppRes = await fetchAllCategories();
+        const mapped = (suppRes || []).map((supp) => ({
+          id: supp.id,
+          name: supp.name,
+          address: supp.address,
+          city: supp.city,
+          zip: supp.zip,
+          contactName: supp.contact_name,
+          phoneNumber: supp.phone_number,
+          email: supp.email,
+          url: supp.URL,
+          notes: supp.notes,
+          logo: supp.logo,
+        }));
+        const sorted = mapped.sort((a, b) => a.name.localeCompare(b.name));
+        setSuppliers(sorted);
+      } catch (error) {
+        console.error("Fetch error:", error);
+        setErrorMessage("Failed to load data.");
+        setTimeout(() => setErrorMessage(""), 5000);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // ----------------- Handlers -----------------
-  const handleSearchChange = (e) => setSearchQuery(e.target.value);
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      setTimeout(() => {
+        setSuccessMessage("");
+        window.history.replaceState({}, document.title);
+      }, 5000);
+    }
 
-  const handleEditSupplier = (id) => navigate('/More/SupplierEdit');
+    fetchData();
+  }, [location]);
 
-  const handleDeleteClick = (id) => {
-    setSupplierToDelete(id);
-    setShowDeleteModal(true);
+  const toggleSelectAll = () => {
+    setCheckedItems(allChecked ? [] : suppliers.map((item) => item.id));
+  };
+
+  const toggleItem = (id) => {
+    setCheckedItems((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const fetchSuppliers = async () => {
+    setLoading(true);
+    try {
+      const res = await contextsService.fetchAllSuppliers();
+      const mapped = (res || []).map((supp) => ({
+        id: supp.id,
+        name: supp.name,
+        address: supp.address,
+        city: supp.city,
+        zip: supp.zip,
+        contactName: supp.contact_name,
+        phoneNumber: supp.phone_number,
+        email: supp.email,
+        url: supp.URL,
+        notes: supp.notes,
+      }));
+      setSuppliers(mapped);
+    } catch (e) {
+      console.error("Error refreshing suppplier:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+  */
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const actionStatus = (action, status) => {
+    let timeoutId;
+
+    if (action === "create" && status === true) {
+      setAddRecordSuccess(true);
+    }
+
+    if (action === "update" && status === true) {
+      setUpdateRecordSuccess(true);
+    }
+
+    // clear the navigation/history state so a full page refresh won't re-show the alert
+    // replace the current history entry with an empty state
+    navigate(location.pathname, { replace: true, state: {} });
+
+    timeoutId = setTimeout(() => {
+      if (action === "create") {
+        setAddRecordSuccess(false);
+      } else {
+        setUpdateRecordSuccess(false);
+      }
+    }, 5000);
+
+    return timeoutId;
+  };
+
+  const getAction = () => {
+    if (addedSupplier == true) {
+      return "create";
+    }
+
+    if (updatedSupplier == true) {
+      return "update";
+    }
+
+    return null;
+  };
+
+  const openDeleteModal = (id = null) => {
+    setDeleteTarget(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteTarget(null);
   };
 
   const confirmDelete = () => {
-    setSuppliers(suppliers.filter(supplier => supplier.id !== supplierToDelete));
-    setShowDeleteModal(false);
-    setSupplierToDelete(null);
+    if (deleteTarget) {
+      console.log("Deleting single supplier id:", deleteTarget);
+      setSuccessMessage("Supplier deleted successfully!");
+    } else {
+      console.log("Deleting multiple supplier ids:", checkedItems);
+      if (checkedItems.length > 0) {
+        setSuccessMessage("Suppliers deleted successfully!");
+      }
+      setCheckedItems([]);
+    }
+    setTimeout(() => setSuccessMessage(""), 5000);
+    closeDeleteModal();
   };
 
-  const cancelDelete = () => {
-    setShowDeleteModal(false);
-    setSupplierToDelete(null);
+  const handleExport = () => {
+    const dataToExport = searchedData.length > 0 ? searchedData : filteredData;
+    exportToExcel(dataToExport, "Supplier_Records.xlsx");
   };
 
-  const handleSupplierClick = (supplier) => {
-    setSelectedSupplier(supplier);
-    setShowDetailsModal(true);
-  };
+  // Set the setAddRecordSuccess or setUpdateRecordSuccess state to true when trigger, then reset to false after 5 seconds.
+  useEffect(() => {
+    let timeoutId;
 
-  const closeDetailsModal = () => {
-    setShowDetailsModal(false);
-    setSelectedSupplier(null);
-  };
+    timeoutId = actionStatus(getAction(), true);
 
-  // ----------------- Computed -----------------
-  const filteredSuppliers = suppliers.filter((supplier) =>
-    supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    supplier.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    supplier.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    supplier.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    supplier.contact.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    supplier.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    // cleanup the timeout on unmount or when addedManufacturer or updatedManufacturer changes
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [addedSupplier, updatedSupplier, navigate, location.pathname]);
+
+  // Handle View button click
+  const handleViewClick = (supplier) => {
+    navigate(`/More/SupplierDetails/${supplier.id}`, {
+      state: { supplier }
+    });
+  };
 
   // ----------------- Render -----------------
   return (
     <>
-      <nav>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
+      {successMessage && <Alert message={successMessage} type="success" />}
+
+      {isAddRecordSuccess && (
+        <Alert message="Supplier added successfully!" type="success" />
+      )}
+
+      {isUpdateRecordSuccess && (
+        <Alert message="Supplier updated successfully!" type="success" />
+      )}
+
+      {isDeleteModalOpen && (
+        <DeleteModal
+          endPoint={endPoint}
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          onConfirm={confirmDelete}
+          /* BACKEND INTEGRATION HERE
+          confirmDelete={async () => {
+            await fetchSuppliers();
+            setSuccessMessage("Supplier Deleted Successfully!");
+            setTimeout(() => setSuccessMessage(""), 5000);
+          }}
+          onDeleteFail={() => {
+            setErrorMessage("Delete failed. Please try again.");
+            setTimeout(() => setErrorMessage(""), 5000);
+          }}
+          */
+        />
+      )}
+
+
+
+      <SupplierFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
+
+      <section className="page-layout-with-table">
         <NavBar />
-      </nav>
-      <main className="page">
-        <div className="container">
-          <section className="top">
-            <h1 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0', color: '#545f71' }}>Suppliers ({suppliers.length})</h1>
-            <div>
-              <form action="" method="post" style={{ marginRight: '10px' }}>
+
+        <main className="main-with-table">
+          <section className="table-layout">
+            {/* Table Header */}
+            <section className="table-header">
+              <h2 className="h2">Suppliers ({searchedData.length})</h2>
+              <section className="table-actions">
+                {checkedItems.length > 0 && (
+                  <MediumButtons
+                    type="delete"
+                    onClick={() => openDeleteModal(null)}
+                  />
+                )}
                 <input
-                  type="text"
+                  type="search"
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="search-input"
+                  className="search"
                 />
-              </form>
-              <MediumButtons type="export" />
-              <MediumButtons type="new" navigatePage="/More/SupplierRegistration" />
-            </div>
-          </section>
-          <section className="middle">
-            <table className="suppliers-table">
-              <thead>
-                <tr>
-                  <th className="checkbox-header">
-                    <input type="checkbox" />
-                  </th>
-                  <th className="name-header">NAME</th>
-                  <th className="address-header">ADDRESS</th>
-                  <th className="city-header">CITY</th>
-                  <th className="country-header">COUNTRY</th>
-                  <th className="contact-header">CONTACT</th>
-                  <th className="phone-header">PHONE</th>
-                  <th className="email-header">EMAIL</th>
-                  <th className="url-header" style={{ textAlign: 'left', paddingLeft: '12px' }}>
-                    <div style={{ textAlign: 'left', display: 'block' }}>URL</div>
-                  </th>
-                  <th className="action-header">EDIT</th>
-                  <th className="action-header">DELETE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSuppliers.map((supplier) => (
-                  <tr key={supplier.id} className="supplier-row">
-                    <td className="checkbox-cell">
-                      <input type="checkbox" />
-                    </td>
-                    <td className="name-cell" onClick={() => handleSupplierClick(supplier)}>
-                      <div className="supplier-name-container">
-                        {supplier.logo && (
-                          <div className="supplier-logo">
-                            <img src={supplier.logo} alt={supplier.name} />
-                          </div>
-                        )}
-                        <span className="supplier-name" style={{ color: '#545f71' }}>{supplier.name}</span>
-                      </div>
-                    </td>
-                    <td className="address-cell" style={{ color: '#545f71' }}>{supplier.address}</td>
-                    <td className="city-cell" style={{ color: '#545f71' }}>{supplier.city}</td>
-                    <td className="country-cell" style={{ color: '#545f71' }}>{supplier.country}</td>
-                    <td className="contact-cell" style={{ color: '#545f71' }}>{supplier.contact}</td>
-                    <td className="phone-cell" style={{ color: '#545f71' }}>{supplier.phone}</td>
-                    <td className="email-cell" style={{ color: '#545f71' }} title={supplier.email}>{supplier.email}</td>
-                    <td className="url-cell" style={{ color: '#545f71', textAlign: 'left', paddingLeft: '12px', paddingRight: '20px' }} title={supplier.url}>{supplier.url}</td>
-                    <td className="action-cell" style={{ textAlign: 'center' }}>
-                      <button
-                        className="table-action-btn edit-btn"
-                        onClick={() => handleEditSupplier(supplier.id)}
-                        style={{ margin: '0 auto' }}
-                      >
-                        <TableBtn type="edit" />
-                      </button>
-                    </td>
-                    <td className="action-cell" style={{ textAlign: 'center' }}>
-                      <button
-                        className="table-action-btn delete-btn"
-                        onClick={() => handleDeleteClick(supplier.id)}
-                        style={{ margin: '0 auto' }}
-                      >
-                        <TableBtn type="delete" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-          <section className="bottom" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', padding: '16px 34px', borderTop: '1px solid #d3d3d3' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#545f71' }}>
-              <span style={{ color: '#545f71' }}>Show</span>
-              <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))} style={{ color: '#545f71' }}>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <span style={{ color: '#545f71' }}>items per page</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button className="prev-btn" disabled={currentPage === 1} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Prev</button>
-              <span className="page-number" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '30px', height: '30px', backgroundColor: '#007bff', color: 'white', borderRadius: '4px', fontSize: '14px' }}>{currentPage}</span>
-              <button className="next-btn" disabled={filteredSuppliers.length <= itemsPerPage} style={{ color: '#545f71', border: '1px solid #dee2e6', background: 'white', padding: '4px 8px', borderRadius: '4px' }}>Next</button>
-            </div>
-          </section>
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => {
+                    setIsFilterModalOpen(true);
+                  }}
+                >
+                  Filter
+                </button>
+                <MediumButtons type="export" onClick={handleExport} />
+                <MediumButtons
+                  type="new"
+                  navigatePage="/More/SupplierRegistration"
+                />
+              </section>
+            </section>
 
-          {/* Delete Modal */}
-          {showDeleteModal && (
-            <DeleteModal
-              closeModal={cancelDelete}
-              confirmDelete={confirmDelete}
-            />
-          )}
+            {/* Table Structure */}
+            <section className="supplier-page-table-section">
+              <table>
+                <thead>
+                  <TableHeader
+                    allChecked={allChecked}
+                    onHeaderChange={handleHeaderChange}
+                  />
+                </thead>
+                <tbody>
+                  {paginatedSuppliers.length > 0 ? (
+                    paginatedSuppliers.map((supplier, index) => (
+                      <TableItem
+                        key={index}
+                        supplier={supplier}
+                        isChecked={checkedItems.includes(supplier.id)}
+                        onRowChange={handleRowChange}
+                        onDeleteClick={() => {
+                          /* BACKEND INTEGRATION HERE
+                          setEndPoint(
+                            `${contextServiceUrl}/contexts/suppliers/${supplier.id}/delete/`
+                          ); */
+                          openDeleteModal(supplier.id);
+                        }}
+                        onViewClick={handleViewClick}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={10} className="no-data-message">
+                        No suppliers available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
 
-          {/* Supplier Details Modal */}
-          {showDetailsModal && selectedSupplier && (
-            <SupplierTableDetails
-              isOpen={showDetailsModal}
-              onClose={closeDetailsModal}
-              supplier={selectedSupplier}
-            />
-          )}
-        </div>
-      </main>
+            {/* Table pagination */}
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={searchedData.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
+          </section>
+        </main>
+        <Footer />
+      </section>
     </>
   );
 }

@@ -1,5 +1,3 @@
-/* Fix for Manufacturer Notes column alignment */
-/* Target the notes header specifically */
 .notes-header {
   text-align: left !important;
   padding-left: 12px !important;
@@ -10,7 +8,6 @@
   display: block !important;
 }
 
-/* Additional selectors to ensure Notes column is left-aligned */
 .page .container .middle .assets-table th:nth-child(7) {
   text-align: left !important;
   padding-left: 12px !important;

@@ -12,23 +12,32 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
+from dotenv import load_dotenv
+import logging
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+def get_list(var_name, default=""):
+    value = os.getenv(var_name, default)
+    return [v.strip() for v in value.split(",") if v.strip()]
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-15afsph4_jmx@or6785n#%id06geq8gx+mp#4rk8h+_w#fgtox'
+SECRET_KEY = os.getenv("ASSETS_SECRET_KEY")
 
 # Update DEBUG setting to help troubleshoot
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.getenv("ASSETS_DEBUG", "False").lower() in ("true", "1", "yes")
 
 # Make sure ALLOWED_HOSTS includes your Railway domain
-ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1", "assets-service-production.up.railway.app"]
-
+ALLOWED_HOSTS = get_list("ASSETS_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 # Application definition
 INSTALLED_APPS = [
@@ -53,6 +62,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Activity logging middleware records CRUD operations for auditing
+    'assets_ms.middleware.activity_middleware.ActivityLogMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -79,18 +90,24 @@ WSGI_APPLICATION = 'assets.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'railway'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'qoSFWIdZocmITRXhUflaawOfxIeGgljG'),
-        'HOST': os.environ.get('DB_HOST', 'switchback.proxy.rlwy.net'),
-        'PORT': os.environ.get('DB_PORT', '30647'),
+if os.getenv("ASSETS_DATABASE_URL"):
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.getenv("ASSETS_DATABASE_URL"),
+            conn_max_age=600
+        )
     }
-}
-
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("ASSETS_DB_NAME"),
+            "USER": os.getenv("ASSETS_DB_USER"),
+            "PASSWORD": os.getenv("ASSETS_DB_PASSWORD"),
+            "HOST": os.getenv("ASSETS_DB_HOST"),
+            "PORT": os.getenv("ASSETS_DB_PORT"),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -154,10 +171,14 @@ REST_FRAMEWORK = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Ensure CORS is properly configured
-CORS_ALLOW_ALL_ORIGINS = True
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://your-frontend-domain.up.railway.app",
-]
+
+CORS_ALLOWED_ORIGINS = get_list("ASSETS_CORS_ALLOWED_ORIGINS")
+CSRF_TRUSTED_ORIGINS = get_list("ASSETS_CSRF_TRUSTED_ORIGINS")
+
+print("Loaded DB host:", os.getenv("ASSETS_DB_HOST"))

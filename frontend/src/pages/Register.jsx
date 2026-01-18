@@ -1,7 +1,7 @@
 import "../styles/custom-colors.css";
 import "../styles/Login.css";
 import "../styles/Alert.css";
-import loginImage from "../assets/img/login.png";
+import loginImage from "../assets/img/pageimg6.png";
 
 import Alert from "../components/Alert";
 import AxiosInstance from "../components/AxiosInstance.jsx";
@@ -36,7 +36,7 @@ function Register() {
     },
   });
 
-  // Uses watch function to monitor password input
+  // Uses watch function to monitor password input.
   const password = watch("password", "");
   // Password requirements for validation
   const passwordRequirements = [
@@ -53,6 +53,10 @@ function Register() {
       message: "Password must contain at least one uppercase letter",
     },
     {
+      test: /[0-9]/.test(password),
+      message: "Password must contain at least one number",
+    },
+    {
       test: /[!@#$%^&*(),.?":{}|<>]/.test(password),
       message: "Password must contain at least one special character",
     },
@@ -60,6 +64,17 @@ function Register() {
 
   // Function to handle form submission
   const onSubmit = async (data) => {
+    // Check if all password requirements are met before submission
+    const allRequirementsMet = passwordRequirements.every(req => req.test);
+    
+    if (!allRequirementsMet) {
+      setErrorMessage("Please meet all password requirements before submitting");
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 3000);
+      return;
+    }
+    
     console.log("Submitting to backend:", {
       email: data.email,
       password: data.password,
@@ -67,6 +82,9 @@ function Register() {
     try {
       await AxiosInstance.post("register/", {
         email: data.email,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        contact_number: data.contactNumber,
         password: data.password,
         password2: data.confirmPassword,
       });
@@ -122,6 +140,72 @@ function Register() {
             />
             {errors.email && (
               <span className="error-msg">{errors.email.message}</span>
+            )}
+          </fieldset>
+
+          {/* First Name field with validation */}
+          <fieldset>
+            <label>First Name:</label>
+            <Controller
+              name="firstName"
+              control={control}
+              rules={{
+                required: "First name is required",
+                minLength: {
+                  value: 2,
+                  message: "First name must be at least 2 characters",
+                },
+              }}
+              render={({ field }) => (
+                <input type="text" placeholder="Enter your first name" {...field} />
+              )}
+            />
+            {errors.firstName && (
+              <span className="error-msg">{errors.firstName.message}</span>
+            )}
+          </fieldset>
+
+          {/* Last Name field with validation */}
+          <fieldset>
+            <label>Last Name:</label>
+            <Controller
+              name="lastName"
+              control={control}
+              rules={{
+                required: "Last name is required",
+                minLength: {
+                  value: 2,
+                  message: "Last name must be at least 2 characters",
+                },
+              }}
+              render={({ field }) => (
+                <input type="text" placeholder="Enter your last name" {...field} />
+              )}
+            />
+            {errors.lastName && (
+              <span className="error-msg">{errors.lastName.message}</span>
+            )}
+          </fieldset>
+
+          {/* Contact Number field with validation */}
+          <fieldset>
+            <label>Contact Number:</label>
+            <Controller
+              name="contactNumber"
+              control={control}
+              rules={{
+                required: "Contact number is required",
+                pattern: {
+                  value: /^[0-9]{11}$/, // Example: Philippine mobile format
+                  message: "Contact number must be 11 digits",
+                },
+              }}
+              render={({ field }) => (
+                <input type="tel" placeholder="Enter your contact number" {...field} />
+              )}
+            />
+            {errors.contactNumber && (
+              <span className="error-msg">{errors.contactNumber.message}</span>
             )}
           </fieldset>
 

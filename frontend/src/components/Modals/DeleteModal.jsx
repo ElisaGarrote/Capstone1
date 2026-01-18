@@ -1,62 +1,140 @@
+import { useEffect, useState } from "react";
+import LoadingButton from "../LoadingButton";
 import "../../styles/DeleteModal.css";
-import DeleteIcon from "../../assets/icons/delete-red.svg";
-import CloseIcon from "../../assets/icons/close-icon.svg";
+import {
+  deleteProduct,
+  bulkDeleteProducts,
+  deleteAsset,
+  bulkDeleteAssets,
+  deleteRepair,
+  bulkDeleteRepairs,
+  deleteAuditSchedule,
+  bulkDeleteAuditSchedules,
+  deleteComponent,
+  bulkDeleteComponents,
+} from "../../services/assets-service";
 
+export default function ConfirmationModal({
+  closeModal,
+  isOpen,
+  actionType,      // "delete", "bulk-delete", "activate", etc.
+  entityType,      // "product", "asset"
+  targetId,        // single ID for delete
+  targetIds,       // array of IDs for bulk-delete
+  onSuccess,       // callback after successful delete (receives deleted id(s))
+  onError,         // callback on error (receives error)
+}) {
+  const [isProcessing, setIsProcessing] = useState(false);
 
-export default function DeleteModal({ closeModal, confirmDelete, endPoint, onDeleteFail, isOpen, onConfirm, onCancel }) {
-  // Handle compatibility with different prop patterns
-  const handleClose = closeModal || onCancel;
+  const handleClose = () => {
+    if (closeModal) closeModal();
+  };
+
   const handleConfirm = async () => {
-    if (confirmDelete) {
-      const success = await handleDelete(endPoint);
-      if (success) {
-        await confirmDelete();
-        if (closeModal) closeModal();
-      } else if (onDeleteFail) {
-        onDeleteFail();
-      }
-    } else if (onConfirm) {
-      onConfirm();
-    }
-  };
-  const handleDelete = async (endPoint) => {
+    setIsProcessing(true);
     try {
-      const response = await fetch(endPoint, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error("Delete failed");
-      return true;
+      if (actionType === "delete" && targetId) {
+        // Single delete
+        if (entityType === "product") {
+          await deleteProduct(targetId);
+        } else if (entityType === "asset") {
+          await deleteAsset(targetId);
+        } else if (entityType === "repair") {
+          await deleteRepair(targetId);
+        } else if (entityType === "audit-schedule") {
+          await deleteAuditSchedule(targetId);
+        } else if (entityType === "component") {
+          await deleteComponent(targetId);
+        }
+        if (onSuccess) onSuccess(targetId);
+      } else if (actionType === "bulk-delete" && targetIds?.length > 0) {
+        // Bulk delete
+        if (entityType === "product") {
+          await bulkDeleteProducts({ ids: targetIds });
+        } else if (entityType === "asset") {
+          await bulkDeleteAssets({ ids: targetIds });
+        } else if (entityType === "repair") {
+          await bulkDeleteRepairs({ ids: targetIds });
+        } else if (entityType === "audit-schedule") {
+          await bulkDeleteAuditSchedules(targetIds);
+        } else if (entityType === "component") {
+          await bulkDeleteComponents({ ids: targetIds });
+        }
+        if (onSuccess) onSuccess(targetIds);
+      }
     } catch (error) {
-      console.error("Delete error:", error);
-      return false;
+      console.error("Action failed:", error);
+      if (onError) onError(error);
+    } finally {
+      setIsProcessing(false);
+      handleClose();
     }
   };
+
+  const getActionText = () => {
+    switch (actionType) {
+      case "delete":
+      case "bulk-delete":
+        return "Delete";
+      case "activate":
+        return "Activate";
+      case "deactivate":
+        return "Deactivate";
+      case "recover":
+        return "Recover";
+      default:
+        return "Confirm";
+    }
+  };
+
+  const getProcessingText = () => {
+    switch (actionType) {
+      case "delete":
+      case "bulk-delete":
+        return "Deleting...";
+      case "activate":
+        return "Activating...";
+      case "deactivate":
+        return "Deactivating...";
+      case "recover":
+        return "Recovering...";
+      default:
+        return "Processing...";
+    }
+  };
+
+  // Disable scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "auto";
+    return () => (document.body.style.overflow = "auto");
+  }, [isOpen]);
 
   return (
-    <main className="delete-modal">
-      <div className="overlay" onClick={handleClose}></div>
-      <div className="content">
-        <button className="close-button" onClick={handleClose}>
-          <img src={CloseIcon} alt="Close" />
-        </button>
-        <img src={DeleteIcon} alt="Delete" />
-        <h3>Delete</h3>
-        <p>Are you sure you want to delete?</p>
-        <div>
-          <button className="cancel-button" onClick={handleClose}>
-            Cancel
-          </button>
-          <button
-            className="confirm-button"
-            onClick={handleConfirm}
-          >
-            Confirm
-          </button>
+    <section className="delete-modal">
+      <div className="overlay" onClick={handleClose}>
+        <div className="content" onClick={(e) => e.stopPropagation()}>
+          <h2 className="modal-title">{getActionText()} Confirmation</h2>
+          <p className="modal-message">
+            Are you sure you want to {getActionText().toLowerCase()}{" "}
+            {actionType === "bulk-delete"
+              ? `these ${targetIds?.length || 0} ${entityType}(s)`
+              : `this ${entityType}`}?
+            This action cannot be undone.
+          </p>
+          <div className="modal-actions">
+            <button className="cancel-btn" onClick={handleClose} disabled={isProcessing}>
+              Cancel
+            </button>
+            <button
+              className={`confirm-action-btn ${actionType}-btn`}
+              onClick={handleConfirm}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <LoadingButton /> : getActionText()}
+            </button>
+          </div>
         </div>
       </div>
-    </main>
+    </section>
   );
 }

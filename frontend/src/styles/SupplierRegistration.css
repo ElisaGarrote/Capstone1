@@ -1,6 +1,4 @@
 /* Supplier Registration specific styles */
-
-/* Image selection styles */
 .image-selected {
   position: relative;
   display: inline-block;
@@ -36,7 +34,6 @@
   background-color: darkred;
 }
 
-/* Additional styles for supplier form */
 textarea {
   resize: vertical;
   min-height: 100px;

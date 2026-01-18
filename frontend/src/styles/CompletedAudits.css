@@ -20,8 +20,26 @@
   align-items: center;
 }
 
-.completed-audits-page .main-top div,
-.completed-audits-page .container div {
+.completed-audits-page
+  .main-top
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ),
+.completed-audits-page
+  .container
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ) {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -82,7 +100,7 @@
   height: auto;
   width: 100%;
   background-color: #ffffff;
-  border-radius: 40px;
+  border-radius: 20px;
   border: 1px solid #d3d3d3;
   box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   padding-bottom: 28px;
@@ -125,6 +143,9 @@
 
 .completed-audits-page table th {
   background-color: rgba(211, 211, 211, 0.2);
+  color: var(--secondary-text-color) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
 }
 
 .completed-audits-page table th,
@@ -191,9 +212,7 @@
 
 /* Set the width of the delete and view header and its data*/
 .completed-audits-page table th:nth-last-child(1),
-.completed-audits-page table td:nth-last-child(1),
-.completed-audits-page table th:nth-last-child(2),
-.completed-audits-page table td:nth-last-child(2) {
+.completed-audits-page table td:nth-last-child(1) {
   /* width: 5vw; */
   width: 50px;
   text-align: center;

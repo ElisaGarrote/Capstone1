@@ -1,11 +1,48 @@
-asset_venv/
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.sqlite3
-*.log
-.env
+
+# Env
+*.env
+
+# Django stuff
+db.sqlite3
+media/
+staticfiles/
+
+# Git
 .git
-Dockerfile
-migrations/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Env
+*.env
+
+# Django stuff
+db.sqlite3
+media/
+staticfiles/
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

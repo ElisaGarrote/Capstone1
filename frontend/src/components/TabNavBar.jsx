@@ -1,28 +1,38 @@
 import "../styles/TabNavBar.css";
 import { useNavigate } from "react-router-dom";
-import assetsService from "../services/assets-service";
 import { useEffect, useState } from "react";
+import { fetchDueAudits, fetchOverdueAudits, fetchScheduledAudits, fetchAllAudits } from "../services/assets-service";
 
-export default function TabNavBar() {
+export default function TabNavBar({ refreshKey = 0 }) {
   const navigate = useNavigate();
-  const [countScheduleAudits, setCountScheduleAudits] = useState(0);
+  const [countDueAudits, setCountDueAudits] = useState(0);
+  const [countScheduledAudits, setCountScheduledAudits] = useState(0);
   const [countAudits, setCountAudits] = useState(0);
   const [countOverdueAudits, setCountOverdueAudits] = useState(0);
 
   // Retrieve the count of all the schedule audits, audits, and overdue audits.
+  // Re-fetch when refreshKey changes
   useEffect(() => {
     const makeRequest = async () => {
-      const countScheduleAudits = await assetsService.countAllScheduleAudits();
-      const countAudits = await assetsService.countAllAudits();
-      const countOverdueAudits = await assetsService.countAllOverdueAudits();
+      try {
+        const [due, overdue, scheduled, completed] = await Promise.all([
+          fetchDueAudits(),
+          fetchOverdueAudits(),
+          fetchScheduledAudits(),
+          fetchAllAudits()
+        ]);
 
-      setCountScheduleAudits(countScheduleAudits);
-      setCountAudits(countAudits);
-      setCountOverdueAudits(countOverdueAudits);
+        setCountDueAudits(due?.length || 0);
+        setCountOverdueAudits(overdue?.length || 0);
+        setCountScheduledAudits(scheduled?.length || 0);
+        setCountAudits(completed?.length || 0);
+      } catch (err) {
+        console.error("Error fetching audit counts:", err);
+      }
     };
 
     makeRequest();
-  }, []);
+  }, [refreshKey]);
 
   return (
     <nav className="tab-nav">
@@ -32,7 +42,7 @@ export default function TabNavBar() {
             className={location.pathname === "/audits" ? "active" : ""}
             onClick={() => navigate("/audits")}
           >
-            Due to be Audited ({countScheduleAudits})
+            Due to be Audited ({countDueAudits})
           </a>
         </li>
         <li className={location.pathname === "/audits/overdue" ? "active" : ""}>
@@ -40,7 +50,7 @@ export default function TabNavBar() {
             className={location.pathname === "/audits/overdue" ? "active" : ""}
             onClick={() => navigate("/audits/overdue")}
           >
-            Overdue for an Audits ({countOverdueAudits})
+            Overdue for Audit ({countOverdueAudits})
           </a>
         </li>
         <li
@@ -52,7 +62,7 @@ export default function TabNavBar() {
             }
             onClick={() => navigate("/audits/scheduled")}
           >
-            Scheduled Audits ({countScheduleAudits})
+            Scheduled Audit ({countScheduledAudits})
           </a>
         </li>
         <li
@@ -64,7 +74,7 @@ export default function TabNavBar() {
             }
             onClick={() => navigate("/audits/completed")}
           >
-            Completed Audits ({countAudits})
+            Completed Audit ({countAudits})
           </a>
         </li>
       </ul>

@@ -1,6 +1,5 @@
 /* Global styles for all audit tables */
 
-/* Remove border radius from all tables */
 .asset-audits-page table,
 .overdue-audits-page table,
 .completed-audits-page table,
@@ -9,7 +8,6 @@
   overflow: hidden !important;
 }
 
-/* Remove border radius from all table cells */
 .asset-audits-page table th,
 .asset-audits-page table td,
 .overdue-audits-page table th,
@@ -21,7 +19,6 @@
   border-radius: 0 !important;
 }
 
-/* Ensure checkbox columns are properly centered */
 .asset-audits-page table th:first-child,
 .asset-audits-page table td:first-child,
 .overdue-audits-page table th:first-child,
@@ -33,7 +30,6 @@
   text-align: center !important;
 }
 
-/* Ensure checkboxes are properly displayed */
 .asset-audits-page table input[type="checkbox"],
 .overdue-audits-page table input[type="checkbox"],
 .completed-audits-page table input[type="checkbox"],
@@ -47,7 +43,6 @@
   display: block;
 }
 
-/* Ensure consistent vertical alignment */
 .asset-audits-page table td,
 .overdue-audits-page table td,
 .completed-audits-page table td,
@@ -55,7 +50,6 @@
   vertical-align: middle !important;
 }
 
-/* Fix for table buttons in Asset Audits tables */
 .asset-audits-page .table-buttons-edit,
 .asset-audits-page .table-buttons-delete,
 .asset-audits-page .table-buttons-view,
@@ -78,7 +72,6 @@
   box-sizing: content-box !important;
 }
 
-/* Fix for button images in Asset Audits tables */
 .asset-audits-page .table-buttons-edit img,
 .asset-audits-page .table-buttons-delete img,
 .asset-audits-page .table-buttons-view img,
@@ -95,7 +88,6 @@
   margin: 0 auto !important;
 }
 
-/* Hover effects for buttons */
 .asset-audits-page .table-buttons-edit:hover,
 .asset-audits-page .table-buttons-view:hover,
 .overdue-audits-page .table-buttons-edit:hover,
@@ -111,7 +103,13 @@
   background-color: rgba(255, 59, 48, 0.2) !important;
 }
 
-/* Global checkbox styling to remove the three dots */
+/* Global audits table header color override - Match Products table */
+.audits-table th {
+  color: var(--secondary-text-color) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+}
+
 input[type="checkbox"] {
   appearance: auto;
   -webkit-appearance: checkbox;

@@ -6,7 +6,7 @@
   width: 100vw;
   padding: 100px 38px 38px 38px;
   position: relative;
-  z-index: 1; /* Lower z-index to ensure it doesn't appear in front of overlays */
+  z-index: 1;
 }
 
 .overdue-audits-page section {
@@ -20,8 +20,26 @@
   align-items: center;
 }
 
-.overdue-audits-page .main-top div,
-.overdue-audits-page .container div {
+.overdue-audits-page
+  .main-top
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ),
+.overdue-audits-page
+  .container
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ) {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -49,7 +67,7 @@
   height: auto;
   width: 100%;
   background-color: #ffffff;
-  border-radius: 40px;
+  border-radius: 20px;
   border: 1px solid #d3d3d3;
   box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   padding-bottom: 28px;

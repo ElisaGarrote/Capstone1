@@ -1,273 +1,484 @@
-import "../../styles/custom-colors.css";
-import "../../styles/CheckInOut.css";
-import NavBar from "../../components/NavBar";
-import TopSecFormPage from "../../components/TopSecFormPage";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState } from "react";
-import CloseIcon from "../../assets/icons/close.svg";
-import PersonIcon from "../../assets/icons/person.svg";
-import LocationIcon from "../../assets/icons/location.svg";
+import NavBar from "../../components/NavBar";
+import Footer from "../../components/Footer";
+import "../../styles/Registration.css";
+import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
+import Alert from "../../components/Alert";
+import SystemLoading from "../../components/Loading/SystemLoading";
+import CloseIcon from "../../assets/icons/close.svg";
+import PlusIcon from "../../assets/icons/plus.svg";
+import AddEntryModal from "../../components/Modals/AddEntryModal";
+import { createAssetCheckoutWithStatus, fetchAssetNames } from "../../services/assets-service";
+import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
+import { fetchTicketById } from "../../services/integration-ticket-tracking-service";
 
 export default function CheckOutAsset() {
-  const location = useLocation();
+  const { state } = useLocation();
   const navigate = useNavigate();
-  const {
-    id,
-    assetId,
-    product,
-    image,
-    ticketId,
-    ticketSubject,
-    ticketRequestor
-  } = location.state || {};
 
-  // Dropdown lists for easier maintenance
-  const employeeList = ['Employee 1', 'Employee 2', 'Employee 3'];
-  const locationList = ['Location 1', 'Location 2', 'Location 3'];
-  const conditionList = ['Excellent', 'Good', 'Fair', 'Poor'];
-  const currentDate = new Date().toISOString().split("T")[0];
+  // State
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [statuses, setStatuses] = useState([]);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
 
+  const [assetName, setAssetName] = useState("");
+  const [assetDisplayId, setAssetDisplayId] = useState("");
+  const [fromAssets, setFromAssets] = useState(false);
+
+  // Extract from navigation state
+  // From Assets page: { assetId (db id), assetDisplayId, assetName, ticketId }
+  // From Tickets page: { ticket (full ticket object) }
+  const assetIdFromState = state?.assetId;
+  const assetDisplayIdFromState = state?.assetDisplayId;
+  const assetNameFromState = state?.assetName;
+  const ticketIdFromState = state?.ticketId;
+  const ticketFromState = state?.ticket;
+
+  // Form handling
   const {
     register,
     handleSubmit,
-    watch,
     setValue,
-    formState: { errors }
+    formState: { errors, isValid },
   } = useForm({
+    mode: "all",
     defaultValues: {
-      checkoutTo: "employee",
-      employee: '',
-      location: '',
-      checkoutDate: {currentDate},
+      employeeName: '',
+      empLocation: '',
+      checkoutDate: '',
       expectedReturnDate: '',
+      status: '',
       condition: '',
       notes: '',
-      photos: []
-    }
+    },
   });
 
-  const checkoutTo = watch("checkoutTo");
-  const checkoutDate = watch("checkoutDate");
-  const [previewImages, setPreviewImages] = useState([]);
+  // Initialize: fetch ticket and dropdowns
+  useEffect(() => {
+    const initialize = async () => {
+      setIsLoading(true);
+      try {
+        let ticket = null;
 
-  const handleImagesSelection = (event) => {
-    const selectedFiles = Array.from(event.target.files);
-    if (selectedFiles.length > 0) {
-      const imagesArray = selectedFiles.map((file) => URL.createObjectURL(file));
-      setPreviewImages(imagesArray);
-      setValue("photos", selectedFiles);
-    } else {
-      setPreviewImages([]);
-      setValue("photos", []);
+        // Scenario 1: Coming from Assets page with assetId, assetDisplayId, assetName, ticketId
+        if (assetIdFromState && ticketIdFromState) {
+          setFromAssets(true);
+          setAssetName(assetNameFromState || "");
+          setAssetDisplayId(assetDisplayIdFromState || "");
+
+          // Fetch ticket details
+          ticket = await fetchTicketById(ticketIdFromState);
+        }
+        // Scenario 2: Coming from Tickets page with full ticket object
+        else if (ticketFromState) {
+          setFromAssets(false);
+          ticket = ticketFromState;
+
+          // Fetch asset details using asset id from ticket
+          if (ticket.asset) {
+            const assetData = await fetchAssetNames({ ids: [ticket.asset] });
+            if (assetData) {
+              setAssetName(assetData.name || "");
+              setAssetDisplayId(assetData.asset_id || "");
+            }
+          }
+        }
+
+        if (ticket) {
+          // Fill form with ticket data (read-only fields)
+          setValue("employeeName", ticket.requestor_details?.name || "Unknown");
+          setValue("empLocation", ticket.location_details?.city || "Unknown");
+          setValue("checkoutDate", ticket.checkout_date || "");
+          setValue("expectedReturnDate", ticket.return_date || "");
+        }
+
+        // Fetch status dropdown (deployed statuses for checkout)
+        const dropdowns = await fetchAllDropdowns("status", {
+          category: "asset",
+          types: "deployed",
+        });
+        setStatuses(dropdowns.statuses || []);
+      } catch (error) {
+        console.error("Error initializing checkout form:", error);
+        setErrorMessage("Failed to load form data. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+  }, [assetIdFromState, assetDisplayIdFromState, assetNameFromState, ticketIdFromState, ticketFromState, setValue]);
+
+  const conditionOptions = [
+    { value: "1", label: "1 - Unserviceable" },
+    { value: "2", label: "2 - Poor" },
+    { value: "3", label: "3 - Needs Maintenance" },
+    { value: "4", label: "4 - Functional" },
+    { value: "5", label: "5 - Fair" },
+    { value: "6", label: "6 - Good" },
+    { value: "7", label: "7 - Very Good" },
+    { value: "8", label: "8 - Excellent" },
+    { value: "9", label: "9 - Like New" },
+    { value: "10", label: "10 - Brand New" }
+  ];
+
+  if (isLoading) {
+    return <SystemLoading />;
+  }
+
+  // Modal field configurations - only allow checkin-valid status types (excludes 'deployed')
+  const statusFields = [
+    {
+      name: 'name',
+      label: 'Status Label',
+      type: 'text',
+      placeholder: 'Status Label',
+      required: true,
+      maxLength: 100,
+      validation: { required: 'Status Label is required' }
+    },
+    {
+      name: 'category',
+      type: 'hidden',
+      defaultValue: 'asset'
+    },
+    {
+      name: 'type',
+      label: 'Status Type',
+      type: 'select',
+      placeholder: 'Select Status Type',
+      required: true,
+      options: [
+        { value: 'deployed', label: 'Deployed' },
+      ],
+      validation: { required: 'Status Type is required' },
+      defaultValue: 'deployed'
+    }
+  ];
+
+  const handleSaveStatus = async (data) => {
+    try {
+      const newStatus = await createStatus(data);
+      setStatuses([...statuses, newStatus]);
+      setShowStatusModal(false);
+      setErrorMessage("");
+    } catch (error) {
+      console.error('Error creating status:', error);
+
+      let message = "Failed to create status";
+
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+
+        // Aggregate all error messages
+        const messages = [];
+        Object.values(data).forEach((value) => {
+          if (Array.isArray(value)) messages.push(...value);
+          else if (typeof value === "string") messages.push(value);
+        });
+
+        if (messages.length > 0) {
+          message = messages.join(" ");
+        }
+      }
+
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(""), 5000);
     }
   };
 
-  const onSubmit = (data) => {
-    console.log("Form submitted:", data);
-    console.log("Asset ID:", id);
+  // File upload
+  // Handle file selection
+  const handleFileSelection = (e) => {
+    const files = Array.from(e.target.files);
+    const maxSize = 300 * 1024 * 1024; // 300MB
 
-    // Include ticket information in the submission if available
-    if (ticketId) {
-      console.log("Ticket Information:", {
-        ticketId,
-        ticketSubject,
-        ticketRequestor
+    const validFiles = files.filter((file) => {
+      if (file.size > maxSize) {
+        alert(`${file.name} is larger than 300MB and was not added.`);
+        return false;
+      }
+      return true;
+    });
+
+    setAttachmentFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  // Remove file from selection
+  const removeFile = (index) => {
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      const formData = new FormData();
+
+      // Required fields
+      // asset - backend fetches from ticket
+      // checkout_to - backend fetches from ticket
+      // location - backend fetches from ticket
+      // checkout_date - backend fetches from ticket
+      // return_date - backend fetches from ticket
+      const ticketId = ticketIdFromState || ticketFromState?.id;
+      formData.append('ticket_id', ticketId);
+      // Status sent to backend for asset status update not checkout
+      formData.append('status', data.status);
+      formData.append("condition", data.condition);
+
+      // Optional fields
+      if (data.revenue) {
+        formData.append('revenue', data.revenue);
+      }
+      if (data.notes) {
+        formData.append('notes', data.notes);
+      }
+
+      // Append attachment files if any
+      attachmentFiles.forEach((file) => {
+        formData.append("attachments", file);
       });
 
-      // You would typically send this data to your backend API
-      // For now, we'll just show a success message
-      alert(`Asset ${assetId} has been checked out successfully for ticket ${ticketId}`);
+      console.log("FINAL FORM DATA:");
+      for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          console.log(`${key}: ${value.name} (${value.size} bytes)`);
+        } else {
+          console.log(`${key}: ${value}`);
+        }
+      }
 
-      // Navigate back to the approved tickets page
-      navigate("/approved-tickets");
-    } else {
-      // If not from a ticket, navigate back to assets page
-      navigate("/assets");
+      await createAssetCheckoutWithStatus(formData);
+
+      // Navigate to approved tickets after successful checkout
+      if (fromAssets) {
+        navigate(`/assets`, {
+          state: {
+            successMessage: "Asset has been checked out successfully!"
+          }
+        });
+      } else {
+        navigate(`/approved-tickets`, {
+          state: {
+            successMessage: "Asset has been checked out successfully!"
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error occurred while checking out the asset:", error);
+
+      let message = "An error occurred while checking out the asset.";
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+        const messages = [];
+        Object.entries(data).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            messages.push(...value);
+          } else if (typeof value === "string") {
+            messages.push(value);
+          }
+        });
+        if (messages.length > 0) {
+          message = messages.join(" ");
+        }
+      }
+
+      setErrorMessage(message);
+      setTimeout(() => setErrorMessage(""), 5000);
     }
   };
+
+  // Build page title from asset info
+  const pageTitle = assetName
+    ? `${assetDisplayId} - ${assetName}`
+    : (assetDisplayId || "Check-Out Asset");
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       <nav><NavBar /></nav>
-      <main className="check-in-out-page">
+      <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root={ticketId ? "Approved Tickets" : "Assets"}
+            root={fromAssets ? "Assets" : "Tickets"}
             currentPage="Check-Out Asset"
-            rootNavigatePage={ticketId ? "/approved-tickets" : "/assets"}
-            title={assetId}
+            rootNavigatePage={fromAssets ? "/assets" : "/approved-tickets"}
+            title={pageTitle}
           />
         </section>
-        <section className="middle">
-          <section className="recent-checkout-info">
-            <h2>Asset Information</h2>
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Form Header */}
+            <h2 style={{
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: 'var(--secondary-text-color)',
+              marginBottom: '10px',
+              borderBottom: '1px solid #d3d3d3',
+              paddingBottom: '10px'
+            }}>
+              Checkout To
+            </h2>
+
+            {/* Employee */}
             <fieldset>
-              <img src={image} alt="asset" />
+              <label htmlFor="employee">Employee <span style={{color: 'red'}}>*</span></label>
+              <input
+                type="text"
+                id="employee"
+                readOnly
+                {...register("employeeName")}
+              />
             </fieldset>
+
+            {/* Location */}
             <fieldset>
-              <label>Asset ID:</label>
-              <p>{assetId}</p>
+              <label htmlFor="empLocation">Location <span style={{color: 'red'}}>*</span></label>
+              <input
+                type="text"
+                id="empLocation"
+                readOnly
+                {...register("empLocation")}
+              />
             </fieldset>
+
+            {/* Check-Out Date */}
             <fieldset>
-              <label>Product:</label>
-              <p>{product}</p>
+              <label htmlFor="checkoutDate">Check-Out Date <span style={{color: 'red'}}>*</span></label>
+              <input
+                type="text"
+                id="checkoutDate"
+                readOnly
+                {...register("checkoutDate")}
+              />
             </fieldset>
 
-            {/* Display ticket information if available */}
-            {ticketId && (
-              <>
-                <h2 style={{ marginTop: '20px' }}>Ticket Information</h2>
-                <fieldset>
-                  <label>Ticket ID:</label>
-                  <p>{ticketId}</p>
-                </fieldset>
-                <fieldset>
-                  <label>Subject:</label>
-                  <p>{ticketSubject}</p>
-                </fieldset>
-                <fieldset>
-                  <label>Requestor:</label>
-                  <p>{ticketRequestor}</p>
-                </fieldset>
-              </>
-            )}
-          </section>
+            {/* Expected Return Date */}
+            <fieldset>
+              <label htmlFor="returnDate">Expected Return Date <span style={{color: 'red'}}>*</span></label>
+              <input
+                type="text"
+                id="returnDate"
+                readOnly
+                {...register("expectedReturnDate")}
+              />
+            </fieldset>
 
-          <section className="checkin-form">
-            <h2>Check-Out Form</h2>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <fieldset>
-                <label>Check-Out To *</label>
-                <div className="checkout-to-container">
-                  <section className="employee-radio-container">
-                    <label>
-                      <input
-                        type="radio"
-                        {...register("checkoutTo")}
-                        value="employee"
-                      />
-                      <img src={PersonIcon} alt="person-icon" />
-                      <span>Employee</span>
-                    </label>
-                  </section>
-                  <section className="location-radio-container">
-                    <label>
-                      <input
-                        type="radio"
-                        {...register("checkoutTo")}
-                        value="location"
-                      />
-                      <img src={LocationIcon} alt="location-icon" />
-                      <span>Location</span>
-                    </label>
-                  </section>
-                </div>
-              </fieldset>
-
-              {checkoutTo === "employee" ? (
-                <fieldset>
-                  <label>Employee *</label>
-                  <select
-                    className={errors.employee ? 'input-error' : ''}
-                    {...register("employee", { required: 'Employee is required' })}
-                  >
-                    <option value="">Select Employee</option>
-                    {employeeList.map((employee, idx) => (
-                      <option key={idx} value={employee}>{employee}</option>
-                    ))}
-                  </select>
-                  {errors.employee && <span className='error-message'>{errors.employee.message}</span>}
-                </fieldset>
-              ) : (
-                <fieldset>
-                  <label>Location *</label>
-                  <select
-                    className={errors.location ? 'input-error' : ''}
-                    {...register("location", { required: 'Location is required' })}
-                  >
-                    <option value="">Select Location</option>
-                    {locationList.map((location, idx) => (
-                      <option key={idx} value={location}>{location}</option>
-                    ))}
-                  </select>
-                  {errors.location && <span className='error-message'>{errors.location.message}</span>}
-                </fieldset>
-              )}
-
-              <fieldset>
-                <label>Check-Out Date *</label>
-                <input
-                  type="text"  // Use "text" instead of "date" to prevent date picker
-                  readOnly
-                  value={currentDate}  // Format: YYYY-MM-DD
-                  className={errors.checkoutDate ? 'input-error' : ''}
-                  {...register("checkoutDate")}
-                />
-              </fieldset>
-
-              <fieldset>
-                <label>Expected Return Date *</label>
-                <input
-                  type="date"
-                  className={errors.expectedReturnDate ? 'input-error' : ''}
-                  min={checkoutDate}
-                  {...register("expectedReturnDate", { required: 'Expected return date is required' })}
-                />
-                {errors.expectedReturnDate && <span className='error-message'>{errors.expectedReturnDate.message}</span>}
-              </fieldset>
-
-              <fieldset>
-                <label>Condition</label>
-                <select {...register("condition")}>
-                  <option value="">Select Condition</option>
-                  {conditionList.map((condition, idx) => (
-                    <option key={idx} value={condition}>{condition}</option>
+            {/* Status Dropdown with + button */}
+            <fieldset>
+              <label htmlFor='status'>Asset Status <span style={{color: 'red'}}>*</span></label>
+              <div className="dropdown-with-add">
+                <select
+                  id="status"
+                  {...register("status", { required: "Status is required" })}
+                  className={errors.status ? 'input-error' : ''}
+                >
+                  <option value="">Select Asset Status</option>
+                  {statuses.map(status => (
+                    <option key={status.id} value={status.id}>
+                      {status.name}
+                    </option>
                   ))}
                 </select>
-              </fieldset>
+                <button
+                  type="button"
+                  className="add-btn"
+                  onClick={() => setShowStatusModal(true)}
+                  title="Add new status"
+                >
+                  <img src={PlusIcon} alt="Add" />
+                </button>
+              </div>
+              {errors.status && <span className='error-message'>{errors.status.message}</span>}
+            </fieldset>
 
-              <fieldset>
-                <label>Image</label>
-                <div className="images-container">
-                  {previewImages.map((img, index) => (
-                    <div key={index} className="image-selected">
-                      <img src={img} alt={`Preview ${index}`} />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPreviewImages(previewImages.filter((_, i) => i !== index));
-                          setValue("photos", previewImages.filter((_, i) => i !== index));
-                        }}
-                      >
+            {/* Condition */}
+            <fieldset>
+              <label htmlFor="condition">Condition <span style={{color: 'red'}}>*</span></label>
+              <select
+                id="condition"
+                {...register("condition", {required: "Condition is required"})}
+                className={errors.condition ? 'input-error' : ''}
+              >
+                <option value="">Select Condition</option>
+                {conditionOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
+            </fieldset>
+
+            {/* Notes */}
+            <fieldset>
+              <label htmlFor="notes">Notes</label>
+              <textarea
+                id="notes"
+                placeholder="Enter notes"
+                {...register("notes")}
+                rows="3"
+                maxLength="500"
+              ></textarea>
+            </fieldset>
+
+            {/* Attachments */}
+            <fieldset>
+              <label htmlFor="attachments">Upload File</label>
+
+              <div className="attachments-wrapper">
+                {/* Left column: Upload button & info */}
+                <div className="upload-left">
+                  <label htmlFor="attachments" className="upload-image-btn">
+                    Choose File
+                    <input
+                      type="file"
+                      id="attachments"
+                      accept="image/*,.pdf,.doc,.docx"
+                      onChange={handleFileSelection}
+                      style={{ display: "none" }}
+                      multiple
+                    />
+                  </label>
+                  <small className="file-size-info">
+                    Maximum file size must be 300MB
+                  </small>
+                </div>
+
+                {/* Right column: Uploaded files */}
+                <div className="upload-right">
+                  {attachmentFiles.map((file, index) => (
+                    <div className="file-uploaded" key={index}>
+                      <span title={file.name}>{file.name}</span>
+                      <button type="button" onClick={() => removeFile(index)}>
                         <img src={CloseIcon} alt="Remove" />
                       </button>
                     </div>
                   ))}
-                  <input
-                    type="file"
-                    id="images"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImagesSelection}
-                    style={{ display: "none" }}
-                  />
                 </div>
-                <label htmlFor="images" className="upload-image-btn">
-                  {previewImages.length === 0 ? "Choose Image" : "Change Image"}
-                </label>
-              </fieldset>
+              </div>
+            </fieldset>
 
-              <fieldset>
-                <label>Notes</label>
-                <textarea {...register("notes")} maxLength="500" />
-              </fieldset>
-
-              <button type="submit" className="save-btn">Save</button>
-            </form>
-          </section>
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid}>
+              Save
+            </button>
+          </form>
         </section>
       </main>
+      <Footer />
+
+      <AddEntryModal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        onSave={handleSaveStatus}
+        title="New Status Label"
+        fields={statusFields}
+        type="status"
+      />
     </>
   );
 }

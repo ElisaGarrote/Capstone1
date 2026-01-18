@@ -19,7 +19,7 @@
   animation: fade-in-out 5s ease-in-out forwards;
 }
 
-.alert img {
+.alert .alert-image {
   display: flex;
   justify-content: center;
   align-items: center;

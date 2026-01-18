@@ -80,15 +80,38 @@ export default function CheckoutAccessory() {
       ...provided,
       width: "100%",
     }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999,
+      position: "absolute",
+      width: "100%",
+      backgroundColor: "white",
+      border: "1px solid #ccc",
+      borderRadius: "4px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      maxHeight: "200px",
+      overflowY: "auto",
+      padding: "0",
+    }),
     option: (provided, state) => ({
       ...provided,
       color: state.isSelected ? "white" : "grey",
       fontSize: "0.875rem",
+      padding: "8px 12px",
+      backgroundColor: state.isSelected ? "#007bff" : state.isFocused ? "#f8f9fa" : "white",
       cursor: "pointer",
+      "&:hover": {
+        backgroundColor: "#f8f9fa",
+      },
     }),
   };
 
+  // For debugging only.
   console.log("location:", dropdownLocation);
+  console.log("data received:", data);
 
   return (
     <>
@@ -101,7 +124,7 @@ export default function CheckoutAccessory() {
             root="Accessory"
             currentPage="Checkout Accessory"
             rootNavigatePage="/accessories"
-            title={data}
+            title={data.accessory_name}
           />
         </section>
         <section className="checkout-form">

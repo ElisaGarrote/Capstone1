@@ -1,118 +1,107 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import NavBar from "../../components/NavBar";
-import "../../styles/ScheduleRegistration.css";
+import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useState, useEffect } from "react";
-import Select from "react-select";
-import { useNavigate } from "react-router-dom";
-import assetsService from "../../services/assets-service";
-import { useForm, Controller } from "react-hook-form";
-import dateRelated from "../../utils/dateRelated";
+import { useForm } from "react-hook-form";
+import Footer from "../../components/Footer";
+import { fetchAssetNames, fetchAuditScheduleById, createAuditSchedule, updateAuditSchedule } from "../../services/assets-service";
 
-export default function ScheduleRegistration() {
+const ScheduleRegistration = () => {
   const navigate = useNavigate();
-  const [currentDate, setCurrentDate] = useState("");
-  const [allAssets, setAllAssets] = useState([]);
-  const [assetAndName, setAssetAndName] = useState([]);
+  const location = useLocation();
+  const { id } = useParams();
+  const previousPage = location.state?.previousPage || null;
 
-  // Get the current date and assign it to the currentDate state.
-  useEffect(() => {
-    setCurrentDate(dateRelated.getCurrentDate());
-  }, []);
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [scheduleData, setScheduleData] = useState(null);
 
-  // Fetch all assets
-  useEffect(() => {
-    const asset = async () => {
-      try {
-        const dataFetched = await assetsService.fetchAllAssets();
-
-        if (dataFetched) {
-          console.log("Schedule Audits fetch all assets: ", dataFetched);
-          setAllAssets(dataFetched);
-        }
-      } catch (error) {
-        console.log("Error whilte fetching all assets!", error);
-      }
-    };
-
-    asset();
-  }, []);
-
-  // Retrieve all the schedule audits records and get only the displayed_id and asset name.
-  useEffect(() => {
-    const fetchAllScheduleAudits = async () => {
-      const allAuditSchedule = await assetsService.fetchAllAuditSchedules();
-
-      // Get only the displayed_id of the asset and asset name.
-      if (allAuditSchedule) {
-        console.log(allAuditSchedule);
-
-        const asset = allAuditSchedule.map((item) => ({
-          displayedId: item.asset_info.displayed_id,
-          name: item.asset_info.name,
-        }));
-        setAssetAndName(asset);
-      }
-    };
-
-    fetchAllScheduleAudits();
-  }, []);
-
-  const assetOptions = allAssets
-    .filter(
-      (item) =>
-        !assetAndName.some(
-          (existing) => existing.displayedId === item.displayed_id
-        )
-    )
-    .map((item) => ({
-      value: item.id,
-      label: item.displayed_id + " - " + item.name,
-    }));
-
-  // Handle form
   const {
-    control,
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
+    defaultValues: {
+      asset: "",
+      auditDueDate: "",
+      notes: "",
+    },
   });
 
-  const submission = async (data) => {
-    console.log(data);
+  // Fetch assets and schedule data (if editing) on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Fetch assets
+        const assetsResult = await fetchAssetNames();
+        setAssets(assetsResult);
 
-    const success = await assetsService.postScheduleAudit(
-      data.asset,
-      data.auditDueDate,
-      data.notes
-    );
+        // If editing, fetch the audit schedule by ID
+        if (id) {
+          const scheduleResult = await fetchAuditScheduleById(id);
+          setScheduleData(scheduleResult);
 
-    if (success) {
-      console.log("Schedule audit successfully created!");
-      navigate("/audits/scheduled", { state: { addedScheduleAudit: true } });
-    } else {
-      console.log("Failed to create schedule audit!");
+          // Populate form with fetched data
+          setValue("asset", scheduleResult.asset || "");
+          setValue("auditDueDate", scheduleResult.date || "");
+          setValue("notes", scheduleResult.notes || "");
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [id, setValue]);
+
+  const onSubmit = async (data) => {
+    setSubmitting(true);
+    try {
+      const payload = {
+        asset: parseInt(data.asset),
+        date: data.auditDueDate,
+        notes: data.notes || "",
+      };
+
+      if (id) {
+        await updateAuditSchedule(id, payload);
+      } else {
+        await createAuditSchedule(payload);
+      }
+
+      // Redirect to scheduled audits section if coming from asset view, otherwise go back to previous page
+      const redirectPage = previousPage === "/asset-view" ? "/audits/scheduled" : previousPage;
+      navigate(redirectPage || "/audits/scheduled");
+    } catch (err) {
+      console.error("Error saving audit schedule:", err);
+      alert("Failed to save audit schedule. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const customStylesDropdown = {
-    control: (provided) => ({
-      ...provided,
-      width: "100%",
-      borderRadius: "10px",
-      fontSize: "0.875rem",
-      padding: "3px 8px",
-    }),
-    container: (provided) => ({
-      ...provided,
-      width: "100%",
-    }),
-    option: (provided, state) => ({
-      ...provided,
-      color: state.isSelected ? "white" : "grey",
-      fontSize: "0.875rem",
-    }),
+  const isEdit = Boolean(id);
+
+  const getRootPage = () => {
+    switch (previousPage) {
+      case "/audits":
+        return "Audits";
+      case "/audits/overdue":
+        return "Overdue for Audits";
+      case "/audits/scheduled":
+        return "Scheduled Audits";
+      case "/audits/completed":
+        return "Completed Audits";
+      case "/asset-view":
+        return "Audits";
+      default:
+        return "Audits";
+    }
   };
 
   return (
@@ -120,68 +109,77 @@ export default function ScheduleRegistration() {
       <nav>
         <NavBar />
       </nav>
-      <main className="schedule-registration-page">
+      <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="Audits"
-            currentPage="Schedule Audits"
-            rootNavigatePage="/audits"
-            title="Schedule Audits"
+            root={getRootPage()}
+            currentPage={isEdit ? "Edit Schedule" : "Schedule Audit"}
+            rootNavigatePage={previousPage === "/asset-view" ? "/audits/scheduled" : (previousPage || "/audits/scheduled")}
+            title={isEdit ? "Edit Schedule" : "Schedule Audit"}
           />
         </section>
-        <section className="schedule-registration-form">
-          <form onSubmit={handleSubmit(submission)}>
+        <section className="registration-form">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Asset */}
             <fieldset>
-              <label htmlFor="asset">Select Asset *</label>
-
-              <Controller
-                name="asset"
-                control={control}
-                rules={{ required: "Asset is required" }}
-                render={({ field }) => (
-                  <Select
-                    options={assetOptions}
-                    styles={customStylesDropdown}
-                    placeholder="Select location..."
-                    {...field}
-                    isMulti
-                  />
-                )}
-              />
-
-              {errors.asset && <span>{errors.asset.message}</span>}
+              <label htmlFor="asset">Asset<span className="required-asterisk">*</span></label>
+              <select
+                className={errors.asset ? "input-error" : ""}
+                disabled={loading}
+                {...register("asset", {
+                  required: "Asset is required",
+                })}
+              >
+                <option value="">{loading ? "Loading assets..." : "Select Asset"}</option>
+                {assets.map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.asset_id} - {asset.name}
+                  </option>
+                ))}
+              </select>
+              {errors.asset && (
+                <span className="error-message">
+                  {errors.asset.message}
+                </span>
+              )}
             </fieldset>
+
+            {/* Audit Due Date */}
             <fieldset>
-              <label htmlFor="audit-due-date">Audit Due Date *</label>
+              <label htmlFor="auditDueDate">Audit Due Date<span className="required-asterisk">*</span></label>
               <input
                 type="date"
-                name="audit-due-date"
-                id="audit-due-date"
-                min={currentDate}
+                className={errors.auditDueDate ? "input-error" : ""}
+                min={new Date().toISOString().split("T")[0]}
                 {...register("auditDueDate", {
                   required: "Audit due date is required",
                 })}
               />
-
               {errors.auditDueDate && (
-                <span>{errors.auditDueDate.message}</span>
+                <span className="error-message">{errors.auditDueDate.message}</span>
               )}
             </fieldset>
+
+            {/* Notes */}
             <fieldset>
               <label htmlFor="notes">Notes</label>
               <textarea
-                name="notes"
-                id="notes"
-                maxLength="500"
+                placeholder="Enter notes"
                 {...register("notes")}
+                rows="3"
               ></textarea>
             </fieldset>
-            <button type="submit" className="save-btn" disabled={!isValid}>
-              Save
+
+            {/* Submit */}
+            <button type="submit" className="primary-button" disabled={!isValid || submitting}>
+              {submitting ? "Saving..." : "Save"}
             </button>
           </form>
         </section>
       </main>
+      <Footer />
     </>
   );
-}
+};
+
+export default ScheduleRegistration;

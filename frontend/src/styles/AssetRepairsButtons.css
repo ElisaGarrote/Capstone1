@@ -1,6 +1,4 @@
 /* AssetRepairsButtons.css - Specific styles for buttons in the Asset Repairs table */
-
-/* Fix for edit, delete, and view buttons in Asset Repairs table */
 .page .table-buttons-edit,
 .page .table-buttons-delete,
 .page .table-buttons-view {
@@ -18,7 +16,6 @@
   cursor: pointer !important;
 }
 
-/* Fix for button images in Asset Repairs table */
 .page .table-buttons-edit img,
 .page .table-buttons-delete img,
 .page .table-buttons-view img {
@@ -29,7 +26,6 @@
   margin: 0 auto !important;
 }
 
-/* Hover effects for buttons */
 .page .table-buttons-edit:hover {
   background-color: rgba(0, 123, 255, 0.2) !important;
 }
@@ -42,7 +38,6 @@
   background-color: rgba(0, 123, 255, 0.2) !important;
 }
 
-/* Ensure action columns have proper spacing */
 .page table th.action-column,
 .page table td.action-column {
   width: 50px !important;

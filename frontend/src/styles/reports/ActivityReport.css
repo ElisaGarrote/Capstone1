@@ -1,213 +1,94 @@
-.activity-container {
-  display: flex;
-  min-height: 100vh;
-  background-color: #f5f5f5;
-}
+.activity-report-table-section {
+  overflow-x: auto;
+  max-height: 55vh;
+  overflow-y: auto;
 
-.activity-content {
-  flex-grow: 1;
-  padding: 2rem 4rem;
-  margin-top: 60px;
-}
+  /* Prevent affecting the parent when scrolling. */
+  overscroll-behavior: contain;
 
-.activity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
+  table {
+    width: 100%;
+    border-collapse: collapse;
 
-.activity-header h1 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #111827;
-}
+    th {
+      padding: 0.75rem !important;
+      /* 12px */
+      text-align: left !important;
+      font-size: 0.75rem;
+      /* 12px */
+      font-weight: 600;
+      color: var(--text-color);
+      border-top: 1px solid #cccccc;
+      border-bottom: 1px solid #cccccc;
+      background-color: #f0f1f2;
 
-.export-button {
-  padding: 0.5rem 1rem;
-  background-color: white;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  color: #374151;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
+      height: 50px;
 
-.export-button:hover {
-  background-color: #F3F4F6;
-}
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
 
-.activity-table-section {
-  background: white;
-  border-radius: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
+    /* Target only the checkbox column */
+    th.checkbox-col,
+    td.checkbox-col {
+      width: 28px;
+      text-align: center;
+      padding: 0 !important; /* remove extra padding */
+    }
 
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #E5E7EB;
-}
+    th.checkbox-col input[type="checkbox"],
+    td.checkbox-col input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
 
-.table-header h2 {
-  font-size: 16px;
-  font-weight: 500;
-  color: #111827;
-}
+    /* table header for 'Date' */
+    th:first-child {
+      min-width: 170px;
+    }
 
-.search-box input {
-  padding: 0.5rem 1rem;
-  border: 1px solid #E5E7EB;
-  border-radius: 8px;
-  font-size: 14px;
-  color: #374151;
-  width: 240px;
-}
+    /* table headear for 'User'*/
+    th:nth-child(2) {
+      min-width: 200px;
+      max-width: fit-content;
+    }
 
-.search-box input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
+    /* table header for 'Type' */
+    th:nth-child(3) {
+      min-width: 130px;
+    }
 
-.activity-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
+    td {
+      text-align: left !important;
+      padding: 0.75rem;
+      font-size: 0.8125rem;
+      /* 13px */
+      color: var(--text-color);
+      border-bottom: 1px solid #cccccc;
 
-.activity-table th {
-  background-color: #F9FAFB;
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 500;
-  color: #6B7280;
-  border-bottom: 1px solid #E5E7EB;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+      height: 50px;
+    }
 
-.activity-table td {
-  font-size: 14px;
-  color: #374151;
-  border-bottom: 1px solid #E5E7EB;
-  background-color: white;
-  vertical-align: middle;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+    /* Ensure empty-state row spans correctly across all columns */
+    td.no-data-message {
+      display: table-cell !important;
+      width: 100% !important;
+      white-space: normal !important;
+      padding: 0.75rem !important;
+      text-align: center !important;
+      font-style: italic;
+      color: var(--secondary-text-color);
+      background: transparent;
+    }
 
-.activity-table tbody tr:hover {
-  background-color: #F9FAFB;
+    tr:hover {
+      background-color: #fcfcfc;
+    }
+  }
 }
-
-.type-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.type-icon {
-  color: #6B7280;
-  font-size: 16px;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.user-icon {
-  color: #0D6EFD;
-  font-size: 16px;
-  min-width: 16px;
-  margin-right: 4px;
-}
-
-.user-info .user-link {
-  color: #0D6EFD;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.asset-cell .asset-link {
-  color: #0D6EFD;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-/* Column width definitions for activity report table */
-.activity-report-table th:nth-child(1),
-.activity-report-table td:nth-child(1) {
-  width: 10%;
-}
-
-.activity-report-table th:nth-child(2),
-.activity-report-table td:nth-child(2) {
-  width: 12%;
-}
-
-.activity-report-table th:nth-child(3),
-.activity-report-table td:nth-child(3) {
-  width: 12%;
-}
-
-.activity-report-table th:nth-child(4),
-.activity-report-table td:nth-child(4) {
-  width: 12%;
-}
-
-.activity-report-table th:nth-child(5),
-.activity-report-table td:nth-child(5) {
-  width: 20%;
-}
-
-.activity-report-table th:nth-child(6),
-.activity-report-table td:nth-child(6) {
-  width: 15%;
-}
-
-/* Fix for Notes column spacing */
-.activity-report-table th:last-child,
-.activity-report-table td:last-child {
-  width: 10%;
-  padding-right: 30px !important;
-  text-align: center;
-}
-
-/* Reset all cell padding */
-.activity-report-table td {
-  padding: 0 !important;
-}
-
-/* Style for all cell content containers */
-.activity-report-table .cell-content,
-.activity-report-table .type-info,
-.activity-report-table .status-container,
-.activity-report-table .asset-cell,
-.activity-report-table .user-info {
-  padding: 0 16px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-}
-
-/* Ensure Status component is properly aligned */
-.activity-report-table .status-container {
-  justify-content: flex-start;
-}
-
-/* Fix vertical alignment for all cells */
-.activity-report-table td {
-  vertical-align: middle;
-  height: 50px;
-}
-

@@ -1,40 +1,31 @@
-/* Fix for screen shifting when modals or tabs are opened */
-
-/* Prevent scrollbar from affecting layout */
 html {
   overflow-y: scroll;
 }
 
-/* Add padding to compensate for scrollbar width */
 body {
   padding-right: 0 !important;
   overflow-x: hidden;
 }
 
-/* Ensure modals don't cause layout shifts */
 .modal-open {
   overflow: hidden;
-  padding-right: 17px; /* Standard scrollbar width */
+  padding-right: 17px;
 }
 
-/* Fix for tab switching in settings page */
 .settings-tabs .tab {
   position: relative;
   overflow: hidden;
 }
 
-/* Ensure content doesn't shift when switching tabs */
 .settings-content {
   position: relative;
   overflow: hidden;
 }
 
-/* Prevent content from shifting when modal is opened */
 .settings-page {
   overflow-x: hidden;
 }
 
-/* Ensure the settings container doesn't shift */
 .settings-container {
   width: 100%;
   max-width: 1200px;

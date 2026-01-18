@@ -1,251 +1,346 @@
-import "../../styles/custom-colors.css";
-import "../../styles/AssetAudits.css";
-import "../../styles/AuditTablesGlobal.css";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import Pagination from "../../components/Pagination";
+import "../../styles/Table.css";
+import ActionButtons from "../../components/ActionButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TableBtn from "../../components/buttons/TableButtons";
-import Status from "../../components/Status";
-import { useLocation } from "react-router-dom";
 import TabNavBar from "../../components/TabNavBar";
-import DeleteModal from "../../components/Modals/DeleteModal";
-import Alert from "../../components/Alert";
-import { useState, useEffect } from "react";
-import ExportModal from "../../components/Modals/ExportModal";
-import assetsService from "../../services/assets-service";
-import dateRelated from "../../utils/dateRelated";
-import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import "../../styles/Audits.css";
+import View from "../../components/Modals/View";
+import Footer from "../../components/Footer";
+import DueAuditFilterModal from "../../components/Modals/DueAuditFilterModal";
+import { exportToExcel } from "../../utils/exportToExcel";
+import authService from "../../services/auth-service";
+import { fetchScheduledAudits } from "../../services/assets-service";
+import { getUserFromToken } from "../../api/TokenUtils";
+
+// TableHeader
+function TableHeader() {
+  return (
+    <tr>
+      <th>DUE DATE</th>
+      <th>ASSET</th>
+      <th>CREATED</th>
+      <th>AUDIT</th>
+      <th>ACTION</th>
+    </tr>
+  );
+}
+
+// TableItem
+function TableItem({ item, onDeleteClick, onViewClick }) {
+  const assetDetails = item.asset_details || {};
+  return (
+    <tr>
+      <td>{item.date}</td>
+      <td>
+        {assetDetails.asset_id || "N/A"} -{" "}
+        {assetDetails.name || "Unknown Asset"}
+      </td>
+      <td>{new Date(item.created_at).toLocaleDateString()}</td>
+      <td>
+        <TableBtn
+          type="audit"
+          navigatePage="/audits/new"
+          data={item}
+          previousPage={location.pathname}
+        />
+      </td>
+      <td>
+        <ActionButtons
+          showEdit
+          showDelete
+          showView
+          editPath={`edit/${item.id}`}
+          editState={{ item, previousPage: "/audits/scheduled" }}
+          onDeleteClick={() => onDeleteClick(item.id)}
+          onViewClick={() => onViewClick(item)}
+        />
+      </td>
+    </tr>
+  );
+}
 
 export default function ScheduledAudits() {
-  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const user = getUserFromToken();
+
+  // Fetch scheduled audits on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchScheduledAudits();
+        setData(result);
+      } catch (err) {
+        console.error("Error fetching scheduled audits:", err);
+        setError("Failed to load scheduled audits");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState([]);
+
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedActivity =
+    filteredData.length > 0
+      ? filteredData.slice(startIndex, endIndex)
+      : data.slice(startIndex, endIndex);
+
+  // delete modal state
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isDeleteSuccess, setDeleteSucess] = useState(false);
-  const [isUpdated, setUpdated] = useState(false);
-  const [isScheduleAuditAdded, setScheduleAuditAdded] = useState(false);
-  const [isExportModalOpen, setExportModalOpen] = useState(false);
-  const [scheduleAuditData, setScheduleAuditData] = useState([]);
-  const [assetsData, setAssetsData] = useState([]);
-  const [addedScheduleAudit, setAddedScheduleAudit] = useState(
-    location.state?.addedScheduleAudit
-  );
-  const [isLoading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState(null);
 
-  // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
-  // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
-  const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
-  const isUpdateFromEdit = location.state?.isUpdateFromEdit;
-  // const addedScheduleAudit = location.state?.addedScheduleAudit;
+  const openDeleteModal = (id) => {
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
 
-  console.log("is update from audit: ", isUpdateFromEdit);
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteId(null);
+  };
 
-  // Set the setDeleteSuccess state to true when the isDeleteSuccessFromEdit is true.
-  // And reset the setDeleteSucces state to false after 5 seconds.
-  useEffect(() => {
-    if (isDeleteSuccessFromEdit == true) {
-      setDeleteSucess(true);
-      setTimeout(() => {
-        setDeleteSucess(false);
-      }, 5000);
+  const handleDeleteSuccess = (deletedId) => {
+    setData(data.filter((item) => item.id !== deletedId));
+    setRefreshKey((prev) => prev + 1); // Trigger TabNavBar refresh
+    closeDeleteModal();
+  };
+
+  const handleDeleteError = (err) => {
+    console.error("Error deleting audit schedule:", err);
+    alert("Failed to delete audit schedule");
+  };
+
+  // Add state for view modal
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Add view handler
+  const handleViewClick = (item) => {
+    setSelectedItem(item);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...data];
+
+    // Filter by Due Date
+    if (filters.dueDate && filters.dueDate.trim() !== "") {
+      filtered = filtered.filter((audit) => {
+        const auditDate = new Date(audit.date);
+        const filterDate = new Date(filters.dueDate);
+        return auditDate.toDateString() === filterDate.toDateString();
+      });
     }
-  }, [isDeleteSuccessFromEdit]); // This will be executed every time the isDeleteSucessFromEdit changes.
 
-  useEffect(() => {
-    if (isUpdateFromEdit == true) {
-      setUpdated(true);
-      setTimeout(() => {
-        setUpdated(false);
-      }, 5000);
+    // Filter by Asset
+    if (filters.asset && filters.asset.trim() !== "") {
+      filtered = filtered.filter((audit) =>
+        audit.asset_details?.name
+          ?.toLowerCase()
+          .includes(filters.asset.toLowerCase())
+      );
     }
-  }, [isUpdateFromEdit]);
 
-  // Set the value for scheduleAuditAdded state.
-  useEffect(() => {
-    if (addedScheduleAudit == true) {
-      setAddedScheduleAudit(false);
-      setScheduleAuditAdded(true);
-      setTimeout(() => {
-        setScheduleAuditAdded(false);
-      }, 5000);
+    // Filter by Created
+    if (filters.created && filters.created.trim() !== "") {
+      filtered = filtered.filter((audit) => {
+        const createdDate = new Date(audit.created_at);
+        const filterDate = new Date(filters.created);
+        return createdDate.toDateString() === filterDate.toDateString();
+      });
     }
-  }, [addedScheduleAudit]);
 
-  // Retrieve all the schedule audits records.
-  useEffect(() => {
-    const fetchAllScheduleAudits = async () => {
-      const fetchedData = await assetsService.fetchAllAuditSchedules();
+    // Filter by Audit
+    if (filters.audit && filters.audit.trim() !== "") {
+      filtered = filtered.filter((audit) =>
+        audit.notes?.toLowerCase().includes(filters.audit.toLowerCase())
+      );
+    }
 
-      setScheduleAuditData(fetchedData);
-      setLoading(false);
-    };
+    return filtered;
+  };
 
-    fetchAllScheduleAudits();
-  }, []);
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
 
-  // Retrieve all the assets records.
-  useEffect(() => {
-    const fetchAllAssets = async () => {
-      const fetchedData = await assetsService.fetchAllAssets();
-
-      setAssetsData(fetchedData);
-    };
-
-    fetchAllAssets();
-  }, []);
-
-  console.table(scheduleAuditData);
-  console.table(assetsData);
+  const handleExport = () => {
+    const baseData = data;
+    const dataToExport = filteredData.length > 0 ? filteredData : baseData;
+    exportToExcel(dataToExport, "Scheduled_Audits.xlsx");
+  };
 
   return (
     <>
-      {/* Handle the delete modal.
-      Open this model if the isDeleteModalOpen state is true */}
       {isDeleteModalOpen && (
-        <DeleteModal
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
-            setDeleteSucess(true);
-            setTimeout(() => {
-              setDeleteSucess(false);
-            }, 5000);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          entityType="audit-schedule"
+          targetId={deleteId}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 
-      {/* Handle the display of the success alert.
-       Display this if the isDeleteSuccess state is true */}
-      {isDeleteSuccess && (
-        <Alert message="Deleted Successfully!" type="success" />
+      {isViewModalOpen && selectedItem && (
+        <View
+          title={`${selectedItem.asset_details?.name || "Unknown"} : ${
+            selectedItem.date
+          }`}
+          data={[
+            { label: "Due Date", value: selectedItem.date },
+            {
+              label: "Asset",
+              value: `${selectedItem.asset_details?.asset_id || "N/A"} - ${
+                selectedItem.asset_details?.name || "Unknown"
+              }`,
+            },
+            {
+              label: "Created At",
+              value: new Date(selectedItem.created_at).toLocaleDateString(),
+            },
+            { label: "Notes", value: selectedItem.notes || "N/A" },
+          ]}
+          closeModal={closeViewModal}
+        />
       )}
 
-      {isUpdated && <Alert message="Update Successfully!" type="success" />}
+      {/* Due Audit Filter Modal */}
+      <DueAuditFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
-      {isScheduleAuditAdded && (
-        <Alert message="New schedule audit added!" type="success" />
-      )}
-
-      {isExportModalOpen && (
-        <ExportModal closeModal={() => setExportModalOpen(false)} />
-      )}
-
-      <nav>
+      <section className="page-layout-with-table">
         <NavBar />
-      </nav>
-      <main className="asset-audits-page">
-        <section className="main-top">
-          <h1>Asset Audits</h1>
-          <div>
-            <MediumButtons
-              type="schedule-audits"
-              navigatePage="/audits/schedule"
-            />
-            <MediumButtons type="perform-audits" navigatePage="/audits/new" />
-          </div>
-        </section>
-        <section className="main-middle">
-          <section>
-            <TabNavBar />
+
+        <main className="main-with-table audit-layout">
+          <section className="audit-title-page-section">
+            <h1>Asset Audits</h1>
+
+            <div>
+              <MediumButtons
+                type="schedule-audits"
+                navigatePage="/audits/schedule"
+                previousPage="/audits/scheduled"
+              />
+              <MediumButtons
+                type="perform-audits"
+                navigatePage="/audits/new"
+                previousPage={location.pathname}
+              />
+            </div>
           </section>
-          <section className="container">
-            <section className="top">
-              <h2>Scheduled Audits</h2>
-              <div>
-                <form action="" method="post">
-                  <input type="text" placeholder="Search..." />
-                </form>
-                <MediumButtons
-                  type="export"
-                  deleteModalOpen={() => setExportModalOpen(true)}
+
+          <section>
+            <TabNavBar refreshKey={refreshKey} />
+          </section>
+
+          <section className="table-layout">
+            <section className="table-header">
+              <h2 className="h2">
+                Scheduled Audits (
+                {filteredData.length > 0 ? filteredData.length : data.length})
+              </h2>
+              <section className="table-actions">
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
                 />
-              </div>
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
+                {user.roles?.[0].role === "Admin" && (
+                  <MediumButtons type="export" onClick={handleExport} />
+                )}
+              </section>
             </section>
-            <section className="middle">
-              {/* Render loading skeleton while waiting to the response from the API request*/}
-              {isLoading && <SkeletonLoadingTable />}
 
-              {/* Render message if the scheduleAuditData is empty */}
-              {!isLoading && scheduleAuditData.length == 0 && (
-                <p className="table-message">No schedule audits found.</p>
-              )}
-
-              {/* Render table if scheduleAuditData is not empty */}
-              {scheduleAuditData.length > 0 && (
+            <section className="audit-table-section">
+              {loading ? (
+                <p className="loading-message">Loading scheduled audits...</p>
+              ) : error ? (
+                <p className="error-message">{error}</p>
+              ) : (
                 <table>
                   <thead>
-                    <tr>
-                      <th>
-                        <input type="checkbox" name="" id="" />
-                      </th>
-                      <th>DUE DATE</th>
-                      <th>ASSET</th>
-                      <th>STATUS</th>
-                      <th>CREATED</th>
-                      <th>AUDIT</th>
-                      <th>EDIT</th>
-                      <th>DELETE</th>
-                      <th>VIEW</th>
-                    </tr>
+                    <TableHeader />
                   </thead>
                   <tbody>
-                    {scheduleAuditData.map((data, index) => {
-                      return (
-                        <tr key={index}>
-                          <td>
-                            <input type="checkbox" name="" id="" />
-                          </td>
-                          <td>{dateRelated.formatDate(data.date)}</td>
-                          <td>
-                            {data.asset_info.displayed_id} -{" "}
-                            {data.asset_info.name}
-                          </td>
-                          <td>
-                            <Status
-                              type="deployed"
-                              name="Deployed"
-                              location="Makati"
-                            />
-                          </td>
-                          <td>{dateRelated.formatDate(data.created_at)}</td>
-                          <td>
-                            <TableBtn
-                              type="audit"
-                              navigatePage="/audits/new"
-                              previousPage={location.pathname}
-                            />
-                          </td>
-                          <td>
-                            <TableBtn
-                              type="edit"
-                              navigatePage={"/audits/edit"}
-                              previousPage={location.pathname}
-                            />
-                          </td>
-                          <td>
-                            <TableBtn
-                              type="delete"
-                              showModal={() => {
-                                setDeleteModalOpen(true);
-                                setSelectedRowId(assetId);
-                              }}
-                            />
-                          </td>
-                          <td>
-                            <TableBtn
-                              type="view"
-                              navigatePage="/audits/view"
-                              data={data}
-                              previousPage={location.pathname}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {paginatedActivity.length > 0 ? (
+                      paginatedActivity.map((item) => (
+                        <TableItem
+                          key={item.id}
+                          item={item}
+                          onDeleteClick={openDeleteModal}
+                          onViewClick={handleViewClick}
+                          navigate={navigate}
+                          location={location}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="no-data-message">
+                          No Scheduled Audits Found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               )}
             </section>
-            <section></section>
+
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={data.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
           </section>
-        </section>
-      </main>
+        </main>
+        <Footer />
+      </section>
     </>
   );
 }

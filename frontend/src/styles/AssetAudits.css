@@ -7,7 +7,7 @@
   padding: 100px 38px 38px 38px;
   height: 100vh;
   position: relative;
-  z-index: 1; /* Lower z-index to ensure it doesn't appear in front of overlays */
+  z-index: 1;
 }
 
 .asset-audits-page section {
@@ -21,8 +21,26 @@
   align-items: center;
 }
 
-.asset-audits-page .main-top div,
-.asset-audits-page .container div {
+.asset-audits-page
+  .main-top
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ),
+.asset-audits-page
+  .container
+  div:not(
+    .status-archived,
+    .status-deployed,
+    .status-undeployable,
+    .status-pending,
+    .status-deployable,
+    .status-lost
+  ) {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -83,7 +101,7 @@
   height: auto;
   width: 100%;
   background-color: #ffffff;
-  border-radius: 40px;
+  border-radius: 25px;
   border: 1px solid #d3d3d3;
   box-shadow: 0 0 20px rgba(211, 211, 211, 0.8);
   padding-bottom: 28px;
@@ -127,6 +145,9 @@
 
 .asset-audits-page table th {
   background-color: rgba(211, 211, 211, 0.2);
+  color: var(--secondary-text-color) !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
 }
 
 .asset-audits-page table th,
@@ -134,7 +155,7 @@
   padding: 0.75rem;
   border-bottom: 1px solid #d3d3d3;
   font-size: 0.75rem;
-  color: var(--secondary-text-color);
+  color: var(--secondary-text-color) !important;
   text-align: left;
   overflow: hidden;
   white-space: nowrap;
@@ -143,7 +164,7 @@
 
 .asset-audits-page table td {
   font-size: 0.88rem;
-  color: var(--secondary-text-color);
+  color: var(--secondary-text-color) !important;
   height: 50px;
 }
 

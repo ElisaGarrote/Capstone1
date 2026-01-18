@@ -10,23 +10,31 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from pathlib import Path
 import os
 import dj_database_url
-from pathlib import Path
-from datetime import timedelta  # Add this import
+from datetime import timedelta
+from dotenv import load_dotenv
 import logging
 logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+def get_list(var_name, default=""):
+    value = os.getenv(var_name, default)
+    return [v.strip() for v in value.split(",") if v.strip()]
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / ".env")
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-for-dev')
+SECRET_KEY = os.getenv("AUTH_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.getenv("AUTH_DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = get_list("AUTH_ALLOWED_HOSTS", "localhost,127.0.0.1")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -119,25 +127,22 @@ WSGI_APPLICATION = 'authentication.wsgi.application'
 
 # Database configuration
 # Use DATABASE_URL if available (Railway provides this)
-if 'DATABASE_URL' in os.environ:
-    logger.info(f"Using DATABASE_URL from environment")
+if os.getenv("AUTH_DATABASE_URL"):
     DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
+        "default": dj_database_url.config(
+            default=os.getenv("AUTH_DATABASE_URL"),
             conn_max_age=600
         )
     }
 else:
-    logger.info(f"Using hardcoded database settings")
-    # Fallback for local development
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'railway',
-            'USER': 'postgres',
-            'PASSWORD': 'QdleMpvGHEMlhrrlrinLihmJggQCMXfU',
-            'HOST': 'trolley.proxy.rlwy.net',
-            'PORT': '57512',
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("AUTH_DB_NAME"),
+            "USER": os.getenv("AUTH_DB_USER"),
+            "PASSWORD": os.getenv("AUTH_DB_PASSWORD"),
+            "HOST": os.getenv("AUTH_DB_HOST"),
+            "PORT": os.getenv("AUTH_DB_PORT"),
         }
     }
 
@@ -166,7 +171,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Manila'
 
 USE_I18N = True
 
@@ -177,33 +182,41 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# WhiteNoise configuration
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 # Define where Django should look for static files
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]  # Add this line
 
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-
-CSRF_COOKIE_NAME = 'csrftoken'
-CSRF_COOKIE_HTTPONLY = False  # Allows JavaScript to read the CSRF cookie
-CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'amsmapg7@gmail.com'
-EMAIL_HOST_PASSWORD = 'jton xyex bxll tluw'
-
-# WhiteNoise configuration
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
 # Optional: WhiteNoise settings for better performance
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 
-# Add this to your settings.py
+# CORS settings
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = get_list("AUTH_CORS_ALLOWED_ORIGINS")
+
+
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_HTTPONLY = False  # Allows JavaScript to read the CSRF cookie
+CSRF_TRUSTED_ORIGINS = get_list("AUTH_CSRF_TRUSTED_ORIGINS")
+
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND"),
+EMAIL_HOST = os.getenv("EMAIL_HOST"),
+EMAIL_PORT = os.getenv("EMAIL_PORT"),
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False").lower() in ("true", "1", "yes")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER"),
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD"),
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL"),
+EMAIL_TIMEOUT = 30  # seconds
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -224,3 +237,5 @@ LOGGING = {
         },
     },
 }
+
+print("Loaded DB host:", os.getenv("AUTH_DB_HOST"))

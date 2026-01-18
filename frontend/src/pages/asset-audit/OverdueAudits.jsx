@@ -1,235 +1,371 @@
-import "../../styles/custom-colors.css";
-import "../../styles/OverdueAudits.css";
-import "../../styles/AuditTablesGlobal.css";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import Pagination from "../../components/Pagination";
+import "../../styles/Table.css";
+import ActionButtons from "../../components/ActionButtons";
+import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TableBtn from "../../components/buttons/TableButtons";
-import Status from "../../components/Status";
 import TabNavBar from "../../components/TabNavBar";
-import { useLocation } from "react-router-dom";
-import DeleteModal from "../../components/Modals/DeleteModal";
-import Alert from "../../components/Alert";
-import { useState, useEffect } from "react";
-import ExportModal from "../../components/Modals/ExportModal";
-import assetsService from "../../services/assets-service";
-import dateRelated from "../../utils/dateRelated";
-import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
+import "../../styles/AuditsOverdue.css";
+import View from "../../components/Modals/View";
+import Footer from "../../components/Footer";
+import OverdueAuditFilterModal from "../../components/Modals/OverdueAuditFilterModal";
+import { exportToExcel } from "../../utils/exportToExcel";
+import authService from "../../services/auth-service";
+import { fetchOverdueAudits } from "../../services/assets-service";
+import { getUserFromToken } from "../../api/TokenUtils";
+
+// TableHeader
+function TableHeader() {
+  return (
+    <tr>
+      <th>DUE DATE</th>
+      <th>OVERDUE BY</th>
+      <th>ASSET</th>
+      <th>CREATED</th>
+      <th>AUDIT</th>
+      <th>ACTION</th>
+    </tr>
+  );
+}
+
+// Helper to calculate overdue days
+function calculateOverdueDays(dateStr) {
+  const dueDate = new Date(dateStr);
+  const today = new Date();
+  const diffTime = today - dueDate;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays > 0 ? diffDays : 0;
+}
+
+// TableItem
+function TableItem({ item, onDeleteClick, onViewClick }) {
+  const assetDetails = item.asset_details || {};
+  const overdueDays = calculateOverdueDays(item.date);
+
+  return (
+    <tr>
+      <td>{item.date}</td>
+      <td>{overdueDays} day/s</td>
+      <td>
+        {assetDetails.asset_id || "N/A"} -{" "}
+        {assetDetails.name || "Unknown Asset"}
+      </td>
+      <td>{new Date(item.created_at).toLocaleDateString()}</td>
+      <td>
+        <TableBtn
+          type="audit"
+          navigatePage="/audits/new"
+          data={item}
+          previousPage={location.pathname}
+        />
+      </td>
+      <td>
+        <ActionButtons
+          showEdit
+          showDelete
+          showView
+          editPath={`edit/${item.id}`}
+          editState={{ item, previousPage: "/audits/overdue" }}
+          onDeleteClick={() => onDeleteClick(item.id)}
+          onViewClick={() => onViewClick(item)}
+        />
+      </td>
+    </tr>
+  );
+}
 
 export default function OverdueAudits() {
-  const location = useLocation();
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isDeleteSuccess, setDeleteSucess] = useState(false);
-  const [isUpdated, setUpdated] = useState(false);
-  const [isExportModalOpen, setExportModalOpen] = useState(false);
-  const [isLoading, setLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState("");
-  const [overdueAuditsData, setOverdueAuditsData] = useState([]);
+  const navigate = useNavigate();
 
-  // Retrieve the "isDeleteSuccessFromEdit" value passed from the navigation state.
-  // If the "isDeleteSuccessFromEdit" is not exist, the default value for this is "undifiend".
-  const isDeleteSuccessFromEdit = location.state?.isDeleteSuccessFromEdit;
-  const isUpdateFromEdit = location.state?.isUpdateFromEdit;
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const user = getUserFromToken();
 
-  // Handle current date
+  // Fetch overdue audits on mount
   useEffect(() => {
-    setCurrentDate(dateRelated.getCurrentDate());
-  }, []);
-
-  // Set the setDeleteSuccess state to true when the isDeleteSuccessFromEdit is true.
-  // And reset the setDeleteSucces state to false after 5 seconds.
-  useEffect(() => {
-    if (isDeleteSuccessFromEdit == true) {
-      setDeleteSucess(true);
-      setTimeout(() => {
-        setDeleteSucess(false);
-      }, 5000);
-    }
-  }, [isDeleteSuccessFromEdit]); // This will be executed every time the isDeleteSucessFromEdit changes.
-
-  useEffect(() => {
-    if (isUpdateFromEdit == true) {
-      setUpdated(true);
-      setTimeout(() => {
-        setUpdated(false);
-      }, 5000);
-    }
-  }, [isUpdateFromEdit]);
-
-  // Retrieve all the overdue audits records.
-  useEffect(() => {
-    const fetchListOverdueAudits = async () => {
-      const fetchedData = await assetsService.fetchAllOverdueAudits();
-
-      setOverdueAuditsData(fetchedData);
-      setLoading(false);
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchOverdueAudits();
+        setData(result);
+      } catch (err) {
+        console.error("Error fetching overdue audits:", err);
+        setError("Failed to load overdue audits");
+      } finally {
+        setLoading(false);
+      }
     };
-
-    fetchListOverdueAudits();
+    loadData();
   }, []);
+
+  // Filter modal state
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
+  const [filteredData, setFilteredData] = useState([]);
+
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedActivity =
+    filteredData.length > 0
+      ? filteredData.slice(startIndex, endIndex)
+      : data.slice(startIndex, endIndex);
+
+  // delete modal state
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const openDeleteModal = (id) => {
+    setDeleteId(id);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteId(null);
+  };
+
+  const handleDeleteSuccess = (deletedId) => {
+    setData(data.filter((item) => item.id !== deletedId));
+    setRefreshKey((prev) => prev + 1); // Trigger TabNavBar refresh
+    closeDeleteModal();
+  };
+
+  const handleDeleteError = (err) => {
+    console.error("Error deleting audit schedule:", err);
+    alert("Failed to delete audit schedule");
+  };
+
+  // Add state for view modal
+  const [isViewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  // Add view handler
+  const handleViewClick = (item) => {
+    setSelectedItem(item);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  // Apply filters to data
+  const applyFilters = (filters) => {
+    let filtered = [...data];
+
+    // Filter by Due Date
+    if (filters.dueDate && filters.dueDate.trim() !== "") {
+      filtered = filtered.filter((audit) => {
+        const auditDate = new Date(audit.date);
+        const filterDate = new Date(filters.dueDate);
+        return auditDate.toDateString() === filterDate.toDateString();
+      });
+    }
+
+    // Filter by Overdue By
+    if (filters.overdueBy && filters.overdueBy.trim() !== "") {
+      const overdueByValue = parseInt(filters.overdueBy);
+      filtered = filtered.filter(
+        (audit) => calculateOverdueDays(audit.date) === overdueByValue
+      );
+    }
+
+    // Filter by Asset
+    if (filters.asset && filters.asset.trim() !== "") {
+      filtered = filtered.filter((audit) =>
+        audit.asset_details?.name
+          ?.toLowerCase()
+          .includes(filters.asset.toLowerCase())
+      );
+    }
+
+    // Filter by Created
+    if (filters.created && filters.created.trim() !== "") {
+      filtered = filtered.filter((audit) => {
+        const createdDate = new Date(audit.created_at);
+        const filterDate = new Date(filters.created);
+        return createdDate.toDateString() === filterDate.toDateString();
+      });
+    }
+
+    // Filter by Audit
+    if (filters.audit && filters.audit.trim() !== "") {
+      filtered = filtered.filter((audit) =>
+        audit.notes?.toLowerCase().includes(filters.audit.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle filter apply
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const handleExport = () => {
+    const baseData = data;
+    const dataToExport = filteredData.length > 0 ? filteredData : baseData;
+    exportToExcel(dataToExport, "Overdue_Audits.xlsx");
+  };
 
   return (
     <>
-      {/* Handle the delete modal.
-      Open this model if the isDeleteModalOpen state is true */}
       {isDeleteModalOpen && (
-        <DeleteModal
-          closeModal={() => setDeleteModalOpen(false)}
-          confirmDelete={() => {
-            setDeleteSucess(true);
-            setTimeout(() => {
-              setDeleteSucess(false);
-            }, 5000);
-          }}
+        <ConfirmationModal
+          closeModal={closeDeleteModal}
+          actionType="delete"
+          entityType="audit-schedule"
+          targetId={deleteId}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
 
-      {/* Handle the display of the success alert.
-       Display this if the isDeleteSuccess state is true */}
-      {isDeleteSuccess && (
-        <Alert message="Deleted Successfully!" type="success" />
+      {isViewModalOpen && selectedItem && (
+        <View
+          title={`${
+            selectedItem.asset_details?.name || "Unknown"
+          } : ${calculateOverdueDays(selectedItem.date)} day/s overdue`}
+          data={[
+            { label: "Due Date", value: selectedItem.date },
+            {
+              label: "Overdue By",
+              value: `${calculateOverdueDays(selectedItem.date)} day/s`,
+            },
+            {
+              label: "Asset",
+              value: `${selectedItem.asset_details?.asset_id || "N/A"} - ${
+                selectedItem.asset_details?.name || "Unknown"
+              }`,
+            },
+            {
+              label: "Created At",
+              value: new Date(selectedItem.created_at).toLocaleDateString(),
+            },
+            { label: "Notes", value: selectedItem.notes || "N/A" },
+          ]}
+          closeModal={closeViewModal}
+        />
       )}
 
-      {isUpdated && <Alert message="Update Successfully!" type="success" />}
+      {/* Overdue Audit Filter Modal */}
+      <OverdueAuditFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
-      {isExportModalOpen && (
-        <ExportModal closeModal={() => setExportModalOpen(false)} />
-      )}
-
-      <nav>
+      <section className="page-layout-with-table">
         <NavBar />
-      </nav>
-      <main className="overdue-audits-page">
-        <section className="main-top">
-          <h1>Asset Audits</h1>
-          <div>
-            <MediumButtons
-              type="schedule-audits"
-              navigatePage="/audits/schedule"
-            />
-            <MediumButtons type="perform-audits" navigatePage="/audits/new" />
-          </div>
-        </section>
-        <section className="main-middle">
-          <section>
-            <TabNavBar />
+
+        <main className="main-with-table">
+          <section className="audit-title-page-section">
+            <h1>Asset Audits</h1>
+
+            <div>
+              <MediumButtons
+                type="schedule-audits"
+                navigatePage="/audits/schedule"
+                previousPage="/audits/overdue"
+              />
+              <MediumButtons
+                type="perform-audits"
+                navigatePage="/audits/new"
+                previousPage={location.pathname}
+              />
+            </div>
           </section>
-          <section className="container">
-            <section className="top">
-              <h2>Overdue for an Audits</h2>
-              <div>
-                <form action="" method="post">
-                  <input type="text" placeholder="Search..." />
-                </form>
-                <MediumButtons
-                  type="export"
-                  deleteModalOpen={() => setExportModalOpen(true)}
+
+          <section>
+            <TabNavBar refreshKey={refreshKey} />
+          </section>
+
+          <section className="table-layout">
+            <section className="table-header">
+              <h2 className="h2">
+                Overdue for Audits (
+                {filteredData.length > 0 ? filteredData.length : data.length})
+              </h2>
+              <section className="table-actions">
+                <input
+                  type="search"
+                  placeholder="Search..."
+                  className="search"
                 />
-              </div>
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
+                {user.roles?.[0].role === "Admin" && (
+                  <MediumButtons type="export" onClick={handleExport} />
+                )}
+              </section>
             </section>
-            <section className="middle">
-              {/* Render loading skeleton while waiting to the response from the API request*/}
-              {isLoading && <SkeletonLoadingTable />}
 
-              {/* Render message if the overdueAuditData is empty */}
-              {!isLoading && overdueAuditsData.length == 0 && (
-                <p className="table-message">
-                  {isLoading ? "Loading..." : "No overdue audits found."}
-                </p>
-              )}
-
-              {/* Render table if overdueAuditData is not empty */}
-              {overdueAuditsData.length > 0 && (
+            <section className="overdue-audit-table-section">
+              {loading ? (
+                <p className="loading-message">Loading overdue audits...</p>
+              ) : error ? (
+                <p className="error-message">{error}</p>
+              ) : (
                 <table>
                   <thead>
-                    <tr>
-                      <th>
-                        <input type="checkbox" name="" id="" />
-                      </th>
-                      <th>DUE DATE</th>
-                      <th>OVERDUE BY</th>
-                      <th>ASSET</th>
-                      <th>STATUS</th>
-                      <th>AUDIT</th>
-                      <th>EDIT</th>
-                      <th>DELETE</th>
-                      <th>VIEW</th>
-                    </tr>
+                    <TableHeader />
                   </thead>
                   <tbody>
-                    {overdueAuditsData.map((data, index) => {
-                      // Calculate the day difference
-                      const date1 = new Date(data.date).setHours(0, 0, 0, 0); // Normalize to midnight
-                      const date2 = new Date(currentDate).setHours(0, 0, 0, 0); // Normalize to midnight
-                      const dayDifference =
-                        (date2 - date1) / (1000 * 60 * 60 * 24); // Difference in days
-
-                      return (
-                        <tr key={index}>
-                          <td>
-                            <input type="checkbox" name="" id="" />
-                          </td>
-                          <td>{dateRelated.formatDate(data.date)}</td>
-                          <td>
-                            {dayDifference} {dayDifference > 1 ? "days" : "day"}
-                          </td>
-                          <td>
-                            {data.asset_info.displayed_id} -{" "}
-                            {data.asset_info.name}
-                          </td>
-                          <td>
-                            <Status
-                              type="deployed"
-                              name="Deployed"
-                              personName="Mary Grace Piattos"
-                            />
-                          </td>
-                          <td>
-                            <TableBtn
-                              type="audit"
-                              navigatePage="/audits/new"
-                              previousPage={location.pathname}
-                            />
-                          </td>
-                          <td>
-                            <TableBtn
-                              type="edit"
-                              navigatePage={"/audits/edit"}
-                              previousPage={location.pathname}
-                            />
-                          </td>
-                          <td>
-                            <TableBtn
-                              type="delete"
-                              showModal={() => {
-                                setDeleteModalOpen(true);
-                                setSelectedRowId(assetId);
-                              }}
-                            />
-                          </td>
-                          <td>
-                            <TableBtn
-                              type="view"
-                              navigatePage="/audits/view"
-                              data={data}
-                              previousPage={location.pathname}
-                            />
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {paginatedActivity.length > 0 ? (
+                      paginatedActivity.map((item) => (
+                        <TableItem
+                          key={item.id}
+                          item={item}
+                          onDeleteClick={openDeleteModal}
+                          onViewClick={handleViewClick}
+                          navigate={navigate}
+                          location={location}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="no-data-message">
+                          No Overdue Audits Found.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               )}
             </section>
-            <section></section>
+
+            <section className="table-pagination">
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={data.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </section>
           </section>
-          {/* {isLoading ? (
-            "Loading..."
-          ) : (
-            
-          )} */}
-        </section>
-      </main>
+        </main>
+        <Footer />
+      </section>
     </>
   );
 }

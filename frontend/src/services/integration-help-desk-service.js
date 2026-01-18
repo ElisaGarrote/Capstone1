@@ -1,0 +1,27 @@
+import helpDeskAxios from "../api/integrationHelpDesk";
+
+/* ===============================
+          LOCATIONS CRUD
+================================= */
+// GET all locations
+export async function fetchAllLocations() {
+  const res = await helpDeskAxios.get("locations/");
+  // Map city to name for frontend compatibility
+  const data = res.data.results ?? res.data;
+  return data.map(loc => ({
+    id: loc.id,
+    name: loc.city || loc.name
+  }));
+}
+
+// GET location by ID
+export async function fetchLocationById(id) {
+  const res = await helpDeskAxios.get(`locations/${id}/`);
+  return res.data;
+}
+
+// create location
+export async function createLocation(data) {
+  const res = await helpDeskAxios.post("locations/", data);
+  return res.data;
+}

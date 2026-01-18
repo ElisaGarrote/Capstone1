@@ -1,45 +1,39 @@
 from rest_framework import serializers
-from django.contrib.auth.password_validation import validate_password
-from .models import CustomUser
+from .models import *
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True)
-    password2 = serializers.CharField(write_only=True, required=True)
-
     class Meta:
-        model = CustomUser
-        fields = ('email', 'password', 'password2')
-        extra_kwargs = {
-            'email': {'required': True}
-        }
-
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
-        return attrs
-
-    def create(self, validated_data):
-        # Remove password2 from validated_data
-        validated_data.pop('password2', None)
-        
-        # Get password
-        password = validated_data.pop('password')
-        
-        # Create user with remaining data
-        user = CustomUser(
-            email=validated_data.get('email'),
-            is_superuser=True,
-            is_staff=True,
-            is_active=True
+        model = User
+        fields = (
+            'id', 'email', 'password', 'first_name', 'middle_name', 
+            'last_name', 'role', 'contact_number', 'image',
         )
-        
-        # Set password
-        user.set_password(password)
-        user.save()
-        
-        return user
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'middle_name': {'required': False, 'allow_blank': True},
+            # 'image': {'required': False, 'allow_null': True},
+        }
+    
+    def create(self, validated_data):
+        role = validated_data.get('role', 'operator')
+        if role == 'admin':
+            return User.objects.create_superuser(**validated_data)
+        return User.objects.create_user(**validated_data)
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'email')
+
+class UserFullNameSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'full_name')
+
+    def get_full_name(self, obj):
+            return ' '.join(part for part in [obj.first_name, obj.middle_name, obj.last_name] if part)

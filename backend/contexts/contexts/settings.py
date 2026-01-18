@@ -12,23 +12,37 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
+from dotenv import load_dotenv
+import logging
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+def get_list(var_name, default=""):
+    value = os.getenv(var_name, default)
+    return [v.strip() for v in value.split(",") if v.strip()]
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#k7v(j$=w58+wzy+ghyu6jmpig!(!pu&wukg%s^+2)siv_fpps'
+SECRET_KEY = os.getenv("CONTEXTS_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("CONTEXTS_DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = get_list("CONTEXTS_ALLOWED_HOSTS","localhost,127.0.0.1",)
+ALLOWED_HOSTS = get_list("CONTEXTS_ALLOWED_HOSTS","localhost,127.0.0.1",)
 
-
+if DEBUG:
+    ALLOWED_HOSTS += ["contexts-service", "contexts-service:8003", "0.0.0.0"]
+if DEBUG:
+    ALLOWED_HOSTS += ["contexts-service", "contexts-service:8003", "0.0.0.0"]
 # Application definition
 
 INSTALLED_APPS = [
@@ -80,16 +94,24 @@ WSGI_APPLICATION = 'contexts.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'railway',
-        'USER': 'postgres',
-        'PASSWORD': 'vzYwYBKnmkTitUnSZgpxFBUicmGIgIcj',
-        'HOST': 'tramway.proxy.rlwy.net',
-        'PORT': '43108',
+if os.getenv("CONTEXTS_DATABASE_URL"):
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.getenv("CONTEXTS_DATABASE_URL"),
+            conn_max_age=600
+        )
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("CONTEXTS_DB_NAME"),
+            "USER": os.getenv("CONTEXTS_DB_USER"),
+            "PASSWORD": os.getenv("CONTEXTS_DB_PASSWORD"),
+            "HOST": os.getenv("CONTEXTS_DB_HOST"),
+            "PORT": os.getenv("CONTEXTS_DB_PORT"),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -115,7 +137,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Manila'
 
 USE_I18N = True
 
@@ -130,9 +152,18 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Extra places for collectstatic to find static files
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+# Only include the project-level `static/` directory if it exists to
+# avoid warnings when the directory is not present (common in local dev).
+STATICFILES_DIRS = []
+_static_dir = os.path.join(BASE_DIR, 'static')
+if os.path.isdir(_static_dir):
+    STATICFILES_DIRS.append(_static_dir)
+# Only include the project-level `static/` directory if it exists to
+# avoid warnings when the directory is not present (common in local dev).
+STATICFILES_DIRS = []
+_static_dir = os.path.join(BASE_DIR, 'static')
+if os.path.isdir(_static_dir):
+    STATICFILES_DIRS.append(_static_dir)
 
 # WhiteNoise settings
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
@@ -146,6 +177,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+# Ensure CORS is properly configured
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = get_list("CONTEXTS_CORS_ALLOWED_ORIGINS")
+CSRF_TRUSTED_ORIGINS = get_list("CONTEXTS_CSRF_TRUSTED_ORIGINS")
+
+print("Loaded DB host:", os.getenv("CONTEXTS_DB_HOST"))
+
+# Import API key for protecting update-enabled imports. If not set, updates are disabled.
+IMPORT_API_KEY = os.getenv('IMPORT_API_KEY', None)
