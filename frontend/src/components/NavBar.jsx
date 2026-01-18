@@ -173,9 +173,34 @@ export default function NavBar() {
     }
   }, [location.pathname]);
 
-  const logout = () => {
-    authService.logout();
-    navigate("/login");
+  const logout = async () => {
+    try {
+      // Check if external auth is configured
+      const externalAuth = import.meta.env.VITE_EXTERNAL_AUTH;
+      if (externalAuth) {
+        try {
+          const accessToken = sessionStorage.getItem("access");
+          await fetch(`${externalAuth}/api/v1/users/logout/`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
+          });
+        } catch (externalError) {
+          console.warn("External auth logout failed:", externalError);
+          // Continue with local logout even if external logout fails
+        }
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Always perform local logout
+      authService.logout();
+      localStorage.clear();
+      sessionStorage.clear();
+      navigate("/login");
+    }
   };
 
   return (

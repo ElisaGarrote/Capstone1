@@ -22,6 +22,15 @@ function Login() {
   const [hasActiveAdmin, setActiveAdmin] = useState(true);
 
   const dispatch = useDispatch();
+  
+  const externalLoginUrl = import.meta.env.VITE_EXTERNAL_LOGIN_URL;
+
+  // Redirect to external login if configured
+  useEffect(() => {
+    if (externalLoginUrl) {
+      window.location.href = externalLoginUrl;
+    }
+  }, [externalLoginUrl]);
 
   const {
     register,
