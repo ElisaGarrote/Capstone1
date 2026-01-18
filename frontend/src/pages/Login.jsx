@@ -130,7 +130,7 @@ function Login() {
                 {...register("email", {
                   required: "Must not empty",
                   pattern: {
-                    value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                    value: /^\S+@\S+\.\S+$/,
                     message: "Invalid email format",
                   },
                 })}
