@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db import connection
 from django.utils import timezone
 from contexts_ms.models import Ticket
 from datetime import timedelta
@@ -26,8 +27,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING('Clearing existing tickets...'))
-            Ticket.objects.all().delete()
-            self.stdout.write(self.style.SUCCESS('Existing tickets cleared.'))
+            table_name = Ticket._meta.db_table
+            with connection.cursor() as cursor:
+                cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE')
+            self.stdout.write(self.style.SUCCESS('Existing tickets cleared (IDs reset to 1).'))
 
         self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding 80 Tickets (40 Checkout + 40 Checkin) ==='))
 

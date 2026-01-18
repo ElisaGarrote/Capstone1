@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db import transaction, IntegrityError
+from django.db import transaction, IntegrityError, connection
 from contexts_ms.models import Category
 from contexts_ms.utils import normalize_name_smart
 
@@ -44,8 +44,10 @@ class Command(BaseCommand):
 
         if clear:
             self.stdout.write(self.style.WARNING('Clearing existing categories...'))
-            Category.objects.all().delete()
-            self.stdout.write(self.style.SUCCESS('Existing categories cleared.'))
+            table_name = Category._meta.db_table
+            with connection.cursor() as cursor:
+                cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE')
+            self.stdout.write(self.style.SUCCESS('Existing categories cleared (IDs reset to 1).'))
 
         if not types:
             self.stderr.write(self.style.ERROR("No types provided; aborting."))
@@ -80,32 +82,54 @@ class Command(BaseCommand):
         asset_idx = 0
         component_idx = 0
 
-        for i in range(count):
-            ctype = types[i % len(types)]
-
-            if use_real:
-                if ctype == 'asset':
-                    base = asset_names[asset_idx % len(asset_names)]
-                    asset_idx += 1
-                else:
-                    base = component_names[component_idx % len(component_names)]
-                    component_idx += 1
-
-                # ensure uniqueness by appending index if needed
+        # When using --use-real, create all asset categories first, then component categories
+        # This ensures predictable IDs: assets get IDs 1-25, components get IDs 26-50
+        if use_real:
+            # First pass: create asset categories
+            for i in range(min(count, len(asset_names))):
+                if 'asset' not in types:
+                    break
+                base = asset_names[i]
                 name = normalize_name_smart(base)
-                if (name.lower(), ctype) in existing or (name.lower(), ctype) in planned_names:
+                if (name.lower(), 'asset') in existing or (name.lower(), 'asset') in planned_names:
                     name = normalize_name_smart(f"{base} {i+1}")
-            else:
+                if (name.lower(), 'asset') in existing:
+                    skipped.append((name, 'asset'))
+                    continue
+                planned_names.add((name.lower(), 'asset'))
+                obj = Category(name=name, type='asset')
+                to_create.append(obj)
+
+            # Second pass: create component categories
+            for i in range(min(count, len(component_names))):
+                if 'component' not in types:
+                    break
+                if len(to_create) + len(skipped) >= count:
+                    break
+                base = component_names[i]
+                name = normalize_name_smart(base)
+                if (name.lower(), 'component') in existing or (name.lower(), 'component') in planned_names:
+                    name = normalize_name_smart(f"{base} {i+1}")
+                if (name.lower(), 'component') in existing:
+                    skipped.append((name, 'component'))
+                    continue
+                planned_names.add((name.lower(), 'component'))
+                obj = Category(name=name, type='component')
+                to_create.append(obj)
+        else:
+            # Original alternating behavior for non-real mode
+            for i in range(count):
+                ctype = types[i % len(types)]
                 raw_name = f"{prefix} {i+1:03d}"
                 name = normalize_name_smart(raw_name)
 
-            if (name.lower(), ctype) in existing:
-                skipped.append((name, ctype))
-                continue
+                if (name.lower(), ctype) in existing:
+                    skipped.append((name, ctype))
+                    continue
 
-            planned_names.add((name.lower(), ctype))
-            obj = Category(name=name, type=ctype)
-            to_create.append(obj)
+                planned_names.add((name.lower(), ctype))
+                obj = Category(name=name, type=ctype)
+                to_create.append(obj)
 
         self.stdout.write(f"Planned: {len(to_create)} new, skipped {len(skipped)} existing")
 

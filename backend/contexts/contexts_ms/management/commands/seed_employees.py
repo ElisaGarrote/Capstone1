@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db import connection
 from contexts_ms.models import Employee
 
 
@@ -15,8 +16,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING('Clearing existing employees...'))
-            Employee.objects.all().delete()
-            self.stdout.write(self.style.SUCCESS('Existing employees cleared.'))
+            table_name = Employee._meta.db_table
+            with connection.cursor() as cursor:
+                cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE')
+            self.stdout.write(self.style.SUCCESS('Existing employees cleared (IDs reset to 1).'))
 
         self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding 20 Employees ==='))
 

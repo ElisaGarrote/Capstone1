@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
+from django.db import connection
 from django.utils import timezone
 from assets_ms.models import Asset, AssetCheckout
 from datetime import timedelta
@@ -30,8 +31,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING('Clearing existing asset checkouts...'))
-            AssetCheckout.objects.all().delete()
-            self.stdout.write(self.style.SUCCESS('Existing asset checkouts cleared.'))
+            table_name = AssetCheckout._meta.db_table
+            with connection.cursor() as cursor:
+                cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE')
+            self.stdout.write(self.style.SUCCESS('Existing asset checkouts cleared (IDs reset to 1).'))
 
         # Get assets with deployed status (3 or 4) - these are the ones that should have checkouts
         # According to seed_assets.py, assets at positions 41-80 (0-indexed: 40-79) have deployed status
