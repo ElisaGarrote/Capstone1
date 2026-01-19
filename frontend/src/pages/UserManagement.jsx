@@ -13,7 +13,7 @@ import Footer from "../components/Footer";
 import { exportToExcel } from "../utils/exportToExcel";
 import ActionButtons from "../components/ActionButtons";
 import mockUsers from "../data/mockData/user-management/user-management-data.json";
-import { useAuth } from "../Context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 import "../styles/UserManagement/UserManagement.css";
 
