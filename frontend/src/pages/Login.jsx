@@ -127,13 +127,15 @@ function Login() {
                 type="text"
                 name="email"
                 placeholder="Enter your email"
+                /*
                 {...register("email", {
                   required: "Must not empty",
-                  // pattern: {
-                  //   value: /^\S+@\S+\.\S+$/,
-                  //   message: "Invalid email format",
-                  // },
+                  pattern: {
+                    value: /^\S+@\S+\.\S+$/,
+                    message: "Invalid email format",
+                  },
                 })}
+                  */
               />
             </fieldset>
 
