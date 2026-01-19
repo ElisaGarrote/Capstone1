@@ -10,10 +10,9 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { createAssetCheckinWithStatus, fetchAssetNames } from "../../services/assets-service";
+import { createAssetCheckinWithStatus, fetchAssetNames, fetchAssetCheckoutById } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
-import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
-import { fetchTicketById } from "../../services/integration-ticket-tracking-service";
+import { fetchAllLocations } from "../../services/integration-help-desk-service";
 
 export default function CheckInAsset() {
   const { state } = useLocation();
@@ -25,7 +24,6 @@ export default function CheckInAsset() {
   const [statuses, setStatuses] = useState([]);
   const [locations, setLocations] = useState([]);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
   const [attachmentFiles, setAttachmentFiles] = useState([]);
 
   // Ticket and asset data
@@ -35,14 +33,14 @@ export default function CheckInAsset() {
   const [fromAssets, setFromAssets] = useState(false);
 
   // Extract from navigation state
-  // From Assets page: { assetId (db id), assetDisplayId, assetName, ticketId, checkoutId }
+  // From Assets page: { assetId, assetDisplayId, assetName, checkoutId, ticket (full object) }
   // From Tickets page: { ticket (full ticket object) }
   const assetIdFromState = state?.assetId;
   const assetDisplayIdFromState = state?.assetDisplayId;
   const assetNameFromState = state?.assetName;
-  const ticketIdFromState = state?.ticketId;
   const checkoutIdFromState = state?.checkoutId;
   const ticketFromState = state?.ticket;
+  const ticketIdFromState = state?.ticketId;
 
   // Only allow asset statuses with these types for checkin (excludes 'deployed')
   const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";
@@ -66,64 +64,56 @@ export default function CheckInAsset() {
     }
   });
 
-  // Helper to determine check-in date based on ticket return_date
-  const getCheckinDate = (ticketData) => {
-    if (!ticketData || !ticketData.return_date) {
+  // Helper to determine check-in date
+  // From Tickets page: use ticket.checkin_date
+  // From Assets page (no ticket): use today's date
+  const getCheckinDate = (ticketData, isFromAssets) => {
+    // If from Assets page or no ticket, use current date
+    if (isFromAssets || !ticketData) {
       return currentDate;
     }
 
-    const returnDate = new Date(ticketData.return_date);
-    const today = new Date(currentDate);
-
-    // If return_date is in the past, use current date
-    if (returnDate < today) {
-      return currentDate;
+    // From Tickets page: use checkin_date if available
+    if (ticketData.checkin_date) {
+      // Extract just the date part (YYYY-MM-DD) from the ISO string
+      const checkinDate = ticketData.checkin_date.split("T")[0];
+      return checkinDate;
     }
 
-    return ticketData.return_date;
+    return currentDate;
   };
 
-  // Initialize: fetch ticket and dropdowns
+  // Initialize: load ticket data and dropdowns
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
       try {
-        let ticketData = null;
+        let ticketData = ticketFromState;
 
-        // Scenario 1: Coming from Assets page with assetId, assetDisplayId, assetName
-        // Ticket is optional - may or may not have ticketId
+        // Scenario 1: Coming from Assets page with asset details and ticket
         if (assetIdFromState) {
           setFromAssets(true);
           setAssetName(assetNameFromState || "");
           setAssetDisplayId(assetDisplayIdFromState || "");
-
-          // Fetch ticket details only if ticketId is provided
-          if (ticketIdFromState) {
-            ticketData = await fetchTicketById(ticketIdFromState);
-          }
         }
-        // Scenario 2: Coming from Tickets page with full ticket object
-        else if (ticketFromState) {
-          setFromAssets(false);
-          ticketData = ticketFromState;
+        // Scenario 2: Coming from Tickets page - need to fetch asset details
+        // Use ticketData.asset (numeric ID) or ticketData.asset_id as fallback
+        else {
+          let ticketAssetId = ticketData?.asset || ticketData?.asset_id;
 
-          // Fetch asset details using asset id from ticket
-          if (ticketData.asset) {
-            const assetData = await fetchAssetNames({ ids: [ticketData.asset] });
-            if (assetData && assetData.length > 0) {
-              setAssetName(assetData[0].name || "");
-              setAssetDisplayId(assetData[0].asset_id || "");
+          // If asset ID is missing but we have asset_checkout, fetch asset from checkout
+          if (!ticketAssetId && ticketData?.asset_checkout) {
+            try {
+              const checkout = await fetchAssetCheckoutById(ticketData.asset_checkout);
+              ticketAssetId = checkout?.asset;
+            } catch (error) {
+              console.error("Failed to fetch checkout for asset ID:", error);
             }
           }
-        }
-        // Scenario 3: Coming from Tickets page with only ticketId
-        else if (ticketIdFromState) {
-          setFromAssets(false);
-          ticketData = await fetchTicketById(ticketIdFromState);
 
-          // Fetch asset details using asset id from ticket
-          if (ticketData?.asset) {
-            const assetData = await fetchAssetNames({ ids: [ticketData.asset] });
+          if (ticketAssetId) {
+            setFromAssets(false);
+            const assetData = await fetchAssetNames({ ids: [ticketAssetId] });
             if (assetData && assetData.length > 0) {
               setAssetName(assetData[0].name || "");
               setAssetDisplayId(assetData[0].asset_id || "");
@@ -133,8 +123,11 @@ export default function CheckInAsset() {
 
         setTicket(ticketData);
 
-        // Set check-in date based on ticket or default to current date
-        const checkinDate = getCheckinDate(ticketData);
+        // Set check-in date based on source:
+        // From Tickets page: use ticket.checkin_date
+        // From Assets page: use today's date
+        const isFromAssetsPage = !!assetIdFromState;
+        const checkinDate = getCheckinDate(ticketData, isFromAssetsPage);
         setValue("checkinDate", checkinDate);
 
         // Set location from ticket if available
@@ -160,7 +153,7 @@ export default function CheckInAsset() {
     };
 
     initialize();
-  }, [assetIdFromState, assetDisplayIdFromState, assetNameFromState, ticketIdFromState, ticketFromState, setValue]);
+  }, [assetIdFromState, assetDisplayIdFromState, assetNameFromState, ticketFromState, setValue]);
 
   const conditionOptions = [
       { value: "1", label: "1 - Unserviceable" },
@@ -212,18 +205,6 @@ export default function CheckInAsset() {
     }
   ];
 
-  const locationFields = [
-    {
-      name: 'city',
-      label: 'Location City',
-      type: 'text',
-      placeholder: 'Location City',
-      required: true,
-      maxLength: 100,
-      validation: { required: 'Location City is required' }
-    }
-  ];
-
   const handleSaveStatus = async (data) => {
     try {
       const newStatus = await createStatus(data);
@@ -234,37 +215,6 @@ export default function CheckInAsset() {
       console.error('Error creating status:', error);
 
       let message = "Failed to create status";
-
-      if (error.response && error.response.data) {
-        const data = error.response.data;
-
-        // Aggregate all error messages
-        const messages = [];
-        Object.values(data).forEach((value) => {
-          if (Array.isArray(value)) messages.push(...value);
-          else if (typeof value === "string") messages.push(value);
-        });
-
-        if (messages.length > 0) {
-          message = messages.join(" ");
-        }
-      }
-
-      setErrorMessage(message);
-      setTimeout(() => setErrorMessage(""), 5000);
-    }
-  };
-
-  const handleSaveLocation = async (data) => {
-    try {
-      const newLocation = await createLocation(data);
-      setLocations(prev => [...prev, newLocation]);
-      setShowLocationModal(false);
-      setErrorMessage("");
-    } catch (error) {
-      console.error('Error creating location:', error);
-
-      let message = "Failed to create location";
 
       if (error.response && error.response.data) {
         const data = error.response.data;
@@ -483,31 +433,21 @@ export default function CheckInAsset() {
               {errors.condition && <span className='error-message'>{errors.condition.message}</span>}
             </fieldset>
 
-            {/* Location Dropdown with + button */}
+            {/* Location Dropdown */}
             <fieldset>
               <label htmlFor='location'>Location <span style={{color: 'red'}}>*</span></label>
-              <div className="dropdown-with-add">
-                <select
-                  id="location"
-                  {...register("location", { required: "Location is required" })}
-                  className={errors.location ? 'input-error' : ''}
-                >
-                  <option value="">Select Location</option>
-                  {locations.map(location => (
-                    <option key={location.id} value={location.id}>
-                      {location.city}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="add-btn"
-                  onClick={() => setShowLocationModal(true)}
-                  title="Add new location"
-                >
-                  <img src={PlusIcon} alt="Add" />
-                </button>
-              </div>
+              <select
+                id="location"
+                {...register("location", { required: "Location is required" })}
+                className={errors.location ? 'input-error' : ''}
+              >
+                <option value="">Select Location</option>
+                {locations.map(loc => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
               {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
 
@@ -576,15 +516,6 @@ export default function CheckInAsset() {
         title="New Status Label"
         fields={statusFields}
         type="status"
-      />
-
-      <AddEntryModal
-        isOpen={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
-        onSave={handleSaveLocation}
-        title="New Location"
-        fields={locationFields}
-        type="location"
       />
     </>
   );

@@ -10,9 +10,8 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { createAssetCheckoutWithStatus, fetchAssetNames } from "../../services/assets-service";
+import { createAssetCheckoutWithStatus, fetchAssetNames, fetchAssetCheckoutById } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
-import { fetchTicketById } from "../../services/integration-ticket-tracking-service";
 
 export default function CheckOutAsset() {
   const { state } = useLocation();
@@ -30,12 +29,11 @@ export default function CheckOutAsset() {
   const [fromAssets, setFromAssets] = useState(false);
 
   // Extract from navigation state
-  // From Assets page: { assetId (db id), assetDisplayId, assetName, ticketId }
+  // From Assets page: { assetId, assetDisplayId, assetName, ticket (full object from ticket_details) }
   // From Tickets page: { ticket (full ticket object) }
   const assetIdFromState = state?.assetId;
   const assetDisplayIdFromState = state?.assetDisplayId;
   const assetNameFromState = state?.assetName;
-  const ticketIdFromState = state?.ticketId;
   const ticketFromState = state?.ticket;
 
   // Form handling
@@ -57,33 +55,40 @@ export default function CheckOutAsset() {
     },
   });
 
-  // Initialize: fetch ticket and dropdowns
+  // Initialize: load ticket data and dropdowns
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
       try {
-        let ticket = null;
+        let ticket = ticketFromState;
 
-        // Scenario 1: Coming from Assets page with assetId, assetDisplayId, assetName, ticketId
-        if (assetIdFromState && ticketIdFromState) {
+        // Scenario 1: Coming from Assets page with asset details and ticket
+        if (assetIdFromState) {
           setFromAssets(true);
           setAssetName(assetNameFromState || "");
           setAssetDisplayId(assetDisplayIdFromState || "");
-
-          // Fetch ticket details
-          ticket = await fetchTicketById(ticketIdFromState);
         }
-        // Scenario 2: Coming from Tickets page with full ticket object
-        else if (ticketFromState) {
-          setFromAssets(false);
-          ticket = ticketFromState;
+        // Scenario 2: Coming from Tickets page - need to fetch asset details
+        // Use ticket.asset (numeric ID) or ticket.asset_id as fallback
+        else {
+          let ticketAssetId = ticket?.asset || ticket?.asset_id;
 
-          // Fetch asset details using asset id from ticket
-          if (ticket.asset) {
-            const assetData = await fetchAssetNames({ ids: [ticket.asset] });
-            if (assetData) {
-              setAssetName(assetData.name || "");
-              setAssetDisplayId(assetData.asset_id || "");
+          // If asset ID is missing but we have asset_checkout, fetch asset from checkout
+          if (!ticketAssetId && ticket?.asset_checkout) {
+            try {
+              const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
+              ticketAssetId = checkout?.asset;
+            } catch (error) {
+              console.error("Failed to fetch checkout for asset ID:", error);
+            }
+          }
+
+          if (ticketAssetId) {
+            setFromAssets(false);
+            const assetData = await fetchAssetNames({ ids: [ticketAssetId] });
+            if (assetData && assetData.length > 0) {
+              setAssetName(assetData[0].name || "");
+              setAssetDisplayId(assetData[0].asset_id || "");
             }
           }
         }
@@ -91,7 +96,8 @@ export default function CheckOutAsset() {
         if (ticket) {
           // Fill form with ticket data (read-only fields)
           setValue("employeeName", ticket.requestor_details?.name || "Unknown");
-          setValue("empLocation", ticket.location_details?.city || "Unknown");
+          // Use location_details.name (location is now an integer ID)
+          setValue("empLocation", ticket.location_details?.name || "Unknown");
           setValue("checkoutDate", ticket.checkout_date || "");
           setValue("expectedReturnDate", ticket.return_date || "");
         }
@@ -111,7 +117,7 @@ export default function CheckOutAsset() {
     };
 
     initialize();
-  }, [assetIdFromState, assetDisplayIdFromState, assetNameFromState, ticketIdFromState, ticketFromState, setValue]);
+  }, [assetIdFromState, assetDisplayIdFromState, assetNameFromState, ticketFromState, setValue]);
 
   const conditionOptions = [
     { value: "1", label: "1 - Unserviceable" },
@@ -223,7 +229,7 @@ export default function CheckOutAsset() {
       // location - backend fetches from ticket
       // checkout_date - backend fetches from ticket
       // return_date - backend fetches from ticket
-      const ticketId = ticketIdFromState || ticketFromState?.id;
+      const ticketId = ticketFromState?.id;
       formData.append('ticket_id', ticketId);
       // Status sent to backend for asset status update not checkout
       formData.append('status', data.status);

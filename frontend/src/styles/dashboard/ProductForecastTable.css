@@ -88,7 +88,11 @@
   color: #ef4444;
 }
 
-.product-forecast-table-section .trend-icon {
+.trend-cell.stable {
+  color: #6b7280;
+}
+
+.trend-icon {
   width: 1rem;
   height: 1rem;
 }

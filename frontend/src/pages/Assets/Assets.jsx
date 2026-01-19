@@ -45,12 +45,29 @@ function getActionState(asset) {
   const status = asset.status_details?.type;
   const hasTicket = !!asset.ticket_details;
 
+  // Debug logging
+  console.log("Asset action state:", {
+    assetId: asset.asset_id,
+    status,
+    hasTicket,
+    status_details: asset.status_details
+  });
+
   // No actions for undeployable or archived
   if (status === "undeployable" || status === "archived") {
     return {
       showCheckin: false,
       showCheckout: false,
       checkoutDisabled: false,
+    };
+  }
+
+  // If status is unknown/undefined, show checkout (disabled) as fallback
+  if (!status) {
+    return {
+      showCheckin: false,
+      showCheckout: true,
+      checkoutDisabled: true, // disabled because we don't know the status
     };
   }
 
@@ -176,7 +193,7 @@ export default function Assets() {
     }
   }, [location]);
 
-  // Fetch assets on component mount
+  // Fetch assets on component mount and when navigating back (e.g., after bulk edit)
   useEffect(() => {
     const loadAssets = async () => {
       try {
@@ -194,7 +211,7 @@ export default function Assets() {
     };
 
     loadAssets();
-  }, []);
+  }, [location.key]);
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -424,15 +441,16 @@ export default function Assets() {
     const assetDisplayId = asset.asset_id;
     const assetName = asset.name;
     const checkoutId = asset.active_checkout;
-    const ticketId = asset.ticket_details?.id;
+    // Pass the full ticket_details object - no need to fetch by ID later
+    const ticket = asset.ticket_details;
 
     if (checkoutId) {
       navigate(`/assets/check-in/${assetId}`, {
-        state: { assetDisplayId, assetName, checkoutId, ticketId },
+        state: { assetId, assetDisplayId, assetName, checkoutId, ticket },
       });
     } else {
-      navigate(`/assets/check-out/${asset.id}`, {
-        state: { assetDisplayId, assetName, assetId, ticketId },
+      navigate(`/assets/check-out/${assetId}`, {
+        state: { assetId, assetDisplayId, assetName, ticket },
       });
     }
   };

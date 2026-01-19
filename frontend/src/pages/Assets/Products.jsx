@@ -128,6 +128,7 @@ export default function Products() {
   }, [location]);
 
   // Load products from API
+  // Refetch when navigating back to this page (location.key changes on navigation)
   useEffect(() => {
     async function loadProducts() {
       try {
@@ -150,7 +151,7 @@ export default function Products() {
     }
 
     loadProducts();
-  }, []);
+  }, [location.key]);
 
   // Search state
   const [searchTerm, setSearchTerm] = useState("");

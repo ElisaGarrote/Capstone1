@@ -81,6 +81,7 @@ import Depreciations from "./pages/More/Depreciations";
 import DepreciationRegistration from "./pages/More/DepreciationRegistration";
 import DepreciationDetails from "./pages/More/depreciation-details/DepreciationDetails";
 import RecycleBin from "./pages/More/RecycleBin";
+import TokenLogin from "./pages/TokenLogin";
 
 function Logout() {
   localStorage.clear();
@@ -94,6 +95,9 @@ function App() {
       <Routes>
         {/* This will Serve as Default Path*/}
         <Route path="/" element={<Navigate to="/login" />} />
+
+        {/* Token-based login route for external authentication */}
+        <Route path="/token-login" element={<TokenLogin />} />
 
         {/* Place here all the routes accessible only for admin */}
         <Route element={<ProtectedRoute roles={["admin"]} />}>

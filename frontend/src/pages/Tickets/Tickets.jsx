@@ -10,7 +10,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
-import { fetchAssetById } from "../../services/assets-service";
+import { fetchAssetById, fetchAssetCheckoutById } from "../../services/assets-service";
 import {
   fetchAllEmployees,
   fetchEmployeeById,
@@ -64,7 +64,7 @@ function TableItem({
       <td>{ticket.formattedDate}</td>
       <td>{ticket.employeeName}</td>
       <td>{ticket.subject}</td>
-      <td>{ticket.location_details.city}</td>
+      <td>{ticket.location}</td>
 
       {/* CHECK-IN / CHECK-OUT Column */}
       <td>
@@ -119,72 +119,82 @@ const Tickets = () => {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  useEffect(() => {
-    const loadTickets = async () => {
-      try {
-        setIsLoading(true);
-        setErrorMessage("");
+  // Extract loadTickets as a reusable function
+  const loadTickets = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
 
-        // Fetch tickets from API
-        const response = await fetchAllTickets();
-        const ticketsData = response.results || response;
+      // Fetch tickets from API
+      const response = await fetchAllTickets();
+      // Handle different response formats: {results: [...]}, {value: [...]}, or direct array
+      const ticketsData = response.results || response.value || (Array.isArray(response) ? response : []);
 
-        // Fetch employees from API
-        const employeesResponse = await fetchAllEmployees();
+      // Fetch employees from API
+      const employeesResponse = await fetchAllEmployees();
 
-        const employeesList = Array.isArray(employeesResponse)
-          ? employeesResponse
-          : employeesResponse?.results || [];
-        setEmployees(employeesList);
+      const employeesList = Array.isArray(employeesResponse)
+        ? employeesResponse
+        : employeesResponse?.results || [];
+      setEmployees(employeesList);
 
-        // Map API response to component format
-        const mappedTickets = ticketsData.map((ticket) => {
-          // Determine if ticket needs check-in or check-out action
-          // Logic: If checkin_date is null, it's a Check-Out ticket, otherwise Check-In
-          const isCheckInOrOut = !ticket.is_resolved
-            ? ticket.checkin_date === null || ticket.checkin_date === undefined
-              ? "Check-Out"
-              : "Check-In"
-            : null;
+      // Map API response to component format
+      const mappedTickets = ticketsData.map((ticket) => {
+        // Determine if ticket needs check-in or check-out action
+        // Logic:
+        // - If checkout_date exists and no asset_checkout → show Checkout button
+        // - If asset_checkout exists → show Checkin button
+        let isCheckInOrOut = null;
+        if (!ticket.is_resolved) {
+          if (ticket.asset_checkout) {
+            isCheckInOrOut = "Check-In";
+          } else if (ticket.checkout_date) {
+            isCheckInOrOut = "Check-Out";
+          }
+        }
 
-          const formattedDate =
-            isCheckInOrOut === "Check-In"
-              ? ticket.checkin_date?.slice(0, 10)
-              : ticket.checkout_date?.slice(0, 10);
+        const formattedDate =
+          isCheckInOrOut === "Check-In"
+            ? ticket.checkin_date?.slice(0, 10)
+            : ticket.checkout_date?.slice(0, 10);
 
-          // Find employee name
-          const employee = employeesList.find(
-            (e) => Number(e.id) === Number(ticket.employee)
-          );
-
-          const employeeName = employee
-            ? `${employee.firstname} ${employee.lastname}`
-            : "Unknown";
-
-          return {
-            ...ticket,
-            isCheckInOrOut,
-            formattedDate,
-            employeeName,
-          };
-        });
-
-        setTicketItems(mappedTickets);
-        setFilteredData(mappedTickets);
-      } catch (error) {
-        console.error("Error loading tickets:", error);
-        setErrorMessage(
-          "Failed to load tickets from server. Please try again later."
+        // Find employee name
+        const employee = employeesList.find(
+          (e) => Number(e.id) === Number(ticket.employee)
         );
-        setTicketItems([]);
-        setFilteredData([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
 
+        const employeeName = employee
+          ? `${employee.firstname} ${employee.lastname}`
+          : "Unknown";
+
+        return {
+          ...ticket,
+          isCheckInOrOut,
+          formattedDate,
+          employeeName,
+          // Use location_details.name for display (location is now an integer ID)
+          location: ticket.location_details?.name || "Unknown",
+        };
+      });
+
+      setTicketItems(mappedTickets);
+      setFilteredData(mappedTickets);
+    } catch (error) {
+      console.error("Error loading tickets:", error);
+      setErrorMessage(
+        "Failed to load tickets from server. Please try again later."
+      );
+      setTicketItems([]);
+      setFilteredData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load tickets on mount and when navigating back with success message
+  useEffect(() => {
     loadTickets();
-  }, []);
+  }, [location.key]);
 
   // Apply filters to data
   const applyFilters = (filters) => {
@@ -285,14 +295,33 @@ const Tickets = () => {
     }
   }, [location]);
 
-  const handleCheckInOut = (ticket) => {
+  const handleCheckInOut = async (ticket) => {
+    // Use ticket.asset (numeric ID) or ticket.asset_id as fallback
+    let assetId = ticket.asset || ticket.asset_id;
+
+    // If asset ID is missing but we have asset_checkout, fetch asset from checkout
+    if (!assetId && ticket.asset_checkout) {
+      try {
+        const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
+        assetId = checkout?.asset;
+      } catch (error) {
+        console.error("Failed to fetch checkout for asset ID:", error);
+      }
+    }
+
+    if (!assetId) {
+      console.error("No asset ID found in ticket:", ticket);
+      setErrorMessage("Cannot process ticket: missing asset information.");
+      return;
+    }
+
     if (ticket.isCheckInOrOut === "Check-In") {
-      navigate(`/assets/check-in/${ticket.asset}`, {
-        state: { ticketId: ticket.id, fromAsset: false },
+      navigate(`/assets/check-in/${assetId}`, {
+        state: { ticket, fromAsset: false },
       });
     } else {
-      navigate(`/assets/check-out/${ticket.asset}`, {
-        state: { ticketId: ticket.id, fromAsset: false },
+      navigate(`/assets/check-out/${assetId}`, {
+        state: { ticket, fromAsset: false },
       });
     }
   };
@@ -305,7 +334,7 @@ const Tickets = () => {
       ticket.formattedDate?.toLowerCase() || "",
       ticket.employeeName?.toLowerCase() || "",
       ticket.subject?.toLowerCase() || "",
-      ticket.location_details?.city?.toLowerCase() || "",
+      ticket.location?.toLowerCase() || "",
     ];
 
     // Every word in search query must match at least one field

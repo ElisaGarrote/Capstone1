@@ -39,7 +39,11 @@ export default function ActionButtons({
   return (
     <section className="action-button-section">
       {showView && (
-        <button title="View" className="action-button" onClick={onViewClick}>
+        <button
+          title="View"
+          className="action-button"
+          onClick={onViewClick}
+        >
           <i className="fas fa-eye"></i>
         </button>
       )}

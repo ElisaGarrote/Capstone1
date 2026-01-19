@@ -3,6 +3,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from ..services.contexts import *
 from ..services.integration_help_desk import *
+from ..services.integration_ticket_tracking import (
+    get_unresolved_tickets_list,
+    get_resolved_tickets_list,
+)
 from django.core.cache import cache
 
 
@@ -225,3 +229,38 @@ class StatusListProxy(APIView):
                 'type': s.get('type')
             })
         return Response({'results': mapped, 'count': len(mapped)})
+
+
+# Ticket Tracking Proxies (external API at 165.22.247.50:1001)
+class TicketUnresolvedListProxy(APIView):
+    """Proxy to fetch unresolved tickets from external ticket tracking API."""
+    def get(self, request):
+        q = request.query_params.get('q')
+        limit = request.query_params.get('limit')
+        try:
+            limit = int(limit) if limit else 50
+        except ValueError:
+            limit = 50
+
+        tickets = get_unresolved_tickets_list(q=q, limit=limit)
+        if isinstance(tickets, dict) and tickets.get('warning'):
+            return Response({"detail": tickets['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response(tickets)
+
+
+class TicketResolvedListProxy(APIView):
+    """Proxy to fetch resolved tickets from external ticket tracking API."""
+    def get(self, request):
+        q = request.query_params.get('q')
+        limit = request.query_params.get('limit')
+        try:
+            limit = int(limit) if limit else 50
+        except ValueError:
+            limit = 50
+
+        tickets = get_resolved_tickets_list(q=q, limit=limit)
+        if isinstance(tickets, dict) and tickets.get('warning'):
+            return Response({"detail": tickets['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+
+        return Response(tickets)

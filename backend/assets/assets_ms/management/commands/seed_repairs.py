@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.core.management import call_command
+from django.db import connection
 from django.utils import timezone
 from assets_ms.models import Asset, Repair
 from decimal import Decimal
@@ -25,8 +26,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING('Clearing existing repairs...'))
-            Repair.objects.all().delete()
-            self.stdout.write(self.style.SUCCESS('Existing repairs cleared.'))
+            table_name = Repair._meta.db_table
+            with connection.cursor() as cursor:
+                cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE')
+            self.stdout.write(self.style.SUCCESS('Existing repairs cleared (IDs reset to 1).'))
 
         # Get assets with undeployable status (5 or 6) - these are the ones that should have repairs
         # According to seed_assets.py, assets at positions 81-90 (0-indexed: 80-89) have undeployable status

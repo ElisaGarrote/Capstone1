@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db import connection
 from contexts_ms.models import Supplier
 import itertools
 
@@ -73,8 +74,10 @@ class Command(BaseCommand):
 
         if clear:
             try:
-                Supplier.objects.all().delete()
-                self.stdout.write(self.style.SUCCESS('Cleared existing suppliers.'))
+                table_name = Supplier._meta.db_table
+                with connection.cursor() as cursor:
+                    cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE')
+                self.stdout.write(self.style.SUCCESS('Cleared existing suppliers (IDs reset to 1).'))
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f'Failed to clear suppliers: {e}'))
 
@@ -107,5 +110,4 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"Failed to create {company}: {e}"))
 
         self.stdout.write(self.style.SUCCESS(f"Suppliers seeding complete: {created} created."))
-
 

@@ -4,6 +4,9 @@ dockerfilePath = "Dockerfile"
 dockerfileTarget = "production"
 
 [deploy]
+startCommand = "caddy run --config Caddyfile --adapter caddyfile"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
-startCommand = "gunicorn contexts.wsgi:application --bind 0.0.0.0:8003 --workers 2 --timeout 120 --log-level debug"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+

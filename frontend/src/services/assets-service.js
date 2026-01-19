@@ -127,12 +127,15 @@ export async function bulkDeleteAssets(data) {
   return res.data;
 }
 
-// GET product names and images for bulk edit
-export const fetchAssetNames = ({ids = [], search = "" } = {}) => {
+// GET asset names and images
+// - ids: array of database IDs (integers)
+// - asset_ids: array of display asset IDs (strings like "AST-20260110-00030-43A7")
+// - search: keyword to search by name
+export const fetchAssetNames = ({ids = [], asset_ids = [], search = "" } = {}) => {
   const params = {};
 
   if (ids.length) params.ids = ids.join(",");
-
+  if (asset_ids.length) params.asset_ids = asset_ids.join(",");
   if (search) params.search = search;
 
   return assetsAxios

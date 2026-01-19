@@ -118,7 +118,7 @@ export default function Assets() {
   const [baseData, setBaseData] = useState([]);
   const user = getUserFromToken();
 
-  // Load components from API
+  // Load components from API and when navigating back (e.g., after bulk edit)
   useEffect(() => {
     async function loadComponents() {
       try {
@@ -143,7 +143,7 @@ export default function Assets() {
     }
 
     loadComponents();
-  }, []);
+  }, [location.key]);
 
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);

@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db import connection
 from django.utils import timezone
 from assets_ms.models import Component
 from decimal import Decimal
@@ -25,8 +26,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING('Clearing existing components...'))
-            Component.objects.all().delete()
-            self.stdout.write(self.style.SUCCESS('Existing components cleared.'))
+            table_name = Component._meta.db_table
+            with connection.cursor() as cursor:
+                cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE')
+            self.stdout.write(self.style.SUCCESS('Existing components cleared (IDs reset to 1).'))
 
         count = options['count']
         

@@ -1,14 +1,28 @@
 from .http_client import get as client_get, post as client_post, patch as client_patch, ASSETS_API_URL
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def get_deleted_assets():
-    response = client_get("assets/deleted/")
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = client_get("assets/deleted/", timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Failed to fetch deleted assets: {e}")
+        raise
+
 
 def get_deleted_components():
-    response = client_get("components/deleted/")
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = client_get("components/deleted/", timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        logger.error(f"Failed to fetch deleted components: {e}")
+        raise
+
 
 def recover_asset(asset_id):
     response = client_patch(f"assets/{asset_id}/recover/")
@@ -114,3 +128,21 @@ def invalidate_asset_cache(asset_id):
     except Exception:
         # Silently fail - cache invalidation is best-effort
         return None
+
+
+def get_assets_by_category(category_id, timeout=8):
+    """
+    Fetch assets by category ID using the /assets/hd/registration/?category={id} endpoint.
+    Returns a list of asset objects with full HD registration details or empty list on error.
+    """
+    try:
+        response = client_get("assets/hd/registration/", params={"category": category_id}, timeout=timeout)
+        response.raise_for_status()
+        data = response.json()
+        # Handle both list and paginated responses
+        if isinstance(data, dict) and 'results' in data:
+            return data['results']
+        return data if isinstance(data, list) else []
+    except Exception as e:
+        logger.error(f"Failed to fetch assets for category {category_id}: {e}")
+        return []
