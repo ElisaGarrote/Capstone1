@@ -175,27 +175,39 @@ export default function NavBar() {
 
   const logout = async () => {
     try {
-      // Check if external auth is configured
+      // First, request logout from external auth service
       const externalAuth = import.meta.env.VITE_EXTERNAL_AUTH;
       if (externalAuth) {
         try {
-          const accessToken = sessionStorage.getItem("access");
-          await fetch(`${externalAuth}/api/v1/users/logout/`, {
+          // Get CSRF token from cookie
+          const csrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+          
+          await fetch(`${externalAuth}/users/logout/`, {
             method: "POST",
+            credentials: 'include',
             headers: {
-              "Authorization": `Bearer ${accessToken}`,
               "Content-Type": "application/json",
+              ...(csrfToken && { "X-CSRFToken": csrfToken }),
             },
           });
         } catch (externalError) {
           console.warn("External auth logout failed:", externalError);
-          // Continue with local logout even if external logout fails
         }
       }
+
+      // Then perform local logout
+      authService.logout();
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Finally redirect to login
+      navigate("/login");
     } catch (error) {
       console.error("Logout error:", error);
-    } finally {
-      // Always perform local logout
+      // Even if there's an error, still perform local logout and redirect
       authService.logout();
       localStorage.clear();
       sessionStorage.clear();
