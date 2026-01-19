@@ -119,7 +119,7 @@ function Login() {
 
           <form onSubmit={handleSubmit(submission)}>
             <fieldset>
-              <label>Email:</label>
+              <label>Email Address:</label>
 
               {errors.email && <span>{errors.email.message}</span>}
 
@@ -127,7 +127,6 @@ function Login() {
                 type="text"
                 name="email"
                 placeholder="Enter your email"
-                /*
                 {...register("email", {
                   required: "Must not empty",
                   pattern: {
@@ -135,7 +134,6 @@ function Login() {
                     message: "Invalid email format",
                   },
                 })}
-                  */
               />
             </fieldset>
 
