@@ -186,9 +186,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Define where Django should look for static files
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]  # Add this line
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [STATIC_DIR] if os.path.exists(STATIC_DIR) else []
 
 # Optional: WhiteNoise settings for better performance
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
@@ -208,13 +207,13 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_COOKIE_HTTPONLY = False  # Allows JavaScript to read the CSRF cookie
 CSRF_TRUSTED_ORIGINS = get_list("AUTH_CSRF_TRUSTED_ORIGINS")
 
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND"),
-EMAIL_HOST = os.getenv("EMAIL_HOST"),
-EMAIL_PORT = os.getenv("EMAIL_PORT"),
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "False").lower() in ("true", "1", "yes")
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER"),
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD"),
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL"),
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "")
 EMAIL_TIMEOUT = 30  # seconds
 
 LOGGING = {

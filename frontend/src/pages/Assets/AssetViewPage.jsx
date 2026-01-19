@@ -38,12 +38,16 @@ function AssetViewPage() {
         }
         setAsset(assetData);
 
-        // Fetch related data in parallel
-        const [productData, supplierData, locationData] = await Promise.all([
-          assetData.product ? fetchProductById(assetData.product) : null,
-          assetData.supplier ? fetchSupplierById(assetData.supplier) : null,
-          assetData.location ? fetchLocationById(assetData.location) : null,
+        // Fetch related data in parallel - use allSettled to handle partial failures
+        const [productResult, supplierResult, locationResult] = await Promise.allSettled([
+          assetData.product ? fetchProductById(assetData.product) : Promise.resolve(null),
+          assetData.supplier ? fetchSupplierById(assetData.supplier) : Promise.resolve(null),
+          assetData.location ? fetchLocationById(assetData.location) : Promise.resolve(null),
         ]);
+
+        const productData = productResult.status === 'fulfilled' ? productResult.value : null;
+        const supplierData = supplierResult.status === 'fulfilled' ? supplierResult.value : null;
+        const locationData = locationResult.status === 'fulfilled' ? locationResult.value : null;
 
         setProduct(productData);
         setSupplier(supplierData);
@@ -51,14 +55,14 @@ function AssetViewPage() {
 
         // If product exists, fetch category, manufacturer, and depreciation
         if (productData) {
-          const [categoryData, manufacturerData, depreciationData] = await Promise.all([
-            productData.category ? fetchCategoryById(productData.category) : null,
-            productData.manufacturer ? fetchManufacturerById(productData.manufacturer) : null,
-            productData.depreciation ? fetchDepreciationById(productData.depreciation) : null,
+          const [categoryResult, manufacturerResult, depreciationResult] = await Promise.allSettled([
+            productData.category ? fetchCategoryById(productData.category) : Promise.resolve(null),
+            productData.manufacturer ? fetchManufacturerById(productData.manufacturer) : Promise.resolve(null),
+            productData.depreciation ? fetchDepreciationById(productData.depreciation) : Promise.resolve(null),
           ]);
-          setCategory(categoryData);
-          setManufacturer(manufacturerData);
-          setDepreciation(depreciationData);
+          setCategory(categoryResult.status === 'fulfilled' ? categoryResult.value : null);
+          setManufacturer(manufacturerResult.status === 'fulfilled' ? manufacturerResult.value : null);
+          setDepreciation(depreciationResult.status === 'fulfilled' ? depreciationResult.value : null);
         }
       } catch (error) {
         console.error("Error loading asset details:", error);

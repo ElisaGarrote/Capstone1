@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db import connection
 from contexts_ms.models import Manufacturer
 import re
 
@@ -22,8 +23,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING('Clearing existing manufacturers...'))
-            Manufacturer.objects.all().delete()
-            self.stdout.write(self.style.SUCCESS('Existing manufacturers cleared.'))
+            table_name = Manufacturer._meta.db_table
+            with connection.cursor() as cursor:
+                cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE')
+            self.stdout.write(self.style.SUCCESS('Existing manufacturers cleared (IDs reset to 1).'))
 
         count = int(options.get('count') or 10)
         self.stdout.write(self.style.MIGRATE_HEADING(f'\n=== Seeding {count} Manufacturers ==='))
@@ -105,4 +108,3 @@ class Command(BaseCommand):
             })
 
         return manufacturers[:count]
-

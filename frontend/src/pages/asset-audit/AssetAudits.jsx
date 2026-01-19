@@ -15,6 +15,7 @@ import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import { fetchDueAudits } from "../../services/assets-service";
 import { getUserFromToken } from "../../api/TokenUtils";
+import Alert from "../../components/Alert";
 
 // TableHeader
 function TableHeader() {
@@ -68,6 +69,7 @@ export default function AssetAudits() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [successMessage, setSuccessMessage] = useState("");
   const user = getUserFromToken();
 
   // Fetch due audits on mount
@@ -119,6 +121,7 @@ export default function AssetAudits() {
   const handleDeleteSuccess = (deletedId) => {
     setData(data.filter((item) => item.id !== deletedId));
     setRefreshKey((prev) => prev + 1); // Trigger TabNavBar refresh
+    setSuccessMessage("Audit schedule deleted successfully.");
     closeDeleteModal();
   };
 
@@ -198,6 +201,7 @@ export default function AssetAudits() {
 
   return (
     <>
+      {successMessage && <Alert message={successMessage} type="success" />}
       {isDeleteModalOpen && (
         <ConfirmationModal
           closeModal={closeDeleteModal}

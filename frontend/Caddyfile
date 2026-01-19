@@ -15,7 +15,10 @@
         format json
     }
 
-    rewrite /health /*
+    # Health check endpoint
+    handle /health {
+        respond "OK" 200
+    }
 
     root * dist
 

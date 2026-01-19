@@ -168,7 +168,9 @@ export default function ActivityReport() {
       setError(null);
       try {
         const base =
-          import.meta.env.VITE_ACTIVITY_LOGS_API_URL || "/api/assets/";
+          import.meta.env.VITE_ACTIVITY_LOGS_API_URL ||
+          "http://127.0.0.1:8002/activity-logs/";
+        console.log("based:", base);
         const resp = await axios.get(`${base}activity-logs/`);
         console.log("Activity logs response:", resp.data);
         // DRF may paginate responses; handle both shapes

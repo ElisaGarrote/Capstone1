@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db import connection
 from django.utils import timezone
 from assets_ms.models import Product
 from decimal import Decimal
@@ -19,8 +20,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write(self.style.WARNING('Clearing existing products...'))
-            Product.objects.all().delete()
-            self.stdout.write(self.style.SUCCESS('Existing products cleared.'))
+            table_name = Product._meta.db_table
+            with connection.cursor() as cursor:
+                cursor.execute(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE')
+            self.stdout.write(self.style.SUCCESS('Existing products cleared (IDs reset to 1).'))
 
         self.stdout.write(self.style.MIGRATE_HEADING('\n=== Seeding 100 Products ==='))
 

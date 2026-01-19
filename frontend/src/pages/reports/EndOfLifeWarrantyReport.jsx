@@ -3,10 +3,14 @@ import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/reports/end-of-life-mockup-data.json";
 import DepreciationFilter from "../../components/FilterPanel";
+import api from "../../api";
+import MockupData from "../../data/mockData/reports/end-of-life-mockup-data.json";
+// base for assets service (prefer specific env, fallback to general API)
+const assetsBase = import.meta.env.VITE_ASSETS_API_URL || import.meta.env.VITE_API_URL || "/api/assets/";
 import Pagination from "../../components/Pagination";
 import dateRelated from "../../utils/dateRelated";
+import { IoWarningOutline } from "react-icons/io5";
 import Footer from "../../components/Footer";
 
 import "../../styles/UpcomingEndOfLife.css";
@@ -27,12 +31,12 @@ const filterConfig = [
   },
   {
     type: "date",
-    name: "endoflifedate",
+    name: "endOfLifeDate",
     label: "End of Life Date",
   },
   {
     type: "date",
-    name: "warrantyexpirationdate",
+    name: "warrantyExpiration",
     label: "Warranty Expiration Date",
   },
 ];
@@ -54,22 +58,62 @@ function TableHeader() {
 function TableItem({ asset, onDeleteClick }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [currentDate, setCurrentDate] = useState("");
+
+  useEffect(() => {
+    const today = new Date();
+    const options = {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    };
+    const formatter = new Intl.DateTimeFormat("en-CA", options);
+    const formattedDate = formatter.format(today);
+    setCurrentDate(formattedDate);
+  }, []);
+
+  const warrantyDate = asset.warrantyExpiration || "";
+  const isExpired = warrantyDate ? new Date(warrantyDate) < new Date(currentDate) : false;
+  let dayDifference = 0;
+  if (isExpired) {
+    const diff = Math.floor((new Date(currentDate) - new Date(warrantyDate)) / (1000 * 60 * 60 * 24));
+    dayDifference = Number.isFinite(diff) ? diff : 0;
+  }
 
   return (
     <tr>
       <td>
-        {asset.asset_id} - {asset.product}
+        {asset.assetId} - {asset.product}
       </td>
       <td>
         <Status
-          type={asset.status_type}
-          name={asset.status_name}
-          {...(asset.deployed_to && { personName: asset.deployed_to })}
+          type={asset.statusType}
+          name={asset.statusName}
+          {...(asset.deployedTo && { personName: asset.deployedTo })}
         />
       </td>
       <td>{asset.location}</td>
-      <td>{dateRelated.formatDate(asset.end_of_life_date)}</td>
-      <td>{dateRelated.formatDate(asset.warranty_expiration_date)}</td>
+      <td>{dateRelated.formatDate(asset.endOfLifeDate)}</td>
+      <td
+        title={
+          isExpired && `Warranty expired ${dayDifference} ${dayDifference > 1 ? "days" : "day"} ago.`
+        }
+      >
+          <div className="icon-td">
+            {isExpired && <IoWarningOutline />}
+            <span
+              title={
+                isExpired
+                  ? `Beyond warranty by ${dayDifference} ${dayDifference > 1 ? "days" : "day"}`
+                  : ""
+              }
+              style={{ color: isExpired ? "red" : "#333333" }}
+            >
+              {dateRelated.formatDate(asset.warrantyExpiration)}
+            </span>
+          </div>
+      </td>
     </tr>
   );
 }
@@ -87,7 +131,51 @@ export default function EndOfLifeWarrantyReport() {
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedDepreciation = MockupData.slice(startIndex, endIndex);
+  const [allData, setAllData] = useState(MockupData);
+  const paginatedDepreciation = allData.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchData() {
+      const url = `${assetsBase}reports/eol-warranty/?format=json`;
+      try {
+        let resp;
+        try {
+          resp = await api.get(url.replace(import.meta.env.VITE_API_URL || "", ""));
+        } catch (e) {
+          // fallback to direct fetch
+          resp = await fetch(url);
+          const data = await resp.json();
+          if (!cancelled) {
+            const rows = data.results || [];
+            rows.sort((a, b) => {
+              const pa = a.warrantyExpiration ? new Date(a.warrantyExpiration).getTime() : Number.MAX_SAFE_INTEGER;
+              const pb = b.warrantyExpiration ? new Date(b.warrantyExpiration).getTime() : Number.MAX_SAFE_INTEGER;
+              return pa - pb;
+            });
+            setAllData(rows);
+          }
+          return;
+        }
+
+        if (!cancelled && resp && resp.data) {
+          const data = resp.data.results || resp.data || [];
+          data.sort((a, b) => {
+            const pa = a.warrantyExpiration ? new Date(a.warrantyExpiration).getTime() : Number.MAX_SAFE_INTEGER;
+            const pb = b.warrantyExpiration ? new Date(b.warrantyExpiration).getTime() : Number.MAX_SAFE_INTEGER;
+            return pa - pb;
+          });
+          setAllData(data);
+        }
+      } catch (e) {
+        // keep mock data on error
+      }
+    }
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -123,8 +211,8 @@ export default function EndOfLifeWarrantyReport() {
 
         <section className="table-layout">
           {/* Table Header */}
-          <section className="table-header">
-            <h2 className="h2">Asset ({MockupData.length})</h2>
+            <section className="table-header">
+            <h2 className="h2">Asset ({allData.length})</h2>
             <section className="table-actions">
               <input type="search" placeholder="Search..." className="search" />
               <div ref={toggleRef}>
@@ -174,7 +262,7 @@ export default function EndOfLifeWarrantyReport() {
             <Pagination
               currentPage={currentPage}
               pageSize={pageSize}
-              totalItems={MockupData.length}
+              totalItems={allData.length}
               onPageChange={setCurrentPage}
               onPageSizeChange={setPageSize}
             />

@@ -57,7 +57,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("category", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -67,9 +67,37 @@ class CategoryViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='names')
     def names(self, request):
-        """Return all categories with only name and id."""
+        """Return all categories with only name and id.
+
+        Optional query param: ?type=asset or ?type=component
+        """
         categories = self.get_queryset()
-        serializer = self.get_serializer(categories, many=True)
+        category_type = request.query_params.get('type')
+        if category_type in ['asset', 'component']:
+            categories = categories.filter(type=category_type)
+
+        serializer = CategoryNameSerializer(categories, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='hd/registration')
+    def hd_registration(self, request):
+        """Return all categories with name, id, and list of assets for HD registration.
+
+        Optional query param: ?type=asset or ?type=component
+        """
+        categories = self.get_queryset()
+        category_type = request.query_params.get('type')
+        if category_type in ['asset', 'component']:
+            categories = categories.filter(type=category_type)
+
+        # Build assets_map to avoid N+1 queries
+        assets_map = {}
+        for cat in categories:
+            assets_map[cat.id] = get_assets_by_category(cat.id)
+
+        serializer = CategoryHdRegistrationSerializer(
+            categories, many=True, context={'assets_map': assets_map}
+        )
         return Response(serializer.data)
 #END
 
@@ -90,7 +118,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("supplier", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -122,7 +150,7 @@ class DepreciationViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("depreciation", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -154,7 +182,7 @@ class ManufacturerViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("manufacturer", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -209,7 +237,7 @@ class StatusViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("status", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.is_deleted = True
         instance.save()
 
@@ -219,14 +247,8 @@ class StatusViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'], url_path='names')
     def names(self, request):
-        """Return all statuses with only name and id.
-
-        Supports optional category filter: ?category=asset or ?category=repair
-        """
+        """Return all statuses with only name and id."""
         statuses = self.get_queryset()
-        category = request.query_params.get('category')
-        if category:
-            statuses = statuses.filter(category=category)
         serializer = self.get_serializer(statuses, many=True)
         return Response(serializer.data)
 
@@ -247,7 +269,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         usage = is_item_in_use("location", instance.id)
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            raise drf_serializers.ValidationError({"error": msg})
+            raise drf_serializers.ValidationError({"detail": msg})
         instance.delete()
 
     @action(detail=False, methods=['post'])
@@ -334,39 +356,24 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.is_resolved = True
         ticket.save()
 
-        # Invalidate asset cache when ticket is resolved
-        if ticket.asset:
-            invalidate_asset_cache(ticket.asset)
-
         serializer = self.get_serializer(ticket)
         return Response(serializer.data)
-
-    def perform_create(self, serializer):
-        ticket = serializer.save()
-        # Invalidate asset cache when a new ticket is created
-        if ticket.asset:
-            invalidate_asset_cache(ticket.asset)
-
-    def perform_update(self, serializer):
-        ticket = serializer.save()
-        # Invalidate asset cache when ticket is updated
-        if ticket.asset:
-            invalidate_asset_cache(ticket.asset)
-
-    def perform_destroy(self, instance):
-        asset_id = instance.asset
-        instance.delete()
-        # Invalidate asset cache when ticket is deleted
-        if asset_id:
-            invalidate_asset_cache(asset_id)
 
 class RecycleBinViewSet(viewsets.ViewSet):
     """Handles viewing and recovering deleted items from the Assets service"""
 
     def list(self, request):
         """List all deleted assets and components"""
-        assets = get_deleted_assets()
-        components = get_deleted_components()
+        try:
+            assets = get_deleted_assets()
+        except Exception:
+            assets = {"warning": "Assets service unreachable"}
+
+        try:
+            components = get_deleted_components()
+        except Exception:
+            components = {"warning": "Assets service unreachable"}
+
         return Response({
             "deleted_assets": assets,
             "deleted_components": components
@@ -408,6 +415,74 @@ class RecycleBinViewSet(viewsets.ViewSet):
         except Exception as exc:
             return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
 
+    @action(detail=True, methods=['delete'])
+    def delete_asset(self, request, pk=None):
+        """Permanently delete an asset via the assets service."""
+        try:
+            data = delete_asset(pk)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    @action(detail=True, methods=['delete'])
+    def delete_component(self, request, pk=None):
+        """Permanently delete a component via the assets service."""
+        try:
+            data = delete_component(pk)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    @action(detail=False, methods=['post'], url_path='bulk-delete-assets')
+    def bulk_delete_assets_action(self, request):
+        ids = request.data.get('ids', [])
+        try:
+            data = bulk_delete_assets(ids)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+    @action(detail=False, methods=['post'], url_path='bulk-delete-components')
+    def bulk_delete_components_action(self, request):
+        ids = request.data.get('ids', [])
+        try:
+            data = bulk_delete_components(ids)
+            return Response(data, status=status.HTTP_200_OK)
+        except requests.exceptions.HTTPError as exc:
+            resp = getattr(exc, 'response', None)
+            if resp is not None:
+                try:
+                    return Response(resp.json(), status=resp.status_code)
+                except Exception:
+                    return Response({'detail': resp.text}, status=resp.status_code)
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+        except Exception as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
 # Dropdowns for asset service
 class ContextsDropdownsViewSet(viewsets.ViewSet):
     # /contexts-dropdowns/all/?entity=product
@@ -429,7 +504,7 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
             data["depreciations"] = DepreciationNameSerializer(Depreciation.objects.filter(is_deleted=False), many=True).data
 
         if entity == "asset":
-            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.ASSET), many=True).data
+            data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.ASSET, type__in=[Status.AssetStatusType.DEPLOYABLE, Status.AssetStatusType.UNDEPLOYABLE, Status.AssetStatusType.PENDING, Status.AssetStatusType.ARCHIVED]), many=True).data
 
         if entity == "repair":
             data["statuses"] = StatusNameSerializer(Status.objects.filter(is_deleted=False, category=Status.Category.REPAIR), many=True).data
@@ -473,5 +548,58 @@ class ContextsDropdownsViewSet(viewsets.ViewSet):
         
         if entity == "location":
             data["locations"] = LocationNameSerializer(Location.objects.all(), many=True).data
-            
+
         return Response(data, status=status.HTTP_200_OK,)
+
+
+# Help Desk Proxy ViewSet - proxies requests to external Help Desk service
+# This allows the frontend to call the contexts service over HTTPS instead of
+# calling the external Help Desk service directly over HTTP (which causes mixed content errors)
+class HelpDeskLocationsProxyViewSet(viewsets.ViewSet):
+    """Proxy ViewSet for Help Desk locations to avoid mixed content errors."""
+
+    def list(self, request):
+        """Proxy GET /helpdesk-locations/ to help desk service."""
+        from contexts_ms.services.integration_help_desk import get_locations_list
+        q = request.query_params.get('q')
+        limit = request.query_params.get('limit', 50)
+        try:
+            limit = int(limit)
+        except (TypeError, ValueError):
+            limit = 50
+        result = get_locations_list(q=q, limit=limit)
+        if isinstance(result, dict) and result.get('warning'):
+            return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result)
+
+    def retrieve(self, request, pk=None):
+        """Proxy GET /helpdesk-locations/<pk>/ to help desk service."""
+        from contexts_ms.services.integration_help_desk import get_location_by_id
+        result = get_location_by_id(pk)
+        if result is None:
+            return Response({'error': 'Location not found'}, status=status.HTTP_404_NOT_FOUND)
+        if isinstance(result, dict) and result.get('warning'):
+            return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result)
+
+
+class HelpDeskEmployeesProxyViewSet(viewsets.ViewSet):
+    """Proxy ViewSet for Help Desk employees to avoid mixed content errors."""
+
+    def list(self, request):
+        """Proxy GET /helpdesk-employees/ to help desk service."""
+        from contexts_ms.services.integration_help_desk import fetch_resource_list
+        result = fetch_resource_list('employees')
+        if isinstance(result, dict) and result.get('warning'):
+            return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result)
+
+    def retrieve(self, request, pk=None):
+        """Proxy GET /helpdesk-employees/<pk>/ to help desk service."""
+        from contexts_ms.services.integration_help_desk import get_employee_by_id
+        result = get_employee_by_id(pk)
+        if result is None:
+            return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
+        if isinstance(result, dict) and result.get('warning'):
+            return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+        return Response(result)

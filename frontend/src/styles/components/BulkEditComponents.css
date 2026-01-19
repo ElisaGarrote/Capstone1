@@ -1,27 +1,41 @@
-.components-bulk-selected {
+.bulk-edit-components-page .components-bulk-selected,
+.bulk-edit-components-page .components-bulk-form-section {
+  width: 60vw;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.bulk-edit-components-page .components-bulk-selected {
   background: #ffffff;
   border-radius: 25px;
   padding: 2rem;
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   margin-bottom: 1rem;
   border: 1px solid #f0f0f0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: stretch;
 }
 
-.components-bulk-selected h3 {
+.bulk-edit-components-page .components-bulk-selected h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: #333;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 0.5rem 0;
 }
 
-.components-bulk-tags {
+.bulk-edit-components-page .components-bulk-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  align-items: flex-start;
+  align-content: flex-start;
 }
 
-.component-bulk-tag {
+.bulk-edit-components-page .component-bulk-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
@@ -33,16 +47,10 @@
   font-weight: 500;
 }
 
-.component-bulk-name {
-  font-weight: 600;
-}
+.bulk-edit-components-page .component-bulk-name { font-weight: 600; }
+.bulk-edit-components-page .component-bulk-id { font-size: 0.8125rem; color: #666; }
 
-.component-bulk-id {
-  font-size: 0.8125rem;
-  color: #666;
-}
-
-.component-bulk-remove {
+.bulk-edit-components-page .component-bulk-remove {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -57,45 +65,27 @@
   flex-shrink: 0;
 }
 
-.component-bulk-remove:hover {
-  background: rgba(0, 0, 0, 0.2);
-  transform: scale(1.1);
-}
+.bulk-edit-components-page .component-bulk-remove:hover { background: rgba(0,0,0,0.2); transform: scale(1.1); }
+.bulk-edit-components-page .component-bulk-remove:active { transform: scale(0.95); }
+.bulk-edit-components-page .component-bulk-remove img { width: 0.75rem; height: 0.75rem; }
 
-.component-bulk-remove:active {
-  transform: scale(0.95);
-}
-
-.component-bulk-remove img {
-  width: 0.75rem;
-  height: 0.75rem;
-}
-
-.components-bulk-empty {
-  color: #999;
-  font-size: 0.875rem;
-  margin: 0;
-  padding: 1rem;
+.bulk-edit-components-page .components-bulk-empty {
+  color: #7a7a7a;
+  font-size: 0.8125rem;
+  margin: 0 auto;
+  padding: 0;
   text-align: center;
-  background: #f9f9f9;
-  border-radius: 8px;
+  background: none;
+  border-radius: 0;
+  font-style: italic;
+  display: inline-block;
 }
 
-.components-bulk-form-section {
-  background: #ffffff;
-  border-radius: 25px;
-  padding: 2rem;
-  margin-top: 1rem;
-  margin-bottom: 2rem;
-  border: 1px solid #d3d3d3;
-  box-shadow: 0 0 20px rgba(211, 211, 211, 0.3);
-}
+.bulk-edit-components-page .components-bulk-form-section { background: #ffffff; border-radius: 25px; padding: 2rem; margin-top: 1rem; margin-bottom: 2rem; border: 1px solid #d3d3d3; box-shadow: 0 0 20px rgba(211,211,211,0.3); }
 
-.components-bulk-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
+.bulk-edit-components-page .components-bulk-form { display:flex; flex-direction:column; gap:1.5rem; }
+.bulk-edit-components-page .form-actions { display:flex; gap:1rem; justify-content:flex-end; margin-top:1rem; padding-top:0.75rem; border-top:none; }
+.bulk-edit-components-page .components-bulk-note { width:60vw; max-width:1200px; margin:0.5rem auto 1rem auto; color:#6b6b6b; font-size:0.875rem; font-style:italic; text-align:center; }
 
 @media (max-width: 768px) {
   .components-bulk-selected {

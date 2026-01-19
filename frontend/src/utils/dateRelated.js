@@ -1,6 +1,8 @@
 class DateRelated {
   formatDate(dateString) {
+    if (!dateString) return "";
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
     const options = {
       timeZone: "Asia/Manila",
       year: "numeric",
@@ -12,7 +14,9 @@ class DateRelated {
   }
 
   formatDateWithTime(dateString) {
+    if (!dateString) return "";
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
     const options = {
       timeZone: "Asia/Manila",
       year: "numeric",

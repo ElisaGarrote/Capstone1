@@ -12,7 +12,7 @@ import Alert from "../../components/Alert";
 import "../../styles/Registration.css";
 import { getNextAssetId, fetchAssetNames, fetchProductsForAssetRegistration, fetchAssetById, createAsset, updateAsset } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus, createSupplier } from "../../services/contexts-service";
-import { fetchAllLocations, createLocation } from "../../services/integration-help-desk-service";
+import { fetchAllLocations } from "../../services/integration-help-desk-service";
 
 
 export default function AssetsRegistration() {
@@ -26,7 +26,6 @@ export default function AssetsRegistration() {
   // Modal states for adding new entries
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -272,18 +271,6 @@ export default function AssetsRegistration() {
     }
   ];
 
-  const locationFields = [
-    {
-      name: 'city',
-      label: 'City',
-      type: 'text',
-      placeholder: 'City Name',
-      required: true,
-      maxLength: 50,
-      validation: { required: 'City is required' }
-    }
-  ];
-
   // Modal save handlers
   const handleSaveStatus = async (data) => {
     try {
@@ -307,20 +294,6 @@ export default function AssetsRegistration() {
     } catch (error) {
       console.error('Error creating supplier:', error);
       setErrorMessage("Failed to create supplier");
-      setTimeout(() => setErrorMessage(""), 5000);
-    }
-  };
-
-  const handleSaveLocation = async (data) => {
-    try {
-      // For now, just add to local state (location API not available)
-      console.log('Creating location:', data);
-      const newLocation = await createLocation(data);
-      setLocations(prev => [...prev, newLocation]);
-      setShowLocationModal(false);
-    } catch (error) {
-      console.error('Error creating location:', error);
-      setErrorMessage("Failed to create location");
       setTimeout(() => setErrorMessage(""), 5000);
     }
   };
@@ -570,31 +543,21 @@ export default function AssetsRegistration() {
               {errors.supplier && <span className='error-message'>{errors.supplier.message}</span>}
             </fieldset>
 
-            {/* Location Dropdown with + button */}
+            {/* Location Dropdown */}
             <fieldset>
               <label htmlFor='location'>Location</label>
-              <div className="dropdown-with-add">
-                <select
-                  id="location"
-                  {...register("location")}
-                  className={errors.location ? 'input-error' : ''}
-                >
-                  <option value="">Select Location</option>
-                  {locations.map(loc => (
-                    <option key={loc.id} value={loc.id}>
-                      {loc.city}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  className="add-btn"
-                  onClick={() => setShowLocationModal(true)}
-                  title="Add new location"
-                >
-                  <img src={PlusIcon} alt="Add" />
-                </button>
-              </div>
+              <select
+                id="location"
+                {...register("location")}
+                className={errors.location ? 'input-error' : ''}
+              >
+                <option value="">Select Location</option>
+                {locations.map(loc => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
               {errors.location && <span className='error-message'>{errors.location.message}</span>}
             </fieldset>
 
@@ -741,15 +704,6 @@ export default function AssetsRegistration() {
         title="New Supplier"
         fields={supplierFields}
         type="supplier"
-      />
-
-      <AddEntryModal
-        isOpen={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
-        onSave={handleSaveLocation}
-        title="New Location"
-        fields={locationFields}
-        type="location"
       />
     </>
   );

@@ -3,6 +3,7 @@ from .models import *
 from .utils import normalize_name_smart, validate_image_file
 import logging
 from .services.assets import *
+from .services.integration_help_desk import get_location_by_id as get_helpdesk_location_by_id
 import re
 
 
@@ -448,40 +449,62 @@ class TicketSerializer(serializers.ModelSerializer):
             return
         
     def get_location_details(self, obj):
-        """Return location details fetched from Help Desk service."""
+        """Return location details from help desk location service."""
         try:
-            if not getattr(obj, 'location', None):
+            location_id = getattr(obj, 'location', None)
+            if not location_id:
                 return None
-            from contexts_ms.services.integration_help_desk import get_location_by_id
-            return get_location_by_id(obj.location)
+            location = get_helpdesk_location_by_id(location_id)
+            if not location or location.get('warning'):
+                return None
+            return {
+                'id': location.get('id'),
+                'name': location.get('display_name') or location.get('city'),
+            }
         except Exception:
-            return {"warning": "Help Desk service unreachable for locations."}
+            return None
 
     def get_requestor_details(self, obj):
-        """Return requestor/employee details fetched from Help Desk service."""
+        """Return requestor/employee details from the database."""
         try:
             if not getattr(obj, 'employee', None):
                 return None
-            from contexts_ms.services.integration_help_desk import get_employee_by_id
-            employee = get_employee_by_id(obj.employee)
-            if employee:
-                firstname = employee.get('firstname', '')
-                lastname = employee.get('lastname', '')
+            from contexts_ms.models import Employee
+            try:
+                employee = Employee.objects.get(id=obj.employee)
                 return {
-                    'id': employee.get('id'),
-                    'name': f"{firstname} {lastname}".strip(),
-                    'firstname': firstname,
-                    'lastname': lastname,
+                    'id': employee.id,
+                    'name': f"{employee.firstname} {employee.lastname}".strip(),
+                    'firstname': employee.firstname,
+                    'lastname': employee.lastname,
                 }
-            return None
+            except Employee.DoesNotExist:
+                return None
         except Exception:
-            return {"warning": "Help Desk service unreachable for employees."}
+            return None
 
 
 class CategoryNameSerializer(serializers.ModelSerializer):
+    """Serializer for category names (id and name only)."""
     class Meta:
         model = Category
         fields = ['id', 'name']
+
+
+class CategoryHdRegistrationSerializer(serializers.ModelSerializer):
+    """Serializer with assets for HD registration."""
+    assets = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'assets']
+
+    def get_assets(self, obj):
+        """Fetch assets referencing this category from assets service."""
+        assets_map = self.context.get('assets_map')
+        if assets_map is not None:
+            return assets_map.get(obj.id, [])
+        return get_assets_by_category(obj.id)
 
 class SupplierNameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -515,11 +538,17 @@ class TicketTypeSerializer(serializers.ModelSerializer):
         fields = ['id', 'asset', 'asset_checkout', 'ticket_number', 'checkout_date', 'return_date', ]
 
     def get_location_details(self, obj):
-        """Return location details fetched from Help Desk service."""
+        """Return location details from help desk location service."""
         try:
-            if not getattr(obj, 'location', None):
+            location_id = getattr(obj, 'location', None)
+            if not location_id:
                 return None
-            from contexts_ms.services.integration_help_desk import get_location_by_id
-            return get_location_by_id(obj.location)
+            location = get_helpdesk_location_by_id(location_id)
+            if not location or location.get('warning'):
+                return None
+            return {
+                'id': location.get('id'),
+                'name': location.get('display_name') or location.get('city'),
+            }
         except Exception:
-            return {"warning": "Help Desk service unreachable for locations."}
+            return None

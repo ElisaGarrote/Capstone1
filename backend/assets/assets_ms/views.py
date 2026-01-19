@@ -17,6 +17,7 @@ import logging
 from assets_ms.services.contexts import *
 from assets_ms.services.integration_help_desk import *
 from assets_ms.services.integration_ticket_tracking import *
+from assets_ms.services.forecast import *
 
 from assets_ms.services.activity_logger import (
     log_asset_activity,
@@ -77,28 +78,40 @@ class ProductViewSet(viewsets.ModelViewSet):
         category_map = cache.get("categories:map")
         if not category_map:
             categories = get_category_names()
-            category_map = {c['id']: c for c in categories}
+            if isinstance(categories, list):
+                category_map = {c['id']: c for c in categories}
+            else:
+                category_map = {}
             cache.set("categories:map", category_map, 300)
 
         # manufacturers
         manufacturer_map = cache.get("manufacturers:map")
         if not manufacturer_map:
             manufacturers = get_manufacturer_names()
-            manufacturer_map = {m['id']: m for m in manufacturers}
+            if isinstance(manufacturers, list):
+                manufacturer_map = {m['id']: m for m in manufacturers}
+            else:
+                manufacturer_map = {}
             cache.set("manufacturers:map", manufacturer_map, 300)
 
         # suppliers
         supplier_map = cache.get("suppliers:map")
         if not supplier_map:
             suppliers = get_supplier_names()
-            supplier_map = {s['id']: s for s in suppliers}
+            if isinstance(suppliers, list):
+                supplier_map = {s['id']: s for s in suppliers}
+            else:
+                supplier_map = {}
             cache.set("suppliers:map", supplier_map, 300)
 
         # depreciations
         depreciation_map = cache.get("depreciations:map")
         if not depreciation_map:
             depreciations = get_depreciation_names()
-            depreciation_map = {d['id']: d for d in depreciations}
+            if isinstance(depreciations, list):
+                depreciation_map = {d['id']: d for d in depreciations}
+            else:
+                depreciation_map = {}
             cache.set("depreciations:map", depreciation_map, 300)
 
         return {
@@ -114,7 +127,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         status_map = cache.get("statuses:map")
         if not status_map:
             statuses = get_status_names_assets()
-            status_map = {s['id']: s for s in statuses}
+            # Handle warning dict or non-list response
+            if isinstance(statuses, list):
+                status_map = {s['id']: s for s in statuses}
+            else:
+                status_map = {}
             cache.set("statuses:map", status_map, 300)
 
         # products (for product_details - though in product view we already know the product)
@@ -124,12 +141,13 @@ class ProductViewSet(viewsets.ModelViewSet):
             product_map = {p.id: p.name for p in products}
             cache.set("products:map", product_map, 300)
 
-        # tickets
-        ticket_map = cache.get("tickets:map")
-        if not ticket_map:
-            tickets = get_tickets_list()
-            ticket_map = {t["asset"]: t for t in tickets}
-            cache.set("tickets:map", ticket_map, 300)
+        # tickets (no caching - always fetch fresh from external service)
+        tickets = get_tickets_list()
+        # Handle warning dict or non-list response
+        if isinstance(tickets, list):
+            ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
+        else:
+            ticket_map = {}
 
         return {
             "status_map": status_map,
@@ -198,6 +216,14 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         instance = serializer.save()
+
+        # Handle image removal
+        remove_image = self.request.data.get("remove_image") == "true"
+        if remove_image and instance.image:
+            instance.image.delete(save=False)
+            instance.image = None
+            instance.save()
+
         self.invalidate_product_cache(instance.id)
     
     # Product names and image for bulk edit
@@ -420,37 +446,42 @@ class AssetViewSet(viewsets.ModelViewSet):
         status_map = cache.get("statuses:map")
         if not status_map:
             statuses = get_status_names_assets()
-            status_map = {s['id']: s for s in statuses}
+            # Handle warning dict or non-list response
+            if isinstance(statuses, list):
+                status_map = {s['id']: s for s in statuses}
+            else:
+                status_map = {}
             cache.set("statuses:map", status_map, 300)
 
         # products
         product_map = cache.get("products:map")
         if not product_map:
             products = Product.objects.filter(is_deleted=False)
-            # products
-            product_map = cache.get("products:map")
-            if not product_map:
-                products = Product.objects.filter(is_deleted=False)
-                serialized = ProductNameSerializer(products, many=True).data
-                product_map = {p['id']: p for p in serialized}
-                cache.set("products:map", product_map, 300)
+            serialized = ProductNameSerializer(products, many=True).data
+            product_map = {p['id']: p for p in serialized}
+            cache.set("products:map", product_map, 300)
 
         # locations
         location_map = cache.get("locations:map")
         if not location_map:
             locations = get_locations_list()
-            location_map = {l['id']: l for l in locations}
+            # Handle warning dict or non-list response
+            if isinstance(locations, list):
+                location_map = {l['id']: l for l in locations}
+            else:
+                location_map = {}
             cache.set("locations:map", location_map, 300)
 
-        # tickets (unresolved)
-        ticket_map = cache.get("tickets:map")
-        if not ticket_map:
-            tickets = get_tickets_list()
-            if isinstance(tickets, list):
-                ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
-            else:
-                ticket_map = {}
-            cache.set("tickets:map", ticket_map, 300)
+        # tickets (unresolved) - no caching, always fetch fresh from external service
+        tickets_response = get_tickets_list()
+        # get_tickets_list returns a list (after filtering) or dict with warning
+        if isinstance(tickets_response, list):
+            ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
+        elif isinstance(tickets_response, dict) and not tickets_response.get('warning'):
+            tickets = tickets_response.get('results') or tickets_response.get('value') or []
+            ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
+        else:
+            ticket_map = {}
 
         return {
             "status_map": status_map,
@@ -499,11 +530,7 @@ class AssetViewSet(viewsets.ModelViewSet):
         cache.delete("assets:list")
         cache.delete(f"assets:detail:{asset_id}")
         cache.delete("assets:names")
-        cache.delete("tickets:map")  # Also invalidate ticket cache
-        # Also invalidate the raw tickets list cache (used by get_tickets_list)
-        cache.delete("contexts:list:tickets:None:50")
-        cache.delete(f"contexts:tickets:asset:{asset_id}:unresolved")
-        cache.delete(f"contexts:tickets:asset:{asset_id}:all")
+        # Note: tickets are not cached anymore - always fetched fresh from external service
 
     @action(detail=True, methods=['post'], url_path='invalidate-cache')
     def invalidate_cache(self, request, pk=None):
@@ -589,9 +616,17 @@ class AssetViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def deleted(self, request):
         """List all soft-deleted assets"""
-        assets = Asset.objects.filter(is_deleted=True).order_by('name')
-        serializer = self.get_serializer(assets, many=True)
-        return Response(serializer.data)
+        try:
+            assets = Asset.objects.filter(is_deleted=True).order_by('name')
+            # Use simplified serializer for recycle bin to avoid context map dependencies
+            serializer = AssetNameSerializer(assets, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error fetching deleted assets: {e}")
+            return Response(
+                {"error": f"Failed to fetch deleted assets: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['patch'])
     def recover(self, request, pk=None):
@@ -657,7 +692,6 @@ class AssetViewSet(viewsets.ModelViewSet):
             )
 
         # Fetch and validate status from Contexts service
-        from assets_ms.services.contexts import get_status_by_id
         status_details = get_status_by_id(status_id)
 
         if not status_details or status_details.get("warning"):
@@ -699,24 +733,33 @@ class AssetViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(asset)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # Asset names for bulk edit
+    # Asset names
     @action(detail=False, methods=["get"], url_path='names')
     def names(self, request):
         """
         Return assets with only id, asset_id, name, and image.
-        Optional query param: ?ids=1,2,3 or ?search=keyword
+        Optional query params:
+          - ?ids=1,2,3 (database IDs)
+          - ?asset_ids=AST-001,AST-002 (display asset_ids)
+          - ?search=keyword
         """
         ids_param = request.query_params.get("ids")
+        asset_ids_param = request.query_params.get("asset_ids")
         search = request.query_params.get("search")
         queryset = self.get_queryset()
 
-        # Filter by IDs if provided
+        # Filter by database IDs if provided (integers)
         if ids_param:
             try:
                 ids = [int(i) for i in ids_param.split(",") if i.strip().isdigit()]
                 queryset = queryset.filter(id__in=ids)
             except ValueError:
                 return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Filter by display asset_ids if provided (strings like "AST-20260110-00030-43A7")
+        if asset_ids_param:
+            asset_ids = [aid.strip() for aid in asset_ids_param.split(",") if aid.strip()]
+            queryset = queryset.filter(asset_id__in=asset_ids)
 
         if search:
             queryset = queryset.filter(name__icontains=search)
@@ -729,7 +772,9 @@ class AssetViewSet(viewsets.ModelViewSet):
         # Build a cache key specific for this set of IDs
         cache_key = "assets:names"
         if ids_param:
-            cache_key += f":{','.join(map(str, ids))}"
+            cache_key += f":ids:{','.join(map(str, ids_param.split(',')))}"
+        if asset_ids_param:
+            cache_key += f":asset_ids:{asset_ids_param}"
 
         return self.cached_response(
             cache_key,
@@ -738,7 +783,84 @@ class AssetViewSet(viewsets.ModelViewSet):
             many=True,
             context={'request': request}
         )
-    
+
+    # assets/hd/registration/?ids=1,2,3&search=keyword&status_type=deployable,deployed
+    # assets/hd/registration/?category=5
+    @action(detail=False, methods=["get"], url_path='hd/registration')
+    def hd_registration(self, request):
+        """
+        Return assets for HD registration with category filter.
+        Optional query params:
+            ?ids=1,2,3
+            ?search=keyword
+            ?status_type=deployable,deployed  (comma-separated status types)
+            ?category=5  (filter by category ID)
+        """
+
+        ids_param = request.query_params.get("ids")
+        search = request.query_params.get("search")
+        status_type_param = request.query_params.get("status_type")
+        category_param = request.query_params.get("category")
+        queryset = self.get_queryset()
+
+        # Fetch all asset statuses for status_map (avoids N+1 queries)
+        statuses = get_status_names_assets()
+        status_map = {}
+        if isinstance(statuses, list):
+            status_map = {
+                s['id']: {'id': s['id'], 'name': s['name'], 'type': s.get('type')}
+                for s in statuses
+            }
+
+        # Filter by IDs if provided
+        if ids_param:
+            try:
+                ids = [int(i) for i in ids_param.split(",") if i.strip().isdigit()]
+                queryset = queryset.filter(id__in=ids)
+            except ValueError:
+                return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Filter by category if provided
+        if category_param:
+            try:
+                category_id = int(category_param)
+                queryset = queryset.filter(product__category=category_id)
+            except ValueError:
+                return Response({"detail": "Invalid category ID."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Filter by status type(s) if provided
+        if status_type_param:
+            status_types = [t.strip() for t in status_type_param.split(",") if t.strip()]
+            if isinstance(statuses, list):
+                matching_status_ids = [s['id'] for s in statuses if s.get('type') in status_types]
+                if matching_status_ids:
+                    queryset = queryset.filter(status__in=matching_status_ids)
+                else:
+                    queryset = queryset.none()
+
+        if search:
+            queryset = queryset.filter(name__icontains=search)
+
+        # Don't cache filtered results - they need to be real-time
+        if search or status_type_param or category_param:
+            serializer = AssetHdRegistrationSerializer(
+                queryset, many=True,
+                context={'request': request, 'status_map': status_map}
+            )
+            return Response(serializer.data)
+
+        cache_key = "assets:hd:registration"
+        if ids_param:
+            cache_key += f":{','.join(map(str, ids))}"
+
+        return self.cached_response(
+            cache_key,
+            queryset,
+            AssetHdRegistrationSerializer,
+            many=True,
+            context={'request': request, 'status_map': status_map}
+        )
+
     # Bulk edit
     @action(detail=False, methods=["patch"], url_path='bulk-edit')
     def bulk_edit(self, request):
@@ -877,7 +999,7 @@ class AssetViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"detail": "Assets deleted successfully."}, status=status.HTTP_200_OK)
-
+    
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     
@@ -912,6 +1034,31 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
             asset__is_deleted=False
         ).order_by('-checkout_date')
         serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='by-employee/(?P<employee_id>[^/.]+)')
+    def by_employee(self, request, employee_id=None):
+        """
+        List all active checkouts for a specific employee with asset details.
+        GET /asset-checkout/by-employee/{employee_id}/
+        """
+        if not employee_id:
+            return Response({"detail": "Employee ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            employee_id = int(employee_id)
+        except ValueError:
+            return Response({"detail": "Invalid employee ID."}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = AssetCheckout.objects.select_related('asset').prefetch_related('files').filter(
+            checkout_to=employee_id,
+            asset_checkin__isnull=True,
+            asset__is_deleted=False
+        ).order_by('-checkout_date')
+
+        serializer = AssetCheckoutByEmployeeSerializer(
+            queryset, many=True, context={'request': request}
+        )
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'], url_path='checkout-with-status')
@@ -974,9 +1121,10 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
 
     def _resolve_overlapping_tickets(self, checkout, current_ticket_id):
         """Resolve other unresolved tickets that overlap with this checkout period."""
-        asset_id = checkout.asset.id
+        # Use display asset_id for tickets API (e.g., "AST-20260110-00030-43A7")
+        display_asset_id = checkout.asset.asset_id
         unresolved_tickets = fetch_resource_list(
-            f"tickets/by-asset/{asset_id}",
+            f"tickets/by-asset/{display_asset_id}",
             params={"is_resolved": False}
         )
 
@@ -1044,7 +1192,6 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
                 asset = checkin.asset_checkout.asset
 
                 # Validate status type
-                from assets_ms.services.contexts import get_status_by_id
                 status_details = get_status_by_id(status_id)
 
                 if not status_details:
@@ -1070,9 +1217,11 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
         ticket_id = request.data.get("ticket_id")
         if ticket_id:
             try:
-                resolve_ticket(ticket_id, asset_checkin_id=checkin.id)
-            except Exception:
-                pass
+                result = resolve_ticket(ticket_id, asset_checkin_id=checkin.id)
+                if result and result.get("warning"):
+                    print(f"[CheckIn] Warning resolving ticket {ticket_id}: {result}")
+            except Exception as e:
+                print(f"[CheckIn] Error resolving ticket {ticket_id}: {e}")
 
         # Log activity
         try:
@@ -1180,10 +1329,18 @@ class ComponentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def deleted(self, request):
         """List all soft-deleted components"""
-        components = Component.objects.filter(is_deleted=True).order_by('name')
-        context_maps = self._build_context_maps()
-        serializer = ComponentListSerializer(components, many=True, context=context_maps)
-        return Response(serializer.data)
+        try:
+            components = Component.objects.filter(is_deleted=True).order_by('name')
+            # Use simplified serializer without context maps for recycle bin
+            # to avoid circular dependency (contexts -> assets -> contexts)
+            serializer = ComponentNameSerializer(components, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error fetching deleted components: {e}")
+            return Response(
+                {"error": f"Failed to fetch deleted components: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=True, methods=['patch'])
     def recover(self, request, pk=None):
@@ -1524,11 +1681,11 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def due(self, request):
-        """Audits due today, not yet completed"""
+        """Audits due to be audited (today and future), not yet completed"""
         today = localdate()
         qs = AuditSchedule.objects.filter(
             is_deleted=False,
-            date=today,
+            date__gte=today,
             audit__isnull=True
         ).order_by('date')
         context = self._build_audit_schedule_context()
@@ -1718,14 +1875,20 @@ class RepairViewSet(viewsets.ModelViewSet):
         supplier_map = cache.get("suppliers:map")
         if not supplier_map:
             suppliers = get_supplier_names()
-            supplier_map = {s['id']: s for s in suppliers}
+            if isinstance(suppliers, list):
+                supplier_map = {s['id']: s for s in suppliers}
+            else:
+                supplier_map = {}
             cache.set("suppliers:map", supplier_map, 300)
 
         # statuses (repair category only)
         status_map = cache.get("statuses:repair:map")
         if not status_map:
             statuses = get_status_names_repairs()
-            status_map = {s['id']: s for s in statuses}
+            if isinstance(statuses, list):
+                status_map = {s['id']: s for s in statuses}
+            else:
+                status_map = {}
             cache.set("statuses:repair:map", status_map, 300)
 
         return {
@@ -1912,131 +2075,155 @@ class DashboardViewSet(viewsets.ViewSet):
     # /dashboard/metrics
     @action(detail=False, methods=['get'])
     def metrics(self, request):
-        today = now().date()
-        next_30_days = today + timedelta(days=30)
-
-        # Assets due for return - only count checkouts that haven't been checked in yet
-        due_for_return = AssetCheckout.objects.filter(
-            return_date__gte=today,
-            asset_checkin__isnull=True
-        ).count()
-        overdue_for_return = AssetCheckout.objects.filter(
-            return_date__lt=today,
-            asset_checkin__isnull=True
-        ).count()
-
-        # Audits - need to check if these models exist
         try:
-            upcoming_audits = AuditSchedule.objects.filter(
-                date__gt=today,
-                date__lte=next_30_days,
-                is_deleted=False,
-                is_completed=False
-            ).count()
-            overdue_audits = AuditSchedule.objects.filter(
-                date__lt=today,
-                is_deleted=False,
-                is_completed=False
-            ).count()
-        except:
-            upcoming_audits = 0
-            overdue_audits = 0
+            today = now().date()
+            next_30_days = today + timedelta(days=30)
 
-        # End of life - products with end_of_life date
-        try:
-            reached_end_of_life = Product.objects.filter(
-                end_of_life__lte=today,
+            # Assets due for return - only count checkouts that haven't been checked in yet
+            due_for_return = AssetCheckout.objects.filter(
+                return_date__gte=today,
+                asset_checkin__isnull=True
+            ).count()
+            overdue_for_return = AssetCheckout.objects.filter(
+                return_date__lt=today,
+                asset_checkin__isnull=True
+            ).count()
+
+            # Audits - due (today and future), upcoming (next 30 days), overdue, and completed
+            try:
+                # Only consider audit schedules that are not deleted and not yet audited
+                base_schedule_qs = AuditSchedule.objects.filter(
+                    is_deleted=False,
+                    audit__isnull=True
+                )
+
+                # Audits due to be audited: all pending audits from today onwards
+                due_audits = base_schedule_qs.filter(
+                    date__gte=today,
+                ).count()
+
+                # Upcoming audits within the next 30 days
+                upcoming_audits = base_schedule_qs.filter(
+                    date__gt=today,
+                    date__lte=next_30_days,
+                ).count()
+
+                # Overdue audits (past due date, not yet completed)
+                overdue_audits = base_schedule_qs.filter(
+                    date__lt=today,
+                ).count()
+
+                # Completed audits (audit records not soft-deleted)
+                completed_audits = Audit.objects.filter(is_deleted=False).count()
+            except Exception:
+                due_audits = 0
+                upcoming_audits = 0
+                overdue_audits = 0
+                completed_audits = 0
+
+            # End of life - products with end_of_life date
+            try:
+                reached_end_of_life = Product.objects.filter(
+                    end_of_life__lte=today,
+                    is_deleted=False
+                ).count()
+                upcoming_end_of_life = Product.objects.filter(
+                    end_of_life__gt=today,
+                    end_of_life__lte=next_30_days,
+                    is_deleted=False
+                ).count()
+            except Exception:
+                reached_end_of_life = 0
+                upcoming_end_of_life = 0
+
+            # Warranties
+            expired_warranties = Asset.objects.filter(
+                warranty_expiration__lte=today,
                 is_deleted=False
             ).count()
-            upcoming_end_of_life = Product.objects.filter(
-                end_of_life__gt=today,
-                end_of_life__lte=next_30_days,
+            expiring_warranties = Asset.objects.filter(
+                warranty_expiration__gt=today,
+                warranty_expiration__lte=next_30_days,
                 is_deleted=False
             ).count()
-        except:
-            reached_end_of_life = 0
-            upcoming_end_of_life = 0
 
-        # Warranties
-        expired_warranties = Asset.objects.filter(
-            warranty_expiration__lte=today,
-            is_deleted=False
-        ).count()
-        expiring_warranties = Asset.objects.filter(
-            warranty_expiration__gt=today,
-            warranty_expiration__lte=next_30_days,
-            is_deleted=False
-        ).count()
+            # Low stock
+            low_stock = Component.objects.filter(is_deleted=False).annotate(
+                total_checked_out=Coalesce(Sum('component_checkouts__quantity'), Value(0)),
+                total_checked_in=Coalesce(Sum('component_checkouts__component_checkins__quantity'), Value(0)),
+                available_quantity=F('quantity') - (F('total_checked_out') - F('total_checked_in'))
+            ).filter(
+                available_quantity__lt=F('minimum_quantity')
+            ).count()
 
-        # Low stock
-        low_stock = Component.objects.filter(is_deleted=False).annotate(
-            total_checked_out=Coalesce(Sum('component_checkouts__quantity'), Value(0)),
-            total_checked_in=Coalesce(Sum('component_checkouts__component_checkins__quantity'), Value(0)),
-            available_quantity=F('quantity') - (F('total_checked_out') - F('total_checked_in'))
-        ).filter(
-            available_quantity__lt=F('minimum_quantity')
-        ).count()
+            # Total asset costs
+            total_asset_costs = Asset.objects.filter(is_deleted=False).aggregate(
+                total=Coalesce(Sum('purchase_cost'), Value(0), output_field=DecimalField())
+            )['total']
 
-        # Total asset costs
-        total_asset_costs = Asset.objects.filter(is_deleted=False).aggregate(
-            total=Coalesce(Sum('purchase_cost'), Value(0), output_field=DecimalField())
-        )['total']
+            # Asset utilization (% of assets that are deployed)
+            total_assets = Asset.objects.filter(is_deleted=False).count()
+            statuses = get_status_names_assets()
+            deployed_status_ids = [s['id'] for s in statuses if s.get('type') == 'deployed'] if isinstance(statuses, list) else []
+            deployed_count = Asset.objects.filter(
+                is_deleted=False,
+                status__in=deployed_status_ids
+            ).count() if deployed_status_ids else 0
+            asset_utilization = round((deployed_count / total_assets * 100) if total_assets > 0 else 0)
 
-        # Asset utilization (% of assets that are deployed)
-        total_assets = Asset.objects.filter(is_deleted=False).count()
-        statuses = get_status_names_assets()
-        deployed_status_ids = [s['id'] for s in statuses if s.get('type') == 'deployed'] if isinstance(statuses, list) else []
-        deployed_count = Asset.objects.filter(
-            is_deleted=False,
-            status__in=deployed_status_ids
-        ).count() if deployed_status_ids else 0
-        asset_utilization = round((deployed_count / total_assets * 100) if total_assets > 0 else 0)
+            # Asset categories - count by category
+            categories = get_categories_list(type='asset', limit=100)
+            category_map = {c['id']: c['name'] for c in categories} if isinstance(categories, list) else {}
+            category_counts = Asset.objects.filter(is_deleted=False).values(
+                'product__category'
+            ).annotate(count=Count('id')).order_by('-count')
+            asset_categories = [
+                {
+                    'product__category__name': category_map.get(item['product__category'], f"Category {item['product__category']}"),
+                    'count': item['count']
+                }
+                for item in category_counts if item['product__category']
+            ]
 
-        # Asset categories - count by category
-        categories = get_categories_list(type='asset', limit=100)
-        category_map = {c['id']: c['name'] for c in categories} if isinstance(categories, list) else {}
-        category_counts = Asset.objects.filter(is_deleted=False).values(
-            'product__category'
-        ).annotate(count=Count('id')).order_by('-count')
-        asset_categories = [
-            {
-                'product__category__name': category_map.get(item['product__category'], f"Category {item['product__category']}"),
-                'count': item['count']
+            # Asset statuses - count by status
+            status_map = {s['id']: s['name'] for s in statuses} if isinstance(statuses, list) else {}
+            status_counts = Asset.objects.filter(is_deleted=False).values(
+                'status'
+            ).annotate(count=Count('id')).order_by('-count')
+            asset_statuses = [
+                {
+                    'status__name': status_map.get(item['status'], f"Status {item['status']}"),
+                    'count': item['count']
+                }
+                for item in status_counts if item['status']
+            ]
+
+            data = {
+                "due_for_return": due_for_return,
+                "overdue_for_return": overdue_for_return,
+                "due_audits": due_audits,
+                "upcoming_audits": upcoming_audits,
+                "overdue_audits": overdue_audits,
+                "completed_audits": completed_audits,
+                "reached_end_of_life": reached_end_of_life,
+                "upcoming_end_of_life": upcoming_end_of_life,
+                "expired_warranties": expired_warranties,
+                "expiring_warranties": expiring_warranties,
+                "low_stock": low_stock,
+                "total_asset_costs": total_asset_costs,
+                "asset_utilization": asset_utilization,
+                "asset_categories": asset_categories,
+                "asset_statuses": asset_statuses,
             }
-            for item in category_counts if item['product__category']
-        ]
 
-        # Asset statuses - count by status
-        status_map = {s['id']: s['name'] for s in statuses} if isinstance(statuses, list) else {}
-        status_counts = Asset.objects.filter(is_deleted=False).values(
-            'status'
-        ).annotate(count=Count('id')).order_by('-count')
-        asset_statuses = [
-            {
-                'status__name': status_map.get(item['status'], f"Status {item['status']}"),
-                'count': item['count']
-            }
-            for item in status_counts if item['status']
-        ]
-
-        data = {
-            "due_for_return": due_for_return,
-            "overdue_for_return": overdue_for_return,
-            "upcoming_audits": upcoming_audits,
-            "overdue_audits": overdue_audits,
-            "reached_end_of_life": reached_end_of_life,
-            "upcoming_end_of_life": upcoming_end_of_life,
-            "expired_warranties": expired_warranties,
-            "expiring_warranties": expiring_warranties,
-            "low_stock": low_stock,
-            "total_asset_costs": total_asset_costs,
-            "asset_utilization": asset_utilization,
-            "asset_categories": asset_categories,
-            "asset_statuses": asset_statuses,
-        }
-
-        serializer = DashboardStatsSerializer(data)
-        return Response(serializer.data)
+            serializer = DashboardStatsSerializer(data)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Dashboard metrics error: {str(e)}")
+            return Response(
+                {"error": f"Failed to fetch dashboard metrics: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     # /dashboard/forecast/asset-status/
     @action(detail=False, methods=['get'], url_path='forecast/asset-status')
@@ -2049,7 +2236,6 @@ class DashboardViewSet(viewsets.ViewSet):
         - months_back: Number of historical months (default: 6)
         - months_forward: Number of forecast months (default: 3)
         """
-        from assets_ms.services.forecast import get_asset_status_forecast
 
         months_back = int(request.query_params.get('months_back', 6))
         months_forward = int(request.query_params.get('months_forward', 3))
@@ -2075,7 +2261,6 @@ class DashboardViewSet(viewsets.ViewSet):
         - months_forward: Number of forecast months (default: 3)
         - top_n: Number of top products to include (default: 4)
         """
-        from assets_ms.services.forecast import get_product_demand_forecast
 
         months_back = int(request.query_params.get('months_back', 6))
         months_forward = int(request.query_params.get('months_forward', 3))
@@ -2102,7 +2287,6 @@ class DashboardViewSet(viewsets.ViewSet):
         Returns key performance indicators including forecasted demand, most requested model,
         shortage risk, and predicted asset count changes.
         """
-        from assets_ms.services.forecast import get_kpi_summary
 
         try:
             data = get_kpi_summary()

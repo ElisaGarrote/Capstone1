@@ -147,8 +147,9 @@ class AssetListSerializer(serializers.ModelSerializer):
         return self.context.get("product_map", {}).get(obj.product_id)
     
     def get_ticket_details(self, obj):
-        return self.context.get("ticket_map", {}).get(obj.id)
-    
+        # ticket_map is keyed by display asset_id (e.g., "AST-20260110-00030-43A7")
+        return self.context.get("ticket_map", {}).get(obj.asset_id)
+
     def get_active_checkout(self, obj):
         checkout = obj.asset_checkouts.filter(asset_checkin__isnull=True).first()
         return checkout.id if checkout else None
@@ -224,7 +225,8 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
         return self.context.get("status_map", {}).get(obj.status)
 
     def get_ticket_details(self, obj):
-        return self.context.get("ticket_map", {}).get(obj.id)
+        # ticket_map is keyed by display asset_id (e.g., "AST-20260110-00030-43A7")
+        return self.context.get("ticket_map", {}).get(obj.asset_id)
 
     def get_history(self, obj):
         """
@@ -382,6 +384,17 @@ class AssetNameSerializer(serializers.ModelSerializer):
         model = Asset
         fields = ['id', 'asset_id', 'name', 'image']
 
+# Serializer for HD registration with category filter
+class AssetHdRegistrationSerializer(serializers.ModelSerializer):
+    status_details = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Asset
+        fields = ['id', 'asset_id', 'name', 'image', 'status_details', 'serial_number']
+
+    def get_status_details(self, obj):
+        return self.context.get("status_map", {}).get(obj.status)
+
 class AssetCheckoutFileSerializer(serializers.ModelSerializer):
     file_from = serializers.CharField(default="asset_checkout", read_only=True)
 
@@ -397,6 +410,32 @@ class AssetCheckoutListSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckout
         fields = '__all__'
+
+
+class AssetCheckoutByEmployeeSerializer(serializers.ModelSerializer):
+    """Serializer for active checkouts by employee with asset details."""
+    asset_details = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AssetCheckout
+        fields = [
+            'id', 'asset_details', 'checkout_to', 'condition'
+        ]
+
+    def get_asset_details(self, obj):
+        """Return asset details (id, asset_id, name, image)."""
+        if obj.asset:
+            request = self.context.get('request')
+            image_url = None
+            if obj.asset.image:
+                image_url = request.build_absolute_uri(obj.asset.image.url) if request else obj.asset.image.url
+            return {
+                'id': obj.asset.id,
+                'asset_id': obj.asset.asset_id,
+                'name': obj.asset.name,
+                'image': image_url,
+            }
+        return None
 
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     # These fields are populated from ticket data, not from form input
@@ -426,12 +465,13 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"ticket_id": "Ticket is already resolved."})
 
         # --- Asset Validations (from ticket) ---
-        asset_id = ticket.get('asset')
-        if not asset_id:
+        # ticket['asset'] contains the display asset_id (e.g., "AST-20260110-00030-43A7")
+        ticket_asset_id = ticket.get('asset')
+        if not ticket_asset_id:
             raise serializers.ValidationError({"asset": "Ticket has no asset assigned."})
 
         try:
-            asset = Asset.objects.get(id=asset_id)
+            asset = Asset.objects.get(asset_id=ticket_asset_id)
         except Asset.DoesNotExist:
             raise serializers.ValidationError({"asset": "Asset not found."})
 
@@ -464,9 +504,21 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         # --- Date Validations (from ticket) ---
         checkout_date = ticket.get('checkout_date')
         return_date = ticket.get('return_date')
+
+        # Parse checkout_date if string
+        if checkout_date and isinstance(checkout_date, str):
+            checkout_date = datetime.strptime(checkout_date, "%Y-%m-%d").date()
+
+        # Validate checkout is not before the ticket's checkout_date
+        if checkout_date:
+            today = datetime.now().date()
+            if today < checkout_date:
+                raise serializers.ValidationError({
+                    "checkout_date": f"Cannot check out before the scheduled checkout date ({checkout_date})."
+                })
+
+        # Validate return_date is not before checkout_date
         if checkout_date and return_date:
-            if isinstance(checkout_date, str):
-                checkout_date = datetime.strptime(checkout_date, "%Y-%m-%d").date()
             if isinstance(return_date, str):
                 return_date = datetime.strptime(return_date, "%Y-%m-%d").date()
             if return_date < checkout_date:
@@ -474,21 +526,36 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
                     "return_date": "Return date cannot be before checkout date."
                 })
 
-        # Store ticket data for create method
+        # Store ticket data and asset for create method
         data['_ticket'] = ticket
+        data['_asset'] = asset
 
         return data
 
     def create(self, validated_data):
         # Pop internal data
         ticket = validated_data.pop('_ticket')
+        asset = validated_data.pop('_asset')
         files_data = validated_data.pop('files', [])
+
+        # Get location ID from location_details (from external location system)
+        location_details = ticket.get('location_details')
+        location_id = None
+        if location_details:
+            loc_id = location_details.get('id')
+            if isinstance(loc_id, int):
+                location_id = loc_id
+            elif isinstance(loc_id, str) and loc_id.isdigit():
+                location_id = int(loc_id)
+
+        if location_id is None:
+            raise serializers.ValidationError({"location": "Valid location ID is required from ticket."})
 
         # Enforce values from ticket (backend sets these, not form)
         validated_data['ticket_id'] = ticket.get('id')
-        validated_data['asset_id'] = ticket.get('asset')
+        validated_data['asset'] = asset  # Use Asset object, not display asset_id string
         validated_data['checkout_to'] = ticket.get('employee')
-        validated_data['location'] = ticket.get('location')
+        validated_data['location'] = location_id
         validated_data['checkout_date'] = ticket.get('checkout_date')
         validated_data['return_date'] = ticket.get('return_date')
 
@@ -547,11 +614,6 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
             ticket = get_ticket_by_id(ticket_id)
             if not ticket or ticket.get("warning"):
                 raise serializers.ValidationError({"ticket_id": "Ticket not found."})
-
-            if ticket.get("asset") != checkout.asset_id:
-                raise serializers.ValidationError({
-                    "ticket_id": "Ticket does not match this asset."
-                })
 
         return data
 
@@ -1095,8 +1157,10 @@ class RepairInstanceSerializer(serializers.ModelSerializer):
 class DashboardStatsSerializer(serializers.Serializer):
     due_for_return = serializers.IntegerField()
     overdue_for_return = serializers.IntegerField()
+    due_audits = serializers.IntegerField()
     upcoming_audits = serializers.IntegerField()
     overdue_audits = serializers.IntegerField()
+    completed_audits = serializers.IntegerField()
     reached_end_of_life = serializers.IntegerField()
     upcoming_end_of_life = serializers.IntegerField()
     expired_warranties = serializers.IntegerField()

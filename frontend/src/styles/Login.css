@@ -30,9 +30,10 @@
 }
 
 .login-page .left-panel img {
-  width: 100%;
-  height: auto;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 0 !important;
 }
 
 .login-page .right-panel {
@@ -90,12 +91,14 @@
 }
 
 .show-password {
-  height: 20px;
-  width: 20px;
+  height: 20px !important;
+  width: 20px !important;
 
   position: absolute;
   right: 16px;
   cursor: pointer;
+  border-radius: 0 !important;
+  object-fit: contain !important;
 }
 
 input[type="password"]::-ms-reveal {
@@ -167,11 +170,12 @@ input[type="password"]::-ms-reveal {
 }
 
 .form-header .logo img {
-  height: 5.8rem;
-  width: 5.8rem;
+  height: 5.8rem !important;
+  width: 5.8rem !important;
 
-  object-fit: contain;
+  object-fit: contain !important;
   mix-blend-mode: multiply;
+  border-radius: 0 !important;
 }
 
 .form-header .logo-text {
@@ -216,4 +220,62 @@ input[type="password"]::-ms-reveal {
 .password-requirements .error-msg {
   display: block;
   margin-bottom: 5px;
+}
+
+/* Token Login Styles */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  padding: 20px;
+}
+
+.login-content {
+  width: 100%;
+  max-width: 500px;
+}
+
+.status-card {
+  background: white;
+  border-radius: 12px;
+  padding: 48px 32px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.status-icon {
+  margin: 0 auto 24px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-color);
+}
+
+.status-title.processing {
+  color: var(--primary-color);
+}
+
+.status-title.success {
+  color: var(--success-color);
+}
+
+.status-title.error {
+  color: var(--error-color);
+}
+
+.status-description {
+  font-size: 16px;
+  color: var(--secondary-text-color);
+  line-height: 1.5;
 }

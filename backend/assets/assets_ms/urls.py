@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .api.supplier import SupplierDetailProxy, SupplierListProxy
 from .api.contexts import *
 from .views import *
-from .api.reports import DepreciationReportAPIView, AssetReportAPIView, ActivityReportAPIView, ActivityReportSummaryAPIView
+from .api.reports import DepreciationReportAPIView, AssetReportAPIView, ActivityReportAPIView, ActivityReportSummaryAPIView, EoLWarrantyReportAPIView, UpcomingEoLReportAPIView
+from .api.reports import DepreciationReportAPIView, AssetReportAPIView, ActivityReportAPIView, ActivityReportSummaryAPIView, EoLWarrantyReportAPIView, UpcomingEoLReportAPIView, ReachedEoLReportAPIView, ExpiredWarrantyReportAPIView, ExpiringWarrantyReportAPIView
 
 router = DefaultRouter()
 router.register('products', ProductViewSet, basename='categories')
@@ -41,10 +42,20 @@ urlpatterns = [
     path("contexts/depreciations/<int:pk>/", DepreciationDetailProxy.as_view(), name="proxy-depreciation-detail"),
     path("contexts/locations/", LocationListProxy.as_view(), name="proxy-location-list"),
     path("contexts/statuses/", StatusListProxy.as_view(), name="proxy-status-list"),
+
+    # Proxy endpoints for external Ticket Tracking API
+    path("tickets/asset/unresolved/", TicketUnresolvedListProxy.as_view(), name="proxy-tickets-unresolved"),
+    path("tickets/asset/resolved/", TicketResolvedListProxy.as_view(), name="proxy-tickets-resolved"),
+
     path("reports/depreciation/", DepreciationReportAPIView.as_view(), name="depreciation-report"),
     path("reports/assets/", AssetReportAPIView.as_view(), name="asset-report"),
     path("reports/activity/", ActivityReportAPIView.as_view(), name="activity-report"),
     path("reports/activity/summary/", ActivityReportSummaryAPIView.as_view(), name="activity-report-summary"),
+    path("reports/eol-warranty/", EoLWarrantyReportAPIView.as_view(), name="eol-warranty-report"),
+    path("reports/expiring-warranty/", ExpiringWarrantyReportAPIView.as_view(), name="expiring-warranty-report"),
+    path("reports/expired-warranty/", ExpiredWarrantyReportAPIView.as_view(), name="expired-warranty-report"),
+    path("reports/reached-eol/", ReachedEoLReportAPIView.as_view(), name="reached-eol-report"),
+    path("reports/upcoming-eol/", UpcomingEoLReportAPIView.as_view(), name="upcoming-eol-report"),
 
     path("", include(router.urls)),
 ]

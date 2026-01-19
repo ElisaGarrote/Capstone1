@@ -60,6 +60,11 @@ export async function fetchAllLocations(params = {}) {
   const res = await contextsApi.get('/locations/', { params })
   // DRF may return paginated { results: [...], count } or a plain list
   const data = res.data.results ?? res.data
+  // Ensure data is an array before mapping
+  if (!Array.isArray(data)) {
+    console.warn("fetchAllLocations: Expected array but got:", typeof data)
+    return []
+  }
   // Map to consistent format with id and name
   return data.map(loc => ({
     id: loc.id,
