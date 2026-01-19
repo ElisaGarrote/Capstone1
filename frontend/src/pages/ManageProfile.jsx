@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../Context/AuthContext";
 import Alert from "../components/Alert";
 import NavBar from "../components/NavBar";
 import DefaultProfile from "../assets/img/default-profile.svg";
