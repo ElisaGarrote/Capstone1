@@ -308,12 +308,6 @@ const Tickets = () => {
       }
     }
 
-    if (!assetId) {
-      console.error("No asset ID found in ticket:", ticket);
-      setErrorMessage("Cannot process ticket: missing asset information.");
-      return;
-    }
-
     if (ticket.isCheckInOrOut === "Check-In") {
       navigate(`/assets/check-in/${assetId}`, {
         state: { ticket, fromAsset: false },
