@@ -434,6 +434,7 @@ class AssetCheckoutByEmployeeSerializer(serializers.ModelSerializer):
                 'asset_id': obj.asset.asset_id,
                 'name': obj.asset.name,
                 'image': image_url,
+                'serial_number': obj.asset.serial_number
             }
         return None
 
