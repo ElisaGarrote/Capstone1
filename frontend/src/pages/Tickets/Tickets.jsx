@@ -297,9 +297,20 @@ const Tickets = () => {
   const handleCheckInOut = async (ticket) => {
     // Use ticket.asset (numeric ID) or ticket.asset_id as fallback
     let assetId = ticket.asset || ticket.asset_id;
+    let checkoutId = ticket.asset_checkout;
+
+    if(!checkoutId && ticket.isCheckInOrOut === "Check-In") {
+      // Clear first to ensure re-render even if same message
+      setErrorMessage("");
+      setTimeout(() => {
+        setErrorMessage("Missing checkout ID. Cannot perform check-in.");
+        setTimeout(() => setErrorMessage(""), 5000);
+      }, 10);
+      return;
+    }
 
     // If asset ID is missing but we have asset_checkout, fetch asset from checkout
-    if (!assetId && ticket.asset_checkout) {
+    if (!assetId && checkoutId) {
       try {
         const checkout = await fetchAssetCheckoutById(ticket.asset_checkout);
         assetId = checkout?.asset;
