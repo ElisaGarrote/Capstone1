@@ -270,7 +270,12 @@ export default function CheckInAsset() {
       console.log("Checkout ID debug:", { checkoutIdFromState, ticketAssetCheckout: ticket?.asset_checkout, rawCheckoutId, checkoutId });
 
       if (!checkoutId || isNaN(checkoutId)) {
-        setErrorMessage("Missing checkout ID. Cannot complete check-in.");
+        // Clear first to ensure re-render even if same message
+        setErrorMessage("");
+        setTimeout(() => {
+          setErrorMessage("Missing checkout ID. Cannot complete check-in.");
+          setTimeout(() => setErrorMessage(""), 5000);
+        }, 10);
         return;
       }
 
