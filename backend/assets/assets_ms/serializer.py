@@ -438,6 +438,46 @@ class AssetCheckoutByEmployeeSerializer(serializers.ModelSerializer):
             }
         return None
 
+
+class AssetCheckoutInstanceSerializer(serializers.ModelSerializer):
+    """Serializer for retrieving a single checkout instance with full asset details."""
+    asset_details = serializers.SerializerMethodField()
+    files = AssetCheckoutFileSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = AssetCheckout
+        fields = [
+            'id', 'asset', 'asset_details', 'checkout_to', 'checkout_date',
+            'return_date', 'location', 'condition', 'notes', 'ticket_id', 'files'
+        ]
+
+    def get_asset_details(self, obj):
+        """Return comprehensive asset details."""
+        if not obj.asset:
+            return None
+
+        asset = obj.asset
+        request = self.context.get('request')
+        image_url = None
+        if asset.image:
+            image_url = request.build_absolute_uri(asset.image.url) if request else asset.image.url
+
+        return {
+            'id': asset.id,
+            'asset_id': asset.asset_id,
+            'name': asset.name,
+            'image': image_url,
+            'serial_number': asset.serial_number,
+            'status': asset.status,
+            'product': asset.product_id,
+            'purchase_date': asset.purchase_date,
+            'purchase_cost': str(asset.purchase_cost) if asset.purchase_cost else None,
+            'warranty_expiration': asset.warranty_expiration,
+            'end_of_life': asset.end_of_life,
+            'supplier': asset.supplier,
+            'manufacturer': asset.manufacturer,
+        }
+
 class AssetCheckoutSerializer(serializers.ModelSerializer):
     # These fields are populated from ticket data, not from form input
     asset = serializers.PrimaryKeyRelatedField(queryset=Asset.objects.all(), required=False)

@@ -984,6 +984,10 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "list":
             return AssetCheckoutListSerializer
+        if self.action == "instance":
+            return AssetCheckoutInstanceSerializer
+        if self.action == "by_employee":
+            return AssetCheckoutByEmployeeSerializer
         return AssetCheckoutSerializer
 
     def get_queryset(self):
@@ -1038,7 +1042,24 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
             queryset, many=True, context={'request': request}
         )
         return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'], url_path='instance')
+    def instance(self, request, pk=None):
+        """Return the instance of the checkout with full asset details."""
+        try:
+            checkout = AssetCheckout.objects.select_related('asset').prefetch_related('files').get(
+                id=pk,
+                asset__is_deleted=False
+            )
+        except AssetCheckout.DoesNotExist:
+            return Response(
+                {"detail": "Checkout not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
+        serializer = AssetCheckoutInstanceSerializer(checkout, context={'request': request})
+        return Response(serializer.data)
+    
     @action(detail=False, methods=['post'], url_path='checkout-with-status')
     def checkout_with_status(self, request):
         """
