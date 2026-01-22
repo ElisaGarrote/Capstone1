@@ -61,7 +61,7 @@ function TableItem({
       </td>
       <td>{ticket.ticket_number}</td>
       <td>{ticket.formattedDate}</td>
-      <td>{ticket.employeeName}</td>
+      <td>{ticket.requestor_details?.name}</td>
       <td>{ticket.subject}</td>
       <td>{ticket.location}</td>
 
