@@ -45,6 +45,7 @@ urlpatterns = [
     # Proxy endpoints for external Ticket Tracking API
     path("tickets/asset/unresolved/", TicketUnresolvedListProxy.as_view(), name="proxy-tickets-unresolved"),
     path("tickets/asset/resolved/", TicketResolvedListProxy.as_view(), name="proxy-tickets-resolved"),
+    path("external/ams/tickets/", ExternalAmsTicketsProxy.as_view(), name="proxy-external-ams-tickets"),
 
     path("reports/depreciation/", DepreciationReportAPIView.as_view(), name="depreciation-report"),
     path("reports/assets/", AssetReportAPIView.as_view(), name="asset-report"),

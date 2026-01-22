@@ -264,3 +264,36 @@ class TicketResolvedListProxy(APIView):
             return Response({"detail": tickets['warning']}, status=status.HTTP_502_BAD_GATEWAY)
 
         return Response(tickets)
+
+
+class ExternalAmsTicketsProxy(APIView):
+    """Proxy to fetch all tickets from external ticket tracking API at /external/ams/tickets/.
+
+    This endpoint proxies requests to http://165.22.247.50:1001/external/ams/tickets/
+    to avoid mixed content (HTTPS->HTTP) issues in the browser.
+    """
+    def get(self, request):
+        from ..services.http_client import get as client_get
+        import os
+        from django.conf import settings
+
+        base_url = getattr(
+            settings,
+            "EXTERNAL_TICKET_API_URL",
+            os.getenv("EXTERNAL_TICKET_API_URL", "http://165.22.247.50:1001/")
+        )
+        url = f"{base_url.rstrip('/')}/external/ams/tickets/"
+
+        try:
+            # Forward query params
+            params = dict(request.query_params)
+            resp = client_get(url, params=params, timeout=10)
+            if resp.status_code == 404:
+                return Response({"detail": "Resource not found."}, status=status.HTTP_404_NOT_FOUND)
+            resp.raise_for_status()
+            return Response(resp.json())
+        except Exception as e:
+            return Response(
+                {"detail": f"External ticket service error: {str(e)}"},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
