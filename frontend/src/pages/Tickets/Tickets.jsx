@@ -89,16 +89,14 @@ function TableItem({
   );
 }
 
-// Helper to check if a date string is today
-function isToday(dateString) {
+// Helper to check if a date string is in the future (after today)
+function isFutureDate(dateString) {
   if (!dateString) return false;
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset to start of day
   const date = new Date(dateString);
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
-  );
+  date.setHours(0, 0, 0, 0);
+  return date > today;
 }
 
 const Tickets = () => {
@@ -165,9 +163,9 @@ const Tickets = () => {
           }
         }
 
-        // Disable checkout if checkout_date is not today
+        // Disable checkout if checkout_date is in the future
         const disableCheckout =
-          isCheckInOrOut === "Check-Out" && !isToday(ticket.checkout_date);
+          isCheckInOrOut === "Check-Out" && isFutureDate(ticket.checkout_date);
 
         const formattedDate =
           isCheckInOrOut === "Check-In"

@@ -286,16 +286,14 @@ function ProductViewPage() {
     setTimeout(() => setErrorMessage(""), 5000);
   };
 
-  // Helper to check if a date string is today
-  function isToday(dateString) {
+  // Helper to check if a date string is in the future (after today)
+  function isFutureDate(dateString) {
     if (!dateString) return false;
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset to start of day
     const date = new Date(dateString);
-    return (
-      date.getFullYear() === today.getFullYear() &&
-      date.getMonth() === today.getMonth() &&
-      date.getDate() === today.getDate()
-    );
+    date.setHours(0, 0, 0, 0);
+    return date > today;
   }
 
   // Helper to determine action button state
@@ -303,7 +301,7 @@ function ProductViewPage() {
     const status = asset.status_details?.type;
     const hasTicket = !!asset.ticket_details;
     const checkoutDate = asset.ticket_details?.checkout_date;
-    const isCheckoutToday = isToday(checkoutDate);
+    const isCheckoutInFuture = isFutureDate(checkoutDate);
 
     // No actions for undeployable or archived
     if (status === "undeployable" || status === "archived") {
@@ -316,10 +314,10 @@ function ProductViewPage() {
 
     // Checkout is disabled if:
     // 1. No ticket, OR
-    // 2. Has ticket but checkout_date is not today
+    // 2. Has ticket but checkout_date is in the future
     const checkoutDisabled =
       (status === "pending" || status === "deployable") &&
-      (!hasTicket || !isCheckoutToday);
+      (!hasTicket || isCheckoutInFuture);
 
     return {
       showCheckin: status === "deployed",
