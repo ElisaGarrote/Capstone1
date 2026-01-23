@@ -276,6 +276,8 @@ const Tickets = () => {
       // Build data array for the modal
       const data = [
         { label: "Ticket Number", value: ticket.ticket_number },
+        { label: "Subject", value: ticket.subject || "N/A" },
+        { label: "Issue Type", value: ticket.issue_type || "N/A" },
         { label: "Location", value: ticket.location_details?.name || "Unknown" },
         { label: "Requestor", value: ticket.requestor_details?.name || "Unknown" },
         { label: "Asset", value: `${ticket.asset} - ${assetName}` },
