@@ -70,6 +70,7 @@ function TableItem({
           <ActionButtons
             showCheckout={ticket.isCheckInOrOut === "Check-Out"}
             showCheckin={ticket.isCheckInOrOut === "Check-In"}
+            disableCheckout={ticket.disableCheckout}
             onCheckoutClick={() => onCheckInOut(ticket)}
             onCheckinClick={() => onCheckInOut(ticket)}
           />
@@ -85,6 +86,18 @@ function TableItem({
         />
       </td>
     </tr>
+  );
+}
+
+// Helper to check if a date string is today
+function isToday(dateString) {
+  if (!dateString) return false;
+  const today = new Date();
+  const date = new Date(dateString);
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
   );
 }
 
@@ -152,6 +165,10 @@ const Tickets = () => {
           }
         }
 
+        // Disable checkout if checkout_date is not today
+        const disableCheckout =
+          isCheckInOrOut === "Check-Out" && !isToday(ticket.checkout_date);
+
         const formattedDate =
           isCheckInOrOut === "Check-In"
             ? ticket.checkin_date?.slice(0, 10)
@@ -169,6 +186,7 @@ const Tickets = () => {
         return {
           ...ticket,
           isCheckInOrOut,
+          disableCheckout,
           formattedDate,
           employeeName,
           // Use location_details.name for display (location is now an integer ID)

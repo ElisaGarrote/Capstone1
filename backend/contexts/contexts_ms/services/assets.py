@@ -134,9 +134,14 @@ def get_assets_by_category(category_id, timeout=8):
     """
     Fetch assets by category ID using the /assets/hd/registration/?category={id} endpoint.
     Returns a list of asset objects with full HD registration details or empty list on error.
+    Only returns assets with deployable or pending status types.
     """
     try:
-        response = client_get("assets/hd/registration/", params={"category": category_id}, timeout=timeout)
+        response = client_get(
+            "assets/hd/registration/",
+            params={"category": category_id, "status_type": "deployable,pending"},
+            timeout=timeout
+        )
         response.raise_for_status()
         data = response.json()
         # Handle both list and paginated responses
