@@ -312,7 +312,7 @@ class AuditSchedule(models.Model):
     date = models.DateField()
     notes = models.TextField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
-    created_at = models.DateTimeField(default=timezone.now(), editable=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
