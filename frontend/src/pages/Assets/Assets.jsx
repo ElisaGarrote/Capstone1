@@ -39,16 +39,32 @@ function TableHeader({ allSelected, onHeaderChange }) {
   );
 }
 
+// Helper to check if a date string is today
+function isToday(dateString) {
+  if (!dateString) return false;
+  const today = new Date();
+  const date = new Date(dateString);
+  return (
+    date.getFullYear() === today.getFullYear() &&
+    date.getMonth() === today.getMonth() &&
+    date.getDate() === today.getDate()
+  );
+}
+
 // Helper to determine action button state
 function getActionState(asset) {
   const status = asset.status_details?.type;
   const hasTicket = !!asset.ticket_details;
+  const checkoutDate = asset.ticket_details?.checkout_date;
+  const isCheckoutToday = isToday(checkoutDate);
 
   // Debug logging
   console.log("Asset action state:", {
     assetId: asset.asset_id,
     status,
     hasTicket,
+    checkoutDate,
+    isCheckoutToday,
     status_details: asset.status_details
   });
 
@@ -70,13 +86,17 @@ function getActionState(asset) {
     };
   }
 
+  // Checkout is disabled if:
+  // 1. No ticket, OR
+  // 2. Has ticket but checkout_date is not today
+  const checkoutDisabled =
+    (status === "pending" || status === "deployable") &&
+    (!hasTicket || !isCheckoutToday);
+
   return {
     showCheckin: status === "deployed",
-
     showCheckout: status === "pending" || status === "deployable",
-
-    checkoutDisabled:
-      (status === "pending" || status === "deployable") && !hasTicket,
+    checkoutDisabled,
   };
 }
 

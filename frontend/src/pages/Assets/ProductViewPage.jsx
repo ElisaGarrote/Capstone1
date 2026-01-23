@@ -286,30 +286,47 @@ function ProductViewPage() {
     setTimeout(() => setErrorMessage(""), 5000);
   };
 
-  // Helper to determine action button state
-function getActionState(asset) {
-  const status = asset.status_details?.type;
-  const hasTicket = !!asset.ticket_details;
-
-  // No actions for undeployable or archived
-  if (status === "undeployable" || status === "archived") {
-    return {
-      showCheckin: false,
-      showCheckout: false,
-      checkoutDisabled: false,
-    };
+  // Helper to check if a date string is today
+  function isToday(dateString) {
+    if (!dateString) return false;
+    const today = new Date();
+    const date = new Date(dateString);
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
   }
 
-  return {
-    showCheckin: status === "deployed",
+  // Helper to determine action button state
+  function getActionState(asset) {
+    const status = asset.status_details?.type;
+    const hasTicket = !!asset.ticket_details;
+    const checkoutDate = asset.ticket_details?.checkout_date;
+    const isCheckoutToday = isToday(checkoutDate);
 
-    showCheckout:
-      status === "pending" || status === "deployable",
+    // No actions for undeployable or archived
+    if (status === "undeployable" || status === "archived") {
+      return {
+        showCheckin: false,
+        showCheckout: false,
+        checkoutDisabled: false,
+      };
+    }
 
-    checkoutDisabled:
-      (status === "pending" || status === "deployable") && !hasTicket,
-  };
-}
+    // Checkout is disabled if:
+    // 1. No ticket, OR
+    // 2. Has ticket but checkout_date is not today
+    const checkoutDisabled =
+      (status === "pending" || status === "deployable") &&
+      (!hasTicket || !isCheckoutToday);
+
+    return {
+      showCheckin: status === "deployed",
+      showCheckout: status === "pending" || status === "deployable",
+      checkoutDisabled,
+    };
+  }
 
   // Pagination logic
   const startIndex = (currentPage - 1) * pageSize;
