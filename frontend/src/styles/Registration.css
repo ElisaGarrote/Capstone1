@@ -580,3 +580,118 @@
 .toggle-switch input[type="checkbox"]:checked + .toggle-label::after {
     left: 26px;
 }
+
+/* Checkout Info Card Styles */
+.checkout-info-card {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #dee2e6;
+}
+
+.checkout-info-card .info-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.checkout-info-card .info-icon {
+    font-size: 1.5rem;
+}
+
+.checkout-info-card .info-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--secondary-text-color);
+    flex: 1;
+}
+
+.checkout-info-card .badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.checkout-info-card .badge.active {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.checkout-info-card .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.checkout-info-card .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.checkout-info-card .info-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.checkout-info-card .info-item .label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.checkout-info-card .info-item .value {
+    font-size: 0.95rem;
+    color: var(--secondary-text-color);
+    font-weight: 500;
+}
+
+.checkout-info-card .info-item .value.asset-id {
+    font-family: monospace;
+    background-color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.checkout-info-card .info-item .value.highlight {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.checkout-info-card .progress-section {
+    margin-top: 8px;
+}
+
+.checkout-info-card .progress-bar-container {
+    height: 8px;
+    background-color: #dee2e6;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.checkout-info-card .progress-bar {
+    height: 100%;
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.checkout-info-card .progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: #6c757d;
+}

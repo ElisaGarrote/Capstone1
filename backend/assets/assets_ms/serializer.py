@@ -218,6 +218,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
     checkout_logs = serializers.SerializerMethodField()
     repairs = serializers.SerializerMethodField()
     audits = serializers.SerializerMethodField()
+    components = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -226,7 +227,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
             'order_number', 'purchase_date', 'purchase_cost', 'notes',
             'image', 'created_at', 'updated_at',
             'product_details', 'status_details', 'supplier_details', 'location_details',
-            'files', 'checkout_logs', 'repairs', 'audits'
+            'files', 'checkout_logs', 'repairs', 'audits', 'components'
         ]
 
     def get_status_details(self, obj):
@@ -491,6 +492,39 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
                 })
 
         return audits_list
+
+    def get_components(self, obj):
+        """
+        Return list of components with active checkouts to this asset.
+        Groups by component and sums remaining quantities.
+        """
+        from collections import defaultdict
+
+        # Get all component checkouts to this asset
+        checkouts = obj.checkout_to.all().select_related('component')
+
+        # Group by component and sum remaining quantities
+        component_quantities = defaultdict(int)
+        component_data = {}
+
+        for checkout in checkouts:
+            remaining = checkout.remaining_quantity
+            if remaining > 0:  # Only include active checkouts (has remaining quantity)
+                component_quantities[checkout.component.id] += remaining
+                if checkout.component.id not in component_data:
+                    component_data[checkout.component.id] = checkout.component
+
+        # Build result list
+        result = []
+        for component_id, quantity in component_quantities.items():
+            component = component_data[component_id]
+            result.append({
+                'id': component.id,
+                'name': component.name,
+                'quantity': quantity
+            })
+
+        return result
 
     def get_history(self, obj):
         """

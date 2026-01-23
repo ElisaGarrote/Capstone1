@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import Alert from "../../components/Alert";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import { createComponentCheckout, fetchAssetNames } from "../../services/assets-service";
-import { fetchAllDropdowns } from "../../services/contexts-service";
 
 const ComponentCheckout = () => {
   const navigate = useNavigate();
@@ -17,7 +16,6 @@ const ComponentCheckout = () => {
   const item = location.state?.item || {};
 
   const [assets, setAssets] = useState([]);
-  const [statuses, setStatuses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alert, setAlert] = useState({ message: "", type: "" });
@@ -32,25 +30,17 @@ const ComponentCheckout = () => {
       asset: "",
       quantity: 1,
       checkoutDate: new Date().toISOString().split("T")[0],
-      status: "",
       notes: "",
     },
   });
 
-  // Fetch assets and statuses on mount
+  // Fetch assets on mount
   useEffect(() => {
     const loadData = async () => {
       try {
         // Fetch assets for dropdown
         const assetsData = await fetchAssetNames();
         setAssets(assetsData || []);
-
-        // Fetch deployed statuses for dropdown
-        const dropdowns = await fetchAllDropdowns("status", {
-          category: "asset",
-          types: "deployed",
-        });
-        setStatuses(dropdowns.statuses || []);
       } catch (error) {
         console.error("Error loading data:", error);
         setAlert({ message: "Failed to load form data", type: "error" });
@@ -69,7 +59,6 @@ const ComponentCheckout = () => {
         asset: parseInt(data.asset),
         quantity: data.quantity,
         checkout_date: data.checkoutDate,
-        status: parseInt(data.status),
         notes: data.notes || "",
       };
       await createComponentCheckout(payload);
@@ -175,28 +164,6 @@ const ComponentCheckout = () => {
               />
               {errors.checkoutDate && (
                 <span className="error-message">{errors.checkoutDate.message}</span>
-              )}
-            </fieldset>
-
-            {/* Status */}
-            <fieldset>
-              <label htmlFor="status">Status<span className="required-asterisk">*</span></label>
-              <select
-                id="status"
-                className={errors.status ? "input-error" : ""}
-                {...register("status", {
-                  required: "Status is required",
-                })}
-              >
-                <option value="">Select Status</option>
-                {statuses.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.name}
-                  </option>
-                ))}
-              </select>
-              {errors.status && (
-                <span className="error-message">{errors.status.message}</span>
               )}
             </fieldset>
 
