@@ -214,29 +214,25 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
     supplier_details = serializers.SerializerMethodField()
     location_details = serializers.SerializerMethodField()
     status_details = serializers.SerializerMethodField()
-    ticket_details = serializers.SerializerMethodField()
-    history = serializers.SerializerMethodField()
-    components = serializers.SerializerMethodField()
-    repairs = serializers.SerializerMethodField()
-    audits = serializers.SerializerMethodField()
-    files = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
         fields = [
-            'id', 'serial_number', 'product_details', 'supplier_details',
-            'location_details', 'warranty_expiration', 'status_details',
+            'id', 'name', 'serial_number', 'warranty_expiration',
             'order_number', 'purchase_date', 'purchase_cost', 'notes',
-            'created_at', 'updated_at', 'asset_id', 'name', 'image',
-            'ticket_details', 'history', 'components', 'repairs', 'audits', 'files'
+            'image', 'created_at', 'updated_at',
+            'product_details', 'status_details', 'supplier_details', 'location_details'
         ]
 
     def get_status_details(self, obj):
-        return self.context.get("status_map", {}).get(obj.status)
-
-    def get_ticket_details(self, obj):
-        # ticket_map is keyed by display asset_id (e.g., "AST-20260110-00030-43A7")
-        return self.context.get("ticket_map", {}).get(obj.asset_id)
+        status = self.context.get("status_map", {}).get(obj.status)
+        if not status:
+            return None
+        return {
+            'id': status.get('id'),
+            'name': status.get('name'),
+            'type': status.get('type') or status.get('code') or status.get('slug')
+        }
 
     def get_supplier_details(self, obj):
         """Return supplier details (id, name) from context service."""
@@ -263,76 +259,48 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
         }
 
     def get_product_details(self, obj):
-        """Return product details including depreciation_left calculation."""
+        """Return product details with nested category, manufacturer, depreciation details."""
         if not obj.product:
             return None
 
         product = obj.product
-        request = self.context.get('request')
-        image_url = None
-        if product.image:
-            image_url = request.build_absolute_uri(product.image.url) if request else product.image.url
 
-        # Fetch related details (same as ProductInstanceSerializer)
-        category_details = get_category_by_id(product.category) if product.category else None
-        manufacturer_details = get_manufacturer_by_id(product.manufacturer) if product.manufacturer else None
-        depreciation_details = get_depreciation_by_id(product.depreciation) if product.depreciation else None
-        default_supplier_details = get_supplier_by_id(product.default_supplier) if product.default_supplier else None
+        # Fetch related details
+        category_data = get_category_by_id(product.category) if product.category else None
+        manufacturer_data = get_manufacturer_by_id(product.manufacturer) if product.manufacturer else None
+        depreciation_data = get_depreciation_by_id(product.depreciation) if product.depreciation else None
 
-        # Clean up warning responses
-        if category_details and category_details.get('warning'):
-            category_details = None
-        if manufacturer_details and manufacturer_details.get('warning'):
-            manufacturer_details = None
-        if depreciation_details and depreciation_details.get('warning'):
-            depreciation_details = None
-        if default_supplier_details and default_supplier_details.get('warning'):
-            default_supplier_details = None
+        # Build category_details (id, name)
+        category_details = None
+        if category_data and not category_data.get('warning'):
+            category_details = {
+                'id': category_data.get('id'),
+                'name': category_data.get('name')
+            }
 
-        # Base product details (matching ProductInstanceSerializer fields + depreciation_left)
-        product_data = {
-            'id': product.id,
-            'name': product.name,
-            'category': product.category,
-            'category_details': category_details,
-            'manufacturer': product.manufacturer,
-            'manufacturer_details': manufacturer_details,
-            'depreciation': product.depreciation,
-            'depreciation_details': depreciation_details,
-            'model_number': product.model_number,
-            'end_of_life': product.end_of_life,
-            'default_purchase_cost': str(product.default_purchase_cost) if product.default_purchase_cost else None,
-            'default_supplier': product.default_supplier,
-            'default_supplier_details': default_supplier_details,
-            'minimum_quantity': product.minimum_quantity,
-            'cpu': product.cpu,
-            'gpu': product.gpu,
-            'os': product.os,
-            'ram': product.ram,
-            'size': product.size,
-            'storage': product.storage,
-            'notes': product.notes,
-            'image': image_url,
-            'is_deleted': product.is_deleted,
-            'created_at': product.created_at,
-            'updated_at': product.updated_at,
-            'depreciation_left': None  # Will be calculated below
-        }
+        # Build manufacturer_details (id, name, website_url, support_phone, support_email)
+        manufacturer_details = None
+        if manufacturer_data and not manufacturer_data.get('warning'):
+            manufacturer_details = {
+                'id': manufacturer_data.get('id'),
+                'name': manufacturer_data.get('name'),
+                'website_url': manufacturer_data.get('website_url') or manufacturer_data.get('url'),
+                'support_phone': manufacturer_data.get('support_phone') or manufacturer_data.get('phone'),
+                'support_email': manufacturer_data.get('support_email') or manufacturer_data.get('email')
+            }
 
-        # Calculate depreciation_left if depreciation is configured
-        if depreciation_details:
+        # Build depreciation_details (id, name, duration_left)
+        depreciation_details = None
+        if depreciation_data and not depreciation_data.get('warning'):
+            # Calculate duration_left (same as depreciation report)
             from datetime import date
-            from decimal import Decimal
 
-            # Extract depreciation parameters
-            duration = depreciation_details.get('duration') or depreciation_details.get('months') or depreciation_details.get('duration_months') or 36
-
+            duration = depreciation_data.get('duration') or depreciation_data.get('months') or depreciation_data.get('duration_months') or 36
             try:
                 duration = int(duration)
             except (ValueError, TypeError):
                 duration = 36
 
-            # Calculate months elapsed
             def months_between(start_date, end_date):
                 if not start_date:
                     return 0
@@ -345,71 +313,28 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
 
             today = date.today()
             months_elapsed = months_between(obj.purchase_date, today)
-            months_left = max(duration - months_elapsed, 0)
+            duration_left = max(duration - months_elapsed, 0)
 
-            product_data['depreciation_left'] = months_left
+            depreciation_details = {
+                'id': depreciation_data.get('id'),
+                'name': depreciation_data.get('name'),
+                'duration_left': duration_left
+            }
 
-        return product_data
-
-    def get_files(self, obj):
-        """Return all files from asset checkout, checkin, repairs, and audits for this asset."""
-        request = self.context.get('request')
-        all_files = []
-
-        def build_file_url(file_field):
-            if not file_field:
-                return None
-            return request.build_absolute_uri(file_field.url) if request else file_field.url
-
-        # 1. Files from asset checkouts
-        for checkout in obj.asset_checkouts.all():
-            for file_obj in checkout.files.filter(is_deleted=False):
-                all_files.append({
-                    'id': file_obj.id,
-                    'file': build_file_url(file_obj.file),
-                    'source': 'checkout',
-                    'source_id': checkout.id,
-                    'created_at': file_obj.created_at
-                })
-
-            # 2. Files from asset checkins (if exists)
-            if hasattr(checkout, 'asset_checkin') and checkout.asset_checkin:
-                for file_obj in checkout.asset_checkin.files.filter(is_deleted=False):
-                    all_files.append({
-                        'id': file_obj.id,
-                        'file': build_file_url(file_obj.file),
-                        'source': 'checkin',
-                        'source_id': checkout.asset_checkin.id,
-                        'created_at': file_obj.created_at
-                    })
-
-        # 3. Files from repairs
-        for repair in obj.repair_assets.filter(is_deleted=False):
-            for file_obj in repair.files.filter(is_deleted=False):
-                all_files.append({
-                    'id': file_obj.id,
-                    'file': build_file_url(file_obj.file),
-                    'source': 'repair',
-                    'source_id': repair.id,
-                    'created_at': file_obj.created_at
-                })
-
-        # 4. Files from audits (via audit_schedules -> audit -> audit_files)
-        for schedule in obj.audit_schedules.filter(is_deleted=False):
-            if hasattr(schedule, 'audit') and schedule.audit and not schedule.audit.is_deleted:
-                for file_obj in schedule.audit.audit_files.filter(is_deleted=False):
-                    all_files.append({
-                        'id': file_obj.id,
-                        'file': build_file_url(file_obj.file),
-                        'source': 'audit',
-                        'source_id': schedule.audit.id,
-                        'created_at': file_obj.created_at
-                    })
-
-        # Sort by created_at descending (newest first)
-        all_files.sort(key=lambda x: x['created_at'] if x['created_at'] else '', reverse=True)
-
-        return all_files
+        return {
+            'id': product.id,
+            'name': product.name,
+            'category_details': category_details,
+            'manufacturer_details': manufacturer_details,
+            'depreciation_details': depreciation_details,
+            'end_of_life': product.end_of_life,
+            'cpu': product.cpu,
+            'gpu': product.gpu,
+            'os': product.os,
+            'ram': product.ram,
+            'size': product.size,
+            'storage': product.storage
+        }
 
     def get_history(self, obj):
         """
