@@ -62,6 +62,34 @@ def get_ticket_by_id(ticket_id):
     return result
 
 
+def get_ticket_by_number(ticket_number):
+    """Fetch a ticket by ticket_number from the external ticket service (no caching).
+
+    Args:
+        ticket_number: The ticket number string (e.g., "TX20260122996422")
+    """
+    if not ticket_number:
+        return None
+
+    url = _build_url("external/ams/tickets/")
+
+    try:
+        resp = client_get(url, timeout=6)
+        if resp.status_code == 404:
+            return {"warning": f"Ticket {ticket_number} not found."}
+        resp.raise_for_status()
+        data = resp.json()
+        # Handle 'value' key (new format) or list directly
+        tickets = data.get('value') if isinstance(data, dict) else data
+        if isinstance(tickets, list):
+            for ticket in tickets:
+                if ticket.get("ticket_number") == ticket_number:
+                    return ticket
+        return {"warning": f"Ticket {ticket_number} not found."}
+    except RequestException:
+        return {"warning": "External ticket service unreachable."}
+
+
 def get_ticket_by_asset_id(asset_id, status=None):
     """Fetch the first ticket for a specific asset (no caching).
 

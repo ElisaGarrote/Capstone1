@@ -229,8 +229,8 @@ export default function CheckOutAsset() {
       // location - backend fetches from ticket
       // checkout_date - backend fetches from ticket
       // return_date - backend fetches from ticket
-      const ticketId = ticketFromState?.id;
-      formData.append('ticket_id', ticketId);
+      const ticketNumber = ticketFromState?.ticket_number;
+      formData.append('ticket_number', ticketNumber);
       // Status sent to backend for asset status update not checkout
       formData.append('status', data.status);
       formData.append("condition", data.condition);

@@ -1195,14 +1195,14 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
         cache.delete(f"assets:detail:{asset.id}")
 
         # Resolve ticket (optional, outside transaction)
-        ticket_id = request.data.get("ticket_id")
-        if ticket_id:
+        ticket_number = request.data.get("ticket_number")
+        if ticket_number:
             try:
-                result = resolve_ticket(ticket_id, asset_checkin_id=checkin.id)
+                result = resolve_ticket_by_number(ticket_number, asset_checkin_id=checkin.id)
                 if result and result.get("warning"):
-                    print(f"[CheckIn] Warning resolving ticket {ticket_id}: {result}")
+                    print(f"[CheckIn] Warning resolving ticket {ticket_number}: {result}")
             except Exception as e:
-                print(f"[CheckIn] Error resolving ticket {ticket_id}: {e}")
+                print(f"[CheckIn] Error resolving ticket {ticket_number}: {e}")
 
         return Response({"success": "Check-in, attachments, and status update completed successfully."}, status=status.HTTP_201_CREATED)
 

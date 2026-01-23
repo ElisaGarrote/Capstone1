@@ -485,27 +485,27 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
     location = serializers.IntegerField(required=False)
     checkout_date = serializers.DateField(required=False)
     return_date = serializers.DateField(required=False)
-    # Accept ticket_id from frontend for validation, but store ticket_number in model
-    ticket_id = serializers.IntegerField(write_only=True, required=True)
+    # ticket_number is required from frontend for validation
+    ticket_number = serializers.CharField(required=True)
 
     class Meta:
         model = AssetCheckout
         fields = '__all__'
 
     def validate(self, data):
-        ticket_id = data.get('ticket_id')
+        ticket_number = data.get('ticket_number')
         status_id = data.get('status') or self.context.get('request').data.get('status')
 
         # --- Ticket Validations ---
-        if not ticket_id:
-            raise serializers.ValidationError({"ticket_id": "A ticket is required to check out this asset."})
+        if not ticket_number:
+            raise serializers.ValidationError({"ticket_number": "A ticket is required to check out this asset."})
 
-        ticket = get_ticket_by_id(ticket_id)
+        ticket = get_ticket_by_number(ticket_number)
         if not ticket or ticket.get("warning"):
-            raise serializers.ValidationError({"ticket_id": "Ticket not found."})
+            raise serializers.ValidationError({"ticket_number": "Ticket not found."})
 
         if ticket.get("is_resolved", False):
-            raise serializers.ValidationError({"ticket_id": "Ticket is already resolved."})
+            raise serializers.ValidationError({"ticket_number": "Ticket is already resolved."})
 
         # --- Asset Validations (from ticket) ---
         # ticket['asset'] contains the display asset_id (e.g., "AST-20260110-00030-43A7")
@@ -594,11 +594,9 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         if location_id is None:
             raise serializers.ValidationError({"location": "Valid location ID is required from ticket."})
 
-        # Remove ticket_id from validated_data (write_only field, not in model)
-        validated_data.pop('ticket_id', None)
-
         # Enforce values from ticket (backend sets these, not form)
-        validated_data['ticket_number'] = ticket.get('ticket_number')  # Store ticket_number, not ID
+        # ticket_number is already in validated_data from frontend, but ensure it matches ticket data
+        validated_data['ticket_number'] = ticket.get('ticket_number')
         validated_data['asset'] = asset  # Use Asset object, not display asset_id string
         validated_data['checkout_to'] = ticket.get('employee')
         validated_data['location'] = location_id
@@ -628,8 +626,8 @@ class AssetCheckinFileSerializer(serializers.ModelSerializer):
 
 class AssetCheckinSerializer(serializers.ModelSerializer):
     files = AssetCheckinFileSerializer(many=True, required=False)
-    # Accept ticket_id from frontend for validation, but store ticket_number in model
-    ticket_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
+    # ticket_number is optional for check-in
+    ticket_number = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = AssetCheckin
@@ -638,7 +636,7 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
     def validate(self, data):
         checkout = data.get('asset_checkout')
         checkin_date = data.get('checkin_date', timezone.now())
-        ticket_id = data.get('ticket_id')
+        ticket_number = data.get('ticket_number')
 
         if not checkout:
             raise serializers.ValidationError({
@@ -657,11 +655,11 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
                 "checkin_date": "Cannot check in before checkout date."
             })
 
-        # Optional ticket validation - if ticket_id provided, fetch and store ticket_number
-        if ticket_id:
-            ticket = get_ticket_by_id(ticket_id)
+        # Optional ticket validation - if ticket_number provided, validate it exists
+        if ticket_number:
+            ticket = get_ticket_by_number(ticket_number)
             if not ticket or ticket.get("warning"):
-                raise serializers.ValidationError({"ticket_id": "Ticket not found."})
+                raise serializers.ValidationError({"ticket_number": "Ticket not found."})
             # Store ticket data for create method
             data['_ticket'] = ticket
 
@@ -670,13 +668,10 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         files_data = validated_data.pop('files', [])
 
-        # Remove ticket_id from validated_data (write_only field, not in model)
-        validated_data.pop('ticket_id', None)
+        # Pop internal ticket data if present (not needed for model creation)
+        validated_data.pop('_ticket', None)
 
-        # Extract ticket_number from ticket data if provided
-        ticket = validated_data.pop('_ticket', None)
-        if ticket:
-            validated_data['ticket_number'] = ticket.get('ticket_number')
+        # ticket_number is already in validated_data from frontend
 
         checkin = AssetCheckin.objects.create(**validated_data)
 

@@ -40,7 +40,7 @@ export default function CheckInAsset() {
   const assetNameFromState = state?.assetName;
   const checkoutIdFromState = state?.checkoutId;
   const ticketFromState = state?.ticket;
-  const ticketIdFromState = state?.ticketId;
+  const ticketNumberFromState = state?.ticketNumber;
 
   // Only allow asset statuses with these types for checkin (excludes 'deployed')
   const CHECKIN_STATUS_TYPES = "deployable,undeployable,pending,archived";
@@ -287,9 +287,9 @@ export default function CheckInAsset() {
       formData.append("location", data.location);
 
       // Optional fields
-      const ticketId = ticketIdFromState || ticketFromState?.id;
-      if (ticketId) {
-        formData.append("ticket_id", ticketId);
+      const ticketNumber = ticketNumberFromState || ticketFromState?.ticket_number;
+      if (ticketNumber) {
+        formData.append("ticket_number", ticketNumber);
       }
       if (data.notes) {
         formData.append("notes", data.notes);
