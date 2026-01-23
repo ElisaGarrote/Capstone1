@@ -201,6 +201,12 @@ export async function fetchAssetCheckoutById(id) {
   return res.data;
 }
 
+// GET all checkouts for a specific asset
+export async function fetchAssetCheckoutsByAsset(assetId) {
+  const res = await assetsAxios.get(`asset-checkout/by-asset/${assetId}/`);
+  return res.data;
+}
+
 /* ===============================
           COMPONENTS CRUD
 ================================= */

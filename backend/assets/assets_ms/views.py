@@ -1042,7 +1042,29 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
             queryset, many=True, context={'request': request}
         )
         return Response(serializer.data)
-    
+
+    @action(detail=False, methods=['get'], url_path='by-asset/(?P<asset_id>[^/.]+)')
+    def by_asset(self, request, asset_id=None):
+        """
+        List all checkouts for a specific asset.
+        GET /asset-checkout/by-asset/{asset_id}/
+        """
+        if not asset_id:
+            return Response({"detail": "Asset ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            asset_id = int(asset_id)
+        except ValueError:
+            return Response({"detail": "Invalid asset ID."}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = AssetCheckout.objects.select_related('asset').prefetch_related('files', 'asset_checkin').filter(
+            asset_id=asset_id,
+            asset__is_deleted=False
+        ).order_by('-checkout_date')
+
+        serializer = AssetCheckoutListSerializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['get'], url_path='instance')
     def instance(self, request, pk=None):
         """Return the instance of the checkout with full asset details."""

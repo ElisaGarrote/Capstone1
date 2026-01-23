@@ -6,9 +6,69 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import { fetchAssetById, fetchProductById, deleteAsset } from "../../services/assets-service";
+import { fetchAssetById, fetchProductById, deleteAsset, fetchAssetCheckoutsByAsset } from "../../services/assets-service";
 import { fetchSupplierById, fetchCategoryById, fetchManufacturerById, fetchDepreciationById } from "../../services/contexts-service";
 import { fetchLocationById } from "../../services/integration-help-desk-service";
+
+// Helper function to calculate depreciation info
+const calculateDepreciationInfo = (purchaseDate, durationMonths) => {
+  if (!purchaseDate || !durationMonths) return null;
+
+  const purchase = new Date(purchaseDate);
+  const fullyDepreciatedDate = new Date(purchase);
+  fullyDepreciatedDate.setMonth(fullyDepreciatedDate.getMonth() + durationMonths);
+
+  const today = new Date();
+  const msRemaining = fullyDepreciatedDate.getTime() - today.getTime();
+
+  if (msRemaining <= 0) {
+    return {
+      fullyDepreciatedDate,
+      isFullyDepreciated: true,
+      remaining: null
+    };
+  }
+
+  // Calculate years, months, weeks remaining
+  const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
+  const years = Math.floor(daysRemaining / 365);
+  const remainingAfterYears = daysRemaining % 365;
+  const months = Math.floor(remainingAfterYears / 30);
+  const weeks = Math.floor((remainingAfterYears % 30) / 7);
+
+  return {
+    fullyDepreciatedDate,
+    isFullyDepreciated: false,
+    remaining: { years, months, weeks }
+  };
+};
+
+// Format depreciation remaining time
+const formatDepreciationRemaining = (depInfo) => {
+  if (!depInfo) return null;
+
+  const dateStr = depInfo.fullyDepreciatedDate.toLocaleDateString('en-US', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  if (depInfo.isFullyDepreciated) {
+    return `${dateStr} (Fully Depreciated)`;
+  }
+
+  const parts = [];
+  if (depInfo.remaining.years > 0) {
+    parts.push(`${depInfo.remaining.years} year${depInfo.remaining.years > 1 ? 's' : ''}`);
+  }
+  if (depInfo.remaining.months > 0) {
+    parts.push(`${depInfo.remaining.months} month${depInfo.remaining.months > 1 ? 's' : ''}`);
+  }
+  if (depInfo.remaining.weeks > 0) {
+    parts.push(`${depInfo.remaining.weeks} week${depInfo.remaining.weeks > 1 ? 's' : ''}`);
+  }
+
+  const remainingStr = parts.length > 0 ? parts.join(', ') + ' left' : 'Less than a week left';
+  return `${dateStr} (${remainingStr})`;
+};
 import "../../styles/Assets/AssetViewPage.css";
 import "../../styles/Assets/AssetEditPage.css";
 
@@ -22,6 +82,7 @@ function AssetViewPage() {
   const [category, setCategory] = useState(null);
   const [manufacturer, setManufacturer] = useState(null);
   const [depreciation, setDepreciation] = useState(null);
+  const [checkoutLogData, setCheckoutLogData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
@@ -39,19 +100,26 @@ function AssetViewPage() {
         setAsset(assetData);
 
         // Fetch related data in parallel - use allSettled to handle partial failures
-        const [productResult, supplierResult, locationResult] = await Promise.allSettled([
+        const [productResult, supplierResult, locationResult, checkoutsResult] = await Promise.allSettled([
           assetData.product ? fetchProductById(assetData.product) : Promise.resolve(null),
           assetData.supplier ? fetchSupplierById(assetData.supplier) : Promise.resolve(null),
           assetData.location ? fetchLocationById(assetData.location) : Promise.resolve(null),
+          fetchAssetCheckoutsByAsset(assetData.id),
         ]);
 
         const productData = productResult.status === 'fulfilled' ? productResult.value : null;
         const supplierData = supplierResult.status === 'fulfilled' ? supplierResult.value : null;
         const locationData = locationResult.status === 'fulfilled' ? locationResult.value : null;
+        const checkoutsData = checkoutsResult.status === 'fulfilled' ? checkoutsResult.value : [];
 
         setProduct(productData);
         setSupplier(supplierData);
         setLocation(locationData);
+
+        // Process checkout/checkin data for the log
+        // We need to fetch location names for each checkout
+        const processedLog = await processCheckoutLog(checkoutsData);
+        setCheckoutLogData(processedLog);
 
         // If product exists, fetch category, manufacturer, and depreciation
         if (productData) {
@@ -66,10 +134,98 @@ function AssetViewPage() {
         }
       } catch (error) {
         console.error("Error loading asset details:", error);
-        setErrorMessage("Failed to load asset details");
       } finally {
         setIsLoading(false);
       }
+    };
+
+    // Process checkout log data - interleave checkouts and checkins by created_at
+    const processCheckoutLog = async (checkouts) => {
+      if (!checkouts || checkouts.length === 0) return [];
+
+      const logEntries = [];
+
+      // Fetch all location names in parallel
+      const locationIds = [...new Set(checkouts.map(c => c.location).filter(Boolean))];
+      const locationPromises = locationIds.map(locId =>
+        fetchLocationById(locId).catch(() => null)
+      );
+      const locationResults = await Promise.all(locationPromises);
+      const locationMap = {};
+      locationIds.forEach((locId, idx) => {
+        locationMap[locId] = locationResults[idx]?.name || `Location ${locId}`;
+      });
+
+      for (const checkout of checkouts) {
+        // Add checkout entry
+        const checkoutDate = checkout.checkout_date
+          ? new Date(checkout.checkout_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          : '-';
+        const returnDate = checkout.return_date
+          ? new Date(checkout.return_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          : '-';
+
+        // Get condition label
+        const conditionLabels = {
+          1: '1 - Non-functional',
+          2: '2 - Barely Usable',
+          3: '3 - Poor',
+          4: '4 - Below Average',
+          5: '5 - Average',
+          6: '6 - Above Average',
+          7: '7 - Good',
+          8: '8 - Very Good',
+          9: '9 - Like New',
+          10: '10 - New'
+        };
+
+        logEntries.push({
+          type: 'checkout',
+          createdAt: new Date(checkout.created_at),
+          actionLabel: 'Checked out to',
+          target: locationMap[checkout.location] || `Location ${checkout.location}`,
+          checkoutDate,
+          expectedReturnDate: returnDate,
+          condition: conditionLabels[checkout.condition] || checkout.condition,
+          user: 'Demo User', // TODO: Get actual user from auth
+        });
+
+        // Add checkin entry if exists
+        if (checkout.asset_checkin) {
+          const checkin = checkout.asset_checkin;
+          const checkinDate = checkin.checkin_date
+            ? new Date(checkin.checkin_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+            : '-';
+
+          // Fetch checkin location name
+          let checkinLocationName = `Location ${checkin.location}`;
+          if (checkin.location && locationMap[checkin.location]) {
+            checkinLocationName = locationMap[checkin.location];
+          } else if (checkin.location) {
+            try {
+              const locData = await fetchLocationById(checkin.location);
+              checkinLocationName = locData?.name || checkinLocationName;
+            } catch {
+              // Use default
+            }
+          }
+
+          logEntries.push({
+            type: 'checkin',
+            createdAt: new Date(checkin.created_at),
+            actionLabel: 'Checked in from',
+            target: checkinLocationName,
+            checkinDate,
+            condition: conditionLabels[checkin.condition] || checkin.condition,
+            user: 'Demo User', // TODO: Get actual user from auth
+          });
+        }
+      }
+
+      // Sort by created_at descending (newest first)
+      logEntries.sort((a, b) => b.createdAt - a.createdAt);
+
+      return logEntries;
     };
 
     loadAssetDetails();
@@ -145,6 +301,10 @@ function AssetViewPage() {
     });
   };
 
+  // Calculate fully depreciated info
+  const depreciationInfo = calculateDepreciationInfo(asset.purchase_date, depreciation?.duration);
+  const fullyDepreciatedDisplay = formatDepreciationRemaining(depreciationInfo);
+
   // Build asset details for DetailedViewPage
   const assetDetails = {
     breadcrumbRoot: "Assets",
@@ -168,6 +328,7 @@ function AssetViewPage() {
     serialNumber: asset.serial_number || null,
     supplier: supplier?.name || null,
     depreciationType: depreciation?.name || null,
+    fullyDepreciatedDate: fullyDepreciatedDisplay,
     location: location?.name || null,
     warrantyDate: formatDate(asset.warranty_expiration),
     endOfLife: product?.end_of_life ? formatDate(product.end_of_life) : null,
@@ -226,6 +387,7 @@ function AssetViewPage() {
         onTabChange={setActiveTab}
         actionButtons={actionButtons}
         showCheckoutLog
+        checkoutLogData={checkoutLogData}
       />
     </>
   );

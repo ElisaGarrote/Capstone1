@@ -16,7 +16,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import mockData from "../../data/mockData/detailedviewpage/asset-view-page.json";
 
-const { historyData, checkoutLogData, componentsData, repairsData, auditsDuplicateData, attachmentsData } = mockData;
+const { historyData, componentsData, repairsData, auditsDuplicateData, attachmentsData } = mockData;
 
 export default function DetailedViewPage({
   breadcrumbRoot,
@@ -72,7 +72,8 @@ export default function DetailedViewPage({
   children,
   customTabContent = null,
   hideAdditionalFields = false,
-  showCheckoutLog = false
+  showCheckoutLog = false,
+  checkoutLogData = []
 }) {
   const navigate = useNavigate();
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -522,16 +523,10 @@ Updated At: ${updatedAt || 'N/A'}`;
                             <span>{entry.checkinDate}</span>
                           </div>
                         )}
-                        {entry.expectedReturnDate && (
+                        {entry.expectedReturnDate && entry.expectedReturnDate !== '-' && (
                           <div className="checkout-log-detail-row">
                             <span className="label">Expected Return Date:</span>
                             <span>{entry.expectedReturnDate}</span>
-                          </div>
-                        )}
-                        {entry.status && (
-                          <div className="checkout-log-detail-row">
-                            <span className="label">Status:</span>
-                            <span>{entry.status}</span>
                           </div>
                         )}
                         {entry.condition && (
@@ -541,41 +536,9 @@ Updated At: ${updatedAt || 'N/A'}`;
                           </div>
                         )}
                         <div className="checkout-log-detail-row">
-                          <span className="label">Photos:</span>
-                          <span>{entry.photos || "-"}</span>
-                        </div>
-                        <div className="checkout-log-detail-row">
-                          <span className="label">Notes:</span>
-                          <span>{entry.notes || "-"}</span>
-                        </div>
-                        <div className="checkout-log-detail-row">
                           <span className="label">User:</span>
                           <span>{entry.user || "-"}</span>
                         </div>
-                        {entry.confirmationEmailSent && (
-                          <div className="checkout-log-detail-row">
-                            <span className="label">Confirmation Email Sent:</span>
-                            <span>{entry.confirmationEmailSent}</span>
-                          </div>
-                        )}
-                        {entry.confirmationEmailNote && (
-                          <div className="checkout-log-detail-row">
-                            <span className="label">Confirmation Email Note:</span>
-                            <span>{entry.confirmationEmailNote}</span>
-                          </div>
-                        )}
-                        {entry.digitalSignatureEnabled && (
-                          <div className="checkout-log-detail-row">
-                            <span className="label">Digital Signature Enabled:</span>
-                            <span>{entry.digitalSignatureEnabled}</span>
-                          </div>
-                        )}
-                        {entry.digitalSignatureCompleted && (
-                          <div className="checkout-log-detail-row">
-                            <span className="label">Digital Signature Completed:</span>
-                            <span>{entry.digitalSignatureCompleted}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
