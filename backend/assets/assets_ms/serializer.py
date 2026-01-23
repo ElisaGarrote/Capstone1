@@ -216,6 +216,8 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
     status_details = serializers.SerializerMethodField()
     files = serializers.SerializerMethodField()
     checkout_logs = serializers.SerializerMethodField()
+    repairs = serializers.SerializerMethodField()
+    audits = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -224,7 +226,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
             'order_number', 'purchase_date', 'purchase_cost', 'notes',
             'image', 'created_at', 'updated_at',
             'product_details', 'status_details', 'supplier_details', 'location_details',
-            'files', 'checkout_logs'
+            'files', 'checkout_logs', 'repairs', 'audits'
         ]
 
     def get_status_details(self, obj):
@@ -444,6 +446,51 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
         logs.sort(key=lambda x: x['created_at'] if x['created_at'] else '', reverse=True)
 
         return logs
+
+    def get_repairs(self, obj):
+        """Return list of repairs for this asset."""
+        repairs = obj.repair_assets.filter(is_deleted=False).order_by('-created_at')
+
+        return [
+            {
+                'id': repair.id,
+                'name': repair.name,
+                'type': repair.type,
+                'supplier_id': repair.supplier_id,
+                'status_id': repair.status_id,
+                'start_date': repair.start_date,
+                'end_date': repair.end_date,
+                'cost': str(repair.cost) if repair.cost else None,
+                'notes': repair.notes,
+                'created_at': repair.created_at,
+                'updated_at': repair.updated_at
+            }
+            for repair in repairs
+        ]
+
+    def get_audits(self, obj):
+        """Return list of audits for this asset (via audit_schedules)."""
+        audits_list = []
+
+        # Get audit schedules that have completed audits
+        schedules = obj.audit_schedules.filter(is_deleted=False).select_related('audit').order_by('-created_at')
+
+        for schedule in schedules:
+            if hasattr(schedule, 'audit') and schedule.audit and not schedule.audit.is_deleted:
+                audit = schedule.audit
+                audits_list.append({
+                    'id': audit.id,
+                    'schedule_id': schedule.id,
+                    'schedule_date': schedule.date,
+                    'schedule_notes': schedule.notes,
+                    'audit_date': audit.audit_date,
+                    'location': audit.location,
+                    'user_id': audit.user_id,
+                    'notes': audit.notes,
+                    'created_at': audit.created_at
+                })
+
+        return audits_list
 
     def get_history(self, obj):
         """
