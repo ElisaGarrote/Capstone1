@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import ConfirmationModal from "../../components/Modals/DeleteModal";
 import TicketFilterModal from "../../components/Modals/TicketFilterModal";
 import ActionButtons from "../../components/ActionButtons";
 import Alert from "../../components/Alert";
@@ -47,7 +46,6 @@ function TableItem({
   ticket,
   isSelected,
   onRowChange,
-  onDeleteClick,
   onViewClick,
   onCheckInOut,
 }) {
@@ -82,9 +80,7 @@ function TableItem({
       <td>
         <ActionButtons
           showEdit={false}
-          showDelete
           showView
-          onDeleteClick={() => onDeleteClick(ticket.id)}
           onViewClick={() => onViewClick(ticket)}
         />
       </td>
@@ -116,8 +112,6 @@ const Tickets = () => {
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState([]);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState(null);
 
   // View modal state
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -423,48 +417,10 @@ const Tickets = () => {
     }
   };
 
-  const openDeleteModal = (id) => {
-    setDeleteTargetId(id);
-    setDeleteModalOpen(true);
-  };
-
-  const closeDeleteModal = () => {
-    setDeleteModalOpen(false);
-    setDeleteTargetId(null);
-  };
-
-  const confirmDelete = () => {
-    if (deleteTargetId) {
-      // Delete single ticket
-      const updatedTickets = ticketItems.filter(
-        (ticket) => ticket.id !== deleteTargetId
-      );
-      setTicketItems(updatedTickets);
-      setSuccessMessage("Ticket deleted successfully");
-    } else {
-      // Bulk delete
-      const updatedTickets = ticketItems.filter(
-        (ticket) => !selectedIds.includes(ticket.id)
-      );
-      setTicketItems(updatedTickets);
-      setSelectedIds([]);
-      setSuccessMessage(`${selectedIds.length} ticket(s) deleted successfully`);
-    }
-    closeDeleteModal();
-  };
-
   return (
     <>
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
-
-      {isDeleteModalOpen && (
-        <ConfirmationModal
-          closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
-        />
-      )}
 
       {/* Ticket Filter Modal */}
       <TicketFilterModal
@@ -492,13 +448,6 @@ const Tickets = () => {
             <section className="table-header">
               <h2 className="h2">Tickets ({filteredTickets.length})</h2>
               <section className="table-actions">
-                {/* Bulk delete button only when checkboxes selected */}
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
-                )}
                 <input
                   type="search"
                   placeholder="Search..."
@@ -554,7 +503,6 @@ const Tickets = () => {
                         ticket={ticket}
                         isSelected={selectedIds.includes(ticket.id)}
                         onRowChange={handleRowChange}
-                        onDeleteClick={openDeleteModal}
                         onViewClick={handleViewClick}
                         onCheckInOut={handleCheckInOut}
                       />
