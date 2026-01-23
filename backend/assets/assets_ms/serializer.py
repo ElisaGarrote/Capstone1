@@ -495,33 +495,36 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
 
     def get_components(self, obj):
         """
-        Return list of components with active checkouts to this asset.
-        Groups by component and sums remaining quantities.
+        Return list of active component checkouts to this asset.
+        Each entry is a checkout record with component details.
         """
-        from collections import defaultdict
+        request = self.context.get('request')
 
         # Get all component checkouts to this asset
-        checkouts = obj.checkout_to.all().select_related('component')
+        checkouts = obj.checkout_to.all().select_related('component').order_by('-created_at')
 
-        # Group by component and sum remaining quantities
-        component_quantities = defaultdict(int)
-        component_data = {}
-
+        result = []
         for checkout in checkouts:
             remaining = checkout.remaining_quantity
-            if remaining > 0:  # Only include active checkouts (has remaining quantity)
-                component_quantities[checkout.component.id] += remaining
-                if checkout.component.id not in component_data:
-                    component_data[checkout.component.id] = checkout.component
+            is_active = remaining > 0
 
-        # Build result list
-        result = []
-        for component_id, quantity in component_quantities.items():
-            component = component_data[component_id]
+            # Build image URL
+            image_url = None
+            if checkout.component.image:
+                image_url = request.build_absolute_uri(checkout.component.image.url) if request else checkout.component.image.url
+
             result.append({
-                'id': component.id,
-                'name': component.name,
-                'quantity': quantity
+                'id': checkout.id,
+                'component_id': checkout.component.id,
+                'component_name': checkout.component.name,
+                'component_image': image_url,
+                'checkout_date': checkout.checkout_date,
+                'quantity': checkout.quantity,
+                'checked_in': checkout.total_checked_in,
+                'remaining': remaining,
+                'status': 'active' if is_active else 'returned',
+                'notes': checkout.notes,
+                'created_at': checkout.created_at
             })
 
         return result
