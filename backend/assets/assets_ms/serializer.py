@@ -404,12 +404,24 @@ class AssetCheckoutFileSerializer(serializers.ModelSerializer):
 
 
 class AssetCheckoutListSerializer(serializers.ModelSerializer):
-    """Read-only serializer for checkout details in asset instance view."""
+    """Read-only serializer for checkout list view."""
     files = AssetCheckoutFileSerializer(many=True, read_only=True)
+    is_checked_in = serializers.SerializerMethodField()
+    checkin_id = serializers.SerializerMethodField()
 
     class Meta:
         model = AssetCheckout
         fields = '__all__'
+
+    def get_is_checked_in(self, obj):
+        """Returns True if this checkout has been checked in."""
+        return hasattr(obj, 'asset_checkin') and obj.asset_checkin is not None
+
+    def get_checkin_id(self, obj):
+        """Returns the checkin ID if checked in, else None."""
+        if hasattr(obj, 'asset_checkin') and obj.asset_checkin:
+            return obj.asset_checkin.id
+        return None
 
 
 class AssetCheckoutByEmployeeSerializer(serializers.ModelSerializer):

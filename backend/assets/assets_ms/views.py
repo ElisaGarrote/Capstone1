@@ -991,8 +991,8 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         return AssetCheckoutSerializer
 
     def get_queryset(self):
-        # All checkouts (excluding deleted assets)
-        return AssetCheckout.objects.select_related('asset').filter(
+        # All checkouts (excluding deleted assets), with checkin prefetched
+        return AssetCheckout.objects.select_related('asset', 'asset_checkin').filter(
             asset__is_deleted=False
         ).order_by('-checkout_date')
     
