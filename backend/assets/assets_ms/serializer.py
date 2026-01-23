@@ -419,7 +419,7 @@ class AssetCheckoutByEmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckout
         fields = [
-            'id', 'asset_details', 'checkout_to', 'condition'
+            'id', 'asset_details', 'checkout_to', 'condition', 'ticket_id'
         ]
 
     def get_asset_details(self, obj):
