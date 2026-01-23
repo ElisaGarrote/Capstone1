@@ -272,7 +272,7 @@ function SupplierDetails() {
           checkoutId: checkout?.checkout_ref_id || "Unknown",
           checkinDate: checkout?.checkin_date || "Unknown",
           condition: checkout?.condition || "Unknown",
-          ticketId: checkout?.ticket_id,
+          ticketNumber: checkout?.ticket_number,
           fromAsset: true,
         },
       });
@@ -283,7 +283,7 @@ function SupplierDetails() {
           assetId: asset.displayed_id,
           product: asset.product,
           image: baseImage,
-          ticketId: checkout?.ticket_id,
+          ticketNumber: checkout?.ticket_number,
           empId: checkout?.requestor_id,
           employee: checkout?.requestor || "Not assigned",
           empLocation: checkout?.requestor_location || "Unknown",

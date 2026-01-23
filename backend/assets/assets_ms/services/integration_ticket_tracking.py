@@ -124,8 +124,31 @@ def fetch_resource_list(resource_name, params=None, skip_api_prefix=False):
         return {"warning": "External ticket service unreachable."}
 
 
-def resolve_ticket(ticket_id, asset_checkout_id=None, asset_checkin_id=None):
+def resolve_ticket_by_number(ticket_number, asset_checkout_id=None, asset_checkin_id=None):
     """Resolve a ticket by POSTing to /external/resolve/ with ticket_number.
+
+    Args:
+        ticket_number: The ticket number to resolve (e.g., "TX20260122996422")
+        asset_checkout_id: The ID of the AssetCheckout record (unused by external API)
+        asset_checkin_id: The ID of the AssetCheckin record (unused by external API)
+    """
+    if not ticket_number:
+        return None
+
+    # POST to external resolve endpoint
+    url = _build_url("external/resolve/")
+    payload = {"ticket_number": ticket_number}
+
+    try:
+        resp = client_post(url, json=payload, timeout=6)
+        resp.raise_for_status()
+        return resp.json() if resp.content else {"success": True}
+    except RequestException as e:
+        return {"warning": f"Failed to resolve ticket: {str(e)}"}
+
+
+def resolve_ticket(ticket_id, asset_checkout_id=None, asset_checkin_id=None):
+    """Resolve a ticket by ID (fetches ticket_number first, then resolves).
 
     Args:
         ticket_id: The ID of the ticket to resolve
@@ -144,16 +167,7 @@ def resolve_ticket(ticket_id, asset_checkout_id=None, asset_checkin_id=None):
     if not ticket_number:
         return {"warning": f"Cannot resolve: Ticket {ticket_id} has no ticket_number."}
 
-    # POST to external resolve endpoint
-    url = _build_url("external/resolve/")
-    payload = {"ticket_number": ticket_number}
-
-    try:
-        resp = client_post(url, json=payload, timeout=6)
-        resp.raise_for_status()
-        return resp.json() if resp.content else {"success": True}
-    except RequestException as e:
-        return {"warning": f"Failed to resolve ticket: {str(e)}"}
+    return resolve_ticket_by_number(ticket_number, asset_checkout_id, asset_checkin_id)
 
 
 def get_tickets_list(ticket_type='unresolved', q=None, limit=50):

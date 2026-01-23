@@ -250,7 +250,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
             history.append({
                 'type': 'checkout',
                 'id': checkout.id,
-                'ticket_id': checkout.ticket_id,
+                'ticket_number': checkout.ticket_number,
                 'checkout_to': checkout.checkout_to,
                 'location': checkout.location,
                 'checkout_date': checkout.checkout_date,
@@ -277,7 +277,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
                         'type': 'checkin',
                         'id': checkin.id,
                         'checkout_id': checkout.id,
-                        'ticket_id': checkin.ticket_id,
+                        'ticket_number': checkin.ticket_number,
                         'checkin_date': checkin.checkin_date,
                         'condition': checkin.condition,
                         'notes': checkin.notes,
@@ -419,7 +419,7 @@ class AssetCheckoutByEmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckout
         fields = [
-            'id', 'asset_details', 'checkout_to', 'condition', 'ticket_id', 'checkout_date'
+            'id', 'asset_details', 'checkout_to', 'condition', 'ticket_number', 'checkout_date'
         ]
 
     def get_asset_details(self, obj):
@@ -448,7 +448,7 @@ class AssetCheckoutInstanceSerializer(serializers.ModelSerializer):
         model = AssetCheckout
         fields = [
             'id', 'asset', 'asset_details', 'checkout_to', 'checkout_date',
-            'return_date', 'location', 'condition', 'notes', 'ticket_id', 'files'
+            'return_date', 'location', 'condition', 'notes', 'ticket_number', 'files'
         ]
 
     def get_asset_details(self, obj):
@@ -485,6 +485,8 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
     location = serializers.IntegerField(required=False)
     checkout_date = serializers.DateField(required=False)
     return_date = serializers.DateField(required=False)
+    # Accept ticket_id from frontend for validation, but store ticket_number in model
+    ticket_id = serializers.IntegerField(write_only=True, required=True)
 
     class Meta:
         model = AssetCheckout
@@ -592,8 +594,11 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         if location_id is None:
             raise serializers.ValidationError({"location": "Valid location ID is required from ticket."})
 
+        # Remove ticket_id from validated_data (write_only field, not in model)
+        validated_data.pop('ticket_id', None)
+
         # Enforce values from ticket (backend sets these, not form)
-        validated_data['ticket_id'] = ticket.get('id')
+        validated_data['ticket_number'] = ticket.get('ticket_number')  # Store ticket_number, not ID
         validated_data['asset'] = asset  # Use Asset object, not display asset_id string
         validated_data['checkout_to'] = ticket.get('employee')
         validated_data['location'] = location_id
@@ -623,6 +628,8 @@ class AssetCheckinFileSerializer(serializers.ModelSerializer):
 
 class AssetCheckinSerializer(serializers.ModelSerializer):
     files = AssetCheckinFileSerializer(many=True, required=False)
+    # Accept ticket_id from frontend for validation, but store ticket_number in model
+    ticket_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
 
     class Meta:
         model = AssetCheckin
@@ -650,16 +657,27 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
                 "checkin_date": "Cannot check in before checkout date."
             })
 
-        # Optional ticket validation
+        # Optional ticket validation - if ticket_id provided, fetch and store ticket_number
         if ticket_id:
             ticket = get_ticket_by_id(ticket_id)
             if not ticket or ticket.get("warning"):
                 raise serializers.ValidationError({"ticket_id": "Ticket not found."})
+            # Store ticket data for create method
+            data['_ticket'] = ticket
 
         return data
 
     def create(self, validated_data):
         files_data = validated_data.pop('files', [])
+
+        # Remove ticket_id from validated_data (write_only field, not in model)
+        validated_data.pop('ticket_id', None)
+
+        # Extract ticket_number from ticket data if provided
+        ticket = validated_data.pop('_ticket', None)
+        if ticket:
+            validated_data['ticket_number'] = ticket.get('ticket_number')
+
         checkin = AssetCheckin.objects.create(**validated_data)
 
         # Handle files uploaded via FormData

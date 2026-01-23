@@ -1080,12 +1080,12 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
                 asset.status = status_id
                 asset.save(update_fields=["status"])
 
-                # 3. Resolve the ticket that triggered this checkout
-                ticket_id = checkout.ticket_id
-                resolve_ticket(ticket_id, asset_checkout_id=checkout.id)
+                # 3. Resolve the ticket that triggered this checkout (using stored ticket_number)
+                ticket_number = checkout.ticket_number
+                resolve_ticket_by_number(ticket_number, asset_checkout_id=checkout.id)
 
                 # 4. Resolve overlapping tickets for the same asset
-                self._resolve_overlapping_tickets(checkout, ticket_id)
+                self._resolve_overlapping_tickets(checkout, ticket_number)
 
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -1098,7 +1098,7 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED
         )
 
-    def _resolve_overlapping_tickets(self, checkout, current_ticket_id):
+    def _resolve_overlapping_tickets(self, checkout, current_ticket_number):
         """Resolve other unresolved tickets that overlap with this checkout period."""
         # Use display asset_id for tickets API (e.g., "AST-20260110-00030-43A7")
         display_asset_id = checkout.asset.asset_id
@@ -1123,7 +1123,8 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
             current_end = datetime.strptime(current_end, "%Y-%m-%d").date()
 
         for t in tickets:
-            if t["id"] == current_ticket_id:
+            # Skip the current ticket (compare by ticket_number)
+            if t.get("ticket_number") == current_ticket_number:
                 continue
 
             if not t.get("checkout_date") or not t.get("return_date"):
@@ -1133,7 +1134,8 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
             ticket_end = datetime.strptime(t["return_date"], "%Y-%m-%d").date()
 
             if ticket_start <= current_end and current_start <= ticket_end:
-                resolve_ticket(t["id"])
+                # Resolve by ticket_number directly
+                resolve_ticket_by_number(t.get("ticket_number"))
 
 class AssetCheckinViewSet(viewsets.ModelViewSet):
     serializer_class = AssetCheckinSerializer
