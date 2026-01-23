@@ -8,9 +8,10 @@ import TicketFilterModal from "../../components/Modals/TicketFilterModal";
 import ActionButtons from "../../components/ActionButtons";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
+import View from "../../components/Modals/View";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
-import { fetchAssetById, fetchAssetCheckoutById } from "../../services/assets-service";
+import { fetchAssetById, fetchAssetCheckoutById, fetchAssetNames } from "../../services/assets-service";
 import {
   fetchAllEmployees,
   fetchEmployeeById,
@@ -117,6 +118,11 @@ const Tickets = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
+
+  // View modal state
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewTicketData, setViewTicketData] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
 
   // Extract loadTickets as a reusable function
   const loadTickets = async () => {
@@ -259,10 +265,49 @@ const Tickets = () => {
   };
 
   const handleViewClick = async (ticket) => {
-    const asset = await fetchAssetById(ticket.asset);
-    navigate(`/tickets/view/${ticket.id}`, {
-      state: { ticket, asset },
-    });
+    try {
+      // Fetch asset name using the displayed asset ID
+      let assetName = "Unknown";
+      if (ticket.asset) {
+        const assetData = await fetchAssetNames({ asset_ids: [ticket.asset] });
+        assetName = assetData?.[0]?.name || "Unknown";
+      }
+
+      // Build data array for the modal
+      const data = [
+        { label: "Ticket Number", value: ticket.ticket_number },
+        { label: "Location", value: ticket.location_details?.name || "Unknown" },
+        { label: "Requestor", value: ticket.requestor_details?.name || "Unknown" },
+        { label: "Asset", value: `${ticket.asset} - ${assetName}` },
+      ];
+
+      // Add checkout dates if this is a checkout ticket
+      if (ticket.checkout_date) {
+        data.push({ label: "Checkout Date", value: ticket.checkout_date });
+      }
+      if (ticket.return_date) {
+        data.push({ label: "Return Date", value: ticket.return_date });
+      }
+
+      // Add checkin date if this is a checkin ticket
+      if (ticket.checkin_date) {
+        data.push({ label: "Checkin Date", value: ticket.checkin_date });
+      }
+
+      setSelectedTicket(ticket);
+      setViewTicketData(data);
+      setIsViewModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching ticket details:", error);
+      setErrorMessage("Failed to load ticket details.");
+      setTimeout(() => setErrorMessage(""), 5000);
+    }
+  };
+
+  const closeViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewTicketData(null);
+    setSelectedTicket(null);
   };
 
   // outside click for export toggle
@@ -426,6 +471,15 @@ const Tickets = () => {
         onApplyFilter={handleApplyFilter}
         initialFilters={appliedFilters}
       />
+
+      {/* View Ticket Modal */}
+      {isViewModalOpen && viewTicketData && (
+        <View
+          title={`Ticket: ${selectedTicket?.ticket_number || "Details"}`}
+          data={viewTicketData}
+          closeModal={closeViewModal}
+        />
+      )}
 
       <section className="page-layout-with-table">
         <NavBar />
