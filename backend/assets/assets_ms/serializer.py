@@ -214,6 +214,8 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
     supplier_details = serializers.SerializerMethodField()
     location_details = serializers.SerializerMethodField()
     status_details = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
+    checkout_logs = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -221,7 +223,8 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
             'id', 'name', 'serial_number', 'warranty_expiration',
             'order_number', 'purchase_date', 'purchase_cost', 'notes',
             'image', 'created_at', 'updated_at',
-            'product_details', 'status_details', 'supplier_details', 'location_details'
+            'product_details', 'status_details', 'supplier_details', 'location_details',
+            'files', 'checkout_logs'
         ]
 
     def get_status_details(self, obj):
@@ -335,6 +338,112 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
             'size': product.size,
             'storage': product.storage
         }
+
+    def get_files(self, obj):
+        """Return all files from checkouts, checkins, repairs, and audits for this asset."""
+        request = self.context.get('request')
+        all_files = []
+
+        def build_file_url(file_field):
+            if not file_field:
+                return None
+            return request.build_absolute_uri(file_field.url) if request else file_field.url
+
+        # Files from asset checkouts
+        for checkout in obj.asset_checkouts.all():
+            for file_obj in checkout.files.filter(is_deleted=False):
+                all_files.append({
+                    'id': file_obj.id,
+                    'file': build_file_url(file_obj.file),
+                    'source': 'checkout',
+                    'source_id': checkout.id,
+                    'created_at': file_obj.created_at
+                })
+
+            # Files from asset checkins (if exists)
+            if hasattr(checkout, 'asset_checkin') and checkout.asset_checkin:
+                for file_obj in checkout.asset_checkin.files.filter(is_deleted=False):
+                    all_files.append({
+                        'id': file_obj.id,
+                        'file': build_file_url(file_obj.file),
+                        'source': 'checkin',
+                        'source_id': checkout.asset_checkin.id,
+                        'created_at': file_obj.created_at
+                    })
+
+        # Files from repairs
+        for repair in obj.repair_assets.filter(is_deleted=False):
+            for file_obj in repair.files.filter(is_deleted=False):
+                all_files.append({
+                    'id': file_obj.id,
+                    'file': build_file_url(file_obj.file),
+                    'source': 'repair',
+                    'source_id': repair.id,
+                    'created_at': file_obj.created_at
+                })
+
+        # Files from audits (via audit_schedules -> audit -> audit_files)
+        for schedule in obj.audit_schedules.filter(is_deleted=False):
+            if hasattr(schedule, 'audit') and schedule.audit and not schedule.audit.is_deleted:
+                for file_obj in schedule.audit.audit_files.filter(is_deleted=False):
+                    all_files.append({
+                        'id': file_obj.id,
+                        'file': build_file_url(file_obj.file),
+                        'source': 'audit',
+                        'source_id': schedule.audit.id,
+                        'created_at': file_obj.created_at
+                    })
+
+        # Sort by created_at descending (newest first)
+        all_files.sort(key=lambda x: x['created_at'] if x['created_at'] else '', reverse=True)
+
+        return all_files
+
+    def get_checkout_logs(self, obj):
+        """
+        Return interleaved list of checkouts and checkins for this asset.
+        Sorted by created_at descending (newest first).
+        Example order: checkout 3, checkin of checkout 2, checkout 2, checkin of checkout 1, checkout 1
+        """
+        logs = []
+
+        # Get all checkouts with their checkins
+        checkouts = obj.asset_checkouts.all().select_related('asset_checkin').order_by('-created_at')
+
+        for checkout in checkouts:
+            # Add checkout entry
+            logs.append({
+                'type': 'checkout',
+                'id': checkout.id,
+                'ticket_number': checkout.ticket_number,
+                'checkout_to': checkout.checkout_to,
+                'location': checkout.location,
+                'checkout_date': checkout.checkout_date,
+                'return_date': checkout.return_date,
+                'condition': checkout.condition,
+                'notes': checkout.notes,
+                'created_at': checkout.created_at
+            })
+
+            # Add checkin entry if exists
+            if hasattr(checkout, 'asset_checkin') and checkout.asset_checkin:
+                checkin = checkout.asset_checkin
+                logs.append({
+                    'type': 'checkin',
+                    'id': checkin.id,
+                    'checkout_id': checkout.id,
+                    'ticket_number': checkin.ticket_number,
+                    'checkin_date': checkin.checkin_date,
+                    'condition': checkin.condition,
+                    'location': checkin.location,
+                    'notes': checkin.notes,
+                    'created_at': checkin.created_at
+                })
+
+        # Sort all entries by created_at descending (newest first)
+        logs.sort(key=lambda x: x['created_at'] if x['created_at'] else '', reverse=True)
+
+        return logs
 
     def get_history(self, obj):
         """
