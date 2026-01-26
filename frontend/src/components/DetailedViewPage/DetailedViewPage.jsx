@@ -71,7 +71,9 @@ export default function DetailedViewPage({
   customTabContent = null,
   hideAdditionalFields = false,
   showCheckoutLog = false,
-  checkoutLogData = []
+  checkoutLogData = [],
+  attachmentsData = [],
+  repairsData = []
 }) {
   const navigate = useNavigate();
   const [qrCodeUrl, setQrCodeUrl] = useState('');
