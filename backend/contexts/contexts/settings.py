@@ -194,5 +194,5 @@ print("Loaded DB host:", os.getenv("CONTEXTS_DB_HOST"))
 IMPORT_API_KEY = os.getenv('IMPORT_API_KEY', None)
 
 # Help Desk service URL for proxying location/employee requests
-# This should point to the external Help Desk service
-HELPDESK_API_URL = os.getenv('HELPDESK_API_URL', 'http://165.22.247.50:5001/')
+# This should point to the external Help Desk service API (includes /api/ prefix)
+HELPDESK_API_URL = os.getenv('HELPDESK_API_URL', 'http://165.22.247.50:5001/api/')
