@@ -38,4 +38,4 @@ COPY . .
 RUN mkdir -p static staticfiles media
 RUN python manage.py collectstatic --noinput
 EXPOSE 8002
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn assets.wsgi:application --bind 0.0.0.0:8002"]
+CMD ["sh", "-c", "gunicorn assets.wsgi:application --bind 0.0.0.0:${PORT:-8002}"]
