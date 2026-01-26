@@ -102,7 +102,7 @@ def _calculate_trend_percentage(historical_values, forecast_value):
     return round(((forecast_value - avg_historical) / avg_historical) * 100, 1)
 
 
-def get_asset_status_forecast(months_back=6, months_forward=2):
+def get_asset_status_forecast(months_back=6, months_forward=3):
     """
     Calculate asset status forecast data using linear regression on actual historical data.
 
@@ -175,8 +175,9 @@ def get_asset_status_forecast(months_back=6, months_forward=2):
     chart_data = []
 
     # First pass: calculate historical values going backwards from current
+    # Include current month as the last historical month
     historical_values = []
-    for i in range(months_back, 0, -1):
+    for i in range(months_back - 1, -1, -1):  # 5,4,3,2,1,0 (0 = current month)
         month_date = today - relativedelta(months=i)
         month_start = month_date.replace(day=1)
 
