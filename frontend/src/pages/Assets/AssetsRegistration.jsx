@@ -100,12 +100,6 @@ export default function AssetsRegistration() {
         setIsLoading(true);
         setIsClone(cloneMode);
 
-        // Generate new asset ID for clone mode or new registration
-        if (cloneMode || !id) {
-          const nextAssetId = await getNextAssetId();
-          setValue("assetId", nextAssetId || "");
-        }
-
         // Fetch dropdown options for assets (filter statuses by asset category)
         const contextDropdowns = await fetchAllDropdowns("asset", { category: "asset" });
         setStatuses(contextDropdowns.statuses || []);
@@ -124,49 +118,7 @@ export default function AssetsRegistration() {
           const assetData = await fetchAssetById(id);
           if (assetData) {
             setAsset(assetData);
-
-            // Fill form with asset data
-            if (!cloneMode) {
-              setValue("assetId", assetData.asset_id || "");
-            }
-            setValue("product", assetData.product || "");
-            setValue("status", assetData.status || "");
-            setValue("supplier", assetData.supplier || "");
-            setValue("location", assetData.location || "");
-            if (cloneMode) {
-              const clonedName = await generateCloneName(assetData.name);
-              setValue("assetName", clonedName);
-            } else {
-              setValue("assetName", assetData.name || "");
-            }
-            setValue("serialNumber", assetData.serial_number || "");
-            setValue("warrantyExpiration", assetData.warranty_expiration || "");
-            setValue("orderNumber", assetData.order_number || "");
-            setValue("purchaseDate", assetData.purchase_date || "");
-            setValue("purchaseCost", assetData.purchase_cost || "");
-            setValue("notes", assetData.notes || "");
-
-            if (assetData.image) {
-              setPreviewImage(assetData.image);
-
-              // For cloning, fetch the image as a file so it can be uploaded with the new asset
-              if (cloneMode) {
-                try {
-                  const response = await fetch(assetData.image);
-                  const blob = await response.blob();
-                  const fileName = assetData.image.split('/').pop() || 'cloned-image.jpg';
-                  const file = new File([blob], fileName, { type: blob.type });
-                  setSelectedImage(file);
-                } catch (imgError) {
-                  console.error("Failed to fetch image for cloning:", imgError);
-                }
-              }
-            }
           }
-        } else {
-          // New registration - generate new asset ID
-          const nextAssetId = await getNextAssetId();
-          setValue("assetId", nextAssetId || "");
         }
       } catch (error) {
         console.error("Error initializing:", error);
@@ -176,7 +128,62 @@ export default function AssetsRegistration() {
       }
     };
     initialize();
-  }, [id, cloneMode, setValue]);
+  }, [id, cloneMode]);
+
+  // Separate useEffect to populate form AFTER dropdowns and asset are loaded
+  useEffect(() => {
+    const populateForm = async () => {
+      // Wait for next tick to ensure dropdowns are rendered
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      // Generate new asset ID for clone mode or new registration
+      if (isClone || !id) {
+        const nextAssetId = await getNextAssetId();
+        setValue("assetId", nextAssetId || "");
+      }
+
+      // If we have asset data (editing or cloning), populate the form
+      if (asset) {
+        if (!isClone) {
+          setValue("assetId", asset.asset_id || "");
+        }
+        setValue("product", asset.product || "");
+        setValue("status", asset.status || "");
+        setValue("supplier", asset.supplier || "");
+        setValue("location", asset.location || "");
+        if (isClone) {
+          const clonedName = await generateCloneName(asset.name);
+          setValue("assetName", clonedName);
+        } else {
+          setValue("assetName", asset.name || "");
+        }
+        setValue("serialNumber", asset.serial_number || "");
+        setValue("warrantyExpiration", asset.warranty_expiration || "");
+        setValue("orderNumber", asset.order_number || "");
+        setValue("purchaseDate", asset.purchase_date || "");
+        setValue("purchaseCost", asset.purchase_cost || "");
+        setValue("notes", asset.notes || "");
+
+        if (asset.image) {
+          setPreviewImage(asset.image);
+
+          // For cloning, fetch the image as a file so it can be uploaded with the new asset
+          if (isClone) {
+            try {
+              const response = await fetch(asset.image);
+              const blob = await response.blob();
+              const fileName = asset.image.split('/').pop() || 'cloned-image.jpg';
+              const file = new File([blob], fileName, { type: blob.type });
+              setSelectedImage(file);
+            } catch (imgError) {
+              console.error("Failed to fetch image for cloning:", imgError);
+            }
+          }
+        }
+      }
+    };
+    populateForm();
+  }, [asset, isClone, products, statuses, suppliers, locations, setValue, id]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
