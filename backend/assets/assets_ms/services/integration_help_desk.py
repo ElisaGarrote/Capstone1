@@ -50,11 +50,19 @@ def get_location_by_id(location_id):
 
     # Use helpdesk-locations proxy endpoint (not locations which is internal contexts)
     result = fetch_resource_by_id('helpdesk-locations', location_id)
-    # If result is a warning dict, cache for a short time
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LOCATION_WARNING_TTL)
-    else:
-        cache.set(key, result, LOCATION_CACHE_TTL)
+
+    # Help Desk API returns {success: true, location: {...}} - extract the location object
+    if isinstance(result, dict):
+        if result.get('warning'):
+            cache.set(key, result, LOCATION_WARNING_TTL)
+            return result
+        # Extract location from nested response
+        if result.get('success') and result.get('location'):
+            location = result['location']
+            cache.set(key, location, LOCATION_CACHE_TTL)
+            return location
+
+    cache.set(key, result, LOCATION_CACHE_TTL)
     return result
 
 

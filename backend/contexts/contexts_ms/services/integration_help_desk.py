@@ -37,25 +37,33 @@ def fetch_resource_by_id(resource_name, resource_id):
         return {"warning": "Help Desk service unreachable. Make sure the Help Desk service is running and accessible."}
 
 def get_location_by_id(location_id):
-    """Fetch a location resource from the Contexts service by ID with caching.
+    """Fetch a location resource from the Help Desk service by ID with caching.
 
     Caches successful lookups for LOCATION_CACHE_TTL seconds. If the
-    Contexts service returns a warning dict (unreachable or 404), cache it
+    Help Desk service returns a warning dict (unreachable or 404), cache it
     for a short period to avoid hammering the remote service.
     """
     if not location_id:
         return None
-    key = f"contexts:location:{location_id}"
+    key = f"helpdesk:location:{location_id}"
     cached = cache.get(key)
     if cached is not None:
         return cached
 
     result = fetch_resource_by_id('locations', location_id)
-    # If result is a warning dict, cache for a short time
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LOCATION_WARNING_TTL)
-    else:
-        cache.set(key, result, LOCATION_CACHE_TTL)
+
+    # Help Desk API returns {success: true, location: {...}} - extract the location object
+    if isinstance(result, dict):
+        if result.get('warning'):
+            cache.set(key, result, LOCATION_WARNING_TTL)
+            return result
+        # Extract location from nested response
+        if result.get('success') and result.get('location'):
+            location = result['location']
+            cache.set(key, location, LOCATION_CACHE_TTL)
+            return location
+
+    cache.set(key, result, LOCATION_CACHE_TTL)
     return result
 
 
@@ -63,17 +71,25 @@ def get_employee_by_id(employee_id):
     """Fetch an employee resource from the Help Desk service by ID with caching."""
     if not employee_id:
         return None
-    key = f"contexts:employee:{employee_id}"
+    key = f"helpdesk:employee:{employee_id}"
     cached = cache.get(key)
     if cached is not None:
         return cached
 
     result = fetch_resource_by_id('employees', employee_id)
-    # If result is a warning dict, cache for a short time
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LOCATION_WARNING_TTL)
-    else:
-        cache.set(key, result, LOCATION_CACHE_TTL)
+
+    # Help Desk API returns {success: true, employee: {...}} - extract the employee object
+    if isinstance(result, dict):
+        if result.get('warning'):
+            cache.set(key, result, LOCATION_WARNING_TTL)
+            return result
+        # Extract employee from nested response
+        if result.get('success') and result.get('employee'):
+            employee = result['employee']
+            cache.set(key, employee, LOCATION_CACHE_TTL)
+            return employee
+
+    cache.set(key, result, LOCATION_CACHE_TTL)
     return result
 
 
