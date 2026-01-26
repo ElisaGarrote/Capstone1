@@ -1049,6 +1049,7 @@ class ComponentInstanceSerializer(serializers.ModelSerializer):
     manufacturer_details = serializers.SerializerMethodField()
     supplier_details = serializers.SerializerMethodField()
     location_details = serializers.SerializerMethodField()
+    available_quantity = serializers.SerializerMethodField()
     active_checkouts = serializers.SerializerMethodField()
     checkout_history = serializers.SerializerMethodField()
 
@@ -1066,7 +1067,29 @@ class ComponentInstanceSerializer(serializers.ModelSerializer):
         return self.context.get("supplier_map", {}).get(obj.supplier)
 
     def get_location_details(self, obj):
-        return self.context.get("location_map", {}).get(obj.location)
+        """Return location details from context map or direct API call."""
+        if not obj.location:
+            return None
+        # First try to get from context map (faster, already fetched)
+        location_map = self.context.get("location_map", {})
+        if location_map and obj.location in location_map:
+            loc = location_map[obj.location]
+            return {
+                'id': loc.get('id'),
+                'name': loc.get('display_name') or loc.get('city') or loc.get('name')
+            }
+        # Fallback to direct API call
+        location = get_location_by_id(obj.location)
+        if not location or location.get('warning'):
+            return None
+        return {
+            'id': location.get('id'),
+            'name': location.get('display_name') or location.get('city') or location.get('name')
+        }
+
+    def get_available_quantity(self, obj):
+        """Return available quantity (property from model)."""
+        return obj.available_quantity
 
     def _get_checkout_data(self, checkout):
         """Helper to format checkout data."""
