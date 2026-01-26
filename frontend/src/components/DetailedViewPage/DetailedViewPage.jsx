@@ -35,6 +35,7 @@ export default function DetailedViewPage({
   manufacturerUrl,
   supportUrl,
   supportPhone,
+  supportEmail,
   category,
   model,
   modelNo,
@@ -282,22 +283,32 @@ Updated At: ${updatedAt || 'N/A'}`;
                   <div className="asset-details-grid">
                     <div className="detail-row">
                       <label>Asset ID</label>
-                      <span>{assetTag}</span>
+                      <span>{assetTag || 'N/A'}</span>
                     </div>
 
                     <div className="detail-row">
-                      <label>Asset Serial Number</label>
+                      <label>Status</label>
+                      <span>{status || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
+                      <label>Serial Number</label>
                       <span>{serialNumber || 'N/A'}</span>
                     </div>
 
                     <div className="detail-row">
+                      <label>Asset Name</label>
+                      <span>{productName || 'N/A'}</span>
+                    </div>
+
+                    <div className="detail-row">
                       <label>Asset Model / Product Name</label>
-                      <span>{productName || model}</span>
+                      <span>{model || 'N/A'}</span>
                     </div>
 
                     <div className="detail-row">
                       <label>Category</label>
-                      <span>{category}</span>
+                      <span>{category || 'N/A'}</span>
                     </div>
 
                     <div className="detail-row">
@@ -309,7 +320,7 @@ Updated At: ${updatedAt || 'N/A'}`;
                       <label>Manufacturer</label>
                       <div className="manufacturer-links">
                         <div>
-                          <span>{manufacturer}</span>
+                          <span>{manufacturer || 'N/A'}</span>
                         </div>
                         {manufacturerUrl && (
                           <div>
@@ -318,10 +329,10 @@ Updated At: ${updatedAt || 'N/A'}`;
                             </a>
                           </div>
                         )}
-                        {supportUrl && (
+                        {supportEmail && (
                           <div>
-                            <a href={supportUrl} target="_blank" rel="noopener noreferrer">
-                              <i className="fas fa-external-link-alt"></i> {supportUrl}
+                            <a href={`mailto:${supportEmail}`}>
+                              <i className="fas fa-envelope"></i> {supportEmail}
                             </a>
                           </div>
                         )}
@@ -336,13 +347,8 @@ Updated At: ${updatedAt || 'N/A'}`;
                     </div>
 
                     <div className="detail-row">
-                      <label>Depreciation Type</label>
-                      <span>{depreciationType || 'N/A'}</span>
-                    </div>
-
-                    <div className="detail-row">
-                      <label>Fully Depreciated</label>
-                      <span>{fullyDepreciatedDate || 'N/A'}</span>
+                      <label>Depreciation</label>
+                      <span>{depreciationType || 'N/A'}{fullyDepreciatedDate ? ` (${fullyDepreciatedDate})` : ''}</span>
                     </div>
 
                     <div className="detail-row">
@@ -351,7 +357,7 @@ Updated At: ${updatedAt || 'N/A'}`;
                     </div>
 
                     <div className="detail-row">
-                      <label>Warranty</label>
+                      <label>Warranty Expiration</label>
                       <span>{warrantyDate || 'N/A'}</span>
                     </div>
 
