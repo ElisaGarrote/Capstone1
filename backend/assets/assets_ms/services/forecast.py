@@ -11,7 +11,7 @@ Uses linear regression on actual historical data for accurate trend forecasting.
 
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
-from django.db.models import Count, Sum, F
+from django.db.models import Count, Sum, F, Q
 from django.db.models.functions import TruncMonth, Coalesce
 from django.utils.timezone import now
 from collections import defaultdict
@@ -106,17 +106,19 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
     """
     Calculate asset status forecast data using linear regression on actual historical data.
 
-    Returns ACTUAL monthly counts of assets by status type:
-    - Available: Number of assets that became available (returned) that month
-    - Deployed: Number of assets that were checked out (deployed) that month
-    - Unavailable: Number of assets marked as unavailable that month (estimated)
+    Returns CUMULATIVE monthly counts of assets by status type at the end of each month:
+    - Available: Total assets with status type 'deployable' or 'pending' at end of month
+    - Deployed: Total assets with status type 'deployed' at end of month
+    - Unavailable: Total assets with status type 'undeployable' or 'archived' at end of month
 
-    Shows 0 for months with no activity. Uses linear regression for forecasting.
+    Uses linear regression on historical cumulative counts for forecasting.
+
+    Note: Since we don't track status history, we use checkout records to determine
+    deployed status historically, and estimate available/unavailable based on current ratios.
     """
     from ..services.contexts import get_status_names_assets
 
     today = now().date()
-    start_date = today - relativedelta(months=months_back)
 
     # Get all status mappings
     statuses = get_status_names_assets()
@@ -129,41 +131,27 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
         status_type_map[s['id']] = s.get('type', 'unknown')
 
     # Get current asset counts by status type (for table data)
-    assets = Asset.objects.filter(is_deleted=False).values('status').annotate(count=Count('id'))
+    assets_by_status = Asset.objects.filter(is_deleted=False).values('status').annotate(count=Count('id'))
 
     # Group by status type
     type_counts = {'deployable': 0, 'deployed': 0, 'undeployable': 0, 'pending': 0, 'archived': 0}
-    for item in assets:
+    for item in assets_by_status:
         status_type = status_type_map.get(item['status'], 'unknown')
         if status_type in type_counts:
             type_counts[status_type] += item['count']
 
     # Current totals for table data
+    # Available = deployable + pending status types
     current_available = type_counts.get('deployable', 0) + type_counts.get('pending', 0)
+    # Deployed = deployed status type
     current_deployed = type_counts.get('deployed', 0)
+    # Unavailable = undeployable + archived status types
     current_unavailable = type_counts.get('undeployable', 0) + type_counts.get('archived', 0)
 
-    # Get ACTUAL monthly checkout counts (assets deployed that month)
-    monthly_checkouts = (
-        AssetCheckout.objects
-        .filter(checkout_date__gte=start_date, checkout_date__lte=today)
-        .annotate(month=TruncMonth('checkout_date'))
-        .values('month')
-        .annotate(checkout_count=Count('id'))
-        .order_by('month')
-    )
-    checkout_by_month = {_to_date(item['month']): item['checkout_count'] for item in monthly_checkouts}
-
-    # Get ACTUAL monthly return counts (assets became available that month)
-    monthly_returns = (
-        AssetCheckout.objects
-        .filter(return_date__gte=start_date, return_date__lte=today)
-        .annotate(month=TruncMonth('return_date'))
-        .values('month')
-        .annotate(return_count=Count('id'))
-        .order_by('month')
-    )
-    returns_by_month = {_to_date(item['month']): item['return_count'] for item in monthly_returns}
+    # Calculate current ratio of unavailable to non-deployed assets
+    # This ratio is used to estimate historical unavailable counts
+    current_non_deployed = current_available + current_unavailable
+    unavailable_ratio = current_unavailable / current_non_deployed if current_non_deployed > 0 else 0
 
     # Build historical data arrays for regression
     available_history = []
@@ -171,20 +159,36 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
     unavailable_history = []
     chart_data = []
 
-    # Build chart data for each historical month
-    # Show ACTUAL counts: 0 if no activity that month
+    # For each historical month, calculate cumulative counts at end of that month
     for i in range(months_back - 1, -1, -1):  # 5,4,3,2,1,0 (0 = current month)
         month_date = today - relativedelta(months=i)
-        month_start = month_date.replace(day=1)
-        month_label = get_month_label(month_start)
+        # End of month = last day of that month
+        month_end = (month_date.replace(day=1) + relativedelta(months=1)) - relativedelta(days=1)
+        month_label = get_month_label(month_date)
         time_index = months_back - 1 - i  # 0, 1, 2, 3, 4, 5
 
-        # ACTUAL counts for this month (0 if no activity)
-        deployed_count = checkout_by_month.get(month_start, 0)
-        available_count = returns_by_month.get(month_start, 0)
-        # Unavailable: we don't track this directly, estimate as 0 for historical
-        # unless we have some data (could be enhanced with activity log in future)
-        unavailable_count = 0
+        # Count total assets created by end of this month (not deleted)
+        total_assets_by_month_end = Asset.objects.filter(
+            is_deleted=False,
+            created_at__date__lte=month_end
+        ).count()
+
+        # Count assets that were checked out (deployed) at end of this month
+        # An asset is deployed if it has a checkout where:
+        # - checkout_date <= month_end AND (return_date is NULL OR return_date > month_end)
+        deployed_count = AssetCheckout.objects.filter(
+            checkout_date__lte=month_end
+        ).filter(
+            Q(return_date__isnull=True) | Q(return_date__gt=month_end)
+        ).values('asset_id').distinct().count()
+
+        # Non-deployed assets = Total - Deployed
+        non_deployed = max(0, total_assets_by_month_end - deployed_count)
+
+        # Estimate unavailable and available based on current ratio
+        # Since we don't track status history, we assume the ratio stays similar
+        unavailable_count = int(non_deployed * unavailable_ratio)
+        available_count = non_deployed - unavailable_count
 
         # Store for regression (x = time index, y = value)
         available_history.append((time_index, available_count))
@@ -229,7 +233,6 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
         })
 
     # Generate table data with current counts and forecast
-    # For table, show current status counts (not monthly activity)
     last_forecast = chart_data[-1] if chart_data else {}
     forecast_available = last_forecast.get('forecastAvailable', 0)
     forecast_deployed = last_forecast.get('forecastDeployed', 0)
