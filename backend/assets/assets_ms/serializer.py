@@ -228,7 +228,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'asset_id', 'name', 'serial_number', 'warranty_expiration',
             'order_number', 'purchase_date', 'purchase_cost', 'notes',
-            'image', 'created_at', 'updated_at',
+            'image', 'created_at', 'updated_at', 'location',
             'product_details', 'status_details', 'supplier_details', 'location_details',
             'files', 'checkout_logs', 'repairs', 'audits', 'components'
         ]
