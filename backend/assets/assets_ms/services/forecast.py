@@ -232,11 +232,12 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
             'forecastUnavailable': forecast_unavailable,
         })
 
-    # Generate table data with current counts and forecast
-    last_forecast = chart_data[-1] if chart_data else {}
-    forecast_available = last_forecast.get('forecastAvailable', 0)
-    forecast_deployed = last_forecast.get('forecastDeployed', 0)
-    forecast_unavailable = last_forecast.get('forecastUnavailable', 0)
+    # Generate table data with current counts and forecast for NEXT MONTH
+    # The first forecast entry is at index months_back (after all historical months)
+    next_month_forecast = chart_data[months_back] if len(chart_data) > months_back else {}
+    forecast_available = next_month_forecast.get('forecastAvailable', 0)
+    forecast_deployed = next_month_forecast.get('forecastDeployed', 0)
+    forecast_unavailable = next_month_forecast.get('forecastUnavailable', 0)
 
     def get_trend(current, forecast):
         """Calculate trend based on comparing current to forecast values."""
@@ -336,12 +337,13 @@ def get_product_demand_forecast(months_back=6, months_forward=3, top_n=5):
         import re
         return f"forecast_{re.sub(r'[^a-zA-Z0-9]', '_', name)}"
 
-    # Historical months - collect actual data
-    for i in range(months_back, 0, -1):
+    # Historical months - collect actual data (including current month)
+    # i goes from months_back-1 down to 0 (0 = current month)
+    for i in range(months_back - 1, -1, -1):
         month_date = today - relativedelta(months=i)
         month_start = month_date.replace(day=1)
         month_label = get_month_label(month_start)
-        time_index = months_back - i  # 0, 1, 2, ...
+        time_index = months_back - 1 - i  # 0, 1, 2, ..., months_back-1
 
         row = {'month': month_label}
 
@@ -385,23 +387,24 @@ def get_product_demand_forecast(months_back=6, months_forward=3, top_n=5):
         chart_data.append(row)
 
     # Generate table data with actual trend analysis
+    # Forecast should be for NEXT MONTH (first forecast entry at index months_back)
+    next_month_row = chart_data[months_back] if len(chart_data) > months_back else {}
+
     table_data = []
     for idx, product_id in enumerate(product_ids):
         product_name = product_names[idx]
 
-        # Current demand = last historical month's actual value
+        # Current demand = last historical month's actual value (current month)
         current = chart_data[months_back - 1].get(product_name, 0) if months_back > 0 and chart_data else 0
 
-        # Forecast demand = last forecast month
-        last_row = chart_data[-1] if chart_data else {}
-        forecast = last_row.get(get_forecast_key(product_name), current)
+        # Forecast demand = next month's forecast
+        forecast = next_month_row.get(get_forecast_key(product_name), current)
 
         # Ensure values are integers
         current = current or 0
         forecast = forecast or 0
 
         # Calculate trend by comparing current to forecast values
-        # This is more intuitive than using regression slope
         if current == 0 and forecast == 0:
             trend = 'stable'
         elif forecast > current:
