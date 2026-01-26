@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
-import { selectUser } from "../features/counter/userSlice";
+import { useAuth } from "../context/AuthContext";
+import Alert from "../components/Alert";
 import NavBar from "../components/NavBar";
-import authService from "../services/auth-service";
 import DefaultProfile from "../assets/img/default-profile.svg";
 import "../styles/ManageProfile.css";
 
@@ -17,25 +16,43 @@ export default function ManageProfile() {
     email: "",
     password: "",
     image: null,
+    imageFile: null,
   });
+  const { user, fetchUserProfile, updateUserProfile, updateUserContext } =
+    useAuth();
 
-  const user = useSelector(selectUser);
+  const [statusAlert, setStatusAlert] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Load user information from auth service
-    // const currentUser = authService.getUserInfo();
-    setUserInfo({
-      first_name: user.firstName || "",
-      middle_name: user.middleName || "",
-      last_name: user.lastName || "",
-      suffix: user.suffix || "",
-      company_id: user.company_id || "",
-      department: user.department || "",
-      email: user.email || "",
-      password: "",
-      image: user.image || null,
-    });
-  }, []);
+    let mounted = true;
+
+    const load = async () => {
+      const profile = (await fetchUserProfile()) || user;
+
+      if (!mounted) return;
+
+      if (profile) {
+        setUserInfo({
+          first_name: profile.first_name || profile.firstName || "",
+          middle_name: profile.middle_name || profile.middleName || "",
+          last_name: profile.last_name || profile.lastName || "",
+          suffix: profile.suffix || "",
+          company_id: profile.company_id || "",
+          department: profile.department || "",
+          email: profile.email || "",
+          password: "",
+          image: profile.profile_picture || profile.image || null,
+        });
+      }
+    };
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [fetchUserProfile, user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -53,17 +70,45 @@ export default function ManageProfile() {
         setUserInfo((prev) => ({
           ...prev,
           image: e.target.result,
+          imageFile: file,
         }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveChanges = (e) => {
+  const handleSaveChanges = async (e) => {
     e.preventDefault();
-    // Here you would typically save the changes to your backend
-    console.log("Saving profile changes:", userInfo);
-    alert("Profile updated successfully!");
+    setIsSaving(true);
+    const payload = {
+      first_name: userInfo.first_name,
+      middle_name: userInfo.middle_name,
+      last_name: userInfo.last_name,
+      suffix: userInfo.suffix,
+      company_id: userInfo.company_id,
+      department: userInfo.department,
+      email: userInfo.email,
+      // include file when present so backend can accept multipart uploads
+      profile_picture: userInfo.imageFile || undefined,
+    };
+
+    try {
+      const res = await updateUserProfile(payload);
+      if (res?.success) {
+        updateUserContext(res.data);
+        setStatusAlert({
+          type: "success",
+          message: "Profile updated successfully",
+        });
+        setTimeout(() => setStatusAlert(null), 4000);
+      } else {
+        console.error("Profile update failed:", res?.error);
+        setStatusAlert({ type: "danger", message: "Failed to update profile" });
+        setTimeout(() => setStatusAlert(null), 4000);
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -72,6 +117,12 @@ export default function ManageProfile() {
       <main className="manage-profile-page">
         <div className="manage-profile-container">
           <h1>Manage Profile</h1>
+
+          {statusAlert && (
+            <div style={{ marginTop: 8 }}>
+              <Alert message={statusAlert.message} type={statusAlert.type} />
+            </div>
+          )}
 
           <div className="profile-content">
             <div className="profile-left">
@@ -190,8 +241,12 @@ export default function ManageProfile() {
                     </div>
                   </div>
 
-                  <button type="submit" className="save-changes-btn">
-                    SAVE CHANGES
+                  <button
+                    type="submit"
+                    className="save-changes-btn"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "SAVING..." : "SAVE CHANGES"}
                   </button>
                 </div>
 

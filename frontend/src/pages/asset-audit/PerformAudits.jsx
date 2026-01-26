@@ -6,10 +6,17 @@ import TopSecFormPage from "../../components/TopSecFormPage";
 import { useForm } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
-import { fetchDueAudits, fetchOverdueAudits, fetchScheduledAudits, createAudit, createAuditSchedule } from "../../services/assets-service";
+import {
+  fetchDueAudits,
+  fetchOverdueAudits,
+  fetchScheduledAudits,
+  createAudit,
+  createAuditSchedule,
+} from "../../services/assets-service";
 import { fetchAllLocations } from "../../api/contextsApi";
 import authService from "../../services/auth-service";
 import Alert from "../../components/Alert";
+import { getUserFromToken } from "../../api/TokenUtils";
 
 const PerformAudits = () => {
   const navigate = useNavigate();
@@ -17,13 +24,13 @@ const PerformAudits = () => {
   // TableBtn passes 'data', ActionButtons passes 'item'
   const item = location.state?.item || location.state?.data || null;
   const previousPage = location.state?.previousPage || null;
+  const user = getUserFromToken();
 
   const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [auditSchedules, setAuditSchedules] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const currentUser = authService.getUserInfo();
   const [errorMessage, setErrorMessage] = useState("");
 
   // Fetch audit schedules and locations on mount
@@ -34,7 +41,7 @@ const PerformAudits = () => {
           fetchDueAudits(),
           fetchOverdueAudits(),
           fetchScheduledAudits(),
-          fetchAllLocations()
+          fetchAllLocations(),
         ]);
         // Combine all pending audit schedules
         const allSchedules = [...due, ...overdue, ...scheduled];
@@ -76,7 +83,7 @@ const PerformAudits = () => {
     const files = Array.from(e.target.files);
     const maxSize = 5 * 1024 * 1024;
 
-    const validFiles = files.filter(file => {
+    const validFiles = files.filter((file) => {
       if (file.size > maxSize) {
         alert(`${file.name} is larger than 5MB and was not added.`);
         return false;
@@ -84,11 +91,11 @@ const PerformAudits = () => {
       return true;
     });
 
-    setAttachmentFiles(prev => [...prev, ...validFiles]);
+    setAttachmentFiles((prev) => [...prev, ...validFiles]);
   };
 
   const removeFile = (index) => {
-    setAttachmentFiles(prev => prev.filter((_, i) => i !== index));
+    setAttachmentFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onSubmit = async (data) => {
@@ -99,7 +106,7 @@ const PerformAudits = () => {
       const auditPayload = {
         audit_schedule: parseInt(data.auditSchedule),
         location: parseInt(data.location),
-        user_id: parseInt(currentUser?.id),
+        user_id: parseInt(user.user_id),
         audit_date: data.auditDate,
         notes: data.notes || "",
       };
@@ -109,7 +116,9 @@ const PerformAudits = () => {
 
       // If next audit date is provided, create a new schedule
       if (data.nextAuditDate) {
-        const selectedSchedule = auditSchedules.find(s => s.id === parseInt(data.auditSchedule));
+        const selectedSchedule = auditSchedules.find(
+          (s) => s.id === parseInt(data.auditSchedule)
+        );
         if (selectedSchedule) {
           await createAuditSchedule({
             asset: selectedSchedule.asset,
@@ -119,24 +128,27 @@ const PerformAudits = () => {
         }
       }
 
-      // Redirect to completed audits section and surface success there
-      const redirectPage = previousPage === "/asset-view" ? "/audits/completed" : "/audits/completed";
-      navigate(redirectPage, {
-        state: { successMessage: "Audit performed successfully." },
-      });
+      // Redirect to completed audits section
+      const redirectPage =
+        previousPage === "/asset-view"
+          ? "/audits/completed"
+          : "/audits/completed";
+      navigate(redirectPage);
     } catch (err) {
       console.error("Error performing audit:", err);
       // Extract error message from API response
       let message = "Failed to save audit. Please try again.";
       if (err.response?.data) {
         const errorData = err.response.data;
-        if (typeof errorData === 'object') {
+        if (typeof errorData === "object") {
           // Format validation errors - only show the message, not the field name
           const messages = Object.values(errorData)
-            .map(errors => Array.isArray(errors) ? errors.join(', ') : errors)
-            .join(' | ');
+            .map((errors) =>
+              Array.isArray(errors) ? errors.join(", ") : errors
+            )
+            .join(" | ");
           message = messages || message;
-        } else if (typeof errorData === 'string') {
+        } else if (typeof errorData === "string") {
           message = errorData;
         }
       }
@@ -174,7 +186,11 @@ const PerformAudits = () => {
           <TopSecFormPage
             root={getRootPage()}
             currentPage="Perform Audit"
-            rootNavigatePage={previousPage === "/asset-view" ? "/audits/completed" : previousPage}
+            rootNavigatePage={
+              previousPage === "/asset-view"
+                ? "/audits/completed"
+                : previousPage
+            }
             title="Perform Audit"
           />
         </section>
@@ -182,7 +198,10 @@ const PerformAudits = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Audit Schedule (Asset) */}
             <fieldset>
-              <label htmlFor="auditSchedule">Select Scheduled Audit<span className="required-asterisk">*</span></label>
+              <label htmlFor="auditSchedule">
+                Select Scheduled Audit
+                <span className="required-asterisk">*</span>
+              </label>
               <select
                 className={errors.auditSchedule ? "input-error" : ""}
                 disabled={loading}
@@ -190,10 +209,14 @@ const PerformAudits = () => {
                   required: "Audit schedule is required",
                 })}
               >
-                <option value="">{loading ? "Loading..." : "Select Scheduled Audit"}</option>
+                <option value="">
+                  {loading ? "Loading..." : "Select Scheduled Audit"}
+                </option>
                 {auditSchedules.map((schedule) => (
                   <option key={schedule.id} value={schedule.id}>
-                    {schedule.asset_details?.asset_id || "N/A"} - {schedule.asset_details?.name || "Unknown"} (Due: {schedule.date})
+                    {schedule.asset_details?.asset_id || "N/A"} -{" "}
+                    {schedule.asset_details?.name || "Unknown"} (Due:{" "}
+                    {schedule.date})
                   </option>
                 ))}
               </select>
@@ -206,7 +229,9 @@ const PerformAudits = () => {
 
             {/* Location */}
             <fieldset>
-              <label htmlFor="location">Location<span className="required-asterisk">*</span></label>
+              <label htmlFor="location">
+                Location<span className="required-asterisk">*</span>
+              </label>
               <select
                 className={errors.location ? "input-error" : ""}
                 disabled={loading}
@@ -214,15 +239,17 @@ const PerformAudits = () => {
                   required: "Location is required",
                 })}
               >
-                <option value="">{loading ? "Loading..." : "Select Location"}</option>
+                <option value="">
+                  {loading ? "Loading..." : "Select Location"}
+                </option>
                 {locations.map((loc) => (
-                  <option key={loc.id} value={loc.id}>{loc.name}</option>
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name}
+                  </option>
                 ))}
               </select>
               {errors.location && (
-                <span className="error-message">
-                  {errors.location.message}
-                </span>
+                <span className="error-message">{errors.location.message}</span>
               )}
             </fieldset>
 
@@ -231,14 +258,20 @@ const PerformAudits = () => {
               <label htmlFor="performBy">Performed By</label>
               <input
                 type="text"
-                value={`${currentUser.first_name || ""} ${currentUser.last_name || ""}`.trim() || currentUser.email}
+                value={
+                  `${currentUser.first_name || ""} ${
+                    currentUser.last_name || ""
+                  }`.trim() || currentUser.email
+                }
                 readOnly
               />
             </fieldset>
 
             {/* Audit Date */}
             <fieldset>
-              <label htmlFor="auditDate">Audit Date<span className="required-asterisk">*</span></label>
+              <label htmlFor="auditDate">
+                Audit Date<span className="required-asterisk">*</span>
+              </label>
               <input
                 type="date"
                 className={errors.auditDate ? "input-error" : ""}
@@ -248,7 +281,9 @@ const PerformAudits = () => {
                 })}
               />
               {errors.auditDate && (
-                <span className="error-message">{errors.auditDate.message}</span>
+                <span className="error-message">
+                  {errors.auditDate.message}
+                </span>
               )}
             </fieldset>
 
@@ -261,7 +296,9 @@ const PerformAudits = () => {
                 {...register("nextAuditDate")}
               />
               {errors.nextAuditDate && (
-                <span className="error-message">{errors.nextAuditDate.message}</span>
+                <span className="error-message">
+                  {errors.nextAuditDate.message}
+                </span>
               )}
             </fieldset>
 
@@ -313,7 +350,11 @@ const PerformAudits = () => {
             </fieldset>
 
             {/* Submit */}
-            <button type="submit" className="primary-button" disabled={!isValid || submitting}>
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={!isValid || submitting}
+            >
               {submitting ? "Saving..." : "Save"}
             </button>
           </form>

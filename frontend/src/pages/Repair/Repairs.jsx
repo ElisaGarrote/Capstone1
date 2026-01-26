@@ -12,6 +12,7 @@ import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import "../../styles/Repairs/Repairs.css";
 import { fetchAllRepairs } from "../../services/assets-service";
+import { getUserFromToken } from "../../api/TokenUtils";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -80,6 +81,7 @@ export default function AssetRepairs() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const user = getUserFromToken();
 
   const [repairs, setRepairs] = useState([]);
 
@@ -228,7 +230,9 @@ export default function AssetRepairs() {
     // Filter by Asset
     if (filters.asset && filters.asset.trim() !== "") {
       filtered = filtered.filter((repair) =>
-        repair.asset_details?.name?.toLowerCase().includes(filters.asset.toLowerCase())
+        repair.asset_details?.name
+          ?.toLowerCase()
+          .includes(filters.asset.toLowerCase())
       );
     }
 
@@ -374,7 +378,7 @@ export default function AssetRepairs() {
                 >
                   Filter
                 </button>
-                {authService.getUserInfo().role === "Admin" && (
+                {user.roles?.[0].role === "Admin" && (
                   <MediumButtons type="export" onClick={handleExport} />
                 )}
 

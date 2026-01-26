@@ -18,7 +18,7 @@ export default function UserManagementFilterModal({
 
   const [filters, setFilters] = useState(initialState);
 
-  const roleOptions = ["Admin", "Manager", "Employee"];
+  const roleOptions = ["Admin", "Operator"];
   const statusOptions = ["Active", "Inactive"];
 
   // Initialize filters from props
@@ -153,4 +153,3 @@ export default function UserManagementFilterModal({
     </div>
   );
 }
-

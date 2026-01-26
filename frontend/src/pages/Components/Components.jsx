@@ -12,6 +12,7 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
 import { fetchAllComponents } from "../../services/assets-service";
+import { getUserFromToken } from "../../api/TokenUtils";
 
 import "../../styles/components/Components.css";
 
@@ -74,7 +75,9 @@ function TableItem({
       <td>{asset.name}</td>
       <td>{asset.category_details?.name || "N/A"}</td>
       <td>{asset.manufacturer_details?.name || "N/A"}</td>
-      <td>{asset.available_quantity ?? 0}/{asset.quantity ?? 0}</td>
+      <td>
+        {asset.available_quantity ?? 0}/{asset.quantity ?? 0}
+      </td>
 
       {/* Check-out Column */}
       <td>
@@ -113,6 +116,7 @@ export default function Assets() {
 
   // base data state
   const [baseData, setBaseData] = useState([]);
+  const user = getUserFromToken();
 
   // Load components from API and when navigating back (e.g., after bulk edit)
   useEffect(() => {
@@ -344,8 +348,12 @@ export default function Assets() {
   const handleDeleteSuccess = (deletedIds) => {
     // Remove deleted items from data
     const idsToRemove = Array.isArray(deletedIds) ? deletedIds : [deletedIds];
-    setBaseData((prev) => prev.filter((item) => !idsToRemove.includes(item.id)));
-    setFilteredData((prev) => prev.filter((item) => !idsToRemove.includes(item.id)));
+    setBaseData((prev) =>
+      prev.filter((item) => !idsToRemove.includes(item.id))
+    );
+    setFilteredData((prev) =>
+      prev.filter((item) => !idsToRemove.includes(item.id))
+    );
     setSelectedIds((prev) => prev.filter((id) => !idsToRemove.includes(id)));
     setSuccessMessage("Component(s) deleted successfully!");
     setTimeout(() => setSuccessMessage(""), 5000);
@@ -354,7 +362,8 @@ export default function Assets() {
 
   const handleDeleteError = (error) => {
     console.error("Delete error:", error);
-    const errMsg = error.response?.data?.detail || "Failed to delete component(s).";
+    const errMsg =
+      error.response?.data?.detail || "Failed to delete component(s).";
     setErrorMessage(errMsg);
     setTimeout(() => setErrorMessage(""), 5000);
   };
@@ -471,7 +480,7 @@ export default function Assets() {
                 >
                   Filter
                 </button>
-                {authService.getUserInfo().role === "Admin" && (
+                {user.roles?.[0].role === "Admin" && (
                   <>
                     <MediumButtons type="export" onClick={handleExport} />
                     <MediumButtons

@@ -367,6 +367,11 @@ class AssetReportTemplate(models.Model):
         return self.name
 
 class ActivityLog(models.Model):
+    """Unified activity log used by UI reports and audit trails.
+
+    Field names are chosen to match the serializers used by the frontend
+    and to be explicit about identifiers and human-friendly names.
+    """
     ACTION_CHOICE = [
         ("CREATE", "Create"),
         ("UPDATE", "Update"),
@@ -378,18 +383,33 @@ class ActivityLog(models.Model):
         ("SCHEDULE", "Schedule"),
         ("PERFORM", "Perform"),
     ]
-    
+
+    # Who performed the action
     user_id = models.PositiveIntegerField()
-    module = models.CharField(max_length=100)
+    user_name = models.CharField(max_length=150, blank=True, null=True)
+
+    # Type of entity / logical module (Asset, Component, Audit, Repair, etc.)
+    activity_type = models.CharField(max_length=100)
+
+    # Action taken
     action = models.CharField(max_length=15, choices=ACTION_CHOICE)
-    item_id = models.PositiveIntegerField()
-    item_name = models.CharField(max_length=100)
-    target_user_id = models.PositiveIntegerField(blank=True, null=True)
+
+    # Target item information
+    item_id = models.PositiveIntegerField(blank=True, null=True)
+    item_identifier = models.CharField(max_length=100, blank=True, null=True)
+    item_name = models.CharField(max_length=200, blank=True, null=True)
+
+    # Target user (for checkouts, transfers)
+    target_id = models.PositiveIntegerField(blank=True, null=True)
+    target_name = models.CharField(max_length=150, blank=True, null=True)
+
+    # Free-form notes and timestamp
     notes = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    datetime = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ["-datetime"]
 
     def __str__(self):
-        return f"{self.action} - {self.item_name}"
+        display = self.item_name or self.item_identifier or str(self.item_id or '')
+        return f"{self.action} - {display}"

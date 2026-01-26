@@ -1,58 +1,90 @@
-/* Reuse the same styles as AssetForecastTable */
-/* This file can be empty or contain product-specific overrides if needed */
-
-.forecast-table-wrapper {
+.main-with-table {
   width: 100%;
-  overflow: hidden;
-  border-radius: 25px;
-  border: 1px solid #cccccc;
 }
 
-.forecast-table {
+.table-layout {
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
 }
 
-.forecast-table thead {
-  background-color: #f0f1f2;
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  gap: 1rem;
 }
 
-.forecast-table th {
-  padding: 0.75rem;
-  text-align: left;
-  font-size: 0.75rem;
+.table-header .h2 {
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #cccccc;
+  color: var(--text-color);
+  margin: 0;
 }
 
-.forecast-table td {
-  padding: 0.75rem;
-  text-align: left;
-  font-size: 0.8125rem;
-  color: #666;
-  border-bottom: 1px solid #f0f0f0;
-  height: 50px;
+.table-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
 }
 
-.forecast-table tbody tr:hover {
-  background-color: #fcfcfc;
+.product-forecast-table-section {
+  overflow-x: auto;
+  max-height: 55vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      padding: 0.75rem !important;
+      text-align: left !important;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-color);
+      border-top: 1px solid #cccccc;
+      border-bottom: 1px solid #cccccc;
+      background-color: #f0f1f2;
+      height: 50px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td {
+      text-align: left !important;
+      padding: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-color);
+      border-bottom: 1px solid #cccccc;
+      min-height: 50px;
+      height: auto;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    tr:hover {
+      background-color: #fcfcfc;
+    }
+  }
 }
 
-.trend-cell {
+.product-forecast-table-section .trend-cell {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.5rem;
   font-weight: 600;
   font-size: 0.875rem;
 }
 
-.trend-cell.up {
+.product-forecast-table-section .trend-cell.up {
   color: #22c55e;
 }
 
-.trend-cell.down {
+.product-forecast-table-section .trend-cell.down {
   color: #ef4444;
 }
 
@@ -63,30 +95,5 @@
 .trend-icon {
   width: 1rem;
   height: 1rem;
-}
-
-.table-footer {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 1rem;
-  border-top: 1px solid #f0f0f0;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .forecast-table th,
-  .forecast-table td {
-    padding: 0.5rem;
-    font-size: 0.75rem;
-  }
-
-  .forecast-table td {
-    height: 45px;
-  }
-
-  .export-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.75rem;
-  }
 }
 

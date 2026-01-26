@@ -28,6 +28,22 @@ from assets_ms.services.activity_logger import (
 
 logger = logging.getLogger(__name__)
 
+def _get_request_user_info(request):
+    """Return (user_id, user_name) from request using request.user or forwarded headers."""
+    user_id = None
+    user_name = None
+    try:
+        if hasattr(request, 'user') and getattr(request.user, 'id', None):
+            user_id = getattr(request.user, 'id')
+            user_name = getattr(request.user, 'username', None) or getattr(request.user, 'email', None)
+        else:
+            header_id = request.META.get('HTTP_X_USER_ID') or request.META.get('HTTP_X_UID')
+            if header_id and str(header_id).isdigit():
+                user_id = int(header_id)
+                user_name = request.META.get('HTTP_X_USER_NAME') or request.META.get('HTTP_X_USERNAME') or request.META.get('HTTP_X_NAME')
+    except Exception:
+        pass
+    return user_id, user_name
 # If will add more views later or functionality, please create file on api folder or services folder
 # Only viewsets here
 class ProductViewSet(viewsets.ModelViewSet):
@@ -567,9 +583,12 @@ class AssetViewSet(viewsets.ModelViewSet):
         self.invalidate_asset_cache(asset.id)
 
         # Log activity
+        user_id, user_name = _get_request_user_info(request)
         log_asset_activity(
             action='Create',
             asset=asset,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Asset '{asset.name}' created"
         )
 
@@ -578,9 +597,12 @@ class AssetViewSet(viewsets.ModelViewSet):
         self.invalidate_asset_cache(instance.id)
 
         # Log activity
+        user_id, user_name = _get_request_user_info(request)
         log_asset_activity(
             action='Update',
             asset=instance,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Asset '{instance.name}' updated"
         )
     
@@ -1115,6 +1137,26 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         # Invalidate cache
         cache.delete(f"assets:detail:{asset.id}")
 
+        # Log activity
+        try:
+            user_id = None
+            if hasattr(request, 'user') and getattr(request.user, 'id', None):
+                user_id = getattr(request.user, 'id')
+            elif request.data.get('user_id'):
+                user_id = int(request.data.get('user_id'))
+            elif request.META.get('HTTP_X_USER_ID') and str(request.META.get('HTTP_X_USER_ID')).isdigit():
+                user_id = int(request.META.get('HTTP_X_USER_ID'))
+
+            log_asset_activity(
+                action='Checkout',
+                asset=asset,
+                user_id=user_id,
+                target_user_id=getattr(checkout, 'checkout_to', None),
+                notes=f"Checkout id={checkout.id} created"
+            )
+        except Exception:
+            pass
+
         return Response(
             {"success": "Checkout, attachments, and status update completed successfully."},
             status=status.HTTP_201_CREATED
@@ -1225,6 +1267,26 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
                     print(f"[CheckIn] Warning resolving ticket {ticket_number}: {result}")
             except Exception as e:
                 print(f"[CheckIn] Error resolving ticket {ticket_number}: {e}")
+
+        # Log activity
+        try:
+            user_id = None
+            if hasattr(request, 'user') and getattr(request.user, 'id', None):
+                user_id = getattr(request.user, 'id')
+            elif request.data.get('user_id'):
+                user_id = int(request.data.get('user_id'))
+            elif request.META.get('HTTP_X_USER_ID') and str(request.META.get('HTTP_X_USER_ID')).isdigit():
+                user_id = int(request.META.get('HTTP_X_USER_ID'))
+
+            log_asset_activity(
+                action='Checkin',
+                asset=asset,
+                user_id=user_id,
+                target_user_id=getattr(checkin.asset_checkout, 'checkout_to', None),
+                notes=f"Checkin id={checkin.id} created"
+            )
+        except Exception:
+            pass
 
         return Response({"success": "Check-in, attachments, and status update completed successfully."}, status=status.HTTP_201_CREATED)
 
@@ -1350,9 +1412,12 @@ class ComponentViewSet(viewsets.ModelViewSet):
         instance.save()
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_component_activity(
             action='Delete',
             component=instance,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Component '{instance.name}' deleted"
         )
 
@@ -1360,9 +1425,12 @@ class ComponentViewSet(viewsets.ModelViewSet):
         component = serializer.save()
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_component_activity(
             action='Create',
             component=component,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Component '{component.name}' created"
         )
 
@@ -1370,9 +1438,12 @@ class ComponentViewSet(viewsets.ModelViewSet):
         component = serializer.save()
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_component_activity(
             action='Update',
             component=component,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Component '{component.name}' updated"
         )
 
@@ -1400,9 +1471,12 @@ class ComponentViewSet(viewsets.ModelViewSet):
         for component in components:
             component.is_deleted = True
             component.save()
+            user_id, user_name = _get_request_user_info(self.request)
             log_component_activity(
                 action='Delete',
                 component=component,
+                user_id=user_id,
+                user_name=user_name,
                 notes=f"Component '{component.name}' deleted (bulk)"
             )
             deleted_count += 1
@@ -1436,9 +1510,12 @@ class ComponentViewSet(viewsets.ModelViewSet):
                 if hasattr(component, field):
                     setattr(component, field, value)
             component.save()
+            user_id, user_name = _get_request_user_info(self.request)
             log_component_activity(
                 action='Update',
                 component=component,
+                user_id=user_id,
+                user_name=user_name,
                 notes=f"Component '{component.name}' updated (bulk)"
             )
             updated_count += 1
@@ -1486,9 +1563,12 @@ class ComponentCheckoutViewSet(viewsets.ModelViewSet):
 
         # Log activity
         target_name = checkout.asset.name if checkout.asset else ''
+        user_id, user_name = _get_request_user_info(self.request)
         log_component_activity(
             action='Checkout',
             component=component,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Checked out {checkout.quantity} unit(s) of '{component.name}' to asset '{target_name}'"
         )
 
@@ -1541,9 +1621,12 @@ class ComponentCheckinViewSet(viewsets.ModelViewSet):
 
         # Log activity
         target_name = checkout.asset.name if checkout.asset else ''
+        user_id, user_name = _get_request_user_info(self.request)
         log_component_activity(
             action='Checkin',
             component=component,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Checked in {checkin.quantity} unit(s) of '{component.name}' from asset '{target_name}'"
         )
 
@@ -1593,9 +1676,12 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
         instance.save()
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_audit_activity(
             action='Delete',
             audit_or_schedule=instance,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Audit schedule deleted"
         )
 
@@ -1603,9 +1689,12 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
         schedule = serializer.save()
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_audit_activity(
             action='Schedule',
             audit_or_schedule=schedule,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Audit scheduled for {schedule.date}"
         )
 
@@ -1613,9 +1702,12 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
         schedule = serializer.save()
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_audit_activity(
             action='Update',
             audit_or_schedule=schedule,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Audit schedule updated"
         )
 
@@ -1676,7 +1768,8 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
                 schedule.is_deleted = True
                 schedule.save()
                 deleted_ids.append(schedule.id)
-                log_audit_activity(action='Delete', audit_or_schedule=schedule, notes="Bulk deleted")
+                user_id, user_name = _get_request_user_info(self.request)
+                log_audit_activity(action='Delete', audit_or_schedule=schedule, user_id=user_id, user_name=user_name, notes="Bulk deleted")
 
         return Response({
             "deleted": deleted_ids,
@@ -1754,9 +1847,12 @@ class AuditViewSet(viewsets.ModelViewSet):
         audit = serializer.save()
 
         # Log activity - when an audit is created, it means the audit was completed
+        user_id, user_name = _get_request_user_info(self.request)
         log_audit_activity(
             action='Create',
             audit_or_schedule=audit,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Audit completed on {audit.audit_date}"
         )
 
@@ -1764,9 +1860,12 @@ class AuditViewSet(viewsets.ModelViewSet):
         audit = serializer.save()
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_audit_activity(
             action='Update',
             audit_or_schedule=audit,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Audit updated"
         )
 
@@ -1775,9 +1874,12 @@ class AuditViewSet(viewsets.ModelViewSet):
         instance.save()
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_audit_activity(
             action='Delete',
             audit_or_schedule=instance,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Audit deleted"
         )
 
@@ -1885,9 +1987,12 @@ class RepairViewSet(viewsets.ModelViewSet):
         self.invalidate_repair_cache(instance.id)
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_repair_activity(
             action='Delete',
             repair=instance,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Repair '{instance.name}' deleted"
         )
 
@@ -1896,9 +2001,12 @@ class RepairViewSet(viewsets.ModelViewSet):
         self.invalidate_repair_cache(repair.id)
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_repair_activity(
             action='Create',
             repair=repair,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Repair '{repair.name}' created"
         )
 
@@ -1907,9 +2015,12 @@ class RepairViewSet(viewsets.ModelViewSet):
         self.invalidate_repair_cache(repair.id)
 
         # Log activity
+        user_id, user_name = _get_request_user_info(self.request)
         log_repair_activity(
             action='Update',
             repair=repair,
+            user_id=user_id,
+            user_name=user_name,
             notes=f"Repair '{repair.name}' updated"
         )
 
@@ -1933,9 +2044,12 @@ class RepairViewSet(viewsets.ModelViewSet):
             self.invalidate_repair_cache(repair.id)
 
             # Log activity
+            user_id, user_name = _get_request_user_info(self.request)
             log_repair_activity(
                 action='Delete',
                 repair=repair,
+                user_id=user_id,
+                user_name=user_name,
                 notes=f"Repair '{repair.name}' deleted (bulk)"
             )
             deleted_count += 1
@@ -2230,6 +2344,26 @@ class DashboardViewSet(viewsets.ViewSet):
 
 
 # ASSET REPORT TEMPLATES
+class ActivityLogViewSet(viewsets.ModelViewSet):
+    """ViewSet to read and create activity log entries.
+
+    Read access is used by the frontend activity report. Creation is allowed
+    so services or webhooks can post activity entries directly.
+    """
+    serializer_class = ActivityLogSerializer
+
+    def get_queryset(self):
+        qs = ActivityLog.objects.all()
+        # Optional filters
+        activity_type = self.request.query_params.get('activity_type')
+        user_id = self.request.query_params.get('user_id')
+        if activity_type:
+            qs = qs.filter(activity_type__iexact=activity_type)
+        if user_id and user_id.isdigit():
+            qs = qs.filter(user_id=int(user_id))
+        return qs.order_by('-datetime')
+
+
 class AssetReportTemplateViewSet(viewsets.ModelViewSet):
     """ViewSet for CRUD operations on AssetReportTemplate."""
     serializer_class = AssetReportTemplateSerializer
