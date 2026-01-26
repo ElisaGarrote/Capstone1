@@ -42,6 +42,8 @@ def _linear_regression(data_points):
         tuple: (slope, intercept) for the line y = slope * x + intercept
                Returns (0, average) if not enough data points
     """
+
+    """if not enough data points, return average as intercept"""
     if not data_points or len(data_points) < 2:
         avg = sum(y for _, y in data_points) / len(data_points) if data_points else 0
         return (0, avg)
@@ -142,7 +144,7 @@ def get_asset_status_forecast(months_back=6, months_forward=2):
     # Unavailable = undeployable + archived (assets that cannot be used)
     current_available = type_counts.get('deployable', 0) + type_counts.get('pending', 0)
     current_deployed = type_counts.get('deployed', 0)
-    current_unavailable = type_counts.get('undeployable', 0) + type_counts.get('archived', 0) + type_counts.get('deployed', 0)
+    current_unavailable = type_counts.get('undeployable', 0) + type_counts.get('archived', 0)
 
     # Get ACTUAL monthly checkout counts for historical data
     monthly_checkouts = (
@@ -269,18 +271,21 @@ def get_asset_status_forecast(months_back=6, months_forward=2):
 
     table_data = [
         {
+            """ Available = deployable + pending (assets that can potentially be assigned)"""
             'status': 'Available',
             'currentCount': current_available,
             'forecastCount': forecast_available,
             'trend': get_trend(current_available, forecast_available)
         },
         {
+            """ Deployed = deployed (assets currently in use)"""
             'status': 'Deployed',
             'currentCount': current_deployed,
             'forecastCount': forecast_deployed,
             'trend': get_trend(current_deployed, forecast_deployed)
         },
         {
+            """ Unavailable = undeployable + archived (assets that cannot be used)"""
             'status': 'Unavailable',
             'currentCount': current_unavailable,
             'forecastCount': forecast_unavailable,
@@ -462,7 +467,7 @@ def get_kpi_summary():
 
     today = now().date()
     months_back = 6  # Use 6 months of historical data
-    months_forward = 2  # Forecast 2 months ahead
+    months_forward = 1  # Forecast 1 month ahead (immediate next month)
     start_date = today - relativedelta(months=months_back)
 
     # Get all status mappings
@@ -486,7 +491,7 @@ def get_kpi_summary():
             type_counts[status_type] += item['count']
 
     # Current inventory stats
-    current_available = type_counts.get('deployable', 0)
+    current_available = type_counts.get('deployable', 0) + type_counts.get('pending', 0)
     current_deployed = type_counts.get('deployed', 0)
     total_assets = Asset.objects.filter(is_deleted=False).count()
 
