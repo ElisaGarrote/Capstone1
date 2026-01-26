@@ -576,13 +576,15 @@ export default function AssetsRegistration() {
 
             {/* Serial Number */}
             <fieldset>
-              <label htmlFor='serial-number'>Serial Number</label>
+              <label htmlFor='serial-number'>Serial Number <span style={{color: 'red'}}>*</span></label>
               <input
                 type='text'
-                {...register('serialNumber')}
+                className={errors.serialNumber ? 'input-error' : ''}
+                {...register('serialNumber', { required: 'Serial Number is required' })}
                 maxLength='50'
                 placeholder='Serial Number'
               />
+              {errors.serialNumber && <span className='error-message'>{errors.serialNumber.message}</span>}
             </fieldset>
 
             {/* Warranty Expiration Date */}
@@ -618,19 +620,25 @@ export default function AssetsRegistration() {
 
             {/* Purchase Cost */}
             <fieldset className="cost-field">
-              <label htmlFor="purchaseCost">Purchase Cost</label>
+              <label htmlFor="purchaseCost">Purchase Cost <span style={{color: 'red'}}>*</span></label>
               <div className="cost-input-group">
                 <span className="cost-addon">PHP</span>
                 <input
                   type="number"
                   id="purchaseCost"
                   name="purchaseCost"
+                  className={errors.purchaseCost ? 'input-error' : ''}
                   placeholder="0.00"
                   min="0"
                   step="0.01"
-                  {...register("purchaseCost", { valueAsNumber: true })}
+                  {...register("purchaseCost", {
+                    required: 'Purchase Cost is required',
+                    valueAsNumber: true,
+                    validate: value => !isNaN(value) && value >= 0 || 'Purchase Cost must be a valid number'
+                  })}
                 />
               </div>
+              {errors.purchaseCost && <span className='error-message'>{errors.purchaseCost.message}</span>}
             </fieldset>
 
             {/* Notes */}

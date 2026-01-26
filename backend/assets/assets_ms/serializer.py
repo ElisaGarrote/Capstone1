@@ -157,6 +157,9 @@ class AssetListSerializer(serializers.ModelSerializer):
 class AssetSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
+    # Make serial_number and purchase_cost required
+    serial_number = serializers.CharField(max_length=50, required=True)
+    purchase_cost = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
 
     class Meta:
         model = Asset
