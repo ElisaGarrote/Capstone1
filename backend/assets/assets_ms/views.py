@@ -445,8 +445,8 @@ class AssetViewSet(viewsets.ModelViewSet):
             product_map = {p['id']: p for p in serialized}
             cache.set("products:map", product_map, 300)
 
-        # locations
-        location_map = cache.get("locations:map")
+        # locations (from Help Desk service via contexts proxy)
+        location_map = cache.get("helpdesk:locations:map")
         if not location_map:
             locations = get_locations_list()
             # Handle warning dict or non-list response
@@ -454,7 +454,7 @@ class AssetViewSet(viewsets.ModelViewSet):
                 location_map = {l['id']: l for l in locations}
             else:
                 location_map = {}
-            cache.set("locations:map", location_map, 300)
+            cache.set("helpdesk:locations:map", location_map, 300)
 
         # tickets (unresolved) - no caching, always fetch fresh from external service
         tickets_response = get_tickets_list()
@@ -1278,8 +1278,8 @@ class ComponentViewSet(viewsets.ModelViewSet):
                 supplier_map = {}
             cache.set("suppliers:map", supplier_map, 300)
 
-        # locations
-        location_map = cache.get("locations:map")
+        # locations (from Help Desk service via contexts proxy)
+        location_map = cache.get("helpdesk:locations:map")
         if not location_map:
             locations = get_locations_list()
             if isinstance(locations, list):
@@ -1288,7 +1288,7 @@ class ComponentViewSet(viewsets.ModelViewSet):
                 location_map = {loc['id']: loc for loc in locations['results']}
             else:
                 location_map = {}
-            cache.set("locations:map", location_map, 300)
+            cache.set("helpdesk:locations:map", location_map, 300)
 
         return {
             'category_map': category_map,

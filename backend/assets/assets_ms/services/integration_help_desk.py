@@ -35,20 +35,21 @@ def fetch_resource_by_id(resource_name, resource_id):
         return {"warning": "Contexts service unreachable. Make sure 'contexts-service' is running and accessible."}
 
 def get_location_by_id(location_id):
-    """Fetch a location resource from the Contexts service by ID with caching.
+    """Fetch a location resource from the Help Desk service (via contexts proxy) by ID with caching.
 
     Caches successful lookups for LOCATION_CACHE_TTL seconds. If the
-    Contexts service returns a warning dict (unreachable or 404), cache it
+    service returns a warning dict (unreachable or 404), cache it
     for a short period to avoid hammering the remote service.
     """
     if not location_id:
         return None
-    key = f"contexts:location:{location_id}"
+    key = f"helpdesk:location:{location_id}"
     cached = cache.get(key)
     if cached is not None:
         return cached
 
-    result = fetch_resource_by_id('locations', location_id)
+    # Use helpdesk-locations proxy endpoint (not locations which is internal contexts)
+    result = fetch_resource_by_id('helpdesk-locations', location_id)
     # If result is a warning dict, cache for a short time
     if isinstance(result, dict) and result.get('warning'):
         cache.set(key, result, LOCATION_WARNING_TTL)
@@ -82,7 +83,7 @@ def fetch_resource_list(resource_name, params=None, skip_api_prefix=False):
 
 
 def get_locations_list(q=None, limit=50):
-    key = f"contexts:list:locations:{q}:{limit}"
+    key = f"helpdesk:list:locations:{q}:{limit}"
     cached = cache.get(key)
     if cached is not None:
         return cached
@@ -91,25 +92,27 @@ def get_locations_list(q=None, limit=50):
         params['q'] = q
     if limit:
         params['limit'] = limit
-    result = fetch_resource_list('locations', params=params)
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LIST_WARNING_TTL)
+    # Use helpdesk-locations proxy endpoint (not locations which is internal contexts)
+    result = fetch_resource_list('helpdesk-locations', params=params, skip_api_prefix=True)
+    # The helpdesk-locations endpoint returns: { success, count, locations: [...] }
+    # or plain list from Help Desk service
+    if isinstance(result, dict):
+        if result.get('warning'):
+            cache.set(key, result, LIST_WARNING_TTL)
+        elif 'locations' in result:
+            # Extract locations array from response
+            locations = result.get('locations', [])
+            cache.set(key, locations, LIST_CACHE_TTL)
+            return locations
+        else:
+            cache.set(key, result, LIST_CACHE_TTL)
     else:
         cache.set(key, result, LIST_CACHE_TTL)
     return result
 
 def get_locations_names():
-    key = f"contexts:list:locations:names"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-
-    result = fetch_resource_list('locations/names', skip_api_prefix=True)
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LIST_WARNING_TTL)
-    else:
-        cache.set(key, result, LIST_CACHE_TTL)
-    return result
+    """Fetch locations for name display (uses same endpoint as list)."""
+    return get_locations_list()
 
 
 # Auth service integration
