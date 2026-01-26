@@ -221,3 +221,61 @@ input[type="password"]::-ms-reveal {
   display: block;
   margin-bottom: 5px;
 }
+
+/* Token Login Styles */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  padding: 20px;
+}
+
+.login-content {
+  width: 100%;
+  max-width: 500px;
+}
+
+.status-card {
+  background: white;
+  border-radius: 12px;
+  padding: 48px 32px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.status-icon {
+  margin: 0 auto 24px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-color);
+}
+
+.status-title.processing {
+  color: var(--primary-color);
+}
+
+.status-title.success {
+  color: var(--success-color);
+}
+
+.status-title.error {
+  color: var(--error-color);
+}
+
+.status-description {
+  font-size: 16px;
+  color: var(--secondary-text-color);
+  line-height: 1.5;
+}

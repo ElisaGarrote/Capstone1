@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { FiTrendingUp, FiTrendingDown, FiMinus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import MediumButtons from '../buttons/MediumButtons';
@@ -35,27 +35,14 @@ function AssetForecastTable({ data, title = 'Asset Status Forecast' }) {
       ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
     ].join('\n');
 
-    // Generate filename with date
-    const date = new Date();
-    const dateStr = date.toISOString().split('T')[0];
-    const filename = `asset-status-forecast_${dateStr}.csv`;
-
-    // Create and download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Create and download Excel file
+    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = filename;
+    a.download = 'asset-forecast.xlsx';
     a.click();
     window.URL.revokeObjectURL(url);
-  };
-
-  const handlePrevPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
-  };
-
-  const handleNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
   };
 
   return (
@@ -127,7 +114,6 @@ AssetForecastTable.propTypes = {
       trend: PropTypes.string.isRequired,
     })
   ).isRequired,
-  title: PropTypes.string,
 };
 
 export default AssetForecastTable;

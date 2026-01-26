@@ -62,6 +62,8 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Activity logging middleware records CRUD operations for auditing
+    'assets_ms.middleware.activity_middleware.ActivityLogMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 

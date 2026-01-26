@@ -18,7 +18,11 @@ import Pagination from "../../components/Pagination";
 import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import AssetFilterModal from "../../components/Modals/AssetFilterModal";
-import { fetchProductById, fetchAssetsByProduct } from "../../services/assets-service";
+import {
+  fetchProductById,
+  fetchAssetsByProduct,
+} from "../../services/assets-service";
+import { getUserFromToken } from "../../api/TokenUtils";
 
 function ProductViewPage() {
   const { id } = useParams();
@@ -29,6 +33,7 @@ function ProductViewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const user = getUserFromToken();
 
   // Assets table state
   const [productAssets, setProductAssets] = useState([]);
@@ -325,7 +330,6 @@ function ProductViewPage() {
       checkoutDisabled,
     };
   }
-
   // Pagination logic
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
@@ -336,7 +340,9 @@ function ProductViewPage() {
     <div className="product-assets-tab-wrapper">
       {/* Table Header with Title and Actions */}
       <section className="product-assets-header">
-        <h2 className="product-assets-title">Assets ({filteredAssets.length})</h2>
+        <h2 className="product-assets-title">
+          Assets ({filteredAssets.length})
+        </h2>
         <section className="product-assets-actions">
           <input
             type="search"
@@ -352,15 +358,9 @@ function ProductViewPage() {
           >
             Filter
           </button>
-          <MediumButtons
-            type="export"
-            onClick={handleExport}
-          />
-          {authService.getUserInfo().role === "Admin" && (
-            <MediumButtons
-              type="new"
-              navigatePage="/assets/registration"
-            />
+          <MediumButtons type="export" onClick={handleExport} />
+          {user.roles?.[0].role === "Admin" && (
+            <MediumButtons type="new" navigatePage="/assets/registration" />
           )}
         </section>
       </section>
@@ -383,7 +383,7 @@ function ProductViewPage() {
             {paginatedAssets.length > 0 ? (
               paginatedAssets.map((asset) => {
                 const baseImage = asset.image || DefaultImage;
-                
+
                 const actions = getActionState(asset);
 
                 return (
@@ -399,17 +399,26 @@ function ProductViewPage() {
                       />
                     </td>
                     <td>{asset.asset_id}</td>
-                    <td>{asset.name || 'N/A'}</td>
-                    <td>{asset.serial_number || 'N/A'}</td>
+                    <td>{asset.name || "N/A"}</td>
+                    <td>{asset.serial_number || "N/A"}</td>
                     <td>
-                      <Status type={asset.status_details?.type?.toLowerCase() || 'unknown'} name={asset.status_details?.name || 'Unknown'} />
+                      <Status
+                        type={
+                          asset.status_details?.type?.toLowerCase() || "unknown"
+                        }
+                        name={asset.status_details?.name || "Unknown"}
+                      />
                     </td>
                     <td>
                       <ActionButtons
                         showCheckout={actions.showCheckout}
                         showCheckin={actions.showCheckin}
-                        onCheckoutClick={() => handleCheckInOut(asset, 'checkout')}
-                        onCheckinClick={() => handleCheckInOut(asset, 'checkin')}
+                        onCheckoutClick={() =>
+                          handleCheckInOut(asset, "checkout")
+                        }
+                        onCheckinClick={() =>
+                          handleCheckInOut(asset, "checkin")
+                        }
                       />
                     </td>
                     <td>
@@ -456,12 +465,14 @@ function ProductViewPage() {
 
   const handleProductDeleteSuccess = () => {
     navigate("/products", {
-      state: { successMessage: "Product deleted successfully!" }
+      state: { successMessage: "Product deleted successfully!" },
     });
   };
 
   const handleProductDeleteError = (error) => {
-    setErrorMessage(error.response?.data?.detail || "Failed to delete product.");
+    setErrorMessage(
+      error.response?.data?.detail || "Failed to delete product."
+    );
     setTimeout(() => setErrorMessage(""), 5000);
   };
 
@@ -469,14 +480,14 @@ function ProductViewPage() {
   const handleCloneClick = () => {
     if (product) {
       navigate(`/products/edit/${product.id}`, {
-        state: { product, isClone: true }
+        state: { product, isClone: true },
       });
     }
   };
 
   const handleEditClick = () => {
     navigate(`/products/edit/${product.id}`, {
-      state: { product }
+      state: { product },
     });
   };
 
@@ -497,7 +508,7 @@ function ProductViewPage() {
           height="16"
           viewBox="0 0 24 24"
           fill="white"
-          style={{ marginRight: '8px' }}
+          style={{ marginRight: "8px" }}
         >
           <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
         </svg>
@@ -513,16 +524,13 @@ function ProductViewPage() {
           height="16"
           viewBox="0 0 24 24"
           fill="white"
-          style={{ marginRight: '8px' }}
+          style={{ marginRight: "8px" }}
         >
-          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
         </svg>
         Edit
       </button>
-      <MediumButtons
-        type="delete"
-        onClick={handleDeleteClick}
-      />
+      <MediumButtons type="delete" onClick={handleDeleteClick} />
     </div>
   );
 
@@ -610,7 +618,13 @@ function ProductViewPage() {
 
                 <div className="detail-row">
                   <label>Default Purchase Cost</label>
-                  <span>{product.default_purchase_cost ? `₱${Number(product.default_purchase_cost).toLocaleString()}` : "N/A"}</span>
+                  <span>
+                    {product.default_purchase_cost
+                      ? `₱${Number(
+                          product.default_purchase_cost
+                        ).toLocaleString()}`
+                      : "N/A"}
+                  </span>
                 </div>
 
                 <div className="detail-row">

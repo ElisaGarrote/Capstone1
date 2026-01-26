@@ -9,6 +9,7 @@ import "../styles/Dashboard.css";
 import { fetchDashboardStats } from "../services/assets-service";
 import forecastService from "../services/forecast-service";
 import authService from "../services/auth-service";
+import { getUserFromToken } from "../api/TokenUtils";
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
@@ -17,6 +18,8 @@ function Dashboard() {
   const [assetForecast, setAssetForecast] = useState(null);
   const [productForecast, setProductForecast] = useState(null);
   const [forecastLoading, setForecastLoading] = useState(true);
+  const user = getUserFromToken();
+  console.log("dashboard user:", user);
 
   useEffect(() => {
     async function loadDashboardStats() {
@@ -97,7 +100,7 @@ function Dashboard() {
         </div>
 
         {/* Forecast Section - Admin Only */}
-        {authService.getUserInfo().role === "Admin" && (
+        {user.roles?.[0].role === "Admin" && (
           <>
             {/* KPI Summary Cards */}
             {!forecastLoading && kpiData && kpiData.length > 0 && (
@@ -113,13 +116,15 @@ function Dashboard() {
             )}
 
             {/* Product Demand Forecast Section */}
-            {!forecastLoading && productForecast && productForecast.chartData && (
-              <ProductDemandForecastChart
-                chartData={productForecast.chartData}
-                tableData={productForecast.tableData}
-                productNames={productForecast.productNames}
-              />
-            )}
+            {!forecastLoading &&
+              productForecast &&
+              productForecast.chartData && (
+                <ProductDemandForecastChart
+                  chartData={productForecast.chartData}
+                  tableData={productForecast.tableData}
+                  productNames={productForecast.productNames}
+                />
+              )}
           </>
         )}
 

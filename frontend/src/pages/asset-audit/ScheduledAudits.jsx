@@ -16,6 +16,7 @@ import { exportToExcel } from "../../utils/exportToExcel";
 import authService from "../../services/auth-service";
 import { fetchScheduledAudits } from "../../services/assets-service";
 import Alert from "../../components/Alert";
+import { getUserFromToken } from "../../api/TokenUtils";
 
 // TableHeader
 function TableHeader() {
@@ -37,7 +38,8 @@ function TableItem({ item, onDeleteClick, onViewClick }) {
     <tr>
       <td>{item.date}</td>
       <td>
-        {assetDetails.asset_id || "N/A"} - {assetDetails.name || "Unknown Asset"}
+        {assetDetails.asset_id || "N/A"} -{" "}
+        {assetDetails.name || "Unknown Asset"}
       </td>
       <td>{new Date(item.created_at).toLocaleDateString()}</td>
       <td>
@@ -80,6 +82,7 @@ export default function ScheduledAudits() {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.pathname, location.state, navigate]);
+  const user = getUserFromToken();
 
   // Fetch scheduled audits on mount
   useEffect(() => {
@@ -170,7 +173,9 @@ export default function ScheduledAudits() {
     // Filter by Asset
     if (filters.asset && filters.asset.trim() !== "") {
       filtered = filtered.filter((audit) =>
-        audit.asset_details?.name?.toLowerCase().includes(filters.asset.toLowerCase())
+        audit.asset_details?.name
+          ?.toLowerCase()
+          .includes(filters.asset.toLowerCase())
       );
     }
 
@@ -223,14 +228,21 @@ export default function ScheduledAudits() {
 
       {isViewModalOpen && selectedItem && (
         <View
-          title={`${selectedItem.asset_details?.name || "Unknown"} : ${selectedItem.date}`}
+          title={`${selectedItem.asset_details?.name || "Unknown"} : ${
+            selectedItem.date
+          }`}
           data={[
             { label: "Due Date", value: selectedItem.date },
             {
               label: "Asset",
-              value: `${selectedItem.asset_details?.asset_id || "N/A"} - ${selectedItem.asset_details?.name || "Unknown"}`,
+              value: `${selectedItem.asset_details?.asset_id || "N/A"} - ${
+                selectedItem.asset_details?.name || "Unknown"
+              }`,
             },
-            { label: "Created At", value: new Date(selectedItem.created_at).toLocaleDateString() },
+            {
+              label: "Created At",
+              value: new Date(selectedItem.created_at).toLocaleDateString(),
+            },
             { label: "Notes", value: selectedItem.notes || "N/A" },
           ]}
           closeModal={closeViewModal}
@@ -289,7 +301,7 @@ export default function ScheduledAudits() {
                 >
                   Filter
                 </button>
-                {authService.getUserInfo().role === "Admin" && (
+                {user.roles?.[0].role === "Admin" && (
                   <MediumButtons type="export" onClick={handleExport} />
                 )}
               </section>

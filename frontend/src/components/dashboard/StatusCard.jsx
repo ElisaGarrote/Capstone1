@@ -7,6 +7,7 @@ import '../../styles/dashboard/StatusCard.css';
 function StatusCard({ number, title, isRed, isLarge, index }) {
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
+  const displayNumber = (number === null || number === undefined || number === '') ? 0 : number;
 
   const handleClick = () => {
     if (title === 'Upcoming End of Life') {
@@ -106,7 +107,7 @@ function StatusCard({ number, title, isRed, isLarge, index }) {
         onClick={handleClick}
       >
         <div className="content-wrapper">
-          <div className={`status-number ${isRed ? 'red' : 'blue'}`}>{number}</div>
+          <div className={`status-number ${isRed ? 'red' : 'blue'}`}>{displayNumber}</div>
           <div className="status-title">{title}</div>
         </div>
       </div>
@@ -124,7 +125,7 @@ function StatusCard({ number, title, isRed, isLarge, index }) {
 }
 
 StatusCard.propTypes = {
-  number: PropTypes.string.isRequired,
+  number: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   title: PropTypes.string.isRequired,
   isRed: PropTypes.bool,
   isLarge: PropTypes.bool,
@@ -132,6 +133,7 @@ StatusCard.propTypes = {
 };
 
 StatusCard.defaultProps = {
+  number: 0,
   isRed: false,
   isLarge: false
 };
