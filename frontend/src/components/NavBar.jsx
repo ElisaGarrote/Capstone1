@@ -176,7 +176,7 @@ export default function NavBar() {
     }
   }, [location.pathname]);
 
-  const logout = async () => {
+  const logoutAccount = async () => {
     try {
       // First, request logout from external auth service
       const externalAuth = import.meta.env.VITE_EXTERNAL_AUTH;
