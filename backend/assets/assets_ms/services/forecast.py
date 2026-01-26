@@ -106,12 +106,12 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
     """
     Calculate asset status forecast data using linear regression on actual historical data.
 
-    Returns historical counts of assets by status type:
-    - Available: deployable + pending (assets that can potentially be assigned)
-    - Deployed: deployed (assets currently in use)
-    - Unavailable: undeployable + archived (assets that cannot be used)
+    Returns ACTUAL monthly counts of assets by status type:
+    - Available: Number of assets that became available (returned) that month
+    - Deployed: Number of assets that were checked out (deployed) that month
+    - Unavailable: Number of assets marked as unavailable that month (estimated)
 
-    Uses linear regression on real checkout trends for forecasting.
+    Shows 0 for months with no activity. Uses linear regression for forecasting.
     """
     from ..services.contexts import get_status_names_assets
 
@@ -128,7 +128,7 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
     for s in statuses:
         status_type_map[s['id']] = s.get('type', 'unknown')
 
-    # Get current asset counts by status type
+    # Get current asset counts by status type (for table data)
     assets = Asset.objects.filter(is_deleted=False).values('status').annotate(count=Count('id'))
 
     # Group by status type
@@ -138,15 +138,12 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
         if status_type in type_counts:
             type_counts[status_type] += item['count']
 
-    # Current totals with NEW groupings:
-    # Available = deployable + pending (assets that can potentially be assigned)
-    # Deployed = deployed (assets currently in use)
-    # Unavailable = undeployable + archived (assets that cannot be used)
+    # Current totals for table data
     current_available = type_counts.get('deployable', 0) + type_counts.get('pending', 0)
     current_deployed = type_counts.get('deployed', 0)
     current_unavailable = type_counts.get('undeployable', 0) + type_counts.get('archived', 0)
 
-    # Get ACTUAL monthly checkout counts for historical data
+    # Get ACTUAL monthly checkout counts (assets deployed that month)
     monthly_checkouts = (
         AssetCheckout.objects
         .filter(checkout_date__gte=start_date, checkout_date__lte=today)
@@ -157,7 +154,7 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
     )
     checkout_by_month = {_to_date(item['month']): item['checkout_count'] for item in monthly_checkouts}
 
-    # Get ACTUAL monthly return counts (assets returned/available)
+    # Get ACTUAL monthly return counts (assets became available that month)
     monthly_returns = (
         AssetCheckout.objects
         .filter(return_date__gte=start_date, return_date__lte=today)
@@ -174,59 +171,34 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
     unavailable_history = []
     chart_data = []
 
-    # First pass: calculate historical values going backwards from current
-    # Include current month as the last historical month
-    historical_values = []
+    # Build chart data for each historical month
+    # Show ACTUAL counts: 0 if no activity that month
     for i in range(months_back - 1, -1, -1):  # 5,4,3,2,1,0 (0 = current month)
         month_date = today - relativedelta(months=i)
         month_start = month_date.replace(day=1)
-
-        checkouts = checkout_by_month.get(month_start, 0)
-        returns = returns_by_month.get(month_start, 0)
-
-        historical_values.append({
-            'month_start': month_start,
-            'checkouts': checkouts,
-            'returns': returns,
-            'net_change': checkouts - returns
-        })
-
-    # Estimate historical values based on cumulative changes from current state
-    # Work backwards from current values
-    cumulative_change = 0
-    for i, hist in enumerate(reversed(historical_values)):
-        cumulative_change += hist['net_change']
-
-    # Now build forward with estimated values
-    est_deployed = max(0, current_deployed - cumulative_change)
-    est_available = max(0, current_available + cumulative_change)
-
-    for idx, hist in enumerate(historical_values):
-        month_start = hist['month_start']
         month_label = get_month_label(month_start)
+        time_index = months_back - 1 - i  # 0, 1, 2, 3, 4, 5
 
-        # Adjust estimates based on actual checkout/return activity
-        est_deployed = max(0, est_deployed + hist['net_change'])
-        est_available = max(0, est_available - hist['net_change'])
-
-        # Unavailable estimate: slight variation based on position
-        # (We don't have direct historical data for unavailable status changes)
-        unavailable_variance = int(current_unavailable * 0.1 * ((months_back - idx) / months_back))
-        est_unavailable = max(0, current_unavailable + unavailable_variance)
+        # ACTUAL counts for this month (0 if no activity)
+        deployed_count = checkout_by_month.get(month_start, 0)
+        available_count = returns_by_month.get(month_start, 0)
+        # Unavailable: we don't track this directly, estimate as 0 for historical
+        # unless we have some data (could be enhanced with activity log in future)
+        unavailable_count = 0
 
         # Store for regression (x = time index, y = value)
-        available_history.append((idx, est_available))
-        deployed_history.append((idx, est_deployed))
-        unavailable_history.append((idx, est_unavailable))
+        available_history.append((time_index, available_count))
+        deployed_history.append((time_index, deployed_count))
+        unavailable_history.append((time_index, unavailable_count))
 
         chart_data.append({
             'month': month_label,
-            'available': est_available,
-            'deployed': est_deployed,
-            'unavailable': est_unavailable,
-            'forecastAvailable': est_available,
-            'forecastDeployed': est_deployed,
-            'forecastUnavailable': est_unavailable,
+            'available': available_count,
+            'deployed': deployed_count,
+            'unavailable': unavailable_count,
+            'forecastAvailable': available_count,
+            'forecastDeployed': deployed_count,
+            'forecastUnavailable': unavailable_count,
         })
 
     # Calculate linear regression for each metric
@@ -256,11 +228,12 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
             'forecastUnavailable': forecast_unavailable,
         })
 
-    # Generate table data with actual trend information
+    # Generate table data with current counts and forecast
+    # For table, show current status counts (not monthly activity)
     last_forecast = chart_data[-1] if chart_data else {}
-    forecast_available = last_forecast.get('forecastAvailable', current_available)
-    forecast_deployed = last_forecast.get('forecastDeployed', current_deployed)
-    forecast_unavailable = last_forecast.get('forecastUnavailable', current_unavailable)
+    forecast_available = last_forecast.get('forecastAvailable', 0)
+    forecast_deployed = last_forecast.get('forecastDeployed', 0)
+    forecast_unavailable = last_forecast.get('forecastUnavailable', 0)
 
     def get_trend(current, forecast):
         """Calculate trend based on comparing current to forecast values."""
@@ -272,21 +245,18 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
 
     table_data = [
         {
-            """ Available = deployable + pending (assets that can potentially be assigned)"""
             'status': 'Available',
             'currentCount': current_available,
             'forecastCount': forecast_available,
             'trend': get_trend(current_available, forecast_available)
         },
         {
-            """ Deployed = deployed (assets currently in use)"""
             'status': 'Deployed',
             'currentCount': current_deployed,
             'forecastCount': forecast_deployed,
             'trend': get_trend(current_deployed, forecast_deployed)
         },
         {
-            """ Unavailable = undeployable + archived (assets that cannot be used)"""
             'status': 'Unavailable',
             'currentCount': current_unavailable,
             'forecastCount': forecast_unavailable,
@@ -300,7 +270,7 @@ def get_asset_status_forecast(months_back=6, months_forward=3):
     }
 
 
-def get_product_demand_forecast(months_back=6, months_forward=2, top_n=5):
+def get_product_demand_forecast(months_back=6, months_forward=3, top_n=5):
     """
     Calculate product demand forecast data using linear regression.
 

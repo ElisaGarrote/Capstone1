@@ -2190,12 +2190,12 @@ class DashboardViewSet(viewsets.ViewSet):
         Query params:
         - months_back: Number of historical months (default: 6)
         - months_forward: Number of forecast months (default: 3)
-        - top_n: Number of top products to include (default: 4)
+        - top_n: Number of top products to include (default: 5)
         """
 
         months_back = int(request.query_params.get('months_back', 6))
         months_forward = int(request.query_params.get('months_forward', 3))
-        top_n = int(request.query_params.get('top_n', 4))
+        top_n = int(request.query_params.get('top_n', 5))
 
         try:
             data = get_product_demand_forecast(
