@@ -11,7 +11,7 @@ export default function AssetViewModal({ asset, closeModal }) {
   const imageSrc = asset.image
   ? `https://assets-service-production.up.railway.app${asset.image}`
   : DefaultImage;
-  const assetId = asset.displayed_id;
+  const assetId = asset.asset_id;
   const productName = asset.product_info?.name || "-";
   const serialNumber = asset.serialNumber || asset.serial_number || "-";
   const purchaseDate = asset.purchaseDate || asset.purchase_date || "-";
@@ -20,7 +20,7 @@ export default function AssetViewModal({ asset, closeModal }) {
   const purchaseCost = asset.purchaseCost || asset.purchase_cost
     ? `PHP ${asset.purchaseCost || asset.purchase_cost}`
     : "-";
-  const location = asset.location || "-";
+  const location = asset.location_details.name || "-";
   const notes = asset.notes || "-";
   const status = asset.status_info?.name || "-";
   const supplier = asset.supplier || "-";

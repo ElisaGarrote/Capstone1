@@ -14,9 +14,6 @@ import Footer from "../Footer";
 import Alert from "../Alert";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import mockData from "../../data/mockData/detailedviewpage/asset-view-page.json";
-
-const { historyData, componentsData, repairsData, auditsDuplicateData, attachmentsData } = mockData;
 
 export default function DetailedViewPage({
   breadcrumbRoot,

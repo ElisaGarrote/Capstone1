@@ -105,62 +105,19 @@ export default function ProductsRegistration() {
 
         // Fetch dropdown options
         const dropdowns = await fetchAllDropdowns("product");
-          setCategories(dropdowns.categories);
-          setManufacturers(dropdowns.manufacturers);
-          setSuppliers(dropdowns.suppliers);
-          setDepreciations(dropdowns.depreciations);
+        setCategories(dropdowns.categories);
+        setManufacturers(dropdowns.manufacturers);
+        setSuppliers(dropdowns.suppliers);
+        setDepreciations(dropdowns.depreciations);
 
         // Get product data from API (only if editing/cloning)
-        let productData = null;
         const cloneMode = location.state?.isClone === true;
         setIsClone(cloneMode);
 
         // Only fetch product if we have an ID (editing or cloning)
         if (id) {
-          productData = await fetchProductById(id);
-        }
-
-        // Initialize form if editing
-        if (productData) {
-          if (cloneMode) {
-            const cloneName = await generateCloneName(productData.name);
-            setValue("productName", cloneName);
-          } else {
-            setValue("productName", productData.name || "");
-          }
-
-          setValue("category", productData.category || "");
-          setValue("manufacturer", productData.manufacturer || "");
-          setValue("depreciation", productData.depreciation || "");
-          setValue("modelNumber", productData.model_number || "");
-          setValue("endOfLife", productData.end_of_life || "");
-          setValue("defaultPurchaseCost", productData.default_purchase_cost || "");
-          setValue("defaultSupplier", productData.default_supplier || "");
-          setValue("minimumQuantity", productData.minimum_quantity || "");
-          setValue("cpu", productData.cpu || "");
-          setValue("gpu", productData.gpu || "");
-          setValue("operatingSystem", productData.os || "");
-          setValue("ram", productData.ram || "");
-          setValue("screenSize", productData.size || "");
-          setValue("storageSize", productData.storage || "");
-          setValue("notes", productData.notes || "");
+          const productData = await fetchProductById(id);
           setProduct(productData);
-          if (productData.image) {
-            setPreviewImage(productData.image);
-
-            // For cloning, fetch the image as a file so it can be uploaded with the new product
-            if (cloneMode) {
-              try {
-                const response = await fetch(productData.image);
-                const blob = await response.blob();
-                const fileName = productData.image.split('/').pop() || 'cloned-image.jpg';
-                const file = new File([blob], fileName, { type: blob.type });
-                setSelectedImage(file);
-              } catch (imgError) {
-                console.error("Failed to fetch image for cloning:", imgError);
-              }
-            }
-          }
         }
       } catch (error) {
         console.error("Error initializing:", error);
@@ -170,7 +127,58 @@ export default function ProductsRegistration() {
       }
     };
     initialize();
-  }, [id, location.state, setValue]);
+  }, [id, location.state]);
+
+  // Separate useEffect to populate form AFTER dropdowns and product are loaded
+  useEffect(() => {
+    const populateForm = async () => {
+      if (!product) return;
+
+      // Wait for next tick to ensure dropdowns are rendered
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      if (isClone) {
+        const cloneName = await generateCloneName(product.name);
+        setValue("productName", cloneName);
+      } else {
+        setValue("productName", product.name || "");
+      }
+
+      setValue("category", product.category || "");
+      setValue("manufacturer", product.manufacturer || "");
+      setValue("depreciation", product.depreciation || "");
+      setValue("modelNumber", product.model_number || "");
+      setValue("endOfLife", product.end_of_life || "");
+      setValue("defaultPurchaseCost", product.default_purchase_cost || "");
+      setValue("defaultSupplier", product.default_supplier || "");
+      setValue("minimumQuantity", product.minimum_quantity || "");
+      setValue("cpu", product.cpu || "");
+      setValue("gpu", product.gpu || "");
+      setValue("operatingSystem", product.os || "");
+      setValue("ram", product.ram || "");
+      setValue("screenSize", product.size || "");
+      setValue("storageSize", product.storage || "");
+      setValue("notes", product.notes || "");
+
+      if (product.image) {
+        setPreviewImage(product.image);
+
+        // For cloning, fetch the image as a file so it can be uploaded with the new product
+        if (isClone) {
+          try {
+            const response = await fetch(product.image);
+            const blob = await response.blob();
+            const fileName = product.image.split('/').pop() || 'cloned-image.jpg';
+            const file = new File([blob], fileName, { type: blob.type });
+            setSelectedImage(file);
+          } catch (imgError) {
+            console.error("Failed to fetch image for cloning:", imgError);
+          }
+        }
+      }
+    };
+    populateForm();
+  }, [product, isClone, categories, manufacturers, depreciations, suppliers, setValue]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];

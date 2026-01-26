@@ -226,7 +226,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = [
-            'id', 'name', 'serial_number', 'warranty_expiration',
+            'id', 'asset_id', 'name', 'serial_number', 'warranty_expiration',
             'order_number', 'purchase_date', 'purchase_cost', 'notes',
             'image', 'created_at', 'updated_at',
             'product_details', 'status_details', 'supplier_details', 'location_details',
@@ -256,9 +256,18 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
         }
 
     def get_location_details(self, obj):
-        """Return location details (id, name) from help desk service."""
+        """Return location details (id, name) from context map or help desk service."""
         if not obj.location:
             return None
+        # First try to get from context map (faster, already fetched)
+        location_map = self.context.get("location_map", {})
+        if location_map and obj.location in location_map:
+            loc = location_map[obj.location]
+            return {
+                'id': loc.get('id'),
+                'name': loc.get('display_name') or loc.get('city') or loc.get('name')
+            }
+        # Fallback to direct API call
         location = get_location_by_id(obj.location)
         if not location or location.get('warning'):
             return None
