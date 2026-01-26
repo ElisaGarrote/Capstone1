@@ -5,9 +5,10 @@ from django.core.cache import cache
 from django.conf import settings
 
 
-# Centralized Help Desk service helper module
-# Use settings.HELPDESK_API_URL or fallback to the default service host
-BASE_URL = getattr(settings, "HELPDESK_API_URL", os.getenv("HELPDESK_API_URL", "http://contexts-service:8003/"))
+# Help Desk integration via Contexts service proxy
+# The contexts service proxies requests to the external Help Desk service
+# Use CONTEXTS_API_URL to call the contexts service (which has helpdesk-locations endpoint)
+BASE_URL = getattr(settings, "CONTEXTS_API_URL", os.getenv("CONTEXTS_API_URL", "http://contexts-service:8003/"))
 
 # Cache settings
 LOCATION_CACHE_TTL = 300
