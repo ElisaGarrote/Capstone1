@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
 import { fetchDueAudits, fetchOverdueAudits, fetchScheduledAudits, createAudit, createAuditSchedule } from "../../services/assets-service";
-import { fetchAllLocations } from "../../api/contextsApi";
+import { fetchAllLocations } from "../../services/integration-help-desk-service";
 import authService from "../../services/auth-service";
 import Alert from "../../components/Alert";
 

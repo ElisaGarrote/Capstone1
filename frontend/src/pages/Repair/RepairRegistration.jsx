@@ -548,7 +548,7 @@ const RepairRegistration = () => {
             {/* Supplier */}
             <fieldset>
               <label htmlFor="supplier">Supplier</label>
-              <div className="input-add-container">
+              <div className="dropdown-with-add">
                 <select
                   className={errors.supplier ? "input-error" : ""}
                   {...register("supplier")}
@@ -564,6 +564,7 @@ const RepairRegistration = () => {
                   type="button"
                   className="add-btn"
                   onClick={() => setShowSupplierModal(true)}
+                  title="Add new supplier"
                 >
                   <img src={PlusIcon} alt="Add" />
                 </button>
@@ -575,7 +576,7 @@ const RepairRegistration = () => {
               <label htmlFor="status">
                 Status<span className="required-asterisk">*</span>
               </label>
-              <div className="input-add-container">
+              <div className="dropdown-with-add">
                 <select
                   className={errors.status ? "input-error" : ""}
                   {...register("status", {
@@ -593,6 +594,7 @@ const RepairRegistration = () => {
                   type="button"
                   className="add-btn"
                   onClick={() => setShowStatusModal(true)}
+                  title="Add new status"
                 >
                   <img src={PlusIcon} alt="Add" />
                 </button>
