@@ -142,7 +142,7 @@ def get_asset_status_forecast(months_back=6, months_forward=2):
     # Unavailable = undeployable + archived (assets that cannot be used)
     current_available = type_counts.get('deployable', 0) + type_counts.get('pending', 0)
     current_deployed = type_counts.get('deployed', 0)
-    current_unavailable = type_counts.get('undeployable', 0) + type_counts.get('archived', 0)
+    current_unavailable = type_counts.get('undeployable', 0) + type_counts.get('archived', 0) + type_counts.get('deployed', 0)
 
     # Get ACTUAL monthly checkout counts for historical data
     monthly_checkouts = (

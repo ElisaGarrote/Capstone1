@@ -6,69 +6,8 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
-import { fetchAssetById, fetchProductById, deleteAsset, fetchAssetCheckoutsByAsset } from "../../services/assets-service";
-import { fetchSupplierById, fetchCategoryById, fetchManufacturerById, fetchDepreciationById } from "../../services/contexts-service";
+import { fetchAssetById, deleteAsset } from "../../services/assets-service";
 import { fetchLocationById } from "../../services/integration-help-desk-service";
-
-// Helper function to calculate depreciation info
-const calculateDepreciationInfo = (purchaseDate, durationMonths) => {
-  if (!purchaseDate || !durationMonths) return null;
-
-  const purchase = new Date(purchaseDate);
-  const fullyDepreciatedDate = new Date(purchase);
-  fullyDepreciatedDate.setMonth(fullyDepreciatedDate.getMonth() + durationMonths);
-
-  const today = new Date();
-  const msRemaining = fullyDepreciatedDate.getTime() - today.getTime();
-
-  if (msRemaining <= 0) {
-    return {
-      fullyDepreciatedDate,
-      isFullyDepreciated: true,
-      remaining: null
-    };
-  }
-
-  // Calculate years, months, weeks remaining
-  const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
-  const years = Math.floor(daysRemaining / 365);
-  const remainingAfterYears = daysRemaining % 365;
-  const months = Math.floor(remainingAfterYears / 30);
-  const weeks = Math.floor((remainingAfterYears % 30) / 7);
-
-  return {
-    fullyDepreciatedDate,
-    isFullyDepreciated: false,
-    remaining: { years, months, weeks }
-  };
-};
-
-// Format depreciation remaining time
-const formatDepreciationRemaining = (depInfo) => {
-  if (!depInfo) return null;
-
-  const dateStr = depInfo.fullyDepreciatedDate.toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric'
-  });
-
-  if (depInfo.isFullyDepreciated) {
-    return `${dateStr} (Fully Depreciated)`;
-  }
-
-  const parts = [];
-  if (depInfo.remaining.years > 0) {
-    parts.push(`${depInfo.remaining.years} year${depInfo.remaining.years > 1 ? 's' : ''}`);
-  }
-  if (depInfo.remaining.months > 0) {
-    parts.push(`${depInfo.remaining.months} month${depInfo.remaining.months > 1 ? 's' : ''}`);
-  }
-  if (depInfo.remaining.weeks > 0) {
-    parts.push(`${depInfo.remaining.weeks} week${depInfo.remaining.weeks > 1 ? 's' : ''}`);
-  }
-
-  const remainingStr = parts.length > 0 ? parts.join(', ') + ' left' : 'Less than a week left';
-  return `${dateStr} (${remainingStr})`;
-};
 import "../../styles/Assets/AssetViewPage.css";
 import "../../styles/Assets/AssetEditPage.css";
 
@@ -76,12 +15,6 @@ function AssetViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [asset, setAsset] = useState(null);
-  const [product, setProduct] = useState(null);
-  const [supplier, setSupplier] = useState(null);
-  const [location, setLocation] = useState(null);
-  const [category, setCategory] = useState(null);
-  const [manufacturer, setManufacturer] = useState(null);
-  const [depreciation, setDepreciation] = useState(null);
   const [checkoutLogData, setCheckoutLogData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -92,46 +25,16 @@ function AssetViewPage() {
       try {
         setIsLoading(true);
 
-        // Fetch asset data
+        // Fetch asset data - the API now returns all related data
         const assetData = await fetchAssetById(id);
         if (!assetData) {
           return;
         }
         setAsset(assetData);
 
-        // Fetch related data in parallel - use allSettled to handle partial failures
-        const [productResult, supplierResult, locationResult, checkoutsResult] = await Promise.allSettled([
-          assetData.product ? fetchProductById(assetData.product) : Promise.resolve(null),
-          assetData.supplier ? fetchSupplierById(assetData.supplier) : Promise.resolve(null),
-          assetData.location ? fetchLocationById(assetData.location) : Promise.resolve(null),
-          fetchAssetCheckoutsByAsset(assetData.id),
-        ]);
-
-        const productData = productResult.status === 'fulfilled' ? productResult.value : null;
-        const supplierData = supplierResult.status === 'fulfilled' ? supplierResult.value : null;
-        const locationData = locationResult.status === 'fulfilled' ? locationResult.value : null;
-        const checkoutsData = checkoutsResult.status === 'fulfilled' ? checkoutsResult.value : [];
-
-        setProduct(productData);
-        setSupplier(supplierData);
-        setLocation(locationData);
-
-        // Process checkout/checkin data for the log
-        // We need to fetch location names for each checkout
-        const processedLog = await processCheckoutLog(checkoutsData);
+        // Process checkout logs from the API response
+        const processedLog = await processCheckoutLog(assetData.checkout_logs || []);
         setCheckoutLogData(processedLog);
-
-        // If product exists, fetch category, manufacturer, and depreciation
-        if (productData) {
-          const [categoryResult, manufacturerResult, depreciationResult] = await Promise.allSettled([
-            productData.category ? fetchCategoryById(productData.category) : Promise.resolve(null),
-            productData.manufacturer ? fetchManufacturerById(productData.manufacturer) : Promise.resolve(null),
-            productData.depreciation ? fetchDepreciationById(productData.depreciation) : Promise.resolve(null),
-          ]);
-          setCategory(categoryResult.status === 'fulfilled' ? categoryResult.value : null);
-          setManufacturer(manufacturerResult.status === 'fulfilled' ? manufacturerResult.value : null);
-          setDepreciation(depreciationResult.status === 'fulfilled' ? depreciationResult.value : null);
-        }
       } catch (error) {
         console.error("Error loading asset details:", error);
       } finally {
@@ -140,83 +43,71 @@ function AssetViewPage() {
     };
 
     // Process checkout log data - interleave checkouts and checkins by created_at
-    const processCheckoutLog = async (checkouts) => {
-      if (!checkouts || checkouts.length === 0) return [];
+    const processCheckoutLog = async (logs) => {
+      if (!logs || logs.length === 0) return [];
 
       const logEntries = [];
 
-      // Fetch all location names in parallel
-      const locationIds = [...new Set(checkouts.map(c => c.location).filter(Boolean))];
-      const locationPromises = locationIds.map(locId =>
-        fetchLocationById(locId).catch(() => null)
-      );
-      const locationResults = await Promise.all(locationPromises);
+      // Collect all location IDs for batch fetching
+      const locationIds = [...new Set(logs.map(log => log.location).filter(Boolean))];
       const locationMap = {};
-      locationIds.forEach((locId, idx) => {
-        locationMap[locId] = locationResults[idx]?.name || `Location ${locId}`;
-      });
 
-      for (const checkout of checkouts) {
-        // Add checkout entry
-        const checkoutDate = checkout.checkout_date
-          ? new Date(checkout.checkout_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-          : '-';
-        const returnDate = checkout.return_date
-          ? new Date(checkout.return_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-          : '-';
-
-        // Get condition label
-        const conditionLabels = {
-          1: '1 - Non-functional',
-          2: '2 - Barely Usable',
-          3: '3 - Poor',
-          4: '4 - Below Average',
-          5: '5 - Average',
-          6: '6 - Above Average',
-          7: '7 - Good',
-          8: '8 - Very Good',
-          9: '9 - Like New',
-          10: '10 - New'
-        };
-
-        logEntries.push({
-          type: 'checkout',
-          createdAt: new Date(checkout.created_at),
-          actionLabel: 'Checked out to',
-          target: locationMap[checkout.location] || `Location ${checkout.location}`,
-          checkoutDate,
-          expectedReturnDate: returnDate,
-          condition: conditionLabels[checkout.condition] || checkout.condition,
-          user: 'Demo User', // TODO: Get actual user from auth
+      // Fetch all location names in parallel
+      if (locationIds.length > 0) {
+        const locationPromises = locationIds.map(locId =>
+          fetchLocationById(locId).catch(() => null)
+        );
+        const locationResults = await Promise.all(locationPromises);
+        locationIds.forEach((locId, idx) => {
+          locationMap[locId] = locationResults[idx]?.name || `Location ${locId}`;
         });
+      }
 
-        // Add checkin entry if exists
-        if (checkout.asset_checkin) {
-          const checkin = checkout.asset_checkin;
-          const checkinDate = checkin.checkin_date
-            ? new Date(checkin.checkin_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+      // Get condition label
+      const conditionLabels = {
+        1: '1 - Non-functional',
+        2: '2 - Barely Usable',
+        3: '3 - Poor',
+        4: '4 - Below Average',
+        5: '5 - Average',
+        6: '6 - Above Average',
+        7: '7 - Good',
+        8: '8 - Very Good',
+        9: '9 - Like New',
+        10: '10 - New'
+      };
+
+      for (const log of logs) {
+        if (log.type === 'checkout') {
+          const checkoutDate = log.checkout_date
+            ? new Date(log.checkout_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+            : '-';
+          const returnDate = log.return_date
+            ? new Date(log.return_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
             : '-';
 
-          // Fetch checkin location name
-          let checkinLocationName = `Location ${checkin.location}`;
-          if (checkin.location && locationMap[checkin.location]) {
-            checkinLocationName = locationMap[checkin.location];
-          } else if (checkin.location) {
-            try {
-              const locData = await fetchLocationById(checkin.location);
-              checkinLocationName = locData?.name || checkinLocationName;
-            } catch {
-              // Use default
-            }
-          }
+          logEntries.push({
+            type: 'checkout',
+            createdAt: new Date(log.created_at),
+            actionLabel: 'Checked out to',
+            target: locationMap[log.location] || `Location ${log.location}`,
+            checkoutDate,
+            expectedReturnDate: returnDate,
+            condition: conditionLabels[log.condition] || log.condition,
+            user: 'Demo User', // TODO: Get actual user from auth
+          });
+        } else if (log.type === 'checkin') {
+          const checkinDate = log.checkin_date
+            ? new Date(log.checkin_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+            : '-';
 
           logEntries.push({
             type: 'checkin',
-            createdAt: new Date(checkin.created_at),
+            createdAt: new Date(log.created_at),
             actionLabel: 'Checked in from',
-            target: checkinLocationName,
+            target: locationMap[log.location] || `Location ${log.location}`,
             checkinDate,
-            condition: conditionLabels[checkin.condition] || checkin.condition,
+            condition: conditionLabels[log.condition] || log.condition,
             user: 'Demo User', // TODO: Get actual user from auth
           });
         }
@@ -301,9 +192,32 @@ function AssetViewPage() {
     });
   };
 
-  // Calculate fully depreciated info
-  const depreciationInfo = calculateDepreciationInfo(asset.purchase_date, depreciation?.duration);
-  const fullyDepreciatedDisplay = formatDepreciationRemaining(depreciationInfo);
+  // Extract nested details from API response
+  const product = asset.product_details;
+  const supplier = asset.supplier_details;
+  const location = asset.location_details;
+  const category = product?.category_details;
+  const manufacturer = product?.manufacturer_details;
+  const depreciation = product?.depreciation_details;
+
+  // Format depreciation duration left
+  const formatDepreciationDurationLeft = (durationLeft) => {
+    if (durationLeft === undefined || durationLeft === null) return null;
+    if (durationLeft === 0) return "Fully Depreciated";
+
+    const years = Math.floor(durationLeft / 12);
+    const months = durationLeft % 12;
+
+    const parts = [];
+    if (years > 0) parts.push(`${years} year${years > 1 ? 's' : ''}`);
+    if (months > 0) parts.push(`${months} month${months > 1 ? 's' : ''}`);
+
+    return parts.length > 0 ? parts.join(', ') + ' left' : 'Fully Depreciated';
+  };
+
+  const fullyDepreciatedDisplay = depreciation
+    ? formatDepreciationDurationLeft(depreciation.duration_left)
+    : null;
 
   // Build asset details for DetailedViewPage
   const assetDetails = {
@@ -316,11 +230,12 @@ function AssetViewPage() {
     status: asset.status_details?.name || "Unknown",
     statusType: asset.status_details?.type || "unknown",
     company: "Zip Technology Corp.",
-    nextAuditDate: asset.audits?.[0]?.date || null,
+    nextAuditDate: asset.audits?.[0]?.schedule_date || null,
     manufacturer: manufacturer?.name || null,
-    manufacturerUrl: manufacturer?.url || null,
-    supportUrl: manufacturer?.support_url || null,
+    manufacturerUrl: manufacturer?.website_url || null,
+    supportUrl: manufacturer?.website_url || null,
     supportPhone: manufacturer?.support_phone || null,
+    supportEmail: manufacturer?.support_email || null,
     category: category?.name || null,
     model: product?.name || null,
     modelNo: product?.model_number || null,
@@ -339,8 +254,8 @@ function AssetViewPage() {
     gpu: product?.gpu || null,
     operatingSystem: product?.os || null,
     ram: product?.ram || null,
-    screenSize: product?.screen_size || null,
-    storageSize: product?.storage_size || null,
+    screenSize: product?.size || null,
+    storageSize: product?.storage || null,
     notes: asset.notes || null,
     createdAt: asset.created_at ? new Date(asset.created_at).toLocaleString() : null,
     updatedAt: asset.updated_at ? new Date(asset.updated_at).toLocaleString() : null,
