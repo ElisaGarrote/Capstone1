@@ -16,7 +16,6 @@ import {
   fetchEmployeeById,
 } from "../../services/integration-auth-service";
 import authService from "../../services/auth-service";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -479,7 +478,7 @@ const Tickets = () => {
                 >
                   Filter
                 </button>
-                {user.roles?.[0].role === "Admin" && (
+                {authService.getUserInfo().role === "Admin" && (
                   <div ref={toggleRef}>
                     <MediumButtons
                       type="export"
