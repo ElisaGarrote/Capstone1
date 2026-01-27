@@ -131,8 +131,13 @@ const Tickets = () => {
 
       // Fetch tickets from API
       const response = await fetchAllTickets();
+      console.log("[Tickets] Raw API response:", response);
       // Handle different response formats: {results: [...]}, {value: [...]}, or direct array
       const ticketsData = response.results || response.value || (Array.isArray(response) ? response : []);
+      console.log("[Tickets] Extracted ticketsData:", ticketsData);
+      if (ticketsData.length > 0) {
+        console.log("[Tickets] First ticket requestor_details:", ticketsData[0].requestor_details);
+      }
 
       // Map API response to component format
       const mappedTickets = ticketsData.map((ticket) => {
@@ -168,6 +173,10 @@ const Tickets = () => {
         };
       });
 
+      console.log("[Tickets] Mapped tickets:", mappedTickets);
+      if (mappedTickets.length > 0) {
+        console.log("[Tickets] First mapped ticket requestor_details:", mappedTickets[0].requestor_details);
+      }
       setTicketItems(mappedTickets);
       setFilteredData(mappedTickets);
     } catch (error) {
