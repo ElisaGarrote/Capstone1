@@ -96,6 +96,7 @@ function isFutureDate(dateString) {
 }
 
 const Tickets = () => {
+  console.log("[Tickets] Component rendering...");
   const navigate = useNavigate();
   const location = useLocation();
   const toggleRef = useRef(null);
