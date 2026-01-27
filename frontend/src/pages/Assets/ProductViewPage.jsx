@@ -217,48 +217,22 @@ function ProductViewPage() {
     exportToExcel(dataToExport, "Product_Assets.xlsx");
   };
 
-  // Handle check-in/check-out
-  const handleCheckInOut = (asset, action) => {
-    const baseImage = asset.image
-      ? `https://assets-service-production.up.railway.app${asset.image}`
-      : DefaultImage;
+  // Handle check-in/check-out (same logic as Assets page)
+  const handleCheckInOut = (asset) => {
+    const assetId = asset.id;
+    const assetDisplayId = asset.asset_id;
+    const assetName = asset.name;
+    const checkoutId = asset.active_checkout;
+    // Pass the full ticket_details object - no need to fetch by ID later
+    const ticket = asset.ticket_details;
 
-    const checkout = asset.checkoutRecord;
-    const isCheckIn = action === 'checkin' || asset.isCheckInOrOut === "Check-In";
-
-    if (isCheckIn) {
-      navigate(`/assets/check-in/${asset.id}`, {
-        state: {
-          id: asset.id,
-          assetId: asset.displayed_id,
-          product: asset.product,
-          image: baseImage,
-          employee: checkout?.requestor || "Not assigned",
-          empLocation: checkout?.requestor_location || "Unknown",
-          checkOutDate: checkout?.checkout_date || "Unknown",
-          returnDate: checkout?.return_date || "Unknown",
-          checkoutId: checkout?.checkout_ref_id || "Unknown",
-          checkinDate: checkout?.checkin_date || "Unknown",
-          condition: checkout?.condition || "Unknown",
-          ticketNumber: checkout?.ticket_number,  // For display
-          fromAsset: true,
-        },
+    if (checkoutId) {
+      navigate(`/assets/check-in/${assetId}`, {
+        state: { assetId, assetDisplayId, assetName, checkoutId, ticket },
       });
     } else {
-      navigate(`/assets/check-out/${asset.id}`, {
-        state: {
-          id: asset.id,
-          assetId: asset.displayed_id,
-          product: asset.product,
-          image: baseImage,
-          ticketNumber: checkout?.ticket_number,
-          empId: checkout?.requestor_id,
-          employee: checkout?.requestor || "Not assigned",
-          empLocation: checkout?.requestor_location || "Unknown",
-          checkoutDate: checkout?.checkout_date || "Unknown",
-          returnDate: checkout?.return_date || "Unknown",
-          fromAsset: true,
-        },
+      navigate(`/assets/check-out/${assetId}`, {
+        state: { assetId, assetDisplayId, assetName, ticket },
       });
     }
   };
@@ -301,7 +275,7 @@ function ProductViewPage() {
     return date > today;
   }
 
-  // Helper to determine action button state
+  // Helper to determine action button state (same logic as Assets page)
   function getActionState(asset) {
     const status = asset.status_details?.type;
     const hasTicket = !!asset.ticket_details;
@@ -314,6 +288,15 @@ function ProductViewPage() {
         showCheckin: false,
         showCheckout: false,
         checkoutDisabled: false,
+      };
+    }
+
+    // If status is unknown/undefined, show checkout (disabled) as fallback
+    if (!status) {
+      return {
+        showCheckin: false,
+        showCheckout: true,
+        checkoutDisabled: true, // disabled because we don't know the status
       };
     }
 
@@ -411,14 +394,11 @@ function ProductViewPage() {
                     </td>
                     <td>
                       <ActionButtons
-                        showCheckout={actions.showCheckout}
                         showCheckin={actions.showCheckin}
-                        onCheckoutClick={() =>
-                          handleCheckInOut(asset, "checkout")
-                        }
-                        onCheckinClick={() =>
-                          handleCheckInOut(asset, "checkin")
-                        }
+                        showCheckout={actions.showCheckout}
+                        disableCheckout={actions.checkoutDisabled}
+                        onCheckoutClick={() => handleCheckInOut(asset)}
+                        onCheckinClick={() => handleCheckInOut(asset)}
                       />
                     </td>
                     <td>
