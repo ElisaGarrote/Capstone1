@@ -11,10 +11,6 @@ import View from "../../components/Modals/View";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
 import { fetchAssetById, fetchAssetCheckoutById, fetchAssetNames } from "../../services/assets-service";
-import {
-  fetchAllEmployees,
-  fetchEmployeeById,
-} from "../../services/integration-auth-service";
 import authService from "../../services/auth-service";
 
 import "../../styles/Tickets/Tickets.css";
@@ -114,8 +110,6 @@ const Tickets = () => {
   const [pageSize, setPageSize] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [employees, setEmployees] = useState([]);
-
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
@@ -139,14 +133,6 @@ const Tickets = () => {
       const response = await fetchAllTickets();
       // Handle different response formats: {results: [...]}, {value: [...]}, or direct array
       const ticketsData = response.results || response.value || (Array.isArray(response) ? response : []);
-
-      // Fetch employees from API
-      const employeesResponse = await fetchAllEmployees();
-
-      const employeesList = Array.isArray(employeesResponse)
-        ? employeesResponse
-        : employeesResponse?.results || [];
-      setEmployees(employeesList);
 
       // Map API response to component format
       const mappedTickets = ticketsData.map((ticket) => {
@@ -172,21 +158,11 @@ const Tickets = () => {
             ? ticket.checkin_date?.slice(0, 10)
             : ticket.checkout_date?.slice(0, 10);
 
-        // Find employee name
-        const employee = employeesList.find(
-          (e) => Number(e.id) === Number(ticket.employee)
-        );
-
-        const employeeName = employee
-          ? `${employee.firstname} ${employee.lastname}`
-          : "Unknown";
-
         return {
           ...ticket,
           isCheckInOrOut,
           disableCheckout,
           formattedDate,
-          employeeName,
           // Use location_details.name for display (location is now an integer ID)
           location: ticket.location_details?.name || "Unknown",
         };
@@ -393,7 +369,7 @@ const Tickets = () => {
     const fields = [
       ticket.ticketNumber?.toLowerCase() || "",
       ticket.formattedDate?.toLowerCase() || "",
-      ticket.employeeName?.toLowerCase() || "",
+      ticket.requestor_details?.name?.toLowerCase() || "",
       ticket.subject?.toLowerCase() || "",
       ticket.location?.toLowerCase() || "",
     ];
