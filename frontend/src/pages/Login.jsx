@@ -22,6 +22,7 @@ function Login() {
   const [isShowPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
+  const { isAuthenticated, login } = useAuth();
   
   const externalLoginUrl = import.meta.env.VITE_EXTERNAL_LOGIN_URL;
 
