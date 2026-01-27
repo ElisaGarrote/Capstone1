@@ -194,6 +194,7 @@ const Tickets = () => {
 
   // Load tickets on mount and when navigating back with success message
   useEffect(() => {
+    console.log("[Tickets] useEffect triggered, calling loadTickets...");
     loadTickets();
   }, [location.key]);
 
