@@ -1,82 +1,72 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import NavBar from "../components/NavBar";
-import MediumButtons from "../components/buttons/MediumButtons";
-import Status from "../components/Status";
-import RegisterUserModal from "../components/RegisterUserModal";
-import DeleteModal from "../components/Modals/DeleteModal";
-import UserManagementFilterModal from "../components/Modals/UserManagementFilterModal";
-import DefaultProfile from "../assets/img/default-profile.svg";
-import Alert from "../components/Alert";
-import Pagination from "../components/Pagination";
-import Footer from "../components/Footer";
-import { exportToExcel } from "../utils/exportToExcel";
-import ActionButtons from "../components/ActionButtons";
-import mockUsers from "../data/mockData/user-management/user-management-data.json";
-import { useAuth } from "../context/AuthContext";
+import NavBar from "../../components/NavBar";
+import MediumButtons from "../../components/buttons/MediumButtons";
+import Status from "../../components/Status";
+import RegisterUserModal from "../../components/RegisterUserModal";
+import DeleteModal from "../../components/Modals/DeleteModal";
+import UserManagementFilterModal from "../../components/Modals/UserManagementFilterModal";
+import Alert from "../../components/Alert";
+import Pagination from "../../components/Pagination";
+import Footer from "../../components/Footer";
+import { exportToExcel } from "../../utils/exportToExcel";
+import ActionButtons from "../../components/ActionButtons";
+import mockUsers from "../../data/mockData/user-management/user-management-data.json";
+import "../../styles/UserManagement/UserManagement.css";
 
-import "../styles/UserManagement/UserManagement.css";
-
-// TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
   return (
     <tr>
-      <th>
-        <input
-          type="checkbox"
-          checked={allSelected}
-          onChange={onHeaderChange}
-        />
-      </th>
-      <th>PROFILE PICTURE</th>
-      <th>NAME</th>
-      <th>EMAIL</th>
+      <th>COMPANY ID</th>
+      <th>LAST NAME</th>
+      <th>FIRST NAME</th>
       <th>ROLE</th>
-      <th>PHONE NUMBER</th>
-      <th>COMPANY</th>
-      <th>PHONE</th>
       <th>STATUS</th>
-      <th>LAST LOGIN</th>
+      <th>ACTIVE / INACTIVE</th>
       <th>ACTIONS</th>
     </tr>
   );
 }
 
-// TableItem component to render each user row
-function TableItem({ user, isSelected, onRowChange, onViewUser }) {
-  const formattedLastLogin = user.lastLogin
-    ? new Date(user.lastLogin).toLocaleString()
-    : "—";
+function TableItem({ user, isSelected, onRowChange, onViewUser, onActivate, onDeactivate }) {
+  const nameParts = (user.name || "").split(" ");
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.slice(1).join(" ") || "";
+  const companyId = user.id || "—";
+  const isInactive = user.status?.name === "Inactive";
 
   return (
     <tr>
-      <td>
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={(e) => onRowChange(user.id, e.target.checked)}
-        />
-      </td>
-      <td>
-        <img
-          src={DefaultProfile}
-          alt={user.name}
-          className="table-img"
-          onError={(e) => {
-            e.target.src = DefaultProfile;
-          }}
-        />
-      </td>
-      <td>{user.name}</td>
-      <td>{user.email}</td>
-      <td>{user.role}</td>
-      <td>{user.phoneNumber || "-"}</td>
-      <td>{user.company || "-"}</td>
-      <td>{user.phone || "-"}</td>
+      <td>{companyId}</td>
+      <td>{lastName}</td>
+      <td>{firstName}</td>
+      <td>{user.role || "—"}</td>
       <td>
         <Status type={user.status.type} name={user.status.name} />
       </td>
-      <td>{formattedLastLogin}</td>
+      <td>
+        <div className="action-button-section">
+          {isInactive ? (
+            <button
+              title="Activate user"
+              className="action-button action-button-activate"
+              onClick={() => onActivate(user)}
+            >
+              <i className="fas fa-check-circle"></i>
+              <span>Active</span>
+            </button>
+          ) : (
+            <button
+              title="Deactivate user"
+              className="action-button action-button-deactivate"
+              onClick={() => onDeactivate(user)}
+            >
+              <i className="fas fa-ban"></i>
+              <span>Inactive</span>
+            </button>
+          )}
+        </div>
+      </td>
       <td>
         <ActionButtons
           showView
@@ -93,7 +83,6 @@ function TableItem({ user, isSelected, onRowChange, onViewUser }) {
 export default function UserManagement() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { fetchAllUsers } = useAuth();
 
   // User data state
   const [users, setUsers] = useState([]);
@@ -123,10 +112,7 @@ export default function UserManagement() {
   // Filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({});
-
   const [successMessage, setSuccessMessage] = useState("");
-
-  // Mock data for users - loaded from JSON file (replace with API later)
 
   // Paginate the data
   const startIndex = (currentPage - 1) * pageSize;
@@ -142,9 +128,7 @@ export default function UserManagement() {
     if (e.target.checked) {
       setSelectedIds((prev) => [
         ...prev,
-        ...paginatedUsers
-          .map((item) => item.id)
-          .filter((id) => !prev.includes(id)),
+        ...paginatedUsers.map((item) => item.id).filter((id) => !prev.includes(id)),
       ]);
     } else {
       setSelectedIds((prev) =>
@@ -198,118 +182,45 @@ export default function UserManagement() {
       }, 5000);
     }
 
-    // Initialize with API users (fallback to mock data)
-    const loadUsers = async () => {
-      try {
-        const apiUsers = await fetchAllUsers();
-
-        const transform = (u) => {
-          // Build display name
-          const name =
-            [u.first_name, u.last_name].filter(Boolean).join(" ") ||
-            u.username ||
-            u.email;
-
-          // Determine role: prefer AMS role if present
-          const amsRole = (u.system_roles || []).find(
-            (r) => r.system_slug === "ams"
-          );
-          const roleObj = amsRole || (u.system_roles && u.system_roles[0]);
-          const role = roleObj ? roleObj.role_name : "";
-
-          // Map status based on is_active boolean
-          const mapStatus = (isActive) => {
-            if (isActive === undefined || isActive === null)
-              return { type: "unknown", name: "Unknown" };
-            return isActive
-              ? { type: "deployable", name: "Active" }
-              : { type: "archived", name: "Inactive" };
-          };
-
-          return {
-            id: u.id,
-            name,
-            email: u.email,
-            role,
-            phoneNumber: u.phone_number || "",
-            company: u.company_id || "",
-            phone: u.phone_number || "",
-            status: mapStatus(u.is_active),
-            lastLogin: u.last_login || null,
-            original: u,
-          };
-        };
-
-        // Only include users that have an AMS system role
-        const amsOnly = (apiUsers || []).filter((u) =>
-          (u.system_roles || []).some((r) => r.system_slug === "ams")
-        );
-
-        const transformed = amsOnly.map(transform);
-
-        if (transformed.length === 0) {
-          setUsers(mockUsers);
-          setFilteredData(mockUsers);
-        } else {
-          setUsers(transformed);
-          setFilteredData(transformed);
-        }
-      } catch (err) {
-        console.error("Failed to load users from API, using mock data:", err);
-        setUsers(mockUsers);
-        setFilteredData(mockUsers);
-      }
-    };
-
-    loadUsers();
+    setUsers(mockUsers);
+    setFilteredData(mockUsers);
   }, [location]);
 
-  // Filter users based on search query and applied filters
   useEffect(() => {
     const query = searchQuery.toLowerCase();
-
     const filtered = users.filter((user) => {
-      const name = (user.name || "").toLowerCase();
+      const nameParts = (user.name || "").split(" ");
+      const firstName = (nameParts[0] || "").toLowerCase();
+      const lastName = nameParts.slice(1).join(" ").toLowerCase();
+      const fullName = (user.name || "").toLowerCase();
+      const companyId = (user.id || "").toString().toLowerCase();
       const email = (user.email || "").toLowerCase();
       const role = (user.role || "").toLowerCase();
-      const phoneNumber = (user.phoneNumber || "").toLowerCase();
-      const company = (user.company || "").toLowerCase();
-      const phone = (user.phone || "").toLowerCase();
-
+      const status = (user.status?.name || "").toLowerCase();
       const matchesSearch =
         !query ||
-        name.includes(query) ||
+        companyId.includes(query) ||
+        firstName.includes(query) ||
+        lastName.includes(query) ||
+        fullName.includes(query) ||
         email.includes(query) ||
         role.includes(query) ||
-        phoneNumber.includes(query) ||
-        company.includes(query) ||
-        phone.includes(query);
+        status.includes(query);
 
-      const filterName = (appliedFilters.name || "").toLowerCase();
-      const filterCompany = (appliedFilters.company || "").toLowerCase();
-      const filterRole = appliedFilters.role || "";
-      const filterStatus = appliedFilters.status || "";
+      const filterStatus = (appliedFilters.status || "").trim();
 
-      const matchesNameFilter = filterName ? name.includes(filterName) : true;
-      const matchesCompanyFilter = filterCompany
-        ? company.includes(filterCompany)
-        : true;
-      const matchesRoleFilter = filterRole ? user.role === filterRole : true;
-      const matchesStatusFilter = filterStatus
-        ? user.status?.name === filterStatus
-        : true;
+      const matchesStatusFilter = filterStatus === "" 
+        ? true 
+        : user.status?.name === filterStatus;
 
       return (
         matchesSearch &&
-        matchesNameFilter &&
-        matchesCompanyFilter &&
-        matchesRoleFilter &&
         matchesStatusFilter
       );
     });
 
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to first page when search or filters change
+    setCurrentPage(1);
   }, [searchQuery, users, appliedFilters]);
 
   const handleDeactivate = (user) => {
@@ -326,15 +237,10 @@ export default function UserManagement() {
     try {
       console.log("Activating user:", user.id);
 
-      // Update the user's status in the local state
-      setUsers((prevUsers) =>
-        prevUsers.map((u) =>
+      setUsers(prevUsers =>
+        prevUsers.map(u =>
           u.id === user.id
-            ? {
-                ...u,
-                status: { type: "deployable", name: "Active" },
-                original: { ...(u.original || {}), is_active: true },
-              }
+            ? { ...u, status: { type: "deployable", name: "Active" } }
             : u
         )
       );
@@ -352,14 +258,10 @@ export default function UserManagement() {
     try {
       console.log("Deactivating user:", user.id);
 
-      setUsers((prevUsers) =>
-        prevUsers.map((u) =>
+      setUsers(prevUsers =>
+        prevUsers.map(u =>
           u.id === user.id
-            ? {
-                ...u,
-                status: { type: "archived", name: "Inactive" },
-                original: { ...(u.original || {}), is_active: false },
-              }
+            ? { ...u, status: { type: "archived", name: "Inactive" } }
             : u
         )
       );
@@ -399,8 +301,9 @@ export default function UserManagement() {
             }
           }}
           onCancel={() => setDeactivateModalOpen(false)}
-          title="Deactivate User"
-          message={`Are you sure you want to deactivate ${selectedUser?.name}? This user will no longer be able to access the system until reactivated.`}
+          title="Deactivate Item"
+          message="Are you sure you want to deactivate this item? This action can be undone."
+          actionType="deactivate"
         />
       )}
 
@@ -416,8 +319,9 @@ export default function UserManagement() {
             }
           }}
           onCancel={() => setActivateModalOpen(false)}
-          title="Activate User"
-          message={`Are you sure you want to activate ${selectedUser?.name}? This user will be able to access the system again.`}
+          title="Activate Item"
+          message="Are you sure you want to activate this item? This action can be undone."
+          actionType="activate"
         />
       )}
 
@@ -450,7 +354,7 @@ export default function UserManagement() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">System Agents ({filteredData.length})</h2>
+              <h2 className="h2">Users ({filteredData.length})</h2>
               <section className="table-actions">
                 {/* Bulk delete button only when checkboxes selected */}
                 {selectedIds.length > 0 && (
@@ -473,7 +377,14 @@ export default function UserManagement() {
                 >
                   Filter
                 </button>
-                <MediumButtons type="export" onClick={handleExport} />
+                <MediumButtons
+                  type="export"
+                  onClick={handleExport}
+                />
+                <MediumButtons
+                  type="new"
+                  navigatePage="/user-registration"
+                />
               </section>
             </section>
 
@@ -481,10 +392,7 @@ export default function UserManagement() {
             <section className="users-table-section">
               <table>
                 <thead>
-                  <TableHeader
-                    allSelected={allSelected}
-                    onHeaderChange={handleHeaderChange}
-                  />
+                  <TableHeader />
                 </thead>
                 <tbody>
                   {paginatedUsers.length > 0 ? (
@@ -495,12 +403,14 @@ export default function UserManagement() {
                         isSelected={selectedIds.includes(user.id)}
                         onRowChange={handleRowChange}
                         onViewUser={handleViewUser}
+                        onActivate={handleActivate}
+                        onDeactivate={handleDeactivate}
                       />
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={11} className="no-data-message">
-                        No Agents Found.
+                      <td colSpan={7} className="no-data-message">
+                        No Users Found.
                       </td>
                     </tr>
                   )}
