@@ -9,36 +9,33 @@ import "../../styles/Registration.css";
 function buildInitialFormData(user) {
   if (!user) {
     return {
+      lastName: "",
       firstName: "",
       middleName: "",
-      lastName: "",
       suffix: "",
-      email: "",
       role: "",
-      phoneNumber: "",
-      company: "",
-      phone: "",
-      status: "",
+      email: "",
     };
   }
 
-  const fullName = user.name || "";
-  const [firstName, ...rest] = fullName.split(" ");
-  const lastName = rest.join(" ");
-
   return {
-    firstName: firstName || "",
+    lastName: user.name?.split(" ").pop() || "",
+    firstName: user.name?.split(" ")[0] || "",
     middleName: "",
-    lastName: lastName || "",
     suffix: "",
-    email: user.email || "",
     role: user.role || "",
-    phoneNumber: user.phoneNumber || "",
-    company: user.company || "",
-    phone: user.phone || "",
-    status: user.status?.name || "",
+    email: user.email || "",
   };
 }
+
+const suffixOptions = [
+  { value: "", label: "Select Suffix" },
+  { value: "Jr.", label: "Jr." },
+  { value: "Sr.", label: "Sr." },
+  { value: "II", label: "II" },
+  { value: "III", label: "III" },
+  { value: "IV", label: "IV" },
+];
 
 export default function UserManagementEditPage() {
   const { id } = useParams();
@@ -76,8 +73,6 @@ export default function UserManagementEditPage() {
       ...formData,
     };
 
-    // Placeholder for future API integration
-    // eslint-disable-next-line no-console
     console.log("Updated user data:", payload);
 
     setSuccessMessage("User details have been updated successfully.");
@@ -103,7 +98,7 @@ export default function UserManagementEditPage() {
       <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="User Management"
+            root="User"
             currentPage="Edit User"
             rootNavigatePage="/user-management"
             title={user?.name || "Edit User"}
@@ -111,159 +106,132 @@ export default function UserManagementEditPage() {
         </section>
 
         <section className="registration-form">
-          <form onSubmit={handleSubmit}>
-            <fieldset>
-              <label htmlFor="firstName">
-                First Name
-                <span className="required-asterisk">*</span>
-              </label>
-              <input
-                id="firstName"
-                name="firstName"
-                type="text"
-                placeholder="John"
-                value={formData.firstName}
-                onChange={handleChange}
-                maxLength="100"
-                required
-              />
-            </fieldset>
+          <form onSubmit={handleSubmit} className="user-registration-form">
+            {/* Personal Information Section */}
+            <div className="registration-section">
+              <h3 className="registration-section-title">Personal Information</h3>
+              
+              <fieldset className="registration-fieldset">
+                <label htmlFor="lastName">
+                  Last Name
+                  <span className="required-asterisk">*</span>
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  placeholder="Enter last name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  maxLength="100"
+                  required
+                />
+              </fieldset>
 
-            <fieldset>
-              <label htmlFor="middleName">Middle Name</label>
-              <input
-                id="middleName"
-                name="middleName"
-                type="text"
-                placeholder="Ronald"
-                value={formData.middleName}
-                onChange={handleChange}
-                maxLength="100"
-              />
-            </fieldset>
+              <fieldset className="registration-fieldset">
+                <label htmlFor="firstName">
+                  First Name
+                  <span className="required-asterisk">*</span>
+                </label>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  placeholder="Enter first name"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  maxLength="100"
+                  required
+                />
+              </fieldset>
 
-            <fieldset>
-              <label htmlFor="lastName">
-                Last Name
-                <span className="required-asterisk">*</span>
-              </label>
-              <input
-                id="lastName"
-                name="lastName"
-                type="text"
-                placeholder="Smith"
-                value={formData.lastName}
-                onChange={handleChange}
-                maxLength="100"
-                required
-              />
-            </fieldset>
+              <fieldset className="registration-fieldset">
+                <label htmlFor="middleName">Middle Name</label>
+                <input
+                  id="middleName"
+                  name="middleName"
+                  type="text"
+                  placeholder="Enter middle name"
+                  value={formData.middleName}
+                  onChange={handleChange}
+                  maxLength="100"
+                />
+              </fieldset>
 
-            <fieldset>
-              <label htmlFor="suffix">Suffix</label>
-              <input
-                id="suffix"
-                name="suffix"
-                type="text"
-                placeholder="Jr., Sr., III"
-                value={formData.suffix}
-                onChange={handleChange}
-                maxLength="20"
-              />
-            </fieldset>
+              <fieldset className="registration-fieldset">
+                <label htmlFor="suffix">Suffix</label>
+                <select
+                  id="suffix"
+                  name="suffix"
+                  value={formData.suffix}
+                  onChange={handleChange}
+                >
+                  {suffixOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </fieldset>
+            </div>
 
-            <fieldset>
-              <label htmlFor="email">
-                Email
-                <span className="required-asterisk">*</span>
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="johnsmith@example.com"
-                value={formData.email}
-                onChange={handleChange}
-                maxLength="150"
-                required
-              />
-            </fieldset>
+            {/* Role & Account Information Section */}
+            <div className="registration-section">
+              <h3 className="registration-section-title">Role & Account Information</h3>
+              
+              <fieldset className="registration-fieldset">
+                <label htmlFor="role">
+                  Role
+                  <span className="required-asterisk">*</span>
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select a role</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Operator">Operator</option>
+                  <option value="User">User</option>
+                </select>
+              </fieldset>
 
-            <fieldset>
-              <label htmlFor="role">
-                Role
-                <span className="required-asterisk">*</span>
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                required
+              <fieldset className="registration-fieldset">
+                <label htmlFor="email">
+                  Email Address
+                  <span className="required-asterisk">*</span>
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="example@gmail.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  maxLength="150"
+                  required
+                />
+              </fieldset>
+            </div>
+
+            <div className="form-buttons">
+              <button
+                type="submit"
+                className="save-btn"
+                disabled={!isFormValid}
               >
-                <option value="">Select Role</option>
-                <option value="Admin">Admin</option>
-                <option value="Manager">Manager</option>
-                <option value="Employee">Employee</option>
-              </select>
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="phoneNumber">Phone Number</label>
-              <input
-                id="phoneNumber"
-                name="phoneNumber"
-                type="text"
-                placeholder="0917 123 4567"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                maxLength="20"
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="company">Company</label>
-              <input
-                id="company"
-                name="company"
-                type="text"
-                placeholder="MapAMS Solutions Inc."
-                value={formData.company}
-                onChange={handleChange}
-                maxLength="150"
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="phone">Phone</label>
-              <input
-                id="phone"
-                name="phone"
-                type="text"
-                placeholder="+63 2 800 1001"
-                value={formData.phone}
-                onChange={handleChange}
-                maxLength="20"
-              />
-            </fieldset>
-
-            <fieldset>
-              <label htmlFor="status">Status</label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
+                Save
+              </button>
+              <button
+                type="button"
+                className="save-btn cancel-btn"
+                onClick={() => navigate("/user-management")}
               >
-                <option value="">Select Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </fieldset>
-
-            <button type="submit" className="save-btn" disabled={!isFormValid}>
-              Save
-            </button>
+                Cancel
+              </button>
+            </div>
           </form>
         </section>
       </main>

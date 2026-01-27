@@ -10,16 +10,12 @@ export default function UserManagementFilterModal({
   initialFilters = {},
 }) {
   const initialState = {
-    name: "",
-    role: "",
     status: "",
-    company: "",
   };
 
   const [filters, setFilters] = useState(initialState);
 
-  const roleOptions = ["Admin", "Manager", "Employee"];
-  const statusOptions = ["Active", "Inactive"];
+  const statusOptions = ["Approved", "Pending", "Rejected", "Inactive"];
 
   // Initialize filters from props
   useEffect(() => {
@@ -44,6 +40,8 @@ export default function UserManagementFilterModal({
   // Reset all filters
   const handleReset = () => {
     setFilters(initialState);
+    onApplyFilter(initialState); // Apply the reset filters immediately
+    onClose(); // Close modal after reset
   };
 
   // Apply filters
@@ -80,35 +78,6 @@ export default function UserManagementFilterModal({
         {/* Modal Body */}
         <div className="modal-body asset-filter-modal-body">
           <div className="filter-grid">
-            {/* Full Name */}
-            <fieldset>
-              <label htmlFor="name">Full Name</label>
-              <input
-                type="text"
-                id="name"
-                placeholder="Search by name"
-                value={filters.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Role */}
-            <fieldset>
-              <label htmlFor="role">Role</label>
-              <select
-                id="role"
-                value={filters.role}
-                onChange={(e) => handleInputChange("role", e.target.value)}
-              >
-                <option value="">Select Role</option>
-                {roleOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </fieldset>
-
             {/* Status */}
             <fieldset>
               <label htmlFor="status">Status</label>
@@ -124,18 +93,6 @@ export default function UserManagementFilterModal({
                   </option>
                 ))}
               </select>
-            </fieldset>
-
-            {/* Company */}
-            <fieldset>
-              <label htmlFor="company">Company</label>
-              <input
-                type="text"
-                id="company"
-                placeholder="Search by company"
-                value={filters.company}
-                onChange={(e) => handleInputChange("company", e.target.value)}
-              />
             </fieldset>
           </div>
         </div>

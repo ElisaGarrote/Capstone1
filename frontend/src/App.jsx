@@ -57,6 +57,7 @@ import ManageProfile from "./pages/ManageProfile/ManageProfile";
 import UserManagement from "./pages/UserManagement/UserManagement";
 import UserManagementViewPage from "./pages/UserManagement/UserManagementViewPage";
 import UserManagementEditPage from "./pages/UserManagement/UserManagementEditPage";
+import UserRegistrationPage from "./pages/UserManagement/UserRegistrationPage";
 import ViewCategories from "./pages/More/ViewCategories";
 import CategoryRegistration from "./pages/More/CategoryRegistration";
 import CategoryEdit from "./pages/More/CategoryEdit";
@@ -164,6 +165,10 @@ function App() {
           <Route
             path="/user-management/edit/:id"
             element={<UserManagementEditPage />}
+          />
+          <Route
+            path="/user-registration"
+            element={<UserRegistrationPage />}
           />
           <Route path="/More/ViewCategories" element={<ViewCategories />} />
           <Route

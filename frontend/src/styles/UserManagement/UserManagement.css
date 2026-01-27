@@ -31,22 +31,22 @@
       min-width: 50px;
     }
 
-    /* table header for 'Profile Picture' */
+    /* table header for 'Company ID' */
     th:nth-child(2) {
-      width: 60px;
-      min-width: 60px;
+      width: 120px;
+      min-width: 120px;
     }
 
-    /* table header for 'Name' */
+    /* table header for 'Last Name' */
     th:nth-child(3) {
-      width: 180px;
-      min-width: 180px;
+      width: 140px;
+      min-width: 140px;
     }
 
-    /* table header for 'Email' */
+    /* table header for 'First Name' */
     th:nth-child(4) {
-      width: 220px;
-      min-width: 220px;
+      width: 140px;
+      min-width: 140px;
     }
 
     /* table header for 'Role' */
@@ -55,40 +55,16 @@
       min-width: 120px;
     }
 
-    /* table header for 'Phone Number' */
-    th:nth-child(6) {
-      width: 140px;
-      min-width: 140px;
-    }
-
-    /* table header for 'Company' */
-    th:nth-child(7) {
-      width: 160px;
-      min-width: 160px;
-    }
-
-    /* table header for 'Phone' */
-    th:nth-child(8) {
-      width: 130px;
-      min-width: 130px;
-    }
-
     /* table header for 'Status' */
-    th:nth-child(9) {
+    th:nth-child(6) {
       width: 120px;
       min-width: 120px;
     }
 
-    /* table header for 'Last Login' */
-    th:nth-child(10) {
-      width: 180px;
-      min-width: 180px;
-    }
-
     /* table header for 'Actions' */
-    th:nth-child(11) {
-      width: 110px;
-      min-width: 110px;
+    th:nth-child(7) {
+      width: 100px;
+      min-width: 100px;
     }
 
     td {
@@ -127,7 +103,6 @@
   object-fit: cover;
 }
 
-/* Activate / Deactivate buttons - match pill style used in other tables */
 .activate-agent-btn,
 .deactivate-agent-btn {
   display: inline-flex;
@@ -162,15 +137,71 @@
   background-color: #c82333;
 }
 
+.action-button.action-button-activate {
+  background-color: #34c759 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 110px;
+  height: 28px;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  border: none !important;
+  position: relative;
+}
+
+.action-button.action-button-activate:hover:not(:disabled) {
+  background-color: rgba(52, 199, 89, 0.8) !important;
+}
+
+.action-button.action-button-deactivate {
+  background-color: var(--primary-color) !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 110px;
+  height: 28px;
+  justify-content: center;
+  white-space: nowrap;
+  padding: 4px 8px;
+  box-sizing: border-box;
+  border: none !important;
+  position: relative;
+}
+
+.action-button.action-button-deactivate:hover:not(:disabled) {
+  background-color: var(--primary-color-hover) !important;
+}
+
+.action-button.action-button-activate i,
+.action-button.action-button-deactivate i,
+.action-button.action-button-activate span,
+.action-button.action-button-deactivate span {
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+/* Disabled state for activate/deactivate buttons */
+.action-button.action-button-activate:disabled,
+.action-button.action-button-deactivate:disabled {
+  background-color: var(--disabled-color) !important;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.action-button.action-button-activate:disabled:hover,
+.action-button.action-button-deactivate:disabled:hover {
+  background-color: var(--disabled-color) !important;
+}
+
 .user-management-view-content {
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 0;
 }
-
-
-
 
 .user-management-view-content .user-profile-avatar {
   width: 64px;

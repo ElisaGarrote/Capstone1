@@ -625,3 +625,43 @@
 .image-preview-close-btn:hover {
     color: #007bff;
 }
+/* User Registration Page Styles */
+.user-registration-form {
+    gap: 36px;
+}
+
+.registration-section {
+    margin-bottom: 32px;
+    padding: 20px 20px 0 20px;
+    border-left: 4px solid #007bff;
+}
+
+.registration-section-title {
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+.registration-fieldset {
+    margin-bottom: 24px;
+}
+
+.registration-fieldset:last-child {
+    margin-bottom: 0;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.form-buttons .save-btn.cancel-btn {
+    background-color: #6c757d;
+}
+
+.form-buttons .save-btn.cancel-btn:hover {
+    background-color: #545b62;
+}
