@@ -34,6 +34,7 @@ export default function NavBar() {
   const [activeMenu, setActiveMenu] = useState("");
 
   const externalUserManagement = import.meta.env.VITE_EXTERNAL_USER_MANAGEMENT;
+  const externalProfileUrl = import.meta.env.VITE_EXTERNAL_PROFILE_MANAGEMENT;
 
   // Close all dropdowns when clicking outside
   useEffect(() => {
@@ -607,7 +608,7 @@ export default function NavBar() {
                 </div>
               </div>
               <div className="profile-menu">
-                <button onClick={() => navigate("/manage-profile")}>
+                <button onClick={() => window.open(externalUserManagement)}>
                   Manage Profile
                 </button>
                 {user.roles?.[0].role === "Admin" && (
