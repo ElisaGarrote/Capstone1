@@ -113,15 +113,13 @@ function Dashboard() {
             )}
 
             {/* Product Demand Forecast Section */}
-            {!forecastLoading &&
-              productForecast &&
-              productForecast.chartData && (
-                <ProductDemandForecastChart
-                  chartData={productForecast.chartData}
-                  tableData={productForecast.tableData}
-                  productNames={productForecast.productNames}
-                />
-              )}
+            {!forecastLoading && productForecast && productForecast.chartData && (
+              <ProductDemandForecastChart
+                chartData={productForecast.chartData}
+                tableData={productForecast.tableData}
+                productNames={productForecast.productNames}
+              />
+            )}
           </>
         )}
 
