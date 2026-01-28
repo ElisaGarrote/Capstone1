@@ -9,10 +9,8 @@ import RepairFilterModal from "../../components/Modals/RepairFilterModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import { exportToExcel } from "../../utils/exportToExcel";
-import authService from "../../services/auth-service";
 import "../../styles/Repairs/Repairs.css";
 import { fetchAllRepairs } from "../../services/assets-service";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -81,7 +79,6 @@ export default function AssetRepairs() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
-  const user = getUserFromToken();
 
   const [repairs, setRepairs] = useState([]);
 

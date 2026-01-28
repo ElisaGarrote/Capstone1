@@ -9,15 +9,12 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import "../../styles/dashboard/AssetMetrics.css";
-import authService from "../../services/auth-service";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 const AssetMetrics = ({ stats }) => {
   const navigate = useNavigate();
 
   const assetCost = `₱${stats?.total_asset_costs || "0.00"}`;
   const assetUtilization = `${stats?.asset_utilization || 0}%`;
-  const user = getUserFromToken();
 
   // Sample data for when API is not available
   const sampleCategoriesData = [

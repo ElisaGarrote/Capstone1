@@ -8,9 +8,7 @@ import CloseIcon from "../../assets/icons/close.svg";
 import Footer from "../../components/Footer";
 import { fetchDueAudits, fetchOverdueAudits, fetchScheduledAudits, createAudit, createAuditSchedule } from "../../services/assets-service";
 import { fetchAllLocations } from "../../services/integration-help-desk-service";
-import authService from "../../services/auth-service";
 import Alert from "../../components/Alert";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 const PerformAudits = () => {
   const navigate = useNavigate();
@@ -18,7 +16,6 @@ const PerformAudits = () => {
   // TableBtn passes 'data', ActionButtons passes 'item'
   const item = location.state?.item || location.state?.data || null;
   const previousPage = location.state?.previousPage || null;
-  const user = getUserFromToken();
 
   const [attachmentFiles, setAttachmentFiles] = useState([]);
   const [auditSchedules, setAuditSchedules] = useState([]);

@@ -13,10 +13,8 @@ import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import OverdueAuditFilterModal from "../../components/Modals/OverdueAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
-import authService from "../../services/auth-service";
 import { fetchOverdueAudits } from "../../services/assets-service";
 import Alert from "../../components/Alert";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 // TableHeader
 function TableHeader() {
@@ -86,7 +84,6 @@ export default function OverdueAudits() {
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [successMessage, setSuccessMessage] = useState("");
-  const user = getUserFromToken();
 
   // Fetch overdue audits on mount
   useEffect(() => {

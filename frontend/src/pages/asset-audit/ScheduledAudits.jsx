@@ -13,10 +13,8 @@ import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import DueAuditFilterModal from "../../components/Modals/DueAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
-import authService from "../../services/auth-service";
 import { fetchScheduledAudits } from "../../services/assets-service";
 import Alert from "../../components/Alert";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 // TableHeader
 function TableHeader() {
@@ -82,7 +80,6 @@ export default function ScheduledAudits() {
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.pathname, location.state, navigate]);
-  const user = getUserFromToken();
 
   // Fetch scheduled audits on mount
   useEffect(() => {

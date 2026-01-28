@@ -14,7 +14,6 @@ import { exportToExcel } from "../../utils/exportToExcel";
 import "../../styles/Products/Products.css";
 import "../../styles/ProductFilterModal.css";
 import { fetchAllProducts } from "../../services/assets-service";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -106,7 +105,6 @@ export default function Products() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const user = getUserFromToken();
 
   // Products state
   const [products, setProducts] = useState([]);

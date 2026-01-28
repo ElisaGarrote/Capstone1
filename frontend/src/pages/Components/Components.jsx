@@ -12,7 +12,6 @@ import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
 import { fetchAllComponents } from "../../services/assets-service";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 import "../../styles/components/Components.css";
 
@@ -116,7 +115,6 @@ export default function Assets() {
 
   // base data state
   const [baseData, setBaseData] = useState([]);
-  const user = getUserFromToken();
 
   // Load components from API and when navigating back (e.g., after bulk edit)
   useEffect(() => {

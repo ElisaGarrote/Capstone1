@@ -14,7 +14,6 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
 import "../../styles/Assets/Assets.css";
 import { fetchAllAssets } from "../../services/assets-service";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 // TableHeader component to render the table header
 function TableHeader({ allSelected, onHeaderChange }) {
@@ -190,7 +189,6 @@ export default function Assets() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const user = getUserFromToken();
 
   // Assets state
   const [assets, setAssets] = useState([]);

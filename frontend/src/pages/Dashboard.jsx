@@ -8,8 +8,6 @@ import ProductDemandForecastChart from "../components/dashboard/ProductDemandFor
 import "../styles/Dashboard.css";
 import { fetchDashboardStats } from "../services/assets-service";
 import forecastService from "../services/forecast-service";
-import authService from "../services/auth-service";
-import { getUserFromToken } from "../api/TokenUtils";
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
@@ -18,8 +16,6 @@ function Dashboard() {
   const [assetForecast, setAssetForecast] = useState(null);
   const [productForecast, setProductForecast] = useState(null);
   const [forecastLoading, setForecastLoading] = useState(true);
-  const user = getUserFromToken();
-  console.log("dashboard user:", user);
 
   useEffect(() => {
     async function loadDashboardStats() {

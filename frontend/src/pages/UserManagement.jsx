@@ -13,7 +13,6 @@ import Footer from "../components/Footer";
 import { exportToExcel } from "../utils/exportToExcel";
 import ActionButtons from "../components/ActionButtons";
 import mockUsers from "../data/mockData/user-management/user-management-data.json";
-import { useAuth } from "../context/AuthContext";
 
 import "../styles/UserManagement/UserManagement.css";
 
@@ -93,7 +92,6 @@ function TableItem({ user, isSelected, onRowChange, onViewUser }) {
 export default function UserManagement() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { fetchAllUsers } = useAuth();
 
   // User data state
   const [users, setUsers] = useState([]);
@@ -198,70 +196,9 @@ export default function UserManagement() {
       }, 5000);
     }
 
-    // Initialize with API users (fallback to mock data)
-    const loadUsers = async () => {
-      try {
-        const apiUsers = await fetchAllUsers();
-
-        const transform = (u) => {
-          // Build display name
-          const name =
-            [u.first_name, u.last_name].filter(Boolean).join(" ") ||
-            u.username ||
-            u.email;
-
-          // Determine role: prefer AMS role if present
-          const amsRole = (u.system_roles || []).find(
-            (r) => r.system_slug === "ams"
-          );
-          const roleObj = amsRole || (u.system_roles && u.system_roles[0]);
-          const role = roleObj ? roleObj.role_name : "";
-
-          // Map status based on is_active boolean
-          const mapStatus = (isActive) => {
-            if (isActive === undefined || isActive === null)
-              return { type: "unknown", name: "Unknown" };
-            return isActive
-              ? { type: "deployable", name: "Active" }
-              : { type: "archived", name: "Inactive" };
-          };
-
-          return {
-            id: u.id,
-            name,
-            email: u.email,
-            role,
-            phoneNumber: u.phone_number || "",
-            company: u.company_id || "",
-            phone: u.phone_number || "",
-            status: mapStatus(u.is_active),
-            lastLogin: u.last_login || null,
-            original: u,
-          };
-        };
-
-        // Only include users that have an AMS system role
-        const amsOnly = (apiUsers || []).filter((u) =>
-          (u.system_roles || []).some((r) => r.system_slug === "ams")
-        );
-
-        const transformed = amsOnly.map(transform);
-
-        if (transformed.length === 0) {
-          setUsers(mockUsers);
-          setFilteredData(mockUsers);
-        } else {
-          setUsers(transformed);
-          setFilteredData(transformed);
-        }
-      } catch (err) {
-        console.error("Failed to load users from API, using mock data:", err);
-        setUsers(mockUsers);
-        setFilteredData(mockUsers);
-      }
-    };
-
-    loadUsers();
+    // Initialize with mock data
+    setUsers(mockUsers);
+    setFilteredData(mockUsers);
   }, [location]);
 
   // Filter users based on search query and applied filters

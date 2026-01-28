@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/ActionButtons.css";
 import { getUserRole } from "../utils/user";
-import { getUserFromToken } from "../api/TokenUtils";
 
 export default function ActionButtons({
   showView = false,
@@ -26,7 +25,6 @@ export default function ActionButtons({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = getUserFromToken();
 
   const allowedPaths = [
     "/repairs",

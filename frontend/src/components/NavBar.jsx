@@ -8,9 +8,10 @@ import { IoIosArrowDown } from "react-icons/io";
 import { FaBars, FaChevronLeft } from "react-icons/fa";
 import NotificationOverlay from "./NotificationOverlay";
 import SystemLogo from "../assets/icons/Map-LogoNew.svg";
+import authService from "../services/auth-service";
 import DefaultProfile from "../assets/img/default-profile.svg";
-import { getUserFromToken } from "../api/TokenUtils";
-import { useAuth } from "../context";
+import { clearUser, selectUser } from "../features/counter/userSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -22,8 +23,9 @@ export default function NavBar() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(4);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const user = getUserFromToken();
-  const { logout } = useAuth();
+
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
 
   // State for selected items in each dropdown
   const [selectedAsset, setSelectedAsset] = useState("Assets");
@@ -176,46 +178,10 @@ export default function NavBar() {
     }
   }, [location.pathname]);
 
-  const logoutAccount = async () => {
-    try {
-      // First, request logout from external auth service
-      const externalAuth = import.meta.env.VITE_EXTERNAL_AUTH;
-      if (externalAuth) {
-        try {
-          // Get CSRF token from cookie
-          const csrfToken = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrftoken='))
-            ?.split('=')[1];
-          
-          await fetch(`${externalAuth}/users/logout/`, {
-            method: "POST",
-            credentials: 'include',
-            headers: {
-              "Content-Type": "application/json",
-              ...(csrfToken && { "X-CSRFToken": csrfToken }),
-            },
-          });
-        } catch (externalError) {
-          console.warn("External auth logout failed:", externalError);
-        }
-      }
-
-      // Then perform local logout
-      authService.logout();
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      // Finally redirect to login
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-      // Even if there's an error, still perform local logout and redirect
-      authService.logout();
-      localStorage.clear();
-      sessionStorage.clear();
-      navigate("/login");
-    }
+  const handleLogout = () => {
+    authService.logout();
+    dispatch(clearUser());
+    navigate("/login");
   };
 
   return (
@@ -465,7 +431,7 @@ export default function NavBar() {
             )}
           </li>
 
-          {user.roles?.[0].role === "Admin" && (
+          {user.role === "Admin" && (
             <>
               <li
                 className={`dropdown-container more-dropdown-container ${
@@ -598,22 +564,22 @@ export default function NavBar() {
           {showProfileMenu && (
             <div className="profile-dropdown">
               <div className="profile-header">
-                <img src={DefaultProfile} alt="profile" />
+                <img src={user.image || DefaultProfile} alt="profile" />
                 <div className="profile-info">
-                  <h3>{user.full_name}</h3>
-                  <span className="admin-badge">{user.roles?.[0].role}</span>
+                  <h3>{user.firstName} {user.lastName}</h3>
+                  <span className="admin-badge">{user.role}</span>
                 </div>
               </div>
               <div className="profile-menu">
                 <button onClick={() => navigate("/manage-profile")}>
                   Manage Profile
                 </button>
-                {user.roles?.[0].role === "Admin" && (
+                {user.role === "Admin" && (
                   <button onClick={() => navigate("/user-management")}>
                     User Management
                   </button>
                 )}
-                <button onClick={logoutAccount} className="logout-btn">
+                <button onClick={handleLogout} className="logout-btn">
                   Log Out
                 </button>
               </div>

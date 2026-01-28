@@ -12,9 +12,7 @@ import View from "../../components/Modals/View";
 import Footer from "../../components/Footer";
 import DueAuditFilterModal from "../../components/Modals/DueAuditFilterModal";
 import { exportToExcel } from "../../utils/exportToExcel";
-import authService from "../../services/auth-service";
 import { fetchDueAudits } from "../../services/assets-service";
-import { getUserFromToken } from "../../api/TokenUtils";
 import Alert from "../../components/Alert";
 
 // TableHeader
@@ -70,7 +68,6 @@ export default function AssetAudits() {
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [successMessage, setSuccessMessage] = useState("");
-  const user = getUserFromToken();
 
   // Fetch due audits on mount
   useEffect(() => {

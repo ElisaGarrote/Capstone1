@@ -22,7 +22,6 @@ import {
   fetchProductById,
   fetchAssetsByProduct,
 } from "../../services/assets-service";
-import { getUserFromToken } from "../../api/TokenUtils";
 
 function ProductViewPage() {
   const { id } = useParams();
@@ -33,7 +32,6 @@ function ProductViewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const user = getUserFromToken();
 
   // Assets table state
   const [productAssets, setProductAssets] = useState([]);
