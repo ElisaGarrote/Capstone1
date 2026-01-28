@@ -20,8 +20,7 @@ site-packages/
 # =========================
 # Django
 # =========================
-**/migrations/
-!**/migrations/__init__.py
+# Note: migrations should be tracked in git for deployment
 *.sqlite3
 media/
 staticfiles/
