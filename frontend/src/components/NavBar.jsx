@@ -33,6 +33,8 @@ export default function NavBar() {
   // State to track which menu item is active
   const [activeMenu, setActiveMenu] = useState("");
 
+  const externalUserManagement = import.meta.env.VITE_EXTERNAL_USER_MANAGEMENT;
+
   // Close all dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -184,13 +186,13 @@ export default function NavBar() {
         try {
           // Get CSRF token from cookie
           const csrfToken = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrftoken='))
-            ?.split('=')[1];
-          
+            .split("; ")
+            .find((row) => row.startsWith("csrftoken="))
+            ?.split("=")[1];
+
           await fetch(`${externalAuth}/users/logout/`, {
             method: "POST",
-            credentials: 'include',
+            credentials: "include",
             headers: {
               "Content-Type": "application/json",
               ...(csrfToken && { "X-CSRFToken": csrfToken }),
@@ -205,7 +207,7 @@ export default function NavBar() {
       authService.logout();
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Finally redirect to login
       navigate("/login");
     } catch (error) {
@@ -609,7 +611,7 @@ export default function NavBar() {
                   Manage Profile
                 </button>
                 {user.roles?.[0].role === "Admin" && (
-                  <button onClick={() => navigate("/user-management")}>
+                  <button onClick={() => window.open(externalUserManagement)}>
                     User Management
                   </button>
                 )}
