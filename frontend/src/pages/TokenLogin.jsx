@@ -4,6 +4,8 @@ import { useDispatch } from "react-redux";
 import { setUser } from "../features/counter/userSlice";
 import authService from "../services/auth-service";
 import SystemLoading from "../components/Loading/SystemLoading";
+import { setAccessToken, getUserFromToken } from "../api/TokenUtils";
+import { useAuth } from "../context/AuthContext";
 import "../styles/custom-colors.css";
 import "../styles/Login.css";
 
@@ -11,6 +13,7 @@ function TokenLogin() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
+  const { checkAuthStatus } = useAuth();
   const [status, setStatus] = useState("processing");
   const [message, setMessage] = useState("Processing authentication...");
 
@@ -29,57 +32,21 @@ function TokenLogin() {
           return;
         }
 
-        // Store tokens in sessionStorage
-        sessionStorage.setItem("access", accessToken);
-        sessionStorage.setItem("refresh", refreshToken);
+        // Store tokens using TokenUtils
+        setAccessToken(accessToken);
+        localStorage.setItem("refresh_token", refreshToken);
 
-        // Get user data from URL parameters
-        const userId = searchParams.get("id");
-        const email = searchParams.get("email");
-        const firstName = searchParams.get("firstName");
-        const lastName = searchParams.get("lastName");
-        const role = searchParams.get("role");
-        const contactNumber = searchParams.get("contactNumber");
+        // Update auth context
+        const authSuccess = await checkAuthStatus();
 
-        // If user data provided in URL, use it directly (bypass /auth/users/me/)
-        if (userId && email && firstName && lastName && role) {
-          const currentUser = {
-            id: parseInt(userId),
-            email,
-            first_name: firstName,
-            last_name: lastName,
-            role,
-            contact_number: contactNumber || ""
-          };
-
-          // Store in sessionStorage
-          sessionStorage.setItem("user", JSON.stringify(currentUser));
-          
-          // Store in Redux
-          dispatch(setUser({
-            firstName: currentUser.first_name,
-            lastName: currentUser.last_name,
-            role: currentUser.role,
-            loggedIn: true,
-          }));
-          
-          setStatus("success");
-          setMessage("Authentication successful! Redirecting to dashboard...");
-          
-          // Redirect to dashboard after short delay
-          setTimeout(() => navigate("/dashboard"), 1000);
-        } else {
-          // Fallback: Fetch user information from backend
-          const currentUser = await authService.getCurrrentUser();
+        if (authSuccess) {
+          // Get user data from token for Redux
+          const currentUser = getUserFromToken();
           
           if (currentUser) {
-            sessionStorage.setItem("user", JSON.stringify(currentUser));
-            dispatch(setUser({
-              firstName: currentUser.first_name,
-              lastName: currentUser.last_name,
-              role: currentUser.role,
-              loggedIn: true,
-            }));
+            // Store full user object in Redux so UI components can read
+            // `roles`, `full_name`, etc. directly (matches backend payload)
+            dispatch(setUser({ ...currentUser, loggedIn: true }));
             
             setStatus("success");
             setMessage("Authentication successful! Redirecting to dashboard...");
@@ -87,8 +54,10 @@ function TokenLogin() {
             // Redirect to dashboard after short delay
             setTimeout(() => navigate("/dashboard"), 1000);
           } else {
-            throw new Error("Failed to fetch user information");
+            throw new Error("Failed to parse user from token");
           }
+        } else {
+          throw new Error("Authentication check failed");
         }
       } catch (error) {
         console.error("Token login error:", error);
@@ -96,9 +65,8 @@ function TokenLogin() {
         setMessage("Authentication failed. Please try logging in again.");
         
         // Clear invalid tokens
-        sessionStorage.removeItem("access");
-        sessionStorage.removeItem("refresh");
-        sessionStorage.removeItem("user");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refresh_token");
         
         // Redirect to login after delay
         setTimeout(() => navigate("/login"), 3000);

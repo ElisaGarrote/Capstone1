@@ -1,26 +1,20 @@
 import { Outlet, Navigate, useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
-import api from "../api";
-import { REFRESH_TOKEN, ACCESS_TOKEN } from "../constants";
-import { useState, useEffect } from "react";
-import SystemLoading from "./Loading/SystemLoading";
+import { useEffect } from "react";
 import { selectUser } from "../features/counter/userSlice";
 import { useSelector } from "react-redux";
-import authService from "../services/auth-service";
-import { getUserRoleFromToken, getUserFromToken } from "../api/TokenUtils";
-import { getAccessTokenFromCookie } from "../api/TokenUtils";
+import { getUserFromToken, getUserRoleFromToken, getAccessToken } from "../api/TokenUtils";
 
 function ProtectedRoute({ roles }) {
   const user = useSelector(selectUser);
   const navigate = useNavigate();
   const userRole = getUserRoleFromToken();
   const currentUser = getUserFromToken();
-  const token = getAccessTokenFromCookie();
+  const token = getAccessToken();
   // console.log("current user:", currentUser);
 
   // const role = currentUser?.role?.toLowerCase() || "";
   const role = currentUser?.roles?.[0]?.role?.toLowerCase() ?? "";
-  const isAuthenticated = token ? true : false;
+  const isAuthenticated = !!token;
 
   // Redirect the user back to the previous page.
   useEffect(() => {

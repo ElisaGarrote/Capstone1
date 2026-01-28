@@ -465,7 +465,7 @@ export default function NavBar() {
             )}
           </li>
 
-          {user.roles?.[0].role === "Admin" && (
+          {user?.roles?.[0]?.role === "Admin" && (
             <>
               <li
                 className={`dropdown-container more-dropdown-container ${
@@ -600,15 +600,15 @@ export default function NavBar() {
               <div className="profile-header">
                 <img src={DefaultProfile} alt="profile" />
                 <div className="profile-info">
-                  <h3>{user.full_name}</h3>
-                  <span className="admin-badge">{user.roles?.[0].role}</span>
+                  <h3>{user?.full_name}</h3>
+                  <span className="admin-badge">{user?.roles?.[0]?.role}</span>
                 </div>
               </div>
               <div className="profile-menu">
                 <button onClick={() => navigate("/manage-profile")}>
                   Manage Profile
                 </button>
-                {user.roles?.[0].role === "Admin" && (
+                {user?.roles?.[0]?.role === "Admin" && (
                   <button onClick={() => navigate("/user-management")}>
                     User Management
                   </button>

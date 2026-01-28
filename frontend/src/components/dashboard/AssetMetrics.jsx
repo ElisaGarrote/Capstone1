@@ -156,7 +156,7 @@ const AssetMetrics = ({ stats }) => {
               <p>No category data available</p>
             </div>
           )}
-          {user.roles?.[0].role === "Admin" && (
+          {user?.roles?.[0]?.role === "Admin" && (
             <button className="browse-all" onClick={() => navigate("/assets")}>
               Browse All
             </button>
@@ -199,7 +199,7 @@ const AssetMetrics = ({ stats }) => {
               <p>No status data available</p>
             </div>
           )}
-          {user.roles?.[0].role === "Admin" && (
+          {user?.roles?.[0]?.role === "Admin" && (
             <button
               className="browse-all"
               onClick={() => navigate("/reports/activity")}

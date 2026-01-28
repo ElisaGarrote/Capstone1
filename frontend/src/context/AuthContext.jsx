@@ -20,21 +20,31 @@ import {
   getSystemRole,
   getAccessTokenFromCookie,
 } from "../api/TokenUtils";
+import { useDispatch } from "react-redux";
+import { setUser as setReduxUser, clearUser as clearReduxUser } from "../features/counter/userSlice";
 import { read } from "xlsx";
 
 const AuthContext = createContext();
 
 // Auth service URL - points to centralized auth service
-const AUTH_URL = import.meta.env.VITE_AUTH_URL || "http://165.22.247.50:8003";
-console.log("pointed at -> ", `${AUTH_URL}/api/v1/token/obtain/`);
+const AUTH_URL = import.meta.env.VITE_EXTERNAL_AUTH || "http://165.22.247.50:8003";
 
-// API endpoints
-const PROFILE_URL = `${AUTH_URL}/api/v1/users/profile/`;
-const TOKEN_OBTAIN_URL = `${AUTH_URL}/api/v1/token/obtain/`;
-const TOKEN_VERIFY_URL = `${AUTH_URL}/api/v1/token/verify/`;
-const TOKEN_REFRESH_URL = `${AUTH_URL}/api/v1/token/refresh/`;
-const LOGOUT_URL = `${AUTH_URL}/logout/`;
-const USERS_LIST_URL = `${AUTH_URL}/api/v1/users/list/`;
+// Normalize base URL to avoid duplicate path segments. Some env values
+// already include '/api/v1' while others are just the host.
+const _base = AUTH_URL.replace(/\/+$/, "");
+const hasApiV1 = /\/api\/v1\/?$/.test(_base);
+
+const BASE_API = hasApiV1 ? _base : `${_base}/api/v1`;
+
+console.log("Auth base ->", BASE_API);
+
+// API endpoints (constructed from BASE_API)
+const PROFILE_URL = `${BASE_API}/users/profile/`;
+const TOKEN_OBTAIN_URL = `${BASE_API}/token/obtain/`;
+const TOKEN_VERIFY_URL = `${BASE_API}/token/verify/`;
+const TOKEN_REFRESH_URL = `${BASE_API}/token/refresh/`;
+const LOGOUT_URL = `${_base}/logout/`;
+const USERS_LIST_URL = `${BASE_API}/users/list/`;
 
 // Create auth API instance for auth service requests
 const createAuthRequest = () => {
@@ -51,6 +61,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
+  const dispatch = useDispatch();
 
   // Check if user has Admin role for AMS system
   const isAdmin = useCallback(() => {
@@ -231,11 +242,21 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const isValid = await verifyToken();
+      const token = getAccessToken();
+      
+      // Check if token is expired locally
+      if (isTokenExpired(token)) {
+        removeAccessToken();
+        setUser(null);
+        setLoading(false);
+        setInitialized(true);
+        return false;
+      }
 
-      if (isValid) {
-        const userData = await fetchUserProfile();
+      // Parse user from token (contains all user data)
+      const userData = getUserFromToken();
 
+      if (userData) {
         // Check if user has AMS access
         if (!hasAnySystemRole(userData, "ams")) {
           console.warn("User does not have AMS access");
@@ -247,6 +268,35 @@ export const AuthProvider = ({ children }) => {
         }
 
         setUser(userData);
+        // Sync Redux persisted user so components depending on it render correctly
+        try {
+          dispatch(setReduxUser({ ...userData, loggedIn: true }));
+        } catch (e) {
+          console.debug("AuthProvider: failed to dispatch redux user sync", e);
+        }
+        setLoading(false);
+        setInitialized(true);
+        return true;
+      }
+
+      // Fallback: try API verification if token parsing fails
+      const isValid = await verifyToken();
+
+      if (isValid) {
+        const apiUserData = await fetchUserProfile();
+
+        // Check if user has AMS access
+        if (!hasAnySystemRole(apiUserData, "ams")) {
+          console.warn("User does not have AMS access");
+          removeAccessToken();
+          setUser(null);
+          try { dispatch(clearReduxUser()); } catch (e) {}
+          setLoading(false);
+          setInitialized(true);
+          return false;
+        }
+
+        setUser(apiUserData);
         setLoading(false);
         setInitialized(true);
         return true;

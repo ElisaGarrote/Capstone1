@@ -27,11 +27,12 @@ function Login() {
   const externalLoginUrl = import.meta.env.VITE_EXTERNAL_LOGIN_URL;
 
   // Redirect to external login if configured
-  useEffect(() => {
-    if (externalLoginUrl) {
-      window.location.href = externalLoginUrl;
-    }
-  }, [externalLoginUrl]);
+  // Temporarily disabled to use internal login
+  // useEffect(() => {
+  //   if (externalLoginUrl) {
+  //     window.location.href = externalLoginUrl;
+  //   }
+  // }, [externalLoginUrl]);
 
   const {
     register,
@@ -65,17 +66,9 @@ function Login() {
         const user = result.user;
         console.log("Updating Redux store with user:", user);
         if (user) {
-          dispatch(
-            setUser({
-              firstName: user.first_name || user.full_name?.split(" ")[0] || "",
-              lastName:
-                user.last_name ||
-                user.full_name?.split(" ").slice(1).join(" ") ||
-                "",
-              role: user.roles?.[0]?.role?.toLowerCase() ?? "",
-              loggedIn: true,
-            })
-          );
+          // Store full user object in Redux so UI components can access
+          // `roles`, `full_name`, etc. directly
+          dispatch(setUser({ ...user, loggedIn: true }));
         }
         navigate("/dashboard");
       } else {

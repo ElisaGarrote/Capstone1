@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../features/counter/userSlice";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -11,7 +13,6 @@ import View from "../../components/Modals/View";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
 import { fetchAssetById, fetchAssetCheckoutById, fetchAssetNames } from "../../services/assets-service";
-import authService from "../../services/auth-service";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -99,6 +100,7 @@ const Tickets = () => {
   console.log("[Tickets] Component rendering...");
   const navigate = useNavigate();
   const location = useLocation();
+  const user = useSelector(selectUser);
   const toggleRef = useRef(null);
   const exportRef = useRef(null);
 
@@ -465,7 +467,7 @@ const Tickets = () => {
                 >
                   Filter
                 </button>
-                {authService.getUserInfo().role === "Admin" && (
+                {user?.roles?.[0]?.role === "Admin" && (
                   <div ref={toggleRef}>
                     <MediumButtons
                       type="export"

@@ -342,7 +342,7 @@ function ProductViewPage() {
             Filter
           </button>
           <MediumButtons type="export" onClick={handleExport} />
-          {user.roles?.[0].role === "Admin" && (
+          {user?.roles?.[0]?.role === "Admin" && (
             <MediumButtons type="new" navigatePage="/assets/registration" />
           )}
         </section>

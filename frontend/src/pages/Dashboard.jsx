@@ -100,7 +100,7 @@ function Dashboard() {
         </div>
 
         {/* Forecast Section - Admin Only */}
-        {user.roles?.[0].role === "Admin" && (
+        {user?.roles?.[0]?.role === "Admin" && (
           <>
             {/* KPI Summary Cards */}
             {!forecastLoading && kpiData && kpiData.length > 0 && (

@@ -301,7 +301,7 @@ export default function ScheduledAudits() {
                 >
                   Filter
                 </button>
-                {user.roles?.[0].role === "Admin" && (
+                {user?.roles?.[0]?.role === "Admin" && (
                   <MediumButtons type="export" onClick={handleExport} />
                 )}
               </section>
