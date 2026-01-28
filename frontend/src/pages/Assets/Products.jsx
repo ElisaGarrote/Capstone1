@@ -526,7 +526,7 @@ export default function Products() {
                 >
                   Filter
                 </button>
-                {user.roles?.[0].role === "Admin" && (
+                {authService.getUserInfo().role === "Admin" && (
                   <>
                     <MediumButtons type="export" onClick={handleExport} />
                     <MediumButtons

@@ -8,6 +8,7 @@ import ProductDemandForecastChart from "../components/dashboard/ProductDemandFor
 import "../styles/Dashboard.css";
 import { fetchDashboardStats } from "../services/assets-service";
 import forecastService from "../services/forecast-service";
+import authService from "../services/auth-service";
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
@@ -96,7 +97,7 @@ function Dashboard() {
         </div>
 
         {/* Forecast Section - Admin Only */}
-        {user.roles?.[0].role === "Admin" && (
+        {authService.getUserInfo().role === "Admin" && (
           <>
             {/* KPI Summary Cards */}
             {!forecastLoading && kpiData && kpiData.length > 0 && (

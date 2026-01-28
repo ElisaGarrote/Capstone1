@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import authService from "../../services/auth-service";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Pagination from "../../components/Pagination";
@@ -276,7 +277,7 @@ export default function CompletedAudits() {
                 >
                   Filter
                 </button>
-                {user.roles?.[0].role === "Admin" && (
+                {authService.getUserInfo().role === "Admin" && (
                   <MediumButtons type="export" onClick={handleExport} />
                 )}
               </section>

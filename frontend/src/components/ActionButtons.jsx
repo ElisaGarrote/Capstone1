@@ -1,6 +1,6 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../styles/ActionButtons.css";
-import { getUserRole } from "../utils/user";
+import authService from "../services/auth-service";
 
 export default function ActionButtons({
   showView = false,
@@ -24,15 +24,6 @@ export default function ActionButtons({
   onCheckinClick = null,
 }) {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const allowedPaths = [
-    "/repairs",
-    "/audits",
-    "/audits/overdue",
-    "/audits/scheduled",
-    "/audits/completed",
-  ];
 
   return (
     <section className="action-button-section">
@@ -46,19 +37,7 @@ export default function ActionButtons({
         </button>
       )}
 
-      {showEdit &&
-        allowedPaths.some((path) => location.pathname.includes(path)) &&
-        getUserRole() === "operator" && (
-          <button
-            title="Edit"
-            className="action-button"
-            onClick={() => navigate(editPath, { state: editState })}
-          >
-            <i className="fas fa-edit"></i>
-          </button>
-        )}
-
-      {showEdit && user.roles[0].role === "admin" && (
+      {showEdit && authService.getUserInfo().role === "Admin" && (
         <button
           title="Edit"
           className="action-button"
@@ -68,7 +47,7 @@ export default function ActionButtons({
         </button>
       )}
 
-      {showDelete && user.roles[0].role === "admin" && (
+      {showDelete && authService.getUserInfo().role === "Admin" && (
         <button
           title={deleteTitle || "Delete"}
           className="action-button"

@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import "../../styles/dashboard/AssetMetrics.css";
+import authService from "../../services/auth-service";
 
 const AssetMetrics = ({ stats }) => {
   const navigate = useNavigate();
@@ -153,7 +154,7 @@ const AssetMetrics = ({ stats }) => {
               <p>No category data available</p>
             </div>
           )}
-          {user.roles?.[0].role === "Admin" && (
+          {authService.getUserInfo().role === "Admin" && (
             <button className="browse-all" onClick={() => navigate("/assets")}>
               Browse All
             </button>
@@ -196,7 +197,7 @@ const AssetMetrics = ({ stats }) => {
               <p>No status data available</p>
             </div>
           )}
-          {user.roles?.[0].role === "Admin" && (
+          {authService.getUserInfo().role === "Admin" && (
             <button
               className="browse-all"
               onClick={() => navigate("/reports/activity")}
