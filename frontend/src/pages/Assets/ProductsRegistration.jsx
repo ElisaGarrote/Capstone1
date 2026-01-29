@@ -34,7 +34,7 @@ export default function ProductsRegistration() {
   const location = useLocation();
   const { id } = useParams();
 
-  const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, watch, trigger, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       productName: '',
@@ -144,14 +144,14 @@ export default function ProductsRegistration() {
         setValue("productName", product.name || "");
       }
 
-      setValue("category", product.category || "");
-      setValue("manufacturer", product.manufacturer || "");
-      setValue("depreciation", product.depreciation || "");
+      setValue("category", product.category ? String(product.category) : "");
+      setValue("manufacturer", product.manufacturer ? String(product.manufacturer) : "");
+      setValue("depreciation", product.depreciation ? String(product.depreciation) : "");
       setValue("modelNumber", product.model_number || "");
       setValue("endOfLife", product.end_of_life || "");
       setValue("defaultPurchaseCost", product.default_purchase_cost || "");
-      setValue("defaultSupplier", product.default_supplier || "");
-      setValue("minimumQuantity", product.minimum_quantity || "");
+      setValue("defaultSupplier", product.default_supplier ? String(product.default_supplier) : "");
+      setValue("minimumQuantity", product.minimum_quantity ?? "");
       setValue("cpu", product.cpu || "");
       setValue("gpu", product.gpu || "");
       setValue("operatingSystem", product.os || "");
@@ -176,9 +176,10 @@ export default function ProductsRegistration() {
           }
         }
       }
+      await trigger();
     };
     populateForm();
-  }, [product, isClone, categories, manufacturers, depreciations, suppliers, setValue]);
+  }, [product, isClone, categories, manufacturers, depreciations, suppliers, setValue, trigger]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
