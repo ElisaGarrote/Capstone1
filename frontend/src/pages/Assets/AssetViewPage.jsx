@@ -222,10 +222,8 @@ function AssetViewPage() {
       };
     }
 
-    // Checkout is disabled if: No ticket, OR Has ticket but checkout_date is in the future
-    const checkoutDisabled =
-      (status === "pending" || status === "deployable") &&
-      (!hasTicket || isFutureCheckout);
+    // Checkout is disabled if: No ticket OR checkout_date is in the future
+    const checkoutDisabled = !hasTicket || isFutureCheckout;
 
     return {
       showCheckin: status === "deployed",
