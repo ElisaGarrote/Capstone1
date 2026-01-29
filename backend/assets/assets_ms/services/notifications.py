@@ -93,8 +93,8 @@ def generate_low_stock_product_notifications():
         if available_count <= product.minimum_quantity:
             notifications.append({
                 'id': f"product-low-stock-{product.id}",
-                'type': 'low-stock',
-                'title': 'Low Stock',
+                'type': 'low-stock-product',
+                'title': 'Low Stock - Product',
                 'message': f"There's {available_count} {product.name} available, which is at or below the minimum of {product.minimum_quantity}.",
                 'item_type': 'product',
                 'item_id': product.id,
@@ -121,7 +121,7 @@ def generate_low_stock_component_notifications():
         if available <= component.minimum_quantity:
             notifications.append({
                 'id': f"component-low-stock-{component.id}",
-                'type': 'low-stock',
+                'type': 'low-stock-component',
                 'title': 'Low Stock - Component',
                 'message': f"Component '{component.name}' has {available} available, which is at or below the minimum of {component.minimum_quantity}.",
                 'item_type': 'component',
