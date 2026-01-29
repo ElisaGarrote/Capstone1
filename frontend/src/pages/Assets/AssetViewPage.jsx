@@ -5,6 +5,7 @@ import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import Alert from "../../components/Alert";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import { fetchAssetById, deleteAsset } from "../../services/assets-service";
 import { fetchLocationById } from "../../services/integration-help-desk-service";
@@ -19,6 +20,7 @@ function AssetViewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const loadAssetDetails = async () => {
@@ -152,18 +154,20 @@ function AssetViewPage() {
     setDeleteModalOpen(false);
   };
 
-  const confirmDelete = async () => {
-    try {
-      await deleteAsset(asset.id);
-      closeDeleteModal();
-      navigate("/assets", {
-        state: { successMessage: "Asset deleted successfully!" },
-      });
-    } catch (error) {
-      console.error("Error deleting asset:", error);
-      setErrorMessage("Failed to delete asset");
-      closeDeleteModal();
-    }
+  const handleDeleteSuccess = () => {
+    navigate("/assets", {
+      state: { successMessage: "Asset deleted successfully!" },
+    });
+  };
+
+  const handleDeleteError = (error) => {
+    console.error("Error deleting asset:", error);
+    setErrorMessage("Failed to delete asset");
+    setTimeout(() => setErrorMessage(""), 5000);
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteModalOpen(true);
   };
 
   const handleCloneClick = () => {
@@ -172,10 +176,6 @@ function AssetViewPage() {
 
   const handleEditClick = () => {
     navigate(`/assets/edit/${asset.id}`);
-  };
-
-  const handleDeleteClick = () => {
-    setDeleteModalOpen(true);
   };
 
   // Format currency
@@ -287,11 +287,16 @@ function AssetViewPage() {
   return (
     <>
       <NavBar />
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
           actionType="delete"
-          onConfirm={confirmDelete}
+          entityType="asset"
+          targetId={asset.id}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
       <DetailedViewPage
