@@ -136,7 +136,6 @@ class AssetCheckout(models.Model):
     ticket_number = models.CharField(max_length=50)  # External ticket number (e.g., "TX20260122996422")
     checkout_to = models.PositiveIntegerField()
     location = models.PositiveIntegerField()
-    checkout_date = models.DateField()
     return_date = models.DateField(blank=True, null=True)
     revenue = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  
     condition = models.PositiveSmallIntegerField(

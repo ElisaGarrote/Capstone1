@@ -994,7 +994,7 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         # All checkouts (excluding deleted assets), with checkin prefetched
         return AssetCheckout.objects.select_related('asset', 'asset_checkin').filter(
             asset__is_deleted=False
-        ).order_by('-checkout_date')
+        ).order_by('-created_at')
     
     def create(self, request, *args, **kwargs):
         return Response(
@@ -1036,7 +1036,7 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
             checkout_to=employee_id,
             asset_checkin__isnull=True,
             asset__is_deleted=False
-        ).order_by('-checkout_date')
+        ).order_by('-created_at')
 
         serializer = AssetCheckoutByEmployeeSerializer(
             queryset, many=True, context={'request': request}
@@ -1060,7 +1060,7 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
         queryset = AssetCheckout.objects.select_related('asset').prefetch_related('files', 'asset_checkin').filter(
             asset_id=asset_id,
             asset__is_deleted=False
-        ).order_by('-checkout_date')
+        ).order_by('-created_at')
 
         serializer = AssetCheckoutListSerializer(queryset, many=True)
         return Response(serializer.data)
