@@ -1363,13 +1363,27 @@ class AuditScheduleSerializer(serializers.ModelSerializer):
         self.fields['asset'].queryset = Asset.objects.filter(is_deleted=False)
 
     def validate(self, data):
-        asset = data.get('asset')
+        asset = data.get('asset') or getattr(self.instance, 'asset', None)
+        date = data.get('date') or getattr(self.instance, 'date', None)
 
         # Ensure asset is not deleted
         if asset and asset.is_deleted:
             raise serializers.ValidationError({
                 "asset": "Cannot create an audit schedule for a deleted asset."
             })
+
+        # Check for duplicate audit schedule (same asset + same date)
+        if asset and date:
+            duplicate = AuditSchedule.objects.filter(
+                asset=asset,
+                date=date,
+                is_deleted=False
+            ).exclude(pk=self.instance.pk if self.instance else None).exists()
+
+            if duplicate:
+                raise serializers.ValidationError({
+                    "date": f"An audit schedule already exists for this asset on {date}."
+                })
 
         return data
 
