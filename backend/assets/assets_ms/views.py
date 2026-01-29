@@ -378,23 +378,29 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
         products = Product.objects.filter(id__in=ids, is_deleted=False)
-        failed = []
 
+        # Check for products with active assets first
         for product in products:
-            try:
-                self.perform_destroy(product)
-            except ValidationError as e:
-                failed.append({"id": product.id, "error": str(e.detail)})
-        
+            if product.product_assets.filter(is_deleted=False).exists():
+                return Response(
+                    {"detail": f"Cannot delete product '{product.name}', it's being used by one or more active assets."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Perform soft delete
+        deleted_count = 0
+        for product in products:
+            product.is_deleted = True
+            product.save()
+            self.invalidate_product_cache(product.id)
+            deleted_count += 1
+
         cache.delete("products:list")
 
-        if failed:
-            return Response({
-                "detail": "Some products could not be deleted. Please check if they are assigned to active assets before trying again.",
-                "failed": failed
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"detail": "Products soft-deleted successfully."}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": f"Successfully deleted {deleted_count} product(s)."},
+            status=status.HTTP_200_OK
+        )
 
     @action(detail=False, methods=["get"], url_path='asset-registration')
     def asset_registration(self, request):
@@ -960,23 +966,29 @@ class AssetViewSet(viewsets.ModelViewSet):
             return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
         assets = Asset.objects.filter(id__in=ids, is_deleted=False)
-        failed = []
 
+        # Check for assets with active checkouts first
         for asset in assets:
-            try:
-                self.perform_destroy(asset)
-            except ValidationError as e:
-                failed.append({"id": asset.id, "error": str(e.detail)})
-        
+            if asset.asset_checkouts.filter(asset_checkin__isnull=True).exists():
+                return Response(
+                    {"detail": f"Cannot delete asset '{asset.asset_id}', it's currently checked out."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Perform soft delete
+        deleted_count = 0
+        for asset in assets:
+            asset.is_deleted = True
+            asset.save()
+            self.invalidate_asset_cache(asset.id)
+            deleted_count += 1
+
         cache.delete("assets:list")
 
-        if failed:
-            return Response({
-                "detail": "Some assets could not be deleted.",
-                "failed": failed
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"detail": "Assets deleted successfully."}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": f"Successfully deleted {deleted_count} asset(s)."},
+            status=status.HTTP_200_OK
+        )
     
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -1393,12 +1405,12 @@ class ComponentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Check if any component is currently checked out
+        # Check if any component has checkouts not fully returned
         components = Component.objects.filter(id__in=ids, is_deleted=False)
         for component in components:
-            if component.component_checkouts.filter(component_checkins__isnull=True).exists():
+            if self._has_active_checkouts(component):
                 return Response(
-                    {"detail": f"Cannot delete component '{component.name}', it's currently checked out."},
+                    {"detail": f"Cannot delete component '{component.name}', it has checkouts that are not fully returned."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -1670,25 +1682,30 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
         """Bulk delete audit schedules (only those without audits)."""
         ids = request.data.get('ids', [])
         if not ids:
-            return Response({"error": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
         schedules = AuditSchedule.objects.filter(id__in=ids, is_deleted=False)
-        deleted_ids = []
-        errors = []
 
+        # Check if any schedule has an audit first
         for schedule in schedules:
             if hasattr(schedule, 'audit') and schedule.audit and not schedule.audit.is_deleted:
-                errors.append(f"Schedule {schedule.id} has an audit and cannot be deleted.")
-            else:
-                schedule.is_deleted = True
-                schedule.save()
-                deleted_ids.append(schedule.id)
-                log_audit_activity(action='Delete', audit_or_schedule=schedule, notes="Bulk deleted")
+                return Response(
+                    {"detail": f"Cannot delete audit schedule for asset '{schedule.asset.asset_id}', it has already been audited."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        return Response({
-            "deleted": deleted_ids,
-            "errors": errors
-        }, status=status.HTTP_200_OK)
+        # Perform soft delete
+        deleted_count = 0
+        for schedule in schedules:
+            schedule.is_deleted = True
+            schedule.save()
+            log_audit_activity(action='Delete', audit_or_schedule=schedule, notes="Bulk deleted")
+            deleted_count += 1
+
+        return Response(
+            {"detail": f"Successfully deleted {deleted_count} audit schedule(s)."},
+            status=status.HTTP_200_OK
+        )
 
 class AuditViewSet(viewsets.ModelViewSet):
     serializer_class = AuditSerializer
