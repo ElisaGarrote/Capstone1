@@ -20,6 +20,7 @@ const ComponentRegistration = () => {
   const location = useLocation();
   const { id } = useParams();
   const isEdit = !!id;
+  const isClone = location.state?.isClone === true;
 
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [existingImage, setExistingImage] = useState(null);
@@ -32,6 +33,7 @@ const ComponentRegistration = () => {
     handleSubmit,
     setValue,
     watch,
+    trigger,
     formState: { errors, isValid },
   } = useForm({
     mode: "all",
@@ -57,7 +59,38 @@ const ComponentRegistration = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [locations, setLocations] = useState([]);
 
-  // Initialize form with dropdown options and component data (if editing)
+  // Helper function to generate clone name
+  const generateCloneName = async (baseName) => {
+    // Fetch all existing component names that contain the base name
+    const data = await fetchAllComponents();
+    const existingNames = data.map(c => c.name);
+
+    // Pattern matches: "BaseName (clone)" or "BaseName (clone) (N)" - case insensitive
+    const clonePattern = new RegExp(`^${escapeRegExp(baseName)} \\(clone\\)(?: \\((\\d+)\\))?$`, 'i');
+
+    // Find the highest existing clone index
+    let maxIndex = -1; // -1 means no clones exist yet
+    existingNames.forEach(name => {
+      const match = name.match(clonePattern);
+      if (match) {
+        const index = match[1] ? parseInt(match[1], 10) : 0;
+        if (index > maxIndex) maxIndex = index;
+      }
+    });
+
+    // Generate clone name
+    if (maxIndex === -1) {
+      return `${baseName} (clone)`;
+    }
+    return `${baseName} (clone) (${maxIndex + 1})`;
+  };
+
+  // Utility to escape regex special chars in base name
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  // Initialize form with dropdown options and component data (if editing or cloning)
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -73,7 +106,7 @@ const ComponentRegistration = () => {
         const locationsData = await fetchAllLocations();
         setLocations(locationsData || []);
 
-        // Fetch component data if editing
+        // Fetch component data if editing or cloning
         if (id) {
           const componentData = await fetchComponentById(id);
           if (componentData) {
@@ -90,7 +123,14 @@ const ComponentRegistration = () => {
               }
             }
 
-            setValue("componentName", componentData.name || "");
+            // Set name with clone suffix if cloning
+            if (isClone) {
+              const clonedName = await generateCloneName(componentData.name);
+              setValue("componentName", clonedName);
+            } else {
+              setValue("componentName", componentData.name ?? "");
+            }
+            
             // Convert IDs to strings to match select option values
             setValue("category", componentData.category ? String(componentData.category) : "");
             setValue("manufacturer", componentData.manufacturer ? String(componentData.manufacturer) : "");
@@ -99,17 +139,34 @@ const ComponentRegistration = () => {
             setValue("modelNumber", componentData.model_number || "");
             setValue("orderNumber", componentData.order_number || "");
             setValue("purchaseCost", componentData.purchase_cost || "");
-            setValue("quantity", componentData.quantity || "");
+            setValue("quantity", componentData.quantity ?? "");
             setValue("minimumQuantity", componentData.minimum_quantity || "");
             setValue("purchaseDate", componentData.purchase_date || "");
             setValue("notes", componentData.notes || "");
+            
             if (componentData.image) {
               setExistingImage(componentData.image);
+
+              // For cloning, fetch the image as a file so it can be uploaded with the new component
+              if (isClone) {
+                try {
+                  const response = await fetch(componentData.image);
+                  const blob = await response.blob();
+                  const fileName = componentData.image.split('/').pop() || 'cloned-image.jpg';
+                  const file = new File([blob], fileName, { type: blob.type });
+                  setAttachmentFile(file);
+                } catch (imgError) {
+                  console.error("Failed to fetch image for cloning:", imgError);
+                }
+              }
             }
           }
         }
 
         setCategories(categoriesList);
+        
+        // Trigger validation after all form values are set
+        await trigger();
       } catch (error) {
         console.error("Error initializing form:", error);
         setErrorMessage("Failed to load form data.");
@@ -119,7 +176,7 @@ const ComponentRegistration = () => {
     };
 
     initialize();
-  }, [id, setValue]);
+  }, [id, setValue, trigger, isClone]);
 
   // Quick-add modal state
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -241,12 +298,16 @@ const ComponentRegistration = () => {
       if (data.notes) formData.append("notes", data.notes);
       if (attachmentFile) formData.append("image", attachmentFile);
 
-      if (isEdit) {
+      // Determine if this is an edit (id present and not cloning) or create (new or clone)
+      const isUpdate = id && !isClone;
+
+      if (isUpdate) {
         await updateComponent(id, formData);
         navigate("/components", { state: { successMessage: "Component updated successfully!" } });
       } else {
         await createComponent(formData);
-        navigate("/components", { state: { successMessage: "Component created successfully!" } });
+        const action = isClone ? 'cloned' : 'created';
+        navigate("/components", { state: { successMessage: `Component has been ${action} successfully!` } });
       }
     } catch (error) {
       console.error("Error saving component:", error);
@@ -270,9 +331,9 @@ const ComponentRegistration = () => {
         <section className="top">
           <TopSecFormPage
             root="Components"
-            currentPage={isEdit ? "Edit Component" : "New Component"}
+            currentPage={isClone ? "Clone Component" : (isEdit ? "Edit Component" : "New Component")}
             rootNavigatePage="/components"
-            title={isEdit ? "Edit Component" : "New Component"}
+            title={isClone ? `Clone ${location.state?.component?.name || 'Component'}` : (isEdit ? "Edit Component" : "New Component")}
           />
         </section>
         <section className="registration-form">
