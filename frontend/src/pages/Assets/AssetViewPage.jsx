@@ -29,6 +29,7 @@ function AssetViewPage() {
 
         // Fetch asset data - the API now returns all related data
         const assetData = await fetchAssetById(id);
+        console.log(assetData)
         if (!assetData) {
           return;
         }
