@@ -116,6 +116,7 @@ export default function AssetsRegistration() {
         // If editing or cloning, fetch the asset data
         if (id) {
           const assetData = await fetchAssetById(id);
+          console.log("Fetched asset:", assetData);
           if (assetData) {
             setAsset(assetData);
           }
