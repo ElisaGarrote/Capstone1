@@ -1340,10 +1340,17 @@ class ComponentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    def _has_active_checkouts(self, component):
+        """Check if component has any checkouts that are not fully returned."""
+        for checkout in component.component_checkouts.all():
+            if not checkout.is_fully_returned:
+                return True
+        return False
+
     def perform_destroy(self, instance):
-        # Check if the component has an active checkout (no checkin yet)
-        if instance.component_checkouts.filter(component_checkins__isnull=True).exists():
-            raise ValidationError({ "detail": "Cannot delete this component, it's currently checked out." })
+        # Check if the component has any checkouts not fully returned
+        if self._has_active_checkouts(instance):
+            raise ValidationError({ "detail": "Cannot delete this component, it has checkouts that are not fully returned." })
 
         # Otherwise, perform soft delete
         instance.is_deleted = True
