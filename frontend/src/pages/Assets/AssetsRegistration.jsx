@@ -32,7 +32,7 @@ export default function AssetsRegistration() {
   const { id } = useParams();
   const currentDate = new Date().toISOString().split("T")[0];
 
-  const { setValue, register, handleSubmit, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, trigger, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       assetId: '',
@@ -163,11 +163,11 @@ export default function AssetsRegistration() {
         } else {
           setValue("assetName", asset.name || "");
         }
-        setValue("serialNumber", asset.serial_number || "");
+        setValue("serialNumber", asset.serial_number ?? "");
         setValue("warrantyExpiration", asset.warranty_expiration || "");
         setValue("orderNumber", asset.order_number || "");
         setValue("purchaseDate", asset.purchase_date || "");
-        setValue("purchaseCost", asset.purchase_cost || "");
+        setValue("purchaseCost", asset.purchase_cost ?? "");
         setValue("notes", asset.notes || "");
 
         if (asset.image) {
@@ -187,9 +187,12 @@ export default function AssetsRegistration() {
           }
         }
       }
+      
+      // Trigger validation after all form values are set
+      await trigger();
     };
     populateForm();
-  }, [asset, isClone, products, statuses, suppliers, locations, setValue, id]);
+  }, [asset, isClone, products, statuses, suppliers, locations, setValue, trigger, id]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
