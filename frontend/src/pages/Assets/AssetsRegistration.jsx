@@ -148,10 +148,15 @@ export default function AssetsRegistration() {
         if (!isClone) {
           setValue("assetId", asset.asset_id || "");
         }
-        setValue("product", asset.product || "");
-        setValue("status", asset.status || "");
-        setValue("supplier", asset.supplier || "");
-        setValue("location", asset.location || "");
+        // Prefer explicit *_details ids from API payload, fall back to top-level id fields when present
+        const productId = asset.product ?? asset.product_details?.id;
+        const statusId = asset.status ?? asset.status_details?.id;
+        const supplierId = asset.supplier ?? asset.supplier_details?.id;
+        const locationId = asset.location ?? asset.location_details?.id;
+        setValue("product", productId ? String(productId) : "");
+        setValue("status", statusId ? String(statusId) : "");
+        setValue("supplier", supplierId ? String(supplierId) : "");
+        setValue("location", locationId ? String(locationId) : "");
         if (isClone) {
           const clonedName = await generateCloneName(asset.name);
           setValue("assetName", clonedName);
@@ -402,7 +407,7 @@ export default function AssetsRegistration() {
     // Only apply product defaults if:
     // 1. A product is selected AND
     // 2. It's either a new registration OR the product is different from the original asset's product
-    const originalProductId = asset?.product;
+    const originalProductId = asset?.product ?? asset?.product_details?.id;
     const isProductChanged = !originalProductId || parseInt(productId) !== originalProductId;
 
     if (productId && isProductChanged) {
@@ -417,9 +422,10 @@ export default function AssetsRegistration() {
           setValue('purchaseCost', product.default_purchase_cost);
         }
 
-        // Set supplier if available
+        // Set supplier if available (supports id or object)
         if (product.default_supplier) {
-          setValue('supplier', String(product.default_supplier));
+          const defaultSupplierId = product.default_supplier?.id ?? product.default_supplier;
+          setValue('supplier', String(defaultSupplierId));
         }
       }
     }
