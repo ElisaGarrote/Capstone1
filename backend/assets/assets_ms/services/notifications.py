@@ -92,7 +92,7 @@ def generate_low_stock_product_notifications():
         
         if available_count <= product.minimum_quantity:
             notifications.append({
-                'id': f"product-low-stock-{product.id}",
+                'id': f"product-low-stock-{product.id}-{today.date().isoformat()}",
                 'type': 'low-stock-product',
                 'title': 'Low Stock - Product',
                 'message': f"There's {available_count} {product.name} available, which is at or below the minimum of {product.minimum_quantity}.",
@@ -120,7 +120,7 @@ def generate_low_stock_component_notifications():
         available = component.available_quantity
         if available <= component.minimum_quantity:
             notifications.append({
-                'id': f"component-low-stock-{component.id}",
+                'id': f"component-low-stock-{component.id}-{today.isoformat()}",
                 'type': 'low-stock-component',
                 'title': 'Low Stock - Component',
                 'message': f"Component '{component.name}' has {available} available, which is at or below the minimum of {component.minimum_quantity}.",
@@ -157,7 +157,7 @@ def generate_warranty_expiration_notifications():
             message = f"Warranty for Asset {asset.asset_id} ({product_name}) expired {days_ago} days ago."
         
         notifications.append({
-            'id': f"warranty-expired-{asset.id}",
+            'id': f"warranty-expired-{asset.id}-{asset.warranty_expiration.isoformat()}",
             'type': 'expiring',
             'title': 'Warranty Expired',
             'message': message,
