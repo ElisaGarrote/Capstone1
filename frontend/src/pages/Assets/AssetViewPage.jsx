@@ -184,14 +184,16 @@ function AssetViewPage() {
     const assetDisplayId = asset.asset_id;
     const assetName = asset.name;
     const checkoutId = asset.active_checkout;
+    // Pass the full ticket_details object - no need to fetch by ID later
+    const ticket = asset.ticket_details;
 
     if (checkoutId) {
       navigate(`/assets/check-in/${assetId}`, {
-        state: { assetId, assetDisplayId, assetName, checkoutId, ticket: null },
+        state: { assetId, assetDisplayId, assetName, checkoutId, ticket },
       });
     } else {
       navigate(`/assets/check-out/${assetId}`, {
-        state: { assetId, assetDisplayId, assetName, ticket: null },
+        state: { assetId, assetDisplayId, assetName, ticket },
       });
     }
   };
