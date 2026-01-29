@@ -433,6 +433,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
                 'ticket_number': checkout.ticket_number,
                 'checkout_to': checkout.checkout_to,
                 'location': checkout.location,
+                'checkout_date': checkout.checkout_date,
                 'return_date': checkout.return_date,
                 'condition': checkout.condition,
                 'notes': checkout.notes,
@@ -742,7 +743,7 @@ class AssetCheckoutByEmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckout
         fields = [
-            'id', 'asset_details', 'checkout_to', 'condition', 'ticket_number', 'created_at'
+            'id', 'asset_details', 'checkout_to', 'condition', 'ticket_number', 'checkout_date'
         ]
 
     def get_asset_details(self, obj):
@@ -770,7 +771,7 @@ class AssetCheckoutInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssetCheckout
         fields = [
-            'id', 'asset', 'asset_details', 'checkout_to', 'created_at',
+            'id', 'asset', 'asset_details', 'checkout_to', 'checkout_date',
             'return_date', 'location', 'condition', 'notes', 'ticket_number', 'files'
         ]
 
@@ -806,6 +807,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
     asset = serializers.PrimaryKeyRelatedField(queryset=Asset.objects.all(), required=False)
     checkout_to = serializers.IntegerField(required=False)
     location = serializers.IntegerField(required=False)
+    checkout_date = serializers.DateField(required=False)
     return_date = serializers.DateField(required=False)
     # ticket_number is required from frontend for validation
     ticket_number = serializers.CharField(required=True)
@@ -922,6 +924,7 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
         validated_data['asset'] = asset  # Use Asset object, not display asset_id string
         validated_data['checkout_to'] = ticket.get('employee')
         validated_data['location'] = location_id
+        validated_data['checkout_date'] = ticket.get('checkout_date')
         validated_data['return_date'] = ticket.get('return_date')
 
         # Form data already in validated_data: condition, revenue, notes
@@ -971,7 +974,7 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
             })
 
         # Make sure checkin happens after checkout
-        if checkin_date < checkout.created_at.date():
+        if checkin_date < checkout.checkout_date():
             raise serializers.ValidationError({
                 "checkin_date": "Cannot check in before checkout date."
             })
