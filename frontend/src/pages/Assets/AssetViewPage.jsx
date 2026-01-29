@@ -202,8 +202,8 @@ function AssetViewPage() {
     const hasTicket = !!asset.ticket_details;
     const checkoutDate = asset.ticket_details?.checkout_date;
     
-    // Check if checkout date is in the future
-    const isFutureCheckout = checkoutDate ? new Date(checkoutDate) > new Date() : false;
+    // Check if checkout date is in the future (compare date only, not time)
+    const isFutureCheckout = checkoutDate ? new Date(checkoutDate).toDateString() > new Date().toDateString() : false;
 
     // No actions for undeployable or archived
     if (status === "undeployable" || status === "archived") {
@@ -240,7 +240,7 @@ function AssetViewPage() {
     status: asset?.status_details?.type,
     hasTicket: !!asset?.ticket_details,
     checkoutDate: asset?.ticket_details?.checkout_date,
-    isFutureCheckout: asset?.ticket_details?.checkout_date ? new Date(asset.ticket_details.checkout_date) > new Date() : false,
+    isFutureCheckout: asset?.ticket_details?.checkout_date ? new Date(asset.ticket_details.checkout_date).toDateString() > new Date().toDateString() : false,
     checkoutState
   });
 
