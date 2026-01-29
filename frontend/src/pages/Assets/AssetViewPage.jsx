@@ -235,6 +235,15 @@ function AssetViewPage() {
 
   const checkoutState = getCheckoutState();
 
+  // Debug logging
+  console.log("AssetViewPage checkout state:", {
+    status: asset?.status_details?.type,
+    hasTicket: !!asset?.ticket_details,
+    checkoutDate: asset?.ticket_details?.checkout_date,
+    isFutureCheckout: asset?.ticket_details?.checkout_date ? new Date(asset.ticket_details.checkout_date) > new Date() : false,
+    checkoutState
+  });
+
   // Format currency
   const formatCurrency = (value) => {
     if (!value) return null;
