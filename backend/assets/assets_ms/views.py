@@ -534,9 +534,30 @@ class AssetViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         errors = []
 
-        # Check for active checkouts (no checkin yet)
+        # Check for active asset checkouts (no checkin yet)
         if instance.asset_checkouts.filter(asset_checkin__isnull=True).exists():
             errors.append("This asset is currently checked out and not yet checked in. Please check in the asset before deleting it or perform a check-in and delete checkout.")
+
+        # Check for active component checkouts (not fully returned)
+        active_component_checkouts = instance.checkout_to.filter(is_deleted=False).exclude(
+            component_checkins__quantity__gte=models.F('quantity')
+        ).distinct()
+        if active_component_checkouts.exists():
+            component_names = ', '.join([cc.component.name for cc in active_component_checkouts])
+            errors.append(f"This asset has components checked out that are not fully returned: {component_names}. Please return all components before deleting this asset.")
+
+        # Check for pending audit schedules (audit schedules without corresponding audits)
+        pending_audits = instance.audit_schedules.filter(is_deleted=False, audit__isnull=True)
+        if pending_audits.exists():
+            errors.append(f"This asset has {pending_audits.count()} pending audit schedule(s) that have not been performed yet. Please complete all audits before deleting this asset.")
+
+        # Check for tickets referencing this asset
+        tickets_response = get_tickets_list()
+        if isinstance(tickets_response, list):
+            referencing_tickets = [t for t in tickets_response if t.get("asset") == instance.id]
+            if referencing_tickets:
+                ticket_ids = ', '.join([str(t.get('id')) for t in referencing_tickets])
+                errors.append(f"This asset has {len(referencing_tickets)} ticket(s) referencing it (IDs: {ticket_ids}). Please resolve or reassign these tickets before deleting this asset.")
 
         # If any blocking relationships exist, raise error
         if errors:
@@ -969,11 +990,42 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         # Check for assets with active checkouts first
         for asset in assets:
+            # Check for active asset checkouts (no checkin yet)
             if asset.asset_checkouts.filter(asset_checkin__isnull=True).exists():
                 return Response(
                     {"detail": f"Cannot delete asset '{asset.asset_id}', it's currently checked out."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            
+            # Check for active component checkouts (not fully returned)
+            active_component_checkouts = asset.checkout_to.filter(is_deleted=False).exclude(
+                component_checkins__quantity__gte=models.F('quantity')
+            ).distinct()
+            if active_component_checkouts.exists():
+                component_names = ', '.join([cc.component.name for cc in active_component_checkouts])
+                return Response(
+                    {"detail": f"Cannot delete asset '{asset.asset_id}', it has components checked out that are not fully returned: {component_names}."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check for pending audit schedules (audit schedules without corresponding audits)
+            pending_audits = asset.audit_schedules.filter(is_deleted=False, audit__isnull=True)
+            if pending_audits.exists():
+                return Response(
+                    {"detail": f"Cannot delete asset '{asset.asset_id}', it has {pending_audits.count()} pending audit schedule(s) that have not been performed yet."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check for tickets referencing this asset
+            tickets_response = get_tickets_list()
+            if isinstance(tickets_response, list):
+                referencing_tickets = [t for t in tickets_response if t.get("asset") == asset.id]
+                if referencing_tickets:
+                    ticket_ids = ', '.join([str(t.get('id')) for t in referencing_tickets])
+                    return Response(
+                        {"detail": f"Cannot delete asset '{asset.asset_id}', it has {len(referencing_tickets)} ticket(s) referencing it (IDs: {ticket_ids})."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
 
         # Perform soft delete
         deleted_count = 0
