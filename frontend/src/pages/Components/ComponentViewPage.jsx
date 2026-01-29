@@ -76,6 +76,26 @@ function ComponentView() {
     setDeleteModalOpen(true);
   };
 
+  const handleCheckInOut = (action) => {
+    const item = {
+      id: component.id,
+      name: component.name,
+      available_quantity: component.available_quantity ?? 0,
+    };
+
+    if (action === "checkin") {
+      // Navigate to checkout list to select which checkout to check in from
+      navigate(`/components/checked-out-list/${component.id}`, {
+        state: { item },
+      });
+    } else {
+      // Navigate to checkout form
+      navigate(`/components/check-out/${component.id}`, {
+        state: { item },
+      });
+    }
+  };
+
   const actionButtons = (
     <div className="vertical-action-buttons">
       <button
@@ -94,6 +114,28 @@ function ComponentView() {
         </svg>
         Edit
       </button>
+      {component.available_quantity > 0 && (
+        <button
+          type="button"
+          className="action-btn action-btn-checkout"
+          onClick={() => handleCheckInOut("checkout")}
+          title="Check Out"
+        >
+          <i className="fas fa-sign-out-alt"></i>
+          <span>Check-Out</span>
+        </button>
+      )}
+      {component.checked_out_quantity > 0 && (
+        <button
+          type="button"
+          className="action-btn action-btn-checkin"
+          onClick={() => handleCheckInOut("checkin")}
+          title="Check In"
+        >
+          <i className="fas fa-sign-in-alt"></i>
+          <span>Check-In</span>
+        </button>
+      )}
       <MediumButtons
         type="delete"
         onClick={handleDeleteClick}

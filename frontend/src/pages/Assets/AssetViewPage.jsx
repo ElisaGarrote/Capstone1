@@ -178,6 +178,64 @@ function AssetViewPage() {
     navigate(`/assets/edit/${asset.id}`);
   };
 
+  const handleCheckInOut = () => {
+    const assetId = asset.id;
+    const assetDisplayId = asset.asset_id;
+    const assetName = asset.name;
+    const checkoutId = asset.active_checkout;
+
+    if (checkoutId) {
+      navigate(`/assets/check-in/${assetId}`, {
+        state: { assetId, assetDisplayId, assetName, checkoutId, ticket: null },
+      });
+    } else {
+      navigate(`/assets/check-out/${assetId}`, {
+        state: { assetId, assetDisplayId, assetName, ticket: null },
+      });
+    }
+  };
+
+  // Determine checkout/checkin button state
+  const getCheckoutState = () => {
+    const status = asset.status_details?.type;
+    const hasTicket = !!asset.ticket_details;
+    const checkoutDate = asset.ticket_details?.checkout_date;
+    
+    // Check if checkout date is in the future
+    const isFutureCheckout = checkoutDate ? new Date(checkoutDate) > new Date() : false;
+
+    // No actions for undeployable or archived
+    if (status === "undeployable" || status === "archived") {
+      return {
+        showCheckin: false,
+        showCheckout: false,
+        checkoutDisabled: false,
+      };
+    }
+
+    // If status is unknown/undefined, show checkout (disabled) as fallback
+    if (!status) {
+      return {
+        showCheckin: false,
+        showCheckout: true,
+        checkoutDisabled: true,
+      };
+    }
+
+    // Checkout is disabled if: No ticket, OR Has ticket but checkout_date is in the future
+    const checkoutDisabled =
+      (status === "pending" || status === "deployable") &&
+      (!hasTicket || isFutureCheckout);
+
+    return {
+      showCheckin: status === "deployed",
+      showCheckout: status === "pending" || status === "deployable",
+      checkoutDisabled,
+    };
+  };
+
+  const checkoutState = getCheckoutState();
+
   // Format currency
   const formatCurrency = (value) => {
     if (!value) return null;
@@ -275,6 +333,24 @@ function AssetViewPage() {
         </svg>
         Edit
       </button>
+      {checkoutState.showCheckin && (
+        <button type="button" className="action-btn action-btn-checkin" onClick={handleCheckInOut} title="Check In">
+          <i className="fas fa-sign-in-alt"></i>
+          <span>Check-In</span>
+        </button>
+      )}
+      {checkoutState.showCheckout && (
+        <button 
+          type="button" 
+          className="action-btn action-btn-checkout" 
+          onClick={handleCheckInOut} 
+          disabled={checkoutState.checkoutDisabled}
+          title={checkoutState.checkoutDisabled ? "Checkout not available. Ensure ticket exists and checkout date has arrived." : "Check Out"}
+        >
+          <i className="fas fa-sign-out-alt"></i>
+          <span>Check-Out</span>
+        </button>
+      )}
       <MediumButtons type="delete" onClick={handleDeleteClick} />
     </div>
   );
