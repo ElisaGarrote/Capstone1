@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "../styles/custom-colors.css";
 import "../styles/NavBar.css";
 import Logo from "../assets/img/Logo.png";
@@ -10,6 +10,7 @@ import NotificationOverlay from "./NotificationOverlay";
 import SystemLogo from "../assets/icons/Map-LogoNew.svg";
 import authService from "../services/auth-service";
 import DefaultProfile from "../assets/img/default-profile.svg";
+import assetsAxios from "../api/assetsAxios";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function NavBar() {
   const [showReportsMenu, setShowReportsMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(4);
+  const [notificationCount, setNotificationCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // State for selected items in each dropdown
@@ -29,6 +30,40 @@ export default function NavBar() {
 
   // State to track which menu item is active
   const [activeMenu, setActiveMenu] = useState("");
+
+  // Fetch notification count from API
+  const fetchNotificationCount = useCallback(async () => {
+    try {
+      const response = await assetsAxios.get('/notifications/');
+      const allNotifications = response.data.results || [];
+      // Get dismissed IDs from localStorage
+      const stored = localStorage.getItem('dismissedNotifications');
+      const dismissedIds = stored ? JSON.parse(stored) : [];
+      // Count only non-dismissed notifications
+      const activeCount = allNotifications.filter(
+        (n) => !dismissedIds.includes(n.id)
+      ).length;
+      setNotificationCount(activeCount);
+    } catch (err) {
+      console.error('Failed to fetch notification count:', err);
+      setNotificationCount(0);
+    }
+  }, []);
+
+  // Fetch notification count on mount and periodically
+  useEffect(() => {
+    fetchNotificationCount();
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchNotificationCount, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchNotificationCount]);
+
+  // Refresh notification count when overlay closes
+  useEffect(() => {
+    if (!showNotifications) {
+      fetchNotificationCount();
+    }
+  }, [showNotifications, fetchNotificationCount]);
 
   // Close all dropdowns when clicking outside
   useEffect(() => {

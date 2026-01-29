@@ -1,44 +1,77 @@
 import React, { useState, useEffect } from 'react';
+import assetsAxios from '../api/assetsAxios';
 import '../styles/NotificationOverlay.css';
 
+// Helper function to format relative time
+const formatRelativeTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays > 0) return `about ${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  if (diffHours > 0) return `about ${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffMins > 0) return `about ${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+  return 'just now';
+};
+
 const NotificationOverlay = ({ isOpen, onClose }) => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'low-stock',
-      title: 'Low Stock',
-      message: "There's 6 Laptops available, which is below the minimum of 15.",
-      time: 'about 8 hours ago',
-    },
-    {
-      id: 2,
-      type: 'due-back',
-      title: 'Asset Due Back',
-      message: "Asset #100009 (Macbook Pro 16\") is due back from Elliott Nolan tomorrow.",
-      time: 'about 8 hours ago',
-    },
-    {
-      id: 3,
-      type: 'maintenance',
-      title: 'Asset Maintenance Due',
-      message: "Asset #100002 (iPhone 16 Pro Max) is due for maintenance next week.",
-      time: 'about 1 day ago',
-    },
-    {
-      id: 4,
-      type: 'expiring',
-      title: 'Warranty Expiring',
-      message: "Warranty for Asset #100016 (Surface Laptop 5) expires in 7 days.",
-      time: 'about 2 days ago',
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [dismissedIds, setDismissedIds] = useState(() => {
+    // Load dismissed notification IDs from localStorage
+    const stored = localStorage.getItem('dismissedNotifications');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  // Fetch notifications from API when overlay opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
     }
-  ]);
+  }, [isOpen]);
+
+  const fetchNotifications = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await assetsAxios.get('/notifications/');
+      const allNotifications = response.data.results || [];
+      // Filter out dismissed notifications
+      const activeNotifications = allNotifications.filter(
+        (n) => !dismissedIds.includes(n.id)
+      );
+      setNotifications(activeNotifications);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+      setError('Failed to load notifications');
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const clearAllNotifications = () => {
+    // Add all current notification IDs to dismissed list
+    const allIds = notifications.map(n => n.id);
+    const newDismissedIds = [...new Set([...dismissedIds, ...allIds])];
+    setDismissedIds(newDismissedIds);
+    localStorage.setItem('dismissedNotifications', JSON.stringify(newDismissedIds));
     setNotifications([]);
     onClose();
   };
 
   const deleteNotification = (id) => {
+    // Add this notification ID to dismissed list
+    const newDismissedIds = [...dismissedIds, id];
+    setDismissedIds(newDismissedIds);
+    localStorage.setItem('dismissedNotifications', JSON.stringify(newDismissedIds));
+
     const updatedNotifications = notifications.filter(notification => notification.id !== id);
     setNotifications(updatedNotifications);
 
@@ -101,7 +134,15 @@ const NotificationOverlay = ({ isOpen, onClose }) => {
         </div>
 
         <div className="notification-list">
-          {notifications.length === 0 ? (
+          {loading ? (
+            <div className="no-notifications">
+              <p>Loading notifications...</p>
+            </div>
+          ) : error ? (
+            <div className="no-notifications">
+              <p>{error}</p>
+            </div>
+          ) : notifications.length === 0 ? (
             <div className="no-notifications">
               <p>No notifications</p>
             </div>
@@ -114,7 +155,9 @@ const NotificationOverlay = ({ isOpen, onClose }) => {
                 <div className="notification-content">
                   <h3>{notification.title}</h3>
                   <p>{notification.message}</p>
-                  <span className="notification-time">{notification.time}</span>
+                  <span className="notification-time">
+                    {formatRelativeTime(notification.created_at)}
+                  </span>
                 </div>
                 <button
                   className="delete-notification-btn"
