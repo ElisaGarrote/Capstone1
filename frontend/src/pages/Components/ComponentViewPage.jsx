@@ -130,28 +130,29 @@ function ComponentView() {
         </svg>
         Edit
       </button>
-      {component.available_quantity > 0 && (
-        <button
-          type="button"
-          className="action-btn action-btn-checkout"
-          onClick={() => handleCheckInOut("checkout")}
-          title="Check Out"
-        >
-          <i className="fas fa-sign-out-alt"></i>
-          <span>Check-Out</span>
-        </button>
-      )}
-      {component.checked_out_quantity > 0 && (
-        <button
-          type="button"
-          className="action-btn action-btn-checkin"
-          onClick={() => handleCheckInOut("checkin")}
-          title="Check In"
-        >
-          <i className="fas fa-sign-in-alt"></i>
-          <span>Check-In</span>
-        </button>
-      )}
+
+      <button
+        type="button"
+        className="action-btn action-btn-checkout"
+        onClick={() => handleCheckInOut("checkout")}
+        disabled={!component.available_quantity || component.available_quantity <= 0}
+        title={!component.available_quantity || component.available_quantity <= 0 ? "No available quantity" : "Check Out"}
+      >
+        <i className="fas fa-sign-out-alt"></i>
+        <span>Check-Out</span>
+      </button>
+
+      <button
+        type="button"
+        className="action-btn action-btn-checkin"
+        onClick={() => handleCheckInOut("checkin")}
+        disabled={!component.checked_out_quantity || component.checked_out_quantity <= 0}
+        title={!component.checked_out_quantity || component.checked_out_quantity <= 0 ? "No checked out quantity" : "Check In"}
+      >
+        <i className="fas fa-sign-in-alt"></i>
+        <span>Check-In</span>
+      </button>
+
       <MediumButtons
         type="delete"
         onClick={handleDeleteClick}
