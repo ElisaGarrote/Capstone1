@@ -753,48 +753,61 @@ export default function BulkEditAssetModels() {
 
               {/* Image */}
               <fieldset>
-                <label>Image</label>
-                {previewImage ? (
-                  <div className="image-selected">
-                    <img src={previewImage} alt="Selected image" />
+                <label>Image Management</label>
+                <div className="image-management-section">
+                  <label 
+                    className={`upload-image-btn ${selectedImage || removeImage ? 'disabled' : ''}`}
+                    title={selectedImage ? "File selected" : removeImage ? "Cannot upload while image removal is selected" : ""}
+                  >
+                    {selectedImage ? `✓ ${selectedImage.name}` : 'Choose File'}
+                    <input
+                      type="file"
+                      id="image"
+                      accept="image/*"
+                      onChange={handleImageSelection}
+                      disabled={removeImage}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                  {selectedImage && (
                     <button
                       type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPreviewImage(null);
+                      className="clear-file-btn"
+                      onClick={(e) => {
+                        e.preventDefault();
                         setSelectedImage(null);
+                        setPreviewImage(null);
                         setValue('image', null);
                         document.getElementById('image').value = '';
-                        setRemoveImage(true);
-                        console.log("Remove image flag set to:", true);
                       }}
+                      title="Clear file selection"
                     >
-                      <img src={CloseIcon} alt="Remove" />
+                      Clear
                     </button>
-                  </div>
-                ) : (
-                  <>
-                    <label 
-                      className={`upload-image-btn ${removeImage ? 'disabled' : ''}`}
-                      title={removeImage ? "Cannot upload while image removal is selected" : ""}
-                    >
-                      Choose File
-                      <input
-                        type="file"
-                        id="image"
-                        accept="image/*"
-                        onChange={handleImageSelection}
-                        disabled={removeImage}
-                        style={{ display: "none" }}
-                      />
-                    </label>
-                    {removeImage && (
-                      <div className="remove-image-indicator">
-                        <small>Image removal is selected</small>
-                      </div>
-                    )}
-                  </>
-                )}
+                  )}
+                </div>
+                <div className="checkbox-group">
+                  <label htmlFor="removeImage" className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      id="removeImage"
+                      checked={removeImage}
+                      onChange={(e) => {
+                        setRemoveImage(e.target.checked);
+                        if (e.target.checked) {
+                          setSelectedImage(null);
+                          setPreviewImage(null);
+                          setValue('image', null);
+                          if (document.getElementById('image')) {
+                            document.getElementById('image').value = '';
+                          }
+                        }
+                      }}
+                      disabled={selectedImage !== null}
+                    />
+                    Remove images from all items
+                  </label>
+                </div>
                 <small className="file-size-info">
                   Maximum file size must be 5MB
                 </small>
