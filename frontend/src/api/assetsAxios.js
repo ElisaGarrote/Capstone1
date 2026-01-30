@@ -6,7 +6,7 @@ const assetsBase = import.meta.env.VITE_ASSETS_API_URL || `${gatewayUrl.replace(
 
 const assetsAxios = axios.create({
   baseURL: assetsBase,
-  timeout: 10000,
+  timeout: 30000,
 });
 
 assetsAxios.interceptors.request.use(
