@@ -89,7 +89,7 @@ function TableItem({
       <td>
         <ActionButtons
           showCheckin
-          disableCheckin={!asset.checked_out_quantity || asset.checked_out_quantity <= 0}
+          disableCheckin={asset.quantity - asset.available_quantity <= 0}
           onCheckinClick={() => onCheckInOut(asset, "checkin")}
         />
       </td>
