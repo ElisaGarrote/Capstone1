@@ -215,34 +215,37 @@ export default function BulkEditComponents() {
             title="Bulk Edit Components"
           />
 
-          <section className="components-bulk-selected">
-            <h3>Selected Components ({currentSelectedIds.length})</h3>
-            <div className="components-bulk-tags">
-              {selectedComponents.length > 0 ? (
-                selectedComponents.map((item) => (
-                  <div key={item.id} className="component-bulk-tag">
-                    <span className="component-bulk-name">{item.name}</span>
-                    <span className="component-bulk-id">#{item.id}</span>
-                    <button
-                      type="button"
-                      className="component-bulk-remove"
-                      onClick={() => handleRemoveComponent(item.id)}
-                      title="Remove from selection"
-                    >
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
-                ))
+          {/* Selected Components Section */}
+          <section className="selected-assets-section">
+            <h3>Selected Components ({selectedComponents.filter(c => currentSelectedIds.includes(c.id)).length})</h3>
+            <div className="selected-assets-tags">
+              {selectedComponents.filter(c => currentSelectedIds.includes(c.id)).length > 0 ? (
+                selectedComponents
+                  .filter(c => currentSelectedIds.includes(c.id))
+                  .map((item) => (
+                    <div key={item.id} className="asset-tag">
+                      <span className="asset-tag-name">{item.name}</span>
+                      <span className="asset-tag-id">#{item.id}</span>
+                      <button
+                        type="button"
+                        className="asset-tag-remove"
+                        onClick={() => handleRemoveComponent(item.id)}
+                        title="Remove from selection"
+                      >
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))
               ) : (
-                <p className="components-bulk-empty">No components selected</p>
+                <p className="no-assets-message">No components selected</p>
               )}
             </div>
           </section>
 
-          <section className="components-bulk-form-section">
+          <section className="bulk-edit-form-section">
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="components-bulk-form"
+              className="bulk-edit-form"
             >
               <fieldset className="form-field">
                 <label htmlFor="category">Category</label>
