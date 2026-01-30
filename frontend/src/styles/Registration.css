@@ -290,6 +290,30 @@
     background-color: var(--primary-color-hover);
 }
 
+.registration .upload-image-btn.disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.registration .upload-image-btn.disabled:hover {
+    background-color: #cccccc;
+}
+
+.registration .remove-image-indicator {
+    display: block;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+    border-radius: 4px;
+}
+
+.registration .remove-image-indicator small {
+    color: #856404;
+    font-weight: 500;
+}
+
 .registration .file-size-info {
     display: block;
     margin-top: 0.5rem;

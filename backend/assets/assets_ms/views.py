@@ -321,6 +321,13 @@ class ProductViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Prevent both uploading and removing images simultaneously
+        if image_content and remove_image:
+            return Response(
+                {"detail": "Cannot upload and remove images simultaneously. Choose one action."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         products = Product.objects.filter(id__in=ids, is_deleted=False)
 
         updated, failed = [], []
@@ -947,6 +954,13 @@ class AssetViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Prevent both uploading and removing images simultaneously
+        if image_content and remove_image:
+            return Response(
+                {"detail": "Cannot upload and remove images simultaneously. Choose one action."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         assets = Asset.objects.filter(id__in=ids, is_deleted=False)
         updated, failed = [], []
 
@@ -1518,39 +1532,119 @@ class ComponentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['patch'], url_path='bulk-edit')
     def bulk_edit(self, request):
-        """Bulk update components"""
-        ids = request.data.get('ids', [])
+        """
+        Bulk edit multiple components.
+        Payload (JSON):
+        {
+            "ids": [1, 2, 3],
+            "data": {
+                "category": 5,
+                "manufacturer": 2,
+                "default_purchase_cost": "150.00"
+            }
+        }
+        Or FormData with 'ids' (JSON string), 'data' (JSON string), and optional 'image' file.
+        Only non-empty fields will be updated.
+        """
+        from django.core.files.base import ContentFile
+
+        # Handle both JSON and FormData
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            ids_raw = request.data.get("ids", "[]")
+            data_raw = request.data.get("data", "{}")
+            try:
+                ids = json.loads(ids_raw) if isinstance(ids_raw, str) else ids_raw
+                update_data = json.loads(data_raw) if isinstance(data_raw, str) else data_raw
+            except json.JSONDecodeError:
+                return Response({"detail": "Invalid JSON in ids or data."}, status=status.HTTP_400_BAD_REQUEST)
+
+            uploaded_image = request.FILES.get("image")
+            if uploaded_image:
+                image_content = uploaded_image.read()
+                image_name = uploaded_image.name
+            else:
+                image_content = None
+                image_name = None
+            remove_image = request.data.get("remove_image") == "true"
+        else:
+            ids = request.data.get("ids", [])
+            update_data = request.data.get("data", {})
+            image_content = None
+            image_name = None
+            remove_image = False
+
         if not ids:
+            return Response({"detail": "No IDs provided."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Remove blank values so they won't overwrite existing fields
+        safe_data = {k: v for k, v in update_data.items() if v not in [None, "", [], {}]}
+
+        # Check if there's anything to update (fields, image, or remove_image)
+        has_field_updates = bool(safe_data)
+        has_image_update = image_content is not None or remove_image
+
+        if not has_field_updates and not has_image_update:
             return Response(
-                {"detail": "No IDs provided."},
+                {"detail": "No valid fields to update."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        update_data = {k: v for k, v in request.data.items() if k != 'ids' and v is not None and v != ''}
-        if not update_data:
+        # Prevent both uploading and removing images simultaneously
+        if image_content and remove_image:
             return Response(
-                {"detail": "No fields to update."},
+                {"detail": "Cannot upload and remove images simultaneously. Choose one action."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         components = Component.objects.filter(id__in=ids, is_deleted=False)
-        updated_count = 0
-        for component in components:
-            for field, value in update_data.items():
-                if hasattr(component, field):
-                    setattr(component, field, value)
-            component.save()
-            log_component_activity(
-                action='Update',
-                component=component,
-                notes=f"Component '{component.name}' updated (bulk)"
-            )
-            updated_count += 1
+        updated, failed = [], []
 
-        return Response(
-            {"detail": f"Successfully updated {updated_count} component(s)."},
-            status=status.HTTP_200_OK
-        )
+        # Check if name is being updated for multiple components
+        base_name = safe_data.get("name")
+        has_name_update = base_name is not None and len(ids) > 1
+
+        for index, component in enumerate(components):
+            # Create component-specific data with unique name suffix if needed
+            component_data = safe_data.copy()
+            if has_name_update:
+                component_data["name"] = f"{base_name} ({index + 1})"
+
+            serializer = ComponentSerializer(
+                component,
+                data=component_data,
+                partial=True
+            )
+
+            if serializer.is_valid():
+                instance = serializer.save()
+
+                # Handle image update
+                if image_content:
+                    instance.image.save(image_name, ContentFile(image_content), save=True)
+                elif remove_image and instance.image:
+                    instance.image.delete(save=False)
+                    instance.image = None
+                    instance.save()
+
+                updated.append(component.id)
+
+                # Log activity
+                log_component_activity(
+                    action='Update',
+                    component=instance,
+                    notes=f"Component '{instance.name}' updated (bulk)"
+                )
+            else:
+                failed.append({
+                    "id": component.id,
+                    "errors": serializer.errors
+                })
+
+        return Response({
+            "updated": updated,
+            "failed": failed
+        })
 
     @action(detail=False, methods=['get'])
     def names(self, request):

@@ -112,6 +112,7 @@ export default function BulkEditAssetModels() {
 
       setSelectedImage(file);
       setValue('image', file);
+      setRemoveImage(false); // Clear remove flag when uploading new image
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -256,6 +257,12 @@ export default function BulkEditAssetModels() {
     try {
       if (currentSelectedIds.length === 0) {
         setErrorMessage("Please select at least one asset model to update");
+        return;
+      }
+
+      // Validate mutual exclusion of upload and remove
+      if (selectedImage && removeImage) {
+        setErrorMessage("Cannot upload and remove images simultaneously. Choose one action.");
         return;
       }
 
@@ -766,16 +773,27 @@ export default function BulkEditAssetModels() {
                     </button>
                   </div>
                 ) : (
-                  <label className="upload-image-btn">
-                    Choose File
-                    <input
-                      type="file"
-                      id="image"
-                      accept="image/*"
-                      onChange={handleImageSelection}
-                      style={{ display: "none" }}
-                    />
-                  </label>
+                  <>
+                    <label 
+                      className={`upload-image-btn ${removeImage ? 'disabled' : ''}`}
+                      title={removeImage ? "Cannot upload while image removal is selected" : ""}
+                    >
+                      Choose File
+                      <input
+                        type="file"
+                        id="image"
+                        accept="image/*"
+                        onChange={handleImageSelection}
+                        disabled={removeImage}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                    {removeImage && (
+                      <div className="remove-image-indicator">
+                        <small>Image removal is selected</small>
+                      </div>
+                    )}
+                  </>
                 )}
                 <small className="file-size-info">
                   Maximum file size must be 5MB
