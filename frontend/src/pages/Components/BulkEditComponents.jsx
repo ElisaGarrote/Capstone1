@@ -9,7 +9,7 @@ import { fetchComponentNames, bulkEditComponents } from "../../services/assets-s
 import { fetchAllDropdowns } from "../../services/contexts-service";
 import { fetchAllLocations } from "../../services/integration-help-desk-service";
 import "../../styles/Registration.css";
-import "../../styles/components/BulkEditComponents.css";
+import "../../styles/Components/BulkEditComponents.css";
 
 export default function BulkEditComponents() {
   const location = useLocation();
