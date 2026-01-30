@@ -199,10 +199,11 @@ class ProductViewSet(viewsets.ModelViewSet):
         self.invalidate_product_cache(instance.id)
 
     def perform_update(self, serializer):
+        remove_image = self.request.data.get("remove_image") == "true"
+
         instance = serializer.save()
 
         # Handle image removal
-        remove_image = self.request.data.get("remove_image") == "true"
         if remove_image and instance.image:
             instance.image.delete(save=False)
             instance.image = None
@@ -599,17 +600,27 @@ class AssetViewSet(viewsets.ModelViewSet):
             asset=asset,
             notes=f"Asset '{asset.name}' created"
         )
-
+      
     def perform_update(self, serializer):
-        instance = serializer.save()
-        self.invalidate_asset_cache(instance.id)
+        remove_image = self.request.data.get("remove_image") == "true"
 
+        instance = serializer.save()
+
+        # Handle image removal
+        if remove_image and instance.image:
+            instance.image.delete(save=False)
+            instance.image = None
+            instance.save()
+        
         # Log activity
         log_asset_activity(
             action='Update',
             asset=instance,
             notes=f"Asset '{instance.name}' updated"
         )
+
+        self.invalidate_asset_cache(instance.id)
+
     
     @action(detail=False, methods=['get'], url_path='by-product/(?P<product_id>\d+)')
     def by_product(self, request, product_id=None):
@@ -1438,14 +1449,24 @@ class ComponentViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
-        component = serializer.save()
+        remove_image = self.request.data.get("remove_image") == "true"
+        
+        instance = serializer.save()
 
+        # Handle image removal
+        if remove_image and instance.image:
+            instance.image.delete(save=False)
+            instance.image = None
+            instance.save()
+        
         # Log activity
         log_component_activity(
             action='Update',
-            component=component,
-            notes=f"Component '{component.name}' updated"
+            component=instance,
+            notes=f"Component '{instance.name}' updated"
         )
+
+        self.invalidate_asset_cache(instance.id)
 
     @action(detail=False, methods=['post'])
     def bulk_delete(self, request):
