@@ -201,6 +201,10 @@ class ProductViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         remove_image = self.request.data.get("remove_image") == "true"
 
+        # If remove_image is true, exclude image from update
+        if remove_image:
+            serializer.validated_data.pop('image', None)
+
         instance = serializer.save()
 
         # Handle image removal
@@ -603,6 +607,10 @@ class AssetViewSet(viewsets.ModelViewSet):
       
     def perform_update(self, serializer):
         remove_image = self.request.data.get("remove_image") == "true"
+
+        # If remove_image is true, exclude image from update
+        if remove_image:
+            serializer.validated_data.pop('image', None)
 
         instance = serializer.save()
 
@@ -1450,6 +1458,10 @@ class ComponentViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         remove_image = self.request.data.get("remove_image") == "true"
+
+        # If remove_image is true, exclude image from update
+        if remove_image:
+            serializer.validated_data.pop('image', None)
         
         instance = serializer.save()
 
