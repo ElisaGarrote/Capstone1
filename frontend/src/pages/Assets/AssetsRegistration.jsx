@@ -101,7 +101,7 @@ export default function AssetsRegistration() {
         setIsClone(cloneMode);
 
         // Fetch dropdown options for assets (filter statuses by asset category)
-        const contextDropdowns = await fetchAllDropdowns("asset", { category: "asset" });
+        const contextDropdowns = await fetchAllDropdowns("asset");
         setStatuses(contextDropdowns.statuses || []);
         setSuppliers(contextDropdowns.suppliers || []);
 
@@ -335,7 +335,10 @@ export default function AssetsRegistration() {
       if (data.warrantyExpiration) formData.append('warranty_expiration', data.warrantyExpiration);
       if (data.orderNumber) formData.append('order_number', data.orderNumber);
       if (data.purchaseDate) formData.append('purchase_date', data.purchaseDate);
-      if (data.purchaseCost) formData.append('purchase_cost', data.purchaseCost);
+      if (data.purchaseCost != null) {
+        formData.append('purchase_cost', data.purchaseCost);
+      }
+
       // Notes can be empty string
       formData.append('notes', data.notes || '');
 
@@ -450,7 +453,12 @@ export default function AssetsRegistration() {
             root="Assets"
             currentPage={isClone ? "Clone Asset" : (id ? "Edit Asset" : "New Asset")}
             rootNavigatePage="/assets"
-            title={isClone ? `Clone ${asset?.name || 'Asset'}` : (id ? `Edit ${asset?.name || 'Asset'}` : 'New Asset')}
+            title={isClone 
+              ? 'Clone ${asset.asset_id} - ${asset.name}'
+              : id
+                ? `Edit ${asset?.asset_id} - ${asset.name}`
+                : 'New Asset'
+            }
             rightComponent={
               <div className="import-section">
                 <label htmlFor="import-file" className="import-btn">
@@ -690,7 +698,7 @@ export default function AssetsRegistration() {
                 </div>
               ) : (
                 <label className="upload-image-btn">
-                  Choose File
+                  Choose Image
                   <input
                     type="file"
                     id="image"

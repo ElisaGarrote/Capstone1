@@ -443,7 +443,12 @@ export default function ProductsRegistration() {
             root="Asset Models"
             currentPage={id ? "Update Asset Model" : "New Asset Model"}
             rootNavigatePage="/products"
-            title={id ? (product?.name || 'Asset Model') : 'New Asset Model'}
+            title={isClone 
+              ? 'Clone ${product.name}'
+              : id
+                ? `Edit ${product?.name}`
+                : 'New Product'
+            }
             rightComponent={
               !id && (
                 <div className="import-section">
@@ -788,7 +793,7 @@ export default function ProductsRegistration() {
                 </div>
               ) : (
                 <label className="upload-image-btn">
-                  Choose File
+                  Choose Image
                   <input
                     type="file"
                     id="image"
