@@ -612,7 +612,16 @@ export default function NavBar() {
                   Manage Profile
                 </button>
                 {authService.getUserInfo().role === "Admin" && (
-                  <button onClick={() => window.open(externalUserManagement)}>
+                  <button
+                    onClick={() =>
+                      window.open(
+                        externalUserManagement,
+                        "_blank",
+                        "noopener,noreferrer",
+                      )
+                    }
+                    title={externalUserManagement}
+                  >
                     User Management
                   </button>
                 )}
