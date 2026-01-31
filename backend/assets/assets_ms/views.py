@@ -1332,6 +1332,16 @@ class ComponentViewSet(viewsets.ModelViewSet):
         queryset = Component.objects.filter(is_deleted=False).order_by('name')
         if self.request.query_params.get('show_deleted') == 'true':
             queryset = Component.objects.filter(is_deleted=True).order_by('name')
+        
+        # Filter by category if provided
+        category_param = self.request.query_params.get('category')
+        if category_param:
+            try:
+                category_id = int(category_param)
+                queryset = queryset.filter(category=category_id)
+            except ValueError:
+                pass  # Invalid category ID, ignore and return unfiltered queryset
+        
         return queryset
 
     def get_serializer_class(self):
