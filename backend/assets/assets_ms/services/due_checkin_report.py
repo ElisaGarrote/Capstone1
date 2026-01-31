@@ -82,9 +82,13 @@ def get_location_details(location_id):
         return None
 
 
-def get_due_checkin_report():
+def get_due_checkin_report(days_threshold=7):
     """
-    Generate a report of assets that are due for check-in (overdue).
+    Generate a report of assets that are due for check-in.
+    Includes both overdue assets and assets nearing their return date.
+    
+    Args:
+        days_threshold: Number of days in the future to include (default: 7)
     
     Returns a list of dictionaries containing:
     - asset_id: The asset ID
@@ -93,23 +97,30 @@ def get_due_checkin_report():
     - checked_out_to: Employee who has the asset
     - checkout_date: Date the asset was checked out
     - return_date: Expected return date (due date)
-    - days_overdue: Number of days past the return date
+    - days_until_due: Negative if overdue, positive if upcoming
+    - status: 'overdue' or 'upcoming'
     """
     from assets_ms.models import AssetCheckout, Asset
+    from datetime import timedelta
     
     today = date.today()
+    future_date = today + timedelta(days=days_threshold)
     report_data = []
     
-    # Find all checkouts that don't have a corresponding checkin and have passed return date
-    overdue_checkouts = AssetCheckout.objects.filter(
-        return_date__lt=today,  # Return date has passed
+    # Find all checkouts that don't have a corresponding checkin and are due soon or overdue
+    due_checkouts = AssetCheckout.objects.filter(
+        return_date__lte=future_date,  # Return date is today or in the near future
         asset_checkin__isnull=True  # No check-in recorded yet
     ).select_related('asset', 'asset__product').order_by('return_date')
     
-    for checkout in overdue_checkouts:
+    for checkout in due_checkouts:
         # Get asset details
         asset = checkout.asset
         asset_display = f"{asset.asset_id} - {asset.product.name}"
+        
+        # Calculate days until due (negative if overdue, positive if upcoming)
+        days_until_due = (checkout.return_date - today).days
+        status = 'overdue' if days_until_due < 0 else 'upcoming'
         
         # Get employee who has the asset (checkout_to)
         checked_out_to = get_employee_details(checkout.checkout_to)
@@ -135,9 +146,6 @@ def get_due_checkin_report():
                     elif isinstance(employee, dict):
                         checked_out_by_name = f"{employee.get('firstname', '')} {employee.get('lastname', '')}".strip()
         
-        # Calculate days overdue
-        days_overdue = (today - checkout.return_date).days
-        
         report_data.append({
             'checkout_id': checkout.id,
             'asset_id': asset.asset_id,
@@ -147,7 +155,8 @@ def get_due_checkin_report():
             'checked_out_to': checked_out_to_name or 'Unknown',
             'checkout_date': checkout.checkout_date,
             'return_date': checkout.return_date,
-            'days_overdue': days_overdue,
+            'days_until_due': days_until_due,
+            'status': status,
             'ticket_number': checkout.ticket_number,
             'location_id': checkout.location
         })
@@ -157,15 +166,28 @@ def get_due_checkin_report():
 
 def get_due_checkin_count():
     """
-    Get the count of assets that are overdue for check-in.
-    Useful for dashboard widgets or quick stats.
+    Get the count of assets that are due for check-in.
+    Returns counts for overdue and upcoming separately.
     """
     from assets_ms.models import AssetCheckout
+    from datetime import timedelta
     
     today = date.today()
-    count = AssetCheckout.objects.filter(
+    future_date = today + timedelta(days=7)
+    
+    overdue_count = AssetCheckout.objects.filter(
         return_date__lt=today,
         asset_checkin__isnull=True
     ).count()
     
-    return count
+    upcoming_count = AssetCheckout.objects.filter(
+        return_date__gte=today,
+        return_date__lte=future_date,
+        asset_checkin__isnull=True
+    ).count()
+    
+    return {
+        'overdue': overdue_count,
+        'upcoming': upcoming_count,
+        'total': overdue_count + upcoming_count
+    }

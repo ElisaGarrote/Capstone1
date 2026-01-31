@@ -55,12 +55,10 @@ function TableItem({ asset }) {
     setCurrentDate(formattedDate);
   }, []);
 
-  // Convert to Date objects for comparison
-  const isOverdue = new Date(asset.return_date) < new Date(currentDate);
-  const dayDifference = Math.floor(
-    (new Date(currentDate) - new Date(asset.return_date)) /
-      (1000 * 60 * 60 * 24)
-  );
+  // Use status from backend
+  const isOverdue = asset.status === 'overdue';
+  const daysUntilDue = asset.days_until_due;
+  const absValue = Math.abs(daysUntilDue);
 
   return (
     <tr>
@@ -82,20 +80,22 @@ function TableItem({ asset }) {
       <td>{dateRelated.formatDate(asset.checkout_date)}</td>
       <td
         title={
-          isOverdue &&
-          `This checkin date is overdue by ${dayDifference} ${
-            dayDifference > 1 ? "days" : "day"
-          }.`
+          isOverdue
+            ? `This checkin date is overdue by ${absValue} ${
+                absValue !== 1 ? "days" : "day"
+              }.`
+            : `Due in ${absValue} ${absValue !== 1 ? "days" : "day"}.`
         }
       >
         <div className="icon-td">
           {isOverdue && <IoWarningOutline />}
           <span
             style={{
-              color: isOverdue ? "red" : "#333333",
+              color: isOverdue ? "red" : daysUntilDue <= 3 ? "orange" : "#333333",
             }}
           >
             {dateRelated.formatDate(asset.return_date)}
+            {!isOverdue && daysUntilDue <= 3 && ` (${daysUntilDue}d)`}
           </span>
         </div>
       </td>
@@ -114,6 +114,8 @@ export default function DueBackReport() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [overdueCount, setOverdueCount] = useState(0);
+  const [upcomingCount, setUpcomingCount] = useState(0);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -125,9 +127,12 @@ export default function DueBackReport() {
       try {
         setLoading(true);
         setError(null);
-        const response = await assetsAxios.get("/due-checkin-report/");
+        // Fetch assets due within 7 days (overdue and upcoming)
+        const response = await assetsAxios.get("/due-checkin-report/?days=7");
         if (response.data.success) {
           setReportData(response.data.data);
+          setOverdueCount(response.data.overdue_count || 0);
+          setUpcomingCount(response.data.upcoming_count || 0);
         } else {
           setError("Failed to load report data");
         }
@@ -194,7 +199,24 @@ export default function DueBackReport() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Asset ({filteredData.length})</h2>
+              <h2 className="h2">
+                Asset ({filteredData.length})
+                {(overdueCount > 0 || upcomingCount > 0) && (
+                  <span style={{ fontSize: "0.9rem", fontWeight: "normal", marginLeft: "1rem" }}>
+                    {overdueCount > 0 && (
+                      <span style={{ color: "red" }}>
+                        {overdueCount} overdue
+                      </span>
+                    )}
+                    {overdueCount > 0 && upcomingCount > 0 && " • "}
+                    {upcomingCount > 0 && (
+                      <span style={{ color: "orange" }}>
+                        {upcomingCount} upcoming
+                      </span>
+                    )}
+                  </span>
+                )}
+              </h2>
               <section className="table-actions">
                 <input
                   type="search"
@@ -247,7 +269,7 @@ export default function DueBackReport() {
                     ) : (
                       <tr>
                         <td colSpan={5} className="no-data-message">
-                          {searchTerm ? "No assets found matching your search." : "No overdue assets found."}
+                          {searchTerm ? "No assets found matching your search." : "No assets due for check-in within 7 days."}
                         </td>
                       </tr>
                     )}
