@@ -13,6 +13,7 @@ import {
   deleteComponent,
   bulkDeleteComponents,
 } from "../../services/assets-service";
+import { deleteCategory, bulkDeleteCategories } from "../../api/contextsApi";
 
 export default function ConfirmationModal({
   closeModal,
@@ -45,6 +46,8 @@ export default function ConfirmationModal({
           await deleteAuditSchedule(targetId);
         } else if (entityType === "component") {
           await deleteComponent(targetId);
+        } else if (entityType === "category") {
+          await deleteCategory(targetId);
         }
         if (onSuccess) onSuccess(targetId);
       } else if (actionType === "bulk-delete" && targetIds?.length > 0) {
@@ -59,6 +62,8 @@ export default function ConfirmationModal({
           await bulkDeleteAuditSchedules(targetIds);
         } else if (entityType === "component") {
           await bulkDeleteComponents({ ids: targetIds });
+        } else if (entityType === "category") {
+          await bulkDeleteCategories(targetIds);
         }
         if (onSuccess) onSuccess(targetIds);
       }
