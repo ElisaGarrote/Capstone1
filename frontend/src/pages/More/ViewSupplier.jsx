@@ -318,18 +318,23 @@ export default function ViewSupplier() {
       const mapped = (res || []).map((supp) => ({
         id: supp.id,
         name: supp.name,
-        address: supp.address,
-        city: supp.city,
-        zip: supp.zip,
-        contactName: supp.contact_name,
-        phoneNumber: supp.phone_number,
-        email: supp.email,
-        url: supp.URL,
-        notes: supp.notes,
+        address: supp.address || supp.street || "",
+        city: supp.city || "",
+        state: supp.state_province || supp.state || "",
+        zip: supp.zip || "",
+        country: supp.country || "",
+        contactName: supp.contact_name || supp.contactName || "",
+        phoneNumber: supp.phone_number || supp.phoneNumber || "",
+        email: supp.email || "",
+        url: supp.url || supp.URL || supp.website || "",
+        notes: supp.notes || "",
+        logo: supp.logo || null,
       }));
-      setSuppliers(mapped);
+      const sorted = mapped.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      setSuppliers(sorted);
+      setFilteredData(sorted);
     } catch (e) {
-      console.error("Error refreshing suppplier:", e);
+      console.error("Error refreshing supplier:", e);
     } finally {
       setLoading(false);
     }
