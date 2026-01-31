@@ -174,10 +174,13 @@ def is_item_in_use(item_type, item_id):
                         successful_checks += 1
                         resp_json = r.json()
                         items = _get_results_list(resp_json)
+                        logger.error(f"[usage_check] Query {path}?{param_name}={item_id} returned {len(items)} items")
+                        if items:
+                            logger.error(f"[usage_check] Sample item from {path}: {items[0] if items else 'N/A'}")
                         # filter items that actually reference the item_id on the param_name
                         # some services may ignore query params, so we verify here
                         filtered = [it for it in items if _matches_reference(it, param_name, item_id)]
-
+                        logger.error(f"[usage_check] After _matches_reference filter: {len(filtered)} items match")
                         if filtered:
                             if key == 'asset_ids':
                                 ids = _extract_asset_identifiers(filtered)

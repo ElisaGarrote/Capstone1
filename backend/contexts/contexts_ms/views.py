@@ -57,16 +57,21 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_destroy(self, instance):
-        logger.info(f"[CategoryViewSet] perform_destroy called for category id={instance.id}, name={instance.name}")
+        logger.error(f"[CategoryViewSet] ==================== DESTROY CALLED ====================")
+        logger.error(f"[CategoryViewSet] perform_destroy called for category id={instance.id}, name={instance.name}, type={instance.type}")
+        logger.error(f"[CategoryViewSet] Starting usage check...")
         usage = is_item_in_use("category", instance.id)
-        logger.info(f"[CategoryViewSet] Usage check result: {usage}")
+        logger.error(f"[CategoryViewSet] Usage check result: {usage}")
+        logger.error(f"[CategoryViewSet] in_use={usage.get('in_use')}, asset_ids={usage.get('asset_ids')}, component_ids={usage.get('component_ids')}")
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
-            logger.warning(f"[CategoryViewSet] Blocking delete: {msg}")
+            logger.error(f"[CategoryViewSet] BLOCKING DELETE: {msg}")
             raise drf_serializers.ValidationError({"detail": msg})
-        logger.info(f"[CategoryViewSet] Proceeding with soft delete")
+        logger.error(f"[CategoryViewSet] NO USAGE FOUND - Proceeding with soft delete")
         instance.is_deleted = True
         instance.save()
+        logger.error(f"[CategoryViewSet] ==================== DESTROY COMPLETE ====================")
+
 
     @action(detail=False, methods=['post'])
     def bulk_delete(self, request):
