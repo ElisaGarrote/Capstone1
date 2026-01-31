@@ -217,8 +217,6 @@ def is_item_in_use(item_type, item_id):
                 logger.info(f"[usage_check] Starting special handling for {item_type}#{item_id}")
                 # For manufacturer and depreciation, use the products-based approach
                 try:
-                # For manufacturer and depreciation, use the products-based approach
-                try:
                     prod_param = item_type
                     logger.info(f"[usage_check] Querying products with {prod_param}={item_id}")
                     pr = client_get('products/', params={prod_param: item_id}, timeout=5)
