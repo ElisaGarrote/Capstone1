@@ -45,6 +45,50 @@ export async function bulkDeleteCategories(ids = []) {
   return res.data
 }
 
+// Status
+export async function deleteStatus(id) {
+  const res = await contextsApi.delete(`/statuses/${id}/`)
+  return res.data
+}
+
+export async function bulkDeleteStatuses(ids = []) {
+  const res = await contextsApi.post(`/statuses/bulk_delete/`, { ids })
+  return res.data
+}
+
+// Manufacturer
+export async function deleteManufacturer(id) {
+  const res = await contextsApi.delete(`/manufacturers/${id}/`)
+  return res.data
+}
+
+export async function bulkDeleteManufacturers(ids = []) {
+  const res = await contextsApi.post(`/manufacturers/bulk_delete/`, { ids })
+  return res.data
+}
+
+// Depreciation
+export async function deleteDepreciation(id) {
+  const res = await contextsApi.delete(`/depreciations/${id}/`)
+  return res.data
+}
+
+export async function bulkDeleteDepreciations(ids = []) {
+  const res = await contextsApi.post(`/depreciations/bulk_delete/`, { ids })
+  return res.data
+}
+
+// Supplier
+export async function deleteSupplier(id) {
+  const res = await contextsApi.delete(`/suppliers/${id}/`)
+  return res.data
+}
+
+export async function bulkDeleteSuppliers(ids = []) {
+  const res = await contextsApi.post(`/suppliers/bulk_delete/`, { ids })
+  return res.data
+}
+
 export async function importCategories(file, options = {}) {
   // file: File object (xlsx)
   const form = new FormData()

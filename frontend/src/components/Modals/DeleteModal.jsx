@@ -13,7 +13,18 @@ import {
   deleteComponent,
   bulkDeleteComponents,
 } from "../../services/assets-service";
-import { deleteCategory, bulkDeleteCategories } from "../../api/contextsApi";
+import { 
+  deleteCategory, 
+  bulkDeleteCategories,
+  deleteStatus,
+  bulkDeleteStatuses,
+  deleteManufacturer,
+  bulkDeleteManufacturers,
+  deleteDepreciation,
+  bulkDeleteDepreciations,
+  deleteSupplier,
+  bulkDeleteSuppliers
+} from "../../api/contextsApi";
 
 export default function ConfirmationModal({
   closeModal,
@@ -48,6 +59,14 @@ export default function ConfirmationModal({
           await deleteComponent(targetId);
         } else if (entityType === "category") {
           await deleteCategory(targetId);
+        } else if (entityType === "status") {
+          await deleteStatus(targetId);
+        } else if (entityType === "manufacturer") {
+          await deleteManufacturer(targetId);
+        } else if (entityType === "depreciation") {
+          await deleteDepreciation(targetId);
+        } else if (entityType === "supplier") {
+          await deleteSupplier(targetId);
         }
         if (onSuccess) onSuccess(targetId);
       } else if (actionType === "bulk-delete" && targetIds?.length > 0) {
@@ -64,6 +83,14 @@ export default function ConfirmationModal({
           await bulkDeleteComponents({ ids: targetIds });
         } else if (entityType === "category") {
           await bulkDeleteCategories(targetIds);
+        } else if (entityType === "status") {
+          await bulkDeleteStatuses(targetIds);
+        } else if (entityType === "manufacturer") {
+          await bulkDeleteManufacturers(targetIds);
+        } else if (entityType === "depreciation") {
+          await bulkDeleteDepreciations(targetIds);
+        } else if (entityType === "supplier") {
+          await bulkDeleteSuppliers(targetIds);
         }
         if (onSuccess) onSuccess(targetIds);
       }
