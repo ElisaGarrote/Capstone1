@@ -89,7 +89,10 @@ def is_item_in_use(item_type, item_id):
       the assets service list endpoints to find referencing object ids.
     - On network error, conservatively assume the item is in use (return in_use=True).
     """
+    from .http_client import ASSETS_API_URL
+    logger.info(f"[usage_check] ==================== USAGE CHECK START ====================")
     logger.info(f"[usage_check] Checking usage for {item_type}#{item_id}")
+    logger.info(f"[usage_check] ASSETS_API_URL={ASSETS_API_URL}")
 
     result = {'in_use': False, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}
 
@@ -157,21 +160,27 @@ def is_item_in_use(item_type, item_id):
 
         # Special handling: some contexts (category, manufacturer, depreciation)
         if item_type in ('category', 'manufacturer', 'depreciation'):
+            logger.info(f"[usage_check] Starting special handling for {item_type}#{item_id}")
             try:
                 prod_param = item_type
+                logger.info(f"[usage_check] Querying products with {prod_param}={item_id}")
                 pr = client_get('products/', params={prod_param: item_id}, timeout=5)
+                logger.info(f"[usage_check] Products query status: {pr.status_code}")
                 if pr.status_code == 200:
                     prod_json = pr.json()
                     prods = _get_results_list(prod_json)
+                    logger.info(f"[usage_check] Found {len(prods)} products with {item_type}={item_id}")
                     # Build product id list and map for quick lookup (keep product dicts if available)
                     prod_map = {p.get('id'): p for p in prods if isinstance(p, dict) and p.get('id')}
                     prod_ids = list(prod_map.keys())
+                    logger.info(f"[usage_check] Product IDs to check: {prod_ids}")
 
                     # For each product id, fetch assets and validate that the asset indeed
                     # references the same product AND that, if present, the product's
                     # depreciation/manufacturer/category matches the requested context.
                     asset_identifiers = []
                     for pid in prod_ids:
+                        logger.info(f"[usage_check] Checking product {pid} for assets")
                         # Ensure we have product details that include the context field
                         prod_obj = prod_map.get(pid)
                         if not prod_obj or prod_obj.get(item_type) is None:
@@ -193,10 +202,12 @@ def is_item_in_use(item_type, item_id):
                                 continue
                         try:
                             ar = client_get('assets/', params={'product': pid}, timeout=5)
+                            logger.info(f"[usage_check] Assets query for product {pid}: status={ar.status_code}")
                             if ar.status_code != 200:
                                 continue
                             ajson = ar.json()
                             aitems = _get_results_list(ajson)
+                            logger.info(f"[usage_check] Found {len(aitems)} assets for product {pid}")
 
                             for a in aitems:
                                 # Extract product id from the asset's product field which
@@ -261,9 +272,12 @@ def is_item_in_use(item_type, item_id):
                     if unique_assets:
                         result['asset_ids'].extend(unique_assets)
                         result['in_use'] = True
-            except requests.RequestException:
+                        logger.info(f"[usage_check] {item_type}#{item_id} is in use by {len(unique_assets)} assets from products")
+            except requests.RequestException as exc:
                 # conservative behavior on network problems
+                logger.error(f"[usage_check] Network error in special handling for {item_type}#{item_id}: {exc}")
                 result['in_use'] = True
+                result['network_error'] = True
 
         # If we encountered network errors but found no explicit references, be conservative
         # Better to block a delete that should succeed than allow one that shouldn't
@@ -272,6 +286,7 @@ def is_item_in_use(item_type, item_id):
             return {'in_use': True, 'asset_ids': [], 'component_ids': [], 'repair_ids': [], 'network_error': True}
 
         logger.info(f"[usage_check] {item_type}#{item_id} final result: in_use={result['in_use']}, assets={len(result.get('asset_ids', []))}, components={len(result.get('component_ids', []))}, repairs={len(result.get('repair_ids', []))}")
+        logger.info(f"[usage_check] ==================== USAGE CHECK END ====================")
         return result
     except requests.RequestException as exc:
         # If the assets-service is unreachable, assume item is in use
