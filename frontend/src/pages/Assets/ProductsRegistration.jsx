@@ -776,7 +776,6 @@ export default function ProductsRegistration() {
                       event.preventDefault();
                       setPreviewImage(null);
                       setSelectedImage(null);
-                      document.getElementById('image').value = '';
                       setRemoveImage(true);
                       console.log("Remove image flag set to:", true);
                     }}
