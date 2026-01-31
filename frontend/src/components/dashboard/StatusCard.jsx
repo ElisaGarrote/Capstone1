@@ -90,6 +90,7 @@ function StatusCard({ number, title, isRed, isLarge, index, dueCheckinData, over
       case 'Due for Return':
         if (dueCheckinData && dueCheckinData.length > 0) {
           return dueCheckinData.map(item => ({
+            assetDbId: item.asset_db_id,
             assetId: item.asset_id,
             assetName: item.asset_name,
             checkedOutTo: item.checked_out_to,
@@ -100,6 +101,7 @@ function StatusCard({ number, title, isRed, isLarge, index, dueCheckinData, over
       case 'Overdue for Return':
         if (overdueCheckinData && overdueCheckinData.length > 0) {
           return overdueCheckinData.map(item => ({
+            assetDbId: item.asset_db_id,
             assetId: item.asset_id,
             assetName: item.asset_name,
             checkedOutTo: item.checked_out_to,
