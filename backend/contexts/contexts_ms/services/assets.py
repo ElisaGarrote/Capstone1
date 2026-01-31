@@ -151,3 +151,21 @@ def get_assets_by_category(category_id, timeout=8):
     except Exception as e:
         logger.error(f"Failed to fetch assets for category {category_id}: {e}")
         return []
+
+
+def update_category_quantity(category_id):
+    """
+    Recalculate and update the quantity field for a given category.
+    """
+    from ..models import Category
+
+    try:
+        # Fetch the number of assets linked to the category
+        assets = get_assets_by_category(category_id)
+        quantity = len(assets)
+
+        # Update the category's quantity field
+        Category.objects.filter(id=category_id).update(quantity=quantity)
+        logger.info(f"Updated quantity for category {category_id} to {quantity}")
+    except Exception as e:
+        logger.error(f"Failed to update quantity for category {category_id}: {e}")

@@ -11,6 +11,7 @@ class Category(models.Model):
     type = models.CharField(max_length=9, choices=CategoryType.choices)
     logo = models.ImageField(upload_to='category_logos/', blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
+    quantity = models.PositiveIntegerField(default=0, help_text="Number of products linked to this category.")
 
     def clean(self):
         if self.name:
