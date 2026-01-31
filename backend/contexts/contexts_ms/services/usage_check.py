@@ -113,7 +113,7 @@ def is_item_in_use(item_type, item_id):
     - Try a dedicated check-usage endpoint if available (supplier/manufacturer/depreciation).
     - If the endpoint reports in_use=True or no endpoint exists, attempt to query
       the assets service list endpoints to find referencing object ids.
-    - On network error, conservatively assume the item is in use (return in_use=True)..
+    - On network error, conservatively assume the item is in use (return in_use=True).
     """
     from .http_client import ASSETS_API_URL
     logger.error(f"[usage_check] ==================== USAGE CHECK START ====================")
