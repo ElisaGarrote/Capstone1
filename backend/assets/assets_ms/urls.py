@@ -62,4 +62,6 @@ urlpatterns = [
     path("notifications/", NotificationsAPIView.as_view(), name="notifications"),
 
     path("", include(router.urls)),
+    path("api/contexts/check-usage/supplier/<int:pk>/", check_supplier_usage, name="api-check-supplier-usage"),
+    path("api/contexts/check-usage/depreciation/<int:pk>/", check_depreciation_usage, name="api-check-depreciation-usage"),
 ]
