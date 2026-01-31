@@ -239,7 +239,7 @@ export default function BulkEditComponents() {
           </section>
 
           {/* Bulk Edit Form */}
-          <section className="bulk-edit-form-section registration">
+          <section className="registration-form">
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="bulk-edit-form"

@@ -308,7 +308,7 @@ export default function BulkEditAssets() {
             </div>
           </section>
 
-          <section className="bulk-edit-form-section registration">
+          <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)} className="bulk-edit-form">
               {/* Product Dropdown */}
               <fieldset className="form-field">
