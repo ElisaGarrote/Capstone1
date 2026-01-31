@@ -242,30 +242,18 @@ export default function Depreciations() {
     setDeleteTarget(null);
   };
 
-  const checkUsage = async (id) => {
-    try {
-      console.log(`Checking usage for depreciation ID: ${id}`);
-      const response = await fetch(`/api/contexts/check-usage/depreciation/${id}`);
-      const data = await response.json();
-      console.log(`Usage check result for depreciation ID ${id}:`, data);
-      return data.in_use;
-    } catch (error) {
-      console.error("Error checking usage:", error);
-      return true; // Assume in use on error
-    }
-  };
-
   const confirmDelete = async () => {
-    if (deleteTarget) {
-      console.log(`Attempting to delete depreciation ID: ${deleteTarget}`);
-      const inUse = await checkUsage(deleteTarget);
-      if (inUse) {
-        setErrorMessage("Cannot delete: Depreciation is in use.");
-        console.log(`Deletion blocked for depreciation ID: ${deleteTarget} (in use)`);
-        return;
-      }
-      console.log(`Proceeding with deletion for depreciation ID: ${deleteTarget}`);
-      // Proceed with deletion logic
+    // Modal already handled the delete, just refresh the list
+    try {
+      const data = await fetchAllDepreciations();
+      const list = data.results ?? data;
+      setAllData(list);
+      setFilteredData(list);
+      setSelectedIds([]);
+      setSuccessMessage(deleteTarget ? "Depreciation deleted successfully!" : "Depreciations deleted successfully!");
+      setTimeout(() => setSuccessMessage(""), 5000);
+    } catch (err) {
+      console.error('Failed to refresh depreciations after delete', err);
     }
   };
 
@@ -295,13 +283,21 @@ export default function Depreciations() {
 
       {isDeleteModalOpen && (
         <ConfirmationModal
-          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
+          isOpen={isDeleteModalOpen}
           actionType={deleteTarget ? "delete" : "bulk-delete"}
-          onConfirm={confirmDelete}
-          targetIds={deleteTarget ? [deleteTarget] : selectedIds}
-          selectedCount={deleteTarget ? 1 : selectedIds.length}
           entityType="depreciation"
+          targetId={deleteTarget}
+          targetIds={selectedIds}
+          onSuccess={async (deletedIds) => {
+            await confirmDelete();
+          }}
+          onError={(error) => {
+            const respData = error?.response?.data;
+            const msg = respData?.detail || respData || error.message || 'Delete failed.';
+            setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            setTimeout(() => setErrorMessage(''), 5000);
+          }}
         />
       )}
 

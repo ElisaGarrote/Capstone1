@@ -389,30 +389,15 @@ export default function ViewSupplier() {
     setDeleteTarget(null);
   };
 
-  const checkUsage = async (id) => {
-    try {
-      console.log(`Checking usage for supplier ID: ${id}`);
-      const response = await fetch(`/api/contexts/check-usage/supplier/${id}`);
-      const data = await response.json();
-      console.log(`Usage check result for supplier ID ${id}:`, data);
-      return data.in_use;
-    } catch (error) {
-      console.error("Error checking usage:", error);
-      return true; // Assume in use on error
-    }
-  };
-
   const confirmDelete = async () => {
-    if (deleteTarget) {
-      console.log(`Attempting to delete supplier ID: ${deleteTarget}`);
-      const inUse = await checkUsage(deleteTarget);
-      if (inUse) {
-        setErrorMessage("Cannot delete: Supplier is in use.");
-        console.log(`Deletion blocked for supplier ID: ${deleteTarget} (in use)`);
-        return;
-      }
-      console.log(`Proceeding with deletion for supplier ID: ${deleteTarget}`);
-      // Proceed with deletion logic
+    // Modal already handled the delete, just refresh the list
+    try {
+      await fetchSuppliers();
+      setCheckedItems([]);
+      setSuccessMessage(deleteTarget ? "Supplier deleted successfully!" : "Suppliers deleted successfully!");
+      setTimeout(() => setSuccessMessage(""), 5000);
+    } catch (err) {
+      console.error('Failed to refresh suppliers after delete', err);
     }
   };
 
@@ -456,12 +441,21 @@ export default function ViewSupplier() {
 
       {isDeleteModalOpen && (
         <DeleteModal
-          endPoint={endPoint}
           closeModal={closeDeleteModal}
+          isOpen={isDeleteModalOpen}
           actionType={deleteTarget ? "delete" : "bulk-delete"}
-          onConfirm={confirmDelete}
-          targetIds={deleteTarget ? [deleteTarget] : checkedItems}
           entityType="supplier"
+          targetId={deleteTarget}
+          targetIds={checkedItems}
+          onSuccess={async (deletedIds) => {
+            await confirmDelete();
+          }}
+          onError={(error) => {
+            const respData = error?.response?.data;
+            const msg = respData?.detail || respData || error.message || 'Delete failed.';
+            setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            setTimeout(() => setErrorMessage(''), 5000);
+          }}
           onDeleteFail={(payload) => {
             // Normalize payload (handlers sometimes return { ok:false, data: ... })
             let body = payload;
