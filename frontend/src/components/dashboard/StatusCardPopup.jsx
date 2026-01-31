@@ -14,14 +14,16 @@ import '../../styles/custom-colors.css';
 const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [exportToggle, setExportToggle] = useState(false);
-  const exportRef = useRef(null);
-  const toggleRef = useRef(null);
 
   // Paginate items
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const paginatedItems = items.slice(startIndex, endIndex);
+
+  const handleExport = () => {
+    // TODO: Implement XLSX export functionality
+    console.log('Exporting as XLSX...');
+  };
   const getColumnTitles = () => {
     if (title === 'Low Stock') {
       return {
@@ -144,25 +146,16 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
         <div className="popup-header">
           <h2>{title}{dueDate ? ` (next ${dueDate} days)` : ''}</h2>
           <div className="popup-header-actions">
-            <div ref={toggleRef}>
-              <MediumButtons
-                type="export"
-                onClick={() => setExportToggle(!exportToggle)}
-              />
-            </div>
+            <MediumButtons
+              type="export"
+              onClick={handleExport}
+            />
             <button className="close-button" onClick={onClose}>
               <IoClose />
             </button>
           </div>
         </div>
         <div className="popup-body">
-          {exportToggle && (
-            <div className="export-button-section" ref={exportRef}>
-              <button>Download as Excel</button>
-              <button>Download as PDF</button>
-              <button>Download as CSV</button>
-            </div>
-          )}
           <div className="table-wrapper">
             <table className="status-card-table">
               {renderTableContent()}

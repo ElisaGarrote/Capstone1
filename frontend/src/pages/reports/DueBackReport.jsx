@@ -93,8 +93,6 @@ function TableItem({ asset }) {
             }}
           >
             {dateRelated.formatDate(asset.return_date)}
-            {isOverdue && ` (${absValue}d overdue)`}
-            {!isOverdue && daysUntilDue <= 3 && ` (${daysUntilDue}d)`}
           </span>
         </div>
       </td>
