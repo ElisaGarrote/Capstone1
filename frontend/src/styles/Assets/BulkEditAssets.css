@@ -4,6 +4,7 @@
   max-width: 1200px;
   margin: 0 auto;
   box-sizing: border-box;
+  align-self: center;
 }
 
 .selected-assets-section {
@@ -94,6 +95,11 @@
   border-radius: 0;
   font-style: italic;
   display: inline-block;
+}
+
+/* Header section styling */
+.top {
+  width: 100%;
 }
 
 .bulk-edit-page .selected-assets-note {

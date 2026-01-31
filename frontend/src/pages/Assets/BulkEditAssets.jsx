@@ -269,16 +269,17 @@ export default function BulkEditAssets() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
-
-        <main className="main-with-table">
+        <main className="registration">
+        <section className="top">
           <TopSecFormPage
             root="Assets"
             currentPage="Bulk Edit Assets"
             rootNavigatePage="/assets"
             title="Bulk Edit Assets"
           />
+        </section>
 
           {/* Selected Assets Section */}
           <section className="selected-assets-section">
@@ -307,7 +308,7 @@ export default function BulkEditAssets() {
             </div>
           </section>
 
-          <section className="bulk-edit-form-section registration">
+          <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)} className="bulk-edit-form">
               {/* Product Dropdown */}
               <fieldset className="form-field">
