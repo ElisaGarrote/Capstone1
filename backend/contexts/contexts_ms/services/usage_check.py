@@ -173,6 +173,11 @@ def is_item_in_use(item_type, item_id):
                 logger.warning(f"[usage_check] Network error checking category#{item_id}, blocking delete as safety measure")
                 result['in_use'] = True
                 result['network_error'] = True
+            
+            # Return immediately after category handling - don't continue to general checks
+            logger.info(f"[usage_check] category#{item_id} final result: in_use={result['in_use']}, assets={len(result.get('asset_ids', []))}, components={len(result.get('component_ids', []))}, repairs={len(result.get('repair_ids', []))}")
+            logger.info(f"[usage_check] ==================== USAGE CHECK END ====================")
+            return result
         
         # For non-category items or manufacturer/depreciation, use general queries
         elif item_type not in ('category',):
