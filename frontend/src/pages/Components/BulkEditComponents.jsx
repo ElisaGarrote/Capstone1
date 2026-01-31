@@ -202,14 +202,14 @@ export default function BulkEditComponents() {
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
-          <section className="top">
-            <TopSecFormPage
-              root="Components"
-              currentPage="Bulk Edit Components"
-              rootNavigatePage="/components"
-              title="Bulk Edit Components"
-            />
-          </section>
+        <section className="top">
+          <TopSecFormPage
+            root="Components"
+            currentPage="Bulk Edit Components"
+            rootNavigatePage="/components"
+            title="Bulk Edit Components"
+          />
+        </section>
 
           {/* Selected Components */}
           <section className="selected-assets-section">
@@ -239,7 +239,7 @@ export default function BulkEditComponents() {
           </section>
 
           {/* Bulk Edit Form */}
-          <section className="bulk-edit-form-section registration">
+          <section className="registration-form">
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="bulk-edit-form"
