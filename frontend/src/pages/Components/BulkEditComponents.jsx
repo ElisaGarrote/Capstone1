@@ -4,12 +4,13 @@ import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import Alert from "../../components/Alert";
+import SystemLoading from "../../components/Loading/SystemLoading";
 import CloseIcon from "../../assets/icons/close.svg";
 import { fetchComponentNames, bulkEditComponents } from "../../services/assets-service";
 import { fetchAllDropdowns } from "../../services/contexts-service";
 import { fetchAllLocations } from "../../services/integration-help-desk-service";
 import "../../styles/Registration.css";
-import "../../styles/Components/BulkEditComponents.css";
+import "../../styles/components/BulkEditComponents.css";
 
 export default function BulkEditComponents() {
   const location = useLocation();
@@ -190,14 +191,7 @@ export default function BulkEditComponents() {
   };
 
   if (isLoading) {
-    return (
-      <section className="page-layout-with-table">
-        <NavBar />
-        <main className="main-with-table">
-          <p>Loading...</p>
-        </main>
-      </section>
-    );
+    return <SystemLoading />;
   }
 
   return (
