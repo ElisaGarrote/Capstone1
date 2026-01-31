@@ -244,8 +244,10 @@ export default function Depreciations() {
 
   const checkUsage = async (id) => {
     try {
+      console.log(`Checking usage for depreciation ID: ${id}`);
       const response = await fetch(`/api/contexts/check-usage/depreciation/${id}`);
       const data = await response.json();
+      console.log(`Usage check result for depreciation ID ${id}:`, data);
       return data.in_use;
     } catch (error) {
       console.error("Error checking usage:", error);
@@ -255,11 +257,14 @@ export default function Depreciations() {
 
   const confirmDelete = async () => {
     if (deleteTarget) {
+      console.log(`Attempting to delete depreciation ID: ${deleteTarget}`);
       const inUse = await checkUsage(deleteTarget);
       if (inUse) {
         setErrorMessage("Cannot delete: Depreciation is in use.");
+        console.log(`Deletion blocked for depreciation ID: ${deleteTarget} (in use)`);
         return;
       }
+      console.log(`Proceeding with deletion for depreciation ID: ${deleteTarget}`);
       // Proceed with deletion logic
     }
   };

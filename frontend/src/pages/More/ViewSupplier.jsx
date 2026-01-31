@@ -391,8 +391,10 @@ export default function ViewSupplier() {
 
   const checkUsage = async (id) => {
     try {
+      console.log(`Checking usage for supplier ID: ${id}`);
       const response = await fetch(`/api/contexts/check-usage/supplier/${id}`);
       const data = await response.json();
+      console.log(`Usage check result for supplier ID ${id}:`, data);
       return data.in_use;
     } catch (error) {
       console.error("Error checking usage:", error);
@@ -402,11 +404,14 @@ export default function ViewSupplier() {
 
   const confirmDelete = async () => {
     if (deleteTarget) {
+      console.log(`Attempting to delete supplier ID: ${deleteTarget}`);
       const inUse = await checkUsage(deleteTarget);
       if (inUse) {
         setErrorMessage("Cannot delete: Supplier is in use.");
+        console.log(`Deletion blocked for supplier ID: ${deleteTarget} (in use)`);
         return;
       }
+      console.log(`Proceeding with deletion for supplier ID: ${deleteTarget}`);
       // Proceed with deletion logic
     }
   };
