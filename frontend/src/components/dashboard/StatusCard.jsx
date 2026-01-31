@@ -131,7 +131,7 @@ function StatusCard({ number, title, isRed, isLarge, index, dueCheckinData, over
       {showPopup && title !== 'Upcoming Audits' && (
         <StatusCardPopup
           title={title}
-          dueDate={title === 'Low Stock' ? null : 14}
+          dueDate={title === 'Due for Return' ? 30 : (title === 'Low Stock' || title === 'Overdue for Return' ? null : 14)}
           items={getItems()}
           onClose={() => setShowPopup(false)}
         />

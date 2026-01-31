@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import { IoClose } from 'react-icons/io5';
 import { HiOutlineTag } from 'react-icons/hi';
 import { IoLocationOutline } from 'react-icons/io5';
@@ -12,6 +13,7 @@ import '../../styles/dashboard/StatusCardPopup.css';
 import '../../styles/custom-colors.css';
 
 const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
@@ -116,7 +118,16 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
               <td>
                 <div className="asset-info">
                   <HiOutlineTag className="asset-icon" />
-                  <span>{item.assetId} - {item.assetName}</span>
+                  <span>
+                    <span 
+                      className="asset-link" 
+                      onClick={() => navigate(`/assets/view/${item.assetId}`)}
+                      style={{ cursor: 'pointer', color: '#0D6EFD', textDecoration: 'underline' }}
+                    >
+                      {item.assetId}
+                    </span>
+                    {' - '}{item.assetName}
+                  </span>
                 </div>
               </td>
               <td>
