@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
 import "../../styles/Registration.css";

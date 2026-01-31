@@ -1,130 +1,94 @@
 import os
 from requests.exceptions import RequestException
-from .http_client import get as client_get, patch as client_patch
-from django.core.cache import cache
+from .http_client import get as client_get
 from django.conf import settings
 
+# Base URL for Help Desk service
+# Must include /api/ prefix, e.g., http://165.22.247.50:5001/api/
+BASE_URL = getattr(
+    settings,
+    "HELPDESK_API_URL",
+    os.getenv("HELPDESK_API_URL", "http://165.22.247.50:5001/api/")
+)
 
-# Centralized Help Desk service helper module
-# Use settings.HELPDESK_API_URL which should point to the external Help Desk service API
-# The URL should include the /api/ prefix (e.g., http://165.22.247.50:5001/api/)
-BASE_URL = getattr(settings, "HELPDESK_API_URL", os.getenv("HELPDESK_API_URL", "http://165.22.247.50:5001/api/"))
-
-# Cache settings
-LOCATION_CACHE_TTL = 300
-LOCATION_WARNING_TTL = 60
-LIST_CACHE_TTL = 300
-LIST_WARNING_TTL = 60
-
-
-def _build_url(path):
+def _build_url(path: str) -> str:
+    """Construct full URL for the given resource path."""
     return f"{BASE_URL.rstrip('/')}/{path.lstrip('/')}"
 
-
-def fetch_resource_by_id(resource_name, resource_id):
-    """Fetch a single resource by name and id. Returns dict or warning dict."""
+def fetch_resource_by_id(resource_name: str, resource_id):
+    """
+    Fetch a single resource by name and ID from the Help Desk service.
+    Returns a dict, or {'warning': ...} if unreachable or not found.
+    """
     if not resource_id:
         return None
-    # HELPDESK_API_URL already includes /api/ prefix (e.g., http://165.22.247.50:5001/api/)
+
     url = _build_url(f"{resource_name}/{resource_id}/")
     try:
         resp = client_get(url, timeout=6)
         if resp.status_code == 404:
-            return {"warning": f"{resource_name[:-1].capitalize()} {resource_id} not found or deleted."}
+            return {"warning": f"{resource_name[:-1].capitalize()} {resource_id} not found."}
         resp.raise_for_status()
         return resp.json()
     except RequestException:
-        return {"warning": "Help Desk service unreachable. Make sure the Help Desk service is running and accessible."}
+        return {"warning": "Help Desk service unreachable."}
 
-def get_location_by_id(location_id):
-    """Fetch a location resource from the Help Desk service by ID with caching.
-
-    Caches successful lookups for LOCATION_CACHE_TTL seconds. If the
-    Help Desk service returns a warning dict (unreachable or 404), cache it
-    for a short period to avoid hammering the remote service.
+def fetch_resource_list(resource_name: str, params=None):
     """
-    if not location_id:
-        return None
-    key = f"helpdesk:location:{location_id}"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-
-    result = fetch_resource_by_id('locations', location_id)
-
-    # Help Desk API returns {success: true, location: {...}} - extract the location object
-    if isinstance(result, dict):
-        if result.get('warning'):
-            cache.set(key, result, LOCATION_WARNING_TTL)
-            return result
-        # Extract location from nested response
-        if result.get('success') and result.get('location'):
-            location = result['location']
-            cache.set(key, location, LOCATION_CACHE_TTL)
-            return location
-
-    cache.set(key, result, LOCATION_CACHE_TTL)
-    return result
-
-
-def get_employee_by_id(employee_id):
-    """Fetch an employee resource from the Help Desk service by ID with caching."""
-    if not employee_id:
-        return None
-    key = f"helpdesk:employee:{employee_id}"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
-
-    result = fetch_resource_by_id('employees', employee_id)
-
-    # Help Desk API returns {success: true, employee: {...}} - extract the employee object
-    if isinstance(result, dict):
-        if result.get('warning'):
-            cache.set(key, result, LOCATION_WARNING_TTL)
-            return result
-        # Extract employee from nested response
-        if result.get('success') and result.get('employee'):
-            employee = result['employee']
-            cache.set(key, employee, LOCATION_CACHE_TTL)
-            return employee
-
-    cache.set(key, result, LOCATION_CACHE_TTL)
-    return result
-
-
-def fetch_resource_list(resource_name, params=None):
-    """Fetch a list endpoint from the Help Desk service."""
+    Fetch a list endpoint from the Help Desk service.
+    Returns a dict or list depending on the API response.
+    """
     params = params or {}
-    # HELPDESK_API_URL already includes /api/ prefix
     url = _build_url(f"{resource_name}/")
     try:
         resp = client_get(url, params=params, timeout=8)
         if resp.status_code == 404:
             return {"warning": f"{resource_name} endpoint not found."}
         resp.raise_for_status()
-        data = resp.json()
-        # If remote returns pagination object with results, return as-is
-        if isinstance(data, dict) and 'results' in data:
-            return data
-        return data
+        return resp.json()
     except RequestException:
-        return {"warning": "Help Desk service unreachable. Make sure the Help Desk service is running and accessible."}
+        return {"warning": "Help Desk service unreachable."}
 
+def get_location_by_id(location_id):
+    """
+    Fetch a single location by ID.
+    Returns the location object, or {'warning': ...} if error.
+    """
+    if not location_id:
+        return None
+
+    result = fetch_resource_by_id("locations", location_id)
+
+    # Pass through warnings
+    if isinstance(result, dict) and result.get("warning"):
+        return result
+
+    # Extract location object if API response uses {success, location}
+    if isinstance(result, dict) and result.get("success") and "location" in result:
+        return result["location"]
+
+    # Otherwise return raw result
+    return result
 
 def get_locations_list(q=None, limit=50):
-    key = f"contexts:list:locations:{q}:{limit}"
-    cached = cache.get(key)
-    if cached is not None:
-        return cached
+    """
+    Fetch list of locations.
+    Returns a list of location objects, or {'warning': ...} if error.
+    """
     params = {}
     if q:
-        params['q'] = q
+        params["q"] = q
     if limit:
-        params['limit'] = limit
-    result = fetch_resource_list('locations', params=params)
-    if isinstance(result, dict) and result.get('warning'):
-        cache.set(key, result, LIST_WARNING_TTL)
-    else:
-        cache.set(key, result, LIST_CACHE_TTL)
+        params["limit"] = limit
+
+    result = fetch_resource_list("locations", params=params)
+
+    # If API returns {success, locations: [...]}, extract array
+    if isinstance(result, dict):
+        if result.get("warning"):
+            return result
+        if "locations" in result:
+            return result["locations"]
+
+    # If API returned a list directly, return it
     return result

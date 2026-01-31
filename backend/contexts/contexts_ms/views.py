@@ -594,28 +594,40 @@ class HelpDeskLocationsProxyViewSet(viewsets.ViewSet):
             return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
         return Response(result)
 
-
 class HelpDeskEmployeesProxyViewSet(viewsets.ViewSet):
     """Proxy ViewSet for Help Desk employees to avoid mixed content errors."""
 
     def list(self, request):
         """Proxy GET /helpdesk-employees/ to help desk service."""
-        from contexts_ms.services.integration_help_desk import fetch_resource_list
-        result = fetch_resource_list('employees')
+        from contexts_ms.services.help_desk_employees import get_employees_list
+
+        q = request.query_params.get('q')
+        limit = request.query_params.get('limit', None)
+        try:
+            limit = int(limit) if limit is not None else None
+        except (TypeError, ValueError):
+            limit = None
+
+        result = get_employees_list(q=q, limit=limit)
         if isinstance(result, dict) and result.get('warning'):
             return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
+
+        # If API returns {"employees": [...]} wrap properly
+        if isinstance(result, dict) and 'employees' in result:
+            return Response(result['employees'])
+
         return Response(result)
 
     def retrieve(self, request, pk=None):
         """Proxy GET /helpdesk-employees/<pk>/ to help desk service."""
-        from contexts_ms.services.integration_help_desk import get_employee_by_id
+        from contexts_ms.services.help_desk_employees import get_employee_by_id
+
         result = get_employee_by_id(pk)
         if result is None:
             return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
         if isinstance(result, dict) and result.get('warning'):
             return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
         return Response(result)
-
 
 # Usage check endpoints
 @api_view(['GET'])

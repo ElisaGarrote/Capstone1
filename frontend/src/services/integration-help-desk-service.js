@@ -34,5 +34,45 @@ export async function fetchLocationById(id) {
   };
 }
 
+/* ===============================
+          EMPLOYEES CRUD
+================================= */
+// GET all employees (via contexts proxy)
+export async function fetchAllEmployees() {
+  const res = await contextsAxios.get("helpdesk-employees/");
+  const data = res.data.employees ?? res.data.results ?? res.data;
+
+  // Ensure data is an array before mapping
+  if (!Array.isArray(data)) {
+    console.warn("fetchAllEmployees: Expected array but got:", typeof data);
+    return [];
+  }
+
+  return data.map(emp => ({
+    id: emp.id,
+    name: [emp.first_name, emp.middle_name, emp.last_name, emp.suffix].filter(Boolean).join(" "),
+    email: emp.email,
+    username: emp.username,
+    phone: emp.phone_number,
+  }));
+}
+
+// GET single employee by ID (via contexts proxy)
+export async function fetchEmployeeById(id) {
+  const res = await contextsAxios.get(`helpdesk-employees/${id}/`);
+  const emp = res.data;
+
+  if (!emp) {
+    return null;
+  }
+
+  return {
+    id: emp.id,
+    name: [emp.first_name, emp.middle_name, emp.last_name, emp.suffix].filter(Boolean).join(" "),
+    email: emp.email,
+    username: emp.username,
+    phone: emp.phone_number,
+  };
+}
 // NOTE: Locations are fetched from external Help Desk service (http://165.22.247.50:5001/api/locations/)
 // Location creation is not available - locations must be managed directly in the Help Desk system
