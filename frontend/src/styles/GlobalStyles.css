@@ -462,3 +462,22 @@ footer {
     display: flex;
   }
 }
+
+/* Top section styling for registration pages */
+.registration .top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 28px 28px 0 28px;
+}
+
+.top {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 28px 28px 0 28px;
+}
