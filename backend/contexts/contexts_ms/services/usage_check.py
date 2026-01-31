@@ -130,6 +130,13 @@ def is_item_in_use(item_type, item_id):
         'depreciation': f"depreciations/{item_id}/check-usage/",
     }
 
+    # Extend endpoint_map to include suppliers, statuses, and depreciations
+    endpoint_map.update({
+        'supplier': f"suppliers/{item_id}/check-usage/",
+        'status': f"statuses/{item_id}/check-usage/",
+        'depreciation': f"depreciations/{item_id}/check-usage/",
+    })
+
     try:
         had_network_error = False
         check_path = endpoint_map.get(item_type)

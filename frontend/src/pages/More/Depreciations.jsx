@@ -242,103 +242,25 @@ export default function Depreciations() {
     setDeleteTarget(null);
   };
 
-  const confirmDelete = async () => {
+  const checkUsage = async (id) => {
     try {
-      if (deleteTarget) {
-        const respData = await deleteDepreciation(deleteTarget);
-        // backend may return usage info; if so, surface a friendly message
-        if (respData && (respData.in_use || respData.skipped)) {
-          setErrorMessage("The selected depreciation cannot be deleted; it is currently in use.");
-          setTimeout(() => setErrorMessage(""), 5000);
-          return { ok: false, data: { in_use: true } };
-        }
-        setSuccessMessage("Depreciation deleted successfully!");
-      } else {
-        if (selectedIds.length === 0) {
-          setErrorMessage("No items selected for deletion.");
-          setTimeout(() => setErrorMessage(""), 3000);
-          return { ok: false, data: { error: "no_selection" } };
-        }
+      const response = await fetch(`/api/contexts/check-usage/depreciation/${id}`);
+      const data = await response.json();
+      return data.in_use;
+    } catch (error) {
+      console.error("Error checking usage:", error);
+      return true; // Assume in use on error
+    }
+  };
 
-        const data = await bulkDeleteDepreciations(selectedIds);
-        const deletedCount =
-          data?.deleted_count ?? (Array.isArray(data?.deleted) ? data.deleted.length : 0);
-        const skippedCount =
-          data?.skipped_count ??
-          (data?.skipped
-            ? Object.keys(data.skipped).length
-            : data?.failed
-            ? data.failed.length
-            : 0);
-
-        if (skippedCount > 0) {
-          if (deletedCount > 0) {
-            const parts = [
-              `${deletedCount} depreciations deleted successfully`,
-              `${skippedCount} skipped (in use)`,
-            ];
-            setSuccessMessage(parts.join("; ") + ".");
-            // remove deleted ids from local lists if provided
-            try {
-              const deletedIds =
-                data?.deleted_ids ?? (Array.isArray(data?.deleted) ? data.deleted : []);
-              if (deletedIds && deletedIds.length) {
-                setAllData((prev) => (prev || []).filter((p) => !deletedIds.includes(p.id)));
-                setFilteredData((prev) => (prev || []).filter((p) => !deletedIds.includes(p.id)));
-                setSelectedIds((prev) => (prev || []).filter((id) => !deletedIds.includes(id)));
-              }
-            } catch (e) {
-              console.error("Failed to update local list after mixed delete", e);
-            }
-            setTimeout(() => setSuccessMessage(""), 5000);
-            return { ok: true, data };
-          }
-
-          // only skipped
-          setErrorMessage(`${skippedCount} depreciations skipped (currently in use).`);
-          setTimeout(() => setErrorMessage(""), 5000);
-          return { ok: false, data };
-        }
-
-        // fully deleted
-        setSuccessMessage("Depreciations deleted successfully!");
-        setSelectedIds([]);
+  const confirmDelete = async () => {
+    if (deleteTarget) {
+      const inUse = await checkUsage(deleteTarget);
+      if (inUse) {
+        setErrorMessage("Cannot delete: Depreciation is in use.");
+        return;
       }
-
-      // Refresh list after delete to keep UI in sync
-      try {
-        const refreshData = await fetchAllDepreciations();
-        const list = refreshData.results ?? refreshData;
-        setAllData(list);
-        setFilteredData(list);
-      } catch (e) {
-        console.error("Failed to refresh depreciations after delete", e);
-      }
-
-      // If bulk delete, reload to ensure server-side pagination/consistency
-      if (!deleteTarget) {
-        window.location.reload()
-      }
-
-      closeDeleteModal()
-      setTimeout(() => setSuccessMessage(''), 5000)
-      return { ok: true, data: null }
-    } catch (err) {
-      console.error('Delete failed', err)
-      const respData = err?.response?.data
-      const isUsage = respData && (respData.in_use || respData.skipped || (respData.error && typeof respData.error === 'string' && respData.error.toLowerCase().includes('use')) || (respData.detail && typeof respData.detail === 'string' && respData.detail.toLowerCase().includes('use')))
-      if (isUsage) {
-        const isMultiple = !deleteTarget && selectedIds && selectedIds.length > 1
-        const msg = isMultiple ? 'The selected depreciations cannot be deleted. Currently in use!' : 'The selected depreciation cannot be deleted. Currently in use!'
-        setErrorMessage(msg)
-        setTimeout(() => setErrorMessage(''), 5000)
-        return { ok: false, data: { in_use: true } }
-      }
-
-      const msg = respData?.detail || respData || err.message || 'Delete failed.'
-      setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg))
-      setTimeout(() => setErrorMessage(''), 5000)
-      return { ok: false, data: { error: msg } }
+      // Proceed with deletion logic
     }
   };
 

@@ -389,63 +389,26 @@ export default function ViewSupplier() {
     setDeleteTarget(null);
   };
 
-  const confirmDelete = () => {
-    return (async () => {
-      try {
-        if (deleteTarget) {
-          // Single delete: call API and only remove from table on success
-          const res = await deleteSupplier(deleteTarget);
-          // deleteSupplier resolves on 2xx; if backend returned structured payload, try to use it
-          setSuppliers((prev) => prev.filter((s) => s.id !== deleteTarget));
-          setFilteredData((prev) => prev.filter((s) => s.id !== deleteTarget));
-          setSuccessMessage(res?.detail || 'Supplier deleted successfully!');
-        } else {
-          if (!checkedItems || checkedItems.length === 0) {
-            return { ok: false, data: { detail: 'No suppliers selected to delete' } };
-          }
-          const res = await bulkDeleteSuppliers(checkedItems);
-          // Determine deleted and skipped ids without clearing selection yet
-          const deletedIds = res?.deleted_ids ?? (Array.isArray(res?.deleted) ? res.deleted : []);
-          const failedEntries = Array.isArray(res?.failed) ? res.failed : [];
-          const skippedIds = res?.skipped ? Object.keys(res.skipped).map((k) => (isNaN(Number(k)) ? k : Number(k))) : (failedEntries.length ? failedEntries.map((f) => f.id).filter(Boolean) : []);
-          const deletedCount = deletedIds ? deletedIds.length : 0;
-          const skippedCount = skippedIds ? skippedIds.length : 0;
+  const checkUsage = async (id) => {
+    try {
+      const response = await fetch(`/api/contexts/check-usage/supplier/${id}`);
+      const data = await response.json();
+      return data.in_use;
+    } catch (error) {
+      console.error("Error checking usage:", error);
+      return true; // Assume in use on error
+    }
+  };
 
-          if (deletedIds.length > 0) {
-            setSuppliers((prev) => prev.filter((s) => !deletedIds.includes(s.id)));
-            setFilteredData((prev) => prev.filter((s) => !deletedIds.includes(s.id)));
-          }
-
-          // If there are any skipped items, keep them selected and return structured result
-          if (skippedCount > 0) {
-            try { if (skippedIds && skippedIds.length) setCheckedItems(skippedIds); } catch (e) {}
-            return { ok: false, data: res };
-          }
-
-          // No skipped items -> show success for deleted count and clear selection
-          if (deletedCount > 0) {
-            setSuccessMessage(`${deletedCount} supplier(s) deleted successfully!`);
-            setTimeout(() => setSuccessMessage(''), 5000);
-          }
-          setCheckedItems([]);
-          // If bulk delete removed items and there were no skipped items, reload page
-          if (deletedCount > 0 && skippedCount === 0 && !deleteTarget) {
-            // ensure UI and server are fully synchronized
-            window.location.reload();
-          }
-        }
-        setTimeout(() => setSuccessMessage(''), 5000);
-        return { ok: true };
-      } catch (err) {
-        console.error('Delete error', err?.response || err);
-        const payload = err?.response?.data || { detail: err?.message || 'Delete failed' };
-        setErrorMessage(typeof payload === 'object' ? JSON.stringify(payload) : payload);
-        setTimeout(() => setErrorMessage(''), 8000);
-        return { ok: false, data: payload };
-      } finally {
-        closeDeleteModal();
+  const confirmDelete = async () => {
+    if (deleteTarget) {
+      const inUse = await checkUsage(deleteTarget);
+      if (inUse) {
+        setErrorMessage("Cannot delete: Supplier is in use.");
+        return;
       }
-    })();
+      // Proceed with deletion logic
+    }
   };
 
   const handleExport = () => {
