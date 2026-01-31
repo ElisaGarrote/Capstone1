@@ -154,7 +154,11 @@ def _bulk_delete_handler(request, item_type, hard_delete=False):
                 continue
 
             if usage.get('in_use'):
-                msg = _build_cant_delete_message(inst, usage)
+                # Check if this is a network error vs actual usage
+                if usage.get('network_error'):
+                    msg = f"Cannot verify usage status (service unavailable). Deletion blocked as safety measure."
+                else:
+                    msg = _build_cant_delete_message(inst, usage)
                 skipped[pk] = msg
                 continue
 

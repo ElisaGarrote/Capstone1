@@ -86,6 +86,7 @@ def is_item_in_use(item_type, item_id):
       the assets service list endpoints to find referencing object ids.
     - On network error, conservatively assume the item is in use (return in_use=True).
     """
+    logger.info(f"[usage_check] Checking usage for {item_type}#{item_id}")
 
     result = {'in_use': False, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}
 
@@ -145,6 +146,7 @@ def is_item_in_use(item_type, item_id):
                         if ids:
                             result[key] = ids
                             result['in_use'] = True
+                            logger.info(f"[usage_check] {item_type}#{item_id} is in use by {len(ids)} {key.replace('_ids', '')}(s)")
             except requests.RequestException:
                 # record network issue and continue; we'll be conservative later
                 had_network_error = True
@@ -260,12 +262,16 @@ def is_item_in_use(item_type, item_id):
                 # conservative behavior on network problems
                 result['in_use'] = True
 
-        # If we encountered network errors but found no explicit references,
-        # allow deletion (Railway/production deployments may have intermittent connectivity)
-        # Only block if we explicitly found usage.
+        # If we encountered network errors but found no explicit references, be conservative
+        # Better to block a delete that should succeed than allow one that shouldn't
+        if not result['in_use'] and had_network_error:
+            logger.warning(f"[usage_check] Network error checking {item_type}#{item_id}, blocking delete as safety measure")
+            return {'in_use': True, 'asset_ids': [], 'component_ids': [], 'repair_ids': [], 'network_error': True}
+
+        logger.info(f"[usage_check] {item_type}#{item_id} final result: in_use={result['in_use']}, assets={len(result.get('asset_ids', []))}, components={len(result.get('component_ids', []))}, repairs={len(result.get('repair_ids', []))}")
         return result
     except requests.RequestException as exc:
-        # If the assets-service is unreachable, log warning but allow deletion
-        # to prevent blocking all deletes due to network issues
-        logger.warning(f"[usage_check] Assets service unreachable for {item_type}#{item_id}: {exc}")
-        return {'in_use': False, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}
+        # If the assets-service is unreachable, assume item is in use
+        # to prevent accidental deletion.
+        logger.error(f"[usage_check] Assets service unreachable for {item_type}#{item_id}: {exc}")
+        return {'in_use': True, 'asset_ids': [], 'component_ids': [], 'repair_ids': [], 'network_error': True}
