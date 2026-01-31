@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/reports/due-for-checkin-mockup-data.json";
 import Pagination from "../../components/Pagination";
 import DepreciationFilter from "../../components/FilterPanel";
 import Footer from "../../components/Footer";
 import dateRelated from "../../utils/dateRelated";
 import { RxPerson } from "react-icons/rx";
 import { IoWarningOutline } from "react-icons/io5";
+import assetsAxios from "../../api/assetsAxios";
 
 import "../../styles/reports/DueBackReport.css";
 
@@ -56,16 +56,16 @@ function TableItem({ asset }) {
   }, []);
 
   // Convert to Date objects for comparison
-  const isOverdue = new Date(asset.checkin_date) < new Date(currentDate);
+  const isOverdue = new Date(asset.return_date) < new Date(currentDate);
   const dayDifference = Math.floor(
-    (new Date(currentDate) - new Date(asset.checkin_date)) /
+    (new Date(currentDate) - new Date(asset.return_date)) /
       (1000 * 60 * 60 * 24)
   );
 
   return (
     <tr>
       <td>
-        {asset.asset_id} - {asset.product}
+        {asset.asset_id} - {asset.asset_name}
       </td>
       <td>
         <div className="icon-td">
@@ -95,7 +95,7 @@ function TableItem({ asset }) {
               color: isOverdue ? "red" : "#333333",
             }}
           >
-            {dateRelated.formatDate(asset.checkin_date)}
+            {dateRelated.formatDate(asset.return_date)}
           </span>
         </div>
       </td>
@@ -109,14 +109,54 @@ export default function DueBackReport() {
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
 
+  // Data state
+  const [reportData, setReportData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
+  // Fetch data from backend
+  useEffect(() => {
+    const fetchReportData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await assetsAxios.get("/due-checkin-report/");
+        if (response.data.success) {
+          setReportData(response.data.data);
+        } else {
+          setError("Failed to load report data");
+        }
+      } catch (err) {
+        console.error("Error fetching due checkin report:", err);
+        setError(err.response?.data?.error || "Failed to load report data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReportData();
+  }, []);
+
+  // Filter data based on search term
+  const filteredData = reportData.filter((asset) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      asset.asset_id?.toLowerCase().includes(searchLower) ||
+      asset.asset_name?.toLowerCase().includes(searchLower) ||
+      asset.checked_out_by?.toLowerCase().includes(searchLower) ||
+      asset.checked_out_to?.toLowerCase().includes(searchLower)
+    );
+  });
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedDepreciation = MockupData.slice(startIndex, endIndex);
+  const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -154,12 +194,14 @@ export default function DueBackReport() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Asset ({MockupData.length})</h2>
+              <h2 className="h2">Asset ({filteredData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
                   placeholder="Search..."
                   className="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <div ref={toggleRef}>
                   <MediumButtons
@@ -179,28 +221,39 @@ export default function DueBackReport() {
                   <button>Download as CSV</button>
                 </section>
               )}
-              <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
-                  {paginatedDepreciation.length > 0 ? (
-                    paginatedDepreciation.map((asset, index) => (
-                      <TableItem
-                        key={index}
-                        asset={asset}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="no-data-message">
-                        No end of life & warranty found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              
+              {loading ? (
+                <div className="loading-message" style={{ textAlign: "center", padding: "2rem" }}>
+                  Loading report data...
+                </div>
+              ) : error ? (
+                <div className="error-message" style={{ textAlign: "center", padding: "2rem", color: "red" }}>
+                  {error}
+                </div>
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader />
+                  </thead>
+                  <tbody>
+                    {paginatedDepreciation.length > 0 ? (
+                      paginatedDepreciation.map((asset, index) => (
+                        <TableItem
+                          key={asset.checkout_id || index}
+                          asset={asset}
+                          onDeleteClick={() => setDeleteModalOpen(true)}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="no-data-message">
+                          {searchTerm ? "No assets found matching your search." : "No overdue assets found."}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             {/* Table pagination */}
@@ -208,7 +261,7 @@ export default function DueBackReport() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={MockupData.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

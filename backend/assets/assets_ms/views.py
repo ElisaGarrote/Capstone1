@@ -25,6 +25,7 @@ from assets_ms.services.activity_logger import (
     log_audit_activity,
     log_repair_activity,
 )
+from assets_ms.services.due_checkin_report import get_due_checkin_report, get_due_checkin_count
 
 logger = logging.getLogger(__name__)
 
@@ -2438,6 +2439,49 @@ class DashboardViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response(
                 {"error": f"Failed to generate KPI summary: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+# DUE FOR CHECKIN REPORT
+class DueCheckinReportViewSet(viewsets.ViewSet):
+    """ViewSet for generating Due for Check-in reports."""
+    
+    def list(self, request):
+        """
+        GET /due-checkin-report/
+        Returns a list of all assets that are overdue for check-in.
+        """
+        try:
+            report_data = get_due_checkin_report()
+            return Response({
+                "success": True,
+                "count": len(report_data),
+                "data": report_data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error generating due checkin report: {str(e)}")
+            return Response(
+                {"error": f"Failed to generate due checkin report: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=False, methods=['get'])
+    def count(self, request):
+        """
+        GET /due-checkin-report/count/
+        Returns the count of assets overdue for check-in.
+        """
+        try:
+            count = get_due_checkin_count()
+            return Response({
+                "success": True,
+                "count": count
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error getting due checkin count: {str(e)}")
+            return Response(
+                {"error": f"Failed to get due checkin count: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

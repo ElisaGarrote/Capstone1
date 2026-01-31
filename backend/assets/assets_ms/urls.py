@@ -21,6 +21,7 @@ router.register('audit-files', AuditFileViewSet, basename='audit-files')
 router.register('repairs', RepairViewSet, basename='repair')
 router.register('dashboard', DashboardViewSet, basename='dashboard')
 router.register('report-templates', AssetReportTemplateViewSet, basename='report-templates')
+router.register('due-checkin-report', DueCheckinReportViewSet, basename='due-checkin-report')
 
 urlpatterns = [
     # Internal cross-service usage checks
