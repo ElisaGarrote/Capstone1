@@ -1,5 +1,8 @@
 import requests
+import logging
 from .http_client import get as client_get
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_ids_from_response(resp_json):
