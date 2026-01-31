@@ -79,6 +79,32 @@ def _get_results_list(resp_json):
     return []
 
 
+def _matches_reference(item, field, target_id):
+    """Return True if `item[field]` references `target_id`.
+
+    Handles cases where the relation field may be:
+    - a raw id (int/str)
+    - a nested dict with keys 'id' or 'pk'
+    - provided via alternative key name like '<field>_id'
+    """
+    if not isinstance(item, dict):
+        return False
+
+    val = item.get(field)
+    # If nested dict relation, pull id
+    if isinstance(val, dict):
+        val = val.get('id') or val.get('pk')
+
+    # Try alternative key e.g. asset_id, component_id
+    if val is None and f"{field}_id" in item:
+        val = item.get(f"{field}_id")
+
+    if val is None:
+        return False
+
+    return str(val) == str(target_id)
+
+
 def is_item_in_use(item_type, item_id):
     """
     Check usage of an item across assets, components and repairs.
@@ -143,10 +169,7 @@ def is_item_in_use(item_type, item_id):
                         items = _get_results_list(resp_json)
                         # filter items that actually reference the item_id on the param_name
                         # some services may ignore query params, so we verify here
-                        filtered = [it for it in items if it.get(param_name) == item_id]
-                        if not filtered:
-                            # if nothing matched by strict equality, try string comparison
-                            filtered = [it for it in items if str(it.get(param_name)) == str(item_id)]
+                        filtered = [it for it in items if _matches_reference(it, param_name, item_id)]
 
                         if filtered:
                             if key == 'asset_ids':
