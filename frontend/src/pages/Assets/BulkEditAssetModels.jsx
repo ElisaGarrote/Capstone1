@@ -375,10 +375,10 @@ export default function BulkEditAssetModels() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
 
-        <main className="main-with-table">
+        <main>
           <TopSecFormPage
             root="Asset Models"
             currentPage="Bulk Edit Asset Models"

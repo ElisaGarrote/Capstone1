@@ -199,9 +199,9 @@ export default function BulkEditComponents() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
-        <main className="main-with-table">
+        <main>
           <TopSecFormPage
             root="Components"
             currentPage="Bulk Edit Components"
