@@ -249,7 +249,6 @@ export default function BulkEditComponents() {
                   className={`form-input ${errors.category ? "input-error" : ""}`}
                   {...register("category")}
                 >
-                  <option value="">-- No Change --</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
@@ -263,7 +262,6 @@ export default function BulkEditComponents() {
                   className={`form-input ${errors.manufacturer ? "input-error" : ""}`}
                   {...register("manufacturer")}
                 >
-                  <option value="">-- No Change --</option>
                   {manufacturers.map((m) => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
@@ -277,7 +275,6 @@ export default function BulkEditComponents() {
                   className={`form-input ${errors.supplier ? "input-error" : ""}`}
                   {...register("supplier")}
                 >
-                  <option value="">-- No Change --</option>
                   {suppliers.map((s) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
@@ -291,7 +288,6 @@ export default function BulkEditComponents() {
                   className={`form-input ${errors.location ? "input-error" : ""}`}
                   {...register("location")}
                 >
-                  <option value="">-- No Change --</option>
                   {locations.map((loc) => (
                     <option key={loc.id} value={loc.id}>{loc.name}</option>
                   ))}
