@@ -81,10 +81,8 @@ function TableItem({ asset }) {
       <td
         title={
           isOverdue
-            ? `This checkin date is overdue by ${absValue} ${
-                absValue !== 1 ? "days" : "day"
-              }.`
-            : `Due in ${absValue} ${absValue !== 1 ? "days" : "day"}.`
+            ? `Overdue by ${absValue} ${absValue !== 1 ? "days" : "day"}`
+            : `Due in ${absValue} ${absValue !== 1 ? "days" : "day"}`
         }
       >
         <div className="icon-td">
@@ -95,6 +93,7 @@ function TableItem({ asset }) {
             }}
           >
             {dateRelated.formatDate(asset.return_date)}
+            {isOverdue && ` (${absValue}d overdue)`}
             {!isOverdue && daysUntilDue <= 3 && ` (${daysUntilDue}d)`}
           </span>
         </div>

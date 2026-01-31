@@ -121,29 +121,37 @@ def get_due_checkin_report(days_threshold=30):
         days_until_due = (checkout.return_date - today).days
         status = 'overdue' if days_until_due < 0 else 'upcoming'
         
-        # Get employee who has the asset (checkout_to)
-        checked_out_to = get_employee_details(checkout.checkout_to)
-        checked_out_to_name = None
-        if checked_out_to:
-            if isinstance(checked_out_to, dict) and checked_out_to.get('employee'):
-                emp = checked_out_to['employee']
-                checked_out_to_name = f"{emp.get('firstname', '')} {emp.get('lastname', '')}".strip()
-            elif isinstance(checked_out_to, dict):
-                checked_out_to_name = f"{checked_out_to.get('firstname', '')} {checked_out_to.get('lastname', '')}".strip()
-        
-        # Get ticket details to find who initiated the checkout (checked_out_by)
+        # Get ticket details first to access requestor info
         checked_out_by_name = None
+        checked_out_to_name = None
+        
         ticket = get_ticket_by_id(checkout.ticket_number)
         if ticket:
-            employee_id = ticket.get('employee')
-            if employee_id:
-                employee = get_employee_details(employee_id)
-                if employee:
-                    if isinstance(employee, dict) and employee.get('employee'):
-                        emp = employee['employee']
+            # The employee field in ticket is the requestor (who initiated the checkout)
+            requestor_id = ticket.get('employee')
+            if requestor_id:
+                requestor = get_employee_details(requestor_id)
+                if requestor:
+                    if isinstance(requestor, dict) and requestor.get('employee'):
+                        emp = requestor['employee']
                         checked_out_by_name = f"{emp.get('firstname', '')} {emp.get('lastname', '')}".strip()
-                    elif isinstance(employee, dict):
-                        checked_out_by_name = f"{employee.get('firstname', '')} {employee.get('lastname', '')}".strip()
+                    elif isinstance(requestor, dict):
+                        checked_out_by_name = f"{requestor.get('firstname', '')} {requestor.get('lastname', '')}".strip()
+            
+            # Get requestor_details from ticket if available
+            requestor_details = ticket.get('requestor_details')
+            if requestor_details and isinstance(requestor_details, dict):
+                checked_out_to_name = f"{requestor_details.get('firstname', '')} {requestor_details.get('lastname', '')}".strip()
+        
+        # If checked_out_to is still not found, try using checkout.checkout_to
+        if not checked_out_to_name:
+            checked_out_to = get_employee_details(checkout.checkout_to)
+            if checked_out_to:
+                if isinstance(checked_out_to, dict) and checked_out_to.get('employee'):
+                    emp = checked_out_to['employee']
+                    checked_out_to_name = f"{emp.get('firstname', '')} {emp.get('lastname', '')}".strip()
+                elif isinstance(checked_out_to, dict):
+                    checked_out_to_name = f"{checked_out_to.get('firstname', '')} {checked_out_to.get('lastname', '')}".strip()
         
         report_data.append({
             'checkout_id': checkout.id,
