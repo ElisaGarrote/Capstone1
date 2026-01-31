@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { IoClose } from 'react-icons/io5';
 import { HiOutlineTag } from 'react-icons/hi';
@@ -6,10 +6,22 @@ import { IoLocationOutline } from 'react-icons/io5';
 import { RxPerson } from 'react-icons/rx';
 import { BsKeyboard, BsLaptop } from 'react-icons/bs';
 import Status from '../Status';
+import Pagination from '../Pagination';
+import MediumButtons from '../buttons/MediumButtons';
 import '../../styles/dashboard/StatusCardPopup.css';
 import '../../styles/custom-colors.css';
 
 const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+  const [exportToggle, setExportToggle] = useState(false);
+  const exportRef = useRef(null);
+  const toggleRef = useRef(null);
+
+  // Paginate items
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedItems = items.slice(startIndex, endIndex);
   const getColumnTitles = () => {
     if (title === 'Low Stock') {
       return {
@@ -66,7 +78,7 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
             </tr>
           </thead>
           <tbody>
-            {items.map((item, index) => (
+            {paginatedItems.map((item, index) => (
               <tr key={index}>
                 <td>
                   <div className="category-info">
@@ -97,7 +109,7 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
           </tr>
         </thead>
         <tbody>
-          {items.map((item, index) => (
+          {paginatedItems.map((item, index) => (
             <tr key={index}>
               <td>
                 <div className="asset-info">
@@ -131,14 +143,40 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
       <div className="popup-content">
         <div className="popup-header">
           <h2>{title}{dueDate ? ` (next ${dueDate} days)` : ''}</h2>
-          <button className="close-button" onClick={onClose}>
-            <IoClose />
-          </button>
+          <div className="popup-header-actions">
+            <div ref={toggleRef}>
+              <MediumButtons
+                type="export"
+                onClick={() => setExportToggle(!exportToggle)}
+              />
+            </div>
+            <button className="close-button" onClick={onClose}>
+              <IoClose />
+            </button>
+          </div>
         </div>
         <div className="popup-body">
-          <table className="status-card-table">
-            {renderTableContent()}
-          </table>
+          {exportToggle && (
+            <div className="export-button-section" ref={exportRef}>
+              <button>Download as Excel</button>
+              <button>Download as PDF</button>
+              <button>Download as CSV</button>
+            </div>
+          )}
+          <div className="table-wrapper">
+            <table className="status-card-table">
+              {renderTableContent()}
+            </table>
+          </div>
+        </div>
+        <div className="popup-footer">
+          <Pagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={items.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       </div>
     </div>
