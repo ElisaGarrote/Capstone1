@@ -90,9 +90,9 @@ def is_item_in_use(item_type, item_id):
     - On network error, conservatively assume the item is in use (return in_use=True).
     """
     from .http_client import ASSETS_API_URL
-    logger.info(f"[usage_check] ==================== USAGE CHECK START ====================")
-    logger.info(f"[usage_check] Checking usage for {item_type}#{item_id}")
-    logger.info(f"[usage_check] ASSETS_API_URL={ASSETS_API_URL}")
+    logger.error(f"[usage_check] ==================== USAGE CHECK START ====================")
+    logger.error(f"[usage_check] Checking usage for {item_type}#{item_id}")
+    logger.error(f"[usage_check] ASSETS_API_URL={ASSETS_API_URL}")
 
     result = {'in_use': False, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}
 
@@ -125,15 +125,15 @@ def is_item_in_use(item_type, item_id):
         # Special handling: some contexts (category, manufacturer, depreciation)
         # For categories, skip the general queries and use direct count-based approach
         if item_type == 'category':
-            logger.info(f"[usage_check] Starting special handling for category#{item_id}")
-            logger.info(f"[usage_check] Querying assets with category={item_id}")
+            logger.error(f"[usage_check] Starting special handling for category#{item_id}")
+            logger.error(f"[usage_check] Querying assets with category={item_id}")
             asset_count = 0
             try:
                 ar = client_get('assets/', params={'category': item_id, 'page_size': 1}, timeout=5)
-                logger.info(f"[usage_check] Assets query status: {ar.status_code}")
+                logger.error(f"[usage_check] Assets query status: {ar.status_code}")
                 if ar.status_code == 200:
                     ajson = ar.json()
-                    logger.info(f"[usage_check] Assets response type: {type(ajson)}, keys: {ajson.keys() if isinstance(ajson, dict) else 'N/A'}")
+                    logger.error(f"[usage_check] Assets response type: {type(ajson)}, keys: {ajson.keys() if isinstance(ajson, dict) else 'N/A'}")
                     
                     # Extract count from paginated response
                     if isinstance(ajson, dict) and 'count' in ajson:
@@ -142,7 +142,7 @@ def is_item_in_use(item_type, item_id):
                         # Fallback: count results list
                         asset_count = len(_get_results_list(ajson))
                     
-                    logger.info(f"[usage_check] Found {asset_count} assets with category={item_id}")
+                    logger.error(f"[usage_check] Found {asset_count} assets with category={item_id}")
                     if asset_count > 0:
                         result['in_use'] = True
                         result['asset_ids'] = [f"asset_{i}" for i in range(min(asset_count, 5))]  # Placeholder IDs
@@ -152,14 +152,14 @@ def is_item_in_use(item_type, item_id):
                 logger.error(f"[usage_check] Network error querying assets by category: {exc}")
                 had_network_error = True
 
-            logger.info(f"[usage_check] Querying components with category={item_id}")
+            logger.error(f"[usage_check] Querying components with category={item_id}")
             comp_count = 0
             try:
                 cr = client_get('components/', params={'category': item_id, 'page_size': 1}, timeout=5)
-                logger.info(f"[usage_check] Components query status: {cr.status_code}")
+                logger.error(f"[usage_check] Components query status: {cr.status_code}")
                 if cr.status_code == 200:
                     cjson = cr.json()
-                    logger.info(f"[usage_check] Components response type: {type(cjson)}, keys: {cjson.keys() if isinstance(cjson, dict) else 'N/A'}")
+                    logger.error(f"[usage_check] Components response type: {type(cjson)}, keys: {cjson.keys() if isinstance(cjson, dict) else 'N/A'}")
                     
                     # Extract count from paginated response
                     if isinstance(cjson, dict) and 'count' in cjson:
@@ -168,7 +168,7 @@ def is_item_in_use(item_type, item_id):
                         # Fallback: count results list
                         comp_count = len(_get_results_list(cjson))
                     
-                    logger.info(f"[usage_check] Found {comp_count} components with category={item_id}")
+                    logger.error(f"[usage_check] Found {comp_count} components with category={item_id}")
                     if comp_count > 0:
                         result['in_use'] = True
                         result['component_ids'] = [f"component_{i}" for i in range(min(comp_count, 5))]  # Placeholder IDs
@@ -181,25 +181,25 @@ def is_item_in_use(item_type, item_id):
             if result['in_use']:
                 asset_ids_count = len(result.get('asset_ids', []))
                 comp_ids_count = len(result.get('component_ids', []))
-                logger.info(f"[usage_check] category#{item_id} is in use: asset_count={asset_count}, comp_count={comp_count}, asset_ids={asset_ids_count}, comp_ids={comp_ids_count}")
+                logger.error(f"[usage_check] category#{item_id} is in use: asset_count={asset_count}, comp_count={comp_count}, asset_ids={asset_ids_count}, comp_ids={comp_ids_count}")
                 if asset_ids_count > 0 and comp_ids_count > 0:
-                    logger.info(f"[usage_check] category#{item_id} blocked: has both assets and components")
+                    logger.error(f"[usage_check] category#{item_id} blocked: has both assets and components")
                 elif asset_ids_count > 0:
-                    logger.info(f"[usage_check] category#{item_id} blocked: has assets")
+                    logger.error(f"[usage_check] category#{item_id} blocked: has assets")
                 elif comp_ids_count > 0:
-                    logger.info(f"[usage_check] category#{item_id} blocked: has components")
+                    logger.error(f"[usage_check] category#{item_id} blocked: has components")
             else:
-                logger.info(f"[usage_check] category#{item_id} not in use: asset_count={asset_count}, comp_count={comp_count}, in_use=False")
+                logger.error(f"[usage_check] category#{item_id} not in use: asset_count={asset_count}, comp_count={comp_count}, in_use=False")
             
             # Check for network errors - only block if we don't have valid query results
             if not result['in_use'] and had_network_error:
-                logger.warning(f"[usage_check] Network error checking category#{item_id} BUT blocking delete as safety measure")
+                logger.error(f"[usage_check] Network error checking category#{item_id} BUT blocking delete as safety measure")
                 result['in_use'] = True
                 result['network_error'] = True
             
             # Return immediately after category handling - don't continue to general checks
-            logger.info(f"[usage_check] category#{item_id} FINAL DECISION: in_use={result['in_use']}, assets={len(result.get('asset_ids', []))}, components={len(result.get('component_ids', []))}, had_network_error={had_network_error}")
-            logger.info(f"[usage_check] ==================== USAGE CHECK END ====================")
+            logger.error(f"[usage_check] category#{item_id} FINAL DECISION: in_use={result['in_use']}, assets={len(result.get('asset_ids', []))}, components={len(result.get('component_ids', []))}, had_network_error={had_network_error}")
+            logger.error(f"[usage_check] ==================== USAGE CHECK END ====================")
             return result
         
         # For non-category items or manufacturer/depreciation, use general queries
