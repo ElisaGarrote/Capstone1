@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
-import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
@@ -14,14 +13,14 @@ import "../../styles/Registration.css";
 import { fetchComponentNames, fetchComponentById, createComponent, updateComponent } from "../../services/assets-service";
 import { fetchAllDropdowns, createCategory, createManufacturer, createSupplier } from "../../services/contexts-service";
 import { fetchAllLocations } from "../../services/integration-help-desk-service";
-import { set } from "react-hook-form";
 
-const ComponentRegistration = () => {
+export default function ProductsRegistration() {
   const [categories, setCategories] = useState([]);
   const [manufacturers, setManufacturers] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [locations, setLocations] = useState([]);
   const [component, setComponent] = useState(null);
+  const [isClone, setIsClone] = useState(false);
 
   // Modal states for adding new entries
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -32,15 +31,10 @@ const ComponentRegistration = () => {
   const location = useLocation();
   const { id } = useParams();
   const currentDate = new Date().toISOString().split("T")[0];
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEdit = id && !isClone;
 
-  const {
-    setValue,
-    register,
-    handleSubmit,
-    watch,
-    trigger,
-    formState: { errors, isValid },
-  } = useForm({
+  const { setValue, register, handleSubmit, trigger, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       componentName: "",
@@ -55,7 +49,7 @@ const ComponentRegistration = () => {
       minimumQuantity: "",
       purchaseDate: "",
       notes: "",
-    },
+    }
   });
 
   const [previewImage, setPreviewImage] = useState(null);
@@ -68,9 +62,8 @@ const ComponentRegistration = () => {
   // Determine mode: clone mode passed from AssetViewPage
   const cloneMode = location.state?.isClone === true;
 
-  // Helper function to generate clone name
   const generateCloneName = async (baseName) => {
-    // 1. Fetch all existing asset names that contain the base name
+    // 1. Fetch all existing component names that contain the base name
     const existing = await fetchComponentNames({ search: baseName });
     const existingNames = existing.map(a => a.name);
 
@@ -103,7 +96,6 @@ const ComponentRegistration = () => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
-  // Initialize form with dropdown options and component data (if editing or cloning)
   useEffect(() => {
     const initialize = async () => {
       try {
@@ -116,14 +108,13 @@ const ComponentRegistration = () => {
         setManufacturers(contextDropdowns.manufacturers || []);
         setSuppliers(contextDropdowns.suppliers || []);
 
-        // Fetch dropdown options for locations from Help Desk service
         const helpDeskDropdowns = await fetchAllLocations();
         setLocations(helpDeskDropdowns || []);
 
-        // If editing or cloning, fetch the component data
+        // If editing or cloning, fetch the asset data
         if (id) {
           const componentData = await fetchComponentById(id);
-          console.log("Fetched component:", componentData);
+          console.log("Fetched product:", componentData);
           if (componentData) {
             setComponent(componentData);
           }
@@ -138,22 +129,22 @@ const ComponentRegistration = () => {
     initialize();
   }, [id, cloneMode]);
 
-   // Separate useEffect to populate form AFTER dropdowns and asset are loaded
+  // Separate useEffect to populate form AFTER dropdowns and component are loaded
   useEffect(() => {
     const populateForm = async () => {
       // Wait for next tick to ensure dropdowns are rendered
       await new Promise(resolve => setTimeout(resolve, 0));
 
-      // If we have asset data (editing or cloning), populate the form
+      // If we have component data (editing or cloning), populate the form
       if (component) {
         if (isClone) {
-          const clonedName = await generateCloneName(asset.name);
+          const clonedName = await generateCloneName(component.name);
           setValue("componentName", clonedName);
         } else {
           setValue("componentName", component.name || "");
         }
         // Prefer explicit *_details ids from API payload, fall back to top-level id fields when present
-        const categoryId = component.category ?? component.category_details?.id;
+        const categoryId = component.category ?? component.category_details?.id
         const manufacturerId = component.manufacturer ?? component.manufacturer_details?.id;
         const supplierId = component.supplier ?? component.supplier_details?.id;
         const locationId = component.location ?? component.location_details?.id;
@@ -164,11 +155,11 @@ const ComponentRegistration = () => {
         setValue("modelNumber", component.model_number || "");
         setValue("orderNumber", component.order_number || "");
         setValue("purchaseDate", component.purchase_date || "");
-        setValue("purchaseCost", component.purchase_cost || "");
+        setValue("purchaseCost", component.purchase_cost ?? "");
         setValue("quantity", component.quantity ?? "");
-        setValue("minimumQuantity", component.minimum_quantity || "");
+        setValue("minimumQuantity", component.minimum_quantity ?? "");
         setValue("notes", component.notes || "");
-        
+
         if (component.image) {
           setPreviewImage(component.image);
 
@@ -300,14 +291,13 @@ const ComponentRegistration = () => {
 
   const onSubmit = async (data) => {
     setErrorMessage("");
-
-    // Determine if this is an edit (id present and not cloning) or create (new or clone)
     const isUpdate = id && !isClone;
+
     try {
       setIsSubmitting(true);
-      
-      const formData = new FormData();
 
+      const formData = new FormData();
+      
       if (data.componentName) formData.append("name", data.componentName);
       if (data.category) formData.append("category", data.category);
       if (data.manufacturer) formData.append("manufacturer", data.manufacturer);
@@ -316,70 +306,47 @@ const ComponentRegistration = () => {
       if (data.modelNumber) formData.append("model_number", data.modelNumber);
       if (data.orderNumber) formData.append("order_number", data.orderNumber);
       if (data.purchaseDate) formData.append("purchase_date", data.purchaseDate);
-      if (data.purchaseCost) formData.append("purchase_cost", data.purchaseCost);
-      if (data.quantity) formData.append("quantity", data.quantity);
-      if (data.minimumQuantity) formData.append("minimum_quantity", data.minimumQuantity);
-      
-      // Notes can be empty string
-      formData.append('notes', data.notes || '');
+      if (data.purchaseCost != null) formData.append("purchase_cost", data.purchaseCost);
+      if (data.quantity != null) formData.append("quantity", data.quantity);
+      if (data.minimumQuantity != null) formData.append("minimum_quantity", data.minimumQuantity);
+      formData.append("notes", data.notes || "");
 
-      // Handle image upload
+      // Handle image
       if (selectedImage) {
-        formData.append('image', selectedImage);
+        formData.append("image", selectedImage);
       }
-
-      // Handle image removal (only for edit mode)
       if (removeImage && isUpdate) {
-        formData.append('remove_image', 'true');
-        console.log("Removing image: remove_image flag set to true");
+        formData.append("remove_image", "true");
       }
-
-      console.log("Form data before submission:");
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
-      }
-      console.log("isUpdate:", isUpdate, "id:", id, "isClone:", isClone);
 
       let result;
-
       if (isUpdate) {
-        // Update existing asset
+        // Update existing component
         result = await updateComponent(id, formData);
       } else {
-        // Create new asset (registration or clone)
+        // Create new component (or clone)
         result = await createComponent(formData);
       }
 
-      if (!result) {
-        throw new Error(`Failed to ${isUpdate ? 'update' : 'create'} component.`);
-      }
+      if (!result) throw new Error(`Failed to ${isUpdate ? "update" : "create"} component`);
 
-      // Determine if this is an edit (id present and not cloning) or create (new or clone)
-      const action = isClone ? 'cloned' : (isUpdate ? 'updated' : 'created');
-      console.log(`${action} component:`, result);
-      navigate('/components', {
-        state: {
-          successMessage: `Component has been ${action} successfully!`
-        }
-      });
+      const action = isClone ? "cloned" : isUpdate ? "updated" : "created";
+      setIsSubmitting(false);
+
+      navigate("/products", { state: { successMessage: `Component ${action} successfully!` } });
     } catch (error) {
-      const action = isClone ? 'cloning' : (id && !isClone ? 'updating' : 'creating');
-      console.error(`Error ${action} component:`, error);
+      console.error("Error submitting component:", error);
+      let message = "An error occurred while saving the component";
 
-      let message = `An error occurred while ${action} the component.`;
-
-      if (error.response && error.response.data) {
-        const errorData = error.response.data;
-
-        // Extract the first message from the first key
-        if (typeof errorData === "object") {
-          const firstKey = Object.keys(errorData)[0];
-          if (Array.isArray(errorData[firstKey]) && errorData[firstKey].length > 0) {
-            message = errorData[firstKey][0];
-          }
+      if (error.response?.data) {
+        const firstKey = Object.keys(error.response.data)[0];
+        if (Array.isArray(error.response.data[firstKey])) {
+          message = error.response.data[firstKey][0];
         }
       }
+
       setErrorMessage(message);
+      setIsSubmitting(false);
     }
   };
 
@@ -397,14 +364,15 @@ const ComponentRegistration = () => {
         <section className="top">
           <TopSecFormPage
             root="Components"
-            currentPage={isClone ? "Clone Component" : (isEdit ? "Edit Component" : "New Component")}
-            rootNavigatePage="/components"
+            currentPage={isClone ? "Clone Component" : (id ? "Edit Component" : "New Component")}
+            rootNavigatePage="/products"
             title={isClone 
-              ? 'Clone ${component.name}'
+              ? `Clone ${component?.name}`
               : id
                 ? `Edit ${component?.name}`
                 : 'New Component'
             }
+
             rightComponent={
               <div className="import-section">
                 <label htmlFor="import-file" className="import-btn">
@@ -422,6 +390,7 @@ const ComponentRegistration = () => {
             }
           />
         </section>
+
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Component Name */}
@@ -672,7 +641,6 @@ const ComponentRegistration = () => {
               </small>
             </fieldset>
 
-            {/* Submit */}
             <button type="submit" className="primary-button" disabled={!isValid || isSubmitting}>
               {isEdit ? "Update Component" : "Save"}
             </button>
@@ -682,6 +650,7 @@ const ComponentRegistration = () => {
       <Footer />
       </section>
 
+      {/* Modals */}
       <AddEntryModal
         isOpen={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
@@ -710,6 +679,4 @@ const ComponentRegistration = () => {
       />
     </>
   );
-};
-
-export default ComponentRegistration;
+}

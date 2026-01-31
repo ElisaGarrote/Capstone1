@@ -31,6 +31,8 @@ export default function AssetsRegistration() {
   const location = useLocation();
   const { id } = useParams();
   const currentDate = new Date().toISOString().split("T")[0];
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEdit = id && !isClone;
 
   const { setValue, register, handleSubmit, trigger, formState: { errors, isValid } } = useForm({
     mode: "all",
@@ -321,6 +323,7 @@ export default function AssetsRegistration() {
     const isUpdate = id && !isClone;
 
     try {
+      setIsSubmitting(true);
       const formData = new FormData();
 
       // Append asset data to FormData object - only include non-empty values
@@ -374,7 +377,7 @@ export default function AssetsRegistration() {
       }
 
       const action = isClone ? 'cloned' : (isUpdate ? 'updated' : 'created');
-      console.log(`${action} asset:`, result);
+      setIsSubmitting(false);
       navigate('/assets', {
         state: {
           successMessage: `Asset has been ${action} successfully!`
@@ -399,6 +402,7 @@ export default function AssetsRegistration() {
       }
 
       setErrorMessage(message);
+      setIsSubmitting(false);
     }
   };
 
@@ -712,8 +716,10 @@ export default function AssetsRegistration() {
                 Maximum file size must be 5MB
               </small>
             </fieldset>
+            <button type="submit" className="primary-button" disabled={!isValid || isSubmitting}>
+              {isEdit ? "Update Asset" : "Save"}
+            </button>
 
-            <button type="submit" className="primary-button" disabled={!isValid}>Save</button>
           </form>
         </section>
       </main>

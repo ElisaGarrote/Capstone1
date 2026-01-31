@@ -31,6 +31,8 @@ export default function ProductsRegistration() {
   const location = useLocation();
   const { id } = useParams();
   const currentDate = new Date().toISOString().split("T")[0];
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEdit = id && !isClone;
 
   const { setValue, register, handleSubmit, trigger, formState: { errors, isValid } } = useForm({
     mode: "all",
@@ -357,6 +359,7 @@ export default function ProductsRegistration() {
     const isUpdate = id && !isClone;
 
     try {
+      setIsSubmitting(true);
       const formData = new FormData();
 
       if (data.productName) formData.append('name', data.productName);
@@ -394,6 +397,7 @@ export default function ProductsRegistration() {
       if (!result) throw new Error(`Failed to ${isUpdate ? "update" : "create"} product`);
 
       const action = isClone ? "cloned" : isUpdate ? "updated" : "created";
+      setIsSubmitting(false);
       navigate("/products", { state: { successMessage: `Product ${action} successfully!` } });
     } catch (error) {
       console.error("Error submitting product:", error);
@@ -407,6 +411,7 @@ export default function ProductsRegistration() {
       }
 
       setErrorMessage(message);
+      setIsSubmitting(false);
     }
   };
 
@@ -427,9 +432,9 @@ export default function ProductsRegistration() {
             currentPage={isClone ? "Clone Product" : (id ? "Edit Product" : "New Product")}
             rootNavigatePage="/products"
             title={isClone 
-              ? `Edit ${product?.name}`
+              ? `Clone ${product?.name}`
               : id
-                ? `Edit ${product?.name}p`
+                ? `Edit ${product?.name}`
                 : 'New Product'
             }
             rightComponent={
@@ -785,7 +790,9 @@ export default function ProductsRegistration() {
               </small>
             </fieldset>
 
-            <button type="submit" className="primary-button" disabled={!isValid}>Save</button>
+            <button type="submit" className="primary-button" disabled={!isValid || isSubmitting}>
+              {isEdit ? "Update Asset Model" : "Save"}
+            </button>
           </form>
         </section>
       </main>
