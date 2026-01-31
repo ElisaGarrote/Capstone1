@@ -164,7 +164,7 @@ export default function ProductsRegistration() {
         setValue("screenSize", product.size || "");
         setValue("storageSize", product.storage || "");
         setValue("operatingSystem", product.os || "");
-        setValue("notes", asset.notes || "");
+        setValue("notes", product.notes || "");
 
         if (product.image) {
           setPreviewImage(asset.image);
