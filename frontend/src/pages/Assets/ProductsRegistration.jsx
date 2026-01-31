@@ -167,7 +167,7 @@ export default function ProductsRegistration() {
         setValue("notes", product.notes || "");
 
         if (product.image) {
-          setPreviewImage(asset.image);
+          setPreviewImage(product.image);
 
           // For cloning, fetch the image as a file so it can be uploaded with the new asset
           if (isClone) {
