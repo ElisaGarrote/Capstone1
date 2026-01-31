@@ -367,6 +367,17 @@ export default function AssetsRegistration() {
       if (isUpdate) {
         // Update existing asset
         result = await updateAsset(id, formData);
+        // Update frontend state to reflect backend removal
+        setAsset(prev => ({
+          ...prev,
+          ...result, // merge any updated fields
+          image: removeImage ? null : result.image || prev.image
+        }));
+
+        if (removeImage) {
+          setPreviewImage(null);
+          setSelectedImage(null);
+        }
       } else {
         // Create new asset (registration or clone)
         result = await createAsset(formData);

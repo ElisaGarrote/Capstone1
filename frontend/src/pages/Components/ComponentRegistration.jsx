@@ -323,6 +323,17 @@ export default function ProductsRegistration() {
       if (isUpdate) {
         // Update existing component
         result = await updateComponent(id, formData);
+        // Update frontend state to reflect backend removal
+        setComponent(prev => ({
+          ...prev,
+          ...result, // merge any updated fields
+          image: removeImage ? null : result.image || prev.image
+        }));
+
+        if (removeImage) {
+          setPreviewImage(null);
+          setSelectedImage(null);
+        }
       } else {
         // Create new component (or clone)
         result = await createComponent(formData);

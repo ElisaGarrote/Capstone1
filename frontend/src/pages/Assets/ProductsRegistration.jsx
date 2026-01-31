@@ -390,6 +390,17 @@ export default function ProductsRegistration() {
       let result;
       if (isUpdate) {
         result = await updateProduct(id, formData);
+        // Update frontend state to reflect backend removal
+        setProduct(prev => ({
+          ...prev,
+          ...result, // merge any updated fields
+          image: removeImage ? null : result.image || prev.image
+        }));
+
+        if (removeImage) {
+          setPreviewImage(null);
+          setSelectedImage(null);
+        }
       } else {
         result = await createProduct(formData);
       }
