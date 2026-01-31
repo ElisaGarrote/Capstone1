@@ -4,6 +4,7 @@ from django.urls import path, include
 from contexts_ms.api.supplier_usage_api import *
 from contexts_ms.api.imports import *
 from contexts_ms.api.import_export_api import *
+from .views import check_supplier_usage, check_depreciation_usage, check_status_usage
 
 
 @api_view(['GET'])
@@ -30,6 +31,11 @@ urlpatterns = router.urls
 
 urlpatterns = [
     path('', include(router.urls)),
+    
+    # Usage check endpoints for frontend
+    path('check-usage/supplier/<int:pk>/', check_supplier_usage, name='check-supplier-usage'),
+    path('check-usage/depreciation/<int:pk>/', check_depreciation_usage, name='check-depreciation-usage'),
+    path('check-usage/status/<int:pk>/', check_status_usage, name='check-status-usage'),
     
     # supplier usage endpoints (assets/components lists by supplier)
     path('suppliers/<int:pk>/assets/', SupplierAssetListAPIView.as_view()),

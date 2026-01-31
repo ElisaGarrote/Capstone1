@@ -610,3 +610,31 @@ class HelpDeskEmployeesProxyViewSet(viewsets.ViewSet):
         if isinstance(result, dict) and result.get('warning'):
             return Response({'error': result['warning']}, status=status.HTTP_502_BAD_GATEWAY)
         return Response(result)
+
+
+# Usage check endpoints
+@api_view(['GET'])
+def check_supplier_usage(request, pk):
+    """
+    Check if supplier is referenced by any active asset, component, or repair.
+    """
+    usage = is_item_in_use('supplier', pk)
+    return Response({"in_use": usage.get('in_use', False)})
+
+
+@api_view(['GET'])
+def check_depreciation_usage(request, pk):
+    """
+    Check if depreciation is referenced by any active product or asset.
+    """
+    usage = is_item_in_use('depreciation', pk)
+    return Response({"in_use": usage.get('in_use', False)})
+
+
+@api_view(['GET'])
+def check_status_usage(request, pk):
+    """
+    Check if status is referenced by any active asset or repair.
+    """
+    usage = is_item_in_use('status', pk)
+    return Response({"in_use": usage.get('in_use', False)})
