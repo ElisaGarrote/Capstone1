@@ -260,12 +260,12 @@ def is_item_in_use(item_type, item_id):
                 # conservative behavior on network problems
                 result['in_use'] = True
 
-        # If we encountered network errors but found no explicit references, be conservative
-        if not result['in_use'] and had_network_error:
-            return {'in_use': True, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}
-
+        # If we encountered network errors but found no explicit references,
+        # allow deletion (Railway/production deployments may have intermittent connectivity)
+        # Only block if we explicitly found usage.
         return result
-    except requests.RequestException:
-        # If the assets-service is unreachable, assume item is in use
-        # to prevent accidental deletion.
-        return {'in_use': True, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}
+    except requests.RequestException as exc:
+        # If the assets-service is unreachable, log warning but allow deletion
+        # to prevent blocking all deletes due to network issues
+        logger.warning(f"[usage_check] Assets service unreachable for {item_type}#{item_id}: {exc}")
+        return {'in_use': False, 'asset_ids': [], 'component_ids': [], 'repair_ids': []}

@@ -1,7 +1,10 @@
 import axios from "axios";
 
+// Use fallback for Railway deployments where env vars may not be set at build time
 const contextsAxios = axios.create({
-  baseURL: import.meta.env.VITE_CONTEXTS_API_URL,
+  baseURL: import.meta.env.VITE_CONTEXTS_API_URL || 
+    (import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/contexts/` : '') || 
+    '/api/contexts/',
   timeout: 30000,
 });
 

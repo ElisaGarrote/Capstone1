@@ -1,6 +1,10 @@
 import axios from 'axios'
 
-export const contextsBase = import.meta.env.VITE_CONTEXTS_API_URL || ''
+// Use fallback for Railway deployments where env vars may not be set at build time
+// Prefer VITE_CONTEXTS_API_URL, then VITE_API_URL + /contexts, then /api/contexts/
+export const contextsBase = import.meta.env.VITE_CONTEXTS_API_URL || 
+  (import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/contexts/` : '') || 
+  '/api/contexts/'
 
 const contextsApi = axios.create({
   baseURL: contextsBase,

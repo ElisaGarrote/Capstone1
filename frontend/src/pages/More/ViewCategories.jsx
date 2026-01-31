@@ -293,9 +293,12 @@ export default function Category() {
   };
 
   const confirmDelete = async () => {
+    console.log('[Delete] Starting delete operation', { deleteTarget, selectedIds });
     try {
       if (deleteTarget) {
+        console.log('[Delete] Calling deleteCategory for ID:', deleteTarget);
         const resp = await deleteCategory(deleteTarget);
+        console.log('[Delete] Response from deleteCategory:', resp);
         // If backend indicates the item is in use or skipped, show singular in-use alert
         if (resp && (resp.in_use || (resp.skipped && Object.keys(resp.skipped).length))) {
           const msg = `The selected category cannot be deleted. Currently in use!`;
@@ -306,7 +309,9 @@ export default function Category() {
         setSuccessMessage("Category deleted successfully!");
       } else {
         if (selectedIds.length > 0) {
+          console.log('[Delete] Calling bulkDeleteCategories for IDs:', selectedIds);
           const resp = await bulkDeleteCategories(selectedIds);
+          console.log('[Delete] Response from bulkDeleteCategories:', resp);
           // If backend skipped some items, signal the modal to display usage message
           if (resp && resp.skipped && Object.keys(resp.skipped).length > 0) {
             const deletedCount = (resp && resp.deleted && resp.deleted.length) || 0;
@@ -348,7 +353,14 @@ export default function Category() {
       setTimeout(() => setSuccessMessage(""), 5000);
       return { ok: true, data: null };
     } catch (err) {
-      console.error('Delete failed', err)
+      console.error('[Delete] Delete operation failed:', err);
+      console.error('[Delete] Error details:', {
+        message: err.message,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data,
+        config: err.config
+      });
       const respData = err?.response?.data;
       // Detect usage-related errors (backend returns ValidationError with 'error' or 'detail')
       const isUsage = respData && (respData.in_use || respData.skipped || (respData.error && typeof respData.error === 'string' && respData.error.toLowerCase().includes('use')) || (respData.detail && typeof respData.detail === 'string' && respData.detail.toLowerCase().includes('use')));
