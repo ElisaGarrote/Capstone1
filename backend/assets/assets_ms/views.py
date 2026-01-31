@@ -2433,6 +2433,26 @@ class DashboardViewSet(viewsets.ViewSet):
 
 
 # ASSET REPORT TEMPLATES
+class ActivityLogViewSet(viewsets.ModelViewSet):
+    """ViewSet to read and create activity log entries.
+
+    Read access is used by the frontend activity report. Creation is allowed
+    so services or webhooks can post activity entries directly.
+    """
+    serializer_class = ActivityLogSerializer
+
+    def get_queryset(self):
+        qs = ActivityLog.objects.all()
+        # Optional filters
+        activity_type = self.request.query_params.get('activity_type')
+        user_id = self.request.query_params.get('user_id')
+        if activity_type:
+            qs = qs.filter(activity_type__iexact=activity_type)
+        if user_id and user_id.isdigit():
+            qs = qs.filter(user_id=int(user_id))
+        return qs.order_by('-datetime')
+
+
 class AssetReportTemplateViewSet(viewsets.ModelViewSet):
     """ViewSet for CRUD operations on AssetReportTemplate."""
     serializer_class = AssetReportTemplateSerializer
