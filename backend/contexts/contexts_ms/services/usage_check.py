@@ -197,7 +197,7 @@ def is_item_in_use(item_type, item_id):
                 if result['in_use']:
                     logger.info(f"[usage_check] category#{item_id} is in use by components")
                 else:
-                    logger.info(f"[usage_check] category#{item_id} not in use by assets or components")
+                    logger.info(f"[usage_check] category#{item_id} not in use by components")
                 
                 # Skip the products-based check for categories
                 if not result['in_use'] and had_network_error:
