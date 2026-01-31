@@ -212,132 +212,76 @@ def is_item_in_use(item_type, item_id):
                     pr = client_get('products/', params={prod_param: item_id}, timeout=5)
                     logger.info(f"[usage_check] Products query status: {pr.status_code}")
                     if pr.status_code == 200:
-                    prod_json = pr.json()
-                    prods = _get_results_list(prod_json)
-                    logger.info(f"[usage_check] Found {len(prods)} products with {item_type}={item_id}")
-                    # Build product id list and map for quick lookup (keep product dicts if available)
-                    prod_map = {p.get('id'): p for p in prods if isinstance(p, dict) and p.get('id')}
-                    prod_ids = list(prod_map.keys())
-                    logger.info(f"[usage_check] Product IDs to check: {prod_ids}")
+                        prod_json = pr.json()
+                        prods = _get_results_list(prod_json)
+                        logger.info(f"[usage_check] Found {len(prods)} products with {item_type}={item_id}")
+                        # Build product id list and map for quick lookup (keep product dicts if available)
+                        prod_map = {p.get('id'): p for p in prods if isinstance(p, dict) and p.get('id')}
+                        prod_ids = list(prod_map.keys())
+                        logger.info(f"[usage_check] Product IDs to check: {prod_ids}")
 
-                    # For each product id, fetch assets and validate that the asset indeed
-                    # references the same product AND that, if present, the product's
-                    # depreciation/manufacturer/category matches the requested context.
-                    asset_identifiers = []
-                    for pid in prod_ids:
-                        logger.info(f"[usage_check] Checking product {pid} for assets")
-                        # Ensure we have product details that include the context field
-                        prod_obj = prod_map.get(pid)
-                        if not prod_obj or prod_obj.get(item_type) is None:
-                            # Try to fetch full product detail as a fallback
+                        # For each product id, fetch assets and validate that the asset indeed
+                        # references the same product AND that, if present, the product's
+                        # depreciation/manufacturer/category matches the requested context.
+                        asset_identifiers = []
+                        for pid in prod_ids:
+                            logger.info(f"[usage_check] Checking product {pid} for assets")
+                            # Ensure we have product details that include the context field
+                            prod_obj = prod_map.get(pid)
+                            if not prod_obj or prod_obj.get(item_type) is None:
+                                # Try to fetch full product detail as a fallback
+                                try:
+                                    pdetail = client_get(f'products/{pid}/', timeout=5)
+                                    if pdetail.status_code == 200:
+                                        prod_obj = pdetail.json()
+                                except requests.RequestException:
+                                    # If we can't fetch product detail, record network error and keep prod_obj as-is
+                                    had_network_error = True
+                                    prod_obj = prod_obj
+
+                            # If product object is present and has the context field, ensure it matches
+                            if isinstance(prod_obj, dict):
+                                ctx_field = prod_obj.get(item_type)
+                                if ctx_field is not None and str(ctx_field) != str(item_id):
+                                    # product doesn't actually reference this context value
+                                    continue
                             try:
-                                pdetail = client_get(f'products/{pid}/', timeout=5)
-                                if pdetail.status_code == 200:
-                                    prod_obj = pdetail.json()
-                            except requests.RequestException:
-                                # If we can't fetch product detail, record network error and keep prod_obj as-is
-                                had_network_error = True
-                                prod_obj = prod_obj
-
-                        # If product object is present and has the context field, ensure it matches
-                        if isinstance(prod_obj, dict):
-                            ctx_field = prod_obj.get(item_type)
-                            if ctx_field is not None and str(ctx_field) != str(item_id):
-                                # product doesn't actually reference this context value
-                                continue
-                        try:
-                            ar = client_get('assets/', params={'product': pid}, timeout=5)
-                            logger.info(f"[usage_check] Assets query for product {pid}: status={ar.status_code}")
-                            if ar.status_code != 200:
-                                continue
-                            ajson = ar.json()
-                            aitems = _get_results_list(ajson)
-                            logger.info(f"[usage_check] Found {len(aitems)} assets for product {pid}")
-
-                            for a in aitems:
-                                # Extract product id from the asset's product field which
-                                # may be an int, string, or nested dict.
-                                prod_field = a.get('product')
-                                pid_in_asset = None
-                                prod_obj_nested = None
-                                if isinstance(prod_field, dict):
-                                    pid_in_asset = prod_field.get('id') or prod_field.get('pk')
-                                    prod_obj_nested = prod_field
-                                else:
-                                    pid_in_asset = prod_field
-
-                                if pid_in_asset is None:
-                                    # can't verify this asset's product, skip it
+                                ar = client_get('assets/', params={'product': pid}, timeout=5)
+                                logger.info(f"[usage_check] Assets query for product {pid}: status={ar.status_code}")
+                                if ar.status_code != 200:
                                     continue
+                                ajson = ar.json()
+                                aitems = _get_results_list(ajson)
+                                logger.info(f"[usage_check] Found {len(aitems)} assets for product {pid}")
 
-                                # Ensure product id matches the product we asked for
-                                if str(pid_in_asset) != str(pid):
-                                    continue
-
-                                # If the asset includes nested product info, prefer that
-                                if prod_obj_nested and isinstance(prod_obj_nested, dict):
-                                    # For depreciation/manufacturer/category checks
-                                    # validate the product's field if present.
-                                    if item_type == 'depreciation':
-                                        dep_field = prod_obj_nested.get('depreciation')
-                                        if dep_field is not None and str(dep_field) != str(item_id):
-                                            # product's depreciation doesn't match; skip
-                                            continue
-                                    if item_type == 'manufacturer':
-                                        man_field = prod_obj_nested.get('manufacturer')
-                                        if man_field is not None and str(man_field) != str(item_id):
-                                            continue
-                                    if item_type == 'category':
-                                        cat_field = prod_obj_nested.get('category')
-                                        if cat_field is not None and str(cat_field) != str(item_id):
-                                            continue
-
-                                # Passed checks; extract asset identifier
-                                idval = None
-                                for key in ('asset_id', 'assetId', 'assetIdentifier', 'identifier', 'serial'):
-                                    if key in a and a.get(key):
-                                        idval = str(a.get(key))
-                                        break
-                                if not idval and 'id' in a:
-                                    idval = str(a.get('id'))
-                                if idval:
-                                    asset_identifiers.append(idval)
-                        except requests.RequestException:
-                            had_network_error = True
-                            continue
-
-                        # Also check for components that use this product
-                        try:
-                            cr = client_get('components/', params={'product': pid}, timeout=5)
-                            logger.info(f"[usage_check] Components query for product {pid}: status={cr.status_code}")
-                            if cr.status_code == 200:
-                                cjson = cr.json()
-                                citems = _get_results_list(cjson)
-                                logger.info(f"[usage_check] Found {len(citems)} components for product {pid}")
-
-                                for c in citems:
-                                    # Extract product id from component's product field
-                                    prod_field = c.get('product')
-                                    pid_in_comp = None
+                                for a in aitems:
+                                    # Extract product id from the asset's product field which
+                                    # may be an int, string, or nested dict.
+                                    prod_field = a.get('product')
+                                    pid_in_asset = None
                                     prod_obj_nested = None
                                     if isinstance(prod_field, dict):
-                                        pid_in_comp = prod_field.get('id') or prod_field.get('pk')
+                                        pid_in_asset = prod_field.get('id') or prod_field.get('pk')
                                         prod_obj_nested = prod_field
                                     else:
-                                        pid_in_comp = prod_field
+                                        pid_in_asset = prod_field
 
-                                    if pid_in_comp is None:
+                                    if pid_in_asset is None:
+                                        # can't verify this asset's product, skip it
                                         continue
 
-                                    # Ensure product id matches
-                                    if str(pid_in_comp) != str(pid):
+                                    # Ensure product id matches the product we asked for
+                                    if str(pid_in_asset) != str(pid):
                                         continue
 
-                                    # Validate nested product context field if present
+                                    # If the asset includes nested product info, prefer that
                                     if prod_obj_nested and isinstance(prod_obj_nested, dict):
+                                        # For depreciation/manufacturer/category checks
+                                        # validate the product's field if present.
                                         if item_type == 'depreciation':
                                             dep_field = prod_obj_nested.get('depreciation')
                                             if dep_field is not None and str(dep_field) != str(item_id):
+                                                # product's depreciation doesn't match; skip
                                                 continue
                                         if item_type == 'manufacturer':
                                             man_field = prod_obj_nested.get('manufacturer')
@@ -348,51 +292,107 @@ def is_item_in_use(item_type, item_id):
                                             if cat_field is not None and str(cat_field) != str(item_id):
                                                 continue
 
-                                    # Extract component identifier
+                                    # Passed checks; extract asset identifier
                                     idval = None
-                                    for key in ('component_id', 'componentId', 'name', 'serial'):
-                                        if key in c and c.get(key):
-                                            idval = str(c.get(key))
+                                    for key in ('asset_id', 'assetId', 'assetIdentifier', 'identifier', 'serial'):
+                                        if key in a and a.get(key):
+                                            idval = str(a.get(key))
                                             break
-                                    if not idval and 'id' in c:
-                                        idval = str(c.get('id'))
+                                    if not idval and 'id' in a:
+                                        idval = str(a.get('id'))
                                     if idval:
-                                        # Add to component_ids instead of asset_ids
-                                        if 'component_ids' not in result:
-                                            result['component_ids'] = []
-                                        result['component_ids'].append(idval)
-                        except requests.RequestException:
-                            had_network_error = True
-                            continue
+                                        asset_identifiers.append(idval)
+                            except requests.RequestException:
+                                had_network_error = True
+                                continue
 
-                    # deduplicate while preserving order
-                    seen = set()
-                    unique_assets = []
-                    for x in asset_identifiers:
-                        if x not in seen:
-                            seen.add(x)
-                            unique_assets.append(x)
+                            # Also check for components that use this product
+                            try:
+                                cr = client_get('components/', params={'product': pid}, timeout=5)
+                                logger.info(f"[usage_check] Components query for product {pid}: status={cr.status_code}")
+                                if cr.status_code == 200:
+                                    cjson = cr.json()
+                                    citems = _get_results_list(cjson)
+                                    logger.info(f"[usage_check] Found {len(citems)} components for product {pid}")
 
-                    # Deduplicate components too
-                    seen_comp = set()
-                    unique_components = []
-                    for x in result.get('component_ids', []):
-                        if x not in seen_comp:
-                            seen_comp.add(x)
-                            unique_components.append(x)
+                                    for c in citems:
+                                        # Extract product id from component's product field
+                                        prod_field = c.get('product')
+                                        pid_in_comp = None
+                                        prod_obj_nested = None
+                                        if isinstance(prod_field, dict):
+                                            pid_in_comp = prod_field.get('id') or prod_field.get('pk')
+                                            prod_obj_nested = prod_field
+                                        else:
+                                            pid_in_comp = prod_field
 
-                    if unique_assets:
-                        result['asset_ids'].extend(unique_assets)
-                        result['in_use'] = True
-                        logger.info(f"[usage_check] {item_type}#{item_id} is in use by {len(unique_assets)} assets from products")
-                    
-                    if unique_components:
-                        result['component_ids'] = unique_components
-                        result['in_use'] = True
-                        logger.info(f"[usage_check] {item_type}#{item_id} is in use by {len(unique_components)} components from products")
-                    
-                    if not unique_assets and not unique_components:
-                        logger.info(f"[usage_check] {item_type}#{item_id} not in use by assets or components (checked {len(prod_ids)} products)")
+                                        if pid_in_comp is None:
+                                            continue
+
+                                        # Ensure product id matches
+                                        if str(pid_in_comp) != str(pid):
+                                            continue
+
+                                        # Validate nested product context field if present
+                                        if prod_obj_nested and isinstance(prod_obj_nested, dict):
+                                            if item_type == 'depreciation':
+                                                dep_field = prod_obj_nested.get('depreciation')
+                                                if dep_field is not None and str(dep_field) != str(item_id):
+                                                    continue
+                                            if item_type == 'manufacturer':
+                                                man_field = prod_obj_nested.get('manufacturer')
+                                                if man_field is not None and str(man_field) != str(item_id):
+                                                    continue
+                                            if item_type == 'category':
+                                                cat_field = prod_obj_nested.get('category')
+                                                if cat_field is not None and str(cat_field) != str(item_id):
+                                                    continue
+
+                                        # Extract component identifier
+                                        idval = None
+                                        for key in ('component_id', 'componentId', 'name', 'serial'):
+                                            if key in c and c.get(key):
+                                                idval = str(c.get(key))
+                                                break
+                                        if not idval and 'id' in c:
+                                            idval = str(c.get('id'))
+                                        if idval:
+                                            # Add to component_ids instead of asset_ids
+                                            if 'component_ids' not in result:
+                                                result['component_ids'] = []
+                                            result['component_ids'].append(idval)
+                            except requests.RequestException:
+                                had_network_error = True
+                                continue
+
+                        # deduplicate while preserving order
+                        seen = set()
+                        unique_assets = []
+                        for x in asset_identifiers:
+                            if x not in seen:
+                                seen.add(x)
+                                unique_assets.append(x)
+
+                        # Deduplicate components too
+                        seen_comp = set()
+                        unique_components = []
+                        for x in result.get('component_ids', []):
+                            if x not in seen_comp:
+                                seen_comp.add(x)
+                                unique_components.append(x)
+
+                        if unique_assets:
+                            result['asset_ids'].extend(unique_assets)
+                            result['in_use'] = True
+                            logger.info(f"[usage_check] {item_type}#{item_id} is in use by {len(unique_assets)} assets from products")
+                        
+                        if unique_components:
+                            result['component_ids'] = unique_components
+                            result['in_use'] = True
+                            logger.info(f"[usage_check] {item_type}#{item_id} is in use by {len(unique_components)} components from products")
+                        
+                        if not unique_assets and not unique_components:
+                            logger.info(f"[usage_check] {item_type}#{item_id} not in use by assets or components (checked {len(prod_ids)} products)")
                 except requests.RequestException as exc:
                     # conservative behavior on network problems
                     logger.error(f"[usage_check] Network error in special handling for {item_type}#{item_id}: {exc}")
