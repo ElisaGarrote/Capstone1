@@ -161,12 +161,57 @@ def is_item_in_use(item_type, item_id):
         # Special handling: some contexts (category, manufacturer, depreciation)
         if item_type in ('category', 'manufacturer', 'depreciation'):
             logger.info(f"[usage_check] Starting special handling for {item_type}#{item_id}")
-            try:
-                prod_param = item_type
-                logger.info(f"[usage_check] Querying products with {prod_param}={item_id}")
-                pr = client_get('products/', params={prod_param: item_id}, timeout=5)
-                logger.info(f"[usage_check] Products query status: {pr.status_code}")
-                if pr.status_code == 200:
+            
+            # For category, query assets and components DIRECTLY by category parameter
+            if item_type == 'category':
+                logger.info(f"[usage_check] Querying assets with category={item_id}")
+                try:
+                    ar = client_get('assets/', params={'category': item_id, 'page_size': 1}, timeout=5)
+                    logger.info(f"[usage_check] Assets query status: {ar.status_code}")
+                    if ar.status_code == 200:
+                        ajson = ar.json()
+                        asset_count = ajson.get('count') if isinstance(ajson, dict) and 'count' in ajson else len(_get_results_list(ajson))
+                        logger.info(f"[usage_check] Found {asset_count} assets with category={item_id}")
+                        if asset_count > 0:
+                            result['in_use'] = True
+                            result['asset_ids'] = [f"asset_{i}" for i in range(min(asset_count, 5))]  # Placeholder IDs
+                except requests.RequestException as exc:
+                    logger.error(f"[usage_check] Network error querying assets by category: {exc}")
+                    had_network_error = True
+
+                logger.info(f"[usage_check] Querying components with category={item_id}")
+                try:
+                    cr = client_get('components/', params={'category': item_id, 'page_size': 1}, timeout=5)
+                    logger.info(f"[usage_check] Components query status: {cr.status_code}")
+                    if cr.status_code == 200:
+                        cjson = cr.json()
+                        comp_count = cjson.get('count') if isinstance(cjson, dict) and 'count' in cjson else len(_get_results_list(cjson))
+                        logger.info(f"[usage_check] Found {comp_count} components with category={item_id}")
+                        if comp_count > 0:
+                            result['in_use'] = True
+                            result['component_ids'] = [f"component_{i}" for i in range(min(comp_count, 5))]  # Placeholder IDs
+                except requests.RequestException as exc:
+                    logger.error(f"[usage_check] Network error querying components by category: {exc}")
+                    had_network_error = True
+
+                if result['in_use']:
+                    logger.info(f"[usage_check] category#{item_id} is in use by assets or components")
+                else:
+                    logger.info(f"[usage_check] category#{item_id} not in use by assets or components")
+                
+                # Skip the products-based check for categories
+                if not result['in_use'] and had_network_error:
+                    logger.warning(f"[usage_check] Network error checking category#{item_id}, blocking delete as safety measure")
+                    result['in_use'] = True
+                    result['network_error'] = True
+            else:
+                # For manufacturer and depreciation, use the products-based approach
+                try:
+                    prod_param = item_type
+                    logger.info(f"[usage_check] Querying products with {prod_param}={item_id}")
+                    pr = client_get('products/', params={prod_param: item_id}, timeout=5)
+                    logger.info(f"[usage_check] Products query status: {pr.status_code}")
+                    if pr.status_code == 200:
                     prod_json = pr.json()
                     prods = _get_results_list(prod_json)
                     logger.info(f"[usage_check] Found {len(prods)} products with {item_type}={item_id}")
@@ -348,17 +393,17 @@ def is_item_in_use(item_type, item_id):
                     
                     if not unique_assets and not unique_components:
                         logger.info(f"[usage_check] {item_type}#{item_id} not in use by assets or components (checked {len(prod_ids)} products)")
-            except requests.RequestException as exc:
-                # conservative behavior on network problems
-                logger.error(f"[usage_check] Network error in special handling for {item_type}#{item_id}: {exc}")
-                result['in_use'] = True
-                result['network_error'] = True
-            except Exception as exc:
-                # Catch ANY other exception and block delete as safety measure
-                logger.error(f"[usage_check] Unexpected error in special handling for {item_type}#{item_id}: {type(exc).__name__}: {exc}")
-                logger.exception(exc)  # Full traceback
-                result['in_use'] = True
-                result['network_error'] = True
+                except requests.RequestException as exc:
+                    # conservative behavior on network problems
+                    logger.error(f"[usage_check] Network error in special handling for {item_type}#{item_id}: {exc}")
+                    result['in_use'] = True
+                    result['network_error'] = True
+                except Exception as exc:
+                    # Catch ANY other exception and block delete as safety measure
+                    logger.error(f"[usage_check] Unexpected error in special handling for {item_type}#{item_id}: {type(exc).__name__}: {exc}")
+                    logger.exception(exc)  # Full traceback
+                    result['in_use'] = True
+                    result['network_error'] = True
 
         # If we encountered network errors but found no explicit references, be conservative
         # Better to block a delete that should succeed than allow one that shouldn't
