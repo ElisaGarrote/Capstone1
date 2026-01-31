@@ -365,7 +365,7 @@ export default function ProductsRegistration() {
           <TopSecFormPage
             root="Components"
             currentPage={isClone ? "Clone Component" : (id ? "Edit Component" : "New Component")}
-            rootNavigatePage="/products"
+            rootNavigatePage="/components"
             title={isClone 
               ? `Clone ${component?.name}`
               : id
