@@ -271,14 +271,15 @@ export default function BulkEditAssets() {
 
       <section className="page-layout-registration">
         <NavBar />
-
-        <main>
-          <TopSecFormPage
-            root="Assets"
-            currentPage="Bulk Edit Assets"
-            rootNavigatePage="/assets"
-            title="Bulk Edit Assets"
-          />
+        <main className="registration">
+          <section className="top">
+            <TopSecFormPage
+              root="Assets"
+              currentPage="Bulk Edit Assets"
+              rootNavigatePage="/assets"
+              title="Bulk Edit Assets"
+            />
+          </section>
 
           {/* Selected Assets Section */}
           <section className="selected-assets-section">
