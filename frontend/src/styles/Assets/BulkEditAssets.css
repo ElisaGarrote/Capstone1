@@ -96,6 +96,11 @@
   display: inline-block;
 }
 
+/* Header section styling */
+.top {
+  width: 100%;
+}
+
 .bulk-edit-page .selected-assets-note {
   width: 60vw;
   max-width: 1200px;
