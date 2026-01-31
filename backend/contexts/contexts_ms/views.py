@@ -12,6 +12,9 @@ from rest_framework import serializers as drf_serializers
 from contexts_ms.services.assets import *
 import requests
 from django.db import transaction
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # If will add more views later or functionality, please create file on api folder or services folder
@@ -54,10 +57,14 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_destroy(self, instance):
+        logger.info(f"[CategoryViewSet] perform_destroy called for category id={instance.id}, name={instance.name}")
         usage = is_item_in_use("category", instance.id)
+        logger.info(f"[CategoryViewSet] Usage check result: {usage}")
         if usage.get('in_use'):
             msg = _build_cant_delete_message(instance, usage)
+            logger.warning(f"[CategoryViewSet] Blocking delete: {msg}")
             raise drf_serializers.ValidationError({"detail": msg})
+        logger.info(f"[CategoryViewSet] Proceeding with soft delete")
         instance.is_deleted = True
         instance.save()
 

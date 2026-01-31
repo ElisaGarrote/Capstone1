@@ -261,6 +261,65 @@ def is_item_in_use(item_type, item_id):
                             had_network_error = True
                             continue
 
+                        # Also check for components that use this product
+                        try:
+                            cr = client_get('components/', params={'product': pid}, timeout=5)
+                            logger.info(f"[usage_check] Components query for product {pid}: status={cr.status_code}")
+                            if cr.status_code == 200:
+                                cjson = cr.json()
+                                citems = _get_results_list(cjson)
+                                logger.info(f"[usage_check] Found {len(citems)} components for product {pid}")
+
+                                for c in citems:
+                                    # Extract product id from component's product field
+                                    prod_field = c.get('product')
+                                    pid_in_comp = None
+                                    prod_obj_nested = None
+                                    if isinstance(prod_field, dict):
+                                        pid_in_comp = prod_field.get('id') or prod_field.get('pk')
+                                        prod_obj_nested = prod_field
+                                    else:
+                                        pid_in_comp = prod_field
+
+                                    if pid_in_comp is None:
+                                        continue
+
+                                    # Ensure product id matches
+                                    if str(pid_in_comp) != str(pid):
+                                        continue
+
+                                    # Validate nested product context field if present
+                                    if prod_obj_nested and isinstance(prod_obj_nested, dict):
+                                        if item_type == 'depreciation':
+                                            dep_field = prod_obj_nested.get('depreciation')
+                                            if dep_field is not None and str(dep_field) != str(item_id):
+                                                continue
+                                        if item_type == 'manufacturer':
+                                            man_field = prod_obj_nested.get('manufacturer')
+                                            if man_field is not None and str(man_field) != str(item_id):
+                                                continue
+                                        if item_type == 'category':
+                                            cat_field = prod_obj_nested.get('category')
+                                            if cat_field is not None and str(cat_field) != str(item_id):
+                                                continue
+
+                                    # Extract component identifier
+                                    idval = None
+                                    for key in ('component_id', 'componentId', 'name', 'serial'):
+                                        if key in c and c.get(key):
+                                            idval = str(c.get(key))
+                                            break
+                                    if not idval and 'id' in c:
+                                        idval = str(c.get('id'))
+                                    if idval:
+                                        # Add to component_ids instead of asset_ids
+                                        if 'component_ids' not in result:
+                                            result['component_ids'] = []
+                                        result['component_ids'].append(idval)
+                        except requests.RequestException:
+                            had_network_error = True
+                            continue
+
                     # deduplicate while preserving order
                     seen = set()
                     unique_assets = []
@@ -269,13 +328,35 @@ def is_item_in_use(item_type, item_id):
                             seen.add(x)
                             unique_assets.append(x)
 
+                    # Deduplicate components too
+                    seen_comp = set()
+                    unique_components = []
+                    for x in result.get('component_ids', []):
+                        if x not in seen_comp:
+                            seen_comp.add(x)
+                            unique_components.append(x)
+
                     if unique_assets:
                         result['asset_ids'].extend(unique_assets)
                         result['in_use'] = True
                         logger.info(f"[usage_check] {item_type}#{item_id} is in use by {len(unique_assets)} assets from products")
+                    
+                    if unique_components:
+                        result['component_ids'] = unique_components
+                        result['in_use'] = True
+                        logger.info(f"[usage_check] {item_type}#{item_id} is in use by {len(unique_components)} components from products")
+                    
+                    if not unique_assets and not unique_components:
+                        logger.info(f"[usage_check] {item_type}#{item_id} not in use by assets or components (checked {len(prod_ids)} products)")
             except requests.RequestException as exc:
                 # conservative behavior on network problems
                 logger.error(f"[usage_check] Network error in special handling for {item_type}#{item_id}: {exc}")
+                result['in_use'] = True
+                result['network_error'] = True
+            except Exception as exc:
+                # Catch ANY other exception and block delete as safety measure
+                logger.error(f"[usage_check] Unexpected error in special handling for {item_type}#{item_id}: {type(exc).__name__}: {exc}")
+                logger.exception(exc)  # Full traceback
                 result['in_use'] = True
                 result['network_error'] = True
 
