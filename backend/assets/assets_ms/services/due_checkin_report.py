@@ -37,21 +37,29 @@ def get_ticket_by_id(ticket_id):
 def get_employee_details(employee_id):
     """Fetch employee details from Help Desk service via contexts proxy."""
     if not employee_id:
+        logger.warning(f"get_employee_details called with empty employee_id")
         return None
     
     cache_key = f"helpdesk:employee:{employee_id}"
     cached = cache.get(cache_key)
     if cached:
+        logger.info(f"Employee {employee_id} found in cache")
         return cached
     
     try:
         url = f"{CONTEXTS_SERVICE_URL}/helpdesk-employees/{employee_id}/"
+        logger.info(f"Fetching employee from URL: {url}")
         response = requests.get(url, timeout=5)
+        logger.info(f"Employee {employee_id} response status: {response.status_code}")
+        
         if response.status_code == 200:
             data = response.json()
+            logger.info(f"Employee {employee_id} response data: {data}")
             # Cache for 5 minutes
             cache.set(cache_key, data, 300)
             return data
+        else:
+            logger.warning(f"Employee {employee_id} returned status {response.status_code}: {response.text}")
         return None
     except Exception as e:
         logger.error(f"Error fetching employee {employee_id}: {str(e)}")
@@ -124,6 +132,8 @@ def get_due_checkin_report(days_threshold=30):
         # Get the employee who has the asset (CHECKED OUT TO)
         # Priority 1: Use checkout.checkout_to which has the employee ID
         checked_out_to_name = None
+        logger.info(f"Processing checkout {checkout.id}: checkout_to={checkout.checkout_to}, ticket={checkout.ticket_number}")
+        
         if checkout.checkout_to:
             checked_out_to = get_employee_details(checkout.checkout_to)
             if checked_out_to:
