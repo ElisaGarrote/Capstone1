@@ -2449,24 +2449,18 @@ class DueCheckinReportViewSet(viewsets.ViewSet):
     
     def list(self, request):
         """
-        GET /due-checkin-report/?days=7
-        Returns a list of all assets that are due for check-in (overdue or upcoming).
+        GET /due-checkin-report/?days=30
+        Returns a list of all assets that are due for check-in within the specified timeframe.
         Query params:
-        - days: Number of days in the future to include (default: 7)
+        - days: Number of days in the future to include (default: 30)
         """
         try:
-            days_threshold = int(request.query_params.get('days', 7))
+            days_threshold = int(request.query_params.get('days', 30))
             report_data = get_due_checkin_report(days_threshold=days_threshold)
-            
-            # Separate overdue and upcoming for summary
-            overdue = [item for item in report_data if item['status'] == 'overdue']
-            upcoming = [item for item in report_data if item['status'] == 'upcoming']
             
             return Response({
                 "success": True,
                 "count": len(report_data),
-                "overdue_count": len(overdue),
-                "upcoming_count": len(upcoming),
                 "data": report_data
             }, status=status.HTTP_200_OK)
         except Exception as e:
@@ -2480,13 +2474,13 @@ class DueCheckinReportViewSet(viewsets.ViewSet):
     def count(self, request):
         """
         GET /due-checkin-report/count/
-        Returns the count of assets due for check-in (overdue and upcoming separately).
+        Returns the count of assets due for check-in within the next 30 days.
         """
         try:
-            counts = get_due_checkin_count()
+            count = get_due_checkin_count()
             return Response({
                 "success": True,
-                **counts
+                "count": count
             }, status=status.HTTP_200_OK)
         except Exception as e:
             logger.error(f"Error getting due checkin count: {str(e)}")

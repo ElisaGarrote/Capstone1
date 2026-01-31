@@ -114,8 +114,6 @@ export default function DueBackReport() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [overdueCount, setOverdueCount] = useState(0);
-  const [upcomingCount, setUpcomingCount] = useState(0);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -127,12 +125,10 @@ export default function DueBackReport() {
       try {
         setLoading(true);
         setError(null);
-        // Fetch assets due within 7 days (overdue and upcoming)
-        const response = await assetsAxios.get("/due-checkin-report/?days=7");
+        // Fetch assets due within 30 days
+        const response = await assetsAxios.get("/due-checkin-report/?days=30");
         if (response.data.success) {
           setReportData(response.data.data);
-          setOverdueCount(response.data.overdue_count || 0);
-          setUpcomingCount(response.data.upcoming_count || 0);
         } else {
           setError("Failed to load report data");
         }
@@ -199,24 +195,7 @@ export default function DueBackReport() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">
-                Asset ({filteredData.length})
-                {(overdueCount > 0 || upcomingCount > 0) && (
-                  <span style={{ fontSize: "0.9rem", fontWeight: "normal", marginLeft: "1rem" }}>
-                    {overdueCount > 0 && (
-                      <span style={{ color: "red" }}>
-                        {overdueCount} overdue
-                      </span>
-                    )}
-                    {overdueCount > 0 && upcomingCount > 0 && " • "}
-                    {upcomingCount > 0 && (
-                      <span style={{ color: "orange" }}>
-                        {upcomingCount} upcoming
-                      </span>
-                    )}
-                  </span>
-                )}
-              </h2>
+              <h2 className="h2">Asset ({filteredData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
@@ -269,7 +248,7 @@ export default function DueBackReport() {
                     ) : (
                       <tr>
                         <td colSpan={5} className="no-data-message">
-                          {searchTerm ? "No assets found matching your search." : "No assets due for check-in within 7 days."}
+                          {searchTerm ? "No assets found matching your search." : "No assets due for check-in within 30 days."}
                         </td>
                       </tr>
                     )}

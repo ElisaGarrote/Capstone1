@@ -82,13 +82,12 @@ def get_location_details(location_id):
         return None
 
 
-def get_due_checkin_report(days_threshold=7):
+def get_due_checkin_report(days_threshold=30):
     """
-    Generate a report of assets that are due for check-in.
-    Includes both overdue assets and assets nearing their return date.
+    Generate a report of assets that are due for check-in within the specified timeframe.
     
     Args:
-        days_threshold: Number of days in the future to include (default: 7)
+        days_threshold: Number of days in the future to include (default: 30)
     
     Returns a list of dictionaries containing:
     - asset_id: The asset ID
@@ -107,9 +106,9 @@ def get_due_checkin_report(days_threshold=7):
     future_date = today + timedelta(days=days_threshold)
     report_data = []
     
-    # Find all checkouts that don't have a corresponding checkin and are due soon or overdue
+    # Find all checkouts that don't have a corresponding checkin and are due within the timeframe
     due_checkouts = AssetCheckout.objects.filter(
-        return_date__lte=future_date,  # Return date is today or in the near future
+        return_date__lte=future_date,  # Return date is within the next month
         asset_checkin__isnull=True  # No check-in recorded yet
     ).select_related('asset', 'asset__product').order_by('return_date')
     
@@ -166,28 +165,17 @@ def get_due_checkin_report(days_threshold=7):
 
 def get_due_checkin_count():
     """
-    Get the count of assets that are due for check-in.
-    Returns counts for overdue and upcoming separately.
+    Get the count of assets that are due for check-in within the next 30 days.
     """
     from assets_ms.models import AssetCheckout
     from datetime import timedelta
     
     today = date.today()
-    future_date = today + timedelta(days=7)
+    future_date = today + timedelta(days=30)
     
-    overdue_count = AssetCheckout.objects.filter(
-        return_date__lt=today,
-        asset_checkin__isnull=True
-    ).count()
-    
-    upcoming_count = AssetCheckout.objects.filter(
-        return_date__gte=today,
+    count = AssetCheckout.objects.filter(
         return_date__lte=future_date,
         asset_checkin__isnull=True
     ).count()
     
-    return {
-        'overdue': overdue_count,
-        'upcoming': upcoming_count,
-        'total': overdue_count + upcoming_count
-    }
+    return count
