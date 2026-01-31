@@ -209,7 +209,7 @@ export default function BulkEditComponents() {
             title="Bulk Edit Components"
           />
 
-          {/* Selected Components Section */}
+          {/* Selected Components */}
           <section className="selected-assets-section">
             <h3>Selected Components ({selectedComponents.filter(c => currentSelectedIds.includes(c.id)).length})</h3>
             <div className="selected-assets-tags">
@@ -236,7 +236,8 @@ export default function BulkEditComponents() {
             </div>
           </section>
 
-          <section className="bulk-edit-form-section">
+          {/* Bulk Edit Form */}
+          <section className="bulk-edit-form-section registration">
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="bulk-edit-form"
