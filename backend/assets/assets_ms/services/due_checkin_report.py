@@ -121,32 +121,32 @@ def get_due_checkin_report(days_threshold=30):
         days_until_due = (checkout.return_date - today).days
         status = 'overdue' if days_until_due < 0 else 'upcoming'
         
-        # Get ticket details to access requestor info
-        checked_out_by_name = None
+        # Get the employee who has the asset (CHECKED OUT TO)
+        # Priority 1: Use checkout.checkout_to which has the employee ID
         checked_out_to_name = None
-        
-        ticket = get_ticket_by_id(checkout.ticket_number)
-        if ticket:
-            # The requestor_details contains the employee who is receiving the asset (CHECKED OUT TO)
-            requestor_details = ticket.get('requestor_details')
-            if requestor_details and isinstance(requestor_details, dict):
-                # This is the person receiving the asset
-                checked_out_to_name = requestor_details.get('name') or f"{requestor_details.get('firstname', '')} {requestor_details.get('lastname', '')}".strip()
-            
-            # For checked_out_by, we can use the same requestor or leave as system
-            # In most cases, this would be the help desk person who processed it
-            # For now, we'll use "System" or the requestor if no other info available
-            checked_out_by_name = "System"
-        
-        # If checked_out_to is still not found from ticket, try using checkout.checkout_to
-        if not checked_out_to_name:
+        if checkout.checkout_to:
             checked_out_to = get_employee_details(checkout.checkout_to)
             if checked_out_to:
-                if isinstance(checked_out_to, dict) and checked_out_to.get('employee'):
-                    emp = checked_out_to['employee']
-                    checked_out_to_name = f"{emp.get('firstname', '')} {emp.get('lastname', '')}".strip()
-                elif isinstance(checked_out_to, dict):
-                    checked_out_to_name = f"{checked_out_to.get('firstname', '')} {checked_out_to.get('lastname', '')}".strip()
+                # Handle different response structures from Help Desk service
+                if isinstance(checked_out_to, dict):
+                    # Check if it's wrapped in an 'employee' key
+                    if checked_out_to.get('employee'):
+                        emp = checked_out_to['employee']
+                        checked_out_to_name = f"{emp.get('firstname', '')} {emp.get('lastname', '')}".strip()
+                    # Or if firstname/lastname are at the top level
+                    elif checked_out_to.get('firstname') or checked_out_to.get('lastname'):
+                        checked_out_to_name = f"{checked_out_to.get('firstname', '')} {checked_out_to.get('lastname', '')}".strip()
+        
+        # Priority 2: Try to get from ticket requestor_details as fallback
+        if not checked_out_to_name:
+            ticket = get_ticket_by_id(checkout.ticket_number)
+            if ticket:
+                requestor_details = ticket.get('requestor_details')
+                if requestor_details and isinstance(requestor_details, dict):
+                    checked_out_to_name = requestor_details.get('name') or f"{requestor_details.get('firstname', '')} {requestor_details.get('lastname', '')}".strip()
+        
+        # For checked_out_by, use System as default
+        checked_out_by_name = "System"
         
         report_data.append({
             'checkout_id': checkout.id,
