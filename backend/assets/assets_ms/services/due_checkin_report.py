@@ -121,29 +121,24 @@ def get_due_checkin_report(days_threshold=30):
         days_until_due = (checkout.return_date - today).days
         status = 'overdue' if days_until_due < 0 else 'upcoming'
         
-        # Get ticket details first to access requestor info
+        # Get ticket details to access requestor info
         checked_out_by_name = None
         checked_out_to_name = None
         
         ticket = get_ticket_by_id(checkout.ticket_number)
         if ticket:
-            # The employee field in ticket is the requestor (who initiated the checkout)
-            requestor_id = ticket.get('employee')
-            if requestor_id:
-                requestor = get_employee_details(requestor_id)
-                if requestor:
-                    if isinstance(requestor, dict) and requestor.get('employee'):
-                        emp = requestor['employee']
-                        checked_out_by_name = f"{emp.get('firstname', '')} {emp.get('lastname', '')}".strip()
-                    elif isinstance(requestor, dict):
-                        checked_out_by_name = f"{requestor.get('firstname', '')} {requestor.get('lastname', '')}".strip()
-            
-            # Get requestor_details from ticket if available
+            # The requestor_details contains the employee who is receiving the asset (CHECKED OUT TO)
             requestor_details = ticket.get('requestor_details')
             if requestor_details and isinstance(requestor_details, dict):
-                checked_out_to_name = f"{requestor_details.get('firstname', '')} {requestor_details.get('lastname', '')}".strip()
+                # This is the person receiving the asset
+                checked_out_to_name = requestor_details.get('name') or f"{requestor_details.get('firstname', '')} {requestor_details.get('lastname', '')}".strip()
+            
+            # For checked_out_by, we can use the same requestor or leave as system
+            # In most cases, this would be the help desk person who processed it
+            # For now, we'll use "System" or the requestor if no other info available
+            checked_out_by_name = "System"
         
-        # If checked_out_to is still not found, try using checkout.checkout_to
+        # If checked_out_to is still not found from ticket, try using checkout.checkout_to
         if not checked_out_to_name:
             checked_out_to = get_employee_details(checkout.checkout_to)
             if checked_out_to:
