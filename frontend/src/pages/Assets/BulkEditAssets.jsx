@@ -269,18 +269,16 @@ export default function BulkEditAssets() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-registration">
+      <section className="page-layout-with-table">
         <NavBar />
 
-        <main className="registration">
-          <section className="top">
-            <TopSecFormPage
-              root="Assets"
-              currentPage="Bulk Edit Assets"
-              rootNavigatePage="/assets"
-              title="Bulk Edit Assets"
-            />
-          </section>
+        <main className="main-with-table">
+          <TopSecFormPage
+            root="Assets"
+            currentPage="Bulk Edit Assets"
+            rootNavigatePage="/assets"
+            title="Bulk Edit Assets"
+          />
 
           {/* Selected Assets Section */}
           <section className="selected-assets-section">
