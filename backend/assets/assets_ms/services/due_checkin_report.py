@@ -37,29 +37,21 @@ def get_ticket_by_id(ticket_id):
 def get_employee_details(employee_id):
     """Fetch employee details from Help Desk service via contexts proxy."""
     if not employee_id:
-        logger.warning(f"get_employee_details called with empty employee_id")
         return None
     
     cache_key = f"helpdesk:employee:{employee_id}"
     cached = cache.get(cache_key)
     if cached:
-        logger.info(f"Employee {employee_id} found in cache")
         return cached
     
     try:
         url = f"{CONTEXTS_SERVICE_URL}/helpdesk-employees/{employee_id}/"
-        logger.info(f"Fetching employee from URL: {url}")
         response = requests.get(url, timeout=5)
-        logger.info(f"Employee {employee_id} response status: {response.status_code}")
-        
         if response.status_code == 200:
             data = response.json()
-            logger.info(f"Employee {employee_id} response data: {data}")
             # Cache for 5 minutes
             cache.set(cache_key, data, 300)
             return data
-        else:
-            logger.warning(f"Employee {employee_id} returned status {response.status_code}: {response.text}")
         return None
     except Exception as e:
         logger.error(f"Error fetching employee {employee_id}: {str(e)}")
@@ -130,21 +122,9 @@ def get_due_checkin_report(days_threshold=30):
         status = 'overdue' if days_until_due < 0 else 'upcoming'
         
         # Get the employee who has the asset (CHECKED OUT TO)
+        # Priority 1: Use checkout.checkout_to which has the employee ID
         checked_out_to_name = None
-        logger.info(f"Processing checkout {checkout.id}: checkout_to={checkout.checkout_to}, ticket={checkout.ticket_number}")
-        
-        # Try to get employee name from ticket first (more reliable)
-        ticket = get_ticket_by_id(checkout.ticket_number)
-        if ticket:
-            logger.info(f"Ticket {checkout.ticket_number} data: {ticket}")
-            requestor_details = ticket.get('requestor_details')
-            if requestor_details and isinstance(requestor_details, dict):
-                checked_out_to_name = requestor_details.get('name') or f"{requestor_details.get('firstname', '')} {requestor_details.get('lastname', '')}".strip()
-                if checked_out_to_name:
-                    logger.info(f"Found employee name from ticket: {checked_out_to_name}")
-        
-        # Fallback: Try checkout.checkout_to (may not exist in Help Desk system)
-        if not checked_out_to_name and checkout.checkout_to:
+        if checkout.checkout_to:
             checked_out_to = get_employee_details(checkout.checkout_to)
             if checked_out_to:
                 # Handle different response structures from Help Desk service
@@ -156,22 +136,6 @@ def get_due_checkin_report(days_threshold=30):
                     # Or if firstname/lastname are at the top level
                     elif checked_out_to.get('firstname') or checked_out_to.get('lastname'):
                         checked_out_to_name = f"{checked_out_to.get('firstname', '')} {checked_out_to.get('lastname', '')}".strip()
-        
-        # Fallback: Try checkout.checkout_to (may not exist in Help Desk system)
-        if not checked_out_to_name and checkout.checkout_to:
-            checked_out_to = get_employee_details(checkout.checkout_to)
-            if checked_out_to:
-                # Handle different response structures from Help Desk service
-                if isinstance(checked_out_to, dict):
-                    # Check if it's wrapped in an 'employee' key
-                    if checked_out_to.get('employee'):
-                        emp = checked_out_to['employee']
-                        checked_out_to_name = f"{emp.get('firstname', '')} {emp.get('lastname', '')}".strip()
-                    # Or if firstname/lastname are at the top level
-                    elif checked_out_to.get('firstname') or checked_out_to.get('lastname'):
-                        checked_out_to_name = f"{checked_out_to.get('firstname', '')} {checked_out_to.get('lastname', '')}".strip()
-                    if checked_out_to_name:
-                        logger.info(f"Found employee name from Help Desk: {checked_out_to_name}")
         
         # Priority 2: Try to get from ticket requestor_details as fallback
         if not checked_out_to_name:

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import StatusCardPopup from './StatusCardPopup';
+import dateRelated from '../../utils/dateRelated';
 import '../../styles/dashboard/StatusCard.css';
 
-function StatusCard({ number, title, isRed, isLarge, index }) {
+function StatusCard({ number, title, isRed, isLarge, index, dueCheckinData, overdueCheckinData }) {
   const [showPopup, setShowPopup] = useState(false);
   const navigate = useNavigate();
 
@@ -87,13 +88,29 @@ function StatusCard({ number, title, isRed, isLarge, index }) {
   const getItems = () => {
     switch (title) {
       case 'Due for Return':
+        if (dueCheckinData && dueCheckinData.length > 0) {
+          return dueCheckinData.map(item => ({
+            assetId: item.asset_id,
+            assetName: item.asset_name,
+            checkedOutTo: item.checked_out_to,
+            expectedReturnDate: dateRelated.formatDate(item.return_date)
+          }));
+        }
         return dueReturnItems;
+      case 'Overdue for Return':
+        if (overdueCheckinData && overdueCheckinData.length > 0) {
+          return overdueCheckinData.map(item => ({
+            assetId: item.asset_id,
+            assetName: item.asset_name,
+            checkedOutTo: item.checked_out_to,
+            expectedReturnDate: dateRelated.formatDate(item.return_date)
+          }));
+        }
+        return overdueReturnItems;
       case 'Upcoming Audits':
         return upcomingAuditsItems;
       case 'Low Stock':
         return lowStockItems;
-      case 'Overdue for Return':
-        return overdueReturnItems;
       default:
         return [];
     }
@@ -128,7 +145,9 @@ StatusCard.propTypes = {
   title: PropTypes.string.isRequired,
   isRed: PropTypes.bool,
   isLarge: PropTypes.bool,
-  index: PropTypes.number.isRequired
+  index: PropTypes.number.isRequired,
+  dueCheckinData: PropTypes.array,
+  overdueCheckinData: PropTypes.array
 };
 
 StatusCard.defaultProps = {

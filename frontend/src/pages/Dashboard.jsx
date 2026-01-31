@@ -9,6 +9,7 @@ import "../styles/Dashboard.css";
 import { fetchDashboardStats } from "../services/assets-service";
 import forecastService from "../services/forecast-service";
 import authService from "../services/auth-service";
+import assetsAxios from "../api/assetsAxios";
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
@@ -17,6 +18,8 @@ function Dashboard() {
   const [assetForecast, setAssetForecast] = useState(null);
   const [productForecast, setProductForecast] = useState(null);
   const [forecastLoading, setForecastLoading] = useState(true);
+  const [dueCheckinData, setDueCheckinData] = useState([]);
+  const [overdueCheckinData, setOverdueCheckinData] = useState([]);
 
   useEffect(() => {
     async function loadDashboardStats() {
@@ -81,8 +84,26 @@ function Dashboard() {
       }
     }
 
+    // Load due/overdue checkin data
+    async function loadCheckinData() {
+      try {
+        const response = await assetsAxios.get("/due-checkin-report/?days=30");
+        if (response.data.success) {
+          const data = response.data.data;
+          // Separate due and overdue items
+          const dueItems = data.filter(item => item.status === "upcoming");
+          const overdueItems = data.filter(item => item.status === "overdue");
+          setDueCheckinData(dueItems);
+          setOverdueCheckinData(overdueItems);
+        }
+      } catch (error) {
+        console.error("Failed to load checkin data:", error);
+      }
+    }
+
     loadDashboardStats();
     loadForecastData();
+    loadCheckinData();
   }, []);
 
   return (
@@ -92,7 +113,13 @@ function Dashboard() {
         <h1>Dashboard</h1>
         <div className="status-cards-grid">
           {statusCards.map((card, index) => (
-            <StatusCard key={index} {...card} index={index} />
+            <StatusCard 
+              key={index} 
+              {...card} 
+              index={index}
+              dueCheckinData={card.title === "Due for Return" ? dueCheckinData : undefined}
+              overdueCheckinData={card.title === "Overdue for Return" ? overdueCheckinData : undefined}
+            />
           ))}
         </div>
 
