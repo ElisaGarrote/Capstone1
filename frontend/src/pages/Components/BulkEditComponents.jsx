@@ -199,15 +199,17 @@ export default function BulkEditComponents() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
-        <main className="main-with-table">
+        <main className="registration">
+        <section className="top">
           <TopSecFormPage
             root="Components"
             currentPage="Bulk Edit Components"
             rootNavigatePage="/components"
             title="Bulk Edit Components"
           />
+        </section>
 
           {/* Selected Components */}
           <section className="selected-assets-section">
