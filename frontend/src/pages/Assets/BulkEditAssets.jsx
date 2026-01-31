@@ -273,12 +273,14 @@ export default function BulkEditAssets() {
         <NavBar />
 
         <main className="main-with-table">
-          <TopSecFormPage
-            root="Assets"
-            currentPage="Bulk Edit Assets"
-            rootNavigatePage="/assets"
-            title="Bulk Edit Assets"
-          />
+          <section className="top">
+            <TopSecFormPage
+              root="Assets"
+              currentPage="Bulk Edit Assets"
+              rootNavigatePage="/assets"
+              title="Bulk Edit Assets"
+            />
+          </section>
 
           {/* Selected Assets Section */}
           <section className="selected-assets-section">
