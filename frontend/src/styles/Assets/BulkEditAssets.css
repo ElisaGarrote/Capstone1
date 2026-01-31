@@ -4,7 +4,6 @@
   max-width: 1200px;
   margin: 0 auto;
   box-sizing: border-box;
-  align-self: center;
 }
 
 .selected-assets-section {
@@ -122,7 +121,7 @@
 .bulk-edit-form-section {
   background: white;
   border-radius: 25px;
-  padding: 24px;
+  padding: 2rem;
   margin-top: 1rem;
   margin-bottom: 2rem;
   border: 1px solid #d3d3d3;
