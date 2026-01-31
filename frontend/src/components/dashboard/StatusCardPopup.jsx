@@ -121,7 +121,7 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
                   <span>
                     <span 
                       className="asset-link" 
-                      onClick={() => navigate(`/assets/view/${item.assetId}`)}
+                      onClick={() => navigate(`/assets/view/${item.assetDbId || item.assetId}`)}
                       style={{ cursor: 'pointer', color: '#0D6EFD', textDecoration: 'underline' }}
                     >
                       {item.assetId}
@@ -193,6 +193,7 @@ StatusCardPopup.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.oneOfType([
       PropTypes.shape({
+        assetDbId: PropTypes.number,
         assetId: PropTypes.string,
         assetName: PropTypes.string,
         checkedOutTo: PropTypes.string,

@@ -2225,10 +2225,13 @@ class DashboardViewSet(viewsets.ViewSet):
             next_30_days = today + timedelta(days=30)
 
             # Assets due for return - only count checkouts that haven't been checked in yet
+            # Due for return: return date is in the future (today or later) within next 30 days
             due_for_return = AssetCheckout.objects.filter(
                 return_date__gte=today,
+                return_date__lte=next_30_days,
                 asset_checkin__isnull=True
             ).count()
+            # Overdue for return: return date is in the past
             overdue_for_return = AssetCheckout.objects.filter(
                 return_date__lt=today,
                 asset_checkin__isnull=True

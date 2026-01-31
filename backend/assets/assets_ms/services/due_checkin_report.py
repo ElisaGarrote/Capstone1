@@ -150,6 +150,7 @@ def get_due_checkin_report(days_threshold=30):
         
         report_data.append({
             'checkout_id': checkout.id,
+            'asset_db_id': asset.id,  # Database ID for navigation
             'asset_id': asset.asset_id,
             'asset_name': asset.product.name,
             'asset_display': asset_display,
