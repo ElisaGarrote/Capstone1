@@ -454,7 +454,7 @@ export default function AssetsRegistration() {
             currentPage={isClone ? "Clone Asset" : (id ? "Edit Asset" : "New Asset")}
             rootNavigatePage="/assets"
             title={isClone 
-              ? 'Clone ${asset.asset_id} - ${asset.name}'
+              ? `Clone ${asset.asset_id} - ${asset.name}`
               : id
                 ? `Edit ${asset?.asset_id} - ${asset.name}`
                 : 'New Asset'
