@@ -276,17 +276,22 @@ const Tickets = () => {
 
   const handleViewClick = async (ticket) => {
     try {
-      let assetName = "Unknown";
+      let assetName = "N/A"; // default if null
 
-      if (ticket.asset) {
-        const isNumeric = !isNaN(ticket.asset); // true if number
-        const params = isNumeric
-          ? { ids: [Number(ticket.asset)] }     // pass as numeric ID
-          : { asset_ids: [ticket.asset] };     // pass as asset_id string
+      if (ticket.asset !== null && ticket.asset !== undefined) {
+        if (ticket.asset === "") {
+          assetName = "Unknown";
+        } else {
+          const isNumeric = !isNaN(ticket.asset);
+          const params = isNumeric
+            ? { ids: [Number(ticket.asset)] }     // numeric ID
+            : { asset_ids: [ticket.asset] };     // asset_id string
 
-        const assetData = await fetchAssetNames(params);
-        console.log("Asset data:", assetData);
-        assetName = assetData?.[0]?.name || "Unknown";
+          const assetData = await fetchAssetNames(params);
+          const name = assetData?.[0]?.name || "Unknown";
+
+          assetName = isNumeric ? name : `${ticket.asset} - ${name}`;
+        }
       }
 
       // Build data array for modal
@@ -296,7 +301,7 @@ const Tickets = () => {
         { label: "Issue Type", value: ticket.issue_type || "N/A" },
         { label: "Location", value: ticket.location_details?.name || "Unknown" },
         { label: "Requestor", value: ticket.requestor_details?.name || "Unknown" },
-        { label: "Asset", value: `${ticket.asset} - ${assetName}` },
+        { label: "Asset", value: assetName },
       ];
 
       if (ticket.checkout_date) data.push({ label: "Checkout Date", value: ticket.checkout_date });
