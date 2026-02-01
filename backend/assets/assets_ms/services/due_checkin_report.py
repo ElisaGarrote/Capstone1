@@ -22,12 +22,15 @@ CONTEXTS_SERVICE_URL = getattr(
 
 
 def get_ticket_by_id(ticket_id):
-    """Fetch ticket details from contexts service."""
+    """Fetch ticket details from contexts service with extended timeout."""
     try:
         url = f"{CONTEXTS_SERVICE_URL}/tickets/{ticket_id}/"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=10)  # Increased from 5 to 10 seconds
         if response.status_code == 200:
             return response.json()
+        return None
+    except requests.exceptions.Timeout:
+        logger.warning(f"Timeout fetching ticket {ticket_id}")
         return None
     except Exception as e:
         logger.error(f"Error fetching ticket {ticket_id}: {str(e)}")
@@ -35,7 +38,7 @@ def get_ticket_by_id(ticket_id):
 
 
 def get_employee_details(employee_id):
-    """Fetch employee details from Help Desk service via contexts proxy."""
+    """Fetch employee details from Help Desk service via contexts proxy with aggressive caching."""
     if not employee_id:
         return None
     
@@ -46,12 +49,15 @@ def get_employee_details(employee_id):
     
     try:
         url = f"{CONTEXTS_SERVICE_URL}/helpdesk-employees/{employee_id}/"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=10)  # Increased from 5 to 10 seconds
         if response.status_code == 200:
             data = response.json()
-            # Cache for 5 minutes
-            cache.set(cache_key, data, 300)
+            # Cache for 1 hour (3600 seconds) - employee data rarely changes
+            cache.set(cache_key, data, 3600)
             return data
+        return None
+    except requests.exceptions.Timeout:
+        logger.warning(f"Timeout fetching employee {employee_id}")
         return None
     except Exception as e:
         logger.error(f"Error fetching employee {employee_id}: {str(e)}")
@@ -59,7 +65,7 @@ def get_employee_details(employee_id):
 
 
 def get_location_details(location_id):
-    """Fetch location details from Help Desk service via contexts proxy."""
+    """Fetch location details from Help Desk service via contexts proxy with aggressive caching."""
     if not location_id:
         return None
     
@@ -70,12 +76,15 @@ def get_location_details(location_id):
     
     try:
         url = f"{CONTEXTS_SERVICE_URL}/helpdesk-locations/{location_id}/"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=10)  # Increased from 5 to 10 seconds
         if response.status_code == 200:
             data = response.json()
-            # Cache for 5 minutes
-            cache.set(cache_key, data, 300)
+            # Cache for 1 hour (3600 seconds) - location data rarely changes
+            cache.set(cache_key, data, 3600)
             return data
+        return None
+    except requests.exceptions.Timeout:
+        logger.warning(f"Timeout fetching location {location_id}")
         return None
     except Exception as e:
         logger.error(f"Error fetching location {location_id}: {str(e)}")
