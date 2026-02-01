@@ -10,6 +10,7 @@ import { fetchDashboardStats } from "../services/assets-service";
 import forecastService from "../services/forecast-service";
 import authService from "../services/auth-service";
 import assetsAxios from "../api/assetsAxios";
+import { fetchEmployeeById } from "../services/integration-help-desk-service";
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
@@ -91,12 +92,42 @@ function Dashboard() {
         if (response.data.success) {
           const data = response.data.data;
           
-          console.log('Checkin data received:', data);
+          console.log('Raw checkin data:', data);
           
-          // Backend already fetches employee names, just separate by status
-          const dueItems = data.filter(item => item.status === "upcoming");
-          const overdueItems = data.filter(item => item.status === "overdue");
+          // Enrich data with employee names from helpdesk service
+          const enrichedData = await Promise.all(
+            data.map(async (item) => {
+              try {
+                console.log(`Processing item:`, item);
+                
+                // If checked_out_to is "Unknown" and we have an employee ID, fetch the employee name
+                if (item.checked_out_to_id && (item.checked_out_to === 'Unknown' || !item.checked_out_to)) {
+                  console.log(`Fetching employee ${item.checked_out_to_id}...`);
+                  const employee = await fetchEmployeeById(item.checked_out_to_id);
+                  console.log(`Employee data for ${item.checked_out_to_id}:`, employee);
+                  return {
+                    ...item,
+                    checked_out_to: employee ? employee.name : `Employee #${item.checked_out_to_id}`,
+                    employee_email: employee ? employee.email : null,
+                    employee_phone: employee ? employee.phone : null
+                  };
+                }
+                
+                // If checked_out_to is already a name (not "Unknown"), use it as-is
+                return item;
+              } catch (error) {
+                console.error(`Failed to fetch employee ${item.checked_out_to_id}:`, error);
+                // Return original item if employee fetch fails
+                return item;
+              }
+            })
+          );
           
+          console.log('Enriched checkin data:', enrichedData);
+          
+          // Separate due and overdue items
+          const dueItems = enrichedData.filter(item => item.status === "upcoming");
+          const overdueItems = enrichedData.filter(item => item.status === "overdue");
           setDueCheckinData(dueItems);
           setOverdueCheckinData(overdueItems);
         }
