@@ -10,6 +10,7 @@ import { fetchDashboardStats } from "../services/assets-service";
 import forecastService from "../services/forecast-service";
 import authService from "../services/auth-service";
 import assetsAxios from "../api/assetsAxios";
+import { fetchEmployeeById } from "../services/integration-help-desk-service";
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
@@ -90,9 +91,33 @@ function Dashboard() {
         const response = await assetsAxios.get("/due-checkin-report/?days=30");
         if (response.data.success) {
           const data = response.data.data;
+          
+          // Enrich data with employee names from helpdesk service
+          const enrichedData = await Promise.all(
+            data.map(async (item) => {
+              try {
+                // If checked_out_to is a number (employee ID), fetch the employee name
+                if (item.checked_out_to && !isNaN(item.checked_out_to)) {
+                  const employee = await fetchEmployeeById(item.checked_out_to);
+                  return {
+                    ...item,
+                    checked_out_to: employee ? employee.name : `Employee #${item.checked_out_to}`,
+                    employee_email: employee ? employee.email : null,
+                    employee_phone: employee ? employee.phone : null
+                  };
+                }
+                return item;
+              } catch (error) {
+                console.error(`Failed to fetch employee ${item.checked_out_to}:`, error);
+                // Return original item if employee fetch fails
+                return item;
+              }
+            })
+          );
+          
           // Separate due and overdue items
-          const dueItems = data.filter(item => item.status === "upcoming");
-          const overdueItems = data.filter(item => item.status === "overdue");
+          const dueItems = enrichedData.filter(item => item.status === "upcoming");
+          const overdueItems = enrichedData.filter(item => item.status === "overdue");
           setDueCheckinData(dueItems);
           setOverdueCheckinData(overdueItems);
         }
