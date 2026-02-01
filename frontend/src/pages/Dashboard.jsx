@@ -10,7 +10,7 @@ import { fetchDashboardStats } from "../services/assets-service";
 import forecastService from "../services/forecast-service";
 import authService from "../services/auth-service";
 import assetsAxios from "../api/assetsAxios";
-import { fetchEmployeeById } from "../services/integration-help-desk-service";
+import { fetchEmployeeByIdDirect } from "../services/integration-help-desk-service";
 
 function Dashboard() {
   const [statusCards, setStatusCards] = useState([]);
@@ -89,16 +89,23 @@ function Dashboard() {
     async function loadCheckinData() {
       try {
         const response = await assetsAxios.get("/due-checkin-report/?days=30");
+        console.log("Due checkin report response:", response.data);
+        
         if (response.data.success) {
           const data = response.data.data;
+          console.log("Checkin data items:", data);
           
           // Enrich data with employee names from helpdesk service
           const enrichedData = await Promise.all(
             data.map(async (item) => {
+              console.log("Processing item:", item);
               try {
                 // If checked_out_to is a number (employee ID), fetch the employee name
                 if (item.checked_out_to && !isNaN(item.checked_out_to)) {
-                  const employee = await fetchEmployeeById(item.checked_out_to);
+                  console.log(`Fetching employee for ID: ${item.checked_out_to}`);
+                  const employee = await fetchEmployeeByIdDirect(item.checked_out_to);
+                  console.log(`Employee data received:`, employee);
+                  
                   return {
                     ...item,
                     checked_out_to: employee ? employee.name : `Employee #${item.checked_out_to}`,
@@ -106,18 +113,28 @@ function Dashboard() {
                     employee_phone: employee ? employee.phone : null
                   };
                 }
+                console.log("Item does not have numeric checked_out_to, returning as is");
                 return item;
               } catch (error) {
                 console.error(`Failed to fetch employee ${item.checked_out_to}:`, error);
                 // Return original item if employee fetch fails
-                return item;
+                return {
+                  ...item,
+                  checked_out_to: `Employee #${item.checked_out_to}`
+                };
               }
             })
           );
           
+          console.log("Enriched data:", enrichedData);
+          
           // Separate due and overdue items
           const dueItems = enrichedData.filter(item => item.status === "upcoming");
           const overdueItems = enrichedData.filter(item => item.status === "overdue");
+          
+          console.log("Due items:", dueItems);
+          console.log("Overdue items:", overdueItems);
+          
           setDueCheckinData(dueItems);
           setOverdueCheckinData(overdueItems);
         }
