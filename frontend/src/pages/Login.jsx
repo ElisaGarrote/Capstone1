@@ -23,7 +23,7 @@ function Login() {
 
   const dispatch = useDispatch();
   const { isAuthenticated, login } = useAuth();
-  
+
   const externalLoginUrl = import.meta.env.VITE_EXTERNAL_LOGIN_URL;
 
   // Redirect to external login if configured

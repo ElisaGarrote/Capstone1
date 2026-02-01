@@ -72,12 +72,48 @@ function ComponentView() {
     });
   };
 
+  const handleCloneClick = () => {
+    navigate(`/components/edit/${component.id}`, {
+      state: { component, isClone: true }
+    });
+  };
+
   const handleDeleteClick = () => {
     setDeleteModalOpen(true);
   };
 
+  const handleCheckInOut = (action) => {
+    const item = {
+      id: component.id,
+      name: component.name,
+      available_quantity: component.available_quantity ?? 0,
+    };
+
+    if (action === "checkin") {
+      // Navigate to checkout list to select which checkout to check in from
+      navigate(`/components/checked-out-list/${component.id}`, {
+        state: { item },
+      });
+    } else {
+      // Navigate to checkout form
+      navigate(`/components/check-out/${component.id}`, {
+        state: { item },
+      });
+    }
+  };
+
   const actionButtons = (
     <div className="vertical-action-buttons">
+      <button
+        type="button"
+        className="action-btn clone-btn"
+        onClick={handleCloneClick}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style={{ marginRight: '8px' }}>
+          <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+        </svg>
+        Clone
+      </button>
       <button
         type="button"
         className="action-btn edit-btn"
@@ -94,6 +130,29 @@ function ComponentView() {
         </svg>
         Edit
       </button>
+
+      <button
+        type="button"
+        className="action-btn action-btn-checkout"
+        onClick={() => handleCheckInOut("checkout")}
+        disabled={!component.available_quantity || component.available_quantity <= 0}
+        title={!component.available_quantity || component.available_quantity <= 0 ? "No available quantity" : "Check Out"}
+      >
+        <i className="fas fa-sign-out-alt"></i>
+        <span>Check-Out</span>
+      </button>
+
+      <button
+        type="button"
+        className="action-btn action-btn-checkin"
+        onClick={() => handleCheckInOut("checkin")}
+        disabled={component.quantity - component.available_quantity <= 0}
+        title={component.quantity - component.available_quantity <= 0 ? "No checked out quantity" : "Check In"}
+      >
+        <i className="fas fa-sign-in-alt"></i>
+        <span>Check-In</span>
+      </button>
+
       <MediumButtons
         type="delete"
         onClick={handleDeleteClick}

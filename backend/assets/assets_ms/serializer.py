@@ -217,6 +217,8 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
     supplier_details = serializers.SerializerMethodField()
     location_details = serializers.SerializerMethodField()
     status_details = serializers.SerializerMethodField()
+    ticket_details = serializers.SerializerMethodField()
+    active_checkout = serializers.SerializerMethodField()
     files = serializers.SerializerMethodField()
     checkout_logs = serializers.SerializerMethodField()
     repairs = serializers.SerializerMethodField()
@@ -230,6 +232,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
             'order_number', 'purchase_date', 'purchase_cost', 'notes',
             'image', 'created_at', 'updated_at', 'location',
             'product_details', 'status_details', 'supplier_details', 'location_details',
+            'ticket_details', 'active_checkout',
             'files', 'checkout_logs', 'repairs', 'audits', 'components'
         ]
 
@@ -566,7 +569,6 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
                 'ticket_number': checkout.ticket_number,
                 'checkout_to': checkout.checkout_to,
                 'location': checkout.location,
-                'checkout_date': checkout.checkout_date,
                 'return_date': checkout.return_date,
                 'condition': checkout.condition,
                 'revenue': str(checkout.revenue) if checkout.revenue else None,
@@ -658,6 +660,15 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
             })
 
         return repairs
+
+    def get_ticket_details(self, obj):
+        """Return ticket details from context map, keyed by asset_id (display ID)."""
+        return self.context.get("ticket_map", {}).get(obj.asset_id)
+
+    def get_active_checkout(self, obj):
+        """Return ID of active checkout (no checkin) or None."""
+        checkout = obj.asset_checkouts.filter(asset_checkin__isnull=True).first()
+        return checkout.id if checkout else None
 
     def get_audits(self, obj):
         """
@@ -975,7 +986,7 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
             })
 
         # Make sure checkin happens after checkout
-        if checkin_date < checkout.checkout_date:
+        if checkin_date < checkout.checkout_date():
             raise serializers.ValidationError({
                 "checkin_date": "Cannot check in before checkout date."
             })
@@ -1367,13 +1378,27 @@ class AuditScheduleSerializer(serializers.ModelSerializer):
         self.fields['asset'].queryset = Asset.objects.filter(is_deleted=False)
 
     def validate(self, data):
-        asset = data.get('asset')
+        asset = data.get('asset') or getattr(self.instance, 'asset', None)
+        date = data.get('date') or getattr(self.instance, 'date', None)
 
         # Ensure asset is not deleted
         if asset and asset.is_deleted:
             raise serializers.ValidationError({
                 "asset": "Cannot create an audit schedule for a deleted asset."
             })
+
+        # Check for duplicate audit schedule (same asset + same date)
+        if asset and date:
+            duplicate = AuditSchedule.objects.filter(
+                asset=asset,
+                date=date,
+                is_deleted=False
+            ).exclude(pk=self.instance.pk if self.instance else None).exists()
+
+            if duplicate:
+                raise serializers.ValidationError({
+                    "date": f"An audit schedule already exists for this asset on {date}."
+                })
 
         return data
 

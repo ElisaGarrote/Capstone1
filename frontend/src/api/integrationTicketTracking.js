@@ -7,7 +7,7 @@ console.log("[Ticket Tracking] Using Assets API proxy, Base URL:", baseURL);
 
 const ticketTrackingAxios = axios.create({
   baseURL: baseURL,
-  timeout: 10000,
+  timeout: 30000,
 });
 
 ticketTrackingAxios.interceptors.response.use(

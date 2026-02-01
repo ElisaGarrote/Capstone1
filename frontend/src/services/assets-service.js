@@ -131,17 +131,17 @@ export async function bulkDeleteAssets(data) {
 // - ids: array of database IDs (integers)
 // - asset_ids: array of display asset IDs (strings like "AST-20260110-00030-43A7")
 // - search: keyword to search by name
-export const fetchAssetNames = ({ids = [], asset_ids = [], search = "" } = {}) => {
+export const fetchAssetNames = ({ ids = [], asset_ids = [], search = "" } = {}) => {
   const params = {};
 
-  if (ids.length) params.ids = ids.join(",");
-  if (asset_ids.length) params.asset_ids = asset_ids.join(",");
-  if (search) params.search = search;
+  if (ids.length) params.ids = ids.map(String).join(",");
+  if (asset_ids.length) params.asset_ids = asset_ids.map(String).join(",");
+  if (search?.trim()) params.search = search.trim();
 
   return assetsAxios
     .get("assets/names/", { params })
     .then(res => res.data);
-}
+};
 
 // BULK EDIT assets
 export async function bulkEditAssets(data, useFormData = false) {

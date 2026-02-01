@@ -318,18 +318,23 @@ export default function ViewSupplier() {
       const mapped = (res || []).map((supp) => ({
         id: supp.id,
         name: supp.name,
-        address: supp.address,
-        city: supp.city,
-        zip: supp.zip,
-        contactName: supp.contact_name,
-        phoneNumber: supp.phone_number,
-        email: supp.email,
-        url: supp.URL,
-        notes: supp.notes,
+        address: supp.address || supp.street || "",
+        city: supp.city || "",
+        state: supp.state_province || supp.state || "",
+        zip: supp.zip || "",
+        country: supp.country || "",
+        contactName: supp.contact_name || supp.contactName || "",
+        phoneNumber: supp.phone_number || supp.phoneNumber || "",
+        email: supp.email || "",
+        url: supp.url || supp.URL || supp.website || "",
+        notes: supp.notes || "",
+        logo: supp.logo || null,
       }));
-      setSuppliers(mapped);
+      const sorted = mapped.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      setSuppliers(sorted);
+      setFilteredData(sorted);
     } catch (e) {
-      console.error("Error refreshing suppplier:", e);
+      console.error("Error refreshing supplier:", e);
     } finally {
       setLoading(false);
     }
@@ -389,63 +394,16 @@ export default function ViewSupplier() {
     setDeleteTarget(null);
   };
 
-  const confirmDelete = () => {
-    return (async () => {
-      try {
-        if (deleteTarget) {
-          // Single delete: call API and only remove from table on success
-          const res = await deleteSupplier(deleteTarget);
-          // deleteSupplier resolves on 2xx; if backend returned structured payload, try to use it
-          setSuppliers((prev) => prev.filter((s) => s.id !== deleteTarget));
-          setFilteredData((prev) => prev.filter((s) => s.id !== deleteTarget));
-          setSuccessMessage(res?.detail || 'Supplier deleted successfully!');
-        } else {
-          if (!checkedItems || checkedItems.length === 0) {
-            return { ok: false, data: { detail: 'No suppliers selected to delete' } };
-          }
-          const res = await bulkDeleteSuppliers(checkedItems);
-          // Determine deleted and skipped ids without clearing selection yet
-          const deletedIds = res?.deleted_ids ?? (Array.isArray(res?.deleted) ? res.deleted : []);
-          const failedEntries = Array.isArray(res?.failed) ? res.failed : [];
-          const skippedIds = res?.skipped ? Object.keys(res.skipped).map((k) => (isNaN(Number(k)) ? k : Number(k))) : (failedEntries.length ? failedEntries.map((f) => f.id).filter(Boolean) : []);
-          const deletedCount = deletedIds ? deletedIds.length : 0;
-          const skippedCount = skippedIds ? skippedIds.length : 0;
-
-          if (deletedIds.length > 0) {
-            setSuppliers((prev) => prev.filter((s) => !deletedIds.includes(s.id)));
-            setFilteredData((prev) => prev.filter((s) => !deletedIds.includes(s.id)));
-          }
-
-          // If there are any skipped items, keep them selected and return structured result
-          if (skippedCount > 0) {
-            try { if (skippedIds && skippedIds.length) setCheckedItems(skippedIds); } catch (e) {}
-            return { ok: false, data: res };
-          }
-
-          // No skipped items -> show success for deleted count and clear selection
-          if (deletedCount > 0) {
-            setSuccessMessage(`${deletedCount} supplier(s) deleted successfully!`);
-            setTimeout(() => setSuccessMessage(''), 5000);
-          }
-          setCheckedItems([]);
-          // If bulk delete removed items and there were no skipped items, reload page
-          if (deletedCount > 0 && skippedCount === 0 && !deleteTarget) {
-            // ensure UI and server are fully synchronized
-            window.location.reload();
-          }
-        }
-        setTimeout(() => setSuccessMessage(''), 5000);
-        return { ok: true };
-      } catch (err) {
-        console.error('Delete error', err?.response || err);
-        const payload = err?.response?.data || { detail: err?.message || 'Delete failed' };
-        setErrorMessage(typeof payload === 'object' ? JSON.stringify(payload) : payload);
-        setTimeout(() => setErrorMessage(''), 8000);
-        return { ok: false, data: payload };
-      } finally {
-        closeDeleteModal();
-      }
-    })();
+  const confirmDelete = async () => {
+    // Modal already handled the delete, just refresh the list
+    try {
+      await fetchSuppliers();
+      setCheckedItems([]);
+      setSuccessMessage(deleteTarget ? "Supplier deleted successfully!" : "Suppliers deleted successfully!");
+      setTimeout(() => setSuccessMessage(""), 5000);
+    } catch (err) {
+      console.error('Failed to refresh suppliers after delete', err);
+    }
   };
 
   const handleExport = () => {
@@ -488,12 +446,21 @@ export default function ViewSupplier() {
 
       {isDeleteModalOpen && (
         <DeleteModal
-          endPoint={endPoint}
           closeModal={closeDeleteModal}
+          isOpen={isDeleteModalOpen}
           actionType={deleteTarget ? "delete" : "bulk-delete"}
-          onConfirm={confirmDelete}
-          targetIds={deleteTarget ? [deleteTarget] : checkedItems}
           entityType="supplier"
+          targetId={deleteTarget}
+          targetIds={checkedItems}
+          onSuccess={async (deletedIds) => {
+            await confirmDelete();
+          }}
+          onError={(error) => {
+            const respData = error?.response?.data;
+            const msg = respData?.detail || respData || error.message || 'Delete failed.';
+            setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            setTimeout(() => setErrorMessage(''), 5000);
+          }}
           onDeleteFail={(payload) => {
             // Normalize payload (handlers sometimes return { ok:false, data: ... })
             let body = payload;

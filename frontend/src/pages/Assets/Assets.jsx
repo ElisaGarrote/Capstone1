@@ -463,10 +463,12 @@ export default function Assets() {
     const ticket = asset.ticket_details;
 
     if (checkoutId) {
+      console.log("Navigating to check-in from assets page for asset:", asset);
       navigate(`/assets/check-in/${assetId}`, {
         state: { assetId, assetDisplayId, assetName, checkoutId, ticket },
       });
     } else {
+      console.log("Navigating to check-out from assets page for asset:", asset);
       navigate(`/assets/check-out/${assetId}`, {
         state: { assetId, assetDisplayId, assetName, ticket },
       });
