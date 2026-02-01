@@ -266,9 +266,9 @@ def get_all_notifications():
     Collect all notifications from all sources.
     Returns a list of notification dictionaries sorted by creation time (newest first).
     
-    Results are cached for 60 seconds to prevent expensive recalculation on every request.
+    Results are cached for 15 seconds to balance performance with freshness.
     """
-    # Check cache first
+    # Check cache first - short TTL for near real-time notifications
     cache_key = "notifications:all_notifications"
     cached = cache.get(cache_key)
     if cached is not None:
@@ -286,7 +286,7 @@ def get_all_notifications():
     # Sort by created_at descending (newest first)
     notifications.sort(key=lambda x: x.get('created_at', ''), reverse=True)
 
-    # Cache for 60 seconds
-    cache.set(cache_key, notifications, 60)
+    # Cache for 15 seconds - balance between performance and freshness
+    cache.set(cache_key, notifications, 15)
     
     return notifications

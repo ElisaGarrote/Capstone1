@@ -2220,6 +2220,19 @@ class DashboardViewSet(viewsets.ViewSet):
     # /dashboard/metrics
     @action(detail=False, methods=['get'])
     def metrics(self, request):
+        """
+        Get dashboard metrics with minimal caching to balance performance and freshness.
+        Results are cached for 10 seconds to prevent duplicate requests while maintaining near real-time data.
+        """
+        from django.core.cache import cache
+        
+        # Check cache first - short 10 second TTL for near real-time data
+        cache_key = "dashboard:metrics"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            serializer = DashboardStatsSerializer(cached_data)
+            return Response(serializer.data)
+        
         try:
             today = now().date()
             next_30_days = today + timedelta(days=30)
@@ -2295,8 +2308,11 @@ class DashboardViewSet(viewsets.ViewSet):
                 is_deleted=False
             ).count()
 
-            # Low stock
-            low_stock = Component.objects.filter(is_deleted=False).annotate(
+            # Low stock - optimized query
+            low_stock = Component.objects.filter(
+                is_deleted=False,
+                minimum_quantity__gt=0  # Only check components with minimum set
+            ).annotate(
                 total_checked_out=Coalesce(Sum('component_checkouts__quantity'), Value(0)),
                 total_checked_in=Coalesce(Sum('component_checkouts__component_checkins__quantity'), Value(0)),
                 available_quantity=F('quantity') - (F('total_checked_out') - F('total_checked_in'))
@@ -2319,12 +2335,12 @@ class DashboardViewSet(viewsets.ViewSet):
             ).count() if deployed_status_ids else 0
             asset_utilization = round((deployed_count / total_assets * 100) if total_assets > 0 else 0)
 
-            # Asset categories - count by category
+            # Asset categories - count by category (limit to top 10 for performance)
             categories = get_categories_list(type='asset', limit=100)
             category_map = {c['id']: c['name'] for c in categories} if isinstance(categories, list) else {}
             category_counts = Asset.objects.filter(is_deleted=False).values(
                 'product__category'
-            ).annotate(count=Count('id')).order_by('-count')
+            ).annotate(count=Count('id')).order_by('-count')[:10]  # Limit to top 10
             asset_categories = [
                 {
                     'product__category__name': category_map.get(item['product__category'], f"Category {item['product__category']}"),
@@ -2333,11 +2349,11 @@ class DashboardViewSet(viewsets.ViewSet):
                 for item in category_counts if item['product__category']
             ]
 
-            # Asset statuses - count by status
+            # Asset statuses - count by status (limit to top 10 for performance)
             status_map = {s['id']: s['name'] for s in statuses} if isinstance(statuses, list) else {}
             status_counts = Asset.objects.filter(is_deleted=False).values(
                 'status'
-            ).annotate(count=Count('id')).order_by('-count')
+            ).annotate(count=Count('id')).order_by('-count')[:10]  # Limit to top 10
             asset_statuses = [
                 {
                     'status__name': status_map.get(item['status'], f"Status {item['status']}"),
@@ -2363,6 +2379,9 @@ class DashboardViewSet(viewsets.ViewSet):
                 "asset_categories": asset_categories,
                 "asset_statuses": asset_statuses,
             }
+
+            # Cache for 10 seconds - short TTL for near real-time updates
+            cache.set(cache_key, data, 10)
 
             serializer = DashboardStatsSerializer(data)
             return Response(serializer.data)
