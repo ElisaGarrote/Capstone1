@@ -380,10 +380,12 @@ const Tickets = () => {
     }
 
     if (ticket.isCheckInOrOut === "Check-In") {
+      console.log("Navigating to check-in from tickets page for ticket:", ticket);
       navigate(`/assets/check-in/${assetId}`, {
         state: { ticket, fromAsset: false },
       });
     } else {
+      console.log("Navigating to check-out from tickets page for ticket:", ticket);
       navigate(`/assets/check-out/${assetId}`, {
         state: { ticket, fromAsset: false },
       });
