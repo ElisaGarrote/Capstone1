@@ -740,7 +740,6 @@ class AssetViewSet(viewsets.ModelViewSet):
         search = request.query_params.get("search")
 
         queryset = self.get_queryset()
-
         filters = Q()
 
         if ids_param:
@@ -762,9 +761,8 @@ class AssetViewSet(viewsets.ModelViewSet):
 
         if search:
             queryset = queryset.filter(name__icontains=search)
-            serializer = AssetNameSerializer(queryset, many=True, context={"request": request})
-            return Response(serializer.data)
 
+        serializer = AssetNameSerializer(queryset, many=True, context={"request": request})
         return Response(serializer.data)
 
     # assets/hd/registration/?ids=1,2,3&search=keyword&status_type=deployable,deployed
