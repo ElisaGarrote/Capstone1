@@ -102,8 +102,16 @@ class ProductViewSet(viewsets.ModelViewSet):
             cache.set("products:map", product_map, 300)
 
         # tickets (no caching - always fetch fresh from external service)
-        tickets = get_tickets_list()
-        ticket_map = {t["asset"]: t for t in tickets if t.get("asset")} if isinstance(tickets, list) else {}
+        try:
+            tickets_response = get_tickets_list()
+            if isinstance(tickets_response, list):
+                ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
+            else:
+                ticket_map = {}  # fallback if external API fails
+        except Exception as e:
+            logger.error(f"Error fetching ticket details: {e}")
+            ticket_map = {}  # fail-soft
+
 
         return {
             "status_map": status_map,
@@ -427,15 +435,15 @@ class AssetViewSet(viewsets.ModelViewSet):
             location_map = {}
 
         # tickets (unresolved) - no caching, always fetch fresh from external service
-        tickets_response = get_tickets_list()
-        # get_tickets_list returns a list (after filtering) or dict with warning
-        if isinstance(tickets_response, list):
-            ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
-        elif isinstance(tickets_response, dict) and not tickets_response.get('warning'):
-            tickets = tickets_response.get('results') or tickets_response.get('value') or []
-            ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
-        else:
-            ticket_map = {}
+        try:
+            tickets_response = get_tickets_list()
+            if isinstance(tickets_response, list):
+                ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
+            else:
+                ticket_map = {}  # fallback if external API fails
+        except Exception as e:
+            logger.error(f"Error fetching ticket details: {e}")
+            ticket_map = {}  # fail-soft
 
         return {
             "status_map": status_map,
