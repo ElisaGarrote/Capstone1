@@ -37,21 +37,35 @@ def get_ticket_by_id(ticket_id):
 def get_employee_details(employee_id):
     """Fetch employee details from Help Desk service via contexts proxy."""
     if not employee_id:
+        logger.warning("get_employee_details called with empty employee_id")
         return None
     
     cache_key = f"helpdesk:employee:{employee_id}"
     cached = cache.get(cache_key)
     if cached:
+        logger.info(f"Employee {employee_id} found in cache")
         return cached
     
     try:
         url = f"{CONTEXTS_SERVICE_URL}/helpdesk-employees/{employee_id}/"
-        response = requests.get(url, timeout=5)
+        logger.info(f"Fetching employee from: {url}")
+        response = requests.get(url, timeout=10)
+        logger.info(f"Employee API response status: {response.status_code}")
+        
         if response.status_code == 200:
             data = response.json()
+            logger.info(f"Employee {employee_id} response data: {data}")
             # Cache for 5 minutes
             cache.set(cache_key, data, 300)
             return data
+        else:
+            logger.warning(f"Employee {employee_id} returned status {response.status_code}")
+            return None
+    except requests.exceptions.Timeout as e:
+        logger.error(f"Timeout fetching employee {employee_id}: {str(e)}")
+        return None
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f"Connection error fetching employee {employee_id}: {str(e)}")
         return None
     except Exception as e:
         logger.error(f"Error fetching employee {employee_id}: {str(e)}")
@@ -126,31 +140,39 @@ def get_due_checkin_report(days_threshold=30):
         checked_out_to_name = None
         checked_out_to_id = checkout.checkout_to
         
+        logger.info(f"Processing checkout {checkout.id}, asset {asset.asset_id}, employee ID: {checked_out_to_id}")
+        
         if checked_out_to_id:
             logger.info(f"Fetching employee details for ID: {checked_out_to_id}")
             checked_out_to = get_employee_details(checked_out_to_id)
             logger.info(f"Employee response for {checked_out_to_id}: {checked_out_to}")
             
-            if checked_out_to:
-                # Handle different response structures from Help Desk service
-                if isinstance(checked_out_to, dict):
+            if checked_out_to and isinstance(checked_out_to, dict):
+                # Check for error/warning in response
+                if checked_out_to.get('error') or checked_out_to.get('warning'):
+                    logger.warning(f"Employee {checked_out_to_id} returned error/warning: {checked_out_to}")
+                else:
                     # Direct response with snake_case fields (first_name, last_name)
                     first_name = checked_out_to.get('first_name', '')
                     middle_name = checked_out_to.get('middle_name', '')
                     last_name = checked_out_to.get('last_name', '')
                     suffix = checked_out_to.get('suffix', '')
                     
+                    logger.info(f"Employee {checked_out_to_id} name fields - first: {first_name}, middle: {middle_name}, last: {last_name}, suffix: {suffix}")
+                    
                     # Build full name
                     name_parts = [first_name, middle_name, last_name, suffix]
                     checked_out_to_name = ' '.join(filter(None, name_parts)).strip()
-                    logger.info(f"Constructed employee name: {checked_out_to_name}")
+                    logger.info(f"Constructed employee name: '{checked_out_to_name}'")
         
         # Priority 2: Try to get from ticket requestor_details as fallback
         if not checked_out_to_name:
             ticket = get_ticket_by_id(checkout.ticket_number)
             if ticket:
                 requestor_details = ticket.get('requestor_details')
-                if requestor_details and isinstance(requestor_details, dict):
+                if requestor_details a
+        
+        logger.info(f"Final checked_out_to_name for asset {asset.asset_id}: '{checked_out_to_name}'")nd isinstance(requestor_details, dict):
                     # Try name field first, then construct from first_name/last_name
                     checked_out_to_name = requestor_details.get('name') or \
                         f"{requestor_details.get('first_name', '')} {requestor_details.get('last_name', '')}".strip()
