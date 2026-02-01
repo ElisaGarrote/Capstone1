@@ -80,29 +80,15 @@ def generate_low_stock_product_notifications():
         return notifications  # Can't determine statuses, skip
     
     # Get products with minimum_quantity > 0
-    products = Product.objects.filter(
-        is_deleted=False, 
-        minimum_quantity__gt=0
-    ).only('id', 'name', 'minimum_quantity')  # Only fetch needed fields
-    
-    # Batch query all asset counts
-    product_ids = [p.id for p in products]
-    if not product_ids:
-        return notifications
-    
-    # Get available counts for all products in one query
-    from django.db.models import Count, Case, When
-    asset_counts = Asset.objects.filter(
-        product_id__in=product_ids,
-        is_deleted=False,
-        status__in=available_status_ids
-    ).values('product_id').annotate(count=Count('id'))
-    
-    # Create lookup dict
-    count_map = {item['product_id']: item['count'] for item in asset_counts}
+    products = Product.objects.filter(is_deleted=False, minimum_quantity__gt=0)
     
     for product in products:
-        available_count = count_map.get(product.id, 0)
+        # Count assets with deployable or pending status
+        available_count = Asset.objects.filter(
+            product=product,
+            is_deleted=False,
+            status__in=available_status_ids
+        ).count()
         
         if available_count <= product.minimum_quantity:
             notifications.append({
@@ -127,12 +113,8 @@ def generate_low_stock_component_notifications():
     notifications = []
     today = timezone.now()
     
-    # Get components with minimum_quantity > 0 where available <= minimum
-    # Do this in one database query instead of iterating
-    components = Component.objects.filter(
-        is_deleted=False, 
-        minimum_quantity__gt=0
-    ).only('id', 'name', 'available_quantity', 'minimum_quantity')
+    # Get components with minimum_quantity > 0
+    components = Component.objects.filter(is_deleted=False, minimum_quantity__gt=0)
     
     for component in components:
         available = component.available_quantity
@@ -265,15 +247,7 @@ def get_all_notifications():
     """
     Collect all notifications from all sources.
     Returns a list of notification dictionaries sorted by creation time (newest first).
-    
-    Results are cached for 15 seconds to balance performance with freshness.
     """
-    # Check cache first - short TTL for near real-time notifications
-    cache_key = "notifications:all_notifications"
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-    
     notifications = []
 
     # Collect from all sources
@@ -286,7 +260,4 @@ def get_all_notifications():
     # Sort by created_at descending (newest first)
     notifications.sort(key=lambda x: x.get('created_at', ''), reverse=True)
 
-    # Cache for 15 seconds - balance between performance and freshness
-    cache.set(cache_key, notifications, 15)
-    
     return notifications

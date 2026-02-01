@@ -1,6 +1,9 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from django.core.cache import cache
+import hashlib
+import json
 
 # Local model imports to avoid circular imports at module import time
 from ..models import Asset, Component, Product, Repair
@@ -9,14 +12,23 @@ from ..models import Asset, Component, Product, Repair
 @api_view(['POST'])
 def check_bulk_usage(request):
     """
-    Bulk usage check for contexts service.
+    Bulk usage check for contexts service with caching.
     Request JSON: {"type": "category|supplier|manufacturer|depreciation|status|location", "ids": [1,2,3], "options": {"sample_limit": 5}}
     Response: {"results": [{"id": <id>, "in_use": bool, "asset_count": int, "asset_ids": [...], "component_ids": [...], "repair_ids": [...]}]}
+    
+    Results are cached for 30 seconds to prevent repeated expensive queries.
     """
     body = request.data or {}
     item_type = body.get('type')
     ids = body.get('ids') or []
     options = body.get('options') or {}
+    
+    # Create cache key from request parameters
+    cache_key = f"usage:bulk:{item_type}:{hashlib.md5(json.dumps(sorted(ids), sort_keys=True).encode()).hexdigest()}"
+    cached_result = cache.get(cache_key)
+    if cached_result is not None:
+        return Response(cached_result)
+    
     try:
         sample_limit = int(options.get('sample_limit', 5))
     except Exception:
@@ -132,4 +144,9 @@ def check_bulk_usage(request):
                 results[key]['in_use'] = True
 
     out = [results.get(int(i), {"id": int(i), "in_use": False, "asset_count": 0, "asset_ids": [], "component_ids": [], "repair_ids": []}) for i in ids]
-    return Response({"results": out})
+    result_data = {"results": out}
+    
+    # Cache for 30 seconds
+    cache.set(cache_key, result_data, 30)
+    
+    return Response(result_data)
