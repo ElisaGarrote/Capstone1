@@ -124,18 +124,26 @@ def get_due_checkin_report(days_threshold=30):
         # Get the employee who has the asset (CHECKED OUT TO)
         # Priority 1: Use checkout.checkout_to which has the employee ID
         checked_out_to_name = None
-        if checkout.checkout_to:
-            checked_out_to = get_employee_details(checkout.checkout_to)
+        checked_out_to_id = checkout.checkout_to
+        
+        if checked_out_to_id:
+            logger.info(f"Fetching employee details for ID: {checked_out_to_id}")
+            checked_out_to = get_employee_details(checked_out_to_id)
+            logger.info(f"Employee response for {checked_out_to_id}: {checked_out_to}")
+            
             if checked_out_to:
                 # Handle different response structures from Help Desk service
                 if isinstance(checked_out_to, dict):
-                    # Check if it's wrapped in an 'employee' key
-                    if checked_out_to.get('employee'):
-                        emp = checked_out_to['employee']
-                        checked_out_to_name = f"{emp.get('firstname', '')} {emp.get('lastname', '')}".strip()
-                    # Or if firstname/lastname are at the top level
-                    elif checked_out_to.get('firstname') or checked_out_to.get('lastname'):
-                        checked_out_to_name = f"{checked_out_to.get('firstname', '')} {checked_out_to.get('lastname', '')}".strip()
+                    # Direct response with snake_case fields (first_name, last_name)
+                    first_name = checked_out_to.get('first_name', '')
+                    middle_name = checked_out_to.get('middle_name', '')
+                    last_name = checked_out_to.get('last_name', '')
+                    suffix = checked_out_to.get('suffix', '')
+                    
+                    # Build full name
+                    name_parts = [first_name, middle_name, last_name, suffix]
+                    checked_out_to_name = ' '.join(filter(None, name_parts)).strip()
+                    logger.info(f"Constructed employee name: {checked_out_to_name}")
         
         # Priority 2: Try to get from ticket requestor_details as fallback
         if not checked_out_to_name:
@@ -143,7 +151,9 @@ def get_due_checkin_report(days_threshold=30):
             if ticket:
                 requestor_details = ticket.get('requestor_details')
                 if requestor_details and isinstance(requestor_details, dict):
-                    checked_out_to_name = requestor_details.get('name') or f"{requestor_details.get('firstname', '')} {requestor_details.get('lastname', '')}".strip()
+                    # Try name field first, then construct from first_name/last_name
+                    checked_out_to_name = requestor_details.get('name') or \
+                        f"{requestor_details.get('first_name', '')} {requestor_details.get('last_name', '')}".strip()
         
         # For checked_out_by, use System as default
         checked_out_by_name = "System"
