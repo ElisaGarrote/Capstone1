@@ -6,8 +6,9 @@ import DepreciationFilter from "../../components/FilterPanel";
 import Footer from "../../components/Footer";
 import dateRelated from "../../utils/dateRelated";
 import { RxPerson } from "react-icons/rx";
-import { IoWarningOutline } from "react-icons/io5";
+import { IoWarningOutline, IoLocationOutline } from "react-icons/io5";
 import assetsAxios from "../../api/assetsAxios";
+import { fetchEmployeeById } from "../../services/integration-help-desk-service";
 
 import "../../styles/reports/DueBackReport.css";
 
@@ -31,6 +32,7 @@ function TableHeader() {
       <th>ASSET</th>
       <th>CHECKED OUT BY</th>
       <th>CHECKED OUT TO</th>
+      <th>LOCATION</th>
       <th>CHECKOUT DATE</th>
       <th>CHECKIN DATE</th>
     </tr>
@@ -76,6 +78,16 @@ function TableItem({ asset }) {
           <RxPerson className="user-icon" />
           <span>{asset.checked_out_to}</span>
         </div>
+      </td>
+      <td>
+        {asset.location ? (
+          <div className="icon-td">
+            <IoLocationOutline style={{ color: '#0D6EFD' }} />
+            <span>{asset.location}</span>
+          </div>
+        ) : (
+          <span>—</span>
+        )}
       </td>
       <td>{dateRelated.formatDate(asset.checkout_date)}</td>
       <td
@@ -125,7 +137,29 @@ export default function DueBackReport() {
         // Fetch assets due within 30 days
         const response = await assetsAxios.get("/due-checkin-report/?days=30");
         if (response.data.success) {
-          setReportData(response.data.data);
+          const data = response.data.data;
+          
+          // Enrich data with employee names from helpdesk service
+          const enrichedData = await Promise.all(
+            data.map(async (item) => {
+              try {
+                // If checked_out_to is "Unknown" and we have an employee ID, fetch the employee name
+                if (item.checked_out_to_id && (item.checked_out_to === 'Unknown' || !item.checked_out_to)) {
+                  const employee = await fetchEmployeeById(item.checked_out_to_id);
+                  return {
+                    ...item,
+                    checked_out_to: employee ? employee.name : `Employee #${item.checked_out_to_id}`,
+                  };
+                }
+                return item;
+              } catch (error) {
+                console.error(`Failed to fetch employee ${item.checked_out_to_id}:`, error);
+                return item;
+              }
+            })
+          );
+          
+          setReportData(enrichedData);
         } else {
           setError("Failed to load report data");
         }
@@ -244,7 +278,7 @@ export default function DueBackReport() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={5} className="no-data-message">
+                        <td colSpan={6} className="no-data-message">
                           {searchTerm ? "No assets found matching your search." : "No assets due for check-in within 30 days."}
                         </td>
                       </tr>

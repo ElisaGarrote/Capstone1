@@ -154,6 +154,22 @@ def get_due_checkin_report(days_threshold=30):
         # For checked_out_by, use System as default
         checked_out_by_name = "System"
         
+        # Get location details
+        location_name = None
+        location_id = checkout.location
+        if checkout.location:
+            location = get_location_details(checkout.location)
+            if location:
+                logger.info(f"Location details for {checkout.location}: {location}")
+                if isinstance(location, dict):
+                    # Extract location name from various possible structures
+                    location_name = (
+                        location.get('name') or 
+                        location.get('display_name') or 
+                        location.get('city') or 
+                        None
+                    )
+        
         report_data.append({
             'checkout_id': checkout.id,
             'asset_db_id': asset.id,  # Database ID for navigation
@@ -168,7 +184,8 @@ def get_due_checkin_report(days_threshold=30):
             'days_until_due': days_until_due,
             'status': status,
             'ticket_number': checkout.ticket_number,
-            'location_id': checkout.location
+            'location_id': location_id,
+            'location': location_name  # Location name for display
         })
     
     return report_data
