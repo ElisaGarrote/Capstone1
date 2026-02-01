@@ -1,7 +1,6 @@
 // Use contexts API proxy to avoid mixed content (HTTP/HTTPS) issues
 // The contexts service proxies requests to the external Help Desk service
 import contextsAxios from "../api/contextsAxios";
-import helpDeskAxios from "../api/integrationHelpDesk";
 
 /* ===============================
           LOCATIONS CRUD
@@ -60,54 +59,34 @@ export async function fetchAllEmployees() {
 
 // GET single employee by ID (via contexts proxy)
 export async function fetchEmployeeById(id) {
-  const res = await contextsAxios.get(`helpdesk-employees/${id}/`);
-  const emp = res.data;
-
-  if (!emp) {
-    return null;
-  }
-
-  return {
-    id: emp.id,
-    name: [emp.first_name, emp.middle_name, emp.last_name, emp.suffix].filter(Boolean).join(" "),
-    email: emp.email,
-    username: emp.username,
-    phone: emp.phone_number,
-  };
-}
-
-// GET single employee by ID (direct from helpdesk API)
-// Use this when you need to fetch from http://165.22.247.50:8003/api/v1/hdts/employees/{id}/
-export async function fetchEmployeeByIdDirect(id) {
   try {
-    console.log(`Fetching employee ${id} from helpdesk API...`);
-    const res = await helpDeskAxios.get(`v1/hdts/employees/${id}/`);
-    console.log(`Employee ${id} response:`, res.data);
+    const res = await contextsAxios.get(`helpdesk-employees/${id}/`);
     const emp = res.data;
 
-    if (!emp) {
-      console.warn(`No employee data found for ID ${id}`);
+    console.log(`fetchEmployeeById(${id}) response:`, emp);
+
+    if (!emp || typeof emp !== 'object') {
+      console.warn(`Invalid employee data for ID ${id}:`, emp);
       return null;
     }
 
-    const fullName = [emp.first_name, emp.middle_name, emp.last_name, emp.suffix]
-      .filter(Boolean)
-      .join(" ");
-    
-    console.log(`Employee ${id} name: ${fullName}`);
+    // Check if the response has the expected fields
+    if (!emp.first_name && !emp.last_name) {
+      console.warn(`Employee ${id} missing name fields:`, emp);
+      return null;
+    }
 
     return {
       id: emp.id,
-      name: fullName || `Employee #${id}`,
+      name: [emp.first_name, emp.middle_name, emp.last_name, emp.suffix].filter(Boolean).join(" "),
       email: emp.email,
       username: emp.username,
       phone: emp.phone_number,
     };
   } catch (error) {
-    console.error(`Error fetching employee ${id}:`, error);
+    console.error(`Error fetching employee ${id}:`, error.response?.data || error.message);
     return null;
   }
 }
-
 // NOTE: Locations are fetched from external Help Desk service (http://165.22.247.50:5001/api/locations/)
 // Location creation is not available - locations must be managed directly in the Help Desk system
