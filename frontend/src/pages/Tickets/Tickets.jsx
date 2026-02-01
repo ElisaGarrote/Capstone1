@@ -276,14 +276,20 @@ const Tickets = () => {
 
   const handleViewClick = async (ticket) => {
     try {
-      // Fetch asset name using the displayed asset ID
       let assetName = "Unknown";
+
       if (ticket.asset) {
-        const assetData = await fetchAssetNames({ asset_ids: [ticket.asset] });
+        const isNumeric = !isNaN(ticket.asset); // true if number
+        const params = isNumeric
+          ? { ids: [Number(ticket.asset)] }     // pass as numeric ID
+          : { asset_ids: [ticket.asset] };     // pass as asset_id string
+
+        const assetData = await fetchAssetNames(params);
+        console.log("Asset data:", assetData);
         assetName = assetData?.[0]?.name || "Unknown";
       }
 
-      // Build data array for the modal
+      // Build data array for modal
       const data = [
         { label: "Ticket Number", value: ticket.ticket_number },
         { label: "Subject", value: ticket.subject || "N/A" },
@@ -293,22 +299,14 @@ const Tickets = () => {
         { label: "Asset", value: `${ticket.asset} - ${assetName}` },
       ];
 
-      // Add checkout dates if this is a checkout ticket
-      if (ticket.checkout_date) {
-        data.push({ label: "Checkout Date", value: ticket.checkout_date });
-      }
-      if (ticket.return_date) {
-        data.push({ label: "Return Date", value: ticket.return_date });
-      }
-
-      // Add checkin date if this is a checkin ticket
-      if (ticket.checkin_date) {
-        data.push({ label: "Checkin Date", value: ticket.checkin_date });
-      }
+      if (ticket.checkout_date) data.push({ label: "Checkout Date", value: ticket.checkout_date });
+      if (ticket.return_date) data.push({ label: "Return Date", value: ticket.return_date });
+      if (ticket.checkin_date) data.push({ label: "Checkin Date", value: ticket.checkin_date });
 
       setSelectedTicket(ticket);
       setViewTicketData(data);
       setIsViewModalOpen(true);
+
     } catch (error) {
       console.error("Error fetching ticket details:", error);
       setErrorMessage("Failed to load ticket details.");

@@ -59,45 +59,26 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     # Build context maps for serializers
     def _build_context_maps(self):
-        # categories
-        category_map = cache.get("categories:map")
-        if not category_map:
-            categories = get_category_names()
-            if isinstance(categories, list):
-                category_map = {c['id']: c for c in categories}
-            else:
-                category_map = {}
-            cache.set("categories:map", category_map, 300)
+        """Return fresh maps without caching."""
+        category_map = {}
+        categories = get_category_names()
+        if isinstance(categories, list):
+            category_map = {c['id']: c for c in categories}
 
-        # manufacturers
-        manufacturer_map = cache.get("manufacturers:map")
-        if not manufacturer_map:
-            manufacturers = get_manufacturer_names()
-            if isinstance(manufacturers, list):
-                manufacturer_map = {m['id']: m for m in manufacturers}
-            else:
-                manufacturer_map = {}
-            cache.set("manufacturers:map", manufacturer_map, 300)
+        manufacturer_map = {}
+        manufacturers = get_manufacturer_names()
+        if isinstance(manufacturers, list):
+            manufacturer_map = {m['id']: m for m in manufacturers}
 
-        # suppliers
-        supplier_map = cache.get("suppliers:map")
-        if not supplier_map:
-            suppliers = get_supplier_names()
-            if isinstance(suppliers, list):
-                supplier_map = {s['id']: s for s in suppliers}
-            else:
-                supplier_map = {}
-            cache.set("suppliers:map", supplier_map, 300)
+        supplier_map = {}
+        suppliers = get_supplier_names()
+        if isinstance(suppliers, list):
+            supplier_map = {s['id']: s for s in suppliers}
 
-        # depreciations
-        depreciation_map = cache.get("depreciations:map")
-        if not depreciation_map:
-            depreciations = get_depreciation_names()
-            if isinstance(depreciations, list):
-                depreciation_map = {d['id']: d for d in depreciations}
-            else:
-                depreciation_map = {}
-            cache.set("depreciations:map", depreciation_map, 300)
+        depreciation_map = {}
+        depreciations = get_depreciation_names()
+        if isinstance(depreciations, list):
+            depreciation_map = {d['id']: d for d in depreciations}
 
         return {
             "category_map": category_map,
@@ -109,15 +90,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     def _build_asset_context_maps(self):
         """Build context maps needed for nested AssetListSerializer in ProductInstanceSerializer."""
         # statuses
-        status_map = cache.get("statuses:map")
-        if not status_map:
-            statuses = get_status_names_assets()
-            # Handle warning dict or non-list response
-            if isinstance(statuses, list):
-                status_map = {s['id']: s for s in statuses}
-            else:
-                status_map = {}
-            cache.set("statuses:map", status_map, 300)
+        # statuses - always fresh
+        statuses = get_status_names_assets()
+        status_map = {s['id']: s for s in statuses} if isinstance(statuses, list) else {}
 
         # products (for product_details - though in product view we already know the product)
         product_map = cache.get("products:map")
@@ -128,11 +103,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
         # tickets (no caching - always fetch fresh from external service)
         tickets = get_tickets_list()
-        # Handle warning dict or non-list response
-        if isinstance(tickets, list):
-            ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
-        else:
-            ticket_map = {}
+        ticket_map = {t["asset"]: t for t in tickets if t.get("asset")} if isinstance(tickets, list) else {}
 
         return {
             "status_map": status_map,
@@ -153,12 +124,12 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     
     def list(self, request, *args, **kwargs):
-        quesryset = self.get_queryset()
+        queryset = self.get_queryset()
 
         context_maps = self._build_context_maps()
         return self.cached_response(
             "products:list",
-            quesryset,
+            queryset,
             self.get_serializer_class(),
             many=True,
             context={**context_maps, 'request': request}
@@ -179,7 +150,6 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def invalidate_product_cache(self, product_id):
         cache.delete("products:list")
-        cache.delete("products:names")
         cache.delete("products:asset-registration")
         cache.delete(f"products:detail:{product_id}")
 
@@ -238,25 +208,14 @@ class ProductViewSet(viewsets.ModelViewSet):
             except ValueError:
                 return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Filter by search if provided
         if search:
             queryset = queryset.filter(name__icontains=search)
 
-        # Don't cache search results - they need to be real-time for clone name generation
-        if search:
-            serializer = ProductNameSerializer(queryset, many=True)
-            return Response(serializer.data)
+        # Always return fresh, no caching
+        serializer = ProductNameSerializer(queryset, many=True)
+        return Response(serializer.data)
 
-        # Build a cache key specific for this set of IDs
-        cache_key = "products:names"
-        if ids_param:
-            cache_key += f":{','.join(map(str, ids))}"
-
-        return self.cached_response(
-            cache_key,
-            queryset,
-            ProductNameSerializer,
-            many=True
-    )
     
     # Bulk edit
     # Receive list of IDs and partially or fully update all products with the same data, else return error
@@ -370,7 +329,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                 })
         
         cache.delete("products:list")
-        cache.delete("products:names")
         cache.delete("products:asset-registration")
 
         return Response({
@@ -446,15 +404,12 @@ class AssetViewSet(viewsets.ModelViewSet):
     
     def _build_asset_context_maps(self):
         # statuses
-        status_map = cache.get("statuses:map")
-        if not status_map:
-            statuses = get_status_names_assets()
-            # Handle warning dict or non-list response
-            if isinstance(statuses, list):
-                status_map = {s['id']: s for s in statuses}
-            else:
-                status_map = {}
-            cache.set("statuses:map", status_map, 300)
+        statuses = get_status_names_assets()
+        # Handle warning dict or non-list response
+        if isinstance(statuses, list):
+            status_map = {s['id']: s for s in statuses}
+        else:
+            status_map = {}
 
         # products
         product_map = cache.get("products:map")
@@ -465,15 +420,11 @@ class AssetViewSet(viewsets.ModelViewSet):
             cache.set("products:map", product_map, 300)
 
         # locations (from Help Desk service via contexts proxy)
-        location_map = cache.get("helpdesk:locations:map")
-        if not location_map:
-            locations = get_locations_list()
-            # Handle warning dict or non-list response
-            if isinstance(locations, list):
-                location_map = {l['id']: l for l in locations}
-            else:
-                location_map = {}
-            cache.set("helpdesk:locations:map", location_map, 300)
+        locations = get_locations_list()
+        if isinstance(locations, list):
+            location_map = {l['id']: l for l in locations}
+        else:
+            location_map = {}
 
         # tickets (unresolved) - no caching, always fetch fresh from external service
         tickets_response = get_tickets_list()
@@ -506,15 +457,21 @@ class AssetViewSet(viewsets.ModelViewSet):
     
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        
+
         context_maps = self._build_asset_context_maps()
+
+        cache_key = "assets:list"
+        if request.query_params.get("show_deleted") == "true":
+            cache_key += ":show_deleted"
+
         return self.cached_response(
-            "assets:list",
+            cache_key,
             queryset,
             self.get_serializer_class(),
             many=True,
             context={**context_maps, 'request': request}
         )
+
     
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -531,8 +488,8 @@ class AssetViewSet(viewsets.ModelViewSet):
     
     def invalidate_asset_cache(self, asset_id):
         cache.delete("assets:list")
+        cache.delete("assets:list:show_deleted")
         cache.delete(f"assets:detail:{asset_id}")
-        cache.delete("assets:names")
         # Note: tickets are not cached anymore - always fetched fresh from external service
 
     @action(detail=True, methods=['post'], url_path='invalidate-cache')
@@ -667,6 +624,8 @@ class AssetViewSet(viewsets.ModelViewSet):
             asset = Asset.objects.get(pk=pk, is_deleted=True)
             asset.is_deleted = False
             asset.save()
+            cache.delete("assets:list")
+            cache.delete("assets:list:show_deleted")
             cache.delete(f"assets:detail:{asset.id}")
             serializer = self.get_serializer(asset)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -768,53 +727,37 @@ class AssetViewSet(viewsets.ModelViewSet):
     # Asset names
     @action(detail=False, methods=["get"], url_path='names')
     def names(self, request):
-        """
-        Return assets with only id, asset_id, name, and image.
-        Optional query params:
-          - ?ids=1,2,3 (database IDs)
-          - ?asset_ids=AST-001,AST-002 (display asset_ids)
-          - ?search=keyword
-        """
         ids_param = request.query_params.get("ids")
         asset_ids_param = request.query_params.get("asset_ids")
         search = request.query_params.get("search")
+
         queryset = self.get_queryset()
 
-        # Filter by database IDs if provided (integers)
+        filters = Q()
+
         if ids_param:
             try:
                 ids = [int(i) for i in ids_param.split(",") if i.strip().isdigit()]
-                queryset = queryset.filter(id__in=ids)
+                filters |= Q(id__in=ids)
             except ValueError:
-                return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "Invalid IDs provided."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        # Filter by display asset_ids if provided (strings like "AST-20260110-00030-43A7")
         if asset_ids_param:
             asset_ids = [aid.strip() for aid in asset_ids_param.split(",") if aid.strip()]
-            queryset = queryset.filter(asset_id__in=asset_ids)
+            filters |= Q(asset_id__in=asset_ids)
+
+        if filters:
+            queryset = queryset.filter(filters)
 
         if search:
             queryset = queryset.filter(name__icontains=search)
-
-        # Don't cache search results - they need to be real-time for clone name generation
-        if search:
-            serializer = AssetNameSerializer(queryset, many=True, context={'request': request})
+            serializer = AssetNameSerializer(queryset, many=True, context={"request": request})
             return Response(serializer.data)
 
-        # Build a cache key specific for this set of IDs
-        cache_key = "assets:names"
-        if ids_param:
-            cache_key += f":ids:{','.join(map(str, ids_param.split(',')))}"
-        if asset_ids_param:
-            cache_key += f":asset_ids:{asset_ids_param}"
-
-        return self.cached_response(
-            cache_key,
-            queryset,
-            AssetNameSerializer,
-            many=True,
-            context={'request': request}
-        )
+        return Response(serializer.data)
 
     # assets/hd/registration/?ids=1,2,3&search=keyword&status_type=deployable,deployed
     # assets/hd/registration/?category=5
@@ -881,17 +824,7 @@ class AssetViewSet(viewsets.ModelViewSet):
             )
             return Response(serializer.data)
 
-        cache_key = "assets:hd:registration"
-        if ids_param:
-            cache_key += f":{','.join(map(str, ids))}"
-
-        return self.cached_response(
-            cache_key,
-            queryset,
-            AssetHdRegistrationSerializer,
-            many=True,
-            context={'request': request, 'status_map': status_map}
-        )
+        return Response(serializer.data)
 
     # Bulk edit
     @action(detail=False, methods=["patch"], url_path='bulk-edit')
@@ -1002,7 +935,7 @@ class AssetViewSet(viewsets.ModelViewSet):
                 })
 
         cache.delete("assets:list")
-        cache.delete("assets:names")
+        cache.delete("assets:list:show_deleted")
 
         return Response({
             "updated": updated,
@@ -1070,6 +1003,7 @@ class AssetViewSet(viewsets.ModelViewSet):
             deleted_count += 1
 
         cache.delete("assets:list")
+        cache.delete("assets:list:show_deleted")
 
         return Response(
             {"detail": f"Successfully deleted {deleted_count} asset(s)."},
