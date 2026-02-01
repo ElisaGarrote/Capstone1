@@ -290,6 +290,80 @@
     background-color: var(--primary-color-hover);
 }
 
+.registration .upload-image-btn.disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.registration .upload-image-btn.disabled:hover {
+    background-color: #cccccc;
+}
+
+.registration .image-management-section {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.registration .clear-file-btn {
+    padding: 0.5rem 1rem;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: 0.3s ease;
+}
+
+.registration .clear-file-btn:hover {
+    background-color: #da190b;
+}
+
+.registration .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.registration .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9375rem;
+    color: #333;
+    cursor: pointer;
+    user-select: none;
+}
+
+.registration .checkbox-label input[type="checkbox"] {
+    width: 1.125rem;
+    height: 1.125rem;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+.registration .checkbox-label input[type="checkbox"]:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.registration .remove-image-indicator {
+    display: block;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: #fff3cd;
+    border-left: 3px solid #ffc107;
+    border-radius: 4px;
+}
+
+.registration .remove-image-indicator small {
+    color: #856404;
+    font-weight: 500;
+}
+
 .registration .file-size-info {
     display: block;
     margin-top: 0.5rem;
@@ -481,14 +555,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     background-color: var(--primary-color);
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    padding: 0;
 }
 
 .add-btn:hover {
@@ -581,7 +656,6 @@
     left: 26px;
 }
 
-/* Checkout Info Card Styles */
 .checkout-info-card {
     display: flex;
     flex-direction: column;

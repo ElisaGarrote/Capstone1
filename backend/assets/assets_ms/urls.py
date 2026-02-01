@@ -5,6 +5,7 @@ from .api.contexts import *
 from .views import *
 from .api.reports import DepreciationReportAPIView, AssetReportAPIView, ActivityReportAPIView, ActivityReportSummaryAPIView, EoLWarrantyReportAPIView, UpcomingEoLReportAPIView
 from .api.reports import DepreciationReportAPIView, AssetReportAPIView, ActivityReportAPIView, ActivityReportSummaryAPIView, EoLWarrantyReportAPIView, UpcomingEoLReportAPIView, ReachedEoLReportAPIView, ExpiredWarrantyReportAPIView, ExpiringWarrantyReportAPIView
+from .api.notifications import NotificationsAPIView
 
 router = DefaultRouter()
 router.register('products', ProductViewSet, basename='categories')
@@ -20,6 +21,7 @@ router.register('audit-files', AuditFileViewSet, basename='audit-files')
 router.register('repairs', RepairViewSet, basename='repair')
 router.register('dashboard', DashboardViewSet, basename='dashboard')
 router.register('report-templates', AssetReportTemplateViewSet, basename='report-templates')
+router.register('due-checkin-report', DueCheckinReportViewSet, basename='due-checkin-report')
 router.register('activity-logs', ActivityLogViewSet, basename='activity-logs')
 
 urlpatterns = [
@@ -58,5 +60,10 @@ urlpatterns = [
     path("reports/reached-eol/", ReachedEoLReportAPIView.as_view(), name="reached-eol-report"),
     path("reports/upcoming-eol/", UpcomingEoLReportAPIView.as_view(), name="upcoming-eol-report"),
 
+    # Notifications endpoint
+    path("notifications/", NotificationsAPIView.as_view(), name="notifications"),
+
     path("", include(router.urls)),
+    path("api/contexts/check-usage/supplier/<int:pk>/", check_supplier_usage, name="api-check-supplier-usage"),
+    path("api/contexts/check-usage/depreciation/<int:pk>/", check_depreciation_usage, name="api-check-depreciation-usage"),
 ]

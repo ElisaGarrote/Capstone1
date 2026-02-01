@@ -263,39 +263,42 @@ const Tickets = () => {
 
   const handleViewClick = async (ticket) => {
     try {
-      // Fetch asset name using the displayed asset ID
-      let assetName = "Unknown";
-      if (ticket.asset) {
-        const assetData = await fetchAssetNames({ asset_ids: [ticket.asset] });
-        assetName = assetData?.[0]?.name || "Unknown";
+      let assetName = "N/A"; // default if null
+
+      if (ticket.asset !== null && ticket.asset !== undefined) {
+        if (ticket.asset === "") {
+          assetName = "Unknown";
+        } else {
+          const isNumeric = !isNaN(ticket.asset);
+          const params = isNumeric
+            ? { ids: [Number(ticket.asset)] }     // numeric ID
+            : { asset_ids: [ticket.asset] };     // asset_id string
+
+          const assetData = await fetchAssetNames(params);
+          const name = assetData?.[0]?.name || "Unknown";
+
+          assetName = isNumeric ? name : `${ticket.asset} - ${name}`;
+        }
       }
 
-      // Build data array for the modal
+      // Build data array for modal
       const data = [
         { label: "Ticket Number", value: ticket.ticket_number },
         { label: "Subject", value: ticket.subject || "N/A" },
         { label: "Issue Type", value: ticket.issue_type || "N/A" },
         { label: "Location", value: ticket.location_details?.name || "Unknown" },
         { label: "Requestor", value: ticket.requestor_details?.name || "Unknown" },
-        { label: "Asset", value: `${ticket.asset} - ${assetName}` },
+        { label: "Asset", value: assetName },
       ];
 
-      // Add checkout dates if this is a checkout ticket
-      if (ticket.checkout_date) {
-        data.push({ label: "Checkout Date", value: ticket.checkout_date });
-      }
-      if (ticket.return_date) {
-        data.push({ label: "Return Date", value: ticket.return_date });
-      }
-
-      // Add checkin date if this is a checkin ticket
-      if (ticket.checkin_date) {
-        data.push({ label: "Checkin Date", value: ticket.checkin_date });
-      }
+      if (ticket.checkout_date) data.push({ label: "Checkout Date", value: ticket.checkout_date });
+      if (ticket.return_date) data.push({ label: "Return Date", value: ticket.return_date });
+      if (ticket.checkin_date) data.push({ label: "Checkin Date", value: ticket.checkin_date });
 
       setSelectedTicket(ticket);
       setViewTicketData(data);
       setIsViewModalOpen(true);
+
     } catch (error) {
       console.error("Error fetching ticket details:", error);
       setErrorMessage("Failed to load ticket details.");
@@ -364,10 +367,12 @@ const Tickets = () => {
     }
 
     if (ticket.isCheckInOrOut === "Check-In") {
+      console.log("Navigating to check-in from tickets page for ticket:", ticket);
       navigate(`/assets/check-in/${assetId}`, {
         state: { ticket, fromAsset: false },
       });
     } else {
+      console.log("Navigating to check-out from tickets page for ticket:", ticket);
       navigate(`/assets/check-out/${assetId}`, {
         state: { ticket, fromAsset: false },
       });

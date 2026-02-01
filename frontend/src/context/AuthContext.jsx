@@ -218,7 +218,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: err };
       }
     },
-    [fetchUserProfile]
+    [fetchUserProfile],
   );
 
   // Central auth checker (single source of truth)
@@ -279,19 +279,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (!user) return;
 
-    const interval = setInterval(() => {
-      const authApi = createAuthRequest();
-      authApi
-        .post(TOKEN_REFRESH_URL)
-        .then((res) => {
-          if (res.data?.access) {
-            setAccessToken(res.data.access);
-          }
-        })
-        .catch(() => {
-          checkAuthStatus();
-        });
-    }, 10 * 60 * 1000); // Refresh every 10 minutes
+    const interval = setInterval(
+      () => {
+        const authApi = createAuthRequest();
+        authApi
+          .post(TOKEN_REFRESH_URL)
+          .then((res) => {
+            if (res.data?.access) {
+              setAccessToken(res.data.access);
+            }
+          })
+          .catch(() => {
+            checkAuthStatus();
+          });
+      },
+      10 * 60 * 1000,
+    ); // Refresh every 10 minutes
 
     return () => clearInterval(interval);
   }, [user, checkAuthStatus]);

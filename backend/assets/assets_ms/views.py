@@ -25,6 +25,7 @@ from assets_ms.services.activity_logger import (
     log_audit_activity,
     log_repair_activity,
 )
+from assets_ms.services.due_checkin_report import get_due_checkin_report, get_due_checkin_count
 
 logger = logging.getLogger(__name__)
 
@@ -74,45 +75,26 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     # Build context maps for serializers
     def _build_context_maps(self):
-        # categories
-        category_map = cache.get("categories:map")
-        if not category_map:
-            categories = get_category_names()
-            if isinstance(categories, list):
-                category_map = {c['id']: c for c in categories}
-            else:
-                category_map = {}
-            cache.set("categories:map", category_map, 300)
+        """Return fresh maps without caching."""
+        category_map = {}
+        categories = get_category_names()
+        if isinstance(categories, list):
+            category_map = {c['id']: c for c in categories}
 
-        # manufacturers
-        manufacturer_map = cache.get("manufacturers:map")
-        if not manufacturer_map:
-            manufacturers = get_manufacturer_names()
-            if isinstance(manufacturers, list):
-                manufacturer_map = {m['id']: m for m in manufacturers}
-            else:
-                manufacturer_map = {}
-            cache.set("manufacturers:map", manufacturer_map, 300)
+        manufacturer_map = {}
+        manufacturers = get_manufacturer_names()
+        if isinstance(manufacturers, list):
+            manufacturer_map = {m['id']: m for m in manufacturers}
 
-        # suppliers
-        supplier_map = cache.get("suppliers:map")
-        if not supplier_map:
-            suppliers = get_supplier_names()
-            if isinstance(suppliers, list):
-                supplier_map = {s['id']: s for s in suppliers}
-            else:
-                supplier_map = {}
-            cache.set("suppliers:map", supplier_map, 300)
+        supplier_map = {}
+        suppliers = get_supplier_names()
+        if isinstance(suppliers, list):
+            supplier_map = {s['id']: s for s in suppliers}
 
-        # depreciations
-        depreciation_map = cache.get("depreciations:map")
-        if not depreciation_map:
-            depreciations = get_depreciation_names()
-            if isinstance(depreciations, list):
-                depreciation_map = {d['id']: d for d in depreciations}
-            else:
-                depreciation_map = {}
-            cache.set("depreciations:map", depreciation_map, 300)
+        depreciation_map = {}
+        depreciations = get_depreciation_names()
+        if isinstance(depreciations, list):
+            depreciation_map = {d['id']: d for d in depreciations}
 
         return {
             "category_map": category_map,
@@ -124,15 +106,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     def _build_asset_context_maps(self):
         """Build context maps needed for nested AssetListSerializer in ProductInstanceSerializer."""
         # statuses
-        status_map = cache.get("statuses:map")
-        if not status_map:
-            statuses = get_status_names_assets()
-            # Handle warning dict or non-list response
-            if isinstance(statuses, list):
-                status_map = {s['id']: s for s in statuses}
-            else:
-                status_map = {}
-            cache.set("statuses:map", status_map, 300)
+        # statuses - always fresh
+        statuses = get_status_names_assets()
+        status_map = {s['id']: s for s in statuses} if isinstance(statuses, list) else {}
 
         # products (for product_details - though in product view we already know the product)
         product_map = cache.get("products:map")
@@ -142,12 +118,16 @@ class ProductViewSet(viewsets.ModelViewSet):
             cache.set("products:map", product_map, 300)
 
         # tickets (no caching - always fetch fresh from external service)
-        tickets = get_tickets_list()
-        # Handle warning dict or non-list response
-        if isinstance(tickets, list):
-            ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
-        else:
-            ticket_map = {}
+        try:
+            tickets_response = get_tickets_list()
+            if isinstance(tickets_response, list):
+                ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
+            else:
+                ticket_map = {}  # fallback if external API fails
+        except Exception as e:
+            logger.error(f"Error fetching ticket details: {e}")
+            ticket_map = {}  # fail-soft
+
 
         return {
             "status_map": status_map,
@@ -168,12 +148,12 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     
     def list(self, request, *args, **kwargs):
-        quesryset = self.get_queryset()
+        queryset = self.get_queryset()
 
         context_maps = self._build_context_maps()
         return self.cached_response(
             "products:list",
-            quesryset,
+            queryset,
             self.get_serializer_class(),
             many=True,
             context={**context_maps, 'request': request}
@@ -194,7 +174,6 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def invalidate_product_cache(self, product_id):
         cache.delete("products:list")
-        cache.delete("products:names")
         cache.delete("products:asset-registration")
         cache.delete(f"products:detail:{product_id}")
 
@@ -215,10 +194,15 @@ class ProductViewSet(viewsets.ModelViewSet):
         self.invalidate_product_cache(instance.id)
 
     def perform_update(self, serializer):
+        remove_image = self.request.data.get("remove_image") == "true"
+
+        # If remove_image is true, exclude image from update
+        if remove_image:
+            serializer.validated_data.pop('image', None)
+
         instance = serializer.save()
 
         # Handle image removal
-        remove_image = self.request.data.get("remove_image") == "true"
         if remove_image and instance.image:
             instance.image.delete(save=False)
             instance.image = None
@@ -248,25 +232,14 @@ class ProductViewSet(viewsets.ModelViewSet):
             except ValueError:
                 return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Filter by search if provided
         if search:
             queryset = queryset.filter(name__icontains=search)
 
-        # Don't cache search results - they need to be real-time for clone name generation
-        if search:
-            serializer = ProductNameSerializer(queryset, many=True)
-            return Response(serializer.data)
+        # Always return fresh, no caching
+        serializer = ProductNameSerializer(queryset, many=True)
+        return Response(serializer.data)
 
-        # Build a cache key specific for this set of IDs
-        cache_key = "products:names"
-        if ids_param:
-            cache_key += f":{','.join(map(str, ids))}"
-
-        return self.cached_response(
-            cache_key,
-            queryset,
-            ProductNameSerializer,
-            many=True
-    )
     
     # Bulk edit
     # Receive list of IDs and partially or fully update all products with the same data, else return error
@@ -332,6 +305,13 @@ class ProductViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Prevent both uploading and removing images simultaneously
+        if image_content and remove_image:
+            return Response(
+                {"detail": "Cannot upload and remove images simultaneously. Choose one action."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         products = Product.objects.filter(id__in=ids, is_deleted=False)
 
         updated, failed = [], []
@@ -373,7 +353,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                 })
         
         cache.delete("products:list")
-        cache.delete("products:names")
         cache.delete("products:asset-registration")
 
         return Response({
@@ -394,23 +373,29 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
         products = Product.objects.filter(id__in=ids, is_deleted=False)
-        failed = []
 
+        # Check for products with active assets first
         for product in products:
-            try:
-                self.perform_destroy(product)
-            except ValidationError as e:
-                failed.append({"id": product.id, "error": str(e.detail)})
-        
+            if product.product_assets.filter(is_deleted=False).exists():
+                return Response(
+                    {"detail": f"Cannot delete product '{product.name}', it's being used by one or more active assets."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Perform soft delete
+        deleted_count = 0
+        for product in products:
+            product.is_deleted = True
+            product.save()
+            self.invalidate_product_cache(product.id)
+            deleted_count += 1
+
         cache.delete("products:list")
 
-        if failed:
-            return Response({
-                "detail": "Some products could not be deleted. Please check if they are assigned to active assets before trying again.",
-                "failed": failed
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"detail": "Products soft-deleted successfully."}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": f"Successfully deleted {deleted_count} product(s)."},
+            status=status.HTTP_200_OK
+        )
 
     @action(detail=False, methods=["get"], url_path='asset-registration')
     def asset_registration(self, request):
@@ -443,15 +428,12 @@ class AssetViewSet(viewsets.ModelViewSet):
     
     def _build_asset_context_maps(self):
         # statuses
-        status_map = cache.get("statuses:map")
-        if not status_map:
-            statuses = get_status_names_assets()
-            # Handle warning dict or non-list response
-            if isinstance(statuses, list):
-                status_map = {s['id']: s for s in statuses}
-            else:
-                status_map = {}
-            cache.set("statuses:map", status_map, 300)
+        statuses = get_status_names_assets()
+        # Handle warning dict or non-list response
+        if isinstance(statuses, list):
+            status_map = {s['id']: s for s in statuses}
+        else:
+            status_map = {}
 
         # products
         product_map = cache.get("products:map")
@@ -462,26 +444,22 @@ class AssetViewSet(viewsets.ModelViewSet):
             cache.set("products:map", product_map, 300)
 
         # locations (from Help Desk service via contexts proxy)
-        location_map = cache.get("helpdesk:locations:map")
-        if not location_map:
-            locations = get_locations_list()
-            # Handle warning dict or non-list response
-            if isinstance(locations, list):
-                location_map = {l['id']: l for l in locations}
-            else:
-                location_map = {}
-            cache.set("helpdesk:locations:map", location_map, 300)
+        locations = get_locations_list()
+        if isinstance(locations, list):
+            location_map = {l['id']: l for l in locations}
+        else:
+            location_map = {}
 
         # tickets (unresolved) - no caching, always fetch fresh from external service
-        tickets_response = get_tickets_list()
-        # get_tickets_list returns a list (after filtering) or dict with warning
-        if isinstance(tickets_response, list):
-            ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
-        elif isinstance(tickets_response, dict) and not tickets_response.get('warning'):
-            tickets = tickets_response.get('results') or tickets_response.get('value') or []
-            ticket_map = {t["asset"]: t for t in tickets if t.get("asset")}
-        else:
-            ticket_map = {}
+        try:
+            tickets_response = get_tickets_list()
+            if isinstance(tickets_response, list):
+                ticket_map = {t["asset"]: t for t in tickets_response if t.get("asset")}
+            else:
+                ticket_map = {}  # fallback if external API fails
+        except Exception as e:
+            logger.error(f"Error fetching ticket details: {e}")
+            ticket_map = {}  # fail-soft
 
         return {
             "status_map": status_map,
@@ -503,15 +481,21 @@ class AssetViewSet(viewsets.ModelViewSet):
     
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        
+
         context_maps = self._build_asset_context_maps()
+
+        cache_key = "assets:list"
+        if request.query_params.get("show_deleted") == "true":
+            cache_key += ":show_deleted"
+
         return self.cached_response(
-            "assets:list",
+            cache_key,
             queryset,
             self.get_serializer_class(),
             many=True,
             context={**context_maps, 'request': request}
         )
+
     
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -528,8 +512,8 @@ class AssetViewSet(viewsets.ModelViewSet):
     
     def invalidate_asset_cache(self, asset_id):
         cache.delete("assets:list")
+        cache.delete("assets:list:show_deleted")
         cache.delete(f"assets:detail:{asset_id}")
-        cache.delete("assets:names")
         # Note: tickets are not cached anymore - always fetched fresh from external service
 
     @action(detail=True, methods=['post'], url_path='invalidate-cache')
@@ -544,9 +528,30 @@ class AssetViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         errors = []
 
-        # Check for active checkouts (no checkin yet)
+        # Check for active asset checkouts (no checkin yet)
         if instance.asset_checkouts.filter(asset_checkin__isnull=True).exists():
             errors.append("This asset is currently checked out and not yet checked in. Please check in the asset before deleting it or perform a check-in and delete checkout.")
+
+        # Check for active component checkouts (not fully returned)
+        active_component_checkouts = instance.checkout_to.filter(is_deleted=False).exclude(
+            component_checkins__quantity__gte=models.F('quantity')
+        ).distinct()
+        if active_component_checkouts.exists():
+            component_names = ', '.join([cc.component.name for cc in active_component_checkouts])
+            errors.append(f"This asset has components checked out that are not fully returned: {component_names}. Please return all components before deleting this asset.")
+
+        # Check for pending audit schedules (audit schedules without corresponding audits)
+        pending_audits = instance.audit_schedules.filter(is_deleted=False, audit__isnull=True)
+        if pending_audits.exists():
+            errors.append(f"This asset has {pending_audits.count()} pending audit schedule(s) that have not been performed yet. Please complete all audits before deleting this asset.")
+
+        # Check for tickets referencing this asset
+        tickets_response = get_tickets_list()
+        if isinstance(tickets_response, list):
+            referencing_tickets = [t for t in tickets_response if t.get("asset") == instance.id]
+            if referencing_tickets:
+                ticket_ids = ', '.join([str(t.get('id')) for t in referencing_tickets])
+                errors.append(f"This asset has {len(referencing_tickets)} ticket(s) referencing it (IDs: {ticket_ids}). Please resolve or reassign these tickets before deleting this asset.")
 
         # If any blocking relationships exist, raise error
         if errors:
@@ -591,11 +596,22 @@ class AssetViewSet(viewsets.ModelViewSet):
             user_name=user_name,
             notes=f"Asset '{asset.name}' created"
         )
-
+      
     def perform_update(self, serializer):
-        instance = serializer.save()
-        self.invalidate_asset_cache(instance.id)
+        remove_image = self.request.data.get("remove_image") == "true"
 
+        # If remove_image is true, exclude image from update
+        if remove_image:
+            serializer.validated_data.pop('image', None)
+
+        instance = serializer.save()
+
+        # Handle image removal
+        if remove_image and instance.image:
+            instance.image.delete(save=False)
+            instance.image = None
+            instance.save()
+        
         # Log activity
         user_id, user_name = _get_request_user_info(request)
         log_asset_activity(
@@ -605,6 +621,9 @@ class AssetViewSet(viewsets.ModelViewSet):
             user_name=user_name,
             notes=f"Asset '{instance.name}' updated"
         )
+
+        self.invalidate_asset_cache(instance.id)
+
     
     @action(detail=False, methods=['get'], url_path='by-product/(?P<product_id>\d+)')
     def by_product(self, request, product_id=None):
@@ -635,6 +654,8 @@ class AssetViewSet(viewsets.ModelViewSet):
             asset = Asset.objects.get(pk=pk, is_deleted=True)
             asset.is_deleted = False
             asset.save()
+            cache.delete("assets:list")
+            cache.delete("assets:list:show_deleted")
             cache.delete(f"assets:detail:{asset.id}")
             serializer = self.get_serializer(asset)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -736,53 +757,35 @@ class AssetViewSet(viewsets.ModelViewSet):
     # Asset names
     @action(detail=False, methods=["get"], url_path='names')
     def names(self, request):
-        """
-        Return assets with only id, asset_id, name, and image.
-        Optional query params:
-          - ?ids=1,2,3 (database IDs)
-          - ?asset_ids=AST-001,AST-002 (display asset_ids)
-          - ?search=keyword
-        """
         ids_param = request.query_params.get("ids")
         asset_ids_param = request.query_params.get("asset_ids")
         search = request.query_params.get("search")
-        queryset = self.get_queryset()
 
-        # Filter by database IDs if provided (integers)
+        queryset = self.get_queryset()
+        filters = Q()
+
         if ids_param:
             try:
                 ids = [int(i) for i in ids_param.split(",") if i.strip().isdigit()]
-                queryset = queryset.filter(id__in=ids)
+                filters |= Q(id__in=ids)
             except ValueError:
-                return Response({"detail": "Invalid IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "Invalid IDs provided."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        # Filter by display asset_ids if provided (strings like "AST-20260110-00030-43A7")
         if asset_ids_param:
             asset_ids = [aid.strip() for aid in asset_ids_param.split(",") if aid.strip()]
-            queryset = queryset.filter(asset_id__in=asset_ids)
+            filters |= Q(asset_id__in=asset_ids)
+
+        if filters:
+            queryset = queryset.filter(filters)
 
         if search:
             queryset = queryset.filter(name__icontains=search)
 
-        # Don't cache search results - they need to be real-time for clone name generation
-        if search:
-            serializer = AssetNameSerializer(queryset, many=True, context={'request': request})
-            return Response(serializer.data)
-
-        # Build a cache key specific for this set of IDs
-        cache_key = "assets:names"
-        if ids_param:
-            cache_key += f":ids:{','.join(map(str, ids_param.split(',')))}"
-        if asset_ids_param:
-            cache_key += f":asset_ids:{asset_ids_param}"
-
-        return self.cached_response(
-            cache_key,
-            queryset,
-            AssetNameSerializer,
-            many=True,
-            context={'request': request}
-        )
+        serializer = AssetNameSerializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data)
 
     # assets/hd/registration/?ids=1,2,3&search=keyword&status_type=deployable,deployed
     # assets/hd/registration/?category=5
@@ -849,17 +852,7 @@ class AssetViewSet(viewsets.ModelViewSet):
             )
             return Response(serializer.data)
 
-        cache_key = "assets:hd:registration"
-        if ids_param:
-            cache_key += f":{','.join(map(str, ids))}"
-
-        return self.cached_response(
-            cache_key,
-            queryset,
-            AssetHdRegistrationSerializer,
-            many=True,
-            context={'request': request, 'status_map': status_map}
-        )
+        return Response(serializer.data)
 
     # Bulk edit
     @action(detail=False, methods=["patch"], url_path='bulk-edit')
@@ -923,6 +916,13 @@ class AssetViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Prevent both uploading and removing images simultaneously
+        if image_content and remove_image:
+            return Response(
+                {"detail": "Cannot upload and remove images simultaneously. Choose one action."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         assets = Asset.objects.filter(id__in=ids, is_deleted=False)
         updated, failed = [], []
 
@@ -963,7 +963,7 @@ class AssetViewSet(viewsets.ModelViewSet):
                 })
 
         cache.delete("assets:list")
-        cache.delete("assets:names")
+        cache.delete("assets:list:show_deleted")
 
         return Response({
             "updated": updated,
@@ -982,23 +982,61 @@ class AssetViewSet(viewsets.ModelViewSet):
             return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
         assets = Asset.objects.filter(id__in=ids, is_deleted=False)
-        failed = []
 
+        # Check for assets with active checkouts first
         for asset in assets:
-            try:
-                self.perform_destroy(asset)
-            except ValidationError as e:
-                failed.append({"id": asset.id, "error": str(e.detail)})
-        
+            # Check for active asset checkouts (no checkin yet)
+            if asset.asset_checkouts.filter(asset_checkin__isnull=True).exists():
+                return Response(
+                    {"detail": f"Cannot delete asset '{asset.asset_id}', it's currently checked out."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check for active component checkouts (not fully returned)
+            active_component_checkouts = asset.checkout_to.filter(is_deleted=False).exclude(
+                component_checkins__quantity__gte=models.F('quantity')
+            ).distinct()
+            if active_component_checkouts.exists():
+                component_names = ', '.join([cc.component.name for cc in active_component_checkouts])
+                return Response(
+                    {"detail": f"Cannot delete asset '{asset.asset_id}', it has components checked out that are not fully returned: {component_names}."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check for pending audit schedules (audit schedules without corresponding audits)
+            pending_audits = asset.audit_schedules.filter(is_deleted=False, audit__isnull=True)
+            if pending_audits.exists():
+                return Response(
+                    {"detail": f"Cannot delete asset '{asset.asset_id}', it has {pending_audits.count()} pending audit schedule(s) that have not been performed yet."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check for tickets referencing this asset
+            tickets_response = get_tickets_list()
+            if isinstance(tickets_response, list):
+                referencing_tickets = [t for t in tickets_response if t.get("asset") == asset.id]
+                if referencing_tickets:
+                    ticket_ids = ', '.join([str(t.get('id')) for t in referencing_tickets])
+                    return Response(
+                        {"detail": f"Cannot delete asset '{asset.asset_id}', it has {len(referencing_tickets)} ticket(s) referencing it (IDs: {ticket_ids})."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+        # Perform soft delete
+        deleted_count = 0
+        for asset in assets:
+            asset.is_deleted = True
+            asset.save()
+            self.invalidate_asset_cache(asset.id)
+            deleted_count += 1
+
         cache.delete("assets:list")
+        cache.delete("assets:list:show_deleted")
 
-        if failed:
-            return Response({
-                "detail": "Some assets could not be deleted.",
-                "failed": failed
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"detail": "Assets deleted successfully."}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": f"Successfully deleted {deleted_count} asset(s)."},
+            status=status.HTTP_200_OK
+        )
     
 class AssetCheckoutViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
@@ -1297,6 +1335,16 @@ class ComponentViewSet(viewsets.ModelViewSet):
         queryset = Component.objects.filter(is_deleted=False).order_by('name')
         if self.request.query_params.get('show_deleted') == 'true':
             queryset = Component.objects.filter(is_deleted=True).order_by('name')
+        
+        # Filter by category if provided
+        category_param = self.request.query_params.get('category')
+        if category_param:
+            try:
+                category_id = int(category_param)
+                queryset = queryset.filter(category=category_id)
+            except ValueError:
+                pass  # Invalid category ID, ignore and return unfiltered queryset
+        
         return queryset
 
     def get_serializer_class(self):
@@ -1402,10 +1450,17 @@ class ComponentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    def _has_active_checkouts(self, component):
+        """Check if component has any checkouts that are not fully returned."""
+        for checkout in component.component_checkouts.all():
+            if not checkout.is_fully_returned:
+                return True
+        return False
+
     def perform_destroy(self, instance):
-        # Check if the component has an active checkout (no checkin yet)
-        if instance.component_checkouts.filter(component_checkins__isnull=True).exists():
-            raise ValidationError({ "detail": "Cannot delete this component, it's currently checked out." })
+        # Check if the component has any checkouts not fully returned
+        if self._has_active_checkouts(instance):
+            raise ValidationError({ "detail": "Cannot delete this component, it has checkouts that are not fully returned." })
 
         # Otherwise, perform soft delete
         instance.is_deleted = True
@@ -1435,8 +1490,20 @@ class ComponentViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
-        component = serializer.save()
+        remove_image = self.request.data.get("remove_image") == "true"
 
+        # If remove_image is true, exclude image from update
+        if remove_image:
+            serializer.validated_data.pop('image', None)
+        
+        instance = serializer.save()
+
+        # Handle image removal
+        if remove_image and instance.image:
+            instance.image.delete(save=False)
+            instance.image = None
+            instance.save()
+        
         # Log activity
         user_id, user_name = _get_request_user_info(self.request)
         log_component_activity(
@@ -1446,6 +1513,8 @@ class ComponentViewSet(viewsets.ModelViewSet):
             user_name=user_name,
             notes=f"Component '{component.name}' updated"
         )
+
+        self.invalidate_asset_cache(instance.id)
 
     @action(detail=False, methods=['post'])
     def bulk_delete(self, request):
@@ -1457,12 +1526,12 @@ class ComponentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Check if any component is currently checked out
+        # Check if any component has checkouts not fully returned
         components = Component.objects.filter(id__in=ids, is_deleted=False)
         for component in components:
-            if component.component_checkouts.filter(component_checkins__isnull=True).exists():
+            if self._has_active_checkouts(component):
                 return Response(
-                    {"detail": f"Cannot delete component '{component.name}', it's currently checked out."},
+                    {"detail": f"Cannot delete component '{component.name}', it has checkouts that are not fully returned."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
@@ -1488,42 +1557,119 @@ class ComponentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['patch'], url_path='bulk-edit')
     def bulk_edit(self, request):
-        """Bulk update components"""
-        ids = request.data.get('ids', [])
+        """
+        Bulk edit multiple components.
+        Payload (JSON):
+        {
+            "ids": [1, 2, 3],
+            "data": {
+                "category": 5,
+                "manufacturer": 2,
+                "default_purchase_cost": "150.00"
+            }
+        }
+        Or FormData with 'ids' (JSON string), 'data' (JSON string), and optional 'image' file.
+        Only non-empty fields will be updated.
+        """
+        from django.core.files.base import ContentFile
+
+        # Handle both JSON and FormData
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            ids_raw = request.data.get("ids", "[]")
+            data_raw = request.data.get("data", "{}")
+            try:
+                ids = json.loads(ids_raw) if isinstance(ids_raw, str) else ids_raw
+                update_data = json.loads(data_raw) if isinstance(data_raw, str) else data_raw
+            except json.JSONDecodeError:
+                return Response({"detail": "Invalid JSON in ids or data."}, status=status.HTTP_400_BAD_REQUEST)
+
+            uploaded_image = request.FILES.get("image")
+            if uploaded_image:
+                image_content = uploaded_image.read()
+                image_name = uploaded_image.name
+            else:
+                image_content = None
+                image_name = None
+            remove_image = request.data.get("remove_image") == "true"
+        else:
+            ids = request.data.get("ids", [])
+            update_data = request.data.get("data", {})
+            image_content = None
+            image_name = None
+            remove_image = False
+
         if not ids:
+            return Response({"detail": "No IDs provided."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Remove blank values so they won't overwrite existing fields
+        safe_data = {k: v for k, v in update_data.items() if v not in [None, "", [], {}]}
+
+        # Check if there's anything to update (fields, image, or remove_image)
+        has_field_updates = bool(safe_data)
+        has_image_update = image_content is not None or remove_image
+
+        if not has_field_updates and not has_image_update:
             return Response(
-                {"detail": "No IDs provided."},
+                {"detail": "No valid fields to update."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        update_data = {k: v for k, v in request.data.items() if k != 'ids' and v is not None and v != ''}
-        if not update_data:
+        # Prevent both uploading and removing images simultaneously
+        if image_content and remove_image:
             return Response(
-                {"detail": "No fields to update."},
+                {"detail": "Cannot upload and remove images simultaneously. Choose one action."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         components = Component.objects.filter(id__in=ids, is_deleted=False)
-        updated_count = 0
-        for component in components:
-            for field, value in update_data.items():
-                if hasattr(component, field):
-                    setattr(component, field, value)
-            component.save()
-            user_id, user_name = _get_request_user_info(self.request)
-            log_component_activity(
-                action='Update',
-                component=component,
-                user_id=user_id,
-                user_name=user_name,
-                notes=f"Component '{component.name}' updated (bulk)"
-            )
-            updated_count += 1
+        updated, failed = [], []
 
-        return Response(
-            {"detail": f"Successfully updated {updated_count} component(s)."},
-            status=status.HTTP_200_OK
-        )
+        # Check if name is being updated for multiple components
+        base_name = safe_data.get("name")
+        has_name_update = base_name is not None and len(ids) > 1
+
+        for index, component in enumerate(components):
+            # Create component-specific data with unique name suffix if needed
+            component_data = safe_data.copy()
+            if has_name_update:
+                component_data["name"] = f"{base_name} ({index + 1})"
+
+            serializer = ComponentSerializer(
+                component,
+                data=component_data,
+                partial=True
+            )
+
+            if serializer.is_valid():
+                instance = serializer.save()
+
+                # Handle image update
+                if image_content:
+                    instance.image.save(image_name, ContentFile(image_content), save=True)
+                elif remove_image and instance.image:
+                    instance.image.delete(save=False)
+                    instance.image = None
+                    instance.save()
+
+                updated.append(component.id)
+
+                # Log activity
+                log_component_activity(
+                    action='Update',
+                    component=instance,
+                    notes=f"Component '{instance.name}' updated (bulk)"
+                )
+            else:
+                failed.append({
+                    "id": component.id,
+                    "errors": serializer.errors
+                })
+
+        return Response({
+            "updated": updated,
+            "failed": failed
+        })
 
     @action(detail=False, methods=['get'])
     def names(self, request):
@@ -1755,26 +1901,30 @@ class AuditScheduleViewSet(viewsets.ModelViewSet):
         """Bulk delete audit schedules (only those without audits)."""
         ids = request.data.get('ids', [])
         if not ids:
-            return Response({"error": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
 
         schedules = AuditSchedule.objects.filter(id__in=ids, is_deleted=False)
-        deleted_ids = []
-        errors = []
 
+        # Check if any schedule has an audit first
         for schedule in schedules:
             if hasattr(schedule, 'audit') and schedule.audit and not schedule.audit.is_deleted:
-                errors.append(f"Schedule {schedule.id} has an audit and cannot be deleted.")
-            else:
-                schedule.is_deleted = True
-                schedule.save()
-                deleted_ids.append(schedule.id)
-                user_id, user_name = _get_request_user_info(self.request)
-                log_audit_activity(action='Delete', audit_or_schedule=schedule, user_id=user_id, user_name=user_name, notes="Bulk deleted")
+                return Response(
+                    {"detail": f"Cannot delete audit schedule for asset '{schedule.asset.asset_id}', it has already been audited."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        return Response({
-            "deleted": deleted_ids,
-            "errors": errors
-        }, status=status.HTTP_200_OK)
+        # Perform soft delete
+        deleted_count = 0
+        for schedule in schedules:
+            schedule.is_deleted = True
+            schedule.save()
+            log_audit_activity(action='Delete', audit_or_schedule=schedule, notes="Bulk deleted")
+            deleted_count += 1
+
+        return Response(
+            {"detail": f"Successfully deleted {deleted_count} audit schedule(s)."},
+            status=status.HTTP_200_OK
+        )
 
 class AuditViewSet(viewsets.ModelViewSet):
     serializer_class = AuditSerializer
@@ -2120,15 +2270,31 @@ class DashboardViewSet(viewsets.ViewSet):
     # /dashboard/metrics
     @action(detail=False, methods=['get'])
     def metrics(self, request):
+        """
+        Get dashboard metrics with minimal caching to balance performance and freshness.
+        Results are cached for 10 seconds to prevent duplicate requests while maintaining near real-time data.
+        """
+        from django.core.cache import cache
+        
+        # Check cache first - short 10 second TTL for near real-time data
+        cache_key = "dashboard:metrics"
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            serializer = DashboardStatsSerializer(cached_data)
+            return Response(serializer.data)
+        
         try:
             today = now().date()
             next_30_days = today + timedelta(days=30)
 
             # Assets due for return - only count checkouts that haven't been checked in yet
+            # Due for return: return date is in the future (today or later) within next 30 days
             due_for_return = AssetCheckout.objects.filter(
                 return_date__gte=today,
+                return_date__lte=next_30_days,
                 asset_checkin__isnull=True
             ).count()
+            # Overdue for return: return date is in the past
             overdue_for_return = AssetCheckout.objects.filter(
                 return_date__lt=today,
                 asset_checkin__isnull=True
@@ -2192,8 +2358,11 @@ class DashboardViewSet(viewsets.ViewSet):
                 is_deleted=False
             ).count()
 
-            # Low stock
-            low_stock = Component.objects.filter(is_deleted=False).annotate(
+            # Low stock - optimized query
+            low_stock = Component.objects.filter(
+                is_deleted=False,
+                minimum_quantity__gt=0  # Only check components with minimum set
+            ).annotate(
                 total_checked_out=Coalesce(Sum('component_checkouts__quantity'), Value(0)),
                 total_checked_in=Coalesce(Sum('component_checkouts__component_checkins__quantity'), Value(0)),
                 available_quantity=F('quantity') - (F('total_checked_out') - F('total_checked_in'))
@@ -2216,12 +2385,12 @@ class DashboardViewSet(viewsets.ViewSet):
             ).count() if deployed_status_ids else 0
             asset_utilization = round((deployed_count / total_assets * 100) if total_assets > 0 else 0)
 
-            # Asset categories - count by category
+            # Asset categories - count by category (limit to top 10 for performance)
             categories = get_categories_list(type='asset', limit=100)
             category_map = {c['id']: c['name'] for c in categories} if isinstance(categories, list) else {}
             category_counts = Asset.objects.filter(is_deleted=False).values(
                 'product__category'
-            ).annotate(count=Count('id')).order_by('-count')
+            ).annotate(count=Count('id')).order_by('-count')[:10]  # Limit to top 10
             asset_categories = [
                 {
                     'product__category__name': category_map.get(item['product__category'], f"Category {item['product__category']}"),
@@ -2230,11 +2399,11 @@ class DashboardViewSet(viewsets.ViewSet):
                 for item in category_counts if item['product__category']
             ]
 
-            # Asset statuses - count by status
+            # Asset statuses - count by status (limit to top 10 for performance)
             status_map = {s['id']: s['name'] for s in statuses} if isinstance(statuses, list) else {}
             status_counts = Asset.objects.filter(is_deleted=False).values(
                 'status'
-            ).annotate(count=Count('id')).order_by('-count')
+            ).annotate(count=Count('id')).order_by('-count')[:10]  # Limit to top 10
             asset_statuses = [
                 {
                     'status__name': status_map.get(item['status'], f"Status {item['status']}"),
@@ -2260,6 +2429,9 @@ class DashboardViewSet(viewsets.ViewSet):
                 "asset_categories": asset_categories,
                 "asset_statuses": asset_statuses,
             }
+
+            # Cache for 10 seconds - short TTL for near real-time updates
+            cache.set(cache_key, data, 10)
 
             serializer = DashboardStatsSerializer(data)
             return Response(serializer.data)
@@ -2339,6 +2511,53 @@ class DashboardViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response(
                 {"error": f"Failed to generate KPI summary: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+# DUE FOR CHECKIN REPORT
+class DueCheckinReportViewSet(viewsets.ViewSet):
+    """ViewSet for generating Due for Check-in reports."""
+    
+    def list(self, request):
+        """
+        GET /due-checkin-report/?days=30
+        Returns a list of all assets that are due for check-in within the specified timeframe.
+        Query params:
+        - days: Number of days in the future to include (default: 30)
+        """
+        try:
+            days_threshold = int(request.query_params.get('days', 30))
+            report_data = get_due_checkin_report(days_threshold=days_threshold)
+            
+            return Response({
+                "success": True,
+                "count": len(report_data),
+                "data": report_data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error generating due checkin report: {str(e)}")
+            return Response(
+                {"error": f"Failed to generate due checkin report: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=False, methods=['get'])
+    def count(self, request):
+        """
+        GET /due-checkin-report/count/
+        Returns the count of assets due for check-in within the next 30 days.
+        """
+        try:
+            count = get_due_checkin_count()
+            return Response({
+                "success": True,
+                "count": count
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error getting due checkin count: {str(e)}")
+            return Response(
+                {"error": f"Failed to get due checkin count: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 

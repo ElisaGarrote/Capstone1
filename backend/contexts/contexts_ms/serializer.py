@@ -93,8 +93,9 @@ class CategorySerializer(serializers.ModelSerializer):
                 if isinstance(val, dict) and 'asset_ids' in val:
                     return int(len(val.get('asset_ids') or []))
                 return 0
-            # Fallback to per-item call
-            return int(count_assets_by_category(obj.id) or 0)
+            # Don't make individual calls - return 0 if not in batch data
+            # This prevents N+1 query problem that causes worker timeouts
+            return 0
         except Exception:
             return None
 
@@ -110,7 +111,9 @@ class CategorySerializer(serializers.ModelSerializer):
                 if isinstance(val, dict) and 'component_count' in val:
                     return int(val.get('component_count') or 0)
                 return 0
-            return int(count_components_by_category(obj.id) or 0)
+            # Don't make individual calls - return 0 if not in batch data
+            # This prevents N+1 query problem that causes worker timeouts
+            return 0
         except Exception:
             return None
 

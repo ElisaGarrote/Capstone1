@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import NavBar from '../../components/NavBar';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
-import TopSecFormPage from '../../components/TopSecFormPage';
-import CloseIcon from '../../assets/icons/close.svg';
-import PlusIcon from '../../assets/icons/plus.svg';
+import TopSecFormPage from "../../components/TopSecFormPage";
+import CloseIcon from "../../assets/icons/close.svg";
+import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import SystemLoading from "../../components/Loading/SystemLoading";
 import Alert from "../../components/Alert";
-import '../../styles/Registration.css';
-import { fetchProductById, fetchProductNames, createProduct, updateProduct } from "../../services/assets-service";
+import "../../styles/Registration.css";
+import { fetchProductNames, fetchProductById, createProduct, updateProduct } from "../../services/assets-service";
 import { fetchAllDropdowns, createCategory, createManufacturer, createDepreciation, createSupplier } from "../../services/contexts-service";
 
 export default function ProductsRegistration() {
@@ -27,14 +27,14 @@ export default function ProductsRegistration() {
   const [showDepreciationModal, setShowDepreciationModal] = useState(false);
   const [showSupplierModal, setShowSupplierModal] = useState(false);
 
-  // Import file state
-  const [importFile, setImportFile] = useState(null);
-
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
+  const currentDate = new Date().toISOString().split("T")[0];
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEdit = id && !isClone;
 
-  const { setValue, register, handleSubmit, watch, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, trigger, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       productName: '',
@@ -48,11 +48,11 @@ export default function ProductsRegistration() {
       minimumQuantity: '',
       cpu: '',
       gpu: '',
-      operatingSystem: '',
       ram: '',
       screenSize: '',
       storageSize: '',
-      notes: ''
+      operatingSystem: '',
+      notes: '',
     }
   });
 
@@ -63,11 +63,13 @@ export default function ProductsRegistration() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Generate a non-conflicting clone name
+  // Determine mode: clone mode passed from AssetViewPage
+  const cloneMode = location.state?.isClone === true;
+
   const generateCloneName = async (baseName) => {
     // 1. Fetch all existing product names that contain the base name
     const existing = await fetchProductNames({ search: baseName });
-    const existingNames = existing.map(p => p.name);
+    const existingNames = existing.map(a => a.name);
 
     // 2. Pattern matches: "BaseName (clone)" or "BaseName (clone) (N)" - case insensitive
     const clonePattern = new RegExp(`^${escapeRegExp(baseName)} \\(clone\\)(?: \\((\\d+)\\))?$`, 'i');
@@ -102,22 +104,22 @@ export default function ProductsRegistration() {
     const initialize = async () => {
       try {
         setIsLoading(true);
-
-        // Fetch dropdown options
-        const dropdowns = await fetchAllDropdowns("product");
-        setCategories(dropdowns.categories);
-        setManufacturers(dropdowns.manufacturers);
-        setSuppliers(dropdowns.suppliers);
-        setDepreciations(dropdowns.depreciations);
-
-        // Get product data from API (only if editing/cloning)
-        const cloneMode = location.state?.isClone === true;
         setIsClone(cloneMode);
 
-        // Only fetch product if we have an ID (editing or cloning)
+        // Fetch dropdown options for assets (filter statuses by asset category)
+        const contextDropdowns = await fetchAllDropdowns("product");
+        setCategories(contextDropdowns.categories || []);
+        setManufacturers(contextDropdowns.manufacturers || []);
+        setDepreciations(contextDropdowns.depreciations || []);
+        setSuppliers(contextDropdowns.suppliers || []);
+
+        // If editing or cloning, fetch the asset data
         if (id) {
           const productData = await fetchProductById(id);
-          setProduct(productData);
+          console.log("Fetched product:", productData);
+          if (productData) {
+            setProduct(productData);
+          }
         }
       } catch (error) {
         console.error("Error initializing:", error);
@@ -127,58 +129,66 @@ export default function ProductsRegistration() {
       }
     };
     initialize();
-  }, [id, location.state]);
+  }, [id, cloneMode]);
 
   // Separate useEffect to populate form AFTER dropdowns and product are loaded
   useEffect(() => {
     const populateForm = async () => {
-      if (!product) return;
-
       // Wait for next tick to ensure dropdowns are rendered
       await new Promise(resolve => setTimeout(resolve, 0));
 
-      if (isClone) {
-        const cloneName = await generateCloneName(product.name);
-        setValue("productName", cloneName);
-      } else {
-        setValue("productName", product.name || "");
-      }
-
-      setValue("category", product.category || "");
-      setValue("manufacturer", product.manufacturer || "");
-      setValue("depreciation", product.depreciation || "");
-      setValue("modelNumber", product.model_number || "");
-      setValue("endOfLife", product.end_of_life || "");
-      setValue("defaultPurchaseCost", product.default_purchase_cost || "");
-      setValue("defaultSupplier", product.default_supplier || "");
-      setValue("minimumQuantity", product.minimum_quantity || "");
-      setValue("cpu", product.cpu || "");
-      setValue("gpu", product.gpu || "");
-      setValue("operatingSystem", product.os || "");
-      setValue("ram", product.ram || "");
-      setValue("screenSize", product.size || "");
-      setValue("storageSize", product.storage || "");
-      setValue("notes", product.notes || "");
-
-      if (product.image) {
-        setPreviewImage(product.image);
-
-        // For cloning, fetch the image as a file so it can be uploaded with the new product
+      // If we have product data (editing or cloning), populate the form
+      if (product) {
         if (isClone) {
-          try {
-            const response = await fetch(product.image);
-            const blob = await response.blob();
-            const fileName = product.image.split('/').pop() || 'cloned-image.jpg';
-            const file = new File([blob], fileName, { type: blob.type });
-            setSelectedImage(file);
-          } catch (imgError) {
-            console.error("Failed to fetch image for cloning:", imgError);
+          const clonedName = await generateCloneName(product.name);
+          setValue("productName", clonedName);
+        } else {
+          setValue("productName", product.name || "");
+        }
+        // Prefer explicit *_details ids from API payload, fall back to top-level id fields when present
+        const categoryId = product.category ?? product.category_details?.id
+        const manufacturerId = product.manufacturer ?? product.manufacturer_details?.id;
+        const depreciationId = product.depreciation ?? product.depreciation_details?.id;
+        const defaultSupplierId = product.defaultSupplier ?? product.default_supplier_details?.id;
+        setValue("category", categoryId ? String(categoryId) : "");
+        setValue("manufacturer", manufacturerId ? String(manufacturerId) : "");
+        setValue("depreciation", depreciationId ? String(depreciationId) : "");
+        setValue("defaultSupplier", defaultSupplierId ? String(defaultSupplierId) : "");
+        setValue("modelNumber", product.model_number || "");
+        setValue("endOfLife", product.end_of_life || "");
+        setValue("defaultPurchaseCost", product.default_purchase_cost ?? "");
+        setValue("minimumQuantity", product.minimum_quantity ?? "");
+        setValue("cpu", product.cpu || "");
+        setValue("gpu", product.gpu || "");
+        setValue("ram", product.ram || "");
+        setValue("screenSize", product.size || "");
+        setValue("storageSize", product.storage || "");
+        setValue("operatingSystem", product.os || "");
+        setValue("notes", product.notes || "");
+
+        if (product.image) {
+          setPreviewImage(product.image);
+
+          // For cloning, fetch the image as a file so it can be uploaded with the new asset
+          if (isClone) {
+            try {
+              const response = await fetch(product.image);
+              const blob = await response.blob();
+              const fileName = product.image.split('/').pop() || 'cloned-image.jpg';
+              const file = new File([blob], fileName, { type: blob.type });
+              setSelectedImage(file);
+            } catch (imgError) {
+              console.error("Failed to fetch image for cloning:", imgError);
+            }
           }
         }
       }
+      
+      // Trigger validation after all form values are set
+      await trigger();
     };
     populateForm();
-  }, [product, isClone, categories, manufacturers, depreciations, suppliers, setValue]);
+  }, [product, isClone, categories, manufacturers, depreciations, suppliers, setValue, trigger, id]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -190,7 +200,7 @@ export default function ProductsRegistration() {
       }
 
       setSelectedImage(file);
-      setValue('image', file);
+      setRemoveImage(false);
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -208,7 +218,6 @@ export default function ProductsRegistration() {
         setTimeout(() => setErrorMessage(""), 5000);
         return;
       }
-      setImportFile(file);
       console.log("Import file selected:", file.name);
     }
   };
@@ -344,84 +353,76 @@ export default function ProductsRegistration() {
     }
   };
 
-
   const onSubmit = async (data) => {
     setErrorMessage("");
+
+    const isUpdate = id && !isClone;
+
     try {
+      setIsSubmitting(true);
       const formData = new FormData();
 
-      // Append all form data to FormData object
-      formData.append('name', data.productName);
-      
-      formData.append('category', data.category || '');
-      formData.append('manufacturer', data.manufacturer || '');
-      formData.append('depreciation', data.depreciation || '');
-      formData.append('model_number', data.modelNumber || '');
-      formData.append('end_of_life', data.endOfLife || '');
-      formData.append('default_purchase_cost', data.defaultPurchaseCost || '');
-      formData.append('default_supplier', data.defaultSupplier || '');
-      formData.append('minimum_quantity', data.minimumQuantity || '');
-      formData.append('cpu', data.cpu || '');
-      formData.append('gpu', data.gpu || '');
-      formData.append('os', data.operatingSystem || '');
-      formData.append('ram', data.ram || '');
-      formData.append('size', data.screenSize || '');
-      formData.append('storage', data.storageSize || '');
+      if (data.productName) formData.append('name', data.productName);
+      if (data.category) formData.append('category', data.category);
+      if (data.manufacturer) formData.append('manufacturer', data.manufacturer);
+      if (data.depreciation) formData.append('depreciation', data.depreciation);
+      if (data.modelNumber) formData.append('model_number', data.modelNumber);
+      if (data.endOfLife) formData.append('end_of_life', data.endOfLife);
+      if (data.defaultPurchaseCost != null) formData.append('default_purchase_cost', data.defaultPurchaseCost);
+      if (data.defaultSupplier) formData.append('default_supplier', data.defaultSupplier);
+      if (data.minimumQuantity != null) formData.append('minimum_quantity', data.minimumQuantity);
+      if (data.cpu) formData.append('cpu', data.cpu);
+      if (data.gpu) formData.append('gpu', data.gpu);
+      if (data.ram) formData.append('ram', data.ram);
+      if (data.screenSize) formData.append('size', data.screenSize);
+      if (data.storageSize) formData.append('storage', data.storageSize);
+      if (data.operatingSystem) formData.append('os', data.operatingSystem);
       formData.append('notes', data.notes || '');
 
-      // Handle image upload
+      // Handle image
       if (selectedImage) {
         formData.append('image', selectedImage);
       }
-
-      // Handle image removal
-      if (removeImage) {
+      if (removeImage && isUpdate) {
         formData.append('remove_image', 'true');
-        console.log("Removing image: remove_image flag set to true");
-      }
-
-      console.log("Form data before submission:");
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
       }
 
       let result;
-
-      // Update existing product or create new one
-      if (id && !isClone) {
+      if (isUpdate) {
         result = await updateProduct(id, formData);
+        // Update frontend state to reflect backend removal
+        setProduct(prev => ({
+          ...prev,
+          ...result, // merge any updated fields
+          image: removeImage ? null : result.image || prev.image
+        }));
+
+        if (removeImage) {
+          setPreviewImage(null);
+          setSelectedImage(null);
+        }
       } else {
         result = await createProduct(formData);
       }
-      
-      if (!result) {
-        throw new Error(`Failed to ${id ? 'update' : 'create'} product.`);
-      }
 
-      console.log(`${id ? 'Updated' : 'Created'} product:`, result);
-      navigate('/products', {
-        state: {
-          successMessage: `Product has been ${id ? 'updated' : 'created'} successfully!`
-        }
-      });
+      if (!result) throw new Error(`Failed to ${isUpdate ? "update" : "create"} product`);
+
+      const action = isClone ? "cloned" : isUpdate ? "updated" : "created";
+      setIsSubmitting(false);
+      navigate("/products", { state: { successMessage: `Product ${action} successfully!` } });
     } catch (error) {
-      console.error(`Error ${id ? 'updating' : 'creating'} product:`, error);
+      console.error("Error submitting product:", error);
+      let message = "An error occurred while saving the product";
 
-      let message = `An error occurred while ${id ? 'updating' : 'creating'} the product`;
-
-      if (error.response && error.response.data) {
-        const data = error.response.data;
-
-        // Extract the first message from the first key
-        if (typeof data === "object") {
-          const firstKey = Object.keys(data)[0];
-          if (Array.isArray(data[firstKey]) && data[firstKey].length > 0) {
-            message = data[firstKey][0]; // "A product with this name already exists."
-          }
+      if (error.response?.data) {
+        const firstKey = Object.keys(error.response.data)[0];
+        if (Array.isArray(error.response.data[firstKey])) {
+          message = error.response.data[firstKey][0];
         }
       }
 
       setErrorMessage(message);
+      setIsSubmitting(false);
     }
   };
 
@@ -429,7 +430,6 @@ export default function ProductsRegistration() {
     console.log("isLoading triggered — showing loading screen");
     return <SystemLoading />;
   }
-
 
   return (
     <>
@@ -439,32 +439,35 @@ export default function ProductsRegistration() {
         <main className="registration">
         <section className="top">
           <TopSecFormPage
-            root="Asset Models"
-            currentPage={id ? "Update Asset Model" : "New Asset Model"}
+            root="Products"
+            currentPage={isClone ? "Clone Product" : (id ? "Edit Product" : "New Product")}
             rootNavigatePage="/products"
-            title={id ? (product?.name || 'Asset Model') : 'New Asset Model'}
+            title={isClone 
+              ? `Clone ${product?.name}`
+              : id
+                ? `Edit ${product?.name}`
+                : 'New Product'
+            }
             rightComponent={
-              !id && (
-                <div className="import-section">
-                  <label htmlFor="import-file" className="import-btn">
-                    <img src={PlusIcon} alt="Import" />
-                    Import
-                    <input
-                      type="file"
-                      id="import-file"
-                      accept=".xlsx"
-                      onChange={handleImportFile}
-                      style={{ display: "none" }}
-                    />
-                  </label>
-                </div>
-              )
+              <div className="import-section">
+                <label htmlFor="import-file" className="import-btn">
+                  <img src={PlusIcon} alt="Import" />
+                  Import
+                  <input
+                    type="file"
+                    id="import-file"
+                    accept=".xlsx"
+                    onChange={handleImportFile}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </div>
             }
           />
         </section>
+
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
-
             {/* Asset Model Name */}
             <fieldset>
               <label htmlFor='product-name'>Asset Model Name <span style={{color: 'red'}}>*</span></label>
@@ -761,6 +764,7 @@ export default function ProductsRegistration() {
               />
             </fieldset>
 
+            {/* Image Upload */}
             <fieldset>
               <label>Image</label>
               {previewImage ? (
@@ -772,12 +776,6 @@ export default function ProductsRegistration() {
                       event.preventDefault();
                       setPreviewImage(null);
                       setSelectedImage(null);
-                      setValue('image', null);
-                      // Clear file input if it exists (it may not exist when preview is shown)
-                      const imageInput = document.getElementById('image');
-                      if (imageInput) {
-                        imageInput.value = '';
-                      }
                       setRemoveImage(true);
                       console.log("Remove image flag set to:", true);
                     }}
@@ -787,7 +785,7 @@ export default function ProductsRegistration() {
                 </div>
               ) : (
                 <label className="upload-image-btn">
-                  Choose File
+                  Choose Image
                   <input
                     type="file"
                     id="image"
@@ -802,55 +800,55 @@ export default function ProductsRegistration() {
               </small>
             </fieldset>
 
-            <button type='submit' className='primary-button' disabled={!isValid}>
-              Save
+            <button type="submit" className="primary-button" disabled={!isValid || isSubmitting}>
+              {isEdit ? "Update Asset Model" : "Save"}
             </button>
           </form>
         </section>
-
-        {/* Add Category Modal */}
-        <AddEntryModal
-          isOpen={showCategoryModal}
-          onClose={() => setShowCategoryModal(false)}
-          onSave={handleSaveCategory}
-          title="New Category"
-          fields={categoryFields}
-          type="category"
-        />
-
-        {/* Add Manufacturer Modal */}
-        <AddEntryModal
-          isOpen={showManufacturerModal}
-          onClose={() => setShowManufacturerModal(false)}
-          onSave={handleSaveManufacturer}
-          title="New Manufacturer"
-          fields={manufacturerFields}
-          type="manufacturer"
-        />
-
-        {/* Add Depreciation Modal */}
-        <AddEntryModal
-          isOpen={showDepreciationModal}
-          onClose={() => setShowDepreciationModal(false)}
-          onSave={handleSaveDepreciation}
-          title="New Depreciation"
-          fields={depreciationFields}
-          type="depreciation"
-        />
-
-        {/* Add Supplier Modal */}
-        <AddEntryModal
-          isOpen={showSupplierModal}
-          onClose={() => setShowSupplierModal(false)}
-          onSave={handleSaveSupplier}
-          title="New Supplier"
-          fields={supplierFields}
-          type="supplier"
-        />
       </main>
       <Footer />
       </section>
 
+      {/* Modals */}
+      {/* Add Category Modal */}
+      <AddEntryModal
+        isOpen={showCategoryModal}
+        onClose={() => setShowCategoryModal(false)}
+        onSave={handleSaveCategory}
+        title="New Category"
+        fields={categoryFields}
+        type="category"
+      />
+
+      {/* Add Manufacturer Modal */}
+      <AddEntryModal
+        isOpen={showManufacturerModal}
+        onClose={() => setShowManufacturerModal(false)}
+        onSave={handleSaveManufacturer}
+        title="New Manufacturer"
+        fields={manufacturerFields}
+        type="manufacturer"
+      />
+
+      {/* Add Depreciation Modal */}
+      <AddEntryModal
+        isOpen={showDepreciationModal}
+        onClose={() => setShowDepreciationModal(false)}
+        onSave={handleSaveDepreciation}
+        title="New Depreciation"
+        fields={depreciationFields}
+        type="depreciation"
+      />
+
+      {/* Add Supplier Modal */}
+      <AddEntryModal
+        isOpen={showSupplierModal}
+        onClose={() => setShowSupplierModal(false)}
+        onSave={handleSaveSupplier}
+        title="New Supplier"
+        fields={supplierFields}
+        type="supplier"
+      />
     </>
   );
 }

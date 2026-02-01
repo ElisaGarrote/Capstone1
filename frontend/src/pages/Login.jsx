@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/custom-colors.css";
 import "../styles/Login.css";
 import "../styles/LoadingButton.css";
@@ -8,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setUser } from "../features/counter/userSlice";
 import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 import LoadingButton from "../components/LoadingButton";
 import eyeOpen from "../assets/icons/eye-open.svg";
 import eyeClose from "../assets/icons/eye-close.svg";
@@ -16,6 +18,8 @@ import AssetImage from "../assets/img/pageimg6.png";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [errorMessage, setErrorMessage] = useState(null);
   const location = useLocation();
   const [errorMessage, setErrorMessage] = useState(null);
   const [isSubmitting, setSubmitting] = useState(false);
@@ -52,12 +56,22 @@ function Login() {
     }
   }, [isAuthenticated, navigate, location]);
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, location]);
+
   const submission = async (data) => {
     const { email, password } = data;
     setSubmitting(true);
     setErrorMessage(null);
+    setErrorMessage(null);
 
     try {
+      const result = await login({ email, password });
       const result = await login({ email, password });
 
       if (result.success) {
@@ -80,8 +94,11 @@ function Login() {
         navigate("/dashboard");
       } else {
         setErrorMessage(result.error || "Invalid credentials.");
+        setErrorMessage(result.error || "Invalid credentials.");
       }
     } catch (error) {
+      console.error("Login failed:", error);
+      setErrorMessage("An unexpected error occurred. Please try again.");
       console.error("Login failed:", error);
       setErrorMessage("An unexpected error occurred. Please try again.");
     } finally {
@@ -93,13 +110,19 @@ function Login() {
     if (errorMessage) {
       const timer = setTimeout(() => {
         setErrorMessage(null);
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage(null);
       }, 5000);
       return () => clearTimeout(timer);
+      return () => clearTimeout(timer);
     }
+  }, [errorMessage]);
   }, [errorMessage]);
 
   // Reset the value of isShowPassword state when the password input is empty.
   useEffect(() => {
+    if (password.length === 0) {
     if (password.length === 0) {
       setShowPassword(false);
     }
@@ -107,6 +130,7 @@ function Login() {
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       {errorMessage && <Alert message={errorMessage} type="danger" />}
 
       <main className="login-page">
@@ -129,6 +153,7 @@ function Login() {
           <form onSubmit={handleSubmit(submission)}>
             <fieldset>
               <label>Email Address:</label>
+              <label>Email Address:</label>
 
               {errors.email && <span>{errors.email.message}</span>}
 
@@ -139,6 +164,7 @@ function Login() {
                 {...register("email", {
                   required: "Must not empty",
                   pattern: {
+                    value: /^\S+@\S+\.\S+$/,
                     value: /^\S+@\S+\.\S+$/,
                     message: "Invalid email format",
                   },

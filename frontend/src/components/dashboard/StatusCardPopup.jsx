@@ -1,15 +1,31 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import { IoClose } from 'react-icons/io5';
 import { HiOutlineTag } from 'react-icons/hi';
 import { IoLocationOutline } from 'react-icons/io5';
 import { RxPerson } from 'react-icons/rx';
 import { BsKeyboard, BsLaptop } from 'react-icons/bs';
 import Status from '../Status';
+import Pagination from '../Pagination';
+import MediumButtons from '../buttons/MediumButtons';
 import '../../styles/dashboard/StatusCardPopup.css';
 import '../../styles/custom-colors.css';
 
 const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
+  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  // Paginate items
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedItems = items.slice(startIndex, endIndex);
+
+  const handleExport = () => {
+    // TODO: Implement XLSX export functionality
+    console.log('Exporting as XLSX...');
+  };
   const getColumnTitles = () => {
     if (title === 'Low Stock') {
       return {
@@ -66,7 +82,7 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
             </tr>
           </thead>
           <tbody>
-            {items.map((item, index) => (
+            {paginatedItems.map((item, index) => (
               <tr key={index}>
                 <td>
                   <div className="category-info">
@@ -97,12 +113,21 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
           </tr>
         </thead>
         <tbody>
-          {items.map((item, index) => (
+          {paginatedItems.map((item, index) => (
             <tr key={index}>
               <td>
                 <div className="asset-info">
                   <HiOutlineTag className="asset-icon" />
-                  <span>{item.assetId} - {item.assetName}</span>
+                  <span>
+                    <span 
+                      className="asset-link" 
+                      onClick={() => navigate(`/assets/view/${item.assetDbId || item.assetId}`)}
+                      style={{ cursor: 'pointer', color: '#0D6EFD', textDecoration: 'underline' }}
+                    >
+                      {item.assetId}
+                    </span>
+                    {' - '}{item.assetName}
+                  </span>
                 </div>
               </td>
               <td>
@@ -131,14 +156,31 @@ const StatusCardPopup = ({ title, dueDate, items, onClose }) => {
       <div className="popup-content">
         <div className="popup-header">
           <h2>{title}{dueDate ? ` (next ${dueDate} days)` : ''}</h2>
-          <button className="close-button" onClick={onClose}>
-            <IoClose />
-          </button>
+          <div className="popup-header-actions">
+            <MediumButtons
+              type="export"
+              onClick={handleExport}
+            />
+            <button className="close-button" onClick={onClose}>
+              <IoClose />
+            </button>
+          </div>
         </div>
         <div className="popup-body">
-          <table className="status-card-table">
-            {renderTableContent()}
-          </table>
+          <div className="table-wrapper">
+            <table className="status-card-table">
+              {renderTableContent()}
+            </table>
+          </div>
+        </div>
+        <div className="popup-footer">
+          <Pagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={items.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       </div>
     </div>
@@ -151,6 +193,7 @@ StatusCardPopup.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.oneOfType([
       PropTypes.shape({
+        assetDbId: PropTypes.number,
         assetId: PropTypes.string,
         assetName: PropTypes.string,
         checkedOutTo: PropTypes.string,

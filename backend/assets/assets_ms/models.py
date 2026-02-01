@@ -63,7 +63,7 @@ class Product(models.Model):
     end_of_life = models.DateField(blank=True, null=True)
     default_purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     default_supplier = models.PositiveIntegerField(blank=True, null=True)
-    minimum_quantity = models.PositiveIntegerField()
+    minimum_quantity = models.PositiveIntegerField(blank=True, null=True)
     cpu = models.CharField(max_length=100, blank=True, null=True)
     gpu = models.CharField(max_length=100, blank=True, null=True)
     os = models.CharField(max_length=100, blank=True, null=True)
@@ -92,11 +92,11 @@ class Asset(models.Model):
     supplier = models.PositiveIntegerField(blank=True, null=True)
     location = models.PositiveIntegerField(blank=True, null=True)
     name = models.CharField(max_length=100, blank=True, null=True)
-    serial_number = models.CharField(max_length=50, blank=True, null=True)
+    serial_number = models.CharField(max_length=50, default="")
     warranty_expiration = models.DateField(blank=True, null=True)
     order_number = models.CharField(max_length=50, blank=True, null=True)
     purchase_date = models.DateField(blank=True, null=True)
-    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     notes = models.TextField(max_length=500, blank=True, null=True)
     image = models.ImageField(
         upload_to='asset_images/',
@@ -194,7 +194,7 @@ class Component(models.Model):
     purchase_date = models.DateField(blank=True, null=True)
     purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     quantity = models.PositiveIntegerField(default=1)
-    minimum_quantity = models.PositiveIntegerField(default=1)
+    minimum_quantity = models.PositiveIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     image = models.ImageField(
         upload_to='component_images/',

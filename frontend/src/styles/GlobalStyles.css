@@ -385,6 +385,42 @@ footer {
           color: #333333;
           border-color: #999999;
         }
+        /* Action button variants used across detailed view pages */
+        .action-btn.action-btn-checkout {
+          background-color: #28a745;
+          color: white;
+          border: none;
+        }
+
+        .action-btn.action-btn-checkout:hover:not(:disabled) {
+          background-color: #218838;
+          transform: translateY(-1px);
+        }
+
+        .action-btn.action-btn-checkout:disabled {
+          background-color: #d3d3d3;
+          color: #999;
+          cursor: not-allowed;
+          border: none;
+        }
+
+        .action-btn.action-btn-checkin {
+          background-color: #007bff;
+          color: white;
+          border: none;
+        }
+
+        .action-btn.action-btn-checkin:hover:not(:disabled) {
+          background-color: #0056b3;
+          transform: translateY(-1px);
+        }
+
+        .action-btn.action-btn-checkin:disabled {
+          background-color: #d3d3d3;
+          color: #999;
+          cursor: not-allowed;
+          border: none;
+        }
       }
     }
 

@@ -112,6 +112,7 @@ export default function BulkEditAssetModels() {
 
       setSelectedImage(file);
       setValue('image', file);
+      setRemoveImage(false); // Clear remove flag when uploading new image
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -259,6 +260,12 @@ export default function BulkEditAssetModels() {
         return;
       }
 
+      // Validate mutual exclusion of upload and remove
+      if (selectedImage && removeImage) {
+        setErrorMessage("Cannot upload and remove images simultaneously. Choose one action.");
+        return;
+      }
+
       // Map frontend field names to backend field names
       const fieldMapping = {
         productName: 'name',
@@ -368,38 +375,41 @@ export default function BulkEditAssetModels() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
-
-        <main className="main-with-table">
+        <main className="registration">
+        <section className="top">
           <TopSecFormPage
             root="Asset Models"
             currentPage="Bulk Edit Asset Models"
             rootNavigatePage="/products"
             title="Bulk Edit Asset Models"
           />
+        </section>
 
           {/* Selected Asset Models */}
-          <section className="asset-models-selected-section">
-            <h3>Selected Asset Models ({currentSelectedIds.length})</h3>
-            <div className="asset-models-selected-tags">
-              {selectedModels.length > 0 ? (
-                selectedModels.map((model) => (
-                  <div key={model.id} className="asset-model-tag">
-                    <span className="asset-model-tag-name">{model.name}</span>
-                    <span className="asset-model-tag-id">#{model.id}</span>
-                    <button
-                      type="button"
-                      className="asset-model-tag-remove"
-                      onClick={() => handleRemoveModel(model.id)}
-                      title="Remove from selection"
-                    >
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
-                ))
+          <section className="selected-assets-section">
+            <h3>Selected Asset Models ({selectedModels.filter(m => currentSelectedIds.includes(m.id)).length})</h3>
+            <div className="selected-assets-tags">
+              {selectedModels.filter(m => currentSelectedIds.includes(m.id)).length > 0 ? (
+                selectedModels
+                  .filter(m => currentSelectedIds.includes(m.id))
+                  .map((model) => (
+                    <div key={model.id} className="asset-tag">
+                      <span className="asset-tag-name">{model.name}</span>
+                      <span className="asset-tag-id">#{model.id}</span>
+                      <button
+                        type="button"
+                        className="asset-tag-remove"
+                        onClick={() => handleRemoveModel(model.id)}
+                        title="Remove from selection"
+                      >
+                        <img src={CloseIcon} alt="Remove" />
+                      </button>
+                    </div>
+                  ))
               ) : (
-                <p className="asset-models-no-selection-message">
+                <p className="no-assets-message">
                   No asset models selected
                 </p>
               )}
@@ -407,10 +417,10 @@ export default function BulkEditAssetModels() {
           </section>
 
           {/* Bulk Edit Form */}
-          <section className="asset-models-bulk-form-section registration">
+          <section className="registration-form">
             <form
               onSubmit={handleSubmit(onSubmit)}
-              className="asset-models-bulk-form"
+              className="bulk-edit-form"
             >
               {/* Asset Model Name */}
               <fieldset className="form-field">
@@ -746,37 +756,61 @@ export default function BulkEditAssetModels() {
 
               {/* Image */}
               <fieldset>
-                <label>Image</label>
-                {previewImage ? (
-                  <div className="image-selected">
-                    <img src={previewImage} alt="Selected image" />
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPreviewImage(null);
-                        setSelectedImage(null);
-                        setValue('image', null);
-                        document.getElementById('image').value = '';
-                        setRemoveImage(true);
-                        console.log("Remove image flag set to:", true);
-                      }}
-                    >
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="upload-image-btn">
-                    Choose File
+                <label>Image Management</label>
+                <div className="image-management-section">
+                  <label 
+                    className={`upload-image-btn ${selectedImage || removeImage ? 'disabled' : ''}`}
+                    title={selectedImage ? "File selected" : removeImage ? "Cannot upload while image removal is selected" : ""}
+                  >
+                    {selectedImage ? `✓ ${selectedImage.name}` : 'Choose File'}
                     <input
                       type="file"
                       id="image"
                       accept="image/*"
                       onChange={handleImageSelection}
+                      disabled={removeImage}
                       style={{ display: "none" }}
                     />
                   </label>
-                )}
+                  {selectedImage && (
+                    <button
+                      type="button"
+                      className="clear-file-btn"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSelectedImage(null);
+                        setPreviewImage(null);
+                        setValue('image', null);
+                        document.getElementById('image').value = '';
+                      }}
+                      title="Clear file selection"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="checkbox-group">
+                  <label htmlFor="removeImage" className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      id="removeImage"
+                      checked={removeImage}
+                      onChange={(e) => {
+                        setRemoveImage(e.target.checked);
+                        if (e.target.checked) {
+                          setSelectedImage(null);
+                          setPreviewImage(null);
+                          setValue('image', null);
+                          if (document.getElementById('image')) {
+                            document.getElementById('image').value = '';
+                          }
+                        }
+                      }}
+                      disabled={selectedImage !== null}
+                    />
+                    Remove images from all items
+                  </label>
+                </div>
                 <small className="file-size-info">
                   Maximum file size must be 5MB
                 </small>
@@ -797,45 +831,46 @@ export default function BulkEditAssetModels() {
               </div>
             </form>
           </section>
+
           {/* Add Category Modal */}
-        <AddEntryModal
-          isOpen={showCategoryModal}
-          onClose={() => setShowCategoryModal(false)}
-          onSave={handleSaveCategory}
-          title="New Category"
-          fields={categoryFields}
-          type="category"
-        />
+          <AddEntryModal
+            isOpen={showCategoryModal}
+            onClose={() => setShowCategoryModal(false)}
+            onSave={handleSaveCategory}
+            title="New Category"
+            fields={categoryFields}
+            type="category"
+          />
 
-        {/* Add Manufacturer Modal */}
-        <AddEntryModal
-          isOpen={showManufacturerModal}
-          onClose={() => setShowManufacturerModal(false)}
-          onSave={handleSaveManufacturer}
-          title="New Manufacturer"
-          fields={manufacturerFields}
-          type="manufacturer"
-        />
+          {/* Add Manufacturer Modal */}
+          <AddEntryModal
+            isOpen={showManufacturerModal}
+            onClose={() => setShowManufacturerModal(false)}
+            onSave={handleSaveManufacturer}
+            title="New Manufacturer"
+            fields={manufacturerFields}
+            type="manufacturer"
+          />
 
-        {/* Add Depreciation Modal */}
-        <AddEntryModal
-          isOpen={showDepreciationModal}
-          onClose={() => setShowDepreciationModal(false)}
-          onSave={handleSaveDepreciation}
-          title="New Depreciation"
-          fields={depreciationFields}
-          type="depreciation"
-        />
+          {/* Add Depreciation Modal */}
+          <AddEntryModal
+            isOpen={showDepreciationModal}
+            onClose={() => setShowDepreciationModal(false)}
+            onSave={handleSaveDepreciation}
+            title="New Depreciation"
+            fields={depreciationFields}
+            type="depreciation"
+          />
 
-        {/* Add Supplier Modal */}
-        <AddEntryModal
-          isOpen={showSupplierModal}
-          onClose={() => setShowSupplierModal(false)}
-          onSave={handleSaveSupplier}
-          title="New Supplier"
-          fields={supplierFields}
-          type="supplier"
-        />
+          {/* Add Supplier Modal */}
+          <AddEntryModal
+            isOpen={showSupplierModal}
+            onClose={() => setShowSupplierModal(false)}
+            onSave={handleSaveSupplier}
+            title="New Supplier"
+            fields={supplierFields}
+            type="supplier"
+          />
         </main>
         <Footer />
       </section>

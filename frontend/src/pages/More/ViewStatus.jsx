@@ -128,6 +128,28 @@ function TableItem({ status, onDeleteClick, isSelected, onRowChange }) {
   );
 }
 
+const checkUsage = async (id) => {
+  try {
+    const response = await fetch(`/api/contexts/check-usage/status/${id}`);
+    const data = await response.json();
+    return data.in_use;
+  } catch (error) {
+    console.error("Error checking usage:", error);
+    return true; // Assume in use on error
+  }
+};
+
+const confirmDelete = async () => {
+  if (deleteTarget) {
+    const inUse = await checkUsage(deleteTarget);
+    if (inUse) {
+      setErrorMessage("Cannot delete: Status is in use.");
+      return;
+    }
+    // Proceed with deletion logic
+  }
+};
+
 export default function Category() {
   const location = useLocation();
   const navigate = useNavigate();

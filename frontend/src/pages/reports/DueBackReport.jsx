@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
-import MockupData from "../../data/mockData/reports/due-for-checkin-mockup-data.json";
 import Pagination from "../../components/Pagination";
 import DepreciationFilter from "../../components/FilterPanel";
 import Footer from "../../components/Footer";
 import dateRelated from "../../utils/dateRelated";
 import { RxPerson } from "react-icons/rx";
-import { IoWarningOutline } from "react-icons/io5";
+import { IoWarningOutline, IoLocationOutline } from "react-icons/io5";
+import assetsAxios from "../../api/assetsAxios";
+import { fetchEmployeeById, fetchLocationById } from "../../services/integration-help-desk-service";
 
 import "../../styles/reports/DueBackReport.css";
 
@@ -31,6 +32,7 @@ function TableHeader() {
       <th>ASSET</th>
       <th>CHECKED OUT BY</th>
       <th>CHECKED OUT TO</th>
+      <th>LOCATION</th>
       <th>CHECKOUT DATE</th>
       <th>CHECKIN DATE</th>
     </tr>
@@ -55,17 +57,15 @@ function TableItem({ asset }) {
     setCurrentDate(formattedDate);
   }, []);
 
-  // Convert to Date objects for comparison
-  const isOverdue = new Date(asset.checkin_date) < new Date(currentDate);
-  const dayDifference = Math.floor(
-    (new Date(currentDate) - new Date(asset.checkin_date)) /
-      (1000 * 60 * 60 * 24)
-  );
+  // Use status from backend
+  const isOverdue = asset.status === 'overdue';
+  const daysUntilDue = asset.days_until_due;
+  const absValue = Math.abs(daysUntilDue);
 
   return (
     <tr>
       <td>
-        {asset.asset_id} - {asset.product}
+        {asset.asset_id} - {asset.asset_name}
       </td>
       <td>
         <div className="icon-td">
@@ -79,23 +79,32 @@ function TableItem({ asset }) {
           <span>{asset.checked_out_to}</span>
         </div>
       </td>
+      <td>
+        {asset.location ? (
+          <div className="icon-td">
+            <IoLocationOutline style={{ color: '#0D6EFD' }} />
+            <span>{asset.location}</span>
+          </div>
+        ) : (
+          <span>—</span>
+        )}
+      </td>
       <td>{dateRelated.formatDate(asset.checkout_date)}</td>
       <td
         title={
-          isOverdue &&
-          `This checkin date is overdue by ${dayDifference} ${
-            dayDifference > 1 ? "days" : "day"
-          }.`
+          isOverdue
+            ? `Overdue by ${absValue} ${absValue !== 1 ? "days" : "day"}`
+            : `Due in ${absValue} ${absValue !== 1 ? "days" : "day"}`
         }
       >
         <div className="icon-td">
           {isOverdue && <IoWarningOutline />}
           <span
             style={{
-              color: isOverdue ? "red" : "#333333",
+              color: isOverdue ? "red" : daysUntilDue <= 3 ? "orange" : "#333333",
             }}
           >
-            {dateRelated.formatDate(asset.checkin_date)}
+            {dateRelated.formatDate(asset.return_date)}
           </span>
         </div>
       </td>
@@ -109,14 +118,97 @@ export default function DueBackReport() {
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
 
+  // Data state
+  const [reportData, setReportData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
 
+  // Fetch data from backend
+  useEffect(() => {
+    const fetchReportData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // Fetch assets due within 30 days
+        const response = await assetsAxios.get("/due-checkin-report/?days=30");
+        if (response.data.success) {
+          const data = response.data.data;
+          
+          // Collect all unique location IDs for batch fetching
+          const locationIds = [...new Set(data.map(item => item.location_id).filter(Boolean))];
+          const locationMap = {};
+
+          // Fetch all location names in parallel
+          if (locationIds.length > 0) {
+            const locationPromises = locationIds.map(locId =>
+              fetchLocationById(locId).catch(() => null)
+            );
+            const locationResults = await Promise.all(locationPromises);
+            locationIds.forEach((locId, idx) => {
+              locationMap[locId] = locationResults[idx]?.name || `Location ${locId}`;
+            });
+          }
+          
+          // Enrich data with employee names and location names
+          const enrichedData = await Promise.all(
+            data.map(async (item) => {
+              try {
+                let updatedItem = { ...item };
+                
+                // Fetch employee name if needed
+                if (item.checked_out_to_id && (item.checked_out_to === 'Unknown' || !item.checked_out_to)) {
+                  const employee = await fetchEmployeeById(item.checked_out_to_id);
+                  updatedItem.checked_out_to = employee ? employee.name : `Employee #${item.checked_out_to_id}`;
+                }
+                
+                // Add location name from the map
+                if (item.location_id && locationMap[item.location_id]) {
+                  updatedItem.location = locationMap[item.location_id];
+                }
+                
+                return updatedItem;
+              } catch (error) {
+                console.error(`Failed to enrich data for item:`, error);
+                return item;
+              }
+            })
+          );
+          
+          setReportData(enrichedData);
+        } else {
+          setError("Failed to load report data");
+        }
+      } catch (err) {
+        console.error("Error fetching due checkin report:", err);
+        setError(err.response?.data?.error || "Failed to load report data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReportData();
+  }, []);
+
+  // Filter data based on search term
+  const filteredData = reportData.filter((asset) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      asset.asset_id?.toLowerCase().includes(searchLower) ||
+      asset.asset_name?.toLowerCase().includes(searchLower) ||
+      asset.checked_out_by?.toLowerCase().includes(searchLower) ||
+      asset.checked_out_to?.toLowerCase().includes(searchLower)
+    );
+  });
+
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedDepreciation = MockupData.slice(startIndex, endIndex);
+  const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -154,12 +246,14 @@ export default function DueBackReport() {
           <section className="table-layout">
             {/* Table Header */}
             <section className="table-header">
-              <h2 className="h2">Asset ({MockupData.length})</h2>
+              <h2 className="h2">Asset ({filteredData.length})</h2>
               <section className="table-actions">
                 <input
                   type="search"
                   placeholder="Search..."
                   className="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <div ref={toggleRef}>
                   <MediumButtons
@@ -179,28 +273,39 @@ export default function DueBackReport() {
                   <button>Download as CSV</button>
                 </section>
               )}
-              <table>
-                <thead>
-                  <TableHeader />
-                </thead>
-                <tbody>
-                  {paginatedDepreciation.length > 0 ? (
-                    paginatedDepreciation.map((asset, index) => (
-                      <TableItem
-                        key={index}
-                        asset={asset}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="no-data-message">
-                        No end of life & warranty found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              
+              {loading ? (
+                <div className="loading-message" style={{ textAlign: "center", padding: "2rem" }}>
+                  Loading report data...
+                </div>
+              ) : error ? (
+                <div className="error-message" style={{ textAlign: "center", padding: "2rem", color: "red" }}>
+                  {error}
+                </div>
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader />
+                  </thead>
+                  <tbody>
+                    {paginatedDepreciation.length > 0 ? (
+                      paginatedDepreciation.map((asset, index) => (
+                        <TableItem
+                          key={asset.checkout_id || index}
+                          asset={asset}
+                          onDeleteClick={() => setDeleteModalOpen(true)}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="no-data-message">
+                          {searchTerm ? "No assets found matching your search." : "No assets due for check-in within 30 days."}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             {/* Table pagination */}
@@ -208,7 +313,7 @@ export default function DueBackReport() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={MockupData.length}
+                totalItems={filteredData.length}
                 onPageChange={setCurrentPage}
                 onPageSizeChange={setPageSize}
               />

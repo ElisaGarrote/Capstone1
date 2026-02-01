@@ -18,6 +18,8 @@ function Dashboard() {
   const [assetForecast, setAssetForecast] = useState(null);
   const [productForecast, setProductForecast] = useState(null);
   const [forecastLoading, setForecastLoading] = useState(true);
+  const [dueCheckinData, setDueCheckinData] = useState([]);
+  const [overdueCheckinData, setOverdueCheckinData] = useState([]);
   const user = getUserFromToken();
   console.log("dashboard user:", user);
 
@@ -84,8 +86,77 @@ function Dashboard() {
       }
     }
 
+    // Load due/overdue checkin data
+    async function loadCheckinData() {
+      try {
+        const response = await assetsAxios.get("/due-checkin-report/?days=30");
+        if (response.data.success) {
+          const data = response.data.data;
+
+          console.log("Raw checkin data:", data);
+
+          // Enrich data with employee names from helpdesk service
+          const enrichedData = await Promise.all(
+            data.map(async (item) => {
+              try {
+                console.log(`Processing item:`, item);
+
+                // If checked_out_to is "Unknown" and we have an employee ID, fetch the employee name
+                if (
+                  item.checked_out_to_id &&
+                  (item.checked_out_to === "Unknown" || !item.checked_out_to)
+                ) {
+                  console.log(`Fetching employee ${item.checked_out_to_id}...`);
+                  const employee = await fetchEmployeeById(
+                    item.checked_out_to_id,
+                  );
+                  console.log(
+                    `Employee data for ${item.checked_out_to_id}:`,
+                    employee,
+                  );
+                  return {
+                    ...item,
+                    checked_out_to: employee
+                      ? employee.name
+                      : `Employee #${item.checked_out_to_id}`,
+                    employee_email: employee ? employee.email : null,
+                    employee_phone: employee ? employee.phone : null,
+                  };
+                }
+
+                // If checked_out_to is already a name (not "Unknown"), use it as-is
+                return item;
+              } catch (error) {
+                console.error(
+                  `Failed to fetch employee ${item.checked_out_to_id}:`,
+                  error,
+                );
+                // Return original item if employee fetch fails
+                return item;
+              }
+            }),
+          );
+
+          console.log("Enriched checkin data:", enrichedData);
+
+          // Separate due and overdue items
+          const dueItems = enrichedData.filter(
+            (item) => item.status === "upcoming",
+          );
+          const overdueItems = enrichedData.filter(
+            (item) => item.status === "overdue",
+          );
+          setDueCheckinData(dueItems);
+          setOverdueCheckinData(overdueItems);
+        }
+      } catch (error) {
+        console.error("Failed to load checkin data:", error);
+      }
+    }
+
     loadDashboardStats();
     loadForecastData();
+    loadCheckinData();
   }, []);
 
   return (
@@ -95,7 +166,19 @@ function Dashboard() {
         <h1>Dashboard</h1>
         <div className="status-cards-grid">
           {statusCards.map((card, index) => (
-            <StatusCard key={index} {...card} index={index} />
+            <StatusCard
+              key={index}
+              {...card}
+              index={index}
+              dueCheckinData={
+                card.title === "Due for Return" ? dueCheckinData : undefined
+              }
+              overdueCheckinData={
+                card.title === "Overdue for Return"
+                  ? overdueCheckinData
+                  : undefined
+              }
+            />
           ))}
         </div>
 
