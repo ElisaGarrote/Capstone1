@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import "../styles/custom-colors.css";
 import "../styles/NavBar.css";
 import Logo from "../assets/img/Logo.png";
@@ -8,9 +8,9 @@ import { IoIosArrowDown } from "react-icons/io";
 import { FaBars, FaChevronLeft } from "react-icons/fa";
 import NotificationOverlay from "./NotificationOverlay";
 import SystemLogo from "../assets/icons/Map-LogoNew.svg";
-import authService from "../services/auth-service";
 import DefaultProfile from "../assets/img/default-profile.svg";
-import assetsAxios from "../api/assetsAxios";
+import { getUserFromToken } from "../api/TokenUtils";
+import { useAuth } from "../context";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -20,8 +20,10 @@ export default function NavBar() {
   const [showReportsMenu, setShowReportsMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(4);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const user = getUserFromToken();
+  const { logout } = useAuth();
 
   // State for selected items in each dropdown
   const [selectedAsset, setSelectedAsset] = useState("Assets");
@@ -33,40 +35,6 @@ export default function NavBar() {
 
   const externalUserManagement = import.meta.env.VITE_EXTERNAL_USER_MANAGEMENT;
   const externalProfileUrl = import.meta.env.VITE_EXTERNAL_PROFILE_MANAGEMENT;
-
-  // Fetch notification count from API
-  const fetchNotificationCount = useCallback(async () => {
-    try {
-      const response = await assetsAxios.get("/notifications/");
-      const allNotifications = response.data.results || [];
-      // Get dismissed IDs from localStorage
-      const stored = localStorage.getItem("dismissedNotifications");
-      const dismissedIds = stored ? JSON.parse(stored) : [];
-      // Count only non-dismissed notifications
-      const activeCount = allNotifications.filter(
-        (n) => !dismissedIds.includes(n.id),
-      ).length;
-      setNotificationCount(activeCount);
-    } catch (err) {
-      console.error("Failed to fetch notification count:", err);
-      setNotificationCount(0);
-    }
-  }, []);
-
-  // Fetch notification count on mount and periodically
-  useEffect(() => {
-    fetchNotificationCount();
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchNotificationCount, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [fetchNotificationCount]);
-
-  // Refresh notification count when overlay closes
-  useEffect(() => {
-    if (!showNotifications) {
-      fetchNotificationCount();
-    }
-  }, [showNotifications, fetchNotificationCount]);
 
   // Close all dropdowns when clicking outside
   useEffect(() => {
@@ -211,9 +179,46 @@ export default function NavBar() {
     }
   }, [location.pathname]);
 
-  const logout = () => {
-    authService.logout();
-    navigate("/login");
+  const logoutAccount = async () => {
+    try {
+      // First, request logout from external auth service
+      const externalAuth = import.meta.env.VITE_EXTERNAL_AUTH;
+      if (externalAuth) {
+        try {
+          // Get CSRF token from cookie
+          const csrfToken = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("csrftoken="))
+            ?.split("=")[1];
+
+          await fetch(`${externalAuth}/users/logout/`, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              ...(csrfToken && { "X-CSRFToken": csrfToken }),
+            },
+          });
+        } catch (externalError) {
+          console.warn("External auth logout failed:", externalError);
+        }
+      }
+
+      // Then perform local logout
+      authService.logout();
+      localStorage.clear();
+      sessionStorage.clear();
+
+      // Finally redirect to login
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if there's an error, still perform local logout and redirect
+      authService.logout();
+      localStorage.clear();
+      sessionStorage.clear();
+      navigate("/login");
+    }
   };
 
   return (
@@ -390,6 +395,7 @@ export default function NavBar() {
               Tickets
             </a>
           </li>
+
           <li
             className={`dropdown-container reports-dropdown-container ${
               showReportsMenu ? "open" : ""
@@ -462,88 +468,90 @@ export default function NavBar() {
             )}
           </li>
 
-          {authService.getUserInfo().role === "Admin" && (
-            <li
-              className={`dropdown-container more-dropdown-container ${
-                showMoreMenu ? "open" : ""
-              }`}
-            >
-              <div
-                className={`dropdown-trigger ${
-                  activeMenu === "more" ? "active" : ""
+          {user.roles?.[0].role === "Admin" && (
+            <>
+              <li
+                className={`dropdown-container more-dropdown-container ${
+                  showMoreMenu ? "open" : ""
                 }`}
-                onClick={() => toggleDropdown("more")}
               >
-                <span className="dropdown-text">{selectedMore}</span>{" "}
-                <IoIosArrowDown />
-              </div>
-              {showMoreMenu && (
-                <div className="custom-dropdown more-dropdown">
-                  <div className="dropdown-menu">
-                    <button
-                      onClick={() => {
-                        navigate("/More/ViewCategories");
-                        setSelectedMore("Categories");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Categories
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/ViewManufacturer");
-                        setSelectedMore("Manufacturers");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Manufacturers
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/ViewSupplier");
-                        setSelectedMore("Suppliers");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Suppliers
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/ViewStatus");
-                        setSelectedMore("Statuses");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Statuses
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/Depreciations");
-                        setSelectedMore("Depreciations");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Depreciations
-                    </button>
-                    <button
-                      onClick={() => {
-                        navigate("/More/RecycleBin");
-                        setSelectedMore("Recycle Bin");
-                        setShowMoreMenu(false);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      Recycle Bin
-                    </button>
-                  </div>
+                <div
+                  className={`dropdown-trigger ${
+                    activeMenu === "more" ? "active" : ""
+                  }`}
+                  onClick={() => toggleDropdown("more")}
+                >
+                  <span className="dropdown-text">{selectedMore}</span>{" "}
+                  <IoIosArrowDown />
                 </div>
-              )}
-            </li>
+                {showMoreMenu && (
+                  <div className="custom-dropdown more-dropdown">
+                    <div className="dropdown-menu">
+                      <button
+                        onClick={() => {
+                          navigate("/More/ViewCategories");
+                          setSelectedMore("Categories");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Categories
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/ViewManufacturer");
+                          setSelectedMore("Manufacturers");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Manufacturers
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/ViewSupplier");
+                          setSelectedMore("Suppliers");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Suppliers
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/ViewStatus");
+                          setSelectedMore("Statuses");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Statuses
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/Depreciations");
+                          setSelectedMore("Depreciations");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Depreciations
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/More/RecycleBin");
+                          setSelectedMore("Recycle Bin");
+                          setShowMoreMenu(false);
+                          setMobileOpen(false);
+                        }}
+                      >
+                        Recycle Bin
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            </>
           )}
         </ul>
       </section>
@@ -582,7 +590,7 @@ export default function NavBar() {
         </div>
         <div className="profile-container">
           <img
-            src={authService.getUserInfo().image || DefaultProfile}
+            src={DefaultProfile}
             alt="sample-profile"
             className="sample-profile"
             onClick={() => {
@@ -593,39 +601,22 @@ export default function NavBar() {
           {showProfileMenu && (
             <div className="profile-dropdown">
               <div className="profile-header">
-                <img
-                  src={authService.getUserInfo().image || DefaultProfile}
-                  alt="profile"
-                />
+                <img src={DefaultProfile} alt="profile" />
                 <div className="profile-info">
-                  <h3>
-                    {authService.getUserInfo().first_name}{" "}
-                    {authService.getUserInfo().last_name}
-                  </h3>
-                  <span className="admin-badge">
-                    {authService.getUserInfo().role}
-                  </span>
+                  <h3>{user.full_name}</h3>
+                  <span className="admin-badge">{user.roles?.[0].role}</span>
                 </div>
               </div>
               <div className="profile-menu">
-                <button onClick={() => window.open(externalProfileUrl)}>
+                <button onClick={() => window.open(externalUserManagement)}>
                   Manage Profile
                 </button>
-                {authService.getUserInfo().role === "Admin" && (
-                  <button
-                    onClick={() =>
-                      window.open(
-                        externalUserManagement,
-                        "_blank",
-                        "noopener,noreferrer",
-                      )
-                    }
-                    title={externalUserManagement}
-                  >
+                {user.roles?.[0].role === "Admin" && (
+                  <button onClick={() => window.open(externalUserManagement)}>
                     User Management
                   </button>
                 )}
-                <button onClick={logout} className="logout-btn">
+                <button onClick={logoutAccount} className="logout-btn">
                   Log Out
                 </button>
               </div>
