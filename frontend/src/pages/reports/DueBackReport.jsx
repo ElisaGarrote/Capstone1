@@ -8,7 +8,7 @@ import dateRelated from "../../utils/dateRelated";
 import { RxPerson } from "react-icons/rx";
 import { IoWarningOutline, IoLocationOutline } from "react-icons/io5";
 import assetsAxios from "../../api/assetsAxios";
-import { fetchEmployeeById } from "../../services/integration-help-desk-service";
+import { fetchEmployeeById, fetchLocationById } from "../../services/integration-help-desk-service";
 
 import "../../styles/reports/DueBackReport.css";
 
@@ -139,21 +139,41 @@ export default function DueBackReport() {
         if (response.data.success) {
           const data = response.data.data;
           
-          // Enrich data with employee names from helpdesk service
+          // Collect all unique location IDs for batch fetching
+          const locationIds = [...new Set(data.map(item => item.location_id).filter(Boolean))];
+          const locationMap = {};
+
+          // Fetch all location names in parallel
+          if (locationIds.length > 0) {
+            const locationPromises = locationIds.map(locId =>
+              fetchLocationById(locId).catch(() => null)
+            );
+            const locationResults = await Promise.all(locationPromises);
+            locationIds.forEach((locId, idx) => {
+              locationMap[locId] = locationResults[idx]?.name || `Location ${locId}`;
+            });
+          }
+          
+          // Enrich data with employee names and location names
           const enrichedData = await Promise.all(
             data.map(async (item) => {
               try {
-                // If checked_out_to is "Unknown" and we have an employee ID, fetch the employee name
+                let updatedItem = { ...item };
+                
+                // Fetch employee name if needed
                 if (item.checked_out_to_id && (item.checked_out_to === 'Unknown' || !item.checked_out_to)) {
                   const employee = await fetchEmployeeById(item.checked_out_to_id);
-                  return {
-                    ...item,
-                    checked_out_to: employee ? employee.name : `Employee #${item.checked_out_to_id}`,
-                  };
+                  updatedItem.checked_out_to = employee ? employee.name : `Employee #${item.checked_out_to_id}`;
                 }
-                return item;
+                
+                // Add location name from the map
+                if (item.location_id && locationMap[item.location_id]) {
+                  updatedItem.location = locationMap[item.location_id];
+                }
+                
+                return updatedItem;
               } catch (error) {
-                console.error(`Failed to fetch employee ${item.checked_out_to_id}:`, error);
+                console.error(`Failed to enrich data for item:`, error);
                 return item;
               }
             })
