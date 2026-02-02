@@ -1,6 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/ActionButtons.css";
-import { getUserRole } from "../utils/user";
 import { getUserFromToken } from "../api/TokenUtils";
 
 export default function ActionButtons({
@@ -39,18 +38,14 @@ export default function ActionButtons({
   return (
     <section className="action-button-section">
       {showView && (
-        <button
-          title="View"
-          className="action-button"
-          onClick={onViewClick}
-        >
+        <button title="View" className="action-button" onClick={onViewClick}>
           <i className="fas fa-eye"></i>
         </button>
       )}
 
       {showEdit &&
         allowedPaths.some((path) => location.pathname.includes(path)) &&
-        getUserRole() === "operator" && (
+        user?.roles?.[0]?.role?.toLowerCase() === "operator" && (
           <button
             title="Edit"
             className="action-button"
@@ -60,7 +55,7 @@ export default function ActionButtons({
           </button>
         )}
 
-      {showEdit && user.roles[0].role === "admin" && (
+      {showEdit && user?.roles?.[0]?.role?.toLowerCase() === "admin" && (
         <button
           title="Edit"
           className="action-button"
@@ -70,7 +65,7 @@ export default function ActionButtons({
         </button>
       )}
 
-      {showDelete && user.roles[0].role === "admin" && (
+      {showDelete && user?.roles?.[0]?.role?.toLowerCase() === "admin" && (
         <button
           title={deleteTitle || "Delete"}
           className="action-button"
