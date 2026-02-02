@@ -27,12 +27,11 @@ function Login() {
   const externalLoginUrl = import.meta.env.VITE_EXTERNAL_LOGIN_URL;
 
   // Redirect to external login if configured
-  // Temporarily disabled to use internal login
-  // useEffect(() => {
-  //   if (externalLoginUrl) {
-  //     window.location.href = externalLoginUrl;
-  //   }
-  // }, [externalLoginUrl]);
+  useEffect(() => {
+    if (externalLoginUrl) {
+      window.location.href = externalLoginUrl;
+    }
+  }, [externalLoginUrl]);
 
   const {
     register,
