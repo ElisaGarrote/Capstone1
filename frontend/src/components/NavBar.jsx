@@ -11,6 +11,7 @@ import SystemLogo from "../assets/icons/Map-LogoNew.svg";
 import DefaultProfile from "../assets/img/default-profile.svg";
 import { getUserFromToken } from "../api/TokenUtils";
 import { useAuth } from "../context";
+import authService from "../services/auth-service";
 
 export default function NavBar() {
   const navigate = useNavigate();
