@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
@@ -16,6 +16,7 @@ import {
   fetchEmployeeById,
 } from "../../services/integration-auth-service";
 import authService from "../../services/auth-service";
+import { exportToExcel } from "../../utils/exportToExcel";
 
 import "../../styles/Tickets/Tickets.css";
 
@@ -102,14 +103,11 @@ function isFutureDate(dateString) {
 const Tickets = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const toggleRef = useRef(null);
-  const exportRef = useRef(null);
 
   const [ticketItems, setTicketItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [exportToggle, setExportToggle] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [isLoading, setIsLoading] = useState(true);
@@ -325,25 +323,6 @@ const Tickets = () => {
     setSelectedTicket(null);
   };
 
-  // outside click for export toggle
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        exportToggle &&
-        exportRef.current &&
-        !exportRef.current.contains(event.target) &&
-        toggleRef.current &&
-        !toggleRef.current.contains(event.target)
-      ) {
-        setExportToggle(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [exportToggle]);
-
   useEffect(() => {
     if (location.state?.successMessage) {
       setSuccessMessage(location.state.successMessage);
@@ -484,25 +463,16 @@ const Tickets = () => {
                   Filter
                 </button>
                 {authService.getUserInfo().role === "Admin" && (
-                  <div ref={toggleRef}>
-                    <MediumButtons
-                      type="export"
-                      onClick={() => setExportToggle(!exportToggle)}
-                    />
-                  </div>
+                  <MediumButtons
+                    type="export"
+                    onClick={() => exportToExcel(filteredTickets, "Tickets_Records.xlsx")}
+                  />
                 )}
               </section>
             </section>
 
             {/* Table Structure */}
             <section className="tickets-table-section">
-              {exportToggle && (
-                <section className="export-button-section" ref={exportRef}>
-                  <button>Download as Excel</button>
-                  <button>Download as PDF</button>
-                  <button>Download as CSV</button>
-                </section>
-              )}
               <table>
                 <thead>
                   <TableHeader
