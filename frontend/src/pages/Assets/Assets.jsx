@@ -12,6 +12,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import "../../styles/Assets/Assets.css";
 import { fetchAllAssets } from "../../services/assets-service";
 import { getUserFromToken } from "../../api/TokenUtils";
@@ -324,92 +325,71 @@ export default function Assets() {
   const applyFilters = (filters) => {
     let filtered = [...assets];
 
-    // Filter by Asset ID
+    // Filter by Asset ID (text matching)
     if (filters.assetId && filters.assetId.trim() !== "") {
       filtered = filtered.filter((asset) =>
-        asset.displayed_id.toLowerCase().includes(filters.assetId.toLowerCase())
+        (asset.asset_id || asset.displayed_id)
+          ?.toLowerCase()
+          .includes(filters.assetId.toLowerCase())
       );
     }
 
-    // Filter by Asset Model
-    if (filters.assetModel && filters.assetModel.trim() !== "") {
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
       filtered = filtered.filter((asset) =>
-        asset.product?.toLowerCase().includes(filters.assetModel.toLowerCase())
+        asset.name.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    // Filter by Serial Number
+    if (filters.serial && filters.serial.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.serial_number
+          ?.toLowerCase()
+          .includes(filters.serial.toLowerCase())
       );
     }
 
     // Filter by Status
     if (filters.status) {
+      if (filters.status.value === "for_audit") {
+        // Filter for assets marked for audit
+        filtered = filtered.filter((asset) => asset.for_audit === true);
+      } else {
+        filtered = filtered.filter((asset) => {
+          const assetStatus = asset.status_details?.type?.toLowerCase();
+          const filterStatus = filters.status.value?.toLowerCase();
+          return assetStatus === filterStatus;
+        });
+      }
+    }
+
+    // Filter by For Audit (removed - now part of Status filter)
+    // If filters.forAudit !== null && filters.forAudit !== undefined removed
+    
+    // Filter by Warranty
+    if (filters.warranty && filters.warranty.trim() !== "") {
       filtered = filtered.filter(
-        (asset) =>
-          asset.status.toLowerCase() === filters.status.value.toLowerCase()
+        (asset) => asset.warranty_expiration === filters.warranty
       );
     }
 
-    // Filter by Supplier
-    if (filters.supplier) {
-      filtered = filtered.filter((asset) =>
-        asset.supplier
-          ?.toLowerCase()
-          .includes(filters.supplier.label.toLowerCase())
-      );
-    }
-
-    // Filter by Location
-    if (filters.location) {
-      filtered = filtered.filter((asset) =>
-        asset.location
-          ?.toLowerCase()
-          .includes(filters.location.label.toLowerCase())
-      );
-    }
-
-    // Filter by Asset Name
-    if (filters.assetName && filters.assetName.trim() !== "") {
-      filtered = filtered.filter((asset) =>
-        asset.name.toLowerCase().includes(filters.assetName.toLowerCase())
-      );
-    }
-
-    // Filter by Serial Number
-    if (filters.serialNumber && filters.serialNumber.trim() !== "") {
-      filtered = filtered.filter((asset) =>
-        asset.serial_number
-          ?.toLowerCase()
-          .includes(filters.serialNumber.toLowerCase())
-      );
-    }
-
-    // Filter by Warranty Expiration
-    if (
-      filters.warrantyExpiration &&
-      filters.warrantyExpiration.trim() !== ""
-    ) {
+    // Filter by End of Life
+    if (filters.endOfLife && filters.endOfLife.trim() !== "") {
       filtered = filtered.filter(
-        (asset) => asset.warranty_expiration_date === filters.warrantyExpiration
+        (asset) => asset.product_details?.end_of_life === filters.endOfLife
       );
     }
 
-    // Filter by Order Number
-    if (filters.orderNumber && filters.orderNumber.trim() !== "") {
-      filtered = filtered.filter((asset) =>
-        asset.order_number
-          ?.toLowerCase()
-          .includes(filters.orderNumber.toLowerCase())
-      );
-    }
-
-    // Filter by Purchase Date
-    if (filters.purchaseDate && filters.purchaseDate.trim() !== "") {
-      filtered = filtered.filter(
-        (asset) => asset.purchase_date === filters.purchaseDate
-      );
-    }
-
-    // Filter by Purchase Cost
-    if (filters.purchaseCost && filters.purchaseCost.trim() !== "") {
-      const cost = parseFloat(filters.purchaseCost);
-      filtered = filtered.filter((asset) => asset.purchase_cost === cost);
+    // Filter by Check-In / Check-Out
+    if (filters.checkInCheckOut) {
+      if (filters.checkInCheckOut.value === "checked_out") {
+        // Checked out = no active checkout (asset is available/checked in)
+        filtered = filtered.filter((asset) => !asset.active_checkout);
+      } else if (filters.checkInCheckOut.value === "checked_in") {
+        // Checked in = has an active checkout (asset is out)
+        filtered = filtered.filter((asset) => asset.active_checkout);
+      }
     }
 
     return filtered;
@@ -422,10 +402,23 @@ export default function Assets() {
       const lowerTerm = term.toLowerCase();
       filtered = filtered.filter(
         (asset) =>
+          // ID
+          (asset.asset_id && asset.asset_id.toLowerCase().includes(lowerTerm)) ||
+          (asset.displayed_id && asset.displayed_id.toLowerCase().includes(lowerTerm)) ||
+          // NAME
           (asset.name && asset.name.toLowerCase().includes(lowerTerm)) ||
-          (asset.displayed_id &&
-            asset.displayed_id.toLowerCase().includes(lowerTerm)) ||
-          (asset.category && asset.category.toLowerCase().includes(lowerTerm))
+          // SERIAL
+          (asset.serial_number && asset.serial_number.toLowerCase().includes(lowerTerm)) ||
+          // STATUS
+          (asset.status_details?.name && asset.status_details.name.toLowerCase().includes(lowerTerm)) ||
+          (asset.status_details?.type && asset.status_details.type.toLowerCase().includes(lowerTerm)) ||
+          // WARRANTY
+          (asset.warranty_expiration && asset.warranty_expiration.toLowerCase().includes(lowerTerm)) ||
+          // END OF LIFE
+          (asset.product_details?.end_of_life && asset.product_details.end_of_life.toLowerCase().includes(lowerTerm)) ||
+          // CHECK-IN / CHECK-OUT status
+          (asset.active_checkout && "checked out".includes(lowerTerm)) ||
+          (!asset.active_checkout && "checked in".includes(lowerTerm))
       );
     }
 
@@ -463,10 +456,12 @@ export default function Assets() {
     const ticket = asset.ticket_details;
 
     if (checkoutId) {
+      console.log("Navigating to check-in from assets page for asset:", asset);
       navigate(`/assets/check-in/${assetId}`, {
         state: { assetId, assetDisplayId, assetName, checkoutId, ticket },
       });
     } else {
+      console.log("Navigating to check-out from assets page for asset:", asset);
       navigate(`/assets/check-out/${assetId}`, {
         state: { assetId, assetDisplayId, assetName, ticket },
       });
@@ -497,6 +492,7 @@ export default function Assets() {
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
         initialFilters={appliedFilters}
+        allAssets={assets}
       />
 
       <section className="page-layout-with-table">
@@ -556,41 +552,39 @@ export default function Assets() {
 
             {/* Table Structure */}
             <section className="assets-table-section">
-              <table>
-                <thead>
-                  <TableHeader
-                    allSelected={allSelected}
-                    onHeaderChange={handleHeaderChange}
-                  />
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={10} className="no-data-message">
-                        Loading assets...
-                      </td>
-                    </tr>
-                  ) : paginatedAssets.length > 0 ? (
-                    paginatedAssets.map((asset) => (
-                      <TableItem
-                        key={asset.id}
-                        asset={asset}
-                        isSelected={selectedIds.includes(asset.id)}
-                        onRowChange={handleRowChange}
-                        onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
-                        onCheckInOut={handleCheckInOut}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={10} className="no-data-message">
-                        No Assets Found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {isLoading ? (
+                <SkeletonLoadingTable />
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader
+                      allSelected={allSelected}
+                      onHeaderChange={handleHeaderChange}
+                    />
+                  </thead>
+                  <tbody>
+                    {paginatedAssets.length > 0 ? (
+                      paginatedAssets.map((asset) => (
+                        <TableItem
+                          key={asset.id}
+                          asset={asset}
+                          isSelected={selectedIds.includes(asset.id)}
+                          onRowChange={handleRowChange}
+                          onDeleteClick={openDeleteModal}
+                          onViewClick={handleViewClick}
+                          onCheckInOut={handleCheckInOut}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={10} className="no-data-message">
+                          No Assets Found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             {/* Table pagination */}

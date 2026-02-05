@@ -293,81 +293,17 @@ export default function Category() {
   };
 
   const confirmDelete = async () => {
+    console.log('[Delete] confirmDelete called - refreshing category list');
+    // Modal already handled the delete, just refresh the list
     try {
-      if (deleteTarget) {
-        const resp = await deleteCategory(deleteTarget);
-        // If backend indicates the item is in use or skipped, show singular in-use alert
-        if (resp && (resp.in_use || (resp.skipped && Object.keys(resp.skipped).length))) {
-          const msg = `The selected category cannot be deleted. Currently in use!`;
-          setErrorMessage(msg);
-          setTimeout(() => setErrorMessage(''), 5000);
-          return { ok: false, data: { in_use: true } };
-        }
-        setSuccessMessage("Category deleted successfully!");
-      } else {
-        if (selectedIds.length > 0) {
-          const resp = await bulkDeleteCategories(selectedIds);
-          // If backend skipped some items, signal the modal to display usage message
-          if (resp && resp.skipped && Object.keys(resp.skipped).length > 0) {
-            const deletedCount = (resp && resp.deleted && resp.deleted.length) || 0;
-            const skippedCount = Object.keys(resp.skipped).length;
-
-            if (deletedCount > 0) {
-              const parts = [`${deletedCount} categories deleted successfully`];
-              if (skippedCount > 0) parts.push(`${skippedCount} skipped (in use)`);
-              const msg = parts.join('; ') + '.';
-              setSuccessMessage(msg);
-              setErrorMessage('');
-              setTimeout(() => setSuccessMessage(''), 5000);
-              return { ok: false, data: resp };
-            }
-
-            // Only skipped
-            const msg = `${skippedCount} categories skipped (currently in use).`;
-            setErrorMessage(msg);
-            setSuccessMessage('');
-            setTimeout(() => setErrorMessage(''), 5000);
-            return { ok: false, data: resp };
-          }
-          setSuccessMessage("Categories deleted successfully!");
-        }
-        setSelectedIds([]);
-      }
-
-      // Refresh the local list after deletion
-      try {
-        const data = await fetchCategories({ fields: 'id,name,type,asset_count,component_count', page_size: 500 })
-        setFetchedCategories(data)
-        setFilteredData(data)
-      } catch (err) {
-        console.error('Failed to refresh categories after delete', err)
-      }
-
-      // Success — close modal and return ok
-      closeDeleteModal();
+      const data = await fetchCategories({ fields: 'id,name,type,asset_count,component_count', page_size: 500 })
+      setFetchedCategories(data)
+      setFilteredData(data)
+      setSelectedIds([]);
+      setSuccessMessage(deleteTarget ? "Category deleted successfully!" : "Categories deleted successfully!");
       setTimeout(() => setSuccessMessage(""), 5000);
-      return { ok: true, data: null };
     } catch (err) {
-      console.error('Delete failed', err)
-      const respData = err?.response?.data;
-      // Detect usage-related errors (backend returns ValidationError with 'error' or 'detail')
-      const isUsage = respData && (respData.in_use || respData.skipped || (respData.error && typeof respData.error === 'string' && respData.error.toLowerCase().includes('use')) || (respData.detail && typeof respData.detail === 'string' && respData.detail.toLowerCase().includes('use')));
-      if (isUsage) {
-        // Set page-level generic in-use alert. Use singular/plural depending on context.
-        const isMultiple = !deleteTarget && selectedIds && selectedIds.length > 1;
-        const msg = isMultiple
-          ? `The selected categories cannot be deleted. Currently in use!`
-          : `The selected category cannot be deleted. Currently in use!`;
-        setErrorMessage(msg);
-        setTimeout(() => setErrorMessage(''), 5000);
-        // Tell the modal/page that deletion was blocked
-        return { ok: false, data: { in_use: true } };
-      }
-
-      const msg = respData?.detail || respData || err.message || 'Delete failed.'
-      setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg))
-      setTimeout(() => setErrorMessage(''), 5000)
-      return { ok: false, data: { error: msg } };
+      console.error('[Delete] Failed to refresh categories after delete', err)
     }
   };
 
@@ -399,9 +335,22 @@ export default function Category() {
       {isDeleteModalOpen && (
         <DeleteModal
           closeModal={closeDeleteModal}
-          actionType="delete"
-          onConfirm={confirmDelete}
-          selectedCount={deleteTarget ? 1 : selectedIds.length}
+          isOpen={isDeleteModalOpen}
+          actionType={deleteTarget ? "delete" : "bulk-delete"}
+          entityType="category"
+          targetId={deleteTarget}
+          targetIds={selectedIds}
+          onSuccess={async (deletedIds) => {
+            console.log('[Delete] Modal onSuccess called with:', deletedIds);
+            await confirmDelete();
+          }}
+          onError={(error) => {
+            console.error('[Delete] Modal onError called with:', error);
+            const respData = error?.response?.data;
+            const msg = respData?.detail || respData || error.message || 'Delete failed.';
+            setErrorMessage(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            setTimeout(() => setErrorMessage(''), 5000);
+          }}
         />
       )}
 

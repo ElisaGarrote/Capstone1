@@ -6,12 +6,14 @@
 .asset-filter-modal-body {
   max-height: 60vh;
   overflow-y: auto;
+  overflow-x: visible;
 }
 
 .filter-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
+  position: relative;
 }
 
 .filter-grid fieldset {
@@ -96,14 +98,22 @@
   border-radius: 25px;
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: all 0.3s ease;
   box-sizing: border-box;
   cursor: pointer;
+  background-color: white;
+  position: relative;
+  z-index: 100;
+}
+
+.filter-grid select:hover {
+  border-color: #999;
 }
 
 .filter-grid select:focus {
   outline: none;
   border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
 }
 
 .asset-filter-cost-field {
@@ -161,6 +171,24 @@
 .asset-filter-cost-input-group input[type="number"]:focus::-webkit-outer-spin-button,
 .asset-filter-cost-input-group input[type="number"]:focus::-webkit-inner-spin-button {
     opacity: 1;
+}
+
+/* Select options styling */
+.filter-grid select option {
+  padding: 10px 16px;
+  background-color: white;
+  color: #333;
+  font-size: 0.875rem;
+}
+
+.filter-grid select option:checked {
+  background-color: #e8f0ff;
+  color: #0D6EFD;
+  font-weight: 500;
+}
+
+.filter-grid select option:hover {
+  background-color: #f0f0f0;
 }
 
 @media (max-width: 768px) {

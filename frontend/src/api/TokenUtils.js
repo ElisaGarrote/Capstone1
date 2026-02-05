@@ -96,7 +96,7 @@ export const parseJwt = (token) => {
       atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .join(""),
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
@@ -120,7 +120,7 @@ export const hasSystemRole = (user, system, roleName) => {
   return user.roles.some(
     (role) =>
       role.system?.toLowerCase() === system?.toLowerCase() &&
-      role.role?.toLowerCase() === roleName?.toLowerCase()
+      role.role?.toLowerCase() === roleName?.toLowerCase(),
   );
 };
 
@@ -136,7 +136,7 @@ export const hasAnySystemRole = (user, system) => {
   }
 
   return user.roles.some(
-    (role) => role.system?.toLowerCase() === system?.toLowerCase()
+    (role) => role.system?.toLowerCase() === system?.toLowerCase(),
   );
 };
 
@@ -175,7 +175,7 @@ export const getSystemRole = (user, system) => {
   }
 
   const roleEntry = user.roles.find(
-    (role) => role.system?.toLowerCase() === system?.toLowerCase()
+    (role) => role.system?.toLowerCase() === system?.toLowerCase(),
   );
   console.log("Role entry:", roleEntry);
   console.log("return role entry:", roleEntry ? roleEntry.role : null);

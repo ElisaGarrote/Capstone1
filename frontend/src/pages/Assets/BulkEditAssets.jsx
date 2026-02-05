@@ -163,6 +163,7 @@ export default function BulkEditAssets() {
 
       setSelectedImage(file);
       setValue('image', file);
+      setRemoveImage(false); // Clear remove flag when uploading new image
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -176,6 +177,12 @@ export default function BulkEditAssets() {
     try {
       if (currentSelectedIds.length === 0) {
         setErrorMessage("Please select at least one asset to update");
+        return;
+      }
+
+      // Validate mutual exclusion of upload and remove
+      if (selectedImage && removeImage) {
+        setErrorMessage("Cannot upload and remove images simultaneously. Choose one action.");
         return;
       }
 
@@ -262,16 +269,17 @@ export default function BulkEditAssets() {
       {errorMessage && <Alert message={errorMessage} type="danger" />}
       {successMessage && <Alert message={successMessage} type="success" />}
 
-      <section className="page-layout-with-table">
+      <section className="page-layout-registration">
         <NavBar />
-
-        <main className="main-with-table">
+        <main className="registration">
+        <section className="top">
           <TopSecFormPage
             root="Assets"
             currentPage="Bulk Edit Assets"
             rootNavigatePage="/assets"
             title="Bulk Edit Assets"
           />
+        </section>
 
           {/* Selected Assets Section */}
           <section className="selected-assets-section">
@@ -300,7 +308,14 @@ export default function BulkEditAssets() {
             </div>
           </section>
 
-          <section className="bulk-edit-form-section registration">
+          {/* Notes Section */}
+          <section className="bulk-edit-notes-section">
+            <p className="bulk-edit-notes-text">
+              <strong>Notes:</strong> Only the fields that are filled in will be updated for all selected assets. Fields left empty will remain unchanged. Selecting "Remove images from all items" will remove the existing images.
+            </p>
+          </section>
+
+          <section className="registration-form">
             <form onSubmit={handleSubmit(onSubmit)} className="bulk-edit-form">
               {/* Product Dropdown */}
               <fieldset className="form-field">
@@ -494,37 +509,61 @@ export default function BulkEditAssets() {
 
               {/* Image */}
               <fieldset>
-                <label>Image</label>
-                {previewImage ? (
-                  <div className="image-selected">
-                    <img src={previewImage} alt="Selected image" />
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setPreviewImage(null);
-                        setSelectedImage(null);
-                        setValue('image', null);
-                        document.getElementById('image').value = '';
-                        setRemoveImage(true);
-                        console.log("Remove image flag set to:", true);
-                      }}
-                    >
-                      <img src={CloseIcon} alt="Remove" />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="upload-image-btn">
-                    Choose File
+                <label>Image Management</label>
+                <div className="image-management-section">
+                  <label 
+                    className={`upload-image-btn ${selectedImage || removeImage ? 'disabled' : ''}`}
+                    title={selectedImage ? "File selected" : removeImage ? "Cannot upload while image removal is selected" : ""}
+                  >
+                    {selectedImage ? `✓ ${selectedImage.name}` : 'Choose File'}
                     <input
                       type="file"
                       id="image"
                       accept="image/*"
                       onChange={handleImageSelection}
+                      disabled={removeImage}
                       style={{ display: "none" }}
                     />
                   </label>
-                )}
+                  {selectedImage && (
+                    <button
+                      type="button"
+                      className="clear-file-btn"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSelectedImage(null);
+                        setPreviewImage(null);
+                        setValue('image', null);
+                        document.getElementById('image').value = '';
+                      }}
+                      title="Clear file selection"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="checkbox-group">
+                  <label htmlFor="removeImage" className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      id="removeImage"
+                      checked={removeImage}
+                      onChange={(e) => {
+                        setRemoveImage(e.target.checked);
+                        if (e.target.checked) {
+                          setSelectedImage(null);
+                          setPreviewImage(null);
+                          setValue('image', null);
+                          if (document.getElementById('image')) {
+                            document.getElementById('image').value = '';
+                          }
+                        }
+                      }}
+                      disabled={selectedImage !== null}
+                    />
+                    Remove images from all items
+                  </label>
+                </div>
                 <small className="file-size-info">
                   Maximum file size must be 5MB
                 </small>

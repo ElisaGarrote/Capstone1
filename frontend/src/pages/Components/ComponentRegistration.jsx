@@ -1,39 +1,40 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useForm } from "react-hook-form";
 import NavBar from "../../components/NavBar";
 import Footer from "../../components/Footer";
-import "../../styles/Registration.css";
 import TopSecFormPage from "../../components/TopSecFormPage";
-import { useForm } from "react-hook-form";
 import CloseIcon from "../../assets/icons/close.svg";
 import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
-import { fetchComponentById, createComponent, updateComponent } from "../../services/assets-service";
+import SystemLoading from "../../components/Loading/SystemLoading";
+import Alert from "../../components/Alert";
+import "../../styles/Registration.css";
+import { fetchComponentNames, fetchComponentById, createComponent, updateComponent } from "../../services/assets-service";
 import { fetchAllDropdowns, createCategory, createManufacturer, createSupplier } from "../../services/contexts-service";
 import { fetchAllLocations } from "../../services/integration-help-desk-service";
-import SystemLoading from "../../components/Loading/SystemLoading";
 
-const ASSETS_API_URL = import.meta.env.VITE_ASSETS_API_URL || "";
+export default function ProductsRegistration() {
+  const [categories, setCategories] = useState([]);
+  const [manufacturers, setManufacturers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [component, setComponent] = useState(null);
+  const [isClone, setIsClone] = useState(false);
 
-const ComponentRegistration = () => {
+  // Modal states for adding new entries
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showManufacturerModal, setShowManufacturerModal] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams();
-  const isEdit = !!id;
-
-  const [attachmentFile, setAttachmentFile] = useState(null);
-  const [existingImage, setExistingImage] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+  const currentDate = new Date().toISOString().split("T")[0];
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEdit = id && !isClone;
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors, isValid },
-  } = useForm({
+  const { setValue, register, handleSubmit, trigger, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       componentName: "",
@@ -48,83 +49,172 @@ const ComponentRegistration = () => {
       minimumQuantity: "",
       purchaseDate: "",
       notes: "",
-    },
+    }
   });
 
-  // Dropdown options from API
-  const [categories, setCategories] = useState([]);
-  const [manufacturers, setManufacturers] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [locations, setLocations] = useState([]);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
-  // Initialize form with dropdown options and component data (if editing)
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Determine mode: clone mode passed from AssetViewPage
+  const cloneMode = location.state?.isClone === true;
+
+  const generateCloneName = async (baseName) => {
+    // 1. Fetch all existing component names that contain the base name
+    const existing = await fetchComponentNames({ search: baseName });
+    const existingNames = existing.map(a => a.name);
+
+    // 2. Pattern matches: "BaseName (clone)" or "BaseName (clone) (N)" - case insensitive
+    const clonePattern = new RegExp(`^${escapeRegExp(baseName)} \\(clone\\)(?: \\((\\d+)\\))?$`, 'i');
+
+    // 3. Find the highest existing clone index
+    let maxIndex = -1; // -1 means no clones exist yet
+    existingNames.forEach(name => {
+      const match = name.match(clonePattern);
+      if (match) {
+        // If no number group, it's the first clone (index 0)
+        // If number group exists, that's the index
+        const index = match[1] ? parseInt(match[1], 10) : 0;
+        if (index > maxIndex) maxIndex = index;
+      }
+    });
+
+    // 4. Generate clone name
+    if (maxIndex === -1) {
+      // No clones exist, return first clone name
+      return `${baseName} (clone)`;
+    }
+    // Clones exist, return next number
+    return `${baseName} (clone) (${maxIndex + 1})`;
+  };
+
+  // Utility to escape regex special chars in base name
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   useEffect(() => {
     const initialize = async () => {
       try {
         setIsLoading(true);
+        setIsClone(cloneMode);
 
-        // Fetch dropdown options for components
-        const dropdowns = await fetchAllDropdowns("component", { type: "component" });
-        let categoriesList = dropdowns.categories || [];
-        setManufacturers(dropdowns.manufacturers || []);
-        setSuppliers(dropdowns.suppliers || []);
+        // Fetch dropdown options for assets (filter statuses by asset category)
+        const contextDropdowns = await fetchAllDropdowns("component");
+        setCategories(contextDropdowns.categories || []);
+        setManufacturers(contextDropdowns.manufacturers || []);
+        setSuppliers(contextDropdowns.suppliers || []);
 
-        // Fetch locations from Help Desk service
-        const locationsData = await fetchAllLocations();
-        setLocations(locationsData || []);
+        const helpDeskDropdowns = await fetchAllLocations();
+        setLocations(helpDeskDropdowns || []);
 
-        // Fetch component data if editing
+        // If editing or cloning, fetch the asset data
         if (id) {
           const componentData = await fetchComponentById(id);
+          console.log("Fetched product:", componentData);
           if (componentData) {
-            // If component has a category that's not in the dropdown list, add it
-            // (handles case where component was created with an asset category)
-            if (componentData.category && componentData.category_details) {
-              const existingCategoryId = componentData.category;
-              const categoryExists = categoriesList.some(cat => cat.id === existingCategoryId);
-              if (!categoryExists) {
-                categoriesList = [
-                  { id: existingCategoryId, name: componentData.category_details.name },
-                  ...categoriesList
-                ];
-              }
-            }
-
-            setValue("componentName", componentData.name || "");
-            // Convert IDs to strings to match select option values
-            setValue("category", componentData.category ? String(componentData.category) : "");
-            setValue("manufacturer", componentData.manufacturer ? String(componentData.manufacturer) : "");
-            setValue("supplier", componentData.supplier ? String(componentData.supplier) : "");
-            setValue("location", componentData.location ? String(componentData.location) : "");
-            setValue("modelNumber", componentData.model_number || "");
-            setValue("orderNumber", componentData.order_number || "");
-            setValue("purchaseCost", componentData.purchase_cost || "");
-            setValue("quantity", componentData.quantity || "");
-            setValue("minimumQuantity", componentData.minimum_quantity || "");
-            setValue("purchaseDate", componentData.purchase_date || "");
-            setValue("notes", componentData.notes || "");
-            if (componentData.image) {
-              setExistingImage(componentData.image);
-            }
+            setComponent(componentData);
           }
         }
-
-        setCategories(categoriesList);
       } catch (error) {
-        console.error("Error initializing form:", error);
-        setErrorMessage("Failed to load form data.");
+        console.error("Error initializing:", error);
+        setErrorMessage("Failed to initialize form data");
       } finally {
         setIsLoading(false);
       }
     };
-
     initialize();
-  }, [id, setValue]);
+  }, [id, cloneMode]);
 
-  // Quick-add modal state
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showManufacturerModal, setShowManufacturerModal] = useState(false);
-  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  // Separate useEffect to populate form AFTER dropdowns and component are loaded
+  useEffect(() => {
+    const populateForm = async () => {
+      // Wait for next tick to ensure dropdowns are rendered
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      // If we have component data (editing or cloning), populate the form
+      if (component) {
+        if (isClone) {
+          const clonedName = await generateCloneName(component.name);
+          setValue("componentName", clonedName);
+        } else {
+          setValue("componentName", component.name || "");
+        }
+        // Prefer explicit *_details ids from API payload, fall back to top-level id fields when present
+        const categoryId = component.category ?? component.category_details?.id
+        const manufacturerId = component.manufacturer ?? component.manufacturer_details?.id;
+        const supplierId = component.supplier ?? component.supplier_details?.id;
+        const locationId = component.location ?? component.location_details?.id;
+        setValue("category", categoryId ? String(categoryId) : "");
+        setValue("manufacturer", manufacturerId ? String(manufacturerId) : "");
+        setValue("supplier", supplierId ? String(supplierId) : "");
+        setValue("location", locationId ? String(locationId) : "");
+        setValue("modelNumber", component.model_number || "");
+        setValue("orderNumber", component.order_number || "");
+        setValue("purchaseDate", component.purchase_date || "");
+        setValue("purchaseCost", component.purchase_cost ?? "");
+        setValue("quantity", component.quantity ?? "");
+        setValue("minimumQuantity", component.minimum_quantity ?? "");
+        setValue("notes", component.notes || "");
+
+        if (component.image) {
+          setPreviewImage(component.image);
+
+          // For cloning, fetch the image as a file so it can be uploaded with the new asset
+          if (isClone) {
+            try {
+              const response = await fetch(component.image);
+              const blob = await response.blob();
+              const fileName = component.image.split('/').pop() || 'cloned-image.jpg';
+              const file = new File([blob], fileName, { type: blob.type });
+              setSelectedImage(file);
+            } catch (imgError) {
+              console.error("Failed to fetch image for cloning:", imgError);
+            }
+          }
+        }
+      }
+      
+      // Trigger validation after all form values are set
+      await trigger();
+    };
+    populateForm();
+  }, [component, isClone, categories, manufacturers, suppliers, locations, setValue, trigger, id]);
+
+  const handleImageSelection = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage("Image size exceeds 5MB. Please choose a smaller file.");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+
+      setSelectedImage(file);
+      setRemoveImage(false);
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImportFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+        setErrorMessage("Please select a valid .xlsx file");
+        setTimeout(() => setErrorMessage(""), 5000);
+        return;
+      }
+      console.log("Import file selected:", file.name);
+    }
+  };
 
   // Modal field configurations for quick-add
   const categoryFields = [
@@ -199,60 +289,74 @@ const ComponentRegistration = () => {
     }
   };
 
-  const handleFileSelection = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-
-      if (!["image/png", "image/jpeg"].includes(file.type)) {
-        alert("Only PNG and JPEG images are allowed.");
-        e.target.value = "";
-        return;
-      }
-
-      // Check file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File size must be less than 5MB");
-        e.target.value = "";
-        return;
-      }
-
-      setAttachmentFile(file);
-      setExistingImage(null); // Clear existing image when new file is selected
-    }
-  };
-
   const onSubmit = async (data) => {
+    setErrorMessage("");
+    const isUpdate = id && !isClone;
+
     try {
       setIsSubmitting(true);
-      setErrorMessage("");
 
       const formData = new FormData();
-      formData.append("name", data.componentName);
-      formData.append("category", data.category);
+      
+      if (data.componentName) formData.append("name", data.componentName);
+      if (data.category) formData.append("category", data.category);
       if (data.manufacturer) formData.append("manufacturer", data.manufacturer);
       if (data.supplier) formData.append("supplier", data.supplier);
       if (data.location) formData.append("location", data.location);
       if (data.modelNumber) formData.append("model_number", data.modelNumber);
       if (data.orderNumber) formData.append("order_number", data.orderNumber);
-      if (data.purchaseCost) formData.append("purchase_cost", data.purchaseCost);
-      formData.append("quantity", data.quantity || 1);
-      if (data.minimumQuantity) formData.append("minimum_quantity", data.minimumQuantity);
       if (data.purchaseDate) formData.append("purchase_date", data.purchaseDate);
-      if (data.notes) formData.append("notes", data.notes);
-      if (attachmentFile) formData.append("image", attachmentFile);
+      if (data.purchaseCost != null) formData.append("purchase_cost", data.purchaseCost);
+      if (data.quantity != null) formData.append("quantity", data.quantity);
+      if (data.minimumQuantity != null) formData.append("minimum_quantity", data.minimumQuantity);
+      formData.append("notes", data.notes || "");
 
-      if (isEdit) {
-        await updateComponent(id, formData);
-        navigate("/components", { state: { successMessage: "Component updated successfully!" } });
-      } else {
-        await createComponent(formData);
-        navigate("/components", { state: { successMessage: "Component created successfully!" } });
+      // Handle image
+      if (selectedImage) {
+        formData.append("image", selectedImage);
       }
+      if (removeImage && isUpdate) {
+        formData.append("remove_image", "true");
+      }
+
+      let result;
+      if (isUpdate) {
+        // Update existing component
+        result = await updateComponent(id, formData);
+        // Update frontend state to reflect backend removal
+        setComponent(prev => ({
+          ...prev,
+          ...result, // merge any updated fields
+          image: removeImage ? null : result.image || prev.image
+        }));
+
+        if (removeImage) {
+          setPreviewImage(null);
+          setSelectedImage(null);
+        }
+      } else {
+        // Create new component (or clone)
+        result = await createComponent(formData);
+      }
+
+      if (!result) throw new Error(`Failed to ${isUpdate ? "update" : "create"} component`);
+
+      const action = isClone ? "cloned" : isUpdate ? "updated" : "created";
+      setIsSubmitting(false);
+
+      navigate("/products", { state: { successMessage: `Component ${action} successfully!` } });
     } catch (error) {
-      console.error("Error saving component:", error);
-      const errMsg = error.response?.data?.name?.[0] || error.response?.data?.detail || "Failed to save component.";
-      setErrorMessage(errMsg);
-    } finally {
+      console.error("Error submitting component:", error);
+      let message = "An error occurred while saving the component";
+
+      if (error.response?.data) {
+        const firstKey = Object.keys(error.response.data)[0];
+        if (Array.isArray(error.response.data[firstKey])) {
+          message = error.response.data[firstKey][0];
+        }
+      }
+
+      setErrorMessage(message);
       setIsSubmitting(false);
     }
   };
@@ -264,17 +368,40 @@ const ComponentRegistration = () => {
 
   return (
     <>
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       <section className="page-layout-registration">
         <NavBar />
         <main className="registration">
         <section className="top">
           <TopSecFormPage
             root="Components"
-            currentPage={isEdit ? "Edit Component" : "New Component"}
+            currentPage={isClone ? "Clone Component" : (id ? "Edit Component" : "New Component")}
             rootNavigatePage="/components"
-            title={isEdit ? "Edit Component" : "New Component"}
+            title={isClone 
+              ? `Clone ${component?.name}`
+              : id
+                ? `Edit ${component?.name}`
+                : 'New Component'
+            }
+
+            rightComponent={
+              <div className="import-section">
+                <label htmlFor="import-file" className="import-btn">
+                  <img src={PlusIcon} alt="Import" />
+                  Import
+                  <input
+                    type="file"
+                    id="import-file"
+                    accept=".xlsx"
+                    onChange={handleImportFile}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </div>
+            }
           />
         </section>
+
         <section className="registration-form">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* Component Name */}
@@ -427,6 +554,20 @@ const ComponentRegistration = () => {
               </div>
             </fieldset>
 
+            {/* Purchased Date (optional, past to current date only) */}
+            <fieldset>
+              <label htmlFor="purchaseDate">Purchased Date</label>
+              <input
+                type="date"
+                className={errors.purchaseDate ? "input-error" : ""}
+                max={new Date().toISOString().split("T")[0]} // limits to today or earlier
+                {...register("purchaseDate")}
+              />
+              {errors.purchaseDate && (
+                <span className="error-message">{errors.purchaseDate.message}</span>
+              )}
+            </fieldset>
+
             {/* Quantity (required) */}
             <fieldset>
               <label htmlFor="quantity">
@@ -461,21 +602,7 @@ const ComponentRegistration = () => {
                 step="1"
                 {...register("minimumQuantity", { valueAsNumber: true })}
               />
-            </fieldset>
-
-            {/* Purchased Date (optional, past to current date only) */}
-            <fieldset>
-              <label htmlFor="purchaseDate">Purchased Date</label>
-              <input
-                type="date"
-                className={errors.purchaseDate ? "input-error" : ""}
-                max={new Date().toISOString().split("T")[0]} // limits to today or earlier
-                {...register("purchaseDate")}
-              />
-              {errors.purchaseDate && (
-                <span className="error-message">{errors.purchaseDate.message}</span>
-              )}
-            </fieldset>
+            </fieldset>    
 
             {/* Notes (optional, max 500 characters) */}
             <fieldset>
@@ -488,35 +615,33 @@ const ComponentRegistration = () => {
               ></textarea>
             </fieldset>
 
+            {/* Image Upload */}
             <fieldset>
               <label>Image</label>
-              {attachmentFile ? (
+              {previewImage ? (
                 <div className="image-selected">
-                  <img
-                    src={URL.createObjectURL(attachmentFile)}
-                    alt="Selected icon"
-                  />
-                  <button type="button" onClick={() => setAttachmentFile(null)}>
-                    <img src={CloseIcon} alt="Remove" />
-                  </button>
-                </div>
-              ) : existingImage ? (
-                <div className="image-selected">
-                  <img
-                    src={`${ASSETS_API_URL.replace(/\/$/, "")}${existingImage}`}
-                    alt="Existing component image"
-                  />
-                  <button type="button" onClick={() => setExistingImage(null)}>
+                  <img src={previewImage} alt="Selected image" />
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setPreviewImage(null);
+                      setSelectedImage(null);
+                      setRemoveImage(true);
+                      console.log("Remove image flag set to:", true);
+                    }}
+                  >
                     <img src={CloseIcon} alt="Remove" />
                   </button>
                 </div>
               ) : (
                 <label className="upload-image-btn">
-                  Choose File
+                  Choose Image
                   <input
                     type="file"
-                    accept="image/png,image/jpeg"
-                    onChange={handleFileSelection}
+                    id="image"
+                    accept="image/*"
+                    onChange={handleImageSelection}
                     style={{ display: "none" }}
                   />
                 </label>
@@ -526,13 +651,6 @@ const ComponentRegistration = () => {
               </small>
             </fieldset>
 
-            {errorMessage && (
-              <div className="error-message" style={{ marginBottom: "1rem" }}>
-                {errorMessage}
-              </div>
-            )}
-
-            {/* Submit */}
             <button type="submit" className="primary-button" disabled={!isValid || isSubmitting}>
               {isEdit ? "Update Component" : "Save"}
             </button>
@@ -542,6 +660,7 @@ const ComponentRegistration = () => {
       <Footer />
       </section>
 
+      {/* Modals */}
       <AddEntryModal
         isOpen={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
@@ -570,6 +689,4 @@ const ComponentRegistration = () => {
       />
     </>
   );
-};
-
-export default ComponentRegistration;
+}

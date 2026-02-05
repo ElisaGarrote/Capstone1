@@ -31,8 +31,10 @@ export default function AssetsRegistration() {
   const location = useLocation();
   const { id } = useParams();
   const currentDate = new Date().toISOString().split("T")[0];
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEdit = id && !isClone;
 
-  const { setValue, register, handleSubmit, formState: { errors, isValid } } = useForm({
+  const { setValue, register, handleSubmit, trigger, formState: { errors, isValid } } = useForm({
     mode: "all",
     defaultValues: {
       assetId: '',
@@ -101,7 +103,7 @@ export default function AssetsRegistration() {
         setIsClone(cloneMode);
 
         // Fetch dropdown options for assets (filter statuses by asset category)
-        const contextDropdowns = await fetchAllDropdowns("asset", { category: "asset" });
+        const contextDropdowns = await fetchAllDropdowns("asset");
         setStatuses(contextDropdowns.statuses || []);
         setSuppliers(contextDropdowns.suppliers || []);
 
@@ -116,6 +118,7 @@ export default function AssetsRegistration() {
         // If editing or cloning, fetch the asset data
         if (id) {
           const assetData = await fetchAssetById(id);
+          console.log("Fetched asset:", assetData);
           if (assetData) {
             setAsset(assetData);
           }
@@ -147,21 +150,26 @@ export default function AssetsRegistration() {
         if (!isClone) {
           setValue("assetId", asset.asset_id || "");
         }
-        setValue("product", asset.product || "");
-        setValue("status", asset.status || "");
-        setValue("supplier", asset.supplier || "");
-        setValue("location", asset.location || "");
+        // Prefer explicit *_details ids from API payload, fall back to top-level id fields when present
+        const productId = asset.product ?? asset.product_details?.id;
+        const statusId = asset.status ?? asset.status_details?.id;
+        const supplierId = asset.supplier ?? asset.supplier_details?.id;
+        const locationId = asset.location ?? asset.location_details?.id;
+        setValue("product", productId ? String(productId) : "");
+        setValue("status", statusId ? String(statusId) : "");
+        setValue("supplier", supplierId ? String(supplierId) : "");
+        setValue("location", locationId ? String(locationId) : "");
         if (isClone) {
           const clonedName = await generateCloneName(asset.name);
           setValue("assetName", clonedName);
         } else {
           setValue("assetName", asset.name || "");
         }
-        setValue("serialNumber", asset.serial_number || "");
+        setValue("serialNumber", asset.serial_number ?? "");
         setValue("warrantyExpiration", asset.warranty_expiration || "");
         setValue("orderNumber", asset.order_number || "");
         setValue("purchaseDate", asset.purchase_date || "");
-        setValue("purchaseCost", asset.purchase_cost || "");
+        setValue("purchaseCost", asset.purchase_cost ?? "");
         setValue("notes", asset.notes || "");
 
         if (asset.image) {
@@ -181,9 +189,12 @@ export default function AssetsRegistration() {
           }
         }
       }
+      
+      // Trigger validation after all form values are set
+      await trigger();
     };
     populateForm();
-  }, [asset, isClone, products, statuses, suppliers, locations, setValue, id]);
+  }, [asset, isClone, products, statuses, suppliers, locations, setValue, trigger, id]);
 
   const handleImageSelection = (e) => {
     const file = e.target.files[0];
@@ -312,6 +323,7 @@ export default function AssetsRegistration() {
     const isUpdate = id && !isClone;
 
     try {
+      setIsSubmitting(true);
       const formData = new FormData();
 
       // Append asset data to FormData object - only include non-empty values
@@ -326,7 +338,10 @@ export default function AssetsRegistration() {
       if (data.warrantyExpiration) formData.append('warranty_expiration', data.warrantyExpiration);
       if (data.orderNumber) formData.append('order_number', data.orderNumber);
       if (data.purchaseDate) formData.append('purchase_date', data.purchaseDate);
-      if (data.purchaseCost) formData.append('purchase_cost', data.purchaseCost);
+      if (data.purchaseCost != null) {
+        formData.append('purchase_cost', data.purchaseCost);
+      }
+
       // Notes can be empty string
       formData.append('notes', data.notes || '');
 
@@ -352,6 +367,17 @@ export default function AssetsRegistration() {
       if (isUpdate) {
         // Update existing asset
         result = await updateAsset(id, formData);
+        // Update frontend state to reflect backend removal
+        setAsset(prev => ({
+          ...prev,
+          ...result, // merge any updated fields
+          image: removeImage ? null : result.image || prev.image
+        }));
+
+        if (removeImage) {
+          setPreviewImage(null);
+          setSelectedImage(null);
+        }
       } else {
         // Create new asset (registration or clone)
         result = await createAsset(formData);
@@ -362,7 +388,7 @@ export default function AssetsRegistration() {
       }
 
       const action = isClone ? 'cloned' : (isUpdate ? 'updated' : 'created');
-      console.log(`${action} asset:`, result);
+      setIsSubmitting(false);
       navigate('/assets', {
         state: {
           successMessage: `Asset has been ${action} successfully!`
@@ -387,6 +413,7 @@ export default function AssetsRegistration() {
       }
 
       setErrorMessage(message);
+      setIsSubmitting(false);
     }
   };
 
@@ -401,7 +428,7 @@ export default function AssetsRegistration() {
     // Only apply product defaults if:
     // 1. A product is selected AND
     // 2. It's either a new registration OR the product is different from the original asset's product
-    const originalProductId = asset?.product;
+    const originalProductId = asset?.product ?? asset?.product_details?.id;
     const isProductChanged = !originalProductId || parseInt(productId) !== originalProductId;
 
     if (productId && isProductChanged) {
@@ -416,9 +443,10 @@ export default function AssetsRegistration() {
           setValue('purchaseCost', product.default_purchase_cost);
         }
 
-        // Set supplier if available
+        // Set supplier if available (supports id or object)
         if (product.default_supplier) {
-          setValue('supplier', String(product.default_supplier));
+          const defaultSupplierId = product.default_supplier?.id ?? product.default_supplier;
+          setValue('supplier', String(defaultSupplierId));
         }
       }
     }
@@ -440,7 +468,12 @@ export default function AssetsRegistration() {
             root="Assets"
             currentPage={isClone ? "Clone Asset" : (id ? "Edit Asset" : "New Asset")}
             rootNavigatePage="/assets"
-            title={isClone ? `Clone ${asset?.name || 'Asset'}` : (id ? `Edit ${asset?.name || 'Asset'}` : 'New Asset')}
+            title={isClone 
+              ? `Clone ${asset.asset_id} - ${asset.name}`
+              : id
+                ? `Edit ${asset?.asset_id} - ${asset.name}`
+                : 'New Asset'
+            }
             rightComponent={
               <div className="import-section">
                 <label htmlFor="import-file" className="import-btn">
@@ -670,7 +703,6 @@ export default function AssetsRegistration() {
                       event.preventDefault();
                       setPreviewImage(null);
                       setSelectedImage(null);
-                      document.getElementById('image').value = '';
                       setRemoveImage(true);
                       console.log("Remove image flag set to:", true);
                     }}
@@ -680,7 +712,7 @@ export default function AssetsRegistration() {
                 </div>
               ) : (
                 <label className="upload-image-btn">
-                  Choose File
+                  Choose Image
                   <input
                     type="file"
                     id="image"
@@ -694,8 +726,10 @@ export default function AssetsRegistration() {
                 Maximum file size must be 5MB
               </small>
             </fieldset>
+            <button type="submit" className="primary-button" disabled={!isValid || isSubmitting}>
+              {isEdit ? "Update Asset" : "Save"}
+            </button>
 
-            <button type="submit" className="primary-button" disabled={!isValid}>Save</button>
           </form>
         </section>
       </main>

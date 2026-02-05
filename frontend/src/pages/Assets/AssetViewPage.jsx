@@ -5,6 +5,7 @@ import DetailedViewPage from "../../components/DetailedViewPage/DetailedViewPage
 import DefaultImage from "../../assets/img/default-image.jpg";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import SystemLoading from "../../components/Loading/SystemLoading";
+import Alert from "../../components/Alert";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import { fetchAssetById, deleteAsset } from "../../services/assets-service";
 import { fetchLocationById } from "../../services/integration-help-desk-service";
@@ -19,6 +20,7 @@ function AssetViewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const loadAssetDetails = async () => {
@@ -27,6 +29,7 @@ function AssetViewPage() {
 
         // Fetch asset data - the API now returns all related data
         const assetData = await fetchAssetById(id);
+        console.log(assetData)
         if (!assetData) {
           return;
         }
@@ -152,18 +155,20 @@ function AssetViewPage() {
     setDeleteModalOpen(false);
   };
 
-  const confirmDelete = async () => {
-    try {
-      await deleteAsset(asset.id);
-      closeDeleteModal();
-      navigate("/assets", {
-        state: { successMessage: "Asset deleted successfully!" },
-      });
-    } catch (error) {
-      console.error("Error deleting asset:", error);
-      setErrorMessage("Failed to delete asset");
-      closeDeleteModal();
-    }
+  const handleDeleteSuccess = () => {
+    navigate("/assets", {
+      state: { successMessage: "Asset deleted successfully!" },
+    });
+  };
+
+  const handleDeleteError = (error) => {
+    console.error("Error deleting asset:", error);
+    setErrorMessage("Failed to delete asset");
+    setTimeout(() => setErrorMessage(""), 5000);
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteModalOpen(true);
   };
 
   const handleCloneClick = () => {
@@ -174,9 +179,72 @@ function AssetViewPage() {
     navigate(`/assets/edit/${asset.id}`);
   };
 
-  const handleDeleteClick = () => {
-    setDeleteModalOpen(true);
+  const handleCheckInOut = () => {
+    const assetId = asset.id;
+    const assetDisplayId = asset.asset_id;
+    const assetName = asset.name;
+    const checkoutId = asset.active_checkout;
+    // Pass the full ticket_details object - no need to fetch by ID later
+    const ticket = asset.ticket_details;
+
+    if (checkoutId) {
+      navigate(`/assets/check-in/${assetId}`, {
+        state: { assetId, assetDisplayId, assetName, checkoutId, ticket },
+      });
+    } else {
+      navigate(`/assets/check-out/${assetId}`, {
+        state: { assetId, assetDisplayId, assetName, ticket },
+      });
+    }
   };
+
+  // Determine checkout/checkin button state
+  const getCheckoutState = () => {
+    const status = asset.status_details?.type;
+    const hasTicket = !!asset.ticket_details;
+    const checkoutDate = asset.ticket_details?.checkout_date;
+    
+    // Check if checkout date is in the future (compare date only, not time)
+    const isFutureCheckout = checkoutDate ? new Date(checkoutDate).toDateString() > new Date().toDateString() : false;
+
+    // No actions for undeployable or archived
+    if (status === "undeployable" || status === "archived") {
+      return {
+        showCheckin: false,
+        showCheckout: false,
+        checkoutDisabled: false,
+      };
+    }
+
+    // If status is unknown/undefined, show checkout (disabled) as fallback
+    if (!status) {
+      return {
+        showCheckin: false,
+        showCheckout: true,
+        checkoutDisabled: true,
+      };
+    }
+
+    // Checkout is disabled if: No ticket OR checkout_date is in the future
+    const checkoutDisabled = !hasTicket || isFutureCheckout;
+
+    return {
+      showCheckin: status === "deployed",
+      showCheckout: status === "pending" || status === "deployable",
+      checkoutDisabled,
+    };
+  };
+
+  const checkoutState = getCheckoutState();
+
+  // Debug logging
+  console.log("AssetViewPage checkout state:", {
+    status: asset?.status_details?.type,
+    hasTicket: !!asset?.ticket_details,
+    checkoutDate: asset?.ticket_details?.checkout_date,
+    isFutureCheckout: asset?.ticket_details?.checkout_date ? new Date(asset.ticket_details.checkout_date).toDateString() > new Date().toDateString() : false,
+    checkoutState
+  });
 
   // Format currency
   const formatCurrency = (value) => {
@@ -275,6 +343,24 @@ function AssetViewPage() {
         </svg>
         Edit
       </button>
+      {checkoutState.showCheckin && (
+        <button type="button" className="action-btn action-btn-checkin" onClick={handleCheckInOut} title="Check In">
+          <i className="fas fa-sign-in-alt"></i>
+          <span>Check-In</span>
+        </button>
+      )}
+      {checkoutState.showCheckout && (
+        <button 
+          type="button" 
+          className="action-btn action-btn-checkout" 
+          onClick={handleCheckInOut} 
+          disabled={checkoutState.checkoutDisabled}
+          title={checkoutState.checkoutDisabled ? "Checkout not available. Ensure ticket exists and checkout date has arrived." : "Check Out"}
+        >
+          <i className="fas fa-sign-out-alt"></i>
+          <span>Check-Out</span>
+        </button>
+      )}
       <MediumButtons type="delete" onClick={handleDeleteClick} />
     </div>
   );
@@ -287,11 +373,16 @@ function AssetViewPage() {
   return (
     <>
       <NavBar />
+      {errorMessage && <Alert message={errorMessage} type="danger" />}
       {isDeleteModalOpen && (
         <ConfirmationModal
+          isOpen={isDeleteModalOpen}
           closeModal={closeDeleteModal}
           actionType="delete"
-          onConfirm={confirmDelete}
+          entityType="asset"
+          targetId={asset.id}
+          onSuccess={handleDeleteSuccess}
+          onError={handleDeleteError}
         />
       )}
       <DetailedViewPage

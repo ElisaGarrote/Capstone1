@@ -17,6 +17,7 @@ import authService from "../../services/auth-service";
 import { fetchScheduledAudits } from "../../services/assets-service";
 import Alert from "../../components/Alert";
 import { getUserFromToken } from "../../api/TokenUtils";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 // TableHeader
 function TableHeader() {
@@ -309,7 +310,7 @@ export default function ScheduledAudits() {
 
             <section className="audit-table-section">
               {loading ? (
-                <p className="loading-message">Loading scheduled audits...</p>
+                <SkeletonLoadingTable />
               ) : error ? (
                 <p className="error-message">{error}</p>
               ) : (

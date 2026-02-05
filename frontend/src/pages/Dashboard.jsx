@@ -9,6 +9,8 @@ import "../styles/Dashboard.css";
 import { fetchDashboardStats } from "../services/assets-service";
 import forecastService from "../services/forecast-service";
 import authService from "../services/auth-service";
+import assetsAxios from "../api/assetsAxios";
+import { fetchEmployeeById } from "../services/integration-help-desk-service";
 import { getUserFromToken } from "../api/TokenUtils";
 
 function Dashboard() {
@@ -18,6 +20,8 @@ function Dashboard() {
   const [assetForecast, setAssetForecast] = useState(null);
   const [productForecast, setProductForecast] = useState(null);
   const [forecastLoading, setForecastLoading] = useState(true);
+  const [dueCheckinData, setDueCheckinData] = useState([]);
+  const [overdueCheckinData, setOverdueCheckinData] = useState([]);
   const user = getUserFromToken();
   console.log("dashboard user:", user);
 
@@ -84,8 +88,93 @@ function Dashboard() {
       }
     }
 
+    // Load due/overdue checkin data
+    async function loadCheckinData() {
+      try {
+        const response = await assetsAxios.get("/due-checkin-report/?days=30");
+        if (response.data.success) {
+          const data = response.data.data;
+
+          console.log("Raw checkin data:", data);
+
+          // Collect unique employee IDs that need fetching (where name is "Unknown")
+          const unknownEmployeeIds = [
+            ...new Set(
+              data
+                .filter(
+                  (item) =>
+                    item.checked_out_to_id &&
+                    (item.checked_out_to === "Unknown" || !item.checked_out_to)
+                )
+                .map((item) => item.checked_out_to_id)
+            ),
+          ];
+
+          // Batch fetch all unknown employees in parallel (limited to avoid overwhelming server)
+          const employeeCache = {};
+          if (unknownEmployeeIds.length > 0) {
+            console.log(`Batch fetching ${unknownEmployeeIds.length} employees...`);
+            
+            // Fetch in batches of 10 to avoid overwhelming the server
+            const batchSize = 10;
+            for (let i = 0; i < unknownEmployeeIds.length; i += batchSize) {
+              const batch = unknownEmployeeIds.slice(i, i + batchSize);
+              const employeePromises = batch.map(async (empId) => {
+                try {
+                  const employee = await fetchEmployeeById(empId);
+                  return { empId, employee };
+                } catch (error) {
+                  console.error(`Failed to fetch employee ${empId}:`, error);
+                  return { empId, employee: null };
+                }
+              });
+
+              const results = await Promise.all(employeePromises);
+              results.forEach(({ empId, employee }) => {
+                employeeCache[empId] = employee;
+              });
+            }
+          }
+
+          // Enrich data with cached employee information
+          const enrichedData = data.map((item) => {
+            if (
+              item.checked_out_to_id &&
+              (item.checked_out_to === "Unknown" || !item.checked_out_to)
+            ) {
+              const employee = employeeCache[item.checked_out_to_id];
+              return {
+                ...item,
+                checked_out_to: employee
+                  ? employee.name
+                  : `Employee #${item.checked_out_to_id}`,
+                employee_email: employee ? employee.email : null,
+                employee_phone: employee ? employee.phone : null,
+              };
+            }
+            return item;
+          });
+
+          console.log("Enriched checkin data:", enrichedData);
+
+          // Separate due and overdue items
+          const dueItems = enrichedData.filter(
+            (item) => item.status === "upcoming",
+          );
+          const overdueItems = enrichedData.filter(
+            (item) => item.status === "overdue",
+          );
+          setDueCheckinData(dueItems);
+          setOverdueCheckinData(overdueItems);
+        }
+      } catch (error) {
+        console.error("Failed to load checkin data:", error);
+      }
+    }
+
     loadDashboardStats();
     loadForecastData();
+    loadCheckinData();
   }, []);
 
   return (
@@ -95,7 +184,19 @@ function Dashboard() {
         <h1>Dashboard</h1>
         <div className="status-cards-grid">
           {statusCards.map((card, index) => (
-            <StatusCard key={index} {...card} index={index} />
+            <StatusCard
+              key={index}
+              {...card}
+              index={index}
+              dueCheckinData={
+                card.title === "Due for Return" ? dueCheckinData : undefined
+              }
+              overdueCheckinData={
+                card.title === "Overdue for Return"
+                  ? overdueCheckinData
+                  : undefined
+              }
+            />
           ))}
         </div>
 

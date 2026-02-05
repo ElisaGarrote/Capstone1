@@ -5,9 +5,8 @@
   overscroll-behavior: contain;
 
   table {
-    width: auto;
+    width: 100%;
     border-collapse: collapse;
-    white-space: nowrap;
 
     th {
       padding: 0.75rem !important;
@@ -22,31 +21,17 @@
       position: sticky;
       top: 0;
       z-index: 1;
-      white-space: nowrap;
     }
 
     /* table header for 'Checkbox' */
     th:first-child {
       width: 50px;
-      min-width: 50px;
     }
 
     /* table header for 'Image'*/
     th:nth-child(2) {
-      width: 60px;
       min-width: 60px;
-    }
-
-    /* table header for 'Name' */
-    th:nth-child(3) {
-      width: 150px;
-      min-width: 150px;
-    }
-
-    /* table header for 'Category' */
-    th:nth-child(4) {
-      width: 120px;
-      min-width: 120px;
+      max-width: fit-content;
     }
 
     /* table header for 'Model Number' */

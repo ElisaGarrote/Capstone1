@@ -1,4 +1,12 @@
 import { useState, useEffect } from "react";
+import { BsKeyboard } from "react-icons/bs";
+import { LuDroplet } from "react-icons/lu";
+import { HiOutlineTag } from "react-icons/hi";
+import { RxPerson } from "react-icons/rx";
+import { AiOutlineAudit } from "react-icons/ai";
+import { RxComponent1 } from "react-icons/rx";
+import { exportToExcel } from "../../utils/exportToExcel";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -7,14 +15,6 @@ import MockupData from "../../data/mockData/reports/activity-report-mockup-data.
 import DepreciationFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import Footer from "../../components/Footer";
-import { BsKeyboard } from "react-icons/bs";
-import { LuDroplet } from "react-icons/lu";
-import { HiOutlineTag } from "react-icons/hi";
-import { RxPerson } from "react-icons/rx";
-import { AiOutlineAudit } from "react-icons/ai";
-import { RxComponent1 } from "react-icons/rx";
-import { exportToExcel } from "../../utils/exportToExcel";
-
 import "../../styles/reports/ActivityReport.css";
 
 // Generate a random 7-character alphanumeric token
@@ -251,34 +251,32 @@ export default function ActivityReport() {
 
           {/* Table Structure */}
           <section className="activity-report-table-section">
-            <table>
-              <thead>
-                <TableHeader />
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="no-data-message">
-                      Loading...
-                    </td>
-                  </tr>
-                ) : paginatedActivity.length > 0 ? (
-                  paginatedActivity.map((activity, index) => (
-                    <TableItem
-                      key={index}
-                      activity={activity}
-                      onDeleteClick={() => setDeleteModalOpen(true)}
-                    />
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="no-data-message">
-                      {error || "No activity log found."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            {loading ? (
+              <SkeletonLoadingTable />
+            ) : (
+              <table>
+                <thead>
+                  <TableHeader />
+                </thead>
+                <tbody>
+                  {paginatedActivity.length > 0 ? (
+                    paginatedActivity.map((activity, index) => (
+                      <TableItem
+                        key={index}
+                        activity={activity}
+                        onDeleteClick={() => setDeleteModalOpen(true)}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="no-data-message">
+                        {error || "No activity log found."}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
           </section>
 
           {/* Table pagination */}

@@ -63,7 +63,7 @@ class Product(models.Model):
     end_of_life = models.DateField(blank=True, null=True)
     default_purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     default_supplier = models.PositiveIntegerField(blank=True, null=True)
-    minimum_quantity = models.PositiveIntegerField(default=1)
+    minimum_quantity = models.PositiveIntegerField(blank=True, null=True)
     cpu = models.CharField(max_length=100, blank=True, null=True)
     gpu = models.CharField(max_length=100, blank=True, null=True)
     os = models.CharField(max_length=100, blank=True, null=True)
@@ -92,11 +92,11 @@ class Asset(models.Model):
     supplier = models.PositiveIntegerField(blank=True, null=True)
     location = models.PositiveIntegerField(blank=True, null=True)
     name = models.CharField(max_length=100, blank=True, null=True)
-    serial_number = models.CharField(max_length=50, blank=True, null=True)
+    serial_number = models.CharField(max_length=50, default="")
     warranty_expiration = models.DateField(blank=True, null=True)
     order_number = models.CharField(max_length=50, blank=True, null=True)
     purchase_date = models.DateField(blank=True, null=True)
-    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     notes = models.TextField(max_length=500, blank=True, null=True)
     image = models.ImageField(
         upload_to='asset_images/',
@@ -133,13 +133,14 @@ def generate_asset_id(sender, instance, **kwargs):
 
 class AssetCheckout(models.Model):
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='asset_checkouts', limit_choices_to={'is_deleted': False})
-    ticket_number = models.CharField(max_length=50)  # External ticket number (e.g., "TX20260122996422")
+    ticket_number = models.CharField(max_length=50, default="")  # External ticket number (e.g., "TX20260122996422")
     checkout_to = models.PositiveIntegerField()
     location = models.PositiveIntegerField()
-    checkout_date = models.DateField()
+    checkout_date = models.DateField(auto_now_add=True)
     return_date = models.DateField(blank=True, null=True)
-    revenue = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  
+    revenue = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     condition = models.PositiveSmallIntegerField(
+        default=5,
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     notes = models.TextField(max_length=500, blank=True, null=True)
@@ -160,11 +161,12 @@ class AssetCheckoutFile(models.Model):
 class AssetCheckin(models.Model):
     asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
     ticket_number = models.CharField(max_length=50, blank=True, null=True)  # External ticket number (optional)
-    checkin_date = models.DateField()
+    checkin_date = models.DateField(auto_now_add=True)
     condition = models.PositiveSmallIntegerField(
+        default=5,
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
-    location = models.PositiveIntegerField()
+    location = models.PositiveIntegerField(default=0)
     notes = models.TextField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
@@ -192,7 +194,7 @@ class Component(models.Model):
     purchase_date = models.DateField(blank=True, null=True)
     purchase_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     quantity = models.PositiveIntegerField(default=1)
-    minimum_quantity = models.PositiveIntegerField(default=1)
+    minimum_quantity = models.PositiveIntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     image = models.ImageField(
         upload_to='component_images/',
@@ -283,13 +285,13 @@ class Repair(models.Model):
     ]
     asset = models.ForeignKey(Asset, on_delete=models.CASCADE, related_name='repair_assets')
     supplier_id = models.PositiveIntegerField()  # Store the Supplier ID
-    type = models.CharField(max_length=20, choices=REPAIR_CHOICES)
-    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=20, choices=REPAIR_CHOICES, default='repair')
+    name = models.CharField(max_length=100, default="")
     start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(blank=True, null=True)
-    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     notes = models.TextField(blank=True, null=True)
-    status_id = models.PositiveIntegerField()
+    status_id = models.PositiveIntegerField(default=0)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
@@ -320,9 +322,9 @@ class AuditSchedule(models.Model):
 
 class Audit(models.Model):
     audit_schedule = models.OneToOneField(AuditSchedule, on_delete=models.CASCADE, related_name='audit')
-    location = models.PositiveIntegerField()
-    user_id = models.PositiveIntegerField()
-    audit_date = models.DateField()
+    location = models.PositiveIntegerField(default=0)
+    user_id = models.PositiveIntegerField(default=0)
+    audit_date = models.DateField(auto_now_add=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     is_deleted = models.BooleanField(default=False)
