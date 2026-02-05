@@ -15,16 +15,16 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
     checkInCheckOut: null,
   });
 
-  // Status options - Exact list provided by user + For Audit
+  // Status options - Mapped to actual database values
   const statusOptions = [
-    { value: "ready_to_deploy", label: "Ready to Deploy" },
-    { value: "available", label: "Available" },
-    { value: "under_repair", label: "Under Repair" },
+    { value: "deployable", label: "Ready to Deploy" },
+    { value: "deployed", label: "Available" },
+    { value: "repair", label: "Under Repair" },
     { value: "broken", label: "Broken" },
-    { value: "pending_approval", label: "Pending Approval" },
+    { value: "pending", label: "Pending Approval" },
     { value: "in_transit", label: "In Transit" },
     { value: "retired", label: "Retired" },
-    { value: "lost_or_stolen", label: "Lost or Stolen" },
+    { value: "lost", label: "Lost or Stolen" },
     { value: "maintenance", label: "Maintenance" },
     { value: "reserved", label: "Reserved" },
     { value: "awaiting_calibration", label: "Awaiting Calibration" },
@@ -35,6 +35,8 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
     { value: "decommissioned", label: "Decommissioned" },
     { value: "replacement_pending", label: "Replacement Pending" },
     { value: "inspection_required", label: "Inspection Required" },
+    { value: "archived", label: "Archived" },
+    { value: "undeployable", label: "Undeployable" },
     { value: "for_audit", label: "For Audit" },
   ];
 

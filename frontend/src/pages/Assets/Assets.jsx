@@ -356,11 +356,11 @@ export default function Assets() {
         // Filter for assets marked for audit
         filtered = filtered.filter((asset) => asset.for_audit === true);
       } else {
-        // Filter by status type
-        filtered = filtered.filter(
-          (asset) =>
-            asset.status_details?.type?.toLowerCase() === filters.status.value.toLowerCase()
-        );
+        filtered = filtered.filter((asset) => {
+          const assetStatus = asset.status_details?.type?.toLowerCase();
+          const filterStatus = filters.status.value?.toLowerCase();
+          return assetStatus === filterStatus;
+        });
       }
     }
 
