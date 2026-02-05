@@ -127,7 +127,7 @@ function Dashboard() {
         </div>
 
         {/* Forecast Section - Admin Only */}
-        {authService.getUserInfo().role === "Admin" && (
+        {authService.getUserInfo()?.role === "Admin" && (
           <>
             {/* KPI Summary Cards */}
             {!forecastLoading && kpiData && kpiData.length > 0 && (
