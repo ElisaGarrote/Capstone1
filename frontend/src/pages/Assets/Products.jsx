@@ -11,6 +11,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import "../../styles/Products/Products.css";
 import "../../styles/ProductFilterModal.css";
 import { fetchAllProducts } from "../../services/assets-service";
@@ -542,41 +543,39 @@ export default function Products() {
 
             {/* Table Structure */}
             <section className="products-table-section">
-              <table>
-                <thead>
-                  <TableHeader
-                    allSelected={allSelected}
-                    onHeaderChange={handleHeaderChange}
-                  />
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={12} className="no-data-message">
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : paginatedProducts.length > 0 ? (
-                    paginatedProducts.map((product) => (
-                      <TableItem
-                        key={product.id}
-                        isSelected={selectedIds.includes(product.id)}
-                        onRowChange={handleRowChange}
-                        product={product}
-                        onViewClick={() => handleViewClick(product.id)}
-                        onEditClick={() => handleEditClick(product.id)}
-                        onDeleteClick={() => openDeleteModal(product.id)}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={12} className="no-data-message">
-                        No Asset Models Found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {isLoading ? (
+                <SkeletonLoadingTable />
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader
+                      allSelected={allSelected}
+                      onHeaderChange={handleHeaderChange}
+                    />
+                  </thead>
+                  <tbody>
+                    {paginatedProducts.length > 0 ? (
+                      paginatedProducts.map((product) => (
+                        <TableItem
+                          key={product.id}
+                          isSelected={selectedIds.includes(product.id)}
+                          onRowChange={handleRowChange}
+                          product={product}
+                          onViewClick={() => handleViewClick(product.id)}
+                          onEditClick={() => handleEditClick(product.id)}
+                          onDeleteClick={() => openDeleteModal(product.id)}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={12} className="no-data-message">
+                          No Asset Models Found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             {/* Table pagination */}
