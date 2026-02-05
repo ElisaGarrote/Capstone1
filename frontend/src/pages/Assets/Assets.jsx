@@ -384,9 +384,11 @@ export default function Assets() {
     // Filter by Check-In / Check-Out
     if (filters.checkInCheckOut) {
       if (filters.checkInCheckOut.value === "checked_out") {
-        filtered = filtered.filter((asset) => asset.active_checkout);
-      } else if (filters.checkInCheckOut.value === "checked_in") {
+        // Checked out = no active checkout (asset is available/checked in)
         filtered = filtered.filter((asset) => !asset.active_checkout);
+      } else if (filters.checkInCheckOut.value === "checked_in") {
+        // Checked in = has an active checkout (asset is out)
+        filtered = filtered.filter((asset) => asset.active_checkout);
       }
     }
 
