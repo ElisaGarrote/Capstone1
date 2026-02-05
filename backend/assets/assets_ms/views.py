@@ -1218,59 +1218,50 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'], url_path='checkin-with-status')
     def checkin_with_status(self, request):
-        """
-        Atomically create check-in, attach files, and update asset status.
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        status_id = request.data.get("status")
-        if not str(status_id).isdigit():
-            return Response({"detail": "Invalid status ID"}, status=400)
-
-        status_id = int(status_id)
-
         try:
             with transaction.atomic():
-                # Create check-in (serializer handles file attachments)
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+
+                status_id = request.data.get("status")
+                if not status_id or not str(status_id).isdigit():
+                    return Response(
+                        {"detail": "Invalid status ID"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                status_id = int(status_id)
+
+                # Create check-in
                 checkin = serializer.save()
 
-                # Update asset status
                 asset = checkin.asset_checkout.asset
 
-                # Validate status type
                 status_details = get_status_by_id(status_id)
-
                 if not status_details:
                     raise ValueError("Status not found.")
 
                 VALID_CHECKIN_STATUS_TYPES = ['deployable', 'undeployable', 'pending', 'archived']
-                
                 status_type = status_details.get("type")
+
                 if status_type not in VALID_CHECKIN_STATUS_TYPES:
                     raise ValueError(f"Invalid status type for check-in: {status_type}")
-                
-                # Update asset status if valid
+
                 asset.status = status_id
                 asset.save(update_fields=["status"])
 
         except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # Invalidate cache
         cache.delete(f"assets:detail:{asset.id}")
 
-        # Resolve ticket (optional, outside transaction)
-        ticket_number = request.data.get("ticket_number")
-        if ticket_number:
-            try:
-                result = resolve_ticket_by_number(ticket_number, asset_checkin_id=checkin.id)
-                if result and result.get("warning"):
-                    print(f"[CheckIn] Warning resolving ticket {ticket_number}: {result}")
-            except Exception as e:
-                print(f"[CheckIn] Error resolving ticket {ticket_number}: {e}")
-
-        return Response({"success": "Check-in, attachments, and status update completed successfully."}, status=status.HTTP_201_CREATED)
-
+        return Response(
+            {"success": "Check-in, attachments, and status update completed successfully."},
+            status=status.HTTP_201_CREATED
+        )
 class ComponentViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
