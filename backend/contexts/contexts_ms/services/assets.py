@@ -76,7 +76,7 @@ def count_components_by_category(category_id, timeout=5):
         return None
 
 
-def bulk_check_usage(item_type, ids, sample_limit=0, timeout=8):
+def bulk_check_usage(item_type, ids, sample_limit=0, timeout=60):
     """Call the assets service bulk usage endpoint for multiple ids.
 
     Returns a dict mapping id -> usage dict as returned by assets service.
