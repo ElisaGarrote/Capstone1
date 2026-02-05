@@ -8,6 +8,7 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import DepreciationFilterModal from "../../components/Modals/DepreciationFilterModal";
 import Footer from "../../components/Footer";
 import { exportToExcel } from "../../utils/exportToExcel";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import api from "../../api";
 // base for assets service (prefer specific env, fallback to general API)
 const assetsBase = import.meta.env.VITE_ASSETS_API_URL || import.meta.env.VITE_API_URL || "/api/assets/";
@@ -126,6 +127,7 @@ function TableItem({ asset, onDeleteClick }) {
 
 export default function DepreciationReport() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // filter modal state
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -188,6 +190,7 @@ export default function DepreciationReport() {
           const data = await resp.json();
           setAllData(data.results || []);
           setFilteredData(data.results || []);
+          setIsLoading(false);
           return;
         }
 
@@ -199,6 +202,8 @@ export default function DepreciationReport() {
       } catch (err) {
         // leave data empty on error; UI will show no results
         console.error('Failed to load depreciation report', err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -269,28 +274,32 @@ export default function DepreciationReport() {
 
             {/* Table Structure */}
             <section className="depreciation-table-section">
-              <table>
+              {isLoading ? (
+                <SkeletonLoadingTable />
+              ) : (
+                <table>
                   <thead>
                     <TableHeader />
                   </thead>
                   <tbody>
-                  {paginatedDepreciation.length > 0 ? (
-                    paginatedDepreciation.map((asset, index) => (
-                      <TableItem
-                        key={index}
-                        asset={asset}
-                        onDeleteClick={() => setDeleteModalOpen(true)}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={10} className="no-data-message">
-                        No depreciation found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
+                    {paginatedDepreciation.length > 0 ? (
+                      paginatedDepreciation.map((asset, index) => (
+                        <TableItem
+                          key={index}
+                          asset={asset}
+                          onDeleteClick={() => setDeleteModalOpen(true)}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={10} className="no-data-message">
+                          No depreciation found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
                 </table>
+              )}
             </section>
 
             {/* Table pagination */}
