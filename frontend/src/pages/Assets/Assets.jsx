@@ -12,6 +12,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import "../../styles/Assets/Assets.css";
 import { fetchAllAssets } from "../../services/assets-service";
 import { getUserFromToken } from "../../api/TokenUtils";
@@ -558,41 +559,39 @@ export default function Assets() {
 
             {/* Table Structure */}
             <section className="assets-table-section">
-              <table>
-                <thead>
-                  <TableHeader
-                    allSelected={allSelected}
-                    onHeaderChange={handleHeaderChange}
-                  />
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={10} className="no-data-message">
-                        Loading assets...
-                      </td>
-                    </tr>
-                  ) : paginatedAssets.length > 0 ? (
-                    paginatedAssets.map((asset) => (
-                      <TableItem
-                        key={asset.id}
-                        asset={asset}
-                        isSelected={selectedIds.includes(asset.id)}
-                        onRowChange={handleRowChange}
-                        onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
-                        onCheckInOut={handleCheckInOut}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={10} className="no-data-message">
-                        No Assets Found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {isLoading ? (
+                <SkeletonLoadingTable />
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader
+                      allSelected={allSelected}
+                      onHeaderChange={handleHeaderChange}
+                    />
+                  </thead>
+                  <tbody>
+                    {paginatedAssets.length > 0 ? (
+                      paginatedAssets.map((asset) => (
+                        <TableItem
+                          key={asset.id}
+                          asset={asset}
+                          isSelected={selectedIds.includes(asset.id)}
+                          onRowChange={handleRowChange}
+                          onDeleteClick={openDeleteModal}
+                          onViewClick={handleViewClick}
+                          onCheckInOut={handleCheckInOut}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={10} className="no-data-message">
+                          No Assets Found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             {/* Table pagination */}
