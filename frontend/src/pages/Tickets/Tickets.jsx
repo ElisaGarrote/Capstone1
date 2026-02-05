@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../features/counter/userSlice";
+import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
+import { fetchAssetById, fetchAssetCheckoutById, fetchAssetNames } from "../../services/assets-service";
+import { exportToExcel } from "../../utils/exportToExcel";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import NavBar from "../../components/NavBar";
 import Pagination from "../../components/Pagination";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -11,10 +15,6 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import View from "../../components/Modals/View";
 import DefaultImage from "../../assets/img/default-image.jpg";
-import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
-import { fetchAssetById, fetchAssetCheckoutById, fetchAssetNames } from "../../services/assets-service";
-import { exportToExcel } from "../../utils/exportToExcel";
-import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import "../../styles/Tickets/Tickets.css";
 
 // TableHeader component to render the table header

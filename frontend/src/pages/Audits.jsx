@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
+import { SkeletonLoadingTable } from '../components/Loading/LoadingSkeleton';
 import NavBar from '../components/NavBar';
 import '../styles/Audits.css';
 
 const Audits = () => {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('due');
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
   
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -110,6 +117,25 @@ const Audits = () => {
                 <th>VIEW</th>
               </tr>
             </thead>
+          </table>
+
+          {isLoading ? (
+            <SkeletonLoadingTable />
+          ) : (
+            <table className="audits-table">
+              <thead>
+                <tr>
+                  <th><input type="checkbox" /></th>
+                  <th>DUE DATE</th>
+                  <th>OVERDUE BY</th>
+                  <th>ASSET</th>
+                  <th>STATUS</th>
+                  <th>NOTES</th>
+                  <th>EDIT</th>
+                  <th>DELETE</th>
+                  <th>VIEW</th>
+                </tr>
+              </thead>
             <tbody>
               {auditItems.map((item, index) => (
                 <tr key={index}>
@@ -140,7 +166,8 @@ const Audits = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          )}
         </div>
       </main>
     </div>
