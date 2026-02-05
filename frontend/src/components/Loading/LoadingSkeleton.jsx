@@ -56,6 +56,39 @@ function SkeletonLoadingTable() {
           <SkeletonLoadingTd />
           <SkeletonLoadingTd />
         </tr>
+        <tr>
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+        </tr>
+        <tr>
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+        </tr>
+        <tr>
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+          <SkeletonLoadingTd />
+        </tr>
       </tbody>
     </table>
   );
