@@ -11,6 +11,7 @@ import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import { exportToExcel } from "../../utils/exportToExcel";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import { fetchAllComponents } from "../../services/assets-service";
 import { getUserFromToken } from "../../api/TokenUtils";
 
@@ -118,12 +119,14 @@ export default function Assets() {
 
   // base data state
   const [baseData, setBaseData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const user = getUserFromToken();
 
   // Load components from API and when navigating back (e.g., after bulk edit)
   useEffect(() => {
     async function loadComponents() {
       try {
+        setIsLoading(true);
         const data = await fetchAllComponents();
 
         const processed = data.map((asset) => {
@@ -141,6 +144,8 @@ export default function Assets() {
         setFilteredData(processed);
       } catch (error) {
         setErrorMessage("Failed to load components.");
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -496,35 +501,39 @@ export default function Assets() {
 
             {/* Table Structure */}
             <section className="assets-table-section">
-              <table>
-                <thead>
-                  <TableHeader
-                    allSelected={allSelected}
-                    onHeaderChange={handleHeaderChange}
-                  />
-                </thead>
-                <tbody>
-                  {paginatedAssets.length > 0 ? (
-                    paginatedAssets.map((asset) => (
-                      <TableItem
-                        key={asset.id}
-                        asset={asset}
-                        isSelected={selectedIds.includes(asset.id)}
-                        onRowChange={handleRowChange}
-                        onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
-                        onCheckInOut={handleCheckInOut}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={8} className="no-data-message">
-                        No Components Found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {isLoading ? (
+                <SkeletonLoadingTable />
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader
+                      allSelected={allSelected}
+                      onHeaderChange={handleHeaderChange}
+                    />
+                  </thead>
+                  <tbody>
+                    {paginatedAssets.length > 0 ? (
+                      paginatedAssets.map((asset) => (
+                        <TableItem
+                          key={asset.id}
+                          asset={asset}
+                          isSelected={selectedIds.includes(asset.id)}
+                          onRowChange={handleRowChange}
+                          onDeleteClick={openDeleteModal}
+                          onViewClick={handleViewClick}
+                          onCheckInOut={handleCheckInOut}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="no-data-message">
+                          No Components Found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             {/* Table pagination */}
