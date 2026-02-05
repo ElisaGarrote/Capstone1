@@ -986,7 +986,7 @@ class AssetCheckinSerializer(serializers.ModelSerializer):
             })
 
         # Make sure checkin happens after checkout
-        if checkin_date < checkout.checkout_date():
+        if checkin_date < checkout.checkout_date:
             raise serializers.ValidationError({
                 "checkin_date": "Cannot check in before checkout date."
             })
