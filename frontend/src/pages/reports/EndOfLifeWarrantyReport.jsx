@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IoWarningOutline } from "react-icons/io5";
-import { MdFilterListAlt } from "react-icons/md";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import EndOfLifeWarrantyFilterModal from "../../components/Modals/EndOfLifeWarrantyFilterModal";
 import api from "../../api";
 import MockupData from "../../data/mockData/reports/end-of-life-mockup-data.json";
 // base for assets service (prefer specific env, fallback to general API)
@@ -94,16 +94,10 @@ function TableItem({ asset, onDeleteClick }) {
 
 export default function EndOfLifeWarrantyReport() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [exportToggle, setExportToggle] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [filterValues, setFilterValues] = useState({
-    checkoutDate: "",
-    checkinDate: "",
-  });
-  const exportRef = useRef(null);
   const toggleRef = useRef(null);
-  const filterModalRef = useRef(null);
 
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,7 +107,50 @@ export default function EndOfLifeWarrantyReport() {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
   const [allData, setAllData] = useState(MockupData);
-  const paginatedDepreciation = allData.slice(startIndex, endIndex);
+  const [filteredData, setFilteredData] = useState(MockupData);
+  const paginatedDepreciation = filteredData.slice(startIndex, endIndex);
+
+  // Apply filters logic
+  const applyFilters = (filters) => {
+    let filtered = [...allData];
+
+    if (filters?.status?.value) {
+      filtered = filtered.filter(
+        (row) =>
+          row.statusType?.toLowerCase() === filters.status.value?.toLowerCase()
+      );
+    }
+
+    if (filters?.checkoutDate) {
+      filtered = filtered.filter((row) => {
+        if (!row.checkoutDate) return false;
+        return row.checkoutDate === filters.checkoutDate;
+      });
+    }
+
+    if (filters?.checkinDate) {
+      filtered = filtered.filter((row) => {
+        if (!row.checkinDate) return false;
+        return row.checkinDate === filters.checkinDate;
+      });
+    }
+
+    if (filters?.warrantyExpirationDate) {
+      filtered = filtered.filter((row) => {
+        if (!row.warrantyExpiration) return false;
+        return row.warrantyExpiration === filters.warrantyExpirationDate;
+      });
+    }
+
+    return filtered;
+  };
+
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const next = applyFilters(filters);
+    setFilteredData(next);
+    setCurrentPage(1);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -135,6 +172,7 @@ export default function EndOfLifeWarrantyReport() {
               return pa - pb;
             });
             setAllData(rows);
+            setFilteredData(rows);
             setIsLoading(false);
           }
           return;
@@ -148,6 +186,7 @@ export default function EndOfLifeWarrantyReport() {
             return pa - pb;
           });
           setAllData(data);
+          setFilteredData(data);
           setIsLoading(false);
         }
       } catch (e) {
@@ -161,6 +200,9 @@ export default function EndOfLifeWarrantyReport() {
     };
   }, []);
 
+  const [exportToggle, setExportToggle] = useState(false);
+  const exportRef = useRef(null);
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -172,129 +214,63 @@ export default function EndOfLifeWarrantyReport() {
       ) {
         setExportToggle(false);
       }
-
-      if (
-        isFilterModalOpen &&
-        filterModalRef.current &&
-        !filterModalRef.current.contains(event.target)
-      ) {
-        setIsFilterModalOpen(false);
-      }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [exportToggle, isFilterModalOpen]);
+  }, [exportToggle]);
 
   return (
-    <section className="page-layout-with-table">
-      <NavBar />
+    <>
+      <EndOfLifeWarrantyFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
-      <main className="main-with-table">
-        {/* Title of the Page */}
-        <section className="title-page-section">
-          <h1>End of Life & Warranty Report</h1>
-        </section>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        <section className="table-layout">
-          {/* Table Header */}
-            <section className="table-header">
-            <h2 className="h2">Asset ({allData.length})</h2>
-            <section className="table-actions">
-              <input type="search" placeholder="Search..." className="search" />
-              <button
-                className="filter-button"
-                onClick={() => setIsFilterModalOpen(!isFilterModalOpen)}
-                title="Filter"
-              >
-                <MdFilterListAlt />
-                Filter
-              </button>
-              <div ref={toggleRef}>
-                <MediumButtons
-                  type="export"
-                  onClick={() => setExportToggle(!exportToggle)}
-                />
-              </div>
-            </section>
+        <main className="main-with-table">
+          {/* Title of the Page */}
+          <section className="title-page-section">
+            <h1>End of Life & Warranty Report</h1>
           </section>
 
-          {/* Table Structure */}
-          <section className="eof-warranty-report-table-section">
-            {/* Filter Modal */}
-            {isFilterModalOpen && (
-              <div className="filter-modal-overlay" ref={filterModalRef}>
-                <div className="filter-modal">
-                  <div className="filter-modal-header">
-                    <h3>Filter by Dates</h3>
-                    <button
-                      className="filter-modal-close"
-                      onClick={() => setIsFilterModalOpen(false)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div className="filter-modal-body">
-                    <div className="filter-group">
-                      <label htmlFor="checkoutDate">Checkout Date</label>
-                      <input
-                        type="date"
-                        id="checkoutDate"
-                        value={filterValues.checkoutDate}
-                        onChange={(e) =>
-                          setFilterValues({
-                            ...filterValues,
-                            checkoutDate: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="filter-group">
-                      <label htmlFor="checkinDate">Checkin Date</label>
-                      <input
-                        type="date"
-                        id="checkinDate"
-                        value={filterValues.checkinDate}
-                        onChange={(e) =>
-                          setFilterValues({
-                            ...filterValues,
-                            checkinDate: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className="filter-modal-footer">
-                    <button
-                      className="filter-modal-reset"
-                      onClick={() => {
-                        setFilterValues({
-                          checkoutDate: "",
-                          checkinDate: "",
-                        });
-                      }}
-                    >
-                      Reset
-                    </button>
-                    <button
-                      className="filter-modal-apply"
-                      onClick={() => setIsFilterModalOpen(false)}
-                    >
-                      Apply
-                    </button>
-                  </div>
+          <section className="table-layout">
+            {/* Table Header */}
+            <section className="table-header">
+              <h2 className="h2">Asset ({filteredData.length})</h2>
+              <section className="table-actions">
+                <input type="search" placeholder="Search..." className="search" />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
+                <div ref={toggleRef}>
+                  <MediumButtons
+                    type="export"
+                    onClick={() => setExportToggle(!exportToggle)}
+                  />
                 </div>
-              </div>
-            )}
-            {exportToggle && (
-              <section className="export-button-section" ref={exportRef}>
-                <button>Download as Excel</button>
-                <button>Download as PDF</button>
-                <button>Download as CSV</button>
               </section>
-            )}
+            </section>
+
+            {/* Table Structure */}
+            <section className="eof-warranty-report-table-section">
+              {exportToggle && (
+                <section className="export-button-section" ref={exportRef}>
+                  <button>Download as Excel</button>
+                  <button>Download as PDF</button>
+                  <button>Download as CSV</button>
+                </section>
+              )}
             {isLoading ? (
               <SkeletonLoadingTable />
             ) : (
@@ -337,5 +313,6 @@ export default function EndOfLifeWarrantyReport() {
       </main>
       <Footer />
     </section>
+    </>
   );
 }
