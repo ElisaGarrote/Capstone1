@@ -9,6 +9,7 @@ import { RxPerson } from "react-icons/rx";
 import { IoWarningOutline, IoLocationOutline } from "react-icons/io5";
 import assetsAxios from "../../api/assetsAxios";
 import { fetchEmployeeById, fetchLocationById } from "../../services/integration-help-desk-service";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 import "../../styles/reports/DueBackReport.css";
 
@@ -275,9 +276,7 @@ export default function DueBackReport() {
               )}
               
               {loading ? (
-                <div className="loading-message" style={{ textAlign: "center", padding: "2rem" }}>
-                  Loading report data...
-                </div>
+                <SkeletonLoadingTable />
               ) : error ? (
                 <div className="error-message" style={{ textAlign: "center", padding: "2rem", color: "red" }}>
                   {error}
