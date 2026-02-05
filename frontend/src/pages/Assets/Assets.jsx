@@ -325,10 +325,12 @@ export default function Assets() {
   const applyFilters = (filters) => {
     let filtered = [...assets];
 
-    // Filter by Asset ID (array of IDs)
-    if (filters.assetId && filters.assetId.length > 0) {
+    // Filter by Asset ID (text matching)
+    if (filters.assetId && filters.assetId.trim() !== "") {
       filtered = filtered.filter((asset) =>
-        filters.assetId.includes(asset.asset_id || asset.displayed_id)
+        (asset.asset_id || asset.displayed_id)
+          ?.toLowerCase()
+          .includes(filters.assetId.toLowerCase())
       );
     }
 
@@ -398,10 +400,23 @@ export default function Assets() {
       const lowerTerm = term.toLowerCase();
       filtered = filtered.filter(
         (asset) =>
+          // ID
+          (asset.asset_id && asset.asset_id.toLowerCase().includes(lowerTerm)) ||
+          (asset.displayed_id && asset.displayed_id.toLowerCase().includes(lowerTerm)) ||
+          // NAME
           (asset.name && asset.name.toLowerCase().includes(lowerTerm)) ||
-          (asset.displayed_id &&
-            asset.displayed_id.toLowerCase().includes(lowerTerm)) ||
-          (asset.category && asset.category.toLowerCase().includes(lowerTerm))
+          // SERIAL
+          (asset.serial_number && asset.serial_number.toLowerCase().includes(lowerTerm)) ||
+          // STATUS
+          (asset.status_details?.name && asset.status_details.name.toLowerCase().includes(lowerTerm)) ||
+          (asset.status_details?.type && asset.status_details.type.toLowerCase().includes(lowerTerm)) ||
+          // WARRANTY
+          (asset.warranty_expiration && asset.warranty_expiration.toLowerCase().includes(lowerTerm)) ||
+          // END OF LIFE
+          (asset.product_details?.end_of_life && asset.product_details.end_of_life.toLowerCase().includes(lowerTerm)) ||
+          // CHECK-IN / CHECK-OUT status
+          (asset.active_checkout && "checked out".includes(lowerTerm)) ||
+          (!asset.active_checkout && "checked in".includes(lowerTerm))
       );
     }
 

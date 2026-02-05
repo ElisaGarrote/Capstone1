@@ -6,7 +6,7 @@ import "../../styles/AssetFilterModal.css";
 export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {}, allAssets = [] }) {
 
   const [filters, setFilters] = useState({
-    assetId: [],
+    assetId: "",
     name: "",
     serial: "",
     status: null,
@@ -14,9 +14,6 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
     endOfLife: "",
     checkInCheckOut: null,
   });
-
-  const [assetIdInput, setAssetIdInput] = useState("");
-  const [showAssetIdDropdown, setShowAssetIdDropdown] = useState(false);
 
   // Status options - Exact list provided by user + For Audit
   const statusOptions = [
@@ -73,49 +70,20 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
     }));
   };
 
-  // Handle adding asset ID tag
-  const handleAddAssetIdTag = () => {
-    const trimmedInput = assetIdInput.trim().toUpperCase();
-    if (trimmedInput && availableAssetIds.includes(trimmedInput) && !filters.assetId.includes(trimmedInput)) {
-      setFilters((prev) => ({
-        ...prev,
-        assetId: [...prev.assetId, trimmedInput],
-      }));
-      setAssetIdInput("");
-      setShowAssetIdDropdown(false);
-    }
-  };
-
-  // Handle removing asset ID tag
-  const handleRemoveAssetIdTag = (id) => {
-    setFilters((prev) => ({
-      ...prev,
-      assetId: prev.assetId.filter((tag) => tag !== id),
-    }));
-  };
-
-  // Handle clearing all asset ID tags
-  const handleClearAllAssetIds = () => {
-    setFilters((prev) => ({
-      ...prev,
-      assetId: [],
-    }));
-    setAssetIdInput("");
-  };
-
   // Reset all filters
   const handleReset = () => {
-    setFilters({
-      assetId: [],
+    const resetFilters = {
+      assetId: "",
       name: "",
       serial: "",
       status: null,
       warranty: "",
       endOfLife: "",
       checkInCheckOut: null,
-    });
-    setAssetIdInput("");
-    setShowAssetIdDropdown(false);
+    };
+    setFilters(resetFilters);
+    onApplyFilter(resetFilters);
+    onClose();
   };
 
   // Apply filters
@@ -149,81 +117,16 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
         {/* Modal Body */}
         <div className="modal-body asset-filter-modal-body">
           <div className="filter-grid">
-            {/* Asset ID with Tag Selection - Combobox Style */}
+            {/* Asset ID */}
             <fieldset>
               <label htmlFor="assetId">Asset ID</label>
-              <div className="asset-id-combobox">
-                <div className="asset-id-input-wrapper">
-                  <div className="asset-id-tags-container">
-                    {filters.assetId.map((id) => (
-                      <div key={id} className="asset-id-tag">
-                        {id}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveAssetIdTag(id)}
-                          className="remove-tag-btn"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    <input
-                      type="text"
-                      id="assetId"
-                      className="asset-id-input"
-                      placeholder={filters.assetId.length === 0 ? "Enter Asset ID" : ""}
-                      value={assetIdInput}
-                      onChange={(e) => {
-                        setAssetIdInput(e.target.value.toUpperCase());
-                        setShowAssetIdDropdown(true);
-                      }}
-                      onKeyPress={(e) => e.key === "Enter" && handleAddAssetIdTag()}
-                      onFocus={() => setShowAssetIdDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowAssetIdDropdown(false), 200)}
-                      list="assetIdList"
-                    />
-                    <datalist id="assetIdList">
-                      {availableAssetIds.filter(id => !filters.assetId.includes(id)).map((id) => (
-                        <option key={id} value={id} />
-                      ))}
-                    </datalist>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleClearAllAssetIds}
-                    className="clear-all-btn"
-                    title="Clear all"
-                  >
-                    ×
-                  </button>
-                  <div className="dropdown-arrow">▼</div>
-                </div>
-                {showAssetIdDropdown && (
-                  <div className="asset-id-dropdown">
-                    {availableAssetIds
-                      .filter(id => 
-                        !filters.assetId.includes(id) && 
-                        (assetIdInput === "" || id.includes(assetIdInput))
-                      )
-                      .map((id) => (
-                        <div
-                          key={id}
-                          className="dropdown-option"
-                          onClick={() => {
-                            setFilters((prev) => ({
-                              ...prev,
-                              assetId: [...prev.assetId, id],
-                            }));
-                            setAssetIdInput("");
-                            setShowAssetIdDropdown(false);
-                          }}
-                        >
-                          {id}
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
+              <input
+                type="text"
+                id="assetId"
+                placeholder="Enter Asset ID"
+                value={filters.assetId}
+                onChange={(e) => handleInputChange("assetId", e.target.value)}
+              />
             </fieldset>
 
             {/* Asset Name */}
