@@ -30,6 +30,7 @@ const PerformAudits = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        console.log("Current user:", currentUser);
         const [due, overdue, scheduled, locs] = await Promise.all([
           fetchDueAudits(),
           fetchOverdueAudits(),
