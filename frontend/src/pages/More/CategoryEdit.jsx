@@ -68,7 +68,31 @@ const CategoryEdit = () => {
         .then(() => navigate('/More/ViewCategories', { state: { updatedCategory: true } }))
         .catch((err) => {
           console.error('Failed to update category', err)
-          alert('Failed to update category: ' + (err?.response?.data?.detail || err.message))
+                    console.error('Full error response:', err?.response)
+          console.error('Error data:', err?.response?.data)
+          
+          // Extract detailed error message from backend
+          let errorMsg = 'Failed to update category: ';
+          if (err?.response?.data) {
+            const errorData = err.response.data;
+            // Check for field-specific validation errors
+            if (errorData.name) {
+              errorMsg += `Name - ${Array.isArray(errorData.name) ? errorData.name[0] : errorData.name}`;
+            } else if (errorData.type) {
+              errorMsg += `Type - ${Array.isArray(errorData.type) ? errorData.type[0] : errorData.type}`;
+            } else if (errorData.logo) {
+              errorMsg += `Image - ${Array.isArray(errorData.logo) ? errorData.logo[0] : errorData.logo}`;
+            } else if (errorData.detail) {
+              errorMsg += errorData.detail;
+            } else {
+              // Show all errors as JSON
+              errorMsg += JSON.stringify(errorData);
+            }
+          } else {
+            errorMsg += err.message;
+          }
+          
+          alert(errorMsg);
         })
     } else {
       // Fallback: navigate back
