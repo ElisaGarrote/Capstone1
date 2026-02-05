@@ -1199,6 +1199,7 @@ class AssetCheckoutViewSet(viewsets.ModelViewSet):
 
 class AssetCheckinViewSet(viewsets.ModelViewSet):
     serializer_class = AssetCheckinSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return AssetCheckin.objects.select_related('asset_checkout', 'asset_checkout__asset').order_by('-checkin_date')
@@ -1223,6 +1224,10 @@ class AssetCheckinViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         status_id = request.data.get("status")
+        if not str(status_id).isdigit():
+            return Response({"detail": "Invalid status ID"}, status=400)
+
+        status_id = int(status_id)
 
         try:
             with transaction.atomic():
