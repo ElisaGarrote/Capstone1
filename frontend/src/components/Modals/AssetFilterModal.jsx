@@ -3,55 +3,57 @@ import CloseIcon from "../../assets/icons/close.svg";
 import "../../styles/Modal.css";
 import "../../styles/AssetFilterModal.css";
 
-export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {} }) {
+export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initialFilters = {}, allAssets = [] }) {
 
   const [filters, setFilters] = useState({
-    assetId: "",
-    assetModel: "",
+    assetId: [],
+    name: "",
+    serial: "",
     status: null,
-    supplier: null,
-    location: null,
-    assetName: "",
-    serialNumber: "",
-    warrantyExpiration: "",
-    orderNumber: "",
-    purchaseDate: "",
-    purchaseCost: "",
+    forAudit: null,
+    warranty: "",
+    endOfLife: "",
+    checkInCheckOut: null,
   });
 
-  // Status options
+  const [assetIdInput, setAssetIdInput] = useState("");
+
+  // Status options - Exact list provided by user
   const statusOptions = [
-    { value: "archived", label: "Archived" },
-    { value: "beingrepaired", label: "Being Repaired" },
+    { value: "ready_to_deploy", label: "Ready to Deploy" },
+    { value: "available", label: "Available" },
+    { value: "under_repair", label: "Under Repair" },
     { value: "broken", label: "Broken" },
-    { value: "deployed", label: "Deployed" },
-    { value: "lostorstolen", label: "Lost or Stolen" },
-    { value: "pending", label: "Pending" },
-    { value: "readytodeploy", label: "Ready to Deploy" },
+    { value: "pending_approval", label: "Pending Approval" },
+    { value: "in_transit", label: "In Transit" },
+    { value: "retired", label: "Retired" },
+    { value: "lost_or_stolen", label: "Lost or Stolen" },
+    { value: "maintenance", label: "Maintenance" },
+    { value: "reserved", label: "Reserved" },
+    { value: "awaiting_calibration", label: "Awaiting Calibration" },
+    { value: "calibration_due", label: "Calibration Due" },
+    { value: "warranty", label: "Warranty" },
+    { value: "out_for_service", label: "Out for Service" },
+    { value: "quarantined", label: "Quarantined" },
+    { value: "decommissioned", label: "Decommissioned" },
+    { value: "replacement_pending", label: "Replacement Pending" },
+    { value: "inspection_required", label: "Inspection Required" },
   ];
 
-  // Supplier options
-  const supplierOptions = [
-    { value: "amazon", label: "Amazon" },
-    { value: "newegg", label: "Newegg" },
-    { value: "staples", label: "Staples" },
-    { value: "whsmith", label: "WHSmith" },
+  // For Audit options
+  const forAuditOptions = [
+    { value: true, label: "Yes" },
+    { value: false, label: "No" },
   ];
 
-  // Location options
-  const locationOptions = [
-    { value: "makati", label: "Makati Office" },
-    { value: "pasig", label: "Pasig Office" },
-    { value: "marikina", label: "Marikina Office" },
-    { value: "quezon", label: "Quezon City Office" },
-    { value: "manila", label: "Manila Office" },
-    { value: "taguig", label: "Taguig Office" },
-    { value: "cebu", label: "Cebu Office" },
-    { value: "davao", label: "Davao Office" },
-    { value: "remote", label: "Remote" },
+  // Check-In/Check-Out options
+  const checkInCheckOutOptions = [
+    { value: "checked_out", label: "Checked Out" },
+    { value: "checked_in", label: "Checked In" },
   ];
 
-
+  // Get available asset IDs from allAssets
+  const availableAssetIds = allAssets.map(asset => asset.asset_id || asset.displayed_id).filter(Boolean);
 
   // Initialize filters from props
   useEffect(() => {
@@ -76,21 +78,39 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
     }));
   };
 
+  // Handle adding asset ID tag
+  const handleAddAssetIdTag = () => {
+    const trimmedInput = assetIdInput.trim().toUpperCase();
+    if (trimmedInput && availableAssetIds.includes(trimmedInput) && !filters.assetId.includes(trimmedInput)) {
+      setFilters((prev) => ({
+        ...prev,
+        assetId: [...prev.assetId, trimmedInput],
+      }));
+      setAssetIdInput("");
+    }
+  };
+
+  // Handle removing asset ID tag
+  const handleRemoveAssetIdTag = (id) => {
+    setFilters((prev) => ({
+      ...prev,
+      assetId: prev.assetId.filter((tag) => tag !== id),
+    }));
+  };
+
   // Reset all filters
   const handleReset = () => {
     setFilters({
-      assetId: "",
-      assetModel: "",
+      assetId: [],
+      name: "",
+      serial: "",
       status: null,
-      supplier: null,
-      location: null,
-      assetName: "",
-      serialNumber: "",
-      warrantyExpiration: "",
-      orderNumber: "",
-      purchaseDate: "",
-      purchaseCost: "",
+      forAudit: null,
+      warranty: "",
+      endOfLife: "",
+      checkInCheckOut: null,
     });
+    setAssetIdInput("");
   };
 
   // Apply filters
@@ -124,27 +144,69 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
         {/* Modal Body */}
         <div className="modal-body asset-filter-modal-body">
           <div className="filter-grid">
-            {/* Asset ID */}
+            {/* Asset ID with Tag Selection */}
             <fieldset>
               <label htmlFor="assetId">Asset ID</label>
+              <div className="asset-id-input-group">
+                <input
+                  type="text"
+                  id="assetId"
+                  placeholder="Enter Asset ID"
+                  value={assetIdInput}
+                  onChange={(e) => setAssetIdInput(e.target.value.toUpperCase())}
+                  onKeyPress={(e) => e.key === "Enter" && handleAddAssetIdTag()}
+                  list="assetIdList"
+                />
+                <datalist id="assetIdList">
+                  {availableAssetIds.filter(id => !filters.assetId.includes(id)).map((id) => (
+                    <option key={id} value={id} />
+                  ))}
+                </datalist>
+                <button
+                  type="button"
+                  onClick={handleAddAssetIdTag}
+                  className="add-tag-btn"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="asset-id-tags">
+                {filters.assetId.map((id) => (
+                  <div key={id} className="asset-id-tag">
+                    {id}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveAssetIdTag(id)}
+                      className="remove-tag-btn"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </fieldset>
+
+            {/* Asset Name */}
+            <fieldset>
+              <label htmlFor="name">Name</label>
               <input
                 type="text"
-                id="assetId"
-                placeholder="Enter Asset ID"
-                value={filters.assetId}
-                onChange={(e) => handleInputChange("assetId", e.target.value)}
+                id="name"
+                placeholder="Enter Asset Name"
+                value={filters.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
               />
             </fieldset>
 
-            {/* Asset Model */}
+            {/* Serial Number */}
             <fieldset>
-              <label htmlFor="assetModel">Asset Model</label>
+              <label htmlFor="serial">Serial</label>
               <input
                 type="text"
-                id="assetModel"
-                placeholder="Enter Asset Model"
-                value={filters.assetModel}
-                onChange={(e) => handleInputChange("assetModel", e.target.value)}
+                id="serial"
+                placeholder="Enter Serial Number"
+                value={filters.serial}
+                onChange={(e) => handleInputChange("serial", e.target.value)}
               />
             </fieldset>
 
@@ -168,119 +230,70 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
               </select>
             </fieldset>
 
-            {/* Supplier */}
+            {/* For Audit */}
             <fieldset>
-              <label htmlFor="supplier">Supplier</label>
+              <label htmlFor="forAudit">For Audit</label>
               <select
-                id="supplier"
-                value={filters.supplier?.value || ""}
+                id="forAudit"
+                value={filters.forAudit !== null ? filters.forAudit : ""}
                 onChange={(e) => {
-                  const selectedOption = supplierOptions.find(opt => opt.value === e.target.value);
-                  handleSelectChange("supplier", selectedOption || null);
+                  if (e.target.value === "") {
+                    handleSelectChange("forAudit", null);
+                  } else {
+                    const selectedOption = forAuditOptions.find(opt => String(opt.value) === e.target.value);
+                    handleSelectChange("forAudit", selectedOption || null);
+                  }
                 }}
               >
-                <option value="">Select Supplier</option>
-                {supplierOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
+                <option value="">Select Option</option>
+                {forAuditOptions.map((option) => (
+                  <option key={String(option.value)} value={String(option.value)}>
                     {option.label}
                   </option>
                 ))}
               </select>
             </fieldset>
 
-            {/* Location */}
+            {/* Warranty */}
             <fieldset>
-              <label htmlFor="location">Location</label>
+              <label htmlFor="warranty">Warranty</label>
+              <input
+                type="date"
+                id="warranty"
+                value={filters.warranty}
+                onChange={(e) => handleInputChange("warranty", e.target.value)}
+              />
+            </fieldset>
+
+            {/* End of Life */}
+            <fieldset>
+              <label htmlFor="endOfLife">End of Life</label>
+              <input
+                type="date"
+                id="endOfLife"
+                value={filters.endOfLife}
+                onChange={(e) => handleInputChange("endOfLife", e.target.value)}
+              />
+            </fieldset>
+
+            {/* Check-In / Check-Out */}
+            <fieldset>
+              <label htmlFor="checkInCheckOut">Check-In / Check-Out</label>
               <select
-                id="location"
-                value={filters.location?.value || ""}
+                id="checkInCheckOut"
+                value={filters.checkInCheckOut?.value || ""}
                 onChange={(e) => {
-                  const selectedOption = locationOptions.find(opt => opt.value === e.target.value);
-                  handleSelectChange("location", selectedOption || null);
+                  const selectedOption = checkInCheckOutOptions.find(opt => opt.value === e.target.value);
+                  handleSelectChange("checkInCheckOut", selectedOption || null);
                 }}
               >
-                <option value="">Select Location</option>
-                {locationOptions.map((option) => (
+                <option value="">Select Option</option>
+                {checkInCheckOutOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
               </select>
-            </fieldset>
-
-            {/* Asset Name */}
-            <fieldset>
-              <label htmlFor="assetName">Asset Name</label>
-              <input
-                type="text"
-                id="assetName"
-                placeholder="Enter Asset Name"
-                value={filters.assetName}
-                onChange={(e) => handleInputChange("assetName", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Serial Number */}
-            <fieldset>
-              <label htmlFor="serialNumber">Serial Number</label>
-              <input
-                type="text"
-                id="serialNumber"
-                placeholder="Enter Serial Number"
-                value={filters.serialNumber}
-                onChange={(e) => handleInputChange("serialNumber", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Warranty Expiration */}
-            <fieldset>
-              <label htmlFor="warrantyExpiration">Warranty Expiration</label>
-              <input
-                type="date"
-                id="warrantyExpiration"
-                value={filters.warrantyExpiration}
-                onChange={(e) => handleInputChange("warrantyExpiration", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Order Number */}
-            <fieldset>
-              <label htmlFor="orderNumber">Order No.</label>
-              <input
-                type="text"
-                id="orderNumber"
-                placeholder="Enter Order Number"
-                value={filters.orderNumber}
-                onChange={(e) => handleInputChange("orderNumber", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Purchase Date */}
-            <fieldset>
-              <label htmlFor="purchaseDate">Purchase Date</label>
-              <input
-                type="date"
-                id="purchaseDate"
-                value={filters.purchaseDate}
-                onChange={(e) => handleInputChange("purchaseDate", e.target.value)}
-              />
-            </fieldset>
-
-            {/* Purchase Cost */}
-            <fieldset className="asset-filter-cost-field">
-              <label htmlFor="purchaseCost">Purchase Cost</label>
-              <div className="asset-filter-cost-input-group">
-                <span className="asset-filter-cost-addon">PHP</span>
-                <input
-                  type="number"
-                  id="purchaseCost"
-                  placeholder="0.00"
-                  value={filters.purchaseCost}
-                  onChange={(e) => handleInputChange("purchaseCost", e.target.value)}
-                  min="0"
-                  step="0.01"
-                />
-              </div>
             </fieldset>
           </div>
         </div>

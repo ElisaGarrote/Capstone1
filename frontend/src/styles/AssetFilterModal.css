@@ -163,6 +163,91 @@
     opacity: 1;
 }
 
+/* Asset ID Tag Selection Styles */
+.asset-id-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.asset-id-input-group input {
+  flex: 1;
+  padding: 13px 16px;
+  border: 1px solid #d3d3d3;
+  border-radius: 25px;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.asset-id-input-group input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.add-tag-btn {
+  padding: 13px 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.add-tag-btn:hover {
+  background-color: #0a54c6;
+  transform: translateY(-2px);
+}
+
+.add-tag-btn:active {
+  transform: translateY(0);
+}
+
+.asset-id-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  min-height: 0;
+}
+
+.asset-id-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #e8e8e8;
+  color: #333;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.remove-tag-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  transition: all 0.2s ease;
+}
+
+.remove-tag-btn:hover {
+  color: #333;
+  transform: scale(1.2);
+}
+
 @media (max-width: 768px) {
   .asset-filter-modal-container {
     min-width: 90% !important;
@@ -171,6 +256,14 @@
 
   .filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .asset-id-input-group {
+    flex-direction: column;
+  }
+
+  .add-tag-btn {
+    width: 100%;
   }
 }
 

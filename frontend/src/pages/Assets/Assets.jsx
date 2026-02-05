@@ -325,17 +325,26 @@ export default function Assets() {
   const applyFilters = (filters) => {
     let filtered = [...assets];
 
-    // Filter by Asset ID
-    if (filters.assetId && filters.assetId.trim() !== "") {
+    // Filter by Asset ID (array of IDs)
+    if (filters.assetId && filters.assetId.length > 0) {
       filtered = filtered.filter((asset) =>
-        asset.displayed_id.toLowerCase().includes(filters.assetId.toLowerCase())
+        filters.assetId.includes(asset.asset_id || asset.displayed_id)
       );
     }
 
-    // Filter by Asset Model
-    if (filters.assetModel && filters.assetModel.trim() !== "") {
+    // Filter by Name
+    if (filters.name && filters.name.trim() !== "") {
       filtered = filtered.filter((asset) =>
-        asset.product?.toLowerCase().includes(filters.assetModel.toLowerCase())
+        asset.name.toLowerCase().includes(filters.name.toLowerCase())
+      );
+    }
+
+    // Filter by Serial Number
+    if (filters.serial && filters.serial.trim() !== "") {
+      filtered = filtered.filter((asset) =>
+        asset.serial_number
+          ?.toLowerCase()
+          .includes(filters.serial.toLowerCase())
       );
     }
 
@@ -343,74 +352,38 @@ export default function Assets() {
     if (filters.status) {
       filtered = filtered.filter(
         (asset) =>
-          asset.status.toLowerCase() === filters.status.value.toLowerCase()
+          asset.status_details?.type?.toLowerCase() === filters.status.value.toLowerCase()
       );
     }
 
-    // Filter by Supplier
-    if (filters.supplier) {
+    // Filter by For Audit
+    if (filters.forAudit !== null && filters.forAudit !== undefined) {
       filtered = filtered.filter((asset) =>
-        asset.supplier
-          ?.toLowerCase()
-          .includes(filters.supplier.label.toLowerCase())
+        asset.for_audit === filters.forAudit.value
       );
     }
 
-    // Filter by Location
-    if (filters.location) {
-      filtered = filtered.filter((asset) =>
-        asset.location
-          ?.toLowerCase()
-          .includes(filters.location.label.toLowerCase())
-      );
-    }
-
-    // Filter by Asset Name
-    if (filters.assetName && filters.assetName.trim() !== "") {
-      filtered = filtered.filter((asset) =>
-        asset.name.toLowerCase().includes(filters.assetName.toLowerCase())
-      );
-    }
-
-    // Filter by Serial Number
-    if (filters.serialNumber && filters.serialNumber.trim() !== "") {
-      filtered = filtered.filter((asset) =>
-        asset.serial_number
-          ?.toLowerCase()
-          .includes(filters.serialNumber.toLowerCase())
-      );
-    }
-
-    // Filter by Warranty Expiration
-    if (
-      filters.warrantyExpiration &&
-      filters.warrantyExpiration.trim() !== ""
-    ) {
+    // Filter by Warranty
+    if (filters.warranty && filters.warranty.trim() !== "") {
       filtered = filtered.filter(
-        (asset) => asset.warranty_expiration_date === filters.warrantyExpiration
+        (asset) => asset.warranty_expiration === filters.warranty
       );
     }
 
-    // Filter by Order Number
-    if (filters.orderNumber && filters.orderNumber.trim() !== "") {
-      filtered = filtered.filter((asset) =>
-        asset.order_number
-          ?.toLowerCase()
-          .includes(filters.orderNumber.toLowerCase())
-      );
-    }
-
-    // Filter by Purchase Date
-    if (filters.purchaseDate && filters.purchaseDate.trim() !== "") {
+    // Filter by End of Life
+    if (filters.endOfLife && filters.endOfLife.trim() !== "") {
       filtered = filtered.filter(
-        (asset) => asset.purchase_date === filters.purchaseDate
+        (asset) => asset.product_details?.end_of_life === filters.endOfLife
       );
     }
 
-    // Filter by Purchase Cost
-    if (filters.purchaseCost && filters.purchaseCost.trim() !== "") {
-      const cost = parseFloat(filters.purchaseCost);
-      filtered = filtered.filter((asset) => asset.purchase_cost === cost);
+    // Filter by Check-In / Check-Out
+    if (filters.checkInCheckOut) {
+      if (filters.checkInCheckOut.value === "checked_out") {
+        filtered = filtered.filter((asset) => asset.active_checkout);
+      } else if (filters.checkInCheckOut.value === "checked_in") {
+        filtered = filtered.filter((asset) => !asset.active_checkout);
+      }
     }
 
     return filtered;
@@ -500,6 +473,7 @@ export default function Assets() {
         onClose={() => setIsFilterModalOpen(false)}
         onApplyFilter={handleApplyFilter}
         initialFilters={appliedFilters}
+        allAssets={assets}
       />
 
       <section className="page-layout-with-table">
