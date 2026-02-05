@@ -97,47 +97,63 @@ function Dashboard() {
 
           console.log("Raw checkin data:", data);
 
-          // Enrich data with employee names from helpdesk service
-          const enrichedData = await Promise.all(
-            data.map(async (item) => {
-              try {
-                console.log(`Processing item:`, item);
+          // Collect unique employee IDs that need fetching (where name is "Unknown")
+          const unknownEmployeeIds = [
+            ...new Set(
+              data
+                .filter(
+                  (item) =>
+                    item.checked_out_to_id &&
+                    (item.checked_out_to === "Unknown" || !item.checked_out_to)
+                )
+                .map((item) => item.checked_out_to_id)
+            ),
+          ];
 
-                // If checked_out_to is "Unknown" and we have an employee ID, fetch the employee name
-                if (
-                  item.checked_out_to_id &&
-                  (item.checked_out_to === "Unknown" || !item.checked_out_to)
-                ) {
-                  console.log(`Fetching employee ${item.checked_out_to_id}...`);
-                  const employee = await fetchEmployeeById(
-                    item.checked_out_to_id,
-                  );
-                  console.log(
-                    `Employee data for ${item.checked_out_to_id}:`,
-                    employee,
-                  );
-                  return {
-                    ...item,
-                    checked_out_to: employee
-                      ? employee.name
-                      : `Employee #${item.checked_out_to_id}`,
-                    employee_email: employee ? employee.email : null,
-                    employee_phone: employee ? employee.phone : null,
-                  };
+          // Batch fetch all unknown employees in parallel (limited to avoid overwhelming server)
+          const employeeCache = {};
+          if (unknownEmployeeIds.length > 0) {
+            console.log(`Batch fetching ${unknownEmployeeIds.length} employees...`);
+            
+            // Fetch in batches of 10 to avoid overwhelming the server
+            const batchSize = 10;
+            for (let i = 0; i < unknownEmployeeIds.length; i += batchSize) {
+              const batch = unknownEmployeeIds.slice(i, i + batchSize);
+              const employeePromises = batch.map(async (empId) => {
+                try {
+                  const employee = await fetchEmployeeById(empId);
+                  return { empId, employee };
+                } catch (error) {
+                  console.error(`Failed to fetch employee ${empId}:`, error);
+                  return { empId, employee: null };
                 }
+              });
 
-                // If checked_out_to is already a name (not "Unknown"), use it as-is
-                return item;
-              } catch (error) {
-                console.error(
-                  `Failed to fetch employee ${item.checked_out_to_id}:`,
-                  error,
-                );
-                // Return original item if employee fetch fails
-                return item;
-              }
-            }),
-          );
+              const results = await Promise.all(employeePromises);
+              results.forEach(({ empId, employee }) => {
+                employeeCache[empId] = employee;
+              });
+            }
+          }
+
+          // Enrich data with cached employee information
+          const enrichedData = data.map((item) => {
+            if (
+              item.checked_out_to_id &&
+              (item.checked_out_to === "Unknown" || !item.checked_out_to)
+            ) {
+              const employee = employeeCache[item.checked_out_to_id];
+              return {
+                ...item,
+                checked_out_to: employee
+                  ? employee.name
+                  : `Employee #${item.checked_out_to_id}`,
+                employee_email: employee ? employee.email : null,
+                employee_phone: employee ? employee.phone : null,
+              };
+            }
+            return item;
+          });
 
           console.log("Enriched checkin data:", enrichedData);
 
@@ -156,9 +172,14 @@ function Dashboard() {
       }
     }
 
-    loadDashboardStats();
-    loadForecastData();
-    loadCheckinData();
+    // Load all dashboard data in parallel for faster initial load
+    Promise.all([
+      loadDashboardStats(),
+      loadForecastData(),
+      loadCheckinData()
+    ]).catch(err => {
+      console.error("Error loading dashboard data:", err);
+    });
   }, []);
 
   return (

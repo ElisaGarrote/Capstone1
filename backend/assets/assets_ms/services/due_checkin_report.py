@@ -82,6 +82,74 @@ def get_location_details(location_id):
         return None
 
 
+def get_employees_bulk(employee_ids):
+    """Fetch multiple employees in one call - check cache first, then fetch missing ones."""
+    if not employee_ids:
+        return {}
+    
+    employee_map = {}
+    uncached_ids = []
+    
+    # Check cache first
+    for emp_id in employee_ids:
+        cache_key = f"helpdesk:employee:{emp_id}"
+        cached = cache.get(cache_key)
+        if cached:
+            employee_map[emp_id] = cached
+        else:
+            uncached_ids.append(emp_id)
+    
+    # Fetch uncached employees individually (API doesn't support bulk)
+    # But limit concurrent requests to avoid overwhelming the service
+    if uncached_ids:
+        for emp_id in uncached_ids:
+            try:
+                url = f"{CONTEXTS_SERVICE_URL}/helpdesk-employees/{emp_id}/"
+                response = requests.get(url, timeout=5)
+                if response.status_code == 200:
+                    data = response.json()
+                    cache_key = f"helpdesk:employee:{emp_id}"
+                    cache.set(cache_key, data, 300)
+                    employee_map[emp_id] = data
+            except Exception as e:
+                logger.error(f"Error fetching employee {emp_id}: {str(e)}")
+    
+    return employee_map
+
+
+def get_locations_bulk(location_ids):
+    """Fetch multiple locations - check cache first, then fetch missing ones."""
+    if not location_ids:
+        return {}
+    
+    location_map = {}
+    uncached_ids = []
+    
+    # Check cache first
+    for loc_id in location_ids:
+        cache_key = f"helpdesk:location:{loc_id}"
+        cached = cache.get(cache_key)
+        if cached:
+            location_map[loc_id] = cached
+        else:
+            uncached_ids.append(loc_id)
+    
+    # Fetch uncached locations individually
+    if uncached_ids:
+        for loc_id in uncached_ids:
+            try:
+                url = f"{CONTEXTS_SERVICE_URL}/helpdesk-locations/{loc_id}/"
+                response = requests.get(url, timeout=5)
+                if response.status_code == 200:
+                    data = response.json()
+                    cache_key = f"helpdesk:location:{loc_id}"
+                    cache.set(cache_key, data, 300)
+                    location_map[loc_id] = data
+            except Exception as e:
+                logger.error(f"Error fetching location {loc_id}: {str(e)}")
+    
+    return location_map
+
 def get_due_checkin_report(days_threshold=30):
     """
     Generate a report of assets that are due for check-in within the specified timeframe.
@@ -107,10 +175,22 @@ def get_due_checkin_report(days_threshold=30):
     report_data = []
     
     # Find all checkouts that don't have a corresponding checkin and are due within the timeframe
+    # Optimize with select_related and only() to reduce database queries
     due_checkouts = AssetCheckout.objects.filter(
         return_date__lte=future_date,  # Return date is within the next month
         asset_checkin__isnull=True  # No check-in recorded yet
-    ).select_related('asset', 'asset__product').order_by('return_date')
+    ).select_related('asset', 'asset__product').only(
+        'id', 'checkout_to', 'location', 'checkout_date', 'return_date', 'ticket_number',
+        'asset__id', 'asset__asset_id', 'asset__product__name'
+    ).order_by('return_date')
+    
+    # Collect all unique employee and location IDs for bulk fetching
+    employee_ids = list(set([co.checkout_to for co in due_checkouts if co.checkout_to]))
+    location_ids = list(set([co.location for co in due_checkouts if co.location]))
+    
+    # Bulk fetch employees and locations (uses cache when available)
+    employee_map = get_employees_bulk(employee_ids) if employee_ids else {}
+    location_map = get_locations_bulk(location_ids) if location_ids else {}
     
     for checkout in due_checkouts:
         # Get asset details
@@ -121,13 +201,12 @@ def get_due_checkin_report(days_threshold=30):
         days_until_due = (checkout.return_date - today).days
         status = 'overdue' if days_until_due < 0 else 'upcoming'
         
-        # Get the employee who has the asset (CHECKED OUT TO)
-        # Priority 1: Use checkout.checkout_to which has the employee ID
+        # Get the employee who has the asset (CHECKED OUT TO) from bulk-fetched map
         checked_out_to_name = None
         checked_out_to_id = checkout.checkout_to
         
-        if checkout.checkout_to:
-            checked_out_to = get_employee_details(checkout.checkout_to)
+        if checkout.checkout_to and checkout.checkout_to in employee_map:
+            checked_out_to = employee_map[checkout.checkout_to]
             if checked_out_to:
                 logger.info(f"Employee details for {checkout.checkout_to}: {checked_out_to}")
                 # Handle different response structures from Help Desk service
@@ -154,11 +233,11 @@ def get_due_checkin_report(days_threshold=30):
         # For checked_out_by, use System as default
         checked_out_by_name = "System"
         
-        # Get location details
+        # Get location details from bulk-fetched map
         location_name = None
         location_id = checkout.location
-        if checkout.location:
-            location = get_location_details(checkout.location)
+        if checkout.location and checkout.location in location_map:
+            location = location_map[checkout.location]
             if location:
                 logger.info(f"Location details for {checkout.location}: {location}")
                 if isinstance(location, dict):

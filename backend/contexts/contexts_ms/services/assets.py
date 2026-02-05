@@ -90,7 +90,7 @@ def bulk_check_usage(item_type, ids, sample_limit=0, timeout=8):
             'ids': ids,
             'options': {'sample_limit': sample_limit}
         }
-        r = client_post('usage/check_bulk/', json=payload, timeout=timeout)
+        r = client_post('usage/check_bulk/', json=payload, timeout=60)
         r.raise_for_status()
         j = r.json() or {}
         results = j.get('results') if isinstance(j, dict) else None

@@ -155,30 +155,65 @@ export default function DueBackReport() {
             });
           }
           
-          // Enrich data with employee names and location names
-          const enrichedData = await Promise.all(
-            data.map(async (item) => {
-              try {
-                let updatedItem = { ...item };
-                
-                // Fetch employee name if needed
-                if (item.checked_out_to_id && (item.checked_out_to === 'Unknown' || !item.checked_out_to)) {
-                  const employee = await fetchEmployeeById(item.checked_out_to_id);
-                  updatedItem.checked_out_to = employee ? employee.name : `Employee #${item.checked_out_to_id}`;
+          // Collect unique employee IDs that need fetching
+          const unknownEmployeeIds = [
+            ...new Set(
+              data
+                .filter(
+                  (item) =>
+                    item.checked_out_to_id &&
+                    (item.checked_out_to === "Unknown" || !item.checked_out_to)
+                )
+                .map((item) => item.checked_out_to_id)
+            ),
+          ];
+
+          // Batch fetch all unknown employees
+          const employeeCache = {};
+          if (unknownEmployeeIds.length > 0) {
+            // Fetch in batches of 10 to avoid overwhelming the server
+            const batchSize = 10;
+            for (let i = 0; i < unknownEmployeeIds.length; i += batchSize) {
+              const batch = unknownEmployeeIds.slice(i, i + batchSize);
+              const employeePromises = batch.map(async (empId) => {
+                try {
+                  const employee = await fetchEmployeeById(empId);
+                  return { empId, employee };
+                } catch (error) {
+                  console.error(`Failed to fetch employee ${empId}:`, error);
+                  return { empId, employee: null };
                 }
-                
-                // Add location name from the map
-                if (item.location_id && locationMap[item.location_id]) {
-                  updatedItem.location = locationMap[item.location_id];
-                }
-                
-                return updatedItem;
-              } catch (error) {
-                console.error(`Failed to enrich data for item:`, error);
-                return item;
-              }
-            })
-          );
+              });
+
+              const results = await Promise.all(employeePromises);
+              results.forEach(({ empId, employee }) => {
+                employeeCache[empId] = employee;
+              });
+            }
+          }
+          
+          // Enrich data with cached employee names and location names
+          const enrichedData = data.map((item) => {
+            let updatedItem = { ...item };
+            
+            // Add employee name from cache if needed
+            if (
+              item.checked_out_to_id &&
+              (item.checked_out_to === "Unknown" || !item.checked_out_to)
+            ) {
+              const employee = employeeCache[item.checked_out_to_id];
+              updatedItem.checked_out_to = employee
+                ? employee.name
+                : `Employee #${item.checked_out_to_id}`;
+            }
+            
+            // Add location name from the map
+            if (item.location_id && locationMap[item.location_id]) {
+              updatedItem.location = locationMap[item.location_id];
+            }
+            
+            return updatedItem;
+          });
           
           setReportData(enrichedData);
         } else {

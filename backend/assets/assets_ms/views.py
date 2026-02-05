@@ -2287,18 +2287,19 @@ class DashboardViewSet(viewsets.ViewSet):
             today = now().date()
             next_30_days = today + timedelta(days=30)
 
+            # Use only() to limit fields fetched and improve query performance
             # Assets due for return - only count checkouts that haven't been checked in yet
             # Due for return: return date is in the future (today or later) within next 30 days
             due_for_return = AssetCheckout.objects.filter(
                 return_date__gte=today,
                 return_date__lte=next_30_days,
                 asset_checkin__isnull=True
-            ).count()
+            ).only('id').count()
             # Overdue for return: return date is in the past
             overdue_for_return = AssetCheckout.objects.filter(
                 return_date__lt=today,
                 asset_checkin__isnull=True
-            ).count()
+            ).only('id').count()
 
             # Audits - due (today and future), upcoming (next 30 days), overdue, and completed
             try:
@@ -2306,7 +2307,7 @@ class DashboardViewSet(viewsets.ViewSet):
                 base_schedule_qs = AuditSchedule.objects.filter(
                     is_deleted=False,
                     audit__isnull=True
-                )
+                ).only('id', 'date')
 
                 # Audits due to be audited: all pending audits from today onwards
                 due_audits = base_schedule_qs.filter(
@@ -2325,7 +2326,7 @@ class DashboardViewSet(viewsets.ViewSet):
                 ).count()
 
                 # Completed audits (audit records not soft-deleted)
-                completed_audits = Audit.objects.filter(is_deleted=False).count()
+                completed_audits = Audit.objects.filter(is_deleted=False).only('id').count()
             except Exception:
                 due_audits = 0
                 upcoming_audits = 0
@@ -2337,12 +2338,12 @@ class DashboardViewSet(viewsets.ViewSet):
                 reached_end_of_life = Product.objects.filter(
                     end_of_life__lte=today,
                     is_deleted=False
-                ).count()
+                ).only('id').count()
                 upcoming_end_of_life = Product.objects.filter(
                     end_of_life__gt=today,
                     end_of_life__lte=next_30_days,
                     is_deleted=False
-                ).count()
+                ).only('id').count()
             except Exception:
                 reached_end_of_life = 0
                 upcoming_end_of_life = 0
@@ -2351,18 +2352,18 @@ class DashboardViewSet(viewsets.ViewSet):
             expired_warranties = Asset.objects.filter(
                 warranty_expiration__lte=today,
                 is_deleted=False
-            ).count()
+            ).only('id').count()
             expiring_warranties = Asset.objects.filter(
                 warranty_expiration__gt=today,
                 warranty_expiration__lte=next_30_days,
                 is_deleted=False
-            ).count()
+            ).only('id').count()
 
             # Low stock - optimized query
             low_stock = Component.objects.filter(
                 is_deleted=False,
                 minimum_quantity__gt=0  # Only check components with minimum set
-            ).annotate(
+            ).only('id', 'quantity', 'minimum_quantity').annotate(
                 total_checked_out=Coalesce(Sum('component_checkouts__quantity'), Value(0)),
                 total_checked_in=Coalesce(Sum('component_checkouts__component_checkins__quantity'), Value(0)),
                 available_quantity=F('quantity') - (F('total_checked_out') - F('total_checked_in'))
@@ -2371,24 +2372,26 @@ class DashboardViewSet(viewsets.ViewSet):
             ).count()
 
             # Total asset costs
-            total_asset_costs = Asset.objects.filter(is_deleted=False).aggregate(
+            total_asset_costs = Asset.objects.filter(is_deleted=False).only('purchase_cost').aggregate(
                 total=Coalesce(Sum('purchase_cost'), Value(0), output_field=DecimalField())
             )['total']
 
             # Asset utilization (% of assets that are deployed)
-            total_assets = Asset.objects.filter(is_deleted=False).count()
+            total_assets = Asset.objects.filter(is_deleted=False).only('id').count()
             statuses = get_status_names_assets()
             deployed_status_ids = [s['id'] for s in statuses if s.get('type') == 'deployed'] if isinstance(statuses, list) else []
             deployed_count = Asset.objects.filter(
                 is_deleted=False,
                 status__in=deployed_status_ids
-            ).count() if deployed_status_ids else 0
+            ).only('id').count() if deployed_status_ids else 0
             asset_utilization = round((deployed_count / total_assets * 100) if total_assets > 0 else 0)
 
             # Asset categories - count by category (limit to top 10 for performance)
             categories = get_categories_list(type='asset', limit=100)
             category_map = {c['id']: c['name'] for c in categories} if isinstance(categories, list) else {}
-            category_counts = Asset.objects.filter(is_deleted=False).values(
+            category_counts = Asset.objects.filter(
+                is_deleted=False
+            ).select_related('product').only('product__category').values(
                 'product__category'
             ).annotate(count=Count('id')).order_by('-count')[:10]  # Limit to top 10
             asset_categories = [
@@ -2401,7 +2404,9 @@ class DashboardViewSet(viewsets.ViewSet):
 
             # Asset statuses - count by status (limit to top 10 for performance)
             status_map = {s['id']: s['name'] for s in statuses} if isinstance(statuses, list) else {}
-            status_counts = Asset.objects.filter(is_deleted=False).values(
+            status_counts = Asset.objects.filter(
+                is_deleted=False
+            ).only('status').values(
                 'status'
             ).annotate(count=Count('id')).order_by('-count')[:10]  # Limit to top 10
             asset_statuses = [
@@ -2430,8 +2435,8 @@ class DashboardViewSet(viewsets.ViewSet):
                 "asset_statuses": asset_statuses,
             }
 
-            # Cache for 10 seconds - short TTL for near real-time updates
-            cache.set(cache_key, data, 10)
+            # Cache for 30 seconds instead of 10 for better performance
+            cache.set(cache_key, data, 30)
 
             serializer = DashboardStatsSerializer(data)
             return Response(serializer.data)

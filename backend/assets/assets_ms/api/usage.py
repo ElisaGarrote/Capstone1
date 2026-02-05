@@ -37,7 +37,7 @@ def check_bulk_usage(request):
     if not item_type or not isinstance(ids, list):
         return Response({"detail": "Request must include 'type' and 'ids' list."}, status=status.HTTP_400_BAD_REQUEST)
 
-    MAX_BATCH = 200
+    MAX_BATCH = 50  # Reduced from 200 to prevent timeout issues
     if len(ids) > MAX_BATCH:
         return Response({"detail": f"Too many ids, max {MAX_BATCH}"}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
@@ -59,8 +59,10 @@ def check_bulk_usage(request):
 
     # Handle direct-attribute contexts
     if item_type in ('supplier', 'location', 'status'):
-        # Assets can be filtered by these fields directly
-        assets_qs = Asset.objects.filter(is_deleted=False).filter(**{f"{item_type}__in": ids})
+        # Assets can be filtered by these fields directly - optimize with only()
+        assets_qs = Asset.objects.filter(
+            is_deleted=False
+        ).filter(**{f"{item_type}__in": ids}).only('asset_id', 'id', item_type)
         for row in assets_qs.values(f"{item_type}", 'asset_id', 'id'):
             key = row.get(item_type)
             if key is None:
@@ -74,7 +76,9 @@ def check_bulk_usage(request):
 
         # Components do not have a 'status' field on the Component model; only supplier/location apply
         if item_type in ('supplier', 'location'):
-            comps_qs = Component.objects.filter(is_deleted=False).filter(**{f"{item_type}__in": ids})
+            comps_qs = Component.objects.filter(
+                is_deleted=False
+            ).filter(**{f"{item_type}__in": ids}).only('id', item_type)
             for row in comps_qs.values(f"{item_type}", 'id'):
                 key = row.get(item_type)
                 if key is None:
@@ -101,6 +105,8 @@ def check_bulk_usage(request):
                 results[key]['in_use'] = True
 
     # Product-scoped contexts
+            is_deleted=False
+        ).filter(**{f"{item_type}__in": ids}).only('id', item_type
     if item_type in ('category', 'manufacturer', 'depreciation'):
         prod_qs = Product.objects.filter(is_deleted=False).filter(**{f"{item_type}__in": ids}).values('id', item_type)
         prod_map = {}
@@ -111,6 +117,9 @@ def check_bulk_usage(request):
                 continue
             prod_map.setdefault(int(ctx), []).append(pid)
 
+                is_deleted=False, 
+                product__in=pids
+            ).only('asset_id', 'id'
         for ctx_val, pids in prod_map.items():
             aset_qs = Asset.objects.filter(is_deleted=False, product__in=pids)
             count = aset_qs.count()
@@ -120,7 +129,10 @@ def check_bulk_usage(request):
                 results[ctx_val]['in_use'] = True
                 for a in aset_qs.values('asset_id', 'id')[:sample_limit]:
                     aid = a.get('asset_id') or str(a.get('id'))
-                    results[ctx_val]['asset_ids'].append(aid)
+                    results[ctx_val]['asset_ids'
+                is_deleted=False, 
+                category__in=ids
+            ).only('category', 'id'
 
         if item_type == 'category':
             comps_qs = Component.objects.filter(is_deleted=False, category__in=ids).values('category', 'id')
@@ -128,6 +140,9 @@ def check_bulk_usage(request):
                 key = row.get('category')
                 if key is None:
                     continue
+                is_deleted=False, 
+                manufacturer__in=ids
+            ).only('manufacturer', 'id'
                 key = int(key)
                 results.setdefault(key, {"id": key, "in_use": False, "asset_count": 0, "asset_ids": [], "component_ids": [], "repair_ids": []})
                 results[key]['component_ids'].append(row.get('id'))
