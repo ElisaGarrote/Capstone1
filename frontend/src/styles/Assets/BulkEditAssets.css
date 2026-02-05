@@ -117,7 +117,7 @@
 .bulk-edit-notes-text strong {
   color: #333;
   font-weight: 600;
-  font-style: normal;
+  font-style: normal !important;
 }
 
 /* Header section styling */
