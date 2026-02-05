@@ -10,8 +10,9 @@ export async function fetchAllProducts() {
 }
 
 // GET product by ID
-export async function fetchProductById(id) {
-  const res = await assetsAxios.get(`products/${id}/`);
+export async function fetchProductById(id, options = {}) {
+  const params = options.forForm ? { form: "true" } : {};
+  const res = await assetsAxios.get(`products/${id}/`, { params });
   return res.data;
 }
 
@@ -88,8 +89,9 @@ export async function fetchAssetsByProduct(productId) {
 }
 
 // GET asset by ID
-export async function fetchAssetById(id) {
-  const res = await assetsAxios.get(`assets/${id}/`);
+export async function fetchAssetById(id, options = {}) {
+  const params = options.forForm ? { form: "true" } : {};
+  const res = await assetsAxios.get(`assets/${id}/`, { params });
   return res.data;
 }
 

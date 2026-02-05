@@ -115,7 +115,7 @@ export default function ProductsRegistration() {
 
         // If editing or cloning, fetch the asset data
         if (id) {
-          const productData = await fetchProductById(id);
+          const productData = await fetchProductById(id, { forForm: true });
           console.log("Fetched product:", productData);
           if (productData) {
             setProduct(productData);
