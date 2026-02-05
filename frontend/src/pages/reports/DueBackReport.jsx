@@ -139,47 +139,9 @@ export default function DueBackReport() {
         if (response.data.success) {
           const data = response.data.data;
           
-          // Collect all unique location IDs for batch fetching
-          const locationIds = [...new Set(data.map(item => item.location_id).filter(Boolean))];
-          const locationMap = {};
-
-          // Fetch all location names in parallel
-          if (locationIds.length > 0) {
-            const locationPromises = locationIds.map(locId =>
-              fetchLocationById(locId).catch(() => null)
-            );
-            const locationResults = await Promise.all(locationPromises);
-            locationIds.forEach((locId, idx) => {
-              locationMap[locId] = locationResults[idx]?.name || `Location ${locId}`;
-            });
-          }
-          
-          // Enrich data with employee names and location names
-          const enrichedData = await Promise.all(
-            data.map(async (item) => {
-              try {
-                let updatedItem = { ...item };
-                
-                // Fetch employee name if needed
-                if (item.checked_out_to_id && (item.checked_out_to === 'Unknown' || !item.checked_out_to)) {
-                  const employee = await fetchEmployeeById(item.checked_out_to_id);
-                  updatedItem.checked_out_to = employee ? employee.name : `Employee #${item.checked_out_to_id}`;
-                }
-                
-                // Add location name from the map
-                if (item.location_id && locationMap[item.location_id]) {
-                  updatedItem.location = locationMap[item.location_id];
-                }
-                
-                return updatedItem;
-              } catch (error) {
-                console.error(`Failed to enrich data for item:`, error);
-                return item;
-              }
-            })
-          );
-          
-          setReportData(enrichedData);
+          // Backend already provides employee names and location details
+          // Just use the data as-is to avoid N+1 API calls
+          setReportData(data);
         } else {
           setError("Failed to load report data");
         }

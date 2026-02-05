@@ -25,7 +25,7 @@ def get_ticket_by_id(ticket_id):
     """Fetch ticket details from contexts service."""
     try:
         url = f"{CONTEXTS_SERVICE_URL}/tickets/{ticket_id}/"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=15)
         if response.status_code == 200:
             return response.json()
         return None
@@ -46,11 +46,11 @@ def get_employee_details(employee_id):
     
     try:
         url = f"{CONTEXTS_SERVICE_URL}/helpdesk-employees/{employee_id}/"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=15)
         if response.status_code == 200:
             data = response.json()
-            # Cache for 5 minutes
-            cache.set(cache_key, data, 300)
+            # Cache for 10 minutes to reduce repeated calls
+            cache.set(cache_key, data, 600)
             return data
         return None
     except Exception as e:
@@ -70,11 +70,11 @@ def get_location_details(location_id):
     
     try:
         url = f"{CONTEXTS_SERVICE_URL}/helpdesk-locations/{location_id}/"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, timeout=15)
         if response.status_code == 200:
             data = response.json()
-            # Cache for 5 minutes
-            cache.set(cache_key, data, 300)
+            # Cache for 10 minutes to reduce repeated calls
+            cache.set(cache_key, data, 600)
             return data
         return None
     except Exception as e:
