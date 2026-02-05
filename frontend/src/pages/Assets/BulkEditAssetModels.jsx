@@ -416,6 +416,13 @@ export default function BulkEditAssetModels() {
             </div>
           </section>
 
+          {/* Notes Section */}
+          <section className="bulk-edit-notes-section">
+            <p className="bulk-edit-notes-text">
+              <strong>Notes:</strong> Only the fields that are filled in will be updated for all selected asset models. Fields left empty will remain unchanged. Selecting "Remove images from all items" will remove the existing images.
+            </p>
+          </section>
+
           {/* Bulk Edit Form */}
           <section className="registration-form">
             <form
