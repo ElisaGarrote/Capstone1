@@ -17,6 +17,7 @@ import authService from "../../services/auth-service";
 import { fetchOverdueAudits } from "../../services/assets-service";
 import Alert from "../../components/Alert";
 import { getUserFromToken } from "../../api/TokenUtils";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 // TableHeader
 function TableHeader() {
@@ -325,7 +326,7 @@ export default function OverdueAudits() {
 
             <section className="overdue-audit-table-section">
               {loading ? (
-                <p className="loading-message">Loading overdue audits...</p>
+                <SkeletonLoadingTable />
               ) : error ? (
                 <p className="error-message">{error}</p>
               ) : (

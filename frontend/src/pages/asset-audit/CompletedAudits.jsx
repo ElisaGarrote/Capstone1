@@ -15,6 +15,7 @@ import authService from "../../services/auth-service";
 import { fetchAllAudits } from "../../services/assets-service";
 import { getUserFromToken } from "../../api/TokenUtils";
 import Alert from "../../components/Alert";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 // TableHeader
 function TableHeader() {
@@ -287,7 +288,7 @@ export default function CompletedAudits() {
 
             <section className="completed-audit-table-section">
               {loading ? (
-                <p className="loading-message">Loading completed audits...</p>
+                <SkeletonLoadingTable />
               ) : error ? (
                 <p className="error-message">{error}</p>
               ) : (
