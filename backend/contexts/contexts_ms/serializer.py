@@ -13,9 +13,21 @@ class CategorySerializer(serializers.ModelSerializer):
     type_display = serializers.CharField(source='get_type_display', read_only=True)
     asset_count = serializers.SerializerMethodField(read_only=True)
     component_count = serializers.SerializerMethodField(read_only=True)
+    logo_url = serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = Category
         fields = '__all__'
+    
+    def get_logo_url(self, obj):
+        """Return absolute HTTPS URL for logo"""
+        if not obj.logo:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.logo.url)
+        # Fallback: return the relative path if no request context
+        return obj.logo.url
 
     def validate(self, attrs):
         # Normalize name and enforce unique (name,type) among non-deleted categories
@@ -118,9 +130,20 @@ class CategorySerializer(serializers.ModelSerializer):
             return None
 
 class SupplierSerializer(serializers.ModelSerializer):
+    logo_url = serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = Supplier
         fields = '__all__'
+    
+    def get_logo_url(self, obj):
+        """Return absolute HTTPS URL for logo"""
+        if not obj.logo:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.logo.url)
+        return obj.logo.url
 
     def validate_logo(self, value):
         return validate_image_file(value)
@@ -207,9 +230,20 @@ class SupplierSerializer(serializers.ModelSerializer):
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
+    logo_url = serializers.SerializerMethodField(read_only=True)
+    
     class Meta:
         model = Manufacturer
         fields = '__all__'
+    
+    def get_logo_url(self, obj):
+        """Return absolute HTTPS URL for logo"""
+        if not obj.logo:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.logo.url)
+        return obj.logo.url
 
     def validate_logo(self, value):
         return validate_image_file(value)

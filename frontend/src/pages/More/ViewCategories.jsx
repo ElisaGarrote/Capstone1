@@ -54,23 +54,15 @@ function TableHeader({ allSelected, onSelectAll }) {
 function TableItem({ category, onDeleteClick, onCheckboxChange, isChecked }) {
   const navigate = useNavigate();
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  // Build image URL: API returns field `logo` (not `icon`).
-  // If `logo` is a relative path, prefix it with `contextsBase` so the browser
-  // requests the image from the contexts service rather than the frontend origin.
-  const rawLogo = category.logo ?? category.icon ?? null
-  let logoUrl = null
-  if (rawLogo) {
-    // Absolute URLs (http(s)://) should be used as-is
-    if (/^https?:\/\//i.test(rawLogo)) {
-      logoUrl = rawLogo
-    } else if (rawLogo.startsWith('/')) {
-      // contextsBase may be empty or end with a slash
-      logoUrl = (contextsBase || '').replace(/\/$/, '') + rawLogo
-    } else {
-      // relative path without leading slash — treat similarly
-      logoUrl = (contextsBase || '').replace(/\/$/, '') + '/' + rawLogo
-    }
-  }
+  
+  // Use logo_url from API (absolute HTTPS URL) if available, otherwise fallback to manual construction
+  const logoUrl = category.logo_url || (() => {
+    const rawLogo = category.logo ?? category.icon ?? null
+    if (!rawLogo) return null
+    if (/^https?:\/\//i.test(rawLogo)) return rawLogo
+    const base = (contextsBase || '').replace(/\/$/, '')
+    return rawLogo.startsWith('/') ? base + rawLogo : base + '/' + rawLogo
+  })()
 
   return (
     <tr>
