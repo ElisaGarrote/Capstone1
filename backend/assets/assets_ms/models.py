@@ -82,6 +82,13 @@ class Product(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
     
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_deleted', 'category']),
+            models.Index(fields=['is_deleted', 'manufacturer']),
+            models.Index(fields=['is_deleted', 'depreciation']),
+        ]
+    
     def __str__(self):
         return self.name
 
@@ -107,6 +114,14 @@ class Asset(models.Model):
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_deleted', 'status']),
+            models.Index(fields=['is_deleted', 'supplier']),
+            models.Index(fields=['is_deleted', 'location']),
+            models.Index(fields=['is_deleted', 'product']),
+        ]
 
     def __str__(self):
         return self.asset_id
@@ -204,6 +219,14 @@ class Component(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
     
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_deleted', 'category']),
+            models.Index(fields=['is_deleted', 'manufacturer']),
+            models.Index(fields=['is_deleted', 'supplier']),
+            models.Index(fields=['is_deleted', 'location']),
+        ]
+    
     def __str__(self):
         return self.name
     
@@ -293,6 +316,12 @@ class Repair(models.Model):
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_deleted', 'supplier_id']),
+            models.Index(fields=['is_deleted', 'status_id']),
+        ]
 
     def __str__(self):
         return f"Repairs on {self.asset.displayed_id} at {self.start_date}"

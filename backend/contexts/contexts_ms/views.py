@@ -38,7 +38,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
         usage_map = {}
         if ids:
             try:
-                usage_map = bulk_check_usage('category', ids, sample_limit=0)
+                # Batch requests to avoid timeout - process in chunks of 50
+                BATCH_SIZE = 50
+                for i in range(0, len(ids), BATCH_SIZE):
+                    batch_ids = ids[i:i + BATCH_SIZE]
+                    batch_usage = bulk_check_usage('category', batch_ids, sample_limit=0)
+                    usage_map.update(batch_usage)
             except Exception:
                 usage_map = {}
 
@@ -227,7 +232,12 @@ class StatusViewSet(viewsets.ModelViewSet):
         usage_map = {}
         if ids:
             try:
-                usage_map = bulk_check_usage('status', ids, sample_limit=0)
+                # Batch requests to avoid timeout - process in chunks of 50
+                BATCH_SIZE = 50
+                for i in range(0, len(ids), BATCH_SIZE):
+                    batch_ids = ids[i:i + BATCH_SIZE]
+                    batch_usage = bulk_check_usage('status', batch_ids, sample_limit=0)
+                    usage_map.update(batch_usage)
             except Exception:
                 usage_map = {}
 
