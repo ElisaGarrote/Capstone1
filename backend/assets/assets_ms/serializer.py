@@ -708,6 +708,23 @@ class AssetNameSerializer(serializers.ModelSerializer):
         model = Asset
         fields = ['id', 'asset_id', 'name', 'image']
 
+
+class RecycleBinAssetSerializer(serializers.ModelSerializer):
+    """Serializer for deleted assets in Recycle Bin with all necessary fields"""
+    product_id = serializers.IntegerField(source='product.id', read_only=True)
+    category = serializers.IntegerField(source='product.category', read_only=True)
+    manufacturer = serializers.IntegerField(source='product.manufacturer', read_only=True)
+    deleted_at = serializers.DateTimeField(source='updated_at', read_only=True)
+    
+    class Meta:
+        model = Asset
+        fields = [
+            'id', 'asset_id', 'name', 'image', 
+            'product_id', 'category', 'manufacturer', 
+            'supplier', 'location', 'deleted_at'
+        ]
+
+
 # Serializer for HD registration with category filter
 class AssetHdRegistrationSerializer(serializers.ModelSerializer):
     status_details = serializers.SerializerMethodField()
@@ -1153,6 +1170,19 @@ class ComponentNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Component
         fields = ['id', 'name', 'image']
+
+
+class RecycleBinComponentSerializer(serializers.ModelSerializer):
+    """Serializer for deleted components in Recycle Bin with all necessary fields"""
+    deleted_at = serializers.DateTimeField(source='updated_at', read_only=True)
+    
+    class Meta:
+        model = Component
+        fields = [
+            'id', 'name', 'image',
+            'category', 'manufacturer', 
+            'supplier', 'location', 'deleted_at'
+        ]
 
 
 # Component - CRUD serializer

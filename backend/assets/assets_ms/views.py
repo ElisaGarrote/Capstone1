@@ -614,9 +614,9 @@ class AssetViewSet(viewsets.ModelViewSet):
     def deleted(self, request):
         """List all soft-deleted assets"""
         try:
-            assets = Asset.objects.filter(is_deleted=True).order_by('name')
-            # Use simplified serializer for recycle bin to avoid context map dependencies
-            serializer = AssetNameSerializer(assets, many=True)
+            assets = Asset.objects.filter(is_deleted=True).select_related('product').order_by('name')
+            # Use RecycleBin serializer with all necessary fields
+            serializer = RecycleBinAssetSerializer(assets, many=True)
             return Response(serializer.data)
         except Exception as e:
             logger.error(f"Error fetching deleted assets: {e}")
@@ -1358,9 +1358,8 @@ class ComponentViewSet(viewsets.ModelViewSet):
         """List all soft-deleted components"""
         try:
             components = Component.objects.filter(is_deleted=True).order_by('name')
-            # Use simplified serializer without context maps for recycle bin
-            # to avoid circular dependency (contexts -> assets -> contexts)
-            serializer = ComponentNameSerializer(components, many=True)
+            # Use RecycleBin serializer with all necessary fields
+            serializer = RecycleBinComponentSerializer(components, many=True)
             return Response(serializer.data)
         except Exception as e:
             logger.error(f"Error fetching deleted components: {e}")
