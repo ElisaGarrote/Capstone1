@@ -89,9 +89,11 @@ export default function CheckInAsset() {
       setIsLoading(true);
       try {
         let ticketData = ticketFromState;
+        console.log("Ticket data:", ticketData);
 
         // Scenario 1: Coming from Assets page with asset details and ticket
         if (assetIdFromState) {
+          console.log("Coming from Assets page", { assetIdFromState, assetDisplayIdFromState, assetNameFromState });
           setFromAssets(true);
           setAssetName(assetNameFromState || "");
           setAssetDisplayId(assetDisplayIdFromState || "");
@@ -100,11 +102,14 @@ export default function CheckInAsset() {
         // Use ticketData.asset (numeric ID) or ticketData.asset_id as fallback
         else {
           let ticketAssetId = ticketData?.asset || ticketData?.asset_id;
+          console.log("Coming from Tickets page", { ticketAssetId, ticketData });
 
           // If asset ID is missing but we have asset_checkout, fetch asset from checkout
           if (!ticketAssetId && ticketData?.asset_checkout) {
             try {
+              console.log("Fetching checkout for asset ID:", ticketData.asset_checkout);
               const checkout = await fetchAssetCheckoutById(ticketData.asset_checkout);
+              console.log("Fetched checkout:", checkout);
               ticketAssetId = checkout?.asset;
             } catch (error) {
               console.error("Failed to fetch checkout for asset ID:", error);
@@ -113,7 +118,9 @@ export default function CheckInAsset() {
 
           if (ticketAssetId) {
             setFromAssets(false);
+            console.log("Fetching asset data for ID:", ticketAssetId);
             const assetData = await fetchAssetNames({ ids: [ticketAssetId] });
+            console.log("Fetched asset data:", assetData);
             if (assetData && assetData.length > 0) {
               setAssetName(assetData[0].name || "");
               setAssetDisplayId(assetData[0].asset_id || "");
@@ -122,33 +129,41 @@ export default function CheckInAsset() {
         }
 
         setTicket(ticketData);
+        console.log("Set ticket:", ticketData);
 
         // Set check-in date based on source:
         // From Tickets page: use ticket.checkin_date
         // From Assets page: use today's date
         const isFromAssetsPage = !!assetIdFromState;
         const checkinDate = getCheckinDate(ticketData, isFromAssetsPage);
+        console.log("Checkin date:", checkinDate);
         setValue("checkinDate", checkinDate);
 
         // Set location from ticket if available
         if (ticketData?.location) {
+          console.log("Setting location from ticket:", ticketData.location);
           setValue("location", ticketData.location);
         }
 
         // Fetch dropdowns
+        console.log("Fetching dropdowns...");
         const dropdowns = await fetchAllDropdowns("status", {
           category: "asset",
           types: CHECKIN_STATUS_TYPES
         });
+        console.log("Fetched dropdowns:", dropdowns);
         setStatuses(dropdowns.statuses || []);
 
+        console.log("Fetching locations...");
         const locationsData = await fetchAllLocations();
+        console.log("Fetched locations:", locationsData);
         setLocations(locationsData || []);
       } catch (error) {
         console.error("Error initializing checkin form:", error);
         setErrorMessage("Failed to load form data. Please try again.");
       } finally {
         setIsLoading(false);
+        console.log("Loading complete");
       }
     };
 
@@ -260,12 +275,18 @@ export default function CheckInAsset() {
 
   // Form submission - user inputs are what gets saved
   const onSubmit = async (data) => {
+    console.log("Submitting check-in form:", data);
+    console.log("Attachment files:", attachmentFiles);
+    console.log("Ticket data:", ticket);
+    console.log("From assets?:", fromAssets);
     try {
+      setErrorMessage("");
       const formData = new FormData();
 
       // Get checkout ID from ticket or state - ensure it's an integer
       const rawCheckoutId = checkoutIdFromState || ticket?.asset_checkout;
       const checkoutId = parseInt(rawCheckoutId, 10);
+      console.log("Checkout ID:", checkoutId);
 
       console.log("Checkout ID debug:", { checkoutIdFromState, ticketAssetCheckout: ticket?.asset_checkout, rawCheckoutId, checkoutId });
 
@@ -290,14 +311,17 @@ export default function CheckInAsset() {
       const ticketNumber = ticketNumberFromState || ticketFromState?.ticket_number;
       if (ticketNumber) {
         formData.append("ticket_number", ticketNumber);
+        console.log("Ticket number:", ticketNumber);
       }
       if (data.notes) {
         formData.append("notes", data.notes);
+        console.log("Notes:", data.notes);
       }
 
       // Append attachment files if any
       attachmentFiles.forEach((file) => {
         formData.append("attachments", file);
+        console.log("Appending attachment:", file);
       });
 
       await createAssetCheckinWithStatus(formData);
