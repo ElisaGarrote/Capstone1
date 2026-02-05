@@ -9,6 +9,7 @@ import RepairFilterModal from "../../components/Modals/RepairFilterModal";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
 import { exportToExcel } from "../../utils/exportToExcel";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import authService from "../../services/auth-service";
 import "../../styles/Repairs/Repairs.css";
 import { fetchAllRepairs } from "../../services/assets-service";
@@ -391,40 +392,38 @@ export default function AssetRepairs() {
 
             {/* Table Structure */}
             <section className="repairs-table-section">
-              <table>
-                <thead>
-                  <TableHeader
-                    allSelected={allSelected}
-                    onHeaderChange={handleHeaderChange}
-                  />
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={9} className="no-data-message">
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : paginatedRepairs.length > 0 ? (
-                    paginatedRepairs.map((repair) => (
-                      <TableItem
-                        key={repair.id}
-                        repair={repair}
-                        isSelected={selectedIds.includes(repair.id)}
-                        onRowChange={handleRowChange}
-                        onDeleteClick={openDeleteModal}
-                        onViewClick={handleViewClick}
-                      />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={9} className="no-data-message">
-                        No Repairs Found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              {isLoading ? (
+                <SkeletonLoadingTable />
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader
+                      allSelected={allSelected}
+                      onHeaderChange={handleHeaderChange}
+                    />
+                  </thead>
+                  <tbody>
+                    {paginatedRepairs.length > 0 ? (
+                      paginatedRepairs.map((repair) => (
+                        <TableItem
+                          key={repair.id}
+                          repair={repair}
+                          isSelected={selectedIds.includes(repair.id)}
+                          onRowChange={handleRowChange}
+                          onDeleteClick={openDeleteModal}
+                          onViewClick={handleViewClick}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={9} className="no-data-message">
+                          No Repairs Found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             {/* Table pagination */}
