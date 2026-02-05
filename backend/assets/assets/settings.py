@@ -160,6 +160,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Ensure media directory exists
 os.makedirs(MEDIA_ROOT, exist_ok=True)
 
+# Security settings for HTTPS on Railway
+if not DEBUG:
+    # Trust Railway's proxy headers
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # Force HTTPS for cookies
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Redirect HTTP to HTTPS
+    SECURE_SSL_REDIRECT = True
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny'

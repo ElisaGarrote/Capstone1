@@ -192,6 +192,16 @@ STATICFILES_DIRS = [STATIC_DIR] if os.path.exists(STATIC_DIR) else []
 # Optional: WhiteNoise settings for better performance
 WHITENOISE_MAX_AGE = 31536000  # 1 year in seconds
 
+# Security settings for HTTPS on Railway
+if not DEBUG:
+    # Trust Railway's proxy headers
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    # Force HTTPS for cookies
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Redirect HTTP to HTTPS
+    SECURE_SSL_REDIRECT = True
+
 # CORS settings
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
