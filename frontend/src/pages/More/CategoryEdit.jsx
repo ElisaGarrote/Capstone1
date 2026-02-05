@@ -172,6 +172,7 @@ const CategoryEdit = () => {
                   <span className="required-asterisk">*</span>
                 </label>
                 <input
+                  id="categoryName"
                   type="text"
                   placeholder="Category Name"
                   maxLength="100"
@@ -193,6 +194,7 @@ const CategoryEdit = () => {
                   <span className="required-asterisk">*</span>
                 </label>
                 <select
+                  id="categoryType"
                   disabled={isInUse}
                   title={isInUse ? "Cannot change category type while category is in use" : ""}
                   className={errors.categoryType ? "input-error" : ""}
