@@ -48,8 +48,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         
         # 3. Product View
         if self.action == "retrieve":
+        # If query param ?form=true, return lightweight serializer
+            if self.request.query_params.get("form") == "true":
+                return ProductSerializer
             return ProductInstanceSerializer
-        
         # 4. Product Names
         if self.action == "names":
             return ProductNameSerializer
@@ -406,6 +408,9 @@ class AssetViewSet(viewsets.ModelViewSet):
         if self.action == "list":
             return AssetListSerializer
         if self.action == "retrieve":
+            # If query param ?form=true, return lightweight serializer
+            if self.request.query_params.get("form") == "true":
+                return AssetSerializer
             return AssetInstanceSerializer
         # 3. Create, Update, Destroy
         return AssetSerializer
