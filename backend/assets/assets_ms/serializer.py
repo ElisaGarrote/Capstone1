@@ -714,10 +714,6 @@ class RecycleBinAssetSerializer(serializers.ModelSerializer):
     product_id = serializers.IntegerField(source='product.id', read_only=True)
     category = serializers.IntegerField(source='product.category', read_only=True)
     manufacturer = serializers.IntegerField(source='product.manufacturer', read_only=True)
-    category_name = serializers.SerializerMethodField()
-    manufacturer_name = serializers.SerializerMethodField()
-    supplier_name = serializers.SerializerMethodField()
-    location_name = serializers.SerializerMethodField()
     deleted_at = serializers.DateTimeField(source='updated_at', read_only=True)
     
     class Meta:
@@ -725,46 +721,8 @@ class RecycleBinAssetSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'asset_id', 'name', 'image', 
             'product_id', 'category', 'manufacturer', 
-            'supplier', 'location', 'deleted_at',
-            'category_name', 'manufacturer_name', 'supplier_name', 'location_name'
+            'supplier', 'location', 'deleted_at'
         ]
-    
-    def get_category_name(self, obj):
-        if obj.product and obj.product.category:
-            try:
-                category = get_category_by_id(obj.product.category)
-                return category.get('name') if category else None
-            except:
-                return None
-        return None
-    
-    def get_manufacturer_name(self, obj):
-        if obj.product and obj.product.manufacturer:
-            try:
-                manufacturer = get_manufacturer_by_id(obj.product.manufacturer)
-                return manufacturer.get('name') if manufacturer else None
-            except:
-                return None
-        return None
-    
-    def get_supplier_name(self, obj):
-        if obj.supplier:
-            try:
-                supplier = get_supplier_by_id(obj.supplier)
-                return supplier.get('name') if supplier else None
-            except:
-                return None
-        return None
-    
-    def get_location_name(self, obj):
-        if obj.location:
-            try:
-                location = get_location_details(obj.location)
-                if location:
-                    return location.get('name') or location.get('city')
-            except:
-                return None
-        return None
 
 
 # Serializer for HD registration with category filter
@@ -1216,10 +1174,6 @@ class ComponentNameSerializer(serializers.ModelSerializer):
 
 class RecycleBinComponentSerializer(serializers.ModelSerializer):
     """Serializer for deleted components in Recycle Bin with all necessary fields"""
-    category_name = serializers.SerializerMethodField()
-    manufacturer_name = serializers.SerializerMethodField()
-    supplier_name = serializers.SerializerMethodField()
-    location_name = serializers.SerializerMethodField()
     deleted_at = serializers.DateTimeField(source='updated_at', read_only=True)
     
     class Meta:
@@ -1227,46 +1181,8 @@ class RecycleBinComponentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'image',
             'category', 'manufacturer', 
-            'supplier', 'location', 'deleted_at',
-            'category_name', 'manufacturer_name', 'supplier_name', 'location_name'
+            'supplier', 'location', 'deleted_at'
         ]
-    
-    def get_category_name(self, obj):
-        if obj.category:
-            try:
-                category = get_category_by_id(obj.category)
-                return category.get('name') if category else None
-            except:
-                return None
-        return None
-    
-    def get_manufacturer_name(self, obj):
-        if obj.manufacturer:
-            try:
-                manufacturer = get_manufacturer_by_id(obj.manufacturer)
-                return manufacturer.get('name') if manufacturer else None
-            except:
-                return None
-        return None
-    
-    def get_supplier_name(self, obj):
-        if obj.supplier:
-            try:
-                supplier = get_supplier_by_id(obj.supplier)
-                return supplier.get('name') if supplier else None
-            except:
-                return None
-        return None
-    
-    def get_location_name(self, obj):
-        if obj.location:
-            try:
-                location = get_location_details(obj.location)
-                if location:
-                    return location.get('name') or location.get('city')
-            except:
-                return None
-        return None
 
 
 # Component - CRUD serializer
