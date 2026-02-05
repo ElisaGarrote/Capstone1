@@ -149,7 +149,7 @@ export default function ProductsRegistration() {
         const categoryId = product.category ?? product.category_details?.id
         const manufacturerId = product.manufacturer ?? product.manufacturer_details?.id;
         const depreciationId = product.depreciation ?? product.depreciation_details?.id;
-        const defaultSupplierId = product.defaultSupplier ?? product.default_supplier_details?.id;
+        const defaultSupplierId = product.default_supplier ?? product.default_supplier_details?.id;
         setValue("category", categoryId ? String(categoryId) : "");
         setValue("manufacturer", manufacturerId ? String(manufacturerId) : "");
         setValue("depreciation", depreciationId ? String(depreciationId) : "");
