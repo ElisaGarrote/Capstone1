@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { IoWarningOutline } from "react-icons/io5";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
@@ -10,9 +12,7 @@ import MockupData from "../../data/mockData/reports/end-of-life-mockup-data.json
 const assetsBase = import.meta.env.VITE_ASSETS_API_URL || import.meta.env.VITE_API_URL || "/api/assets/";
 import Pagination from "../../components/Pagination";
 import dateRelated from "../../utils/dateRelated";
-import { IoWarningOutline } from "react-icons/io5";
 import Footer from "../../components/Footer";
-
 import "../../styles/UpcomingEndOfLife.css";
 
 const filterConfig = [
@@ -121,6 +121,7 @@ function TableItem({ asset, onDeleteClick }) {
 export default function EndOfLifeWarrantyReport() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [exportToggle, setExportToggle] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
 
@@ -154,6 +155,7 @@ export default function EndOfLifeWarrantyReport() {
               return pa - pb;
             });
             setAllData(rows);
+            setIsLoading(false);
           }
           return;
         }
@@ -166,9 +168,11 @@ export default function EndOfLifeWarrantyReport() {
             return pa - pb;
           });
           setAllData(data);
+          setIsLoading(false);
         }
       } catch (e) {
         // keep mock data on error
+        setIsLoading(false);
       }
     }
     fetchData();
@@ -233,28 +237,32 @@ export default function EndOfLifeWarrantyReport() {
                 <button>Download as CSV</button>
               </section>
             )}
-            <table>
-              <thead>
-                <TableHeader />
-              </thead>
-              <tbody>
-                {paginatedDepreciation.length > 0 ? (
-                  paginatedDepreciation.map((asset, index) => (
-                    <TableItem
-                      key={index}
-                      asset={asset}
-                      onDeleteClick={() => setDeleteModalOpen(true)}
-                    />
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="no-data-message">
-                      No end of life & warranty found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            {isLoading ? (
+              <SkeletonLoadingTable />
+            ) : (
+              <table>
+                <thead>
+                  <TableHeader />
+                </thead>
+                <tbody>
+                  {paginatedDepreciation.length > 0 ? (
+                    paginatedDepreciation.map((asset, index) => (
+                      <TableItem
+                        key={index}
+                        asset={asset}
+                        onDeleteClick={() => setDeleteModalOpen(true)}
+                      />
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="no-data-message">
+                        No end of life & warranty found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
           </section>
 
           {/* Table pagination */}
