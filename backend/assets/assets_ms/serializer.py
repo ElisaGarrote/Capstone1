@@ -711,25 +711,18 @@ class AssetNameSerializer(serializers.ModelSerializer):
 
 class RecycleBinAssetSerializer(serializers.ModelSerializer):
     """Serializer for deleted assets in Recycle Bin with all necessary fields"""
-    product = serializers.SerializerMethodField()
+    product_id = serializers.IntegerField(source='product.id', read_only=True)
+    category = serializers.IntegerField(source='product.category', read_only=True)
+    manufacturer = serializers.IntegerField(source='product.manufacturer', read_only=True)
     deleted_at = serializers.DateTimeField(source='updated_at', read_only=True)
     
     class Meta:
         model = Asset
         fields = [
             'id', 'asset_id', 'name', 'image', 
-            'product', 'supplier', 'location', 'deleted_at'
+            'product_id', 'category', 'manufacturer', 
+            'supplier', 'location', 'deleted_at'
         ]
-    
-    def get_product(self, obj):
-        """Return product data with category and manufacturer IDs for frontend resolution"""
-        if obj.product:
-            return {
-                'id': obj.product.id,
-                'category': obj.product.category,
-                'manufacturer': obj.product.manufacturer,
-            }
-        return None
 
 
 # Serializer for HD registration with category filter
