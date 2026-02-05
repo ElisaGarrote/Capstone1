@@ -14,7 +14,7 @@ import DefaultImage from "../../assets/img/default-image.jpg";
 import { fetchAllTickets } from "../../services/integration-ticket-tracking-service";
 import { fetchAssetById, fetchAssetCheckoutById, fetchAssetNames } from "../../services/assets-service";
 import { exportToExcel } from "../../utils/exportToExcel";
-
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import "../../styles/Tickets/Tickets.css";
 
 // TableHeader component to render the table header
@@ -462,22 +462,19 @@ const Tickets = () => {
 
             {/* Table Structure */}
             <section className="tickets-table-section">
-              <table>
-                <thead>
-                  <TableHeader
-                    allSelected={allSelected}
-                    onHeaderChange={handleHeaderChange}
-                  />
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan={8} className="no-data-message">
-                        Loading tickets...
-                      </td>
-                    </tr>
-                  ) : paginatedTickets.length > 0 ? (
-                    paginatedTickets.map((ticket) => (
+              {isLoading ? (
+                <SkeletonLoadingTable />
+              ) : (
+                <table>
+                  <thead>
+                    <TableHeader
+                      allSelected={allSelected}
+                      onHeaderChange={handleHeaderChange}
+                    />
+                  </thead>
+                  <tbody>
+                    {paginatedTickets.length > 0 ? (
+                      paginatedTickets.map((ticket) => (
                       <TableItem
                         key={ticket.id}
                         ticket={ticket}
@@ -487,15 +484,16 @@ const Tickets = () => {
                         onCheckInOut={handleCheckInOut}
                       />
                     ))
-                  ) : (
-                    <tr>
-                      <td colSpan={8} className="no-data-message">
-                        No tickets found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="no-data-message">
+                          No tickets found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </section>
 
             {/* Table pagination */}
