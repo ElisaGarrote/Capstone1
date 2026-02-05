@@ -170,7 +170,7 @@ class AssetCheckoutFile(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def __str__(self):
-        return f"AssetCheckout #{self.asset_checkin.id} - {self.file.name}"
+        return f"AssetCheckout #{self.asset_checkout.id} - {self.file.name}"
 
 class AssetCheckin(models.Model):
     asset_checkout = models.OneToOneField(AssetCheckout, on_delete=models.CASCADE, related_name='asset_checkin')
