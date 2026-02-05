@@ -101,7 +101,7 @@
 .bulk-edit-notes-section {
   width: 60vw;
   max-width: 1200px;
-  margin: 0.5rem auto 1rem auto;
+  margin: 0.5rem auto 0.5rem auto;
   text-align: left;
   align-self: center;
 }
@@ -118,7 +118,6 @@
 .bulk-edit-notes-text strong {
   color: #333;
   font-weight: 600;
-  font-style: normal;
 }
 
 /* Header section styling */
