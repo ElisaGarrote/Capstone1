@@ -67,6 +67,7 @@ function resolveManufacturerName(item, manufacturersMap = {}, productMap = {}) {
     item.product?.manufacturer ||
     // fallback to dropdown map id lookup
     (item.product && manufacturersMap[String(item.product.manufacturer)]) ||
+    (item.manufacturer && manufacturersMap[String(item.manufacturer)]) ||
     null
   );
 }
@@ -271,14 +272,28 @@ export default function RecycleBin() {
     // also load dropdowns to resolve ids -> names
     const loadDropdowns = async () => {
       try {
-        const dd = await fetchAllDropdowns("product");
+        // Load product dropdowns (asset categories, manufacturers, suppliers)
+        const productDd = await fetchAllDropdowns("product");
         if (!mounted) return;
-        const suppliers = dd.suppliers || [];
-        const categories = dd.categories || [];
-        const manufacturers = dd.manufacturers || [];
+        
+        // Load component dropdowns (component categories, same manufacturers, suppliers)
+        const componentDd = await fetchAllDropdowns("component");
+        if (!mounted) return;
+        
+        // Merge suppliers (same for both)
+        const suppliers = productDd.suppliers || [];
         setSuppliersMap(suppliers.reduce((acc, s) => ({ ...acc, [String(s.id)]: s.name }), {}));
-        setCategoriesMap(categories.reduce((acc, c) => ({ ...acc, [String(c.id)]: c.name }), {}));
+        
+        // Merge categories from both product (asset) and component
+        const assetCategories = productDd.categories || [];
+        const componentCategories = componentDd.categories || [];
+        const allCategories = [...assetCategories, ...componentCategories];
+        setCategoriesMap(allCategories.reduce((acc, c) => ({ ...acc, [String(c.id)]: c.name }), {}));
+        
+        // Manufacturers (same for both)
+        const manufacturers = productDd.manufacturers || [];
         setManufacturersMap(manufacturers.reduce((acc, m) => ({ ...acc, [String(m.id)]: m.name }), {}));
+        
         // load locations separately
         try {
           const locDd = await fetchAllDropdowns("location");
