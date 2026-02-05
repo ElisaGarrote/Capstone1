@@ -350,19 +350,21 @@ export default function Assets() {
 
     // Filter by Status
     if (filters.status) {
-      filtered = filtered.filter(
-        (asset) =>
-          asset.status_details?.type?.toLowerCase() === filters.status.value.toLowerCase()
-      );
+      if (filters.status.value === "for_audit") {
+        // Filter for assets marked for audit
+        filtered = filtered.filter((asset) => asset.for_audit === true);
+      } else {
+        // Filter by status type
+        filtered = filtered.filter(
+          (asset) =>
+            asset.status_details?.type?.toLowerCase() === filters.status.value.toLowerCase()
+        );
+      }
     }
 
-    // Filter by For Audit
-    if (filters.forAudit !== null && filters.forAudit !== undefined) {
-      filtered = filtered.filter((asset) =>
-        asset.for_audit === filters.forAudit.value
-      );
-    }
-
+    // Filter by For Audit (removed - now part of Status filter)
+    // If filters.forAudit !== null && filters.forAudit !== undefined removed
+    
     // Filter by Warranty
     if (filters.warranty && filters.warranty.trim() !== "") {
       filtered = filtered.filter(

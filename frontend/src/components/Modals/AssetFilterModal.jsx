@@ -10,15 +10,15 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
     name: "",
     serial: "",
     status: null,
-    forAudit: null,
     warranty: "",
     endOfLife: "",
     checkInCheckOut: null,
   });
 
   const [assetIdInput, setAssetIdInput] = useState("");
+  const [showAssetIdDropdown, setShowAssetIdDropdown] = useState(false);
 
-  // Status options - Exact list provided by user
+  // Status options - Exact list provided by user + For Audit
   const statusOptions = [
     { value: "ready_to_deploy", label: "Ready to Deploy" },
     { value: "available", label: "Available" },
@@ -38,12 +38,7 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
     { value: "decommissioned", label: "Decommissioned" },
     { value: "replacement_pending", label: "Replacement Pending" },
     { value: "inspection_required", label: "Inspection Required" },
-  ];
-
-  // For Audit options
-  const forAuditOptions = [
-    { value: true, label: "Yes" },
-    { value: false, label: "No" },
+    { value: "for_audit", label: "For Audit" },
   ];
 
   // Check-In/Check-Out options
@@ -87,6 +82,7 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
         assetId: [...prev.assetId, trimmedInput],
       }));
       setAssetIdInput("");
+      setShowAssetIdDropdown(false);
     }
   };
 
@@ -98,6 +94,15 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
     }));
   };
 
+  // Handle clearing all asset ID tags
+  const handleClearAllAssetIds = () => {
+    setFilters((prev) => ({
+      ...prev,
+      assetId: [],
+    }));
+    setAssetIdInput("");
+  };
+
   // Reset all filters
   const handleReset = () => {
     setFilters({
@@ -105,12 +110,12 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
       name: "",
       serial: "",
       status: null,
-      forAudit: null,
       warranty: "",
       endOfLife: "",
       checkInCheckOut: null,
     });
     setAssetIdInput("");
+    setShowAssetIdDropdown(false);
   };
 
   // Apply filters
@@ -144,45 +149,80 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
         {/* Modal Body */}
         <div className="modal-body asset-filter-modal-body">
           <div className="filter-grid">
-            {/* Asset ID with Tag Selection */}
+            {/* Asset ID with Tag Selection - Combobox Style */}
             <fieldset>
               <label htmlFor="assetId">Asset ID</label>
-              <div className="asset-id-input-group">
-                <input
-                  type="text"
-                  id="assetId"
-                  placeholder="Enter Asset ID"
-                  value={assetIdInput}
-                  onChange={(e) => setAssetIdInput(e.target.value.toUpperCase())}
-                  onKeyPress={(e) => e.key === "Enter" && handleAddAssetIdTag()}
-                  list="assetIdList"
-                />
-                <datalist id="assetIdList">
-                  {availableAssetIds.filter(id => !filters.assetId.includes(id)).map((id) => (
-                    <option key={id} value={id} />
-                  ))}
-                </datalist>
-                <button
-                  type="button"
-                  onClick={handleAddAssetIdTag}
-                  className="add-tag-btn"
-                >
-                  Add
-                </button>
-              </div>
-              <div className="asset-id-tags">
-                {filters.assetId.map((id) => (
-                  <div key={id} className="asset-id-tag">
-                    {id}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveAssetIdTag(id)}
-                      className="remove-tag-btn"
-                    >
-                      ×
-                    </button>
+              <div className="asset-id-combobox">
+                <div className="asset-id-input-wrapper">
+                  <div className="asset-id-tags-container">
+                    {filters.assetId.map((id) => (
+                      <div key={id} className="asset-id-tag">
+                        {id}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAssetIdTag(id)}
+                          className="remove-tag-btn"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    <input
+                      type="text"
+                      id="assetId"
+                      className="asset-id-input"
+                      placeholder={filters.assetId.length === 0 ? "Enter Asset ID" : ""}
+                      value={assetIdInput}
+                      onChange={(e) => {
+                        setAssetIdInput(e.target.value.toUpperCase());
+                        setShowAssetIdDropdown(true);
+                      }}
+                      onKeyPress={(e) => e.key === "Enter" && handleAddAssetIdTag()}
+                      onFocus={() => setShowAssetIdDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowAssetIdDropdown(false), 200)}
+                      list="assetIdList"
+                    />
+                    <datalist id="assetIdList">
+                      {availableAssetIds.filter(id => !filters.assetId.includes(id)).map((id) => (
+                        <option key={id} value={id} />
+                      ))}
+                    </datalist>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={handleClearAllAssetIds}
+                    className="clear-all-btn"
+                    title="Clear all"
+                  >
+                    ×
+                  </button>
+                  <div className="dropdown-arrow">▼</div>
+                </div>
+                {showAssetIdDropdown && (
+                  <div className="asset-id-dropdown">
+                    {availableAssetIds
+                      .filter(id => 
+                        !filters.assetId.includes(id) && 
+                        (assetIdInput === "" || id.includes(assetIdInput))
+                      )
+                      .map((id) => (
+                        <div
+                          key={id}
+                          className="dropdown-option"
+                          onClick={() => {
+                            setFilters((prev) => ({
+                              ...prev,
+                              assetId: [...prev.assetId, id],
+                            }));
+                            setAssetIdInput("");
+                            setShowAssetIdDropdown(false);
+                          }}
+                        >
+                          {id}
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
             </fieldset>
 
@@ -224,30 +264,6 @@ export default function AssetFilterModal({ isOpen, onClose, onApplyFilter, initi
                 <option value="">Select Status</option>
                 {statusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </fieldset>
-
-            {/* For Audit */}
-            <fieldset>
-              <label htmlFor="forAudit">For Audit</label>
-              <select
-                id="forAudit"
-                value={filters.forAudit !== null ? filters.forAudit : ""}
-                onChange={(e) => {
-                  if (e.target.value === "") {
-                    handleSelectChange("forAudit", null);
-                  } else {
-                    const selectedOption = forAuditOptions.find(opt => String(opt.value) === e.target.value);
-                    handleSelectChange("forAudit", selectedOption || null);
-                  }
-                }}
-              >
-                <option value="">Select Option</option>
-                {forAuditOptions.map((option) => (
-                  <option key={String(option.value)} value={String(option.value)}>
                     {option.label}
                   </option>
                 ))}
