@@ -158,7 +158,6 @@ class AssetCheckout(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
     notes = models.TextField(max_length=500, blank=True, null=True)
-    created_by = models.PositiveIntegerField(blank=True, null=True)  # User who performed the checkout
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     
     def __str__(self):

@@ -760,8 +760,6 @@ class AssetCheckoutSerializer(serializers.ModelSerializer):
     return_date = serializers.DateField(required=False)
     # ticket_number is required from frontend for validation
     ticket_number = serializers.CharField(required=True)
-    # created_by tracks who performed the checkout
-    created_by = serializers.IntegerField(required=False, allow_null=True)
 
     class Meta:
         model = AssetCheckout
