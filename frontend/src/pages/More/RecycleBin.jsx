@@ -48,8 +48,7 @@ function resolveCategoryName(item, categoriesMap = {}, productMap = {}) {
     (item.product && typeof item.product === 'object' && item.product.category_details?.name) ||
     (item.product && typeof item.product === 'number' && productMap[String(item.product)]?.category_details?.name) ||
     item.product?.category_name ||
-    item.product?.category ||
-    // fallback to dropdown map id lookup
+    // dropdown map id lookup (must be before raw id fallback)
     (item.product && categoriesMap[String(item.product.category)]) ||
     (item.category && categoriesMap[String(item.category)]) ||
     null
@@ -64,8 +63,7 @@ function resolveManufacturerName(item, manufacturersMap = {}, productMap = {}) {
     (item.product && typeof item.product === 'object' && item.product.manufacturer_details?.name) ||
     (item.product && typeof item.product === 'number' && productMap[String(item.product)]?.manufacturer_details?.name) ||
     item.product?.manufacturer_name ||
-    item.product?.manufacturer ||
-    // fallback to dropdown map id lookup
+    // dropdown map id lookup (must be before raw id fallback)
     (item.product && manufacturersMap[String(item.product.manufacturer)]) ||
     (item.manufacturer && manufacturersMap[String(item.manufacturer)]) ||
     null
