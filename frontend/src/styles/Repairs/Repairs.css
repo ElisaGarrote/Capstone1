@@ -7,8 +7,6 @@
   table {
     width: 100%;
     border-collapse: collapse;
-    white-space: nowrap;
-    table-layout: fixed;
 
     th {
       padding: 0.75rem !important;
@@ -28,56 +26,7 @@
 
     /* table header for 'Checkbox' */
     th:first-child {
-      width: 6%;
-      min-width: auto;
-    }
-
-    /* table header for 'Asset' */
-    th:nth-child(2) {
-      width: 14%;
-      min-width: auto;
-    }
-
-    /* table header for 'Type' */
-    th:nth-child(3) {
-      width: 13%;
-      min-width: auto;
-    }
-
-    /* table header for 'Name' */
-    th:nth-child(4) {
-      width: 18%;
-      min-width: auto;
-    }
-
-    /* table header for 'Start Date' */
-    th:nth-child(5) {
-      width: 13%;
-      min-width: auto;
-    }
-
-    /* table header for 'End Date' */
-    th:nth-child(6) {
-      width: 13%;
-      min-width: auto;
-    }
-
-    /* table header for 'Cost' */
-    th:nth-child(7) {
-      width: 10%;
-      min-width: auto;
-    }
-
-    /* table header for 'Status' */
-    th:nth-child(8) {
-      width: 13%;
-      min-width: auto;
-    }
-
-    /* table header for 'Action' */
-    th:nth-child(9) {
-      width: 13%;
-      min-width: auto;
+      width: 50px;
     }
 
     td {
@@ -87,9 +36,6 @@
       color: var(--text-color);
       border-bottom: 1px solid #cccccc;
       height: 50px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     td.no-data-message {
