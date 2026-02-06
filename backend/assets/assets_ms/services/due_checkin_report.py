@@ -21,6 +21,13 @@ CONTEXTS_SERVICE_URL = getattr(
     'http://localhost:8002'
 )
 
+# Auth service base URL
+AUTH_SERVICE_URL = getattr(
+    settings,
+    'AUTH_API_URL',
+    'http://localhost:8001'
+)
+
 
 def get_ticket_by_id(ticket_id):
     """Fetch ticket details from contexts service."""
@@ -175,6 +182,52 @@ def fetch_locations_batch(location_ids):
     return location_map
 
 
+def fetch_users_batch(user_ids):
+    """
+    Fetch multiple user details from auth service concurrently.
+    Returns a dictionary mapping user_id -> user_data.
+    """
+    if not user_ids:
+        return {}
+    
+    user_map = {}
+    uncached_ids = []
+    
+    # Check cache first
+    for user_id in user_ids:
+        if user_id:
+            cache_key = f"auth:user:{user_id}"
+            cached = cache.get(cache_key)
+            if cached:
+                user_map[user_id] = cached
+            else:
+                uncached_ids.append(user_id)
+    
+    # Fetch uncached users concurrently
+    if uncached_ids:
+        def fetch_single_user(user_id):
+            try:
+                url = f"{AUTH_SERVICE_URL}/users/{user_id}/"
+                response = requests.get(url, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    cache_key = f"auth:user:{user_id}"
+                    cache.set(cache_key, data, 600)
+                    return (user_id, data)
+            except Exception as e:
+                logger.warning(f"Error fetching user {user_id}: {str(e)}")
+            return (user_id, None)
+        
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(fetch_single_user, user_id) for user_id in uncached_ids]
+            for future in as_completed(futures):
+                user_id, data = future.result()
+                if data:
+                    user_map[user_id] = data
+    
+    return user_map
+
+
 def get_due_checkin_report(days_threshold=30):
     """
     Generate a report of assets that are due for check-in within the specified timeframe.
@@ -204,21 +257,25 @@ def get_due_checkin_report(days_threshold=30):
         asset_checkin__isnull=True  # No check-in recorded yet
     ).select_related('asset', 'asset__product').order_by('return_date')
     
-    # Collect all unique employee and location IDs
+    # Collect all unique employee, user, and location IDs
     employee_ids = set()
+    user_ids = set()
     location_ids = set()
     
     for checkout in due_checkouts:
         if checkout.checkout_to:
             employee_ids.add(checkout.checkout_to)
+        if checkout.created_by:
+            user_ids.add(checkout.created_by)
         if checkout.location:
             location_ids.add(checkout.location)
     
-    # Batch fetch all employees and locations concurrently
-    logger.info(f"Fetching {len(employee_ids)} employees and {len(location_ids)} locations in batch...")
+    # Batch fetch all employees, users, and locations concurrently
+    logger.info(f"Fetching {len(employee_ids)} employees, {len(user_ids)} users, and {len(location_ids)} locations in batch...")
     employee_map = fetch_employees_batch(list(employee_ids))
+    user_map = fetch_users_batch(list(user_ids))
     location_map = fetch_locations_batch(list(location_ids))
-    logger.info(f"Batch fetch complete. Got {len(employee_map)} employees and {len(location_map)} locations.")
+    logger.info(f"Batch fetch complete. Got {len(employee_map)} employees, {len(user_map)} users, and {len(location_map)} locations.")
     
     report_data = []
     
@@ -251,8 +308,13 @@ def get_due_checkin_report(days_threshold=30):
                     elif checked_out_to.get('firstName') or checked_out_to.get('lastName'):
                         checked_out_to_name = f"{checked_out_to.get('firstName', '')} {checked_out_to.get('middleName', '')} {checked_out_to.get('lastName', '')} {checked_out_to.get('suffix', '')}".strip()
         
-        # For checked_out_by, use System as default
+        # Get the user who created the checkout (from centralized auth service)
         checked_out_by_name = "System"
+        if checkout.created_by and checkout.created_by in user_map:
+            user = user_map[checkout.created_by]
+            if user and isinstance(user, dict):
+                # Extract user name from auth service response
+                checked_out_by_name = user.get('fullname') or f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or f"User {checkout.created_by}"
         
         # Get location details from batch-fetched data
         location_name = None
