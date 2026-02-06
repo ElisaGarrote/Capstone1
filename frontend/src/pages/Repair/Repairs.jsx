@@ -11,6 +11,7 @@ import Footer from "../../components/Footer";
 import { exportToExcel } from "../../utils/exportToExcel";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import authService from "../../services/auth-service";
+import Status from "../../components/Status";
 import "../../styles/Repairs/Repairs.css";
 import { fetchAllRepairs } from "../../services/assets-service";
 import { getUserFromToken } from "../../api/TokenUtils";
@@ -58,7 +59,12 @@ function TableItem({
       </td>
       <td>{repair.asset_details?.asset_id}</td>
       <td>{repair.asset_details?.name}</td>
-      <td>{repair.status_details?.name}</td>
+      <td>
+        <Status
+          type={repair.status_details?.type || "repair"}
+          name={repair.status_details?.name}
+        />
+      </td>
       <td>{repair.type}</td>
       <td>{repair.name}</td>
       <td>{repair.start_date}</td>
