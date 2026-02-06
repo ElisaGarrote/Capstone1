@@ -253,9 +253,9 @@ const PerformAudits = () => {
               <input
                 type="text"
                 value={
-                  `${currentUser.first_name || ""} ${
-                    currentUser.last_name || ""
-                  }`.trim() || currentUser.email
+                  `${user.first_name || ""} ${
+                    user.last_name || ""
+                  }`.trim() || user.email
                 }
                 readOnly
               />
