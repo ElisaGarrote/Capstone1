@@ -64,7 +64,10 @@ function resolveManufacturerName(item, manufacturersMap = {}, productMap = {}) {
     (item.product && typeof item.product === 'object' && item.product.manufacturer_details?.name) ||
     (item.product && typeof item.product === 'number' && productMap[String(item.product)]?.manufacturer_details?.name) ||
     item.product?.manufacturer_name ||
+    // dropdown map id lookup for assets (via product)
     (item.product && manufacturersMap[String(item.product.manufacturer)]) ||
+    // dropdown map id lookup for components (manufacturer directly on item)
+    (item.manufacturer && manufacturersMap[String(item.manufacturer)]) ||
     null
   );
 }
