@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import NavBar from "../../components/NavBar";
 import MediumButtons from "../../components/buttons/MediumButtons";
 import Pagination from "../../components/Pagination";
-import DepreciationFilter from "../../components/FilterPanel";
+import DueBackFilterModal from "../../components/Modals/DueBackFilterModal";
 import Footer from "../../components/Footer";
 import dateRelated from "../../utils/dateRelated";
 import { RxPerson } from "react-icons/rx";
@@ -13,18 +13,6 @@ import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 import "../../styles/reports/DueBackReport.css";
 
-const filterConfig = [
-  {
-    type: "date",
-    name: "checkoutdate",
-    label: "Checkout Date",
-  },
-  {
-    type: "date",
-    name: "checkindate",
-    label: "Checkin Date",
-  },
-];
 
 // TableHeader component to render the table header
 function TableHeader() {
@@ -116,6 +104,8 @@ function TableItem({ asset }) {
 export default function DueBackReport() {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [exportToggle, setExportToggle] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
   const exportRef = useRef(null);
   const toggleRef = useRef(null);
 
@@ -230,16 +220,53 @@ export default function DueBackReport() {
     fetchReportData();
   }, []);
 
-  // Filter data based on search term
-  const filteredData = reportData.filter((asset) => {
+  // Apply filters logic
+  const applyFilters = (filters) => {
+    let filtered = [...reportData];
+
+    if (filters?.checkoutdate) {
+      filtered = filtered.filter((row) => {
+        if (!row.checkout_date) return false;
+        return row.checkout_date === filters.checkoutdate;
+      });
+    }
+
+    if (filters?.checkindate) {
+      filtered = filtered.filter((row) => {
+        if (!row.return_date) return false;
+        return row.return_date === filters.checkindate;
+      });
+    }
+
+    return filtered;
+  };
+
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    // Apply search on top of date filters
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const finalFiltered = filtered.filter((asset) =>
       asset.asset_id?.toLowerCase().includes(searchLower) ||
       asset.asset_name?.toLowerCase().includes(searchLower) ||
       asset.checked_out_by?.toLowerCase().includes(searchLower) ||
       asset.checked_out_to?.toLowerCase().includes(searchLower)
     );
-  });
+    return finalFiltered;
+  };
+
+  // Filter data based on search term and applied filters
+  const filteredData = appliedFilters && Object.keys(appliedFilters).length > 0
+    ? handleApplyFilter(appliedFilters)
+    : reportData.filter((asset) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          asset.asset_id?.toLowerCase().includes(searchLower) ||
+          asset.asset_name?.toLowerCase().includes(searchLower) ||
+          asset.checked_out_by?.toLowerCase().includes(searchLower) ||
+          asset.checked_out_to?.toLowerCase().includes(searchLower)
+        );
+      });
 
   // paginate the data
   const startIndex = (currentPage - 1) * pageSize;
@@ -267,6 +294,16 @@ export default function DueBackReport() {
 
   return (
     <>
+      <DueBackFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={(filters) => {
+          setAppliedFilters(filters);
+          setCurrentPage(1);
+        }}
+        initialFilters={appliedFilters}
+      />
+
       <section className="page-layout-with-table">
         <NavBar />
 
@@ -275,9 +312,6 @@ export default function DueBackReport() {
           <section className="title-page-section">
             <h1>Due for Checkin Report</h1>
           </section>
-
-          {/* Table Filter */}
-          <DepreciationFilter filters={filterConfig} />
 
           <section className="table-layout">
             {/* Table Header */}
@@ -291,6 +325,13 @@ export default function DueBackReport() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
                 <div ref={toggleRef}>
                   <MediumButtons
                     type="export"

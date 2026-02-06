@@ -10,9 +10,9 @@ import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import NavBar from "../../components/NavBar";
 import Status from "../../components/Status";
 import MediumButtons from "../../components/buttons/MediumButtons";
+import ActivityFilterModal from "../../components/Modals/ActivityFilterModal";
 import axios from "axios";
 import MockupData from "../../data/mockData/reports/activity-report-mockup-data.json";
-import DepreciationFilter from "../../components/FilterPanel";
 import Pagination from "../../components/Pagination";
 import Footer from "../../components/Footer";
 import "../../styles/reports/ActivityReport.css";
@@ -35,47 +35,6 @@ const getFormattedDate = () => {
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}${month}${day}`;
 };
-
-const filterConfig = [
-  {
-    type: "select",
-    name: "type",
-    label: "Type",
-    options: [
-      { value: "accessory", label: "Accessory" },
-      { value: "asset", label: "Asset" },
-      { value: "audit", label: "Audit" },
-      { value: "component", label: "Component" },
-      { value: "consumable", label: "Consumable" },
-    ],
-  },
-  {
-    type: "select",
-    name: "event",
-    label: "Event",
-    options: [
-      { value: "checkin", label: "Checkin" },
-      { value: "checkout", label: "Checkout" },
-      { value: "create", label: "Create" },
-      { value: "delete", label: "Delete" },
-      { value: "failed", label: "Failed" },
-      { value: "passed", label: "Passed" },
-      { value: "repair", label: "Repair" },
-      { value: "schedule", label: "Schedule" },
-      { value: "update", label: "Update" },
-    ],
-  },
-  {
-    type: "text",
-    name: "user",
-    label: "User",
-  },
-  {
-    type: "text",
-    name: "tofrom",
-    label: "To/From",
-  },
-];
 
 const toTitleCase = (str = "") =>
   str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
@@ -152,14 +111,55 @@ export default function ActivityReport() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5); // default page size or number of items per page
   const [activities, setActivities] = useState([]);
+  const [filteredActivities, setFilteredActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState({});
 
   // paginate the data (client-side after fetching)
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const sourceData = activities.length > 0 ? activities : MockupData;
+  const sourceData = filteredActivities.length > 0 ? filteredActivities : (activities.length > 0 ? activities : MockupData);
   const paginatedActivity = sourceData.slice(startIndex, endIndex);
+
+  // Apply filters logic
+  const applyFilters = (filters) => {
+    let filtered = [...activities];
+
+    if (filters?.type) {
+      filtered = filtered.filter(
+        (row) => row.type?.toLowerCase() === filters.type.toLowerCase()
+      );
+    }
+
+    if (filters?.event) {
+      filtered = filtered.filter(
+        (row) => row.action?.toLowerCase() === filters.event.toLowerCase()
+      );
+    }
+
+    if (filters?.user && filters.user.trim() !== "") {
+      filtered = filtered.filter((row) =>
+        row.user?.toLowerCase().includes(filters.user.toLowerCase())
+      );
+    }
+
+    if (filters?.tofrom && filters.tofrom.trim() !== "") {
+      filtered = filtered.filter((row) =>
+        row.to_from?.toLowerCase().includes(filters.tofrom.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
+  const handleApplyFilter = (filters) => {
+    setAppliedFilters(filters);
+    const filtered = applyFilters(filters);
+    setFilteredActivities(filtered);
+    setCurrentPage(1);
+  };
 
   // Fetch activity logs from backend
   useEffect(() => {
@@ -203,6 +203,7 @@ export default function ActivityReport() {
             return { date, user, type, action, item, to_from, notes };
           });
           setActivities(mapped);
+          setFilteredActivities(mapped);
         }
       } catch (err) {
         console.error("Failed to load activity logs", err);
@@ -227,27 +228,39 @@ export default function ActivityReport() {
   };
 
   return (
-    <section className="page-layout-with-table">
-      <NavBar />
+    <>
+      <ActivityFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        onApplyFilter={handleApplyFilter}
+        initialFilters={appliedFilters}
+      />
 
-      <main className="main-with-table">
-        {/* Title of the Page */}
-        <section className="title-page-section">
-          <h1>Activity Report</h1>
-        </section>
+      <section className="page-layout-with-table">
+        <NavBar />
 
-        {/* Table Filter */}
-        <DepreciationFilter filters={filterConfig} />
-
-        <section className="table-layout">
-          {/* Table Header */}
-          <section className="table-header">
-            <h2 className="h2">Activity Log ({sourceData.length})</h2>
-            <section className="table-actions">
-              <input type="search" placeholder="Search..." className="search" />
-              <MediumButtons type="export" onClick={handleExportExcel} />
-            </section>
+        <main className="main-with-table">
+          {/* Title of the Page */}
+          <section className="title-page-section">
+            <h1>Activity Report</h1>
           </section>
+
+          <section className="table-layout">
+            {/* Table Header */}
+            <section className="table-header">
+              <h2 className="h2">Activity Log ({sourceData.length})</h2>
+              <section className="table-actions">
+                <input type="search" placeholder="Search..." className="search" />
+                <button
+                  type="button"
+                  className="medium-button-filter"
+                  onClick={() => setIsFilterModalOpen(true)}
+                >
+                  Filter
+                </button>
+                <MediumButtons type="export" onClick={handleExportExcel} />
+              </section>
+            </section>
 
           {/* Table Structure */}
           <section className="activity-report-table-section">
@@ -293,5 +306,6 @@ export default function ActivityReport() {
       </main>
       <Footer />
     </section>
+    </>
   );
 }
