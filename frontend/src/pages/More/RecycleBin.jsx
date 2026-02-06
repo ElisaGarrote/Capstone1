@@ -133,7 +133,15 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
         // If any still unresolved, log for debugging (helps identify API shape)
         if (!catName || !manName || !supName || !locName) {
           // eslint-disable-next-line no-console
-          console.debug('RecycleBin unresolved names', { id: item.id, item, catName, manName, supName, locName });
+          console.debug('RecycleBin unresolved names', { 
+            id: item.id, 
+            item, 
+            catName, 
+            manName, 
+            supName, 
+            locName,
+            maps: { manufacturersMap, locationsMap }
+          });
         }
 
         return (
