@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { FiTrendingUp, FiTrendingDown, FiMinus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import MediumButtons from '../buttons/MediumButtons';
