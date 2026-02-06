@@ -8,6 +8,7 @@ import DeleteModal from "../../components/Modals/DeleteModal";
 import DefaultImage from "../../assets/img/default-image.jpg";
 import Alert from "../../components/Alert";
 import Footer from "../../components/Footer";
+import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 import "../../styles/Category.css";
 import { fetchCategories, contextsBase, deleteCategory, bulkDeleteCategories } from '../../api/contextsApi'
 
@@ -130,12 +131,14 @@ export default function Category() {
   const [filteredData, setFilteredData] = useState([]);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch categories from contexts backend (minimal fields)
   useEffect(() => {
     let mounted = true
     ;(async () => {
       try {
+        setIsLoading(true)
           // Request both counts; serializer will provide numeric values (0 when none)
           const data = await fetchCategories({ fields: 'id,name,type,asset_count,component_count', page_size: 500 })
         if (!mounted) return
@@ -145,6 +148,8 @@ export default function Category() {
         console.error('Failed to fetch categories', err)
         setFetchedCategories([])
         setFilteredData([])
+      } finally {
+        setIsLoading(false)
       }
     })()
     return () => { mounted = false }
@@ -358,71 +363,77 @@ export default function Category() {
 
         <main className="main-with-table">
           <section className="table-layout">
-            {/* Table Header */}
-            <section className="table-header">
-              <h2 className="h2">Categories ({searchedData.length})</h2>
-              <section className="table-actions">
-                {selectedIds.length > 0 && (
-                  <MediumButtons
-                    type="delete"
-                    onClick={() => openDeleteModal(null)}
-                  />
-                )}
-                <input
-                  type="search"
-                  placeholder="Search..."
-                  className="search"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
-                <MediumButtons
-                  type="new"
-                  navigatePage="/More/CategoryRegistration"
-                />
-              </section>
-            </section>
-
-            {/* Table Structure */}
-            <section className="table-section">
-              <table>
-                <thead>
-                  <TableHeader
-                    allSelected={allSelected}
-                    onSelectAll={handleHeaderChange}
-                  />
-                </thead>
-                <tbody>
-                  {paginatedCategories.length > 0 ? (
-                    paginatedCategories.map((category, index) => (
-                      <TableItem
-                        key={index}
-                        category={category}
-                        isChecked={selectedIds.includes(category.id)}
-                        onCheckboxChange={handleRowChange}
-                        onDeleteClick={() => openDeleteModal(category.id)}
+            {isLoading ? (
+              <SkeletonLoadingTable />
+            ) : (
+              <>
+                {/* Table Header */}
+                <section className="table-header">
+                  <h2 className="h2">Categories ({searchedData.length})</h2>
+                  <section className="table-actions">
+                    {selectedIds.length > 0 && (
+                      <MediumButtons
+                        type="delete"
+                        onClick={() => openDeleteModal(null)}
                       />
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="no-data-message">
-                        No categories found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </section>
+                    )}
+                    <input
+                      type="search"
+                      placeholder="Search..."
+                      className="search"
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                    />
+                    <MediumButtons
+                      type="new"
+                      navigatePage="/More/CategoryRegistration"
+                    />
+                  </section>
+                </section>
 
-            {/* Table pagination */}
-            <section className="table-pagination">
-              <Pagination
-                currentPage={currentPage}
-                pageSize={pageSize}
-                totalItems={searchedData.length}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={handlePageSizeChangeLocal}
-              />
-            </section>
+                {/* Table Structure */}
+                <section className="table-section">
+                  <table>
+                    <thead>
+                      <TableHeader
+                        allSelected={allSelected}
+                        onSelectAll={handleHeaderChange}
+                      />
+                    </thead>
+                    <tbody>
+                      {paginatedCategories.length > 0 ? (
+                        paginatedCategories.map((category, index) => (
+                          <TableItem
+                            key={index}
+                            category={category}
+                            isChecked={selectedIds.includes(category.id)}
+                            onCheckboxChange={handleRowChange}
+                            onDeleteClick={() => openDeleteModal(category.id)}
+                          />
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="no-data-message">
+                            No categories found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </section>
+
+                {/* Table pagination */}
+                <section className="table-pagination">
+                  <Pagination
+                    currentPage={currentPage}
+                    pageSize={pageSize}
+                    totalItems={searchedData.length}
+                    onPageChange={setCurrentPage}
+                    onPageSizeChange={handlePageSizeChangeLocal}
+                  />
+                </section>
+              </>
+            )}
           </section>
         </main>
         <Footer />
