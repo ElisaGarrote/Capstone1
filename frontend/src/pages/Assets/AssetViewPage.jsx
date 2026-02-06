@@ -156,6 +156,7 @@ function AssetViewPage() {
   // Build tabs with counts from API data
   const tabs = [
     { label: "About" },
+    { label: "History" },
     { label: `Checkout Log (${asset.checkout_logs?.length || 0})` },
     { label: `Components (${asset.components?.length || 0})` },
     { label: `Repair (${asset.repairs?.length || 0})` },
