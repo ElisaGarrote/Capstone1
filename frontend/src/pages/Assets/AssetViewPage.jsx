@@ -53,7 +53,7 @@ function AssetViewPage() {
 
       // Collect all location IDs for batch fetching
       const locationIds = [...new Set(logs.map(log => log.location).filter(Boolean))];
-      const employeeIds = [...new Set(logs.map(log => log.checked_out_to).filter(Boolean))];
+      const employeeIds = [...new Set(logs.map(log => log.checkout_to).filter(Boolean))];
 
       const locationMap = {};
       const employeeMap = {};
