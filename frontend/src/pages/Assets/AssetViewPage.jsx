@@ -8,7 +8,7 @@ import SystemLoading from "../../components/Loading/SystemLoading";
 import Alert from "../../components/Alert";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
 import { fetchAssetById, deleteAsset } from "../../services/assets-service";
-import { fetchLocationById } from "../../services/integration-help-desk-service";
+import { fetchLocationById, fetchEmployeeById } from "../../services/integration-help-desk-service";
 import "../../styles/Assets/AssetViewPage.css";
 import "../../styles/Assets/AssetEditPage.css";
 
