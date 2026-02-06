@@ -11,6 +11,7 @@ import "../../styles/TabNavBar.css";
 import "../../styles/RecycleBin.css";
 import ActionButtons from "../../components/ActionButtons";
 import ConfirmationModal from "../../components/Modals/DeleteModal";
+import { fetchAllLocations } from "../../services/integration-help-desk-service";
 import { fetchDeletedItems, recoverAsset, recoverComponent, deleteAsset, deleteComponent, bulkDeleteAssets, bulkDeleteComponents, fetchAllDropdowns } from "../../services/contexts-service";
 import { fetchProductById } from "../../services/assets-service";
 import { isEligible, daysUntilEligible } from "../../utils/retention";
@@ -117,17 +118,10 @@ function TableItem({ item, isSelected, onRowChange, onDeleteClick, onRecoverClic
       </td>
       <td>{item.name}</td>
       {(() => {
-        const catName = resolveCategoryName(item, categoriesMap, productMap) ||
-          (item.product && (item.product.category || item.product.category_id)) ||
-          item.category_name || null;
-        const manName = resolveManufacturerName(item, manufacturersMap, productMap) ||
-          (item.product && (item.product.manufacturer || item.product.manufacturer_id)) ||
-          item.manufacturer_name || null;
-        const supName = resolveSupplierName(item, suppliersMap) ||
-          (item.product && (item.product.default_supplier || item.product.default_supplier_id)) ||
-          (item.supplier || null);
-        const locName = resolveLocationName(item, locationsMap) || (item.location || item.location_id) || null;
-
+       const catName = resolveCategoryName(item, categoriesMap, productMap);
+        const manName = resolveManufacturerName(item, manufacturersMap, productMap);
+        const supName = resolveSupplierName(item, suppliersMap);
+        const locName = resolveLocationName(item, locationsMap);
         // If any still unresolved, log for debugging (helps identify API shape)
         if (!catName || !manName || !supName || !locName) {
           // eslint-disable-next-line no-console
@@ -200,10 +194,9 @@ export default function RecycleBin() {
           if (missingLocationIds.size > 0) {
       (async () => {
         try {
-          const locDd = await fetchAllDropdowns("location");
-          const locs = locDd.locations || [];
-          if (locs.length > 0) {
-            setLocationsMap(locs.reduce((acc, l) => ({ ...acc, [String(l.id)]: (l.name || l.city) }), {}));
+          const locationsData = await fetchAllLocations();
+          if (Array.isArray(locationsData) && locationsData.length > 0) {
+            setLocationsMap(locationsData.reduce((acc, l) => ({ ...acc, [String(l.id)]: l.name }), {}));
           }
         } catch (e) {
           console.debug('Retry load locations failed:', e);
@@ -301,9 +294,9 @@ export default function RecycleBin() {
         
         // load locations separately
         try {
-          const locDd = await fetchAllDropdowns("location");
-          if (mounted && locDd.locations) {
-            setLocationsMap(locDd.locations.reduce((acc, l) => ({ ...acc, [String(l.id)]: (l.name || l.city) }), {}));
+         const locationsData = await fetchAllLocations();
+          if (mounted && Array.isArray(locationsData)) {
+            setLocationsMap(locationsData.reduce((acc, l) => ({ ...acc, [String(l.id)]: l.name }), {}));
           }
         } catch (e) {
           // ignore location dropdown errors
