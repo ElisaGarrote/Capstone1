@@ -10,6 +10,7 @@ from datetime import date
 from django.conf import settings
 from django.core.cache import cache
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +83,98 @@ def get_location_details(location_id):
         return None
 
 
+def fetch_employees_batch(employee_ids):
+    """
+    Fetch multiple employee details concurrently.
+    Returns a dictionary mapping employee_id -> employee_data.
+    """
+    if not employee_ids:
+        return {}
+    
+    employee_map = {}
+    uncached_ids = []
+    
+    # Check cache first
+    for emp_id in employee_ids:
+        if emp_id:
+            cache_key = f"helpdesk:employee:{emp_id}"
+            cached = cache.get(cache_key)
+            if cached:
+                employee_map[emp_id] = cached
+            else:
+                uncached_ids.append(emp_id)
+    
+    # Fetch uncached employees concurrently
+    if uncached_ids:
+        def fetch_single_employee(emp_id):
+            try:
+                url = f"{CONTEXTS_SERVICE_URL}/helpdesk-employees/{emp_id}/"
+                response = requests.get(url, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    cache_key = f"helpdesk:employee:{emp_id}"
+                    cache.set(cache_key, data, 600)
+                    return (emp_id, data)
+            except Exception as e:
+                logger.warning(f"Error fetching employee {emp_id}: {str(e)}")
+            return (emp_id, None)
+        
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(fetch_single_employee, emp_id) for emp_id in uncached_ids]
+            for future in as_completed(futures):
+                emp_id, data = future.result()
+                if data:
+                    employee_map[emp_id] = data
+    
+    return employee_map
+
+
+def fetch_locations_batch(location_ids):
+    """
+    Fetch multiple location details concurrently.
+    Returns a dictionary mapping location_id -> location_data.
+    """
+    if not location_ids:
+        return {}
+    
+    location_map = {}
+    uncached_ids = []
+    
+    # Check cache first
+    for loc_id in location_ids:
+        if loc_id:
+            cache_key = f"helpdesk:location:{loc_id}"
+            cached = cache.get(cache_key)
+            if cached:
+                location_map[loc_id] = cached
+            else:
+                uncached_ids.append(loc_id)
+    
+    # Fetch uncached locations concurrently
+    if uncached_ids:
+        def fetch_single_location(loc_id):
+            try:
+                url = f"{CONTEXTS_SERVICE_URL}/helpdesk-locations/{loc_id}/"
+                response = requests.get(url, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    cache_key = f"helpdesk:location:{loc_id}"
+                    cache.set(cache_key, data, 600)
+                    return (loc_id, data)
+            except Exception as e:
+                logger.warning(f"Error fetching location {loc_id}: {str(e)}")
+            return (loc_id, None)
+        
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = [executor.submit(fetch_single_location, loc_id) for loc_id in uncached_ids]
+            for future in as_completed(futures):
+                loc_id, data = future.result()
+                if data:
+                    location_map[loc_id] = data
+    
+    return location_map
+
+
 def get_due_checkin_report(days_threshold=30):
     """
     Generate a report of assets that are due for check-in within the specified timeframe.
@@ -104,13 +197,30 @@ def get_due_checkin_report(days_threshold=30):
     
     today = date.today()
     future_date = today + timedelta(days=days_threshold)
-    report_data = []
     
     # Find all checkouts that don't have a corresponding checkin and are due within the timeframe
     due_checkouts = AssetCheckout.objects.filter(
         return_date__lte=future_date,  # Return date is within the next month
         asset_checkin__isnull=True  # No check-in recorded yet
     ).select_related('asset', 'asset__product').order_by('return_date')
+    
+    # Collect all unique employee and location IDs
+    employee_ids = set()
+    location_ids = set()
+    
+    for checkout in due_checkouts:
+        if checkout.checkout_to:
+            employee_ids.add(checkout.checkout_to)
+        if checkout.location:
+            location_ids.add(checkout.location)
+    
+    # Batch fetch all employees and locations concurrently
+    logger.info(f"Fetching {len(employee_ids)} employees and {len(location_ids)} locations in batch...")
+    employee_map = fetch_employees_batch(list(employee_ids))
+    location_map = fetch_locations_batch(list(location_ids))
+    logger.info(f"Batch fetch complete. Got {len(employee_map)} employees and {len(location_map)} locations.")
+    
+    report_data = []
     
     for checkout in due_checkouts:
         # Get asset details
@@ -121,15 +231,13 @@ def get_due_checkin_report(days_threshold=30):
         days_until_due = (checkout.return_date - today).days
         status = 'overdue' if days_until_due < 0 else 'upcoming'
         
-        # Get the employee who has the asset (CHECKED OUT TO)
-        # Priority 1: Use checkout.checkout_to which has the employee ID
+        # Get the employee who has the asset (CHECKED OUT TO) from batch-fetched data
         checked_out_to_name = None
         checked_out_to_id = checkout.checkout_to
         
-        if checkout.checkout_to:
-            checked_out_to = get_employee_details(checkout.checkout_to)
+        if checkout.checkout_to and checkout.checkout_to in employee_map:
+            checked_out_to = employee_map[checkout.checkout_to]
             if checked_out_to:
-                logger.info(f"Employee details for {checkout.checkout_to}: {checked_out_to}")
                 # Handle different response structures from Help Desk service
                 if isinstance(checked_out_to, dict):
                     # Check if it's wrapped in an 'employee' key
@@ -143,32 +251,22 @@ def get_due_checkin_report(days_threshold=30):
                     elif checked_out_to.get('firstName') or checked_out_to.get('lastName'):
                         checked_out_to_name = f"{checked_out_to.get('firstName', '')} {checked_out_to.get('middleName', '')} {checked_out_to.get('lastName', '')} {checked_out_to.get('suffix', '')}".strip()
         
-        # Priority 2: Try to get from ticket requestor_details as fallback
-        if not checked_out_to_name:
-            ticket = get_ticket_by_id(checkout.ticket_number)
-            if ticket:
-                requestor_details = ticket.get('requestor_details')
-                if requestor_details and isinstance(requestor_details, dict):
-                    checked_out_to_name = requestor_details.get('name') or f"{requestor_details.get('firstname', '')} {requestor_details.get('lastname', '')}".strip()
-        
         # For checked_out_by, use System as default
         checked_out_by_name = "System"
         
-        # Get location details
+        # Get location details from batch-fetched data
         location_name = None
         location_id = checkout.location
-        if checkout.location:
-            location = get_location_details(checkout.location)
-            if location:
-                logger.info(f"Location details for {checkout.location}: {location}")
-                if isinstance(location, dict):
-                    # Extract location name from various possible structures
-                    location_name = (
-                        location.get('name') or 
-                        location.get('display_name') or 
-                        location.get('city') or 
-                        None
-                    )
+        if checkout.location and checkout.location in location_map:
+            location = location_map[checkout.location]
+            if location and isinstance(location, dict):
+                # Extract location name from various possible structures
+                location_name = (
+                    location.get('name') or 
+                    location.get('display_name') or 
+                    location.get('city') or 
+                    None
+                )
         
         report_data.append({
             'checkout_id': checkout.id,

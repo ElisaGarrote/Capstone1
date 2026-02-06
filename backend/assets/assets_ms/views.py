@@ -2418,7 +2418,24 @@ class DueCheckinReportViewSet(viewsets.ViewSet):
         """
         try:
             days_threshold = int(request.query_params.get('days', 30))
+            
+            # Check cache first (cache for 60 seconds to balance freshness and performance)
+            cache_key = f"due_checkin_report:{days_threshold}"
+            cached_data = cache.get(cache_key)
+            
+            if cached_data is not None:
+                return Response({
+                    "success": True,
+                    "count": len(cached_data),
+                    "data": cached_data,
+                    "cached": True
+                }, status=status.HTTP_200_OK)
+            
+            # Generate fresh report
             report_data = get_due_checkin_report(days_threshold=days_threshold)
+            
+            # Cache for 60 seconds
+            cache.set(cache_key, report_data, 60)
             
             return Response({
                 "success": True,
