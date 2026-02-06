@@ -1,6 +1,7 @@
 from io import BytesIO
 import datetime
 from django.http import HttpResponse
+from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -410,7 +411,19 @@ class EoLWarrantyReportAPIView(APIView):
     def get(self, request):
         fmt = request.query_params.get('format', '').lower()
 
+        # Check cache first for JSON responses (cache for 60 seconds to balance freshness and performance)
+        cache_key = "eol_warranty_report"
+        if fmt != 'xlsx':
+            cached_data = cache.get(cache_key)
+            if cached_data is not None:
+                return Response({'results': cached_data, 'cached': True})
+
+        # Generate fresh report
         rows = generate_eol_warranty_report()
+        
+        # Cache for 60 seconds (only for JSON)
+        if fmt != 'xlsx':
+            cache.set(cache_key, rows, 60)
 
         if fmt == 'xlsx':
             try:
@@ -448,8 +461,18 @@ class ExpiredWarrantyReportAPIView(APIView):
         """
 
         def get(self, request):
+                # Check cache first (cache for 60 seconds)
+                cache_key = "expired_warranty_report"
+                cached_data = cache.get(cache_key)
+                if cached_data is not None:
+                    return Response({'results': cached_data, 'cached': True})
+                
                 fmt = request.query_params.get('format', '').lower()
                 rows = generate_expired_warranty_report()
+                
+                # Cache for 60 seconds
+                cache.set(cache_key, rows, 60)
+                
                 # Currently only JSON supported
                 return Response({'results': rows})
 
@@ -465,8 +488,18 @@ class ExpiringWarrantyReportAPIView(APIView):
         """
 
         def get(self, request):
+                # Check cache first (cache for 60 seconds)
+                cache_key = "expiring_warranty_report"
+                cached_data = cache.get(cache_key)
+                if cached_data is not None:
+                    return Response({'results': cached_data, 'cached': True})
+                
                 fmt = request.query_params.get('format', '').lower()
                 rows = generate_expiring_warranty_report()
+                
+                # Cache for 60 seconds
+                cache.set(cache_key, rows, 60)
+                
                 # Currently only JSON supported
                 return Response({'results': rows})
 

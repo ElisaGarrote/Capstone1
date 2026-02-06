@@ -3,6 +3,10 @@ from datetime import date
 from ..models import Asset, AssetCheckout
 from .contexts import get_statuses_list
 from .integration_help_desk import get_locations_list
+from .due_checkin_report import fetch_employees_batch, fetch_locations_batch
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def _build_lookup_dict(data) -> Dict[int, Dict]:
@@ -80,20 +84,55 @@ def generate_eol_warranty_report(today: Optional[date] = None) -> List[Dict]:
         product__is_deleted=False,
     )
 
-    # Batch lookups
+    # Batch lookups for statuses
     statuses_lookup = _build_lookup_dict(get_statuses_list(limit=500))
-    locations_lookup = _build_lookup_dict(get_locations_list(limit=500))
 
-    # Active checkouts map: asset_id -> last active checkout
+    # Active checkouts map: asset_id -> last active checkout (only those without checkin)
     active_checkouts = {}
-    checkout_qs = AssetCheckout.objects.select_related('asset')
+    checkout_qs = AssetCheckout.objects.select_related('asset').filter(
+        asset_checkin__isnull=True  # Only active checkouts (not checked in)
+    )
+    
     for co in checkout_qs:
-        # heuristics: prefer checkouts without a returned flag (models may vary)
         active_checkouts.setdefault(co.asset_id, []).append(co)
+
+    # Collect all unique employee IDs and location IDs for batch fetching
+    employee_ids = set()
+    location_ids = set()
+    
+    # Get all assets as a list to iterate twice (once for collecting IDs, once for building results)
+    assets_list = list(qs.order_by('asset_id'))
+    
+    for asset in assets_list:
+        # Collect location IDs
+        if asset.location:
+            # Handle both int and string location IDs
+            try:
+                if isinstance(asset.location, (int, str)):
+                    loc_id = int(asset.location) if isinstance(asset.location, str) else asset.location
+                    location_ids.add(loc_id)
+            except (ValueError, TypeError):
+                pass
+        
+        # Collect employee IDs from active checkouts
+        checkouts = active_checkouts.get(asset.id) or []
+        for co in checkouts:
+            if co.checkout_to:
+                try:
+                    emp_id = int(co.checkout_to) if isinstance(co.checkout_to, str) else co.checkout_to
+                    employee_ids.add(emp_id)
+                except (ValueError, TypeError):
+                    pass
+    
+    # Batch fetch employees and locations concurrently
+    logger.info(f"EOL Report: Fetching {len(employee_ids)} employees and {len(location_ids)} locations in batch...")
+    employee_map = fetch_employees_batch(list(employee_ids))
+    location_map = fetch_locations_batch(list(location_ids))
+    logger.info(f"EOL Report: Batch fetch complete. Got {len(employee_map)} employees and {len(location_map)} locations.")
 
     results = []
 
-    for asset in qs.order_by('asset_id'):
+    for asset in assets_list:
         product = getattr(asset, 'product', None)
 
         # status
@@ -101,21 +140,51 @@ def generate_eol_warranty_report(today: Optional[date] = None) -> List[Dict]:
         status_type = status_info.get('type', '') if status_info else ''
         status_name = status_info.get('name', '') if status_info else ''
 
-        # location - resolve robustly (asset.location may be id, string, or dict)
-        location_name = _resolve_lookup_name(asset.location, locations_lookup)
-        # fallback: if asset has a direct location_name attribute, use it
-        if not location_name:
-            location_name = getattr(asset, 'location_name', '') or getattr(asset, 'location_display', '') or ''
+        # location - use batch-fetched location data
+        location_name = ''
+        if asset.location:
+            try:
+                loc_id = int(asset.location) if isinstance(asset.location, str) else asset.location
+                if loc_id in location_map:
+                    location_data = location_map[loc_id]
+                    if isinstance(location_data, dict):
+                        location_name = (
+                            location_data.get('name') or 
+                            location_data.get('city') or 
+                            location_data.get('display_name') or 
+                            ''
+                        )
+            except (ValueError, TypeError):
+                pass
 
-        # deployedTo: inspect active_checkouts entries and pick most recent
+        # deployedTo: get from active checkouts and resolve employee name from batch-fetched data
         deployed_to = None
         try:
-            lst = active_checkouts.get(asset.id) or []
-            if lst:
-                # pick latest by id (assumes increasing ids) or checkout_date
-                last = sorted(lst, key=lambda x: getattr(x, 'id', 0))[-1]
-                deployed_to = getattr(last, 'person_name', None) or getattr(last, 'deployed_to', None) or getattr(last, 'checkout_to', None) or None
-        except Exception:
+            checkouts = active_checkouts.get(asset.id) or []
+            if checkouts:
+                # Pick latest checkout by id
+                last_checkout = sorted(checkouts, key=lambda x: getattr(x, 'id', 0))[-1]
+                
+                # Get employee ID and resolve name from batch-fetched data
+                emp_id = last_checkout.checkout_to
+                if emp_id:
+                    try:
+                        emp_id_int = int(emp_id) if isinstance(emp_id, str) else emp_id
+                        if emp_id_int in employee_map:
+                            emp_data = employee_map[emp_id_int]
+                            if isinstance(emp_data, dict):
+                                # Handle different response structures
+                                if emp_data.get('employee'):
+                                    emp = emp_data['employee']
+                                    deployed_to = f"{emp.get('first_name', '')} {emp.get('middle_name', '')} {emp.get('last_name', '')} {emp.get('suffix', '')}".strip()
+                                elif emp_data.get('first_name') or emp_data.get('last_name'):
+                                    deployed_to = f"{emp_data.get('first_name', '')} {emp_data.get('middle_name', '')} {emp_data.get('last_name', '')} {emp_data.get('suffix', '')}".strip()
+                                elif emp_data.get('firstName') or emp_data.get('lastName'):
+                                    deployed_to = f"{emp_data.get('firstName', '')} {emp_data.get('middleName', '')} {emp_data.get('lastName', '')} {emp_data.get('suffix', '')}".strip()
+                    except (ValueError, TypeError):
+                        pass
+        except Exception as e:
+            logger.warning(f"Error resolving deployed_to for asset {asset.id}: {str(e)}")
             deployed_to = None
 
         # Dates
