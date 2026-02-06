@@ -223,6 +223,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
     repairs = serializers.SerializerMethodField()
     audits = serializers.SerializerMethodField()
     components = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -232,7 +233,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
             'image', 'created_at', 'updated_at', 'location',
             'product_details', 'status_details', 'supplier_details', 'location_details',
             'ticket_details', 'active_checkout',
-            'checkout_logs', 'repairs', 'audits', 'components'
+            'checkout_logs', 'repairs', 'audits', 'components', 'files'
         ]
 
     def get_status_details(self, obj):
