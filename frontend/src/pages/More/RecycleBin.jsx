@@ -288,9 +288,12 @@ export default function RecycleBin() {
         const allCategories = [...assetCategories, ...componentCategories];
         setCategoriesMap(allCategories.reduce((acc, c) => ({ ...acc, [String(c.id)]: c.name }), {}));
         
-        // Manufacturers (same for both)
-        const manufacturers = productDd.manufacturers || [];
-        setManufacturersMap(manufacturers.reduce((acc, m) => ({ ...acc, [String(m.id)]: m.name }), {}));
+        // Merge manufacturers from both product and component dropdowns
+        const productManufacturers = productDd.manufacturers || [];
+        const componentManufacturers = componentDd.manufacturers || [];
+        const allManufacturers = [...productManufacturers, ...componentManufacturers];
+        console.debug('RecycleBin manufacturers loaded:', allManufacturers.map(m => ({ id: m.id, name: m.name })));
+        setManufacturersMap(allManufacturers.reduce((acc, m) => ({ ...acc, [String(m.id)]: m.name }), {}));
         
         // load locations separately
         try {
