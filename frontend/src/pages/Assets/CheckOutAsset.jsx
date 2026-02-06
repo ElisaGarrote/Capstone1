@@ -12,6 +12,7 @@ import PlusIcon from "../../assets/icons/plus.svg";
 import AddEntryModal from "../../components/Modals/AddEntryModal";
 import { createAssetCheckoutWithStatus, fetchAssetNames, fetchAssetCheckoutById } from "../../services/assets-service";
 import { fetchAllDropdowns, createStatus } from "../../services/contexts-service";
+import authService from "../../services/auth-service";
 
 export default function CheckOutAsset() {
   const { state } = useLocation();
@@ -27,6 +28,9 @@ export default function CheckOutAsset() {
   const [assetName, setAssetName] = useState("");
   const [assetDisplayId, setAssetDisplayId] = useState("");
   const [fromAssets, setFromAssets] = useState(false);
+  
+  // Get current user for tracking who performed the checkout
+  const currentUser = authService.getUserInfo();
 
   // Extract from navigation state
   // From Assets page: { assetId, assetDisplayId, assetName, ticket (full object from ticket_details) }
@@ -234,6 +238,11 @@ export default function CheckOutAsset() {
       // Status sent to backend for asset status update not checkout
       formData.append('status', data.status);
       formData.append("condition", data.condition);
+      
+      // Track who performed the checkout (logged-in user)
+      if (currentUser?.id) {
+        formData.append('created_by', currentUser.id);
+      }
 
       // Optional fields
       if (data.revenue) {
