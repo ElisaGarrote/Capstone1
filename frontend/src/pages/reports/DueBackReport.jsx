@@ -8,7 +8,7 @@ import dateRelated from "../../utils/dateRelated";
 import { RxPerson } from "react-icons/rx";
 import { IoWarningOutline, IoLocationOutline } from "react-icons/io5";
 import assetsAxios from "../../api/assetsAxios";
-import { fetchEmployeeById, fetchLocationById } from "../../services/integration-help-desk-service";
+import { fetchAllEmployees, fetchAllLocations } from "../../services/integration-help-desk-service";
 import { SkeletonLoadingTable } from "../../components/Loading/LoadingSkeleton";
 
 import "../../styles/reports/DueBackReport.css";
@@ -125,86 +125,61 @@ export default function DueBackReport() {
       try {
         setLoading(true);
         setError(null);
-        // Fetch assets due within 30 days
+        // Fetch assets due within 30 days (backend already resolves most names)
         const response = await assetsAxios.get("/due-checkin-report/?days=30");
         if (response.data.success) {
           const data = response.data.data;
-          
-          // Collect all unique location IDs for batch fetching
-          const locationIds = [...new Set(data.map(item => item.location_id).filter(Boolean))];
-          const locationMap = {};
 
-          // Fetch all location names in parallel
-          if (locationIds.length > 0) {
-            const locationPromises = locationIds.map(locId =>
-              fetchLocationById(locId).catch(() => null)
+          // Check if any names still need resolution
+          const hasUnresolvedLocations = data.some(item => item.location_id && !item.location);
+          const hasUnresolvedEmployees = data.some(
+            item => item.checked_out_to_id && (!item.checked_out_to || item.checked_out_to === "Unknown")
+          );
+
+          // Batch-fetch only if needed (single API call each, not per-ID)
+          let locationMap = {};
+          let employeeMap = {};
+
+          const batchPromises = [];
+          if (hasUnresolvedLocations) {
+            batchPromises.push(
+              fetchAllLocations()
+                .then(locations => {
+                  locations.forEach(loc => { locationMap[loc.id] = loc.name; });
+                })
+                .catch(err => console.error("Failed to batch-fetch locations:", err))
             );
-            const locationResults = await Promise.all(locationPromises);
-            locationIds.forEach((locId, idx) => {
-              locationMap[locId] = locationResults[idx]?.name || `Location ${locId}`;
-            });
           }
-          
-          // Collect unique employee IDs that need fetching
-          const unknownEmployeeIds = [
-            ...new Set(
-              data
-                .filter(
-                  (item) =>
-                    item.checked_out_to_id &&
-                    (item.checked_out_to === "Unknown" || !item.checked_out_to)
-                )
-                .map((item) => item.checked_out_to_id)
-            ),
-          ];
-
-          // Batch fetch all unknown employees
-          const employeeCache = {};
-          if (unknownEmployeeIds.length > 0) {
-            // Fetch in batches of 10 to avoid overwhelming the server
-            const batchSize = 10;
-            for (let i = 0; i < unknownEmployeeIds.length; i += batchSize) {
-              const batch = unknownEmployeeIds.slice(i, i + batchSize);
-              const employeePromises = batch.map(async (empId) => {
-                try {
-                  const employee = await fetchEmployeeById(empId);
-                  return { empId, employee };
-                } catch (error) {
-                  console.error(`Failed to fetch employee ${empId}:`, error);
-                  return { empId, employee: null };
-                }
-              });
-
-              const results = await Promise.all(employeePromises);
-              results.forEach(({ empId, employee }) => {
-                employeeCache[empId] = employee;
-              });
-            }
+          if (hasUnresolvedEmployees) {
+            batchPromises.push(
+              fetchAllEmployees()
+                .then(employees => {
+                  employees.forEach(emp => { employeeMap[emp.id] = emp.name; });
+                })
+                .catch(err => console.error("Failed to batch-fetch employees:", err))
+            );
           }
-          
-          // Enrich data with cached employee names and location names
+          await Promise.all(batchPromises);
+
+          // Enrich only the items that are missing names
           const enrichedData = data.map((item) => {
             let updatedItem = { ...item };
-            
-            // Add employee name from cache if needed
-            if (
-              item.checked_out_to_id &&
-              (item.checked_out_to === "Unknown" || !item.checked_out_to)
-            ) {
-              const employee = employeeCache[item.checked_out_to_id];
-              updatedItem.checked_out_to = employee
-                ? employee.name
-                : `Employee #${item.checked_out_to_id}`;
-            }
-            
-            // Add location name from the map
-            if (item.location_id && locationMap[item.location_id]) {
+
+            if (item.location_id && !item.location && locationMap[item.location_id]) {
               updatedItem.location = locationMap[item.location_id];
             }
-            
+
+            if (
+              item.checked_out_to_id &&
+              (!item.checked_out_to || item.checked_out_to === "Unknown") &&
+              employeeMap[item.checked_out_to_id]
+            ) {
+              updatedItem.checked_out_to = employeeMap[item.checked_out_to_id];
+            }
+
             return updatedItem;
           });
-          
+
           setReportData(enrichedData);
         } else {
           setError("Failed to load report data");
