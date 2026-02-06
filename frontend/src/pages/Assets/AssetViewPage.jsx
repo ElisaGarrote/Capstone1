@@ -53,7 +53,10 @@ function AssetViewPage() {
 
       // Collect all location IDs for batch fetching
       const locationIds = [...new Set(logs.map(log => log.location).filter(Boolean))];
+      const employeeIds = [...new Set(logs.map(log => log.checked_out_to).filter(Boolean))];
+
       const locationMap = {};
+      const employeeMap = {};
 
       // Fetch all location names in parallel
       if (locationIds.length > 0) {
@@ -63,6 +66,16 @@ function AssetViewPage() {
         const locationResults = await Promise.all(locationPromises);
         locationIds.forEach((locId, idx) => {
           locationMap[locId] = locationResults[idx]?.name || `Location ${locId}`;
+        });
+      }
+
+      // Fetch all employees in parallel
+      if (employeeIds.length > 0) {
+        const employeeResults = await Promise.all(
+          employeeIds.map(empId => fetchEmployeeById(empId).catch(() => null))
+        );
+        employeeIds.forEach((empId, idx) => {
+          employeeMap[empId] = employeeResults[idx]?.name || `User ${empId}`;
         });
       }
 
@@ -97,7 +110,7 @@ function AssetViewPage() {
             checkoutDate,
             expectedReturnDate: returnDate,
             condition: conditionLabels[log.condition] || log.condition,
-            user: 'Demo User', // TODO: Get actual user from auth
+            user: employeeMap[log.checkout_to] || `User ${log.checkout_to}`,
           });
         } else if (log.type === 'checkin') {
           const checkinDate = log.checkin_date
@@ -148,7 +161,7 @@ function AssetViewPage() {
     { label: `Components (${asset.components?.length || 0})` },
     { label: `Repair (${asset.repairs?.length || 0})` },
     { label: `Audits (${asset.audits?.length || 0})` },
-    { label: "Attachments (0)" }
+    { label: `Attachments (${asset.files?.length || 0})` }
   ];
 
   const closeDeleteModal = () => {
@@ -394,6 +407,7 @@ function AssetViewPage() {
         actionButtons={actionButtons}
         showCheckoutLog
         checkoutLogData={checkoutLogData}
+        filesData={asset.files || []}
       />
     </>
   );
