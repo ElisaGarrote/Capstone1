@@ -219,11 +219,11 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
     status_details = serializers.SerializerMethodField()
     ticket_details = serializers.SerializerMethodField()
     active_checkout = serializers.SerializerMethodField()
-    files = serializers.SerializerMethodField()
     checkout_logs = serializers.SerializerMethodField()
     repairs = serializers.SerializerMethodField()
     audits = serializers.SerializerMethodField()
     components = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -233,7 +233,7 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
             'image', 'created_at', 'updated_at', 'location',
             'product_details', 'status_details', 'supplier_details', 'location_details',
             'ticket_details', 'active_checkout',
-            'files', 'checkout_logs', 'repairs', 'audits', 'components'
+            'checkout_logs', 'repairs', 'audits', 'components', 'files'
         ]
 
     def get_status_details(self, obj):
@@ -463,27 +463,6 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
 
         return logs
 
-    def get_repairs(self, obj):
-        """Return list of repairs for this asset."""
-        repairs = obj.repair_assets.filter(is_deleted=False).order_by('-created_at')
-
-        return [
-            {
-                'id': repair.id,
-                'name': repair.name,
-                'type': repair.type,
-                'supplier_id': repair.supplier_id,
-                'status_id': repair.status_id,
-                'start_date': repair.start_date,
-                'end_date': repair.end_date,
-                'cost': str(repair.cost) if repair.cost else None,
-                'notes': repair.notes,
-                'created_at': repair.created_at,
-                'updated_at': repair.updated_at
-            }
-            for repair in repairs
-        ]
-
     def get_audits(self, obj):
         """Return list of audits for this asset (via audit_schedules)."""
         audits_list = []
@@ -507,42 +486,6 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
                 })
 
         return audits_list
-
-    def get_components(self, obj):
-        """
-        Return list of active component checkouts to this asset.
-        Each entry is a checkout record with component details.
-        """
-        request = self.context.get('request')
-
-        # Get all component checkouts to this asset
-        checkouts = obj.checkout_to.all().select_related('component').order_by('-created_at')
-
-        result = []
-        for checkout in checkouts:
-            remaining = checkout.remaining_quantity
-            is_active = remaining > 0
-
-            # Build image URL
-            image_url = None
-            if checkout.component.image:
-                image_url = request.build_absolute_uri(checkout.component.image.url) if request else checkout.component.image.url
-
-            result.append({
-                'id': checkout.id,
-                'component_id': checkout.component.id,
-                'component_name': checkout.component.name,
-                'component_image': image_url,
-                'checkout_date': checkout.checkout_date,
-                'quantity': checkout.quantity,
-                'checked_in': checkout.total_checked_in,
-                'remaining': remaining,
-                'status': 'active' if is_active else 'returned',
-                'notes': checkout.notes,
-                'created_at': checkout.created_at
-            })
-
-        return result
 
     def get_history(self, obj):
         """
@@ -605,21 +548,30 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
 
     def get_components(self, obj):
         """
-        Returns components checked out to this asset with their checkin history.
+        Returns only components that have active checkouts referencing this asset.
+        Each entry includes checkin history.
         """
         components = []
+
         # Get component checkouts where this asset is the target
         component_checkouts = ComponentCheckout.objects.filter(asset=obj).select_related(
             'component'
         ).prefetch_related('component_checkins').order_by('-checkout_date')
 
         for checkout in component_checkouts:
-            checkins = [{
-                'id': ci.id,
-                'checkin_date': ci.checkin_date,
-                'quantity': ci.quantity,
-                'notes': ci.notes
-            } for ci in checkout.component_checkins.all().order_by('-checkin_date')]
+            # Only include active checkouts
+            if checkout.remaining_quantity <= 0:
+                continue
+
+            checkins = [
+                {
+                    'id': ci.id,
+                    'checkin_date': ci.checkin_date,
+                    'quantity': ci.quantity,
+                    'notes': ci.notes
+                }
+                for ci in checkout.component_checkins.all().order_by('-checkin_date')
+            ]
 
             components.append({
                 'id': checkout.id,
@@ -637,16 +589,10 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
 
     def get_repairs(self, obj):
         """
-        Returns repairs for this asset with files.
+        Returns repairs for this asset.
         """
         repairs = []
         for repair in obj.repair_assets.filter(is_deleted=False).order_by('-start_date'):
-            repair_files = [{
-                'id': f.id,
-                'file': f.file.url if f.file else None,
-                'from': 'repair'
-            } for f in repair.files.filter(is_deleted=False)]
-
             repairs.append({
                 'id': repair.id,
                 'supplier_id': repair.supplier_id,
@@ -656,7 +602,6 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
                 'end_date': repair.end_date,
                 'cost': str(repair.cost) if repair.cost else None,
                 'notes': repair.notes,
-                'files': repair_files
             })
 
         return repairs
@@ -669,38 +614,6 @@ class AssetInstanceSerializer(serializers.ModelSerializer):
         """Return ID of active checkout (no checkin) or None."""
         checkout = obj.asset_checkouts.filter(asset_checkin__isnull=True).first()
         return checkout.id if checkout else None
-
-    def get_audits(self, obj):
-        """
-        Returns completed audits for this asset with files.
-        """
-        audits = []
-        # Get audit schedules that have been completed (have an audit)
-        for schedule in obj.audit_schedules.filter(is_deleted=False).select_related('audit').prefetch_related('audit__audit_files').order_by('-date'):
-            try:
-                audit = schedule.audit
-                if audit and not audit.is_deleted:
-                    audit_files = [{
-                        'id': f.id,
-                        'file': f.file.url if f.file else None,
-                        'from': 'audit'
-                    } for f in audit.audit_files.filter(is_deleted=False)]
-
-                    audits.append({
-                        'id': audit.id,
-                        'schedule_id': schedule.id,
-                        'scheduled_date': schedule.date,
-                        'audit_date': audit.audit_date,
-                        'location': audit.location,
-                        'user_id': audit.user_id,
-                        'notes': audit.notes,
-                        'created_at': audit.created_at,
-                        'files': audit_files
-                    })
-            except Audit.DoesNotExist:
-                pass
-
-        return audits
 
 # Serializer for asset bulk edit selected items
 class AssetNameSerializer(serializers.ModelSerializer):
