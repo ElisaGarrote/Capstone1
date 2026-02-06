@@ -406,6 +406,9 @@ function AssetViewPage() {
         actionButtons={actionButtons}
         showCheckoutLog
         checkoutLogData={checkoutLogData}
+        componentsData={asset.components || []}
+        repairsData={asset.repairs || []}
+        auditsData={asset.audits || []}
         filesData={asset.files || []}
       />
     </>
