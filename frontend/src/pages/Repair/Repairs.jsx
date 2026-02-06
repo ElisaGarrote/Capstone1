@@ -46,7 +46,6 @@ function TableItem({
   isSelected,
   onRowChange,
   onDeleteClick,
-  onViewClick,
 }) {
   return (
     <tr>
@@ -61,7 +60,11 @@ function TableItem({
       <td>{repair.asset_details?.name}</td>
       <td>
         <Status
-          type={repair.status_details?.type || "repair"}
+          type={
+            repair.status_details?.name?.toLowerCase().includes('complete') 
+              ? "passed" 
+              : repair.status_details?.type || "repair"
+          }
           name={repair.status_details?.name}
         />
       </td>
@@ -72,10 +75,8 @@ function TableItem({
       <td>{repair.cost}</td>
       <td>
         <ActionButtons
-          showView
           showEdit
           showDelete
-          onViewClick={() => onViewClick(repair.id)}
           editPath={`/repairs/edit/${repair.id}`}
           onDeleteClick={() => onDeleteClick(repair.id)}
         />
@@ -212,17 +213,6 @@ export default function AssetRepairs() {
       error.response?.data?.detail || "Failed to delete repair(s)."
     );
     setTimeout(() => setErrorMessage(""), 5000);
-  };
-
-  // View handler - navigates to the linked asset's view page
-  const handleViewClick = (repairId) => {
-    const repair = repairs.find((r) => r.id === repairId);
-    if (repair && repair.asset) {
-      navigate(`/assets/view/${repair.asset}`);
-    } else {
-      setErrorMessage("No linked asset found for this repair.");
-      setTimeout(() => setErrorMessage(""), 4000);
-    }
   };
 
   const handleExport = () => {
@@ -417,7 +407,6 @@ export default function AssetRepairs() {
                           isSelected={selectedIds.includes(repair.id)}
                           onRowChange={handleRowChange}
                           onDeleteClick={openDeleteModal}
-                          onViewClick={handleViewClick}
                         />
                       ))
                     ) : (
